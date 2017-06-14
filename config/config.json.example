@@ -1,0 +1,21 @@
+{
+    "docRoot": ["public/www"],
+
+    "session": {
+        "dataDir": "data",
+        "secret": "secrets/session-secret"
+    },
+
+    "database": {
+        "development": {
+            "url": "sqlite://data/app.db"
+        },
+        "test": {
+            "url": "sqlite://data/app-tests.db"
+        },
+        "production": {
+            "url": "postgres://user:pass@localhost/workbench"
+        }
+    }
+}
+

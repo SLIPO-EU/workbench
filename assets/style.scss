@@ -1,0 +1,23 @@
+/**
+ * Apply local style
+ */
+
+$font: sans-serif;
+
+body {
+   font-family: $font;
+}
+
+section {
+   padding: 10px 0px;
+}
+
+section:after {
+  content: '';
+  display: block;
+  float: none;
+  clear: both;
+}
+
+@import "./images";
+@import "./buttons";

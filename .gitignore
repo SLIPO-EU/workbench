@@ -2,6 +2,8 @@ logs/
 target/
 build/
 lib/
+data/
+secrets/
 
 **/*.*~
 **/*.~
@@ -43,3 +45,9 @@ apidoc/docs
 jsdoc/
 
 Gruntfile-local.js
+
+.sass-cache
+
+config/config.json
+
+public/www/
