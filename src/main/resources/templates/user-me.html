@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:th="http://www.thymeleaf.org"
+    xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4"
+    lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hello Spring</title>
+  <link th:href="@{/css/style.css}" type="text/css" rel="stylesheet"/>
+</head>
+<body>
+  <div>
+    <h1>Hello, <em th:text="${username}">user</em></h1>
+
+    <p>You have been authenticated as <em th:text="${username}">user</em>, and granted the following roles (authorities):</p>
+    <ul>
+        <li th:each="role: ${roles}">
+            <span th:text="${role}">Tester</span>
+        </li>
+    </ul>
+    
+    <p>You have visisted this page <b th:text="${counter}">3</b> times</p>
+    
+    <form th:action="@{/logout}" method="post">
+      <input type="submit" name="submit" value="Sign out" />
+      <!--/* The CSRF token is inserted automatically by Thymeleaf (th:action) */-->
+    </form>
+   
+  </div>
+</body>
+</html>

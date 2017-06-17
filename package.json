@@ -2,10 +2,9 @@
   "name": "slipo-workbench",
   "version": "1.0.0",
   "description": "SLIPO.eu Workbench",
-  "main": "src/js/main.js",
   "scripts": {
-    "start": "./server.js",
-    "test": "./jest",
+    "eslint": "./node_modules/.bin/eslint",
+    "test": "./node_modules/.bin/jest",
     "develop": "NODE_ENV=development ./grunt build deploy",
     "build": "NODE_ENV=production ./grunt build deploy"
   },

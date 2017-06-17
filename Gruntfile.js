@@ -1,38 +1,42 @@
 module.exports = function(grunt) {
-  
-  const prefix = grunt.option('prefix') || 'public/www';
 
   const develop = process.env.NODE_ENV != 'production';
 
-  // Project configuration.
+  // Project configuration
+  
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
-    
-    
+
+    sourceDir: 'src/main/frontend',
+
+    buildDir: 'target/frontend',
+
+    targetDir: 'target/classes/public/',
+
     clean: {
       options: {
         force: true,
       },
       'workbench': {
-        src: ['build/*', 'public/www/*'],
+        src: ['<%= buildDir %>/*'],
       },
     },
     
     
     uglify: {
       options: {
-        banner: '/*! Package: <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
+        banner: '/*! Package: <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n',
+        sourceMap: true,
       },
       'workbench': {
         files: { 
-          'build/<%= pkg.name %>.min.js': ['build/<%= pkg.name %>.js'],
+          '<%= buildDir %>/js/workbench.min.js': ['<%= buildDir %>/js/workbench.js'],
         },
       },
       'vendor': {
         files: {
-          'build/vendor/util.min.js': ['build/vendor/util.js'],
-          'build/vendor/moment-localized.min.js': ['build/vendor/moment-localized.js'],
-          'build/vendor/react-with-redux.min.js': ['build/vendor/react-with-redux.js'],         
+          '<%= buildDir %>/js/vendor/util.min.js': ['<%= buildDir %>/js/vendor/util.js'],
+          '<%= buildDir %>/js/vendor/react-with-redux.min.js': ['<%= buildDir %>/js/vendor/react-with-redux.js'],         
         },
       },
     },
@@ -55,23 +59,26 @@ module.exports = function(grunt) {
           ]
         },
         files: {
-          'build/<%= pkg.name %>.js': ['src/js/main.js'],
+          '<%= buildDir %>/js/workbench.js': ['<%= sourceDir %>/js/workbench/main.js'],
         },
       },
       'vendor-util': {
         options: {
           alias: [
             'isomorphic-fetch:fetch',
+          ],
+          require: [
+            'moment', 'moment/locale/el', 'moment/locale/es', 'moment/locale/de',
             'url-search-params',
-            'lodash',
+            'lodash', 
             'history',
             'immutable',
             'rgbcolor',
             'sprintf',
-          ]
+          ],
         },
         files: {
-          'build/vendor/util.js': []
+          '<%= buildDir %>/js/vendor/util.js': []
         },
       },
       'vendor-react': {
@@ -86,17 +93,7 @@ module.exports = function(grunt) {
           ],
         },
         files: {
-          'build/vendor/react-with-redux.js': [],
-        },
-      },
-      'vendor-moment': {
-        options: {
-          require: [
-            'moment', 'moment/locale/el', 'moment/locale/es', 'moment/locale/de',
-          ],
-        },
-        files: {
-          'build/vendor/moment-localized.js': [],
+          '<%= buildDir %>/js/vendor/react-with-redux.js': [],
         },
       },
     },
@@ -108,7 +105,7 @@ module.exports = function(grunt) {
           style: develop? 'expanded' : 'compressed',
         },
         files: {
-          'build/style.css': ['assets/style.scss'], 
+          '<%= buildDir %>/css/style.css': ['<%= sourceDir %>/scss/style.scss'], 
         },
       },
     },
@@ -118,31 +115,14 @@ module.exports = function(grunt) {
       options: {
         mode: '0644',
       },
-      'workbench-markup': {
-         options: {
-          // Pre-process HTML files as templates
-          processContent: function (data, src) {
-            return grunt.template.process(data)
-          },
-        },
-        files: [
-          {
-            expand: true,
-            filter: 'isFile',
-            cwd: 'src/html/',
-            src: '*.html',
-            dest: prefix,
-          }, 
-        ],
-      },
       'workbench-scripts': {
         files: [
           {
             expand: true,
             filter: 'isFile',
-            cwd: 'build/',
-            src: '<%= pkg.name %>*.js',
-            dest: prefix,
+            cwd: '<%= buildDir %>',
+            src: 'js/workbench*.js',
+            dest: '<%= targetDir %>',
           },
         ],
       },
@@ -151,23 +131,9 @@ module.exports = function(grunt) {
           {
             expand: true,
             filter: 'isFile',
-            cwd: 'build/',
-            src: '*.css',
-            dest: prefix,
-          },
-          {
-            expand: true,
-            filter: 'isFile',
-            cwd: 'assets/',
-            src: '**/*.png',
-            dest: prefix,
-          },          
-          {
-            expand: true,
-            filter: 'isFile',
-            cwd: 'assets/',
-            src: 'fonts/*',
-            dest: prefix,
+            cwd: '<%= buildDir %>',
+            src: 'css/*.css',
+            dest: '<%= targetDir %>',
           },
         ],
       },
@@ -176,17 +142,10 @@ module.exports = function(grunt) {
           {
             expand: true,
             filter: 'isFile',
-            cwd: 'build/',
+            cwd: '<%= buildDir %>/',
             src: 'vendor/*.js',
-            dest: prefix,
+            dest: '<%= targetDir %>',
           },
-          {
-            expand: true,
-            filter: 'isFile',
-            cwd: '.',
-            src: 'vendor/coreui/**/*',
-            dest: prefix,
-          }
         ],
       },
     },
@@ -198,8 +157,8 @@ module.exports = function(grunt) {
           configFile: develop? '.eslintrc.develop.js' : '.eslintrc.js',
         },
         src: [
-          'src/js/**/*.js',
-          '!src/js/__tests__/**/*.js',
+          '<%= sourceDir %>/js/workbench/**/*.js',
+          '!<%= sourceDir %>/js/workbench/__tests__/**/*.js',
         ],
       },
     },
@@ -207,27 +166,22 @@ module.exports = function(grunt) {
 
     watch: {
       'workbench-scripts': {
-         files: ['src/js/**/*.js'],
+         files: ['<%= sourceDir %>/js/workbench/**/*.js'],
          tasks: ['build:workbench', 'copy:workbench-scripts'],
       },
-      'workbench-markup': {
-        files: ['src/html/**.html'],
-        tasks: ['copy:workbench-markup'],
-      },
       'workbench-stylesheets': {
-        files: ['assets/**.scss'],
+        files: ['<%= sourceDir %>/scss/**.scss'],
         tasks: ['sass:workbench', 'copy:workbench-stylesheets'],
-      },
-      'vendor': {
-        files: ['vendor/**/*'],
-        tasks: ['build:vendor', 'deploy:vendor'],
       },
     },
 
     
     jsdoc: {
       'workbench': {
-        src: ['src/js/**/*.js', '!src/js/__tests__/*.js'],
+        src: [
+          '<%= sourceDir %>/js/workbench/**/*.js',
+          '!<%= sourceDir %>/js/workbench/__tests__/**/*.js',
+        ],
         options: {
           destination: 'jsdoc',
         }
@@ -257,25 +211,27 @@ module.exports = function(grunt) {
   //
 
   grunt.registerTask('browserify:vendor', [
-    'browserify:vendor-util', 'browserify:vendor-react', 'browserify:vendor-moment'
+    'browserify:vendor-util', 'browserify:vendor-react',
   ]);
 
-  grunt.registerTask('build:workbench', [
-    'sass:workbench', 'eslint:workbench', 'browserify:workbench', 'uglify:workbench'
-  ]);
+  grunt.registerTask('build:workbench', develop?
+    ['sass:workbench', 'eslint:workbench', 'browserify:workbench'] :
+    ['sass:workbench', 'eslint:workbench', 'browserify:workbench', 'uglify:workbench']
+  );
   
-  grunt.registerTask('build:vendor', [
-    'browserify:vendor', 'uglify:vendor'
-  ]);
+  grunt.registerTask('build:vendor', develop?
+    ['browserify'] :
+    ['browserify:vendor', 'uglify:vendor']
+  );
   
-  grunt.registerTask('build', [
-    'sass', 'eslint', 'browserify', 'uglify'
-  ]);
+  grunt.registerTask('build', develop?
+    ['sass', 'eslint', 'browserify'] :
+    ['sass', 'eslint', 'browserify', 'uglify']
+  );
   
-  grunt.registerTask('deploy:workbench', [
-    'copy:workbench-markup', 'copy:workbench-scripts', 'copy:workbench-stylesheets',
+  grunt.registerTask('copy:workbench', [
+    'copy:workbench-scripts', 'copy:workbench-stylesheets',
   ]);
-  grunt.registerTask('deploy:vendor', ['copy:vendor']);
   grunt.registerTask('deploy', ['copy']);  
 
   grunt.registerTask('default', ['build', 'deploy']);

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:th="http://www.thymeleaf.org"
+    xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4"
+    lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login</title>
+  <link th:href="@{/css/style.css}" type="text/css" rel="stylesheet"/>
+</head>
+<body>
+  <div>
+    <h1>Sign in!</h1>
+    
+    <p th:if="${error} != null" class="error-message">
+      Your login attempt failed: <span th:text="${errorMessage}">Why?</span>
+    </p>
+    
+    <form method="post" th:action="@{/login}">  
+      <table>
+        <tr><td>User:</td><td><input type="text" name="username" value=""/></td></tr>
+        <tr><td>Password:</td><td><input type="password" name="password"/></td></tr>
+        <tr><td colspan='2'><input name="submit" type="submit" value="Login"/></td></tr>
+      </table>
+      <!--/* The CSRF token is inserted automatically by Thymeleaf (th:action) */-->
+    </form>
+  </div>
+</body>
+</html>

@@ -1,12 +1,13 @@
-logs/
-target/
-build/
-lib/
-data/
-secrets/
+/logs/
+/target/
+/data/
+/secrets/
 
 **/*.*~
 **/*.~
+*.tar.gz
+*.zip
+*.rar
 
 **/*.min.js
 !apidoc/template/**/*.min.js
@@ -20,34 +21,22 @@ node
 node_modules
 npm-debug.log
 
-src/main/resources/public/assets/js/build
-src/main/resources/public/assets/images
-src/main/resources/public/assets/lib
-src/main/resources/public/assets/data
-
-src/main/resources/public/docs
+/src/main/resources/public/docs
+/src/main/resources/config/*.properties
+/src/main/resources/config/*.xml
+/src/main/resources/config/*.yml
+/config/*.properties
+/config/*.xml
+/config/*.yml
 
 bower_components
 jspm_packages
 
-*.tar.gz
-*.zip
-*.rar
+/generated-sql/
 
-src/main/resources/log4j.properties
-src/main/resources/log4j2.xml
-src/main/resources/log4j2-test.xml
-src/main/resources/config
+/apidoc/docs
+/jsdoc/
 
-generated-sql/
-
-apidoc/docs
-jsdoc/
-
-Gruntfile-local.js
+/Gruntfile-local.js
 
 .sass-cache
-
-config/config.json
-
-public/www/
