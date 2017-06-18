@@ -33,6 +33,10 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>1.8</java.version>
+        <!-- frontend build -->
+        <node.version>v6.10.3</node.version>
+        <npm.version>3.10.10</npm.version>
+        <node.env>development</node.env>
     </properties>
 
     <dependencies>
@@ -154,36 +158,43 @@
                 <artifactId>frontend-maven-plugin</artifactId>
                 <version>1.1</version>
                 <configuration>
-                    <!-- speedup java-only builds (under spring-boot:run) -->
-                    <skip>false</skip> 
+                    <skip>false</skip> <!-- speedup java-only builds (under spring-boot:run) -->
                 </configuration>
                 <executions>
                     <execution>
                         <id>node-install</id>
+                        <phase>generate-resources</phase>
                         <goals>
                             <goal>install-node-and-npm</goal>
                         </goals>
                         <configuration>
-                            <nodeVersion>v6.10.3</nodeVersion>
-                            <npmVersion>3.10.10</npmVersion>
+                            <skip>true</skip>
+                            <nodeVersion>${node.version}</nodeVersion>
+                            <npmVersion>${npm.version}</npmVersion>
                         </configuration>
                     </execution>
                     <execution>
                         <id>npm-install</id>
+                        <phase>generate-resources</phase>
                         <goals>
                             <goal>npm</goal>
                         </goals>
                         <configuration>
+                            <skip>true</skip>
                             <arguments>install</arguments>
                         </configuration>
                     </execution>
                     <execution>
-                        <id>npm-run-build</id>
+                        <phase>generate-resources</phase>
+                        <id>grunt-build</id>
                         <goals>
-                            <goal>npm</goal>
+                            <goal>grunt</goal>
                         </goals>
                         <configuration>
-                            <arguments>run build</arguments>
+                            <arguments>build</arguments>
+                            <environmentVariables>
+                                <NODE_ENV>${node.env}</NODE_ENV>
+                            </environmentVariables>
                         </configuration>
                     </execution>
                 </executions>
