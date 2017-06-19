@@ -3,7 +3,7 @@
 
 var sprintf = require('sprintf');
 
-module.exports = function (res) 
+function checkStatus(res) 
 {
   if (res.status >= 200 && res.status < 300) {
     return res;
@@ -12,4 +12,6 @@ module.exports = function (res)
       "Received: %d %s", res.status, res.statusText));
     throw err;
   }
-};
+}
+
+module.exports = {checkStatus};

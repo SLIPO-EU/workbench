@@ -6,16 +6,17 @@ module.exports = {
   
   getProfile: () => (
     api.getProfile().then(res => {
-      if (res.user == null || !_.isObject(res.user))
-        throw new Error('Expected a non-empty user object!');
+      var p = res.result;
+      if (p == null || !_.isObject(p))
+        throw new Error('Expected a non-empty user profile!');
       else
-        return res.user;
+        return p;
     })
   ),
 
-  saveProfile: (profile) => api.saveProfile(profile),
+  saveProfile: (profile, token) => api.saveProfile(profile, token),
 
-  login: (username = '', password = '') => api.login(username, password),
+  login: (username, password, token) => api.login(username, password, token),
 
-  logout: () => api.logout(),
+  logout: (token) => api.logout(token),
 };

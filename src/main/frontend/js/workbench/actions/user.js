@@ -16,9 +16,10 @@ var actions = {
     username,
   }), 
 
-  loggedIn: (username, timestamp) => ({
+  loggedIn: (username, token, timestamp) => ({
     type: ActionTypes.user.LOGIN,
     username,
+    token,
     timestamp,
   }),
 
@@ -26,8 +27,10 @@ var actions = {
     type: ActionTypes.user.REQUEST_LOGOUT,
   }),
 
-  loggedOut: () => ({
-    type: ActionTypes.user.LOGOUT, 
+  loggedOut: (token, timestamp) => ({
+    type: ActionTypes.user.LOGOUT,
+    token,
+    timestamp,
   }),
 
   requestProfile: () => ({
@@ -59,25 +62,28 @@ var actions = {
   //
 
   login: (username, password) => (dispatch, getState) => {
+    var {meta: {csrfToken: token}} = getState();
     dispatch(actions.requestLogin(username));
-    return login(username, password).then(
-      (res) => {
+    return login(username, password, token).then(
+      (r) => {
         console.info('Logged in');
         var t = moment().valueOf();
-        return dispatch(actions.loggedIn(username, t));
+        dispatch(actions.loggedIn(username, r.csrfToken, t));
       },
       (err) => {
-        console.error('Failed login *1*');
+        console.error('Failed login: ' + err.message);
         throw err;
       });
   },
 
   logout: () => (dispatch, getState) => {
+    var {meta: {csrfToken: token}} = getState();
     dispatch(actions.requestLogout());
-    return logout().then(
-      (res) => {
+    return logout(token).then(
+      (r) => {
         console.info('Logged out');
-        return dispatch(actions.loggedOut());
+        var t = moment().valueOf();
+        dispatch(actions.loggedOut(r.csrfToken, t));
       },
       (err) => {
         console.error('Failed logout');
@@ -90,7 +96,7 @@ var actions = {
     return getProfile().then(
       (p) => {
         var t = moment().valueOf();
-        return dispatch(actions.loadProfile(p, t));
+        dispatch(actions.loadProfile(p, t));
       },  
       (err) => {
         console.warn('Cannot load user profile: ' + err.message);
@@ -99,12 +105,12 @@ var actions = {
   },
 
   saveProfile: () => (dispatch, getState) => {
-    var {user: {profile}} = getState();
+    var {meta: {csrfToken: token}, user: {profile}} = getState();
     if (_.isEmpty(profile))
       return Promise.reject('The user profile is empty!');
 
     dispatch(actions.requestSaveProfile());
-    return saveProfile(profile).then(
+    return saveProfile(profile, token).then(
       () => dispatch(actions.savedProfile()),
       (err) => {
         console.error('Cannot save user profile: ' + err.message);

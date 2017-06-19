@@ -1,6 +1,6 @@
 const store = require('./store');
-const {refreshProfile} = require('./actions/user');
 const {renderRoot} = require('./root');
+const actions = require('./actions/index');
 
 var rootSelector = document.currentScript.getAttribute('data-root') || '#root';
 
@@ -10,8 +10,12 @@ document.addEventListener("DOMContentLoaded", function () {
   var rootEl = document.querySelector(rootSelector);
   var _renderRoot = renderRoot.bind(window, rootEl);
   
+  var token = document.querySelector("meta[name=_csrf]")
+    .getAttribute('content');
+
   // Chain preliminary actions before initial rendering
-  store.dispatch(refreshProfile())
+  store.dispatch(actions.meta.setCsrfToken(token));
+  store.dispatch(actions.user.refreshProfile())
     .then(undefined, (err) => console.info('Cannot refresh user profile'))
     .then(_renderRoot);
 });

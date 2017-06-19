@@ -1,4 +1,4 @@
-package slipo.eu.workbench.config;
+package eu.slipo.workbench.config;
 
 import org.springframework.context.annotation.AdviceMode;
 import org.springframework.context.annotation.Configuration;

@@ -1,4 +1,4 @@
-package slipo.eu.workbench;
+package eu.slipo.workbench;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
