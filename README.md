@@ -1,40 +1,54 @@
-# Introduction
+# Slipo Workbench
 
 Design and execute workflows on POI datasets.
 
-# Quickstart (example)
+## Quickstart
 
-## Configure
-
-Copy initial configuration from samples, and tweak:
-
-    mkdir secrets data
-    echo -n secr3t >secrets/session-secret
-    cp config/config.json.example config/config.json
-    cp initial-data/app.db data/app.db
-
-## Build
+### Build
 
 Install SASS globally to be used as CSS compiler:
 
     sudo gem install sass
 
-Install Grunt locally (and use a symlink for convenience):
+Build the project:
 
-    npm install grunt-cli grunt
-    ./grunt
+    mvn clean package
 
-Install all project dependencies:
+Build documentation:
 
-    npm install
+    mvn site
 
-Build, copy to target folder (by default is `public/www`), and watch for changes:
+Run application:
 
-    ./grunt build deploy watch
+    mvn exec:java -Dstart-class=eu.slipo.workbench.Application
 
-## Serve the example application
+### Deploy as standalone JAR
 
-Start Express server:
+Deploy as a standalone JAR with an embedded server (here Tomcat 8.x). Our `pom.xml` has a packaging type of `jar`.
 
-    npm start
+Run a standalone JAR:
+
+    java -jar target/workbench-<version>.jar
+
+During development, we usually deploy the application with `spring-boot:run`. 
+
+    mvn spring-boot:run
+
+### Deploy as WAR on server
+
+Normally a WAR archive can be deployed at any servlet container. The following is only tested on a Tomcat 8.x.
+
+Open `pom.xml` and change packaging type to `war`, in order to produce a WAR archive.
+
+Ensure that the following section is uncommented (to avoid packaging an embedded server):
+
+```xml
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-tomcat</artifactId>
+            <scope>provided</scope>
+        </dependency>    
+```
+
+Rebuild, and deploy generated `target/workbench-<version>.war` on a Tomcat 8.x servlet container.
 
