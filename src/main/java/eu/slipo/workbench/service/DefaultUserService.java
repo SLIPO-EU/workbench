@@ -41,7 +41,7 @@ public class DefaultUserService implements UserService
         {
             List<GrantedAuthority> authorities = new ArrayList<>();
             for (EnumRole role: account.getRoles())
-                authorities.add(new SimpleGrantedAuthority(role.name()));
+                authorities.add(new SimpleGrantedAuthority("ROLE_" + role.name()));
             return authorities;    
         }
 

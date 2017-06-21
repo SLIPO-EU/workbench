@@ -65,7 +65,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter
                 .authenticated()
             .antMatchers(
                     "/admin/**")
-                .hasAuthority("ADMIN");
+                .hasAuthority("ROLE_ADMIN");
 
         // Support form-based login
 
