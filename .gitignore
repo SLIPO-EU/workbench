@@ -21,6 +21,8 @@ node
 node_modules
 npm-debug.log
 
+/src/main/java/eu/slipo/workbench/controller/ScratchController.java
+
 /src/main/resources/public/docs
 /src/main/resources/config/*.properties
 /src/main/resources/config/*.xml
@@ -31,8 +33,6 @@ npm-debug.log
 
 bower_components
 jspm_packages
-
-/generated-sql/
 
 /apidoc/docs
 /jsdoc/

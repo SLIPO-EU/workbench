@@ -6,15 +6,19 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.encoding.Md5PasswordEncoder;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 
@@ -22,11 +26,15 @@ import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter
 {
+    @Autowired
+    @Qualifier("defaultUserService")
+    UserDetailsService userService;
+    
     @Override
     public void configure(WebSecurity security) throws Exception
     {
         security.ignoring()
-            .antMatchers("/css/**", "/js/**", "/images/**");
+            .antMatchers("/css/**", "/js/**", "/images/**", "vendor/**");
     }
     
     @Override
@@ -34,16 +42,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter
     {
         // Which authentication providers are to be used?
         
-        // Todo configure UserDetailsService
-        
-        builder.inMemoryAuthentication()
-            .withUser("admin")
-                .password("adm1n")
-                .authorities("ADMIN", "MAINTAINER")
-            .and()
-            .withUser("malex")
-                .password("m@lex")
-                .authorities("USER");
+        builder.userDetailsService(userService)
+            .passwordEncoder(new Md5PasswordEncoder());
         
         builder.eraseCredentials(true);
     }
@@ -67,7 +67,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter
                     "/admin/**")
                 .hasAuthority("ADMIN");
 
-        // Support normal form-based login/logout
+        // Support form-based login
 
         security.formLogin()
             .loginPage("/login")
