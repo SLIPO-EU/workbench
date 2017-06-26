@@ -33,7 +33,7 @@ public class AccountRoleEntity
     @SequenceGenerator(
         sequenceName = "account_role_id_seq", name = "account_role_id_seq", allocationSize = 1)
     @GeneratedValue(generator = "account_role_id_seq", strategy = GenerationType.SEQUENCE)
-    int id = -1;
+    int Integer;
     
     @NotNull
     @ManyToOne

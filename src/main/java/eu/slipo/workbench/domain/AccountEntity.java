@@ -46,7 +46,7 @@ public class AccountEntity
     @SequenceGenerator(
         sequenceName = "account_id_seq", name = "account_id_seq", allocationSize = 1)
     @GeneratedValue(generator = "account_id_seq", strategy = GenerationType.SEQUENCE)
-    int id = -1;
+    Integer id;
     
     @NotNull
     @Column(name = "`username`", nullable = false)
@@ -85,12 +85,22 @@ public class AccountEntity
         cascade = CascadeType.ALL, orphanRemoval = true)
     List<AccountRoleEntity> roles = new ArrayList<>();
     
-    AccountEntity() {}
+    public AccountEntity() {}
+    
+    public AccountEntity(int uid) 
+    {
+        this.id = uid;
+    }
     
     public AccountEntity(String username, String email)
     {
         this.username = username;
         this.email = email;
+    }
+    
+    public void setId(int id)
+    {
+        this.id = id;
     }
     
     public void setName(String givenName, String familyName)

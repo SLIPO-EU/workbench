@@ -14,7 +14,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
  */
 public class Account implements Serializable
 {
-    private int id = -1;
+    private static final long serialVersionUID = 1L;
+
+    private Integer id;
 
     private String username;
     
@@ -38,7 +40,8 @@ public class Account implements Serializable
     
     public Account(String username, String email)
     {
-        this(-1, username, email);
+        this.username = username;
+        this.email = email;
     }
     
     public Account(int id, String username, String email)
@@ -48,7 +51,7 @@ public class Account implements Serializable
         this.email = email;
     }
 
-    public int getId()
+    public Integer getId()
     {
         return id;
     }

@@ -6,7 +6,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @Configuration
-@EnableJpaRepositories
+@EnableJpaRepositories(
+    basePackageClasses = { eu.slipo.workbench.repository._Marker.class })
 @EnableTransactionManagement(mode = AdviceMode.PROXY)
 public class DatabaseConfig 
 {

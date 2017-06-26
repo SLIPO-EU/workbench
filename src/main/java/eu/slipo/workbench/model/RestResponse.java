@@ -1,28 +1,29 @@
 package eu.slipo.workbench.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class RestResponse<R>
+public class RestResponse<Result>
 {
     private final List<Error> errors = new ArrayList<Error>();
 
-    private final R result;
+    private final Result result;
     
     protected RestResponse() 
     {
         this.result = null;
     }
     
-    protected RestResponse(R r)
+    protected RestResponse(Result r)
     {
         this.result = r;
     }
     
-    protected RestResponse(R r, List<Error> errors) 
+    protected RestResponse(Result r, List<Error> errors) 
     {
         this.result = r;
         this.errors.addAll(errors);
@@ -40,7 +41,7 @@ public class RestResponse<R>
     }
     
     @JsonProperty("result")
-    public R getResult()
+    public Result getResult()
     {
         return result;
     }
