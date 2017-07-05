@@ -6,18 +6,25 @@ var rootSelector = document.currentScript.getAttribute('data-root') || '#root';
 
 // Bind top-level event handlers
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function () 
+{
   var rootEl = document.querySelector(rootSelector);
-  var _renderRoot = renderRoot.bind(window, rootEl);
   
+  // Todo read from non-httponly "language" cookie  
+  var language = "en"; 
+
   var token = document.querySelector("meta[name=_csrf]")
     .getAttribute('content');
 
   // Chain preliminary actions before initial rendering
-  store.dispatch(actions.meta.setCsrfToken(token));
-  store.dispatch(actions.user.refreshProfile())
-    .then(undefined, (err) => console.info('Cannot refresh user profile'))
-    .then(_renderRoot);
+  
+  Promise.resolve()
+    .then(() => store.dispatch(actions.meta.setCsrfToken(token)))
+    .then(() => store.dispatch(actions.i18n.changeLocale(language)))
+    .then(() => store.dispatch(actions.user.refreshProfile())
+      // recover from an "Unauthorized" error
+      .then(undefined, (err) => console.info('Cannot refresh user profile')))
+    .then(() => renderRoot(rootEl));
 });
 
 

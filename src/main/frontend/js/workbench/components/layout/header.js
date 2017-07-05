@@ -3,12 +3,15 @@ const PropTypes = require('prop-types');
 const ReactRedux = require('react-redux');
 const {Dropdown, DropdownMenu, DropdownItem} = require('reactstrap');
 const {Link, NavLink} = require('react-router-dom');
+const {FormattedMessage} = require('react-intl');
 
 const {userPropType} = require('../../common-prop-structs');
 
 //
 // Presentational component
 //
+
+const SelectLanguage = require('../helpers/select-language');
 
 class Header extends React.Component 
 {
@@ -50,26 +53,31 @@ class Header extends React.Component
           </li>       
           {/* left-aligned top navbar items */} 
           <li className="nav-item px-3">
-            <a className="nav-link" href="#/dashboard">Dashboard</a>
+            <a className="nav-link" href="#/dashboard">
+              <FormattedMessage id="links.dashboard" defaultMessage="Dashboard" />
+            </a>
           </li>
           <li className="nav-item px-3">
-            <a className="nav-link" href="#/users">Users</a>
+            <a className="nav-link" href="#/users">
+              <FormattedMessage id="links.users" defaultMessage="Users" />
+            </a>
           </li>
           <li className="nav-item px-3">
-            <a className="nav-link" href="#/settings">Settings</a>
+            <a className="nav-link" href="#/settings">
+              <FormattedMessage id="links.settings" defaultMessage="Settings" />
+            </a>
           </li>
         </ul>
 
         {/* right-aligned menu items */}
         <ul className="nav navbar-nav ml-auto">
           <li className="nav-item d-md-down-none">
-            <a className="nav-link" href="#"><i className="icon-bell"></i><span className="badge badge-pill badge-danger">5</span></a>
+            <a className="nav-link" href="#">
+              <i className="icon-bell"></i><span className="badge badge-pill badge-info">5</span>
+            </a>
           </li>
           <li className="nav-item d-md-down-none">
-            <a className="nav-link" href="#"><i className="icon-list"></i></a>
-          </li>
-          <li className="nav-item d-md-down-none">
-            <a className="nav-link" href="#"><i className="icon-location-pin"></i></a>
+            <SelectLanguage />
           </li>
           <li className="nav-item">
             <Dropdown isOpen={this.state.dropdownOpen} toggle={this._toggleDropdown}>

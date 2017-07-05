@@ -19,5 +19,13 @@ section:after {
   clear: both;
 }
 
+.app-header.navbar {
+
+  .nav-item {
+    padding: 0px 10px;
+    min-width: 60px;
+  } 
+}
+
 @import "./images";
 @import "./buttons";

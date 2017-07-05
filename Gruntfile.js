@@ -51,11 +51,12 @@ module.exports = function(grunt) {
           // Exclude the modules below from being packaged into the main JS file:
           // The following will be resolved globally (shim) or via earlier vendor includes
           external: [
-            'fetch', 'lodash', 'immutable', 'rgbcolor', 'history', 'sprintf', 'url-search-params',
+            'fetch', 'lodash', 'immutable', 'rgbcolor', 'history', 'sprintf', 'url-search-params', 'flat',
             'moment', 'moment/locale/el', 'moment/locale/es', 'moment/locale/de',
             'react', 'react-dom', 'prop-types', 'react-router-dom', 
             'redux', 'redux-logger', 'redux-thunk', 'react-router-redux', 'react-redux', 
             'reactstrap', 'react-transition-group',
+            'intl-messageformat', 'react-intl', 'react-intl/locale-data/en', 'react-intl/locale-data/el',
           ]
         },
         files: {
@@ -70,7 +71,9 @@ module.exports = function(grunt) {
           require: [
             'moment', 'moment/locale/el', 'moment/locale/es', 'moment/locale/de',
             'url-search-params',
+            'intl-messageformat',
             'lodash', 
+            'flat',
             'history',
             'immutable',
             'rgbcolor',
@@ -90,6 +93,7 @@ module.exports = function(grunt) {
             'react', 'react-dom', 'prop-types', 'react-router-dom', 
             'redux', 'redux-logger', 'redux-thunk', 'react-router-redux', 'react-redux',
             'reactstrap', 'react-transition-group',
+            'react-intl', 'react-intl/locale-data/en', 'react-intl/locale-data/el',
           ],
         },
         files: {
@@ -122,6 +126,25 @@ module.exports = function(grunt) {
             filter: 'isFile',
             cwd: '<%= buildDir %>',
             src: 'js/workbench*.js',
+            dest: '<%= targetDir %>',
+          },
+        ],
+      },
+      'workbench-i18n-data': {
+        files: [
+          // Note i18n data are just copied verbatim to build/target directory
+          {
+            expand: true,
+            filter: 'isFile',
+            cwd: '<%= sourceDir %>/js/workbench',
+            src: 'i18n/**/*.json',
+            dest: '<%= buildDir %>',
+          },
+          {
+            expand: true,
+            filter: 'isFile',
+            cwd: '<%= buildDir %>',
+            src: 'i18n/**/*.json',
             dest: '<%= targetDir %>',
           },
         ],
@@ -169,6 +192,11 @@ module.exports = function(grunt) {
          files: ['<%= sourceDir %>/js/workbench/**/*.js'],
          tasks: ['build:workbench', 'copy:workbench-scripts'],
       },
+      'workbench-i18n-data': {
+         files: ['<%= sourceDir %>/js/workbench/i18n/**/*.json'],
+         tasks: ['copy:workbench-i18n-data'],
+
+      },
       'workbench-stylesheets': {
         files: ['<%= sourceDir %>/scss/**.scss'],
         tasks: ['sass:workbench', 'copy:workbench-stylesheets'],
@@ -215,8 +243,8 @@ module.exports = function(grunt) {
   ]);
 
   grunt.registerTask('build:workbench', develop?
-    ['sass:workbench', 'eslint:workbench', 'browserify:workbench'] :
-    ['sass:workbench', 'eslint:workbench', 'browserify:workbench', 'uglify:workbench']
+    ['sass:workbench', 'eslint:workbench', 'browserify:workbench', 'copy:workbench-i18n-data'] :
+    ['sass:workbench', 'eslint:workbench', 'browserify:workbench', 'copy:workbench-i18n-data', 'uglify:workbench']
   );
   
   grunt.registerTask('build:vendor', develop?
@@ -224,13 +252,10 @@ module.exports = function(grunt) {
     ['browserify:vendor', 'uglify:vendor']
   );
   
-  grunt.registerTask('build', develop?
-    ['sass', 'eslint', 'browserify'] :
-    ['sass', 'eslint', 'browserify', 'uglify']
-  );
+  grunt.registerTask('build', ['build:workbench', 'build:vendor']);
   
   grunt.registerTask('copy:workbench', [
-    'copy:workbench-scripts', 'copy:workbench-stylesheets',
+    'copy:workbench-scripts', 'copy:workbench-i18n-data', 'copy:workbench-stylesheets',
   ]);
   grunt.registerTask('deploy', ['copy']);  
 

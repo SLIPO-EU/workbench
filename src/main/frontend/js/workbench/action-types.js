@@ -10,7 +10,16 @@ module.exports = mirrorToPath({
     REQUEST_CONFIGURATION: null,
     LOAD_CONFIGURATION: null,
   },
+
+  locale: {
+    SET_LOCALE: null,
+  },
   
+  i18n: {
+    REQUEST_MESSAGES: null,
+    LOAD_MESSAGES: null,
+  },
+
   user: {
     REQUEST_LOGIN: null,
     LOGIN: null,
