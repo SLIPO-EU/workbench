@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN">
     <Properties>
-        <Property name="baseDir">logs</Property>
+        <Property name="baseDir">/var/tmp/slipo-workbench-webapp/logs</Property>
     </Properties>
 
     <Appenders>
