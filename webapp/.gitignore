@@ -14,7 +14,7 @@ node
 node_modules
 npm-debug.log
 
-/src/main/java/eu/slipo/workbench/controller/ScratchController.java
+ScratchController.java
 
 /src/main/resources/public/docs
 /src/main/resources/config/*.properties

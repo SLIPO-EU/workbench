@@ -3,23 +3,18 @@
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>slipo.eu</groupId>
     <artifactId>workbench-webapp</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>slipo-workbench-webapp</name>
 
     <parent>
-        <groupId>slipo.eu</groupId>
+        <groupId>eu.slipo</groupId>
         <artifactId>workbench-project</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
     <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <!-- frontend build -->
         <frontend.skip>false</frontend.skip>
         <node.version>v6.10.3</node.version>
         <npm.version>3.10.10</npm.version>
@@ -27,22 +22,67 @@
     </properties>
 
     <dependencies>
-
-        <!-- Pull basic spring-related dependencies -->
+        
         <dependency>
-            <groupId>slipo.eu</groupId>
-            <artifactId>workbench-spring-base</artifactId>
+            <groupId>eu.slipo</groupId>
+            <artifactId>workbench-common</artifactId>
             <version>${project.version}</version>
         </dependency>
+       
+        <!-- Spring-Boot starter dependencies -->
 
-        <!-- Tests -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-batch</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-cache</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.springframework.session</groupId>
+            <artifactId>spring-session</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
         
-        <!-- Package to WAR (mark dependency on embedded server as provided) -->
+        <!-- If packaging to WAR, mark dependency on embedded server as provided -->
         <!--
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -56,6 +96,7 @@
     <build>
         <plugins>
 
+            <!-- Use Spring-Boot to package as standalone executable JAR -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -111,7 +152,7 @@
                             <goal>install-node-and-npm</goal>
                         </goals>
                         <configuration>
-                            <skip>false</skip>
+                            <skip>true</skip>
                             <nodeVersion>${node.version}</nodeVersion>
                             <npmVersion>${npm.version}</npmVersion>
                         </configuration>
@@ -123,7 +164,7 @@
                             <goal>npm</goal>
                         </goals>
                         <configuration>
-                            <skip>false</skip>
+                            <skip>true</skip>
                             <arguments>install</arguments>
                         </configuration>
                     </execution>

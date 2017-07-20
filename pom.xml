@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>slipo.eu</groupId>
+    <groupId>eu.slipo</groupId>
     <artifactId>workbench-project</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     
-    <name>slipo-workbench-project</name>
+    <name>slipo-workbench</name>
     
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -18,8 +17,10 @@
     </parent>
  
     <modules>
-        <module>spring-base</module>
+        <module>common</module> <!-- common for Spring-based applications -->
+        <module>command</module>
         <module>webapp</module>
+        <module>service</module>
     </modules>
     
     <properties>
@@ -27,7 +28,20 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <java.version>1.8</java.version>
     </properties>
-    
+
+    <developers>
+        <developer>
+            <id>jkouvar</id>
+            <name>Yiannis Kouvaras</name>
+            <email>jkouvar at imis.athena-innovation.gr</email>
+        </developer>
+        <developer>
+            <id>alexakis</id>
+            <name>Michail Alexakis</name>
+            <email>alexakis at imis.athena-innovation.gr</email>
+        </developer>
+    </developers>
+     
     <url>http://slipo.eu/</url>
     <organization>
         <name>IMIS, Institute for the Management of Information Systems</name>
@@ -41,6 +55,7 @@
 
     <build>
         <pluginManagement>
+            
             <plugins>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -51,12 +66,25 @@
                     </configuration>
                 </plugin>
             </plugins>
+
         </pluginManagement>
     </build>
      
     <dependencyManagement>
         <dependencies>
+             
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter</artifactId>
+                <version>1.5.4.RELEASE</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-starter-logging</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 </project>
-
