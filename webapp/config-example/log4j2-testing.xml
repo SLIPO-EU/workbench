@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN">
     <Properties>
-        <Property name="baseDir">/var/tmp/slipo-workbench-webapp/logs</Property>
+        <Property name="baseDir">./logs</Property>
     </Properties>
 
     <Appenders>
@@ -10,8 +10,8 @@
                 pattern="%d{yyyy-MM-dd HH:mm:ss} %20X{session.remote-address} %20X{session.username} %-5p %c{1}:%L - %m%n" />
         </Console>
 
-        <RollingFile name="File" filename="${baseDir}/workbench.log"
-            filepattern="${baseDir}/workbench-%d{MM-dd-yyyy}-%i.log.gz">
+        <RollingFile name="File" filename="${baseDir}/webapp-testing.log"
+            filepattern="${baseDir}/webapp-testing-%d{MM-dd-yyyy}-%i.log.gz">
             <PatternLayout
                 pattern="%d{yyyy-MM-dd HH:mm:ss} %20X{session.remote-address} %20X{session.username} %-5p %c{1}:%L - %m%n" />
             <Policies>
