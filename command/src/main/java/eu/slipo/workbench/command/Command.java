@@ -25,7 +25,7 @@ public class Command implements ApplicationRunner
     private static Logger logger = LoggerFactory.getLogger(Command.class);
     
     @Autowired
-    ApplicationContext ctx;
+    ApplicationContext applicationContext;
     
     @Override
     public void run(ApplicationArguments args) throws Exception
@@ -35,11 +35,9 @@ public class Command implements ApplicationRunner
         // Find a proper SubCommand bean to delegate to 
         
         String subname = p.isEmpty()? "help" : p.get(0);
-        SubCommand subcommand = ctx.getBean(subname, SubCommand.class);
+        SubCommand subcommand = applicationContext.getBean(subname, SubCommand.class);
         
-        logger.debug("About to execute subcommand: {}", subcommand);
-        
-        // Build proper arguments to feed SubCommand
+        // Build arguments to feed subcommand
         
         HashMap<String, String> args1 = new HashMap<>();
         for (String name: args.getOptionNames()) {

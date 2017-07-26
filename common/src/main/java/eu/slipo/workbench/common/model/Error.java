@@ -2,20 +2,20 @@ package eu.slipo.workbench.common.model;
 
 public class Error {
 
-    private String code;
+    private ErrorCode code;
     
     private String description;
     
-    public Error(String code, String description) {
+    public Error(ErrorCode code, String description) {
         this.code = code;
         this.description = description;
     }
 
-    public String getCode() {
+    public ErrorCode getCode() {
         return code;
     }
 
-    public void setCode(String code) {
+    public void setCode(ErrorCode code) {
         this.code = code;
     }
 

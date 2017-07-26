@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import eu.slipo.workbench.common.model.BasicErrorCode;
 import eu.slipo.workbench.common.model.Error;
 import eu.slipo.workbench.common.model.RestResponse;
 
@@ -54,7 +55,7 @@ public class LoginController
         if (error != null) {
             AuthenticationException ex = (AuthenticationException) 
                 session.getAttribute(WebAttributes.AUTHENTICATION_EXCEPTION);
-            Error e = new Error(ex.getClass().getName(), ex.getMessage());
+            Error e = new Error(BasicErrorCode.AUTHENTICATION_FAILED, ex.getMessage());
             return RestResponse.error(e); 
         } 
         return RestResponse.result(null);

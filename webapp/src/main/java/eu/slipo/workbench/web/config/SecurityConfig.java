@@ -61,7 +61,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter
                 .permitAll()
             .antMatchers(
                     "/logged-in", "/logout",
-                    "/action/**") // Fixme
+                    "/action/**")
                 .authenticated()
             .antMatchers(
                     "/admin/**")
