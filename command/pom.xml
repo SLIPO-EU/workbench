@@ -24,7 +24,7 @@
             <artifactId>workbench-common</artifactId>
             <version>${project.version}</version>
         </dependency>
-       
+
         <!-- Spring-Boot starter dependencies -->
 
         <dependency>
@@ -41,6 +41,13 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
+        </dependency>
+        
+        <!-- Flyway -->
+
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
         </dependency>
 
     </dependencies>

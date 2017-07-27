@@ -1,3 +1,11 @@
+CREATE SCHEMA IF NOT EXISTS "web";
+
+CREATE SCHEMA IF NOT EXISTS "service";
+
+--
+-- Create "public".* objects
+--
+
 CREATE SEQUENCE public.account_id_seq INCREMENT 1 MINVALUE 1 START 1 CACHE 1;
 
 CREATE TABLE account
@@ -18,6 +26,9 @@ CREATE TABLE account
 );
 
 
+CREATE INDEX account_username_ix1 
+    ON account USING btree  (username COLLATE pg_catalog."default");
+
 CREATE SEQUENCE public.account_role_id_seq INCREMENT 1 MINVALUE 1 START 1 CACHE 1;
 
 CREATE TABLE account_role
@@ -35,5 +46,4 @@ CREATE TABLE account_role
       REFERENCES account (id) MATCH SIMPLE
       ON UPDATE NO ACTION ON DELETE NO ACTION,
   CONSTRAINT uq_account_role UNIQUE ("account", "role")
-);
-
+); 
