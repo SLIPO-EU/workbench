@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/DECORATION/1.6.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/DECORATION/1.7.0 http://maven.apache.org/xsd/decoration-1.7.0.xsd"
+	name="Slipo Workbench">
+
+	<skin>
+		<groupId>org.apache.maven.skins</groupId>
+		<artifactId>maven-fluido-skin</artifactId>
+		<!--<version>1.5</version>-->
+	</skin>
+
+	<custom>
+		<fluidoSkin>
+			<topBarEnabled>false</topBarEnabled>
+			<breadcrumbDivider>»</breadcrumbDivider>
+			<topBarIcon>
+				<name>Maven Fluido Skin</name>
+				<alt>Maven Fluido Skin</alt>
+				<src>images/logo.png</src>
+				<href>/index.html</href>
+			</topBarIcon>
+			<sideBarEnabled>true</sideBarEnabled>
+		</fluidoSkin>
+	</custom>
+
+	<publishDate position="right"></publishDate>
+	<version position="right"></version>
+
+    <bannerLeft>
+		<name>Slipo Workbench</name>
+		<src>images/logo.png</src>
+		<href>http://slipo.eu/</href>
+		<height>50</height>
+		<width>194</width>
+	</bannerLeft>
+
+	<body>
+		<head>
+		  <![CDATA[<link href="css/site.css" rel="stylesheet" />]]>
+		</head>
+
+		<breadcrumbs>
+			<item name="Slipo Workbench - Introduction" href="introduction.html" />
+		</breadcrumbs>
+
+		<menu name="Overview">
+			<item name="Introduction" href="introduction.html" />
+		</menu>
+
+		<menu ref="reports" />
+	</body>
+
+</project>

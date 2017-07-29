@@ -8,13 +8,32 @@
     <packaging>pom</packaging>
     
     <name>slipo-workbench</name>
+    <url>http://slipo.eu/</url>
     
+    <repositories>
+        <repository>
+            <id>spring-libs-release</id>
+            <name>Spring Releases</name>
+            <url>https://repo.spring.io/libs-release</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>        
+    </repositories> 
+   
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>1.5.4.RELEASE</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
+
+    <distributionManagement>
+        <site>
+            <id>gs-multi-module.example.com</id>
+            <url>file://${project.build.directory}/multi-site/</url> 
+        </site>
+    </distributionManagement>
  
     <modules>
         <module>common</module> <!-- common for Spring-based applications -->
@@ -26,6 +45,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <dependency.locations.enabled>false</dependency.locations.enabled>
         <java.version>1.8</java.version>
     </properties>
 
@@ -42,34 +62,18 @@
         </developer>
     </developers>
      
-    <url>http://slipo.eu/</url>
     <organization>
         <name>IMIS, Institute for the Management of Information Systems</name>
         <url>http://www.ipsyp.gr/en</url>
     </organization>
+    
     <scm>
         <url>https://github.com/SLIPO-EU/workbench</url>
         <connection>scm:git:git@github.com:SLIPO-EU/workbench.git</connection>
         <developerConnection>scm:git:git@github.com:SLIPO-EU/workbench.git</developerConnection>
     </scm>
+    
 
-    <build>
-        <pluginManagement>
-            
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <configuration>
-                        <source>${java.version}</source>
-                        <target>${java.version}</target>
-                    </configuration>
-                </plugin>
-            </plugins>
-
-        </pluginManagement>
-    </build>
-     
     <dependencyManagement>
         <dependencies>
              
@@ -87,4 +91,63 @@
 
         </dependencies>
     </dependencyManagement>
+
+    
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <configuration>
+                        <source>${java.version}</source>
+                        <target>${java.version}</target>
+                    </configuration>
+                </plugin>
+                
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-site-plugin</artifactId>
+                </plugin>
+                
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-project-info-reports-plugin</artifactId>
+                </plugin>
+            
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+        <plugins>
+            <!-- Q: should this go into reporting <plugins> section? -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-site-plugin</artifactId>
+                <!--<inherited>false</inherited>-->
+                <configuration>
+                    <siteDirectory>project/site</siteDirectory>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+     
+
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-project-info-reports-plugin</artifactId>
+            </plugin>
+            
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </reporting>
+
 </project>
