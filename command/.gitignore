@@ -1,4 +1,5 @@
 /target/
 /logs/
 
-/src/main/resources/config/
+/src/main/resources/config/*.properties
+/src/main/resources/config/*.xml
