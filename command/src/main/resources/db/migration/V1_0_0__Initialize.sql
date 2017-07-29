@@ -1,6 +1,9 @@
-CREATE SCHEMA IF NOT EXISTS "web";
 
-CREATE SCHEMA IF NOT EXISTS "service";
+-- Create schema for objects specific to the web application
+CREATE SCHEMA IF NOT EXISTS "web"; 
+
+-- Create schema for objects specific to the rpc server
+CREATE SCHEMA IF NOT EXISTS "rpc";
 
 --
 -- Create "public".* objects
