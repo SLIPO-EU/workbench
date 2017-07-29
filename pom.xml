@@ -39,7 +39,7 @@
         <module>common</module> <!-- common for Spring-based applications -->
         <module>command</module>
         <module>webapp</module>
-        <module>service</module>
+        <module>rpc-server</module>
     </modules>
     
     <properties>
