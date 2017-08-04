@@ -12,6 +12,7 @@ import static org.mockito.Mockito.*;
 
 import java.util.Locale;
 
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.MessageSource;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -20,6 +21,7 @@ import eu.slipo.workbench.common.model.TextMessage;
 import eu.slipo.workbench.rpc.controller.EchoController;
 
 @RunWith(SpringRunner.class)
+@SpringBootTest(properties = {"spring.profiles.active=testing"})
 public class EchoControllerTests
 {
     /**

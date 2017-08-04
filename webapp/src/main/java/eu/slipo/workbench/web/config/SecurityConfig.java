@@ -21,6 +21,9 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.authentication.switchuser.SwitchUserFilter;
+
+import eu.slipo.workbench.web.logging.filter.MappedDiagnosticContextFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -99,5 +102,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter
         security.exceptionHandling()
             .authenticationEntryPoint(
                 new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED));
+        
+        // Add servlet filters
+        
+        security.addFilterAfter(
+            new MappedDiagnosticContextFilter(), SwitchUserFilter.class);
     }
 }

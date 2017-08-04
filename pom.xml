@@ -30,7 +30,7 @@
 
     <distributionManagement>
         <site>
-            <id>gs-multi-module.example.com</id>
+            <id>slipo.eu</id>
             <url>file://${project.build.directory}/multi-site/</url> 
         </site>
     </distributionManagement>
@@ -119,6 +119,20 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
                 </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <configuration>
+                        <systemProperties>
+                            <property>
+                                <name>log4j.configurationFile</name>
+                                <value>classpath:log4j2-testing.xml</value>
+                            </property>
+                        </systemProperties>
+                    </configuration>
+                </plugin>
+
             </plugins>
         </pluginManagement>
 
