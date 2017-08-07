@@ -1,5 +1,5 @@
 const React = require('react');
-const { Link, Switch, Route, Redirect } = require('react-router-dom');
+const { Switch, Route } = require('react-router-dom');
 const { Container } = require('reactstrap');
 
 const Header = require('./layout/header');

@@ -42,7 +42,7 @@ Root.defaultProps = {
 // Wrap into a connected component
 //
 
-const mapStateToProps = (state, ownProps) => {
+const mapStateToProps = (state) => {
   var locale = state.locale;
   var messages = state.i18n.messages[locale];
   return { locale, messages };

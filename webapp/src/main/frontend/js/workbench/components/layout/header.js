@@ -2,7 +2,6 @@ const React = require('react');
 const PropTypes = require('prop-types');
 const ReactRedux = require('react-redux');
 const { Dropdown, DropdownMenu, DropdownItem } = require('reactstrap');
-const { Link, NavLink } = require('react-router-dom');
 const { FormattedMessage } = require('react-intl');
 
 const { userPropType } = require('../../common-prop-structs');
@@ -143,9 +142,9 @@ Header.propTypes = {
 
 const { logout } = require('../../actions/user');
 
-const mapStateToProps = (state, ownProps) => ({});
+const mapStateToProps = () => ({});
 
-const mapDispatchToProps = (dispatch, ownProps) => ({
+const mapDispatchToProps = (dispatch) => ({
   logout: () => (
     dispatch(logout())
   ),

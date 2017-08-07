@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", function () {
     .then(() => store.dispatch(actions.i18n.changeLocale(language)))
     .then(() => store.dispatch(actions.user.refreshProfile())
       // recover from an "Unauthorized" error
-      .then(undefined, (err) => console.info('Cannot refresh user profile')))
+      .then(undefined, () => console.error('Cannot refresh user profile')))
     .then(() => renderRoot(rootEl));
 });
 

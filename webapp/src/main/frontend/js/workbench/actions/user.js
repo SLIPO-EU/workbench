@@ -11,7 +11,7 @@ var actions = {
   // Basic actions
   //
 
-  requestLogin: (username, redirectUrl = '/') => ({
+  requestLogin: (username) => ({
     type: ActionTypes.user.REQUEST_LOGIN,
     username,
   }),
@@ -66,7 +66,6 @@ var actions = {
     dispatch(actions.requestLogin(username));
     return login(username, password, token).then(
       (r) => {
-        console.info('Logged in');
         var t = moment().valueOf();
         dispatch(actions.loggedIn(username, r.csrfToken, t));
       },
@@ -81,7 +80,6 @@ var actions = {
     dispatch(actions.requestLogout());
     return logout(token).then(
       (r) => {
-        console.info('Logged out');
         var t = moment().valueOf();
         dispatch(actions.loggedOut(r.csrfToken, t));
       },
@@ -91,7 +89,7 @@ var actions = {
       });
   },
 
-  refreshProfile: () => (dispatch, getState) => {
+  refreshProfile: () => (dispatch) => {
     dispatch(actions.requestProfile());
     return getProfile().then(
       (p) => {

@@ -1,5 +1,4 @@
 const fetch = require('fetch');
-const URLSearchParams = require('url-search-params');
 
 const checkStatus = require('../util/check-fetch-status');
 

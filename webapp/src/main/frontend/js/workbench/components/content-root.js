@@ -1,10 +1,7 @@
 const React = require('react');
-const PropTypes = require('prop-types');
 const ReactRedux = require('react-redux');
-const { Link, Switch, Route, Redirect } = require('react-router-dom');
+const { Switch, Route, Redirect } = require('react-router-dom');
 
-const history = require('../history');
-const routeInfo = require('../route-info');
 const { userPropType } = require('../common-prop-structs');
 
 const Home = require('./home');
@@ -49,7 +46,7 @@ ContentRoot.propTypes = {
 // Container component
 //
 
-const mapStateToProps = (state, ownProps) => ({
+const mapStateToProps = (state) => ({
   user: state.user.profile,
 });
 

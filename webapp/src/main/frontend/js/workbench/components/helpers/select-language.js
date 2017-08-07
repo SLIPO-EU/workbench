@@ -1,7 +1,7 @@
 const React = require('react');
 const ReactRedux = require('react-redux');
 const PropTypes = require('prop-types');
-const { Dropdown, ButtonDropdown, DropdownToggle, DropdownMenu, DropdownItem } = require('reactstrap');
+const { Dropdown, DropdownToggle, DropdownMenu, DropdownItem } = require('reactstrap');
 const { FormattedMessage } = require('react-intl');
 const _ = require('lodash');
 
@@ -24,7 +24,7 @@ class SelectLanguage extends React.Component {
     };
   }
 
-  componentWillReceiveProps(nextProps) {
+  componentWillReceiveProps() {
     this.setState({ open: false });
   }
 
@@ -40,7 +40,7 @@ class SelectLanguage extends React.Component {
         <DropdownMenu>
           {_.values(this._supportedLanguages).map(
             y => (
-              <DropdownItem key={language + "/" + y.value} onClick={(ev) => this.props.changeLanguage(y.value)} >
+              <DropdownItem key={language + "/" + y.value} onClick={() => this.props.changeLanguage(y.value)} >
                 <FormattedMessage id={y.titleId} defaultMessage={y.title} />
               </DropdownItem>
             )
@@ -66,11 +66,11 @@ SelectLanguage.propTypes = {
 
 const { changeLocale } = require('../../actions/i18n');
 
-const mapStateToProps = (state, ownProps) => ({
+const mapStateToProps = (state) => ({
   language: state.locale,
 });
 
-const mapDispatchToProps = (dispatch, ownProps) => ({
+const mapDispatchToProps = (dispatch) => ({
   changeLanguage: (language) => dispatch(changeLocale(language)),
 });
 

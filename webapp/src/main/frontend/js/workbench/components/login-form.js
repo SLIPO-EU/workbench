@@ -1,7 +1,7 @@
 const React = require('react');
 const ReactRedux = require('react-redux');
 const PropTypes = require('prop-types');
-const { Link, NavLink } = require('react-router-dom');
+const { NavLink } = require('react-router-dom');
 const { FormattedMessage } = require('react-intl');
 
 //
@@ -27,7 +27,7 @@ class LoginForm extends React.Component {
     });
   }
 
-  _submit(ev) {
+  _submit() {
     var { username, password } = this.state;
 
     this.props.submit(username, password);
@@ -118,12 +118,12 @@ const { navigateTo } = require('../actions/router');
 
 const mapStateToProps = null;
 
-const mapDispatchToProps = (dispatch, ownProps) => ({
+const mapDispatchToProps = (dispatch) => ({
   submit: (username, password) => (
     dispatch(login(username, password))
       .then(() => dispatch(refreshProfile()))
       .then(() => dispatch(navigateTo("/")))
-      .catch((err) => null) // ignore failed logins
+      .catch(() => null) // ignore failed logins
   ),
 });
 

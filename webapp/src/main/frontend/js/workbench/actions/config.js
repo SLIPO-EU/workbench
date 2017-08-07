@@ -10,7 +10,7 @@ var actions = {
     type: ActionTypes.config.REQUEST_CONFIGURATION,
   }),
 
-  loadConfiguration: (config, timestamp) => ({
+  loadConfiguration: (config) => ({
     type: ActionTypes.config.LOAD_CONFIGURATION,
     config,
   }),
@@ -19,7 +19,7 @@ var actions = {
   // Thunk actions
   //
 
-  getConfiguration: () => (dispatch, getState) => {
+  getConfiguration: () => (dispatch) => {
     // Request and load configuration from server
     dispatch(actions.requestConfiguration());
     // Todo fetch and load

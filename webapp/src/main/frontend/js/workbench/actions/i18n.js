@@ -24,17 +24,17 @@ var actions = {
 
   // Thunk actions
 
-  fetchMessages: (locale) => (dispatch, getState) => {
+  fetchMessages: (locale) => (dispatch) => {
     dispatch(actions.requestMessages(locale));
     return getMessages(locale)
       .then(r => dispatch(actions.loadMessages(locale, r)));
   },
 
-  changeLocale: (locale) => (dispatch, getState) => (
+  changeLocale: (locale) => (dispatch) => (
     dispatch(actions.fetchMessages(locale))
       .then(
       () => dispatch(actions.setLocale(locale)),
-      (err) => console.warn("No messages for locale " + locale))
+      () => console.warn("No messages for locale " + locale))
   ),
 
 };

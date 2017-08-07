@@ -1,12 +1,12 @@
 const React = require('react');
-const { Route, Link } = require('react-router-dom');
+const { Link } = require('react-router-dom');
 const { Breadcrumb, BreadcrumbItem } = require('reactstrap');
 
 const routeInfo = require('../../route-info');
 
 const MAX_LENGTH = 3; // maximum number of parts for a breadcrumb
 
-module.exports = ({ location, match }) => {
+module.exports = ({ location }) => {
   var paths = location.pathname.split('/')
     .slice(1, 1 + MAX_LENGTH)
     .reduce((res, part) => {
