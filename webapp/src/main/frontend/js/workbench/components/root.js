@@ -1,6 +1,6 @@
 const React = require('react');
 const ReactRedux = require('react-redux');
-const {HashRouter, Route} = require('react-router-dom');
+const { HashRouter, Route } = require('react-router-dom');
 const ReactIntl = require('react-intl');
 
 const history = require('../history');
@@ -18,12 +18,10 @@ ReactIntl.addLocaleData(require('react-intl/locale-data/el'));
 
 const ContentRoot = require('./content-root');
 
-class Root extends React.Component 
-{
-  render() 
-  {
-    var {locale, messages} = this.props; 
-    
+class Root extends React.Component {
+  render() {
+    var { locale, messages } = this.props;
+
     return (
       <ReactIntl.IntlProvider locale={locale} key={locale} messages={messages}>
         <HashRouter history={history}>
@@ -35,7 +33,7 @@ class Root extends React.Component
   }
 }
 
-Root.defaultProps  = {
+Root.defaultProps = {
   locale: 'en',
   messages: {},
 };
@@ -47,7 +45,7 @@ Root.defaultProps  = {
 const mapStateToProps = (state, ownProps) => {
   var locale = state.locale;
   var messages = state.i18n.messages[locale];
-  return {locale, messages};
+  return { locale, messages };
 };
 
 const mapDispatchToProps = null;

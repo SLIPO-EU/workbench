@@ -5,13 +5,12 @@ const ReactDOM = require('react-dom');
 const store = require('./store');
 const Root = require('./components/root.js');
 
-var renderRoot = function (placeholder) 
-{
+var renderRoot = function (placeholder) {
   ReactDOM.render(
     <ReactRedux.Provider store={store}>
       <Root />
-    </ReactRedux.Provider> , 
+    </ReactRedux.Provider>,
     placeholder);
 };
 
-module.exports = {renderRoot};
+module.exports = { renderRoot };

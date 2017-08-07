@@ -1,7 +1,7 @@
 const mirrorToPath = require('./util/path-mirror.js');
 
 module.exports = mirrorToPath({
- 
+
   meta: {
     SET_CSRF_TOKEN: null,
   },
@@ -14,7 +14,7 @@ module.exports = mirrorToPath({
   locale: {
     SET_LOCALE: null,
   },
-  
+
   i18n: {
     REQUEST_MESSAGES: null,
     LOAD_MESSAGES: null,

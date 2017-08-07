@@ -1,4 +1,4 @@
-const {createHashHistory} = require('history');
+const { createHashHistory } = require('history');
 
 const history = createHashHistory();
 

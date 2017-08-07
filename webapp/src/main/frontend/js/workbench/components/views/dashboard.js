@@ -1,7 +1,6 @@
 const React = require('react');
 
-class Dashboard extends React.Component 
-{
+class Dashboard extends React.Component {
   render() {
     return (
       <div className="animated fadeIn">

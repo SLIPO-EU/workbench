@@ -1,4 +1,4 @@
-const {push: navigateTo} = require('react-router-redux'); 
+const { push: navigateTo } = require('react-router-redux');
 
 var actions = {
 

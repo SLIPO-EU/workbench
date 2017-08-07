@@ -1,7 +1,7 @@
 const React = require('react');
-const {Link, Switch, Route, Redirect} = require('react-router-dom');
-const {Container} = require('reactstrap');
- 
+const { Link, Switch, Route, Redirect } = require('react-router-dom');
+const { Container } = require('reactstrap');
+
 const Header = require('./layout/header');
 const Sidebar = require('./layout/sidebar');
 const Breadcrumb = require('./layout/breadcrumb');
@@ -9,7 +9,7 @@ const Aside = require('./layout/aside');
 const Footer = require('./layout/footer');
 
 const routeInfo = require('../route-info');
-const {userPropType} = require('../common-prop-structs');
+const { userPropType } = require('../common-prop-structs');
 
 const Dashboard = require('./views/dashboard');
 
@@ -36,17 +36,15 @@ const Dashboard = require('./views/dashboard');
 //
 /////////////////////////////////////////////////////////////////
 
-class Home extends React.Component 
-{
-  constructor(props)
-  {
+class Home extends React.Component {
+  constructor(props) {
     super(props);
-    
+
     this._toggleSidebar = this._toggleSidebar.bind(this);
     this._styleSidebar = this._styleSidebar.bind(this);
     this._toggleAsideMenu = this._toggleAsideMenu.bind(this);
     this._styleAsideMenu = this._styleAsideMenu.bind(this);
-    
+
     this.state = {
       sidebarOpen: true,
       sidebarStyle: 'fixed', // fixed, compact, minimized, off-canvas
@@ -55,50 +53,45 @@ class Home extends React.Component
     };
   }
 
-  _toggleSidebar() 
-  {
-    this.setState({sidebarOpen: !this.state.sidebarOpen});
+  _toggleSidebar() {
+    this.setState({ sidebarOpen: !this.state.sidebarOpen });
   }
 
-  _styleSidebar(style)
-  {
+  _styleSidebar(style) {
     if (['fixed', 'compact', 'minimized', 'off-canvas', 'mobile-show'].indexOf(style) < 0) {
       console.warn('Ignoring unknown sidebar style: ' + style);
       return;
     }
 
-    this.setState({sidebarStyle: style});
-  }
-  
-  _toggleAsideMenu() 
-  {
-    this.setState({asideOpen: !this.state.asideOpen});
+    this.setState({ sidebarStyle: style });
   }
 
-  _styleAsideMenu(style) 
-  {
+  _toggleAsideMenu() {
+    this.setState({ asideOpen: !this.state.asideOpen });
+  }
+
+  _styleAsideMenu(style) {
     if (['fixed', 'off-canvas'].indexOf(style) < 0) {
       console.warn('Ignoring unknown aside-menu style: ' + style);
       return;
     }
-    
-    this.setState({asideStyle: style});
+
+    this.setState({ asideStyle: style });
   }
 
-  render() 
-  {
+  render() {
     var cssClasses = [
       'app',
       /* header-* */
       'header-fixed',
       /* sidebar-* */
-      this.state.sidebarOpen? null : 'sidebar-hidden',
+      this.state.sidebarOpen ? null : 'sidebar-hidden',
       'sidebar-' + (this.state.sidebarStyle || 'fixed'),
       /* aside-menu-* */
-      this.state.asideOpen? null : 'aside-menu-hidden',
+      this.state.asideOpen ? null : 'aside-menu-hidden',
       'aside-menu-' + (this.state.asideStyle || 'fixed'),
     ];
-   
+
     return (
       <div className={cssClasses.join(' ')}>
         <Header
@@ -107,14 +100,14 @@ class Home extends React.Component
           styleSidebar={this._styleSidebar}
           toggleAsideMenu={this._toggleAsideMenu}
           styleAsideMenu={this._styleAsideMenu}
-         />
+        />
         <div className="app-body">
           <Route path="/" component={Sidebar} />
           <div className="main">
             <Route path="/" component={Breadcrumb} />
             <Container fluid>
               <Switch>
-                <Route path="/dashboard" name={routeInfo.get('/dashboard').title} component={Dashboard}/>
+                <Route path="/dashboard" name={routeInfo.get('/dashboard').title} component={Dashboard} />
               </Switch>
             </Container>
           </div>

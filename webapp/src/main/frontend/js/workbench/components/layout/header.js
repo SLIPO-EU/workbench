@@ -1,11 +1,11 @@
 const React = require('react');
 const PropTypes = require('prop-types');
 const ReactRedux = require('react-redux');
-const {Dropdown, DropdownMenu, DropdownItem} = require('reactstrap');
-const {Link, NavLink} = require('react-router-dom');
-const {FormattedMessage} = require('react-intl');
+const { Dropdown, DropdownMenu, DropdownItem } = require('reactstrap');
+const { Link, NavLink } = require('react-router-dom');
+const { FormattedMessage } = require('react-intl');
 
-const {userPropType} = require('../../common-prop-structs');
+const { userPropType } = require('../../common-prop-structs');
 
 //
 // Presentational component
@@ -13,10 +13,8 @@ const {userPropType} = require('../../common-prop-structs');
 
 const SelectLanguage = require('../helpers/select-language');
 
-class Header extends React.Component 
-{
-  constructor(props) 
-  {
+class Header extends React.Component {
+  constructor(props) {
     super(props);
 
     this._toggleDropdown = this._toggleDropdown.bind(this);
@@ -25,33 +23,31 @@ class Header extends React.Component
       dropdownOpen: false,
     };
   }
-   
-  _toggleDropdown() 
-  {
-    this.setState({dropdownOpen: !this.state.dropdownOpen});
+
+  _toggleDropdown() {
+    this.setState({ dropdownOpen: !this.state.dropdownOpen });
   }
 
-  render() 
-  {
+  render() {
     return (
       <header className="app-header navbar">
-        
-        <button className="navbar-toggler mobile-sidebar-toggler d-lg-none" type="button" 
-            onClick={() => this.props.styleSidebar('mobile-show')}>
+
+        <button className="navbar-toggler mobile-sidebar-toggler d-lg-none" type="button"
+          onClick={() => this.props.styleSidebar('mobile-show')}>
           <i className="fa fa-navicon"></i>
         </button>
         <a className="navbar-brand" href="#"></a>
-        
+
         {/* left-aligned menu items */}
         <ul className="nav navbar-nav d-md-down-none mr-auto">
           {/* toggle sidebar */}
           <li className="nav-item">
-            <button className="nav-link navbar-toggler sidebar-toggler" type="button" 
-                onClick={this.props.toggleSidebar}>
+            <button className="nav-link navbar-toggler sidebar-toggler" type="button"
+              onClick={this.props.toggleSidebar}>
               <i className="fa fa-navicon"></i>
             </button>
-          </li>       
-          {/* left-aligned top navbar items */} 
+          </li>
+          {/* left-aligned top navbar items */}
           <li className="nav-item px-3">
             <a className="nav-link" href="#/dashboard">
               <FormattedMessage id="links.dashboard" defaultMessage="Dashboard" />
@@ -81,11 +77,11 @@ class Header extends React.Component
           </li>
           <li className="nav-item">
             <Dropdown isOpen={this.state.dropdownOpen} toggle={this._toggleDropdown}>
-              <button onClick={this._toggleDropdown} className="nav-link dropdown-toggle" data-toggle="dropdown" type="button" 
-                  aria-haspopup="true" aria-expanded={this.state.dropdownOpen}>
-                <img src={'https://github.com/identicons/drmalex07.png'} className="img-avatar" 
+              <button onClick={this._toggleDropdown} className="nav-link dropdown-toggle" data-toggle="dropdown" type="button"
+                aria-haspopup="true" aria-expanded={this.state.dropdownOpen}>
+                <img src={'https://github.com/identicons/drmalex07.png'} className="img-avatar"
                   alt={this.props.user.username}
-                 />
+                />
                 <span className="d-md-down-none">{this.props.user.username}</span>
               </button>
               <DropdownMenu className="dropdown-menu-right">
@@ -119,8 +115,8 @@ class Header extends React.Component
           </li>
           {/* toggle aside menu */}
           <li className="nav-item d-md-down-none">
-            <button className="nav-link navbar-toggler aside-menu-toggler" type="button" 
-                onClick={this.props.toggleAsideMenu}>
+            <button className="nav-link navbar-toggler aside-menu-toggler" type="button"
+              onClick={this.props.toggleAsideMenu}>
               <i className="fa fa-navicon"></i>
             </button>
           </li>
@@ -145,7 +141,7 @@ Header.propTypes = {
 // Container component
 //
 
-const {logout} = require('../../actions/user');
+const { logout } = require('../../actions/user');
 
 const mapStateToProps = (state, ownProps) => ({});
 
@@ -153,7 +149,7 @@ const mapDispatchToProps = (dispatch, ownProps) => ({
   logout: () => (
     dispatch(logout())
   ),
-}); 
+});
 
 Header = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(Header);
 

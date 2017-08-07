@@ -1,11 +1,11 @@
 const React = require('react');
 const PropTypes = require('prop-types');
 const ReactRedux = require('react-redux');
-const {Link, Switch, Route, Redirect} = require('react-router-dom');
+const { Link, Switch, Route, Redirect } = require('react-router-dom');
 
 const history = require('../history');
 const routeInfo = require('../route-info');
-const {userPropType} = require('../common-prop-structs');
+const { userPropType } = require('../common-prop-structs');
 
 const Home = require('./home');
 const LoginForm = require('./login-form');
@@ -16,17 +16,14 @@ const ResetPasswordForm = () => (<p>Todo: Reset password</p>);
 // Presentational component
 //
 
-class ContentRoot extends React.Component
-{
-  constructor(props)
-  {
+class ContentRoot extends React.Component {
+  constructor(props) {
     super(props);
   }
- 
-  render() 
-  {
+
+  render() {
     var authenticated = (this.props.user != null);
-    
+
     if (!authenticated) {
       return (
         <Switch>
@@ -53,7 +50,7 @@ ContentRoot.propTypes = {
 //
 
 const mapStateToProps = (state, ownProps) => ({
-  user: state.user.profile,  
+  user: state.user.profile,
 });
 
 const mapDispatchToProps = null;

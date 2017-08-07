@@ -3,7 +3,7 @@ const _ = require('lodash');
 const api = require('./api/user');
 
 module.exports = {
-  
+
   getProfile: () => (
     api.getProfile().then(res => {
       var p = res.result;

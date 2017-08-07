@@ -3,27 +3,22 @@
     "en": "English",
     "el": "Greek"
   },
-  
   "links": {
     "dashboard": "Dashboard",
-    "users": "Users", 
-    "settings": "Settings" 
+    "users": "Users",
+    "settings": "Settings"
   },
-  
   "login": {
     "title": "Login",
     "subtitle": "Sign in into your account",
     "login": "Login",
     "forgot-password": "Forgot password?"
   },
-
   "register": {
     "title": "Sign up!",
     "register": "Register"
   },
-
   "home": {
     "welcome": "Home, sweet home!"
   }
 }
-

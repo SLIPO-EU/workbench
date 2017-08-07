@@ -3,27 +3,22 @@
     "en": "Αγγλικά",
     "el": "Ελληνικά"
   },
-  
   "links": {
     "dashboard": "Πίνακας Ελέγχου",
-    "users": "Χρήστες", 
-    "settings": "Ρυθμίσεις" 
+    "users": "Χρήστες",
+    "settings": "Ρυθμίσεις"
   },
-  
   "login": {
     "title": "Είσοδος",
     "subtitle": "Εισοδος στον λογαριασμό σου",
     "login": "Είσοδος",
     "forgot-password": "Ξέχασες το password?"
   },
-
   "register": {
     "title": "Εγγραφή!",
     "register": "Εγγραφή"
   },
-
   "home": {
     "welcome": "Σπιτι μου, σπιτάκι μου!"
   }
 }
-

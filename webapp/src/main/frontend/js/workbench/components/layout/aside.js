@@ -1,7 +1,6 @@
 const React = require('react');
 
-class Aside extends React.Component 
-{
+class Aside extends React.Component {
   render() {
     return (
       <aside className="aside-menu">

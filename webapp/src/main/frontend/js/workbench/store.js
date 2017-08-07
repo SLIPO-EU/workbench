@@ -1,7 +1,7 @@
 const Redux = require('redux');
 const ReduxLogger = require('redux-logger');
 const ReduxThunk = require('redux-thunk');
-const {routerMiddleware}  = require('react-router-redux');
+const { routerMiddleware } = require('react-router-redux');
 
 const rootReducer = require('./reducers/index');
 const history = require('./history');
@@ -16,7 +16,7 @@ var middleware = [
 /* global process */
 if (process.env.NODE_ENV != 'production') {
   // The logger middleware should always be last
-  middleware.push(ReduxLogger.createLogger({colors: {}}));
+  middleware.push(ReduxLogger.createLogger({ colors: {} }));
 }
 
 var initialState = {};

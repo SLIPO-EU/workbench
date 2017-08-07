@@ -1,10 +1,8 @@
 const React = require('react');
 const PropTypes = require('prop-types');
 
-class RegisterForm extends React.Component 
-{
-  render() 
-  {
+class RegisterForm extends React.Component {
+  render() {
     return (
       <div className="app flex-row align-items-center">
         <div className="container">
@@ -16,19 +14,19 @@ class RegisterForm extends React.Component
                   <p className="text-muted">Create your account</p>
                   <div className="input-group mb-3">
                     <span className="input-group-addon"><i className="icon-user"></i></span>
-                    <input type="text" className="form-control" placeholder="Username"/>
+                    <input type="text" className="form-control" placeholder="Username" />
                   </div>
                   <div className="input-group mb-3">
                     <span className="input-group-addon">@</span>
-                    <input type="text" className="form-control" placeholder="Email"/>
+                    <input type="text" className="form-control" placeholder="Email" />
                   </div>
                   <div className="input-group mb-3">
                     <span className="input-group-addon"><i className="icon-lock"></i></span>
-                    <input type="password" className="form-control" placeholder="Password"/>
+                    <input type="password" className="form-control" placeholder="Password" />
                   </div>
                   <div className="input-group mb-4">
                     <span className="input-group-addon"><i className="icon-lock"></i></span>
-                    <input type="password" className="form-control" placeholder="Repeat password"/>
+                    <input type="password" className="form-control" placeholder="Repeat password" />
                   </div>
                   <button type="button" className="btn btn-block btn-success">Create Account</button>
                 </div>

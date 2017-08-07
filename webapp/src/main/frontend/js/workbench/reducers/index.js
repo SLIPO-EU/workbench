@@ -8,7 +8,7 @@ const reduceI18n = require('./i18n');
 
 module.exports = Redux.combineReducers({
   meta: reduceMeta,
-  locale:reduceLocale,
+  locale: reduceLocale,
   i18n: reduceI18n,
   config: reduceConfig,
   user: reduceUser,

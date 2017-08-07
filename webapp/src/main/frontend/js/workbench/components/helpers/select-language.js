@@ -1,8 +1,8 @@
 const React = require('react');
 const ReactRedux = require('react-redux');
 const PropTypes = require('prop-types');
-const {Dropdown, ButtonDropdown, DropdownToggle, DropdownMenu, DropdownItem} = require('reactstrap');
-const {FormattedMessage} = require('react-intl');
+const { Dropdown, ButtonDropdown, DropdownToggle, DropdownMenu, DropdownItem } = require('reactstrap');
+const { FormattedMessage } = require('react-intl');
 const _ = require('lodash');
 
 //
@@ -10,14 +10,13 @@ const _ = require('lodash');
 //
 
 class SelectLanguage extends React.Component {
-  
-  constructor(props)
-  {
+
+  constructor(props) {
     super(props);
 
     this._supportedLanguages = {
-      'en': {value: 'en', titleId: 'locales.en', title: 'English'},
-      'el': {value: 'el', titleId: 'locales.el', title: 'Greek'},
+      'en': { value: 'en', titleId: 'locales.en', title: 'English' },
+      'el': { value: 'el', titleId: 'locales.el', title: 'Greek' },
     };
 
     this.state = {
@@ -25,18 +24,16 @@ class SelectLanguage extends React.Component {
     };
   }
 
-  componentWillReceiveProps(nextProps) 
-  {
-    this.setState({open: false});
-  } 
+  componentWillReceiveProps(nextProps) {
+    this.setState({ open: false });
+  }
 
-  render() 
-  {
-    var {language} = this.props;
+  render() {
+    var { language } = this.props;
     var languageInfo = this._supportedLanguages[language];
 
-    return ( 
-      <Dropdown isOpen={this.state.open} toggle={() => this.setState({open: !this.state.open})}>
+    return (
+      <Dropdown isOpen={this.state.open} toggle={() => this.setState({ open: !this.state.open })}>
         <DropdownToggle caret size="sm">
           <FormattedMessage id={languageInfo.titleId} defaultMessage={languageInfo.title} />
         </DropdownToggle>
@@ -67,10 +64,10 @@ SelectLanguage.propTypes = {
 // Wrap into a connected component
 //
 
-const {changeLocale} = require('../../actions/i18n');
+const { changeLocale } = require('../../actions/i18n');
 
 const mapStateToProps = (state, ownProps) => ({
-  language: state.locale,  
+  language: state.locale,
 });
 
 const mapDispatchToProps = (dispatch, ownProps) => ({

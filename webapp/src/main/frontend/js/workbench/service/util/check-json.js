@@ -1,7 +1,6 @@
 const _ = require('lodash');
 
-function checkError(r) 
-{
+function checkError(r) {
   if (_.isEmpty(r.errors)) {
     return r;
   } else {
@@ -10,4 +9,4 @@ function checkError(r)
   }
 }
 
-module.exports = {checkError};
+module.exports = { checkError };

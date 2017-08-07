@@ -3,7 +3,7 @@ const moment = require('moment');
 
 const ActionTypes = require('../action-types');
 
-const {login, logout, getProfile, saveProfile} = require('../service/user');
+const { login, logout, getProfile, saveProfile } = require('../service/user');
 
 var actions = {
 
@@ -14,7 +14,7 @@ var actions = {
   requestLogin: (username, redirectUrl = '/') => ({
     type: ActionTypes.user.REQUEST_LOGIN,
     username,
-  }), 
+  }),
 
   loggedIn: (username, token, timestamp) => ({
     type: ActionTypes.user.LOGIN,
@@ -35,8 +35,8 @@ var actions = {
 
   requestProfile: () => ({
     type: ActionTypes.user.REQUEST_PROFILE,
-  }), 
-  
+  }),
+
   loadProfile: (profile, timestamp) => ({
     type: ActionTypes.user.LOAD_PROFILE,
     profile,
@@ -47,22 +47,22 @@ var actions = {
     type: ActionTypes.user.SET_PROFILE,
     profile,
     timestamp,
-  }), 
-  
+  }),
+
   requestSaveProfile: () => ({
     type: ActionTypes.user.REQUEST_SAVE_PROFILE,
-  }), 
+  }),
 
   savedProfile: () => ({
     type: ActionTypes.user.SAVED_PROFILE,
-  }), 
+  }),
 
   //
   // Thunk actions
   //
 
   login: (username, password) => (dispatch, getState) => {
-    var {meta: {csrfToken: token}} = getState();
+    var { meta: { csrfToken: token } } = getState();
     dispatch(actions.requestLogin(username));
     return login(username, password, token).then(
       (r) => {
@@ -77,7 +77,7 @@ var actions = {
   },
 
   logout: () => (dispatch, getState) => {
-    var {meta: {csrfToken: token}} = getState();
+    var { meta: { csrfToken: token } } = getState();
     dispatch(actions.requestLogout());
     return logout(token).then(
       (r) => {
@@ -90,14 +90,14 @@ var actions = {
         throw err;
       });
   },
-  
-  refreshProfile: () => (dispatch, getState) => { 
+
+  refreshProfile: () => (dispatch, getState) => {
     dispatch(actions.requestProfile());
     return getProfile().then(
       (p) => {
         var t = moment().valueOf();
         dispatch(actions.loadProfile(p, t));
-      },  
+      },
       (err) => {
         console.warn('Cannot load user profile: ' + err.message);
         throw err;
@@ -105,7 +105,7 @@ var actions = {
   },
 
   saveProfile: () => (dispatch, getState) => {
-    var {meta: {csrfToken: token}, user: {profile}} = getState();
+    var { meta: { csrfToken: token }, user: { profile } } = getState();
     if (_.isEmpty(profile))
       return Promise.reject('The user profile is empty!');
 
