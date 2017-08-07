@@ -22,10 +22,6 @@
     "register": "Register"
   },
 
-  "greeting": {
-    "welcome": "Hello {name}!"
-  },
-
   "home": {
     "welcome": "Home, sweet home!"
   }

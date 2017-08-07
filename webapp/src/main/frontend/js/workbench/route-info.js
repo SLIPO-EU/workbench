@@ -6,9 +6,6 @@ const routes = new Map([
   ['/dashboard', {
     name: 'dashboard', title: 'Dashboard'
   }],
-  ['/greet', {
-    name: 'greeter', title: 'Greeter',
-  }],
 ]);
 
 module.exports = routes;

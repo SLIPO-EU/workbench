@@ -81,14 +81,7 @@ class Sidebar extends React.Component
               </ul>
             </li>
 
-            <li className="nav-title">{'About'}</li>
-
-            <li className="nav-item">
-              <NavLink to={'/greet'} className="nav-link" activeClassName="active">
-                <i className="fa fa-life-saver"></i>{'Greet!'}
-              </NavLink>
-            </li>
-            
+            <li className="nav-title">{'About'}</li>           
 
           </ul>
         </nav>

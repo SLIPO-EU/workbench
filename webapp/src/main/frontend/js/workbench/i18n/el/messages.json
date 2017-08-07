@@ -22,10 +22,6 @@
     "register": "Εγγραφή"
   },
 
-  "greeting": {
-    "welcome": "Καλημέρα {name}!"
-  },
-
   "home": {
     "welcome": "Σπιτι μου, σπιτάκι μου!"
   }

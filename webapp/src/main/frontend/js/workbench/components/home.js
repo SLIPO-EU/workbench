@@ -12,8 +12,6 @@ const routeInfo = require('../route-info');
 const {userPropType} = require('../common-prop-structs');
 
 const Dashboard = require('./views/dashboard');
-const Greeter = require('./views/greeter');
-
 
 /////////////////////////////////////////////////////////////////
 //
@@ -116,7 +114,6 @@ class Home extends React.Component
             <Route path="/" component={Breadcrumb} />
             <Container fluid>
               <Switch>
-                <Route path="/greet" name={routeInfo.get('/greet').title} component={Greeter}/>
                 <Route path="/dashboard" name={routeInfo.get('/dashboard').title} component={Dashboard}/>
               </Switch>
             </Container>
