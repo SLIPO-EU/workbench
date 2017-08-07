@@ -1,9 +1,9 @@
-module.exports = function(grunt) {
+module.exports = function (grunt) {
 
   const develop = process.env.NODE_ENV != 'production';
 
   // Project configuration
-  
+
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
 
@@ -21,26 +21,26 @@ module.exports = function(grunt) {
         src: ['<%= buildDir %>/*'],
       },
     },
-    
-    
+
+
     uglify: {
       options: {
         banner: '/*! Package: <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n',
         sourceMap: true,
       },
       'workbench': {
-        files: { 
+        files: {
           '<%= buildDir %>/js/workbench.min.js': ['<%= buildDir %>/js/workbench.js'],
         },
       },
       'vendor': {
         files: {
           '<%= buildDir %>/js/vendor/util.min.js': ['<%= buildDir %>/js/vendor/util.js'],
-          '<%= buildDir %>/js/vendor/react-with-redux.min.js': ['<%= buildDir %>/js/vendor/react-with-redux.js'],         
+          '<%= buildDir %>/js/vendor/react-with-redux.min.js': ['<%= buildDir %>/js/vendor/react-with-redux.js'],
         },
       },
     },
-   
+
 
     browserify: {
       options: {
@@ -51,10 +51,10 @@ module.exports = function(grunt) {
           // Exclude the modules below from being packaged into the main JS file:
           // The following will be resolved globally (shim) or via earlier vendor includes
           external: [
-            'fetch', 'lodash', 'immutable', 'rgbcolor', 'history', 'sprintf', 'url-search-params', 'flat',
-            'moment', 'moment/locale/el', 'moment/locale/es', 'moment/locale/de',
-            'react', 'react-dom', 'prop-types', 'react-router-dom', 
-            'redux', 'redux-logger', 'redux-thunk', 'react-router-redux', 'react-redux', 
+            'fetch', 'lodash', 'immutable', 'history', 'url-search-params', 'flat',
+            'moment', 'moment/locale/el', 
+            'react', 'react-dom', 'prop-types', 'react-router-dom',
+            'redux', 'redux-logger', 'redux-thunk', 'react-router-redux', 'react-redux',
             'reactstrap', 'react-transition-group',
             'intl-messageformat', 'react-intl', 'react-intl/locale-data/en', 'react-intl/locale-data/el',
           ]
@@ -69,15 +69,13 @@ module.exports = function(grunt) {
             'isomorphic-fetch:fetch',
           ],
           require: [
-            'moment', 'moment/locale/el', 'moment/locale/es', 'moment/locale/de',
+            'moment', 'moment/locale/el',
             'url-search-params',
             'intl-messageformat',
-            'lodash', 
+            'lodash',
             'flat',
             'history',
             'immutable',
-            'rgbcolor',
-            'sprintf',
           ],
         },
         files: {
@@ -90,7 +88,7 @@ module.exports = function(grunt) {
             'tether:reactstrap-tether',
           ],
           require: [
-            'react', 'react-dom', 'prop-types', 'react-router-dom', 
+            'react', 'react-dom', 'prop-types', 'react-router-dom',
             'redux', 'redux-logger', 'redux-thunk', 'react-router-redux', 'react-redux',
             'reactstrap', 'react-transition-group',
             'react-intl', 'react-intl/locale-data/en', 'react-intl/locale-data/el',
@@ -106,10 +104,10 @@ module.exports = function(grunt) {
     sass: {
       'workbench': {
         options: {
-          style: develop? 'expanded' : 'compressed',
+          style: develop ? 'expanded' : 'compressed',
         },
         files: {
-          '<%= buildDir %>/css/style.css': ['<%= sourceDir %>/scss/style.scss'], 
+          '<%= buildDir %>/css/style.css': ['<%= sourceDir %>/scss/style.scss'],
         },
       },
     },
@@ -149,7 +147,7 @@ module.exports = function(grunt) {
           },
         ],
       },
-      'workbench-stylesheets': { 
+      'workbench-stylesheets': {
         files: [
           {
             expand: true,
@@ -161,7 +159,7 @@ module.exports = function(grunt) {
         ],
       },
       'vendor': {
-        files: [ 
+        files: [
           {
             expand: true,
             filter: 'isFile',
@@ -177,7 +175,7 @@ module.exports = function(grunt) {
     eslint: {
       'workbench': {
         options: {
-          configFile: develop? '.eslintrc.develop.js' : '.eslintrc.js',
+          configFile: develop ? '.eslintrc.develop.js' : '.eslintrc.js',
         },
         src: [
           '<%= sourceDir %>/js/workbench/**/*.js',
@@ -189,12 +187,12 @@ module.exports = function(grunt) {
 
     watch: {
       'workbench-scripts': {
-         files: ['<%= sourceDir %>/js/workbench/**/*.js'],
-         tasks: ['build:workbench', 'copy:workbench-scripts'],
+        files: ['<%= sourceDir %>/js/workbench/**/*.js'],
+        tasks: ['build:workbench', 'copy:workbench-scripts'],
       },
       'workbench-i18n-data': {
-         files: ['<%= sourceDir %>/js/workbench/i18n/**/*.json'],
-         tasks: ['copy:workbench-i18n-data'],
+        files: ['<%= sourceDir %>/js/workbench/i18n/**/*.json'],
+        tasks: ['copy:workbench-i18n-data'],
 
       },
       'workbench-stylesheets': {
@@ -203,7 +201,7 @@ module.exports = function(grunt) {
       },
     },
 
-    
+
     jsdoc: {
       'workbench': {
         src: [
@@ -242,22 +240,22 @@ module.exports = function(grunt) {
     'browserify:vendor-util', 'browserify:vendor-react',
   ]);
 
-  grunt.registerTask('build:workbench', develop?
+  grunt.registerTask('build:workbench', develop ?
     ['sass:workbench', 'eslint:workbench', 'browserify:workbench', 'copy:workbench-i18n-data'] :
     ['sass:workbench', 'eslint:workbench', 'browserify:workbench', 'copy:workbench-i18n-data', 'uglify:workbench']
   );
-  
-  grunt.registerTask('build:vendor', develop?
+
+  grunt.registerTask('build:vendor', develop ?
     ['browserify'] :
     ['browserify:vendor', 'uglify:vendor']
   );
-  
+
   grunt.registerTask('build', ['build:workbench', 'build:vendor']);
-  
+
   grunt.registerTask('copy:workbench', [
     'copy:workbench-scripts', 'copy:workbench-i18n-data', 'copy:workbench-stylesheets',
   ]);
-  grunt.registerTask('deploy', ['copy']);  
+  grunt.registerTask('deploy', ['copy']);
 
   grunt.registerTask('default', ['build', 'deploy']);
 };
