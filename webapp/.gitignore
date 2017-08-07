@@ -33,3 +33,11 @@ jspm_packages
 /Gruntfile-local.js
 
 .sass-cache
+
+# Visual Studio Code
+
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
