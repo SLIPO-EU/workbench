@@ -24,6 +24,8 @@ public class Command implements ApplicationRunner
     
     private static Logger logger = LoggerFactory.getLogger(Command.class);
     
+    private static final String DEFAULT_SUBCOMMAND = "help";
+    
     @Autowired
     ApplicationContext applicationContext;
     
@@ -33,20 +35,17 @@ public class Command implements ApplicationRunner
         List<String> p = args.getNonOptionArgs();
       
         // Find a proper SubCommand bean to delegate to 
-        
-        String subname = p.isEmpty()? "help" : p.get(0);
+        String subname = p.isEmpty()? DEFAULT_SUBCOMMAND : p.get(0);
         SubCommand subcommand = applicationContext.getBean(subname, SubCommand.class);
         
-        // Build arguments to feed subcommand
-        
+        // Forward remaining arguments to sub-command
         HashMap<String, String> args1 = new HashMap<>();
         for (String name: args.getOptionNames()) {
             List<String> vals = args.getOptionValues(name);
-            args1.put(name, vals.isEmpty()? null : vals.get(0)); // 1st value
+            args1.put(name, vals.isEmpty()? null : vals.get(0)); // use 1st value
         }
         
         // Delegate
-        
         subcommand.run(args1);
     } 
 
