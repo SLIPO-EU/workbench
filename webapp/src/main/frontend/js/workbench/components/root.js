@@ -1,6 +1,6 @@
 const React = require('react');
 const ReactRedux = require('react-redux');
-const { HashRouter, Route } = require('react-router-dom');
+const { BrowserRouter, Route } = require('react-router-dom');
 const ReactIntl = require('react-intl');
 
 const history = require('../history');
@@ -24,10 +24,10 @@ class Root extends React.Component {
 
     return (
       <ReactIntl.IntlProvider locale={locale} key={locale} messages={messages}>
-        <HashRouter history={history}>
+        <BrowserRouter history={history}>
           {/* wrap connected component in a Route to be aware of navigation */}
           <Route path="/" component={ContentRoot} />
-        </HashRouter>
+        </BrowserRouter>
       </ReactIntl.IntlProvider>
     );
   }

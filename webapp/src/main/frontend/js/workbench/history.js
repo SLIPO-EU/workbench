@@ -1,6 +1,5 @@
-const { createHashHistory } = require('history');
+const { createBrowserHistory } = require('history');
 
-const history = createHashHistory();
+const history = createBrowserHistory();
 
 module.exports = history;
-

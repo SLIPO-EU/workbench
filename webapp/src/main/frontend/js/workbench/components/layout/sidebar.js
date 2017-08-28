@@ -43,7 +43,7 @@ class Sidebar extends React.Component {
             </li>
 
             <li className={'nav-item nav-dropdown ' + (expanded('/examples') ? 'open' : '')}>
-              <a className="nav-link nav-dropdown-toggle" href="#" onClick={() => (toggle('/examples'), false)}>
+              <a className="nav-link nav-dropdown-toggle" onClick={() => (toggle('/examples'), false)}>
                 {'Examples'}
               </a>
               <ul className="nav-dropdown-items">
@@ -61,7 +61,7 @@ class Sidebar extends React.Component {
             </li>
 
             <li className={'nav-item nav-dropdown ' + (expanded('/pages') ? 'open' : '')}>
-              <a className="nav-link nav-dropdown-toggle" href="#" onClick={() => (toggle('/pages'), false)}>
+              <a className="nav-link nav-dropdown-toggle" onClick={() => (toggle('/pages'), false)}>
                 {'Pages'}
               </a>
               <ul className="nav-dropdown-items">
