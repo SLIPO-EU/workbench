@@ -19,9 +19,10 @@
             <DefaultRolloverStrategy max="10" />
         </RollingFile>
 
-        <JDBC name="table" tableName="rpc.log4j_message">
+        <JDBC name="table" tableName="public.log4j_message">
             <ConnectionFactory 
                 class="eu.slipo.workbench.common.logging.jdbc.ConnectionFactory" method="dataSource" />
+            <Column name="application" literal="'rpc-server'" />
             <Column name="generated" isEventTimestamp="true" />
             <Column name="level" pattern="%level" isUnicode="false" />
             <Column name="logger" pattern="%logger" isUnicode="false" />
