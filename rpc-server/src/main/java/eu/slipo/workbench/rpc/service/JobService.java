@@ -1,11 +1,13 @@
 package eu.slipo.workbench.rpc.service;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.JobExecutionException;
 import org.springframework.batch.core.JobInstance;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.launch.NoSuchJobException;
@@ -16,14 +18,23 @@ import org.springframework.batch.core.launch.NoSuchJobException;
 public interface JobService
 {
     /**
+     * List names of registered jobs.
+     */
+    Collection<String> getNames();
+    
+    /**
      * Start (or restart) a new job by name, passing a map of parameters.
      * <p>
      * If a {@link JobInstance} with the same identifying parameters exists, and
      * is failed, then it will be restarted (if complete, an exception is raised). 
-     * If no matching {@link JobInstance} is found, then a new will be created and started. 
-     * @throws NoSuchJobException 
+     * If no matching {@link JobInstance} is found, then a new will be created and started.
+     * 
+     * @param jobName
+     * @param params
+     * @return the started job execution
+     * @throws JobExecutionException if the job could not be started (or restarted).
      */
-    JobExecution start(String jobName, JobParameters params);
+    JobExecution start(String jobName, JobParameters params) throws JobExecutionException;
     
     /**
      * Stop a running job execution ({@link JobExecution}). If given execution does
@@ -150,23 +161,26 @@ public interface JobService
     JobExecution findRunningExecution(String jobName, long instanceId);
     
     /**
-     * Mark the running execution (if any) of a given job instance as {@link BatchStatus#STOPPED}.
+     * Reset a running execution of a given job instance to a non-running status.
      * 
      * <p>
-     * Note #1: This method does not attempt to stop a running task; it only marks it as {@link BatchStatus#STOPPED}.
+     * Note: This method does not attempt to stop a running task: only resets its status.
      * Its purpose is to clear the status of an interrupted task (e.g. by the application
-     * shutdown) that appears as {@link BatchStatus#STARTED} but in fact is stopped in an unknown
-     * state. This restoration step is needed because Spring Batch will refuse to restart the same job
-     * instance thinking it already has an active execution.  
-     * 
-     * <p>
-     * Note #2: If we restart a job instance with a latest execution marked as 
-     * {@link BatchStatus#STOPPED}, it will inherit any persisted step-wide execution context.
-     * I.e. it will resume execution from last completed chunk inside interrupted step.  
+     * shutdown) that falsely appears as {@link BatchStatus#STARTED} but in fact is stopped 
+     * in an unknown state. This recovery step is needed because Spring Batch will refuse 
+     * to restart the same job instance thinking it already has an active execution.  
      * 
      * @param jobName
      * @param instanceId
+     * @param newStatus the new status that a running execution should be set to (must 
+     *   be a non-running status)
+     *   
      * @return a {@link JobExecution} instance if cleared, <tt>null</tt> otherwise
      */
-    JobExecution clearRunningExecution(String jobName, long instanceId);
+    JobExecution clearRunningExecution(String jobName, long instanceId, BatchStatus newStatus);
+    
+    default JobExecution clearRunningExecution(String jobName, long instanceId) 
+    {
+        return clearRunningExecution(jobName, instanceId, BatchStatus.ABANDONED);
+    }
 }

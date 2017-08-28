@@ -1,4 +1,4 @@
-package eu.slipo.workbench.web.config;
+package eu.slipo.workbench.command.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;

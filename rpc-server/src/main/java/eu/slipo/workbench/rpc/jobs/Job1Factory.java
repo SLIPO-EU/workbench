@@ -70,13 +70,12 @@ public class Job1Factory implements JobFactory
             // Retrieve something from step-level execution context
             int chunkIndex = stepExecutionContext.getInt("step1.chunk-index", 0);
             
-            try { Thread.sleep(2000); } // simulate some processing
+            try { Thread.sleep(5000); } // simulate some processing
             catch (InterruptedException ex) {
                 logger.info("Interrupted while sleeping!");
             }
             
             chunkIndex++; // pretend that some progress is done
-            logger.info("Done with chunk #{}", chunkIndex);
             
             // Note: Can only write to step-level execution context
             stepExecutionContext.putInt("step1.chunk-index", chunkIndex);
@@ -84,6 +83,7 @@ public class Job1Factory implements JobFactory
             stepExecutionContext.put("step1.key2", "val12");
            
             // A chunk is processed; cycle through same step
+            logger.info("Done with chunk #{}", chunkIndex);
             return RepeatStatus.continueIf(chunkIndex < 12);
         }
     }
@@ -136,8 +136,7 @@ public class Job1Factory implements JobFactory
         {
             JobInstance instance = execution.getJobInstance();
             logger.info("After #{}: status={} exit-status={}", 
-                instance.getInstanceId(), 
-                execution.getStatus(), execution.getExitStatus());
+                instance.getInstanceId(), execution.getStatus(), execution.getExitStatus());
         }  
     }
     
@@ -190,6 +189,7 @@ public class Job1Factory implements JobFactory
             .start(step1())
             .next(step2())
             .listener(new ExecutionListener())
+            //.preventRestart()
             .build();
     }
 

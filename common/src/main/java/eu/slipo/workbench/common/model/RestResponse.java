@@ -51,6 +51,11 @@ public class RestResponse<Result>
         return new RestResponse<>(r);
     }
     
+    public static <R> RestResponse<R> error(ErrorCode code, String description)
+    {
+        return RestResponse.<R>error(new Error(code, description));
+    }
+    
     public static <R> RestResponse<R> error(Error e)
     {
         return new RestResponse<R>(null, Collections.singletonList(e));

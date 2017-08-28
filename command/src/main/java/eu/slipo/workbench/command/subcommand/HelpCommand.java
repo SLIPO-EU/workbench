@@ -2,11 +2,10 @@ package eu.slipo.workbench.command.subcommand;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -19,8 +18,6 @@ public class HelpCommand implements SubCommand
 {
     @Autowired
     ApplicationContext applicationContext;
-    
-    private static Logger logger = LoggerFactory.getLogger(HelpCommand.class);
     
     private SubCommand subcommandByName(String name)
     {
@@ -38,23 +35,30 @@ public class HelpCommand implements SubCommand
         return Arrays.asList(applicationContext.getBeanNamesForType(SubCommand.class));
     }
     
+    private Map<String, SubCommand> subcommands()
+    {
+        return applicationContext.getBeansOfType(SubCommand.class);
+    }
+    
     @Override
     public void run(Map<String, String> args)
     {
-        logger.info(
-            "The following subcommands are available: {}", 
-            String.join(", ", subcommandNames()));
+        for (Entry<String, SubCommand> p: subcommands().entrySet()) {
+            SubCommand c = p.getValue();
+            System.out.printf("%-15.12s %s%n", p.getKey(), c.getDescription());
+        }
     }
 
     @Override
     public void run(String subcommandName, Map<String, String> options)
     {
         // Print help on a given subcommand
-        SubCommand c = subcommandByName(subcommandName);
+        SubCommand c = subcommandName.equals("help")? 
+            this : subcommandByName(subcommandName);
         if (c == null) {
-            logger.info("No such command: {}", subcommandName);
+            System.out.printf("No such command: %s%n", subcommandName);
         } else {
-            logger.info("syntax: {}", c.getSummary());
+            System.out.println(c.getSummary());
         }
     }
 
@@ -74,6 +78,6 @@ public class HelpCommand implements SubCommand
     @Override
     public String getDescription()
     {
-        return "List available commands or help on a specific command";
+        return "List available commands or get help on a specific command";
     }
 }

@@ -6,7 +6,7 @@
     </Properties>
     
     <Appenders>
-        <Console name="console" target="SYSTEM_OUT">
+        <Console name="console" target="SYSTEM_ERR">
             <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n" />
         </Console>
 
@@ -14,7 +14,7 @@
             filepattern="${baseDir}/command-%d{MM-dd-yyyy}-%i.log.gz">
             <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n" />
             <Policies>
-                <SizeBasedTriggeringPolicy size="10 MB" />
+                <SizeBasedTriggeringPolicy size="25MB" />
             </Policies>
             <DefaultRolloverStrategy max="10" />
         </RollingFile>
@@ -22,7 +22,7 @@
     
     <Loggers>
         <Root level="INFO">
-            <AppenderRef ref="console" />
+            <AppenderRef ref="console" level="WARN"/>
             <AppenderRef ref="file" />
         </Root>
     </Loggers>

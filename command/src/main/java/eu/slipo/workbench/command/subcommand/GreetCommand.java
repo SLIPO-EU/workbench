@@ -18,15 +18,16 @@ public class GreetCommand implements SubCommand
     @Override
     public void run(String a1, Map<String, String> options)
     {
-        throw new IllegalArgumentException(
-            "Unexpected non-option argument: " + a1);
+        System.err.printf(
+            "Unexpected non-option argument (%s). Try `help greet`%n", a1);
     }
 
     @Override
     public void run(String a1, String a2, Map<String, String> options)
     {
-        throw new IllegalArgumentException(
-            "Unexpected non-option arguments: " + a1 + ", " + a2);
+        System.err.printf(
+            "Unexpected non-option arguments (%s, %s). Try `help greet`%n",
+            a1, a2);
     }
 
     @Override
@@ -38,6 +39,6 @@ public class GreetCommand implements SubCommand
     @Override
     public String getDescription()
     {
-        return "Says hello to the world";
+        return "Greet the world";
     }
 }

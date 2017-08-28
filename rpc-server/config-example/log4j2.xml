@@ -6,9 +6,8 @@
     </Properties>
     
     <Appenders>
-        <Console name="console" target="SYSTEM_OUT">
-            <PatternLayout
-                pattern="%d{yyyy-MM-dd HH:mm:ss} [%t] %-5p %c{1.}:%L - %m%n" />
+        <Console name="console" target="SYSTEM_ERR">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} [%t] %-5p %c{1.}:%L - %m%n" />
         </Console>
 
         <RollingFile name="file" filename="${baseDir}/service.log"
@@ -33,6 +32,11 @@
     </Appenders>
     
     <Loggers>
+    
+        <Logger name="eu.slipo.workbench.rpc" level="DEBUG" additivity="false">
+            <AppenderRef ref="console" />
+        </Logger>
+    
         <Root level="INFO">
             <AppenderRef ref="console" />
             <AppenderRef ref="table" />
