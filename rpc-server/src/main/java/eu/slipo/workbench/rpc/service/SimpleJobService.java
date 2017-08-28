@@ -20,7 +20,6 @@ import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersInvalidException;
 import org.springframework.batch.core.configuration.JobFactory;
 import org.springframework.batch.core.configuration.JobRegistry;
-import org.springframework.batch.core.configuration.support.MapJobRegistry;
 import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.launch.JobInstanceAlreadyExistsException;
 import org.springframework.batch.core.launch.JobLauncher;
@@ -64,7 +63,7 @@ public class SimpleJobService implements JobService
      */
     @PostConstruct
     private void initialize()
-    {
+    {        
         if (recoverOnInit) {
             int countRunning = 0;
             // Reset status for abnormally terminated (interrupted) jobs.
@@ -108,10 +107,11 @@ public class SimpleJobService implements JobService
             // time we query them): just query repository for names seen so far.
             for (String jobName: explorer.getJobNames()) {
                 for (JobExecution execution: findRunningExecutions(jobName)) {
-                    if (execution.getStatus() != BatchStatus.STOPPING) {
+                    BatchStatus currentStatus = execution.getStatus();
+                    if (currentStatus != BatchStatus.STOPPING) {
                         stop(execution);
-                        logger.debug("Requested from running (as {}) execution {}#{} to stop", 
-                            execution.getStatus(), jobName, execution.getId());
+                        logger.debug("Requested from running ({}) execution {}#{} to stop", 
+                            currentStatus, jobName, execution.getId());
                         countStopped++;
                     }
                     countRunning++;
