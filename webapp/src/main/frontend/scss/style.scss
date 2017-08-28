@@ -1,31 +1,6 @@
-/**
- * Apply local style
- */
+@import "coreui/style";
 
-$font: sans-serif;
+@import "buttons";
+@import "images";
 
-body {
-   font-family: $font;
-}
-
-section {
-   padding: 10px 0px;
-}
-
-section:after {
-  content: '';
-  display: block;
-  float: none;
-  clear: both;
-}
-
-.app-header.navbar {
-
-  .nav-item {
-    padding: 0px 10px;
-    min-width: 60px;
-  } 
-}
-
-@import "./images";
-@import "./buttons";
+@import "custom";

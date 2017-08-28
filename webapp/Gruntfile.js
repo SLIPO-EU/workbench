@@ -196,7 +196,7 @@ module.exports = function (grunt) {
 
       },
       'workbench-stylesheets': {
-        files: ['<%= sourceDir %>/scss/**.scss'],
+        files: ['<%= sourceDir %>/scss/**/*.scss'],
         tasks: ['sass:workbench', 'copy:workbench-stylesheets'],
       },
     },

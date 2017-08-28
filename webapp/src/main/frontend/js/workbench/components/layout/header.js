@@ -1,6 +1,7 @@
 const React = require('react');
 const PropTypes = require('prop-types');
 const ReactRedux = require('react-redux');
+const { NavLink } = require('react-router-dom');
 const { Dropdown, DropdownMenu, DropdownItem } = require('reactstrap');
 const { FormattedMessage } = require('react-intl');
 
@@ -48,19 +49,19 @@ class Header extends React.Component {
           </li>
           {/* left-aligned top navbar items */}
           <li className="nav-item px-3">
-            <a className="nav-link" href="#/dashboard">
+            <NavLink to={'/dashboard'} className="nav-link" activeClassName="active">
               <FormattedMessage id="links.dashboard" defaultMessage="Dashboard" />
-            </a>
+            </NavLink>
           </li>
           <li className="nav-item px-3">
-            <a className="nav-link" href="#/users">
+            <NavLink to={'/users'} className="nav-link" activeClassName="active">
               <FormattedMessage id="links.users" defaultMessage="Users" />
-            </a>
+            </NavLink>
           </li>
           <li className="nav-item px-3">
-            <a className="nav-link" href="#/settings">
+            <NavLink to={'/settings'} className="nav-link" activeClassName="active">
               <FormattedMessage id="links.settings" defaultMessage="Settings" />
-            </a>
+            </NavLink>
           </li>
         </ul>
 

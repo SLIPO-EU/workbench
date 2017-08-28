@@ -24,13 +24,12 @@
   
   <link rel="stylesheet" th:href="@{/vendor/coreui/css/font-awesome.min.css}" />
   <link rel="stylesheet" th:href="@{/vendor/coreui/css/simple-line-icons.css}" />
-  <link rel="stylesheet" th:href="@{/vendor/coreui/css/style.css}" />
   
   <link rel="stylesheet" th:href="@{/css/style.css}" />
 </head>
 
 <body>
-   <div id="root">Loading root...</div>
+   <div id="root"></div>
 </body>
 
 <script th:if="${@environment.getActiveProfiles()[0] == 'production'}" th:src="@{/js/workbench.min.js}"></script>
