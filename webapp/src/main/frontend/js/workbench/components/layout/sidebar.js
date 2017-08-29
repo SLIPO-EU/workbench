@@ -1,7 +1,10 @@
 const React = require('react');
 const PropTypes = require('prop-types');
+const ReactRedux = require('react-redux');
 const { NavLink } = require('react-router-dom');
 const Immutable = require('immutable');
+
+import * as Roles from '../../model/role';
 
 class Sidebar extends React.Component {
   constructor(props) {
@@ -9,6 +12,15 @@ class Sidebar extends React.Component {
     this.state = {
       expanded: new Immutable.Set(),
     };
+  }
+
+  hasRole(role) {
+    if (!role) {
+      return false;
+    }
+
+    let user = this.props.user;
+    return (user && user.profile.roles.indexOf(role) !== -1);
   }
 
   render() {
@@ -28,58 +40,97 @@ class Sidebar extends React.Component {
         <nav className="sidebar-nav">
           <ul className="nav">
 
-            <li className="nav-title">{'Admin'}</li>
-
             <li className="nav-item">
               <NavLink to={'/dashboard'} className="nav-link" activeClassName="active">
-                <i className="fa fa-dashboard"></i>{'Dashboard'}
+                {'Dashboard'}
               </NavLink>
             </li>
 
-            <li className="nav-item">
-              <NavLink to={'/scheduler'} className="nav-link" activeClassName="active">
-                <i className="fa fa-gears"></i>{'Scheduler'}
-              </NavLink>
-            </li>
-
-            <li className={'nav-item nav-dropdown ' + (expanded('/examples') ? 'open' : '')}>
-              <a className="nav-link nav-dropdown-toggle" onClick={() => (toggle('/examples'), false)}>
-                {'Examples'}
+            <li className={'nav-item nav-dropdown ' + (expanded('/resource') ? 'open' : '')}>
+              <a className="nav-link nav-dropdown-toggle" onClick={() => (toggle('/resource'), false)}>
+                {'Resources'}
               </a>
               <ul className="nav-dropdown-items">
                 <li className="nav-item">
-                  <NavLink to={'/examples/buttons'} className="nav-link" activeClassName="active">
-                    <i className="fa fa-puzzle-piece"></i>{'Buttons'}
+                  <NavLink to={'/resource/explorer'} className="nav-link" activeClassName="active">
+                    <i className="fa fa-database"></i>{'Explorer'}
                   </NavLink>
                 </li>
                 <li className="nav-item">
-                  <NavLink to={'/examples/tables'} className="nav-link" activeClassName="active">
-                    <i className="fa fa-puzzle-piece"></i>{'Tables'}
+                  <NavLink to={'/resource/register'} className="nav-link" activeClassName="active">
+                    <i className="fa fa-pencil"></i>{'Register'}
                   </NavLink>
                 </li>
               </ul>
             </li>
 
-            <li className={'nav-item nav-dropdown ' + (expanded('/pages') ? 'open' : '')}>
-              <a className="nav-link nav-dropdown-toggle" onClick={() => (toggle('/pages'), false)}>
-                {'Pages'}
+            <li className={'nav-item nav-dropdown ' + (expanded('/process') ? 'open' : '')}>
+              <a className="nav-link nav-dropdown-toggle" onClick={() => (toggle('/process'), false)}>
+                {'Data Processing'}
               </a>
               <ul className="nav-dropdown-items">
                 <li className="nav-item">
-                  <NavLink to={'/pages/login'} className="nav-link" activeClassName="active">
-                    <i className="fa fa-file-text-o"></i>{'Login'}
+                  <NavLink to={'/process/scheduler'} className="nav-link" activeClassName="active">
+                    <i className="fa fa-clock-o"></i>{'Scheduler'}
                   </NavLink>
                 </li>
                 <li className="nav-item">
-                  <NavLink to={'/pages/register'} className="nav-link" activeClassName="active">
-                    <i className="fa fa-file-text-o"></i>{'Register'}
+                  <NavLink to={'/process/design'} className="nav-link" activeClassName="active">
+                    <i className="fa fa-magic"></i>{'Design'}
                   </NavLink>
                 </li>
               </ul>
             </li>
 
-            <li className="nav-title">{'About'}</li>
+            <li className={'nav-item nav-dropdown ' + (expanded('/recipe') ? 'open' : '')}>
+              <a className="nav-link nav-dropdown-toggle" onClick={() => (toggle('/recipe'), false)}>
+                {'Recipes'}
+              </a>
+              <ul className="nav-dropdown-items">
+                <li className="nav-item">
+                  <NavLink to={'/recipe/overview'} className="nav-link" activeClassName="active">
+                    <i className="fa fa-book"></i>{'Overview'}
+                  </NavLink>
+                </li>
+                <li className="nav-item">
+                  <NavLink to={'/recipe/design'} className="nav-link" activeClassName="active">
+                    <i className="fa fa-magic"></i>{'Design'}
+                  </NavLink>
+                </li>
+              </ul>
+            </li>
 
+            <li className={'nav-item nav-dropdown ' + (expanded('/tools') ? 'open' : '')}>
+              <a className="nav-link nav-dropdown-toggle" onClick={() => (toggle('/tools'), false)}>
+                {'Tools'}
+              </a>
+              <ul className="nav-dropdown-items">
+                <li className="nav-item">
+                  <NavLink to={'/tools/schema-mapper'} className="nav-link" activeClassName="active">
+                    <i className="fa fa-file-code-o"></i>{'Schema Mapper'}
+                  </NavLink>
+                </li>
+              </ul>
+            </li>
+            {this.hasRole(Roles.ADMIN) &&
+              <li className={'nav-item nav-dropdown ' + (expanded('/admin') ? 'open' : '')}>
+                <a className="nav-link nav-dropdown-toggle" onClick={() => (toggle('/admin'), false)}>
+                  {'Admin'}
+                </a>
+                <ul className="nav-dropdown-items">
+                  <li className="nav-item">
+                    <NavLink to={'/admin/user-manager'} className="nav-link" activeClassName="active">
+                      <i className="fa fa-users"></i>{'Users'}
+                    </NavLink>
+                  </li>
+                  <li className="nav-item">
+                    <NavLink to={'/admin/event-viewer'} className="nav-link" activeClassName="active">
+                      <i className="fa fa-heartbeat"></i>{'Event Log'}
+                    </NavLink>
+                  </li>
+                </ul>
+              </li>
+            }
           </ul>
         </nav>
       </div>
@@ -92,5 +143,19 @@ Sidebar.propTypes = {
     pathname: PropTypes.string.isRequired,
   }),
 };
+
+//
+// Wrap into a connected component
+//
+
+const mapStateToProps = (state) => {
+  return {
+    user: state.user
+  };
+};
+
+const mapDispatchToProps = null;
+
+Sidebar = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(Sidebar);
 
 module.exports = Sidebar;
