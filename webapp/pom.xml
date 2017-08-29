@@ -185,6 +185,25 @@
                 </executions>
             </plugin>
 
+            <!-- Define helper Ant tasks -->
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <!-- Create a symbolic link to current target JAR -->
+                        <id>link-to-target-jar</id>
+                        <phase>package</phase>
+                        <goals><goal>run</goal></goals>
+                        <configuration>
+                            <target>
+                                <symlink overwrite="yes" link="${project.build.directory}/${project.artifactId}.jar" 
+                                    resource="${project.artifactId}-${project.version}-exec.jar"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
         </plugins>
     </build>
 
