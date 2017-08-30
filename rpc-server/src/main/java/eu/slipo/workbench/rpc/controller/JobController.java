@@ -16,23 +16,22 @@ import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionException;
+import org.springframework.batch.core.JobInstance;
 import org.springframework.batch.core.JobParameter;
 import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.launch.NoSuchJobException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpMethod;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import eu.slipo.workbench.common.model.RestResponse;
-import eu.slipo.workbench.common.model.BasicErrorCode;
+import eu.slipo.workbench.common.model.jobs.JobExecutionInfo;
+import eu.slipo.workbench.common.model.jobs.JobInstanceInfo;
 import eu.slipo.workbench.common.model.ErrorCode;
 import eu.slipo.workbench.rpc.model.JobExecutionErrorCode;
 import eu.slipo.workbench.rpc.service.JobService;
@@ -43,43 +42,29 @@ public class JobController
 {
     private static final Logger logger = LoggerFactory.getLogger(JobController.class);
     
-    private static class ExecutionStatus
-    {
-        @JsonProperty("status")
-        private String statusText = BatchStatus.UNKNOWN.name();
-        
-        /**
-         * The job execution id.
-         */
-        @JsonProperty
-        private Long xid;
-        
-        /**
-         * The job instance id.
-         */
-        @JsonProperty
-        private Long id;
-        
-        @JsonProperty
-        private Date started;
-        
-        @JsonProperty
-        private Date finished;
-        
-        public ExecutionStatus(JobExecution x)
-        {
-            if (x != null) {
-                statusText = x.getStatus().name();
-                xid = x.getId();
-                id = x.getJobId();
-                started = x.getStartTime();
-                finished = x.getEndTime();
-            }
-        }
-    }
-    
     @Autowired
     JobService jobService;
+    
+    /**
+     * Create a DTO object ({@link JobExecutionInfo}) from a job execution ({@link JobExecution}).
+     */
+    private static JobExecutionInfo createExecutionInfo(JobExecution execution)
+    {
+        JobExecutionInfo r = new JobExecutionInfo(); 
+        if (execution != null) {
+            r.setId(execution.getJobId());
+            r.setExecutionId(execution.getId());
+            r.setStarted(execution.getStartTime());
+            r.setFinished(execution.getEndTime());
+        }
+        return r;
+    }
+    
+    private static JobInstanceInfo createInstanceInfo(JobInstance instance)
+    {
+        JobInstanceInfo r = new JobInstanceInfo(instance.getJobName(), instance.getId());
+        return r;
+    }
     
     /**
      * List registered job names.
@@ -100,7 +85,7 @@ public class JobController
      * @param foo Fixme remove foo parameter
      */
     @PostMapping(value = "/api/jobs/{jobName}/submit", consumes = "application/json")
-    public RestResponse<ExecutionStatus> submit(@PathVariable String jobName, @RequestParam("foo") String foo)
+    public RestResponse<JobExecutionInfo> submit(@PathVariable String jobName, @RequestParam("foo") String foo)
     {
         // Todo Load default (per job) parameters from database or properties file
         // Todo Load request-specific job parameters from request body
@@ -130,7 +115,7 @@ public class JobController
         
         return execution == null?
             RestResponse.error(errorCode, errorMessage):
-            RestResponse.result(new ExecutionStatus(execution));
+            RestResponse.result(createExecutionInfo(execution));
     }
     
     /**
@@ -141,7 +126,7 @@ public class JobController
      * @return
      */
     @PostMapping(value = "/api/jobs/{jobName}/stop/{jobId}")
-    public RestResponse<ExecutionStatus> stop(@PathVariable String jobName, @PathVariable Long jobId)
+    public RestResponse<JobExecutionInfo> stop(@PathVariable String jobName, @PathVariable Long jobId)
     {
         JobExecution execution = jobService.findRunningExecution(jobName, jobId);
         if (execution != null) {
@@ -149,7 +134,7 @@ public class JobController
             jobService.stop(execution.getId());
             // Poll for the current execution status
             JobExecution x1 = jobService.findExecution(execution.getId());
-            return RestResponse.result(new ExecutionStatus(x1));
+            return RestResponse.result(createExecutionInfo(x1));
         }
         
         // Do not regard this as an error (?), simply return null 
@@ -164,11 +149,11 @@ public class JobController
      * @return
      */
     @GetMapping(value = {"/api/jobs/{jobName}/status/{jobId}", "/api/jobs/{jobName}/executions/{jobId}"})
-    public RestResponse<List<ExecutionStatus>> getExecutions(@PathVariable String jobName, @PathVariable Long jobId)
+    public RestResponse<List<JobExecutionInfo>> getExecutions(@PathVariable String jobName, @PathVariable Long jobId)
     {
-        List<ExecutionStatus> r = 
+        List<JobExecutionInfo> r = 
             jobService.findExecutions(jobName, jobId).stream()
-                .map(x -> new ExecutionStatus(x))
+                .map(x -> createExecutionInfo(x))
                 .collect(Collectors.toList());
         
         return RestResponse.result(r);
@@ -181,12 +166,40 @@ public class JobController
      * @return
      */
     @GetMapping(value = "/api/jobs/{jobName}/running-executions")
-    public RestResponse<List<ExecutionStatus>> getRunningExecutions(@PathVariable String jobName)
+    public RestResponse<List<JobExecutionInfo>> getRunningExecutions(@PathVariable String jobName)
     {
-        List<ExecutionStatus> r = 
+        List<JobExecutionInfo> r = 
             jobService.findRunningExecutions(jobName).stream()
-                .map(x -> new ExecutionStatus(x))
+                .map(x -> createExecutionInfo(x))
                 .collect(Collectors.toList());
+        
+        return RestResponse.result(r);
+    }
+    
+    /**
+     * List instances for a given job.
+     * 
+     * @param jobName
+     * @param start The starting index for this set of results
+     * @param count The page size for this set of results
+     * @return
+     */
+    @GetMapping(value = "/api/jobs/{jobName}/instances")
+    public RestResponse<List<JobInstanceInfo>> getInstances(
+        @PathVariable String jobName, 
+        @RequestParam(defaultValue = "0") Integer start, @RequestParam(defaultValue = "25") Integer count)
+    {
+        final int MAX_PAGE_SIZE = 100;
+        
+        if (count > MAX_PAGE_SIZE || count <= 0)
+            count = MAX_PAGE_SIZE;
+        
+        logger.info("Fetching instances for job {}: start={} limit={}", 
+            jobName, start, count);
+        
+        List<JobInstanceInfo> r = jobService.findInstances(jobName, start, count).stream()
+            .map(y -> createInstanceInfo(y))
+            .collect(Collectors.toList());
         
         return RestResponse.result(r);
     }
@@ -199,10 +212,10 @@ public class JobController
      * @return
      */
     @PostMapping(value = "/api/jobs/{jobName}/clear-running-execution/{jobId}")
-    public RestResponse<ExecutionStatus> clearRunningExecution(@PathVariable String jobName, @PathVariable Long jobId)
+    public RestResponse<JobExecutionInfo> clearRunningExecution(@PathVariable String jobName, @PathVariable Long jobId)
     {
         JobExecution x = jobService.clearRunningExecution(jobName, jobId);
         return x == null? 
-            null : RestResponse.result(new ExecutionStatus(x));
+            null : RestResponse.result(createExecutionInfo(x));
     }
 }

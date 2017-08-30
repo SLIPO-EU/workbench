@@ -1,6 +1,7 @@
 package eu.slipo.workbench.web.service;
 
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -37,13 +38,13 @@ public class RpcClientEchoService implements EchoService
     }
     
     /**
-     * Build a {@link RequestEntity} object around a request payload (body).
+     * Build a POST request ({@link RequestEntity}) around a payload (body).
      * Set path and basic request headers.
      * 
      * @param path
      * @param body
      */
-    private <T> RequestEntity<T> buildRequestEntity(String path, T body)
+    private <T> RequestEntity<T> buildPostEntity(String path, T body)
     {
         return RequestEntity
             .post(URI.create(rootUrl + "/" + path))
@@ -55,23 +56,22 @@ public class RpcClientEchoService implements EchoService
     @Override
     public TextMessage echo(String text)
     {        
+        final String path = "/api/echo";
+        
         TextMessage message = new TextMessage(text);
         
         ParameterizedTypeReference<RestResponse<TextMessage>> responseType = 
             new ParameterizedTypeReference<RestResponse<TextMessage>>() {};
         
         ResponseEntity<RestResponse<TextMessage>> responseEntity = 
-            rest.exchange(buildRequestEntity("/api/echo", message), responseType);   
+            rest.exchange(buildPostEntity(path, message), responseType);   
             
         RestResponse<TextMessage> response = responseEntity.getBody();
         
-        // If server reported an error on this response object, raise an ApplicationException
-        
+        // If server reported an error on this response, raise an ApplicationException
         List<Error> errors = response.getErrors();
         if (!errors.isEmpty())
-            throw new ApplicationException(
-                BasicErrorCode.REST_ERROR_RESULT, 
-                Collections.singletonMap("error", errors.get(0).getDescription()));
+            throw ApplicationException.fromPattern(BasicErrorCode.REST_RESPONSE_WITH_ERRORS, errors);
         
         return response.getResult();
     }

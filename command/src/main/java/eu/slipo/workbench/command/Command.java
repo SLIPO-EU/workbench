@@ -1,8 +1,10 @@
 package eu.slipo.workbench.command;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -15,8 +17,11 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.DefaultApplicationArguments;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
+
+import eu.slipo.workbench.common.model.ApplicationException;
 
 @Component
 public class Command implements ApplicationRunner
@@ -28,9 +33,36 @@ public class Command implements ApplicationRunner
     @Autowired
     private ApplicationContext applicationContext;
     
+    @Autowired
+    private MessageSource messageSource;
+    
     private SubCommand subcommandByName(String name)
     {
         return applicationContext.getBean(name, SubCommand.class);
+    }
+    
+    /**
+     * Delegate to a subcommand form depending on number of positional arguments.
+     * 
+     * @param subcommand The subcommand bean
+     * @param pargs The list of (remaining) positional arguments
+     * @param options The map of option arguments
+     */
+    private void run(SubCommand subcommand, List<String> pargs, Map<String, String> options)
+    {
+        int n = pargs.size();
+        if (n == 0)
+            subcommand.run(options);
+        else if (n == 1)
+            subcommand.run(pargs.get(0), options);
+        else if (n == 2)
+            subcommand.run(pargs.get(0), pargs.get(1), options);
+        else if (n == 3)
+            subcommand.run(pargs.get(0), pargs.get(1), pargs.get(2), options);
+        else {
+            throw new IllegalArgumentException(
+                "Too many (>3) positional arguments for subcommand");
+        }
     }
     
     @Override
@@ -38,7 +70,7 @@ public class Command implements ApplicationRunner
     {
         List<String> pargs = new ArrayList<>(args.getNonOptionArgs());
       
-        // Find a proper SubCommand bean to delegate to 
+        // Find a proper SubCommand bean to delegate to
         
         String name; 
         if (pargs.isEmpty()) {
@@ -48,7 +80,7 @@ public class Command implements ApplicationRunner
         }
         SubCommand subcommand = subcommandByName(name);
         
-        // Prepare optional arguments to be forwarded to sub-command
+        // Prepare optional arguments to be forwarded to subcommand
         
         HashMap<String, String> options = new HashMap<>();
         for (String key: args.getOptionNames()) {
@@ -57,18 +89,14 @@ public class Command implements ApplicationRunner
             options.put(key, vals.isEmpty()? null : vals.get(0));
         }
         
-        // Delegate to proper form (depending on number of remaining non-option args)
+        // Delegate to subcommand
         
-        int n = pargs.size();
-        if (n == 0)
-            subcommand.run(options);
-        else if (n == 1)
-            subcommand.run(pargs.get(0), options);
-        else if (n == 2)
-            subcommand.run(pargs.get(0), pargs.get(1), options);
-        else {
-            throw new IllegalArgumentException(
-                "Too many (>2) non-option arguments for subcommand");
+        try {
+            run(subcommand, pargs, options);
+        } catch (ApplicationException e) {
+            // Format top-level exception and print stack-trace
+            e.withFormattedMessage(messageSource, Locale.getDefault())
+                .printStackTrace(System.err);
         }
     } 
 

@@ -119,7 +119,7 @@ public class Job1Factory implements JobFactory
         @Override
         public void validate(JobParameters parameters) throws JobParametersInvalidException
         {
-            // Todo validate, raise exception on invalid parameters            
+            // Validate, raise exception on invalid parameters            
         }
     }
     

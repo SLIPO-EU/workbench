@@ -31,6 +31,14 @@ public class GreetCommand implements SubCommand
     }
 
     @Override
+    public void run(String a1, String a2, String a3, Map<String, String> options)
+    {
+        System.err.printf(
+            "Unexpected non-option arguments (%s, %s, %s). Try `help greet`%n",
+            a1, a2, a3);
+    }
+    
+    @Override
     public String getSummary()
     {
         return "greet";

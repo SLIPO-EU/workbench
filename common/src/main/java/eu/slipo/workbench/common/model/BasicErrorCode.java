@@ -12,8 +12,9 @@ public enum BasicErrorCode implements ErrorCode
     
     NO_RESULT,
     
-    REST_ERROR_RESULT,
-    REST_TIMEOUT,
+    REST_RESPONSE_WITH_ERRORS,  // REST response flags application-side errors   
+    REST_TIMEOUT,               // REST client reached timeout (on reading)
+    REST_CLIENT_EXCEPTION,      // REST client encountered HTTP-side problems (e.g. connectivity)
     
     AUTHENTICATION_FAILED,
     AUTHENTICATION_REQUIRED,

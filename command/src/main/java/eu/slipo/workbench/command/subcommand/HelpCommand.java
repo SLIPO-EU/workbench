@@ -43,9 +43,10 @@ public class HelpCommand implements SubCommand
     @Override
     public void run(Map<String, String> args)
     {
+        System.out.println("The following (sub)commands are available:");
         for (Entry<String, SubCommand> p: subcommands().entrySet()) {
             SubCommand c = p.getValue();
-            System.out.printf("%-15.12s %s%n", p.getKey(), c.getDescription());
+            System.out.printf(" * %-12.10s %s%n", p.getKey(), c.getDescription());
         }
     }
 
@@ -70,6 +71,13 @@ public class HelpCommand implements SubCommand
     }
     
     @Override
+    public void run(String subcommandName, String a2, String a3, Map<String, String> options)
+    {
+        // ignore any extra non-option arguments, just print help on subcommand
+        run(subcommandName, options);
+    }
+    
+    @Override
     public String getSummary()
     {
         return "help [<subcommand-name>]";
@@ -78,6 +86,6 @@ public class HelpCommand implements SubCommand
     @Override
     public String getDescription()
     {
-        return "List available commands or get help on a specific command";
+        return "List available commands or ask help on a specific command";
     }
 }
