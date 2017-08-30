@@ -1,11 +1,11 @@
 const React = require('react');
 const PropTypes = require('prop-types');
 const ReactRedux = require('react-redux');
-const { NavLink } = require('react-router-dom');
 const { Dropdown, DropdownMenu, DropdownItem } = require('reactstrap');
-const { FormattedMessage } = require('react-intl');
 
 const { userPropType } = require('../../common-prop-structs');
+
+import ShortcutList from './shortcut-list';
 
 //
 // Presentational component
@@ -39,31 +39,7 @@ class Header extends React.Component {
         <a className="navbar-brand" href="#"></a>
 
         {/* left-aligned menu items */}
-        <ul className="nav navbar-nav d-md-down-none mr-auto">
-          {/* toggle sidebar */}
-          <li className="nav-item">
-            <button className="nav-link navbar-toggler sidebar-toggler" type="button"
-              onClick={this.props.toggleSidebar}>
-              <i className="fa fa-navicon"></i>
-            </button>
-          </li>
-          {/* left-aligned top navbar items */}
-          <li className="nav-item px-3">
-            <NavLink to={'/dashboard'} className="nav-link" activeClassName="active">
-              <FormattedMessage id="links.dashboard" defaultMessage="Dashboard" />
-            </NavLink>
-          </li>
-          <li className="nav-item px-3">
-            <NavLink to={'/users'} className="nav-link" activeClassName="active">
-              <FormattedMessage id="links.users" defaultMessage="Users" />
-            </NavLink>
-          </li>
-          <li className="nav-item px-3">
-            <NavLink to={'/settings'} className="nav-link" activeClassName="active">
-              <FormattedMessage id="links.settings" defaultMessage="Settings" />
-            </NavLink>
-          </li>
-        </ul>
+        <ShortcutList user={this.props.user} toggleSidebar={this.props.toggleSidebar} />
 
         {/* right-aligned menu items */}
         <ul className="nav navbar-nav ml-auto">

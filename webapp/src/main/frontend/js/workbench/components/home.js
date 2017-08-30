@@ -1,5 +1,5 @@
 const React = require('react');
-const { Switch, Route } = require('react-router-dom');
+const { Switch, Route, Redirect } = require('react-router-dom');
 const { Container } = require('reactstrap');
 
 const Header = require('./layout/header');
@@ -12,6 +12,16 @@ const routeInfo = require('../route-info');
 const { userPropType } = require('../common-prop-structs');
 
 const Dashboard = require('./views/dashboard');
+
+import * as Roles from '../model/role';
+
+import SecureRoute from './helpers/secure-route';
+
+import ResourceExplorer from './views/resource-explorer';
+import ResourceRegisterForm from './views/resource-register-form';
+
+import UserManager from './views/user-manager';
+import EventViewer from './views/event-viewer';
 
 /////////////////////////////////////////////////////////////////
 //
@@ -91,7 +101,7 @@ class Home extends React.Component {
       this.state.asideOpen ? null : 'aside-menu-hidden',
       'aside-menu-' + (this.state.asideStyle || 'fixed'),
     ];
-
+    
     return (
       <div className={cssClasses.join(' ')}>
         <Header
@@ -107,7 +117,13 @@ class Home extends React.Component {
             <Route path="/" component={Breadcrumb} />
             <Container fluid>
               <Switch>
+                <Redirect from="/" to="/dashboard" exact />
                 <Route path="/dashboard" name={routeInfo.get('/dashboard').title} component={Dashboard} />
+                <Route path="/resource/explorer" name={routeInfo.get('/resource/explorer').title} component={ResourceExplorer} />
+                <Route path="/resource/register" name={routeInfo.get('/resource/register').title} component={ResourceRegisterForm} />
+                <SecureRoute path="/admin/user-manager" name={routeInfo.get('/admin/user-manager').title} component={UserManager} role={Roles.ADMIN} />
+                <SecureRoute path="/admin/event-viewer" name={routeInfo.get('/admin/event-viewer').title} component={EventViewer} role={Roles.MAINTAINER} />
+                <Redirect push={true} to="/error/404" />
               </Switch>
             </Container>
           </div>

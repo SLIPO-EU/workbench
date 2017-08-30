@@ -11,7 +11,7 @@ var api = {
 
   getProfile: () => {
     var reqOpts = { credentials };
-    return fetch('action/user/profile', reqOpts)
+    return fetch('/action/user/profile', reqOpts)
       .then(checkStatus)
       .then(res => res.json())
       .then(checkError);
@@ -29,7 +29,7 @@ var api = {
     var body = JSON.stringify({ email, givenName, familyName });
 
     var reqOpts = { method: 'POST', credentials, headers, body };
-    return fetch('action/user/profile/save', reqOpts)
+    return fetch('/action/user/profile/save', reqOpts)
       .then(checkStatus);
   },
 
@@ -47,7 +47,7 @@ var api = {
     q.set('password', password);
 
     var reqOpts = { method: 'POST', credentials, headers, body: q.toString() };
-    return fetch('login', reqOpts)
+    return fetch('/login', reqOpts)
       .then(checkStatus)
       .then(res => res.json())
       .then(checkError)
@@ -58,7 +58,7 @@ var api = {
     var headers = { 'x-csrf-token': token };
 
     var reqOpts = { method: 'POST', credentials, headers };
-    return fetch('logout', reqOpts)
+    return fetch('/logout', reqOpts)
       .then(checkStatus)
       .then(res => res.json())
       .then(checkError)

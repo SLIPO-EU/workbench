@@ -11,10 +11,16 @@ public class HomeController {
 
     @RequestMapping("*")
     public String index(HttpSession session, HttpServletRequest request) {
-        if (!request.getRequestURI().equalsIgnoreCase("/")) {
-            return "redirect:/";
+        // Prevent infinite redirects
+        if(request.getServletPath().equalsIgnoreCase("/workbench/")) {
+            return "index";
         }
+        return "redirect:/workbench/";
+    }
 
+    @RequestMapping("/workbench/**")
+    public String workbench(HttpSession session, HttpServletRequest request) {
+        // Handle all requests except for API calls
         return "index";
     }
 
