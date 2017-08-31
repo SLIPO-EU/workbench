@@ -4,6 +4,8 @@ const PropTypes = require('prop-types');
 const { NavLink } = require('react-router-dom');
 const { FormattedMessage } = require('react-intl');
 
+import { toast } from 'react-toastify';
+
 //
 // Presentational component
 //
@@ -27,11 +29,12 @@ class LoginForm extends React.Component {
     });
   }
 
-  _submit() {
-    var { username, password } = this.state;
+  _submit($event) {
+    $event.preventDefault();
+
+    let { username, password } = this.state;
 
     this.props.submit(username, password);
-    return false;
   }
 
   render() {
@@ -43,7 +46,7 @@ class LoginForm extends React.Component {
               <div className="card-group mb-0">
 
                 <div className="card p-4">
-                  <div className="card-block">
+                  <form className="card-block" onSubmit={this._submit}>
 
                     <h1><FormattedMessage id="login.title" defaultMessage="Sign in" /></h1>
                     <p className="text-muted">
@@ -68,7 +71,7 @@ class LoginForm extends React.Component {
 
                     <div className="row">
                       <div className="col-6">
-                        <button type="button" className="btn btn-primary px-4" onClick={this._submit}>
+                        <button type="submit" className="btn btn-primary px-4">
                           <FormattedMessage id="login.login" defaultMessage="Login" />
                         </button>
                       </div>
@@ -78,7 +81,7 @@ class LoginForm extends React.Component {
                         </NavLink>
                       </div>
                     </div>
-                  </div>
+                  </form>
                 </div>
 
                 <div className="card card-inverse card-primary py-5 d-md-down-none">
@@ -114,7 +117,6 @@ LoginForm.propTypes = {
 //
 
 const { login, refreshProfile } = require('../actions/user');
-const { navigateTo } = require('../actions/router');
 
 const mapStateToProps = null;
 
@@ -122,8 +124,12 @@ const mapDispatchToProps = (dispatch) => ({
   submit: (username, password) => (
     dispatch(login(username, password))
       .then(() => dispatch(refreshProfile()))
-      .then(() => dispatch(navigateTo("/")))
-      .catch(() => null) // ignore failed logins
+      .then(() => toast.dismiss(),
+            () => {
+              toast.dismiss();
+              toast.error(<FormattedMessage id="login.failure" defaultMessage="The username or password is incorrect." />);
+            })
+      .catch((err) => null)
   ),
 });
 

@@ -12,13 +12,11 @@
     "title": "Login",
     "subtitle": "Sign in into your account",
     "login": "Login",
-    "forgot-password": "Forgot password?"
+    "forgot-password": "Forgot password?",
+    "failure": "The username or password is incorrect."
   },
   "register": {
     "title": "Sign up!",
     "register": "Register"
-  },
-  "home": {
-    "welcome": "Home, sweet home!"
   }
 }

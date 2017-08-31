@@ -12,13 +12,11 @@
     "title": "Είσοδος",
     "subtitle": "Εισοδος στον λογαριασμό σου",
     "login": "Είσοδος",
-    "forgot-password": "Ξέχασες το password?"
+    "forgot-password": "Ξέχασες το password?",
+    "failure": "Ο χρήστης ή ο κωδικός είναι λάθος."
   },
   "register": {
     "title": "Εγγραφή!",
     "register": "Εγγραφή"
-  },
-  "home": {
-    "welcome": "Σπιτι μου, σπιτάκι μου!"
   }
 }
