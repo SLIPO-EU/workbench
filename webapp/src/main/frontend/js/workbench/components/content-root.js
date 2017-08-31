@@ -9,6 +9,8 @@ const LoginForm = require('./login-form');
 const RegisterForm = require('./register-form');
 const ResetPasswordForm = () => (<p>Todo: Reset password</p>);
 
+import { ToastContainer } from 'react-toastify';
+
 import Page403 from './pages/page-403.js';
 import Page404 from './pages/page-404.js';
 
@@ -22,10 +24,11 @@ class ContentRoot extends React.Component {
   }
 
   render() {
-    var authenticated = (this.props.user != null);
+    let authenticated = (this.props.user != null);
+    let routes;
 
     if (!authenticated) {
-      return (
+      routes = (
         <Switch>
           <Route path="/login" name="login" component={LoginForm} />
           <Route path="/register" name="register" component={RegisterForm} />
@@ -34,14 +37,14 @@ class ContentRoot extends React.Component {
         </Switch>
       );
     } else {
-      return (
+      routes = (
         <Switch>
           {/* Handle errors first */}
           <Route path="/error/403" component={Page403} exact />
           <Route path="/error/404" component={Page404} exact />
           {/* Redirect for authenticated users. Navigation after a successful login operation
               occurs after the component hierarchy is rendered due to state change and casues 
-              /error/403 to render */}
+              /error/404 to render */}
           <Redirect from="/login" to="/dashboard" exact />
           <Redirect from="/register" to="/dashboard" exact />
           {/* Default component */}
@@ -49,6 +52,21 @@ class ContentRoot extends React.Component {
         </Switch>
       );
     }
+
+    return (
+      <div>
+        <ToastContainer
+          position="top-right"
+          type="default"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          pauseOnHover
+        />
+        {routes}
+      </div>
+    );
   }
 }
 

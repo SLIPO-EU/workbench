@@ -27,3 +27,13 @@ section:after {
   } 
 }
 
+/*
+* Fix z-ordering for react-toastify / CoreUI header component 
+*/
+.toastify {
+  z-index: 1030;
+}
+
+.toastify__progress {
+  z-index: 1030;
+}
