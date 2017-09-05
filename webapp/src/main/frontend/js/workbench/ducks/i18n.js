@@ -13,7 +13,7 @@ const initialState = {
 };
 
 // Reducers
-const reduceI18n = (state = initialState, action) => {
+export const reduceI18n = (state = initialState, action) => {
   switch (action.type) {
     case REQUEST_MESSAGES:
       return state; // no-op
@@ -33,7 +33,7 @@ const reduceI18n = (state = initialState, action) => {
 };
 
 // Action Creators
-const setLocale = (locale) => ({
+export const setLocale = (locale) => ({
   type: SET_LOCALE,
   locale,
 });
@@ -50,24 +50,15 @@ const requestMessages = (locale) => ({
 });
 
 // Thunk actions
-const fetchMessages = (locale) => (dispatch) => {
+export const fetchMessages = (locale) => (dispatch) => {
   dispatch(requestMessages(locale));
   return getMessages(locale)
   .then(r => dispatch(loadMessages(locale, r)));
 };
 
-const changeLocale = (locale) => (dispatch) => {
+export const changeLocale = (locale) => (dispatch) => {
   dispatch(fetchMessages(locale))
     .then(
     () => dispatch(setLocale(locale)),
     () => console.warn("No messages for locale " + locale));
-};
-
-module.exports = {
-  reduceI18n,
-  setLocale,
-  loadMessages,
-  requestMessages,
-  fetchMessages,
-  changeLocale,
 };

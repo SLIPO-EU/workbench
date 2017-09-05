@@ -6,7 +6,7 @@ const { LOGIN, LOGOUT } = require('./user');
 const SET_CSRF_TOKEN = 'meta/SET_CSRF_TOKEN';
 
 // Reducer
-const reduceMeta = (state = {}, action) => {
+export const reduceMeta = (state = {}, action) => {
   switch (action.type) {
     case SET_CSRF_TOKEN: // token read from meta tag
     case LOGIN:  // token replaced by new session 
@@ -19,12 +19,7 @@ const reduceMeta = (state = {}, action) => {
 
 
 // Action Creators
-const setCsrfToken = (token) => ({
+export const setCsrfToken = (token) => ({
   type: SET_CSRF_TOKEN,
   token,
 });
-
-module.exports = {
-  reduceMeta,
-  setCsrfToken,
-};

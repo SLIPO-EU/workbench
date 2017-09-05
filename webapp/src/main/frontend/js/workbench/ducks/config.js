@@ -5,7 +5,7 @@ const REQUEST_CONFIGURATION = 'config/REQUEST_CONFIGURATION';
 const LOAD_CONFIGURATION = 'config/LOAD_CONFIGURATION';
 
 // Reducer
-const reduceConfig = (state = {}, action) => {
+export const reduceConfig = (state = {}, action) => {
   switch (action.type) {
     case REQUEST_CONFIGURATION:
       return state;
@@ -17,25 +17,18 @@ const reduceConfig = (state = {}, action) => {
 };
 
 // Action Creators
-const requestConfiguration = () => ({
+export const requestConfiguration = () => ({
   type: REQUEST_CONFIGURATION,
 });
 
-const loadConfiguration = (config) => ({
+export const loadConfiguration = (config) => ({
   type: LOAD_CONFIGURATION,
   config,
 });
 
 // Thunk actions
-const getConfiguration = () => (dispatch) => {
+export const getConfiguration = () => (dispatch) => {
   // Request and load configuration from server
   dispatch(requestConfiguration());
   // Todo fetch and load
-};
-  
-module.exports = {
-  reduceConfig,
-  requestConfiguration,
-  loadConfiguration,
-  getConfiguration,
 };

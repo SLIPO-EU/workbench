@@ -5,10 +5,10 @@ const moment = require('moment');
 const userService = require('../service/user');
 
 // Actions
+export const LOGIN = 'user/LOGIN';
+export const LOGOUT = 'user/LOGOUT';
 const REQUEST_LOGIN = 'user/REQUEST_LOGIN';
-const LOGIN = 'user/LOGIN';
 const REQUEST_LOGOUT = 'user/REQUEST_LOGOUT';
-const LOGOUT = 'user/LOGOUT';
 const REQUEST_PROFILE = 'user/REQUEST_PROFILE';
 const LOAD_PROFILE = 'user/LOAD_PROFILE';
 const SET_PROFILE = 'user/SET_PROFILE';
@@ -22,7 +22,7 @@ const initialState = {
 };
 
 // Reducer
-const reduceUser = (state = initialState, action) => {
+export const reduceUser = (state = initialState, action) => {
   switch (action.type) {
     case REQUEST_LOGIN:
       return state; // no-op
@@ -121,8 +121,7 @@ const savedProfile = () => ({
 
 
 // Thunk actions
-
-const login = (username, password) => (dispatch, getState) => {
+export const login = (username, password) => (dispatch, getState) => {
   var { meta: { csrfToken: token } } = getState();
   dispatch(requestLogin(username));
   return userService.login(username, password, token).then(
@@ -136,7 +135,7 @@ const login = (username, password) => (dispatch, getState) => {
     });
 };
 
-const logout = () => (dispatch, getState) => {
+export const logout = () => (dispatch, getState) => {
   var { meta: { csrfToken: token } } = getState();
   dispatch(requestLogout());
   return userService.logout(token).then(
@@ -150,7 +149,7 @@ const logout = () => (dispatch, getState) => {
     });
 };
 
-const refreshProfile = () => (dispatch) => {
+export const refreshProfile = () => (dispatch) => {
   dispatch(requestProfile());
   return userService.getProfile().then(
     (p) => {
@@ -163,7 +162,7 @@ const refreshProfile = () => (dispatch) => {
     });
 };
 
-const saveProfile = () => (dispatch, getState) => {
+export const saveProfile = () => (dispatch, getState) => {
   var { meta: { csrfToken: token }, user: { profile } } = getState();
   if (_.isEmpty(profile))
     return Promise.reject('The user profile is empty!');
@@ -176,23 +175,3 @@ const saveProfile = () => (dispatch, getState) => {
       throw err;
     });
 };
-
-module.exports = {
-  LOGIN,
-  LOGOUT,
-  reduceUser,
-  requestLogin,
-  requestLogout,
-  loggedIn,
-  loggedOut,
-  requestProfile,
-  loadProfile,
-  setProfile,
-  requestSaveProfile,
-  savedProfile,
-  login,
-  logout,
-  refreshProfile,
-  saveProfile,
-};
-
