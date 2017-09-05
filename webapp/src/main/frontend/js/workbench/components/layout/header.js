@@ -141,7 +141,7 @@ Header.propTypes = {
 // Container component
 //
 
-const { logout } = require('../../actions/user');
+const { logout } = require('../../ducks/user');
 
 const mapStateToProps = () => ({});
 

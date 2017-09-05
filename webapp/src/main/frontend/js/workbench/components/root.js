@@ -43,7 +43,7 @@ Root.defaultProps = {
 //
 
 const mapStateToProps = (state) => {
-  var locale = state.locale;
+  var locale = state.i18n.locale;
   var messages = state.i18n.messages[locale];
   return { locale, messages };
 };

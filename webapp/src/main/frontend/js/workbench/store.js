@@ -3,7 +3,7 @@ const ReduxLogger = require('redux-logger');
 const ReduxThunk = require('redux-thunk');
 const { routerMiddleware } = require('react-router-redux');
 
-const rootReducer = require('./reducers/index');
+const rootReducer = require('./reducer');
 const history = require('./history');
 
 // Create and configure store
