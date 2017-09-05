@@ -64,10 +64,10 @@ SelectLanguage.propTypes = {
 // Wrap into a connected component
 //
 
-const { changeLocale } = require('../../actions/i18n');
+const { changeLocale } = require('../../ducks/i18n');
 
 const mapStateToProps = (state) => ({
-  language: state.locale,
+  language: state.i18n.locale,
 });
 
 const mapDispatchToProps = (dispatch) => ({

@@ -1,22 +1,29 @@
 const _ = require('lodash');
+const fetch = require('fetch');
 
-const api = require('./api/user');
+const actions = require('./api/fetch-actions');
 
-module.exports = {
+var api = {
 
-  getProfile: () => (
-    api.getProfile().then(res => {
-      var p = res.result;
-      if (p == null || !_.isObject(p))
-        throw new Error('Expected a non-empty user profile!');
-      else
-        return p;
-    })
-  ),
+  getProfile: () => {
+    return actions.get('action/user/profile');
+  },
 
-  saveProfile: (profile, token) => api.saveProfile(profile, token),
+  saveProfile: (profileData, token) => {
+    return actions.post('action/user/profile/save', token, JSON.stringify(profileData));
+  },
 
-  login: (username, password, token) => api.login(username, password, token),
+  login: (username, password, token) => {
+    const loginForm = new FormData();
+    loginForm.set('username', username);
+    loginForm.set('password', password);
 
-  logout: (token) => api.logout(token),
+    return actions.submit('login', token, loginForm);
+  },
+
+  logout: (token) => {
+    return actions.submit('logout', token, null);
+  },
 };
+
+module.exports = api;
