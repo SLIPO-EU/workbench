@@ -4,9 +4,24 @@
     "el": "Ελληνικά"
   },
   "links": {
+    "home": "Αρχική Σελίδα",
     "dashboard": "Πίνακας Ελέγχου",
-    "users": "Χρήστες",
-    "settings": "Ρυθμίσεις"
+    "resource": {
+      "explorer": "Δεδομένα",
+      "registration": "Εισαγωγή Δεδομένων"
+    },
+    "process": {
+      "scheduler": "Διεργασίες",
+      "design": "Σχεδίαση Διεργασίας"
+    },
+    "recipe": {
+      "explorer": "Recipe Explorer",
+      "design": "Recipe Designer"
+    },
+    "admin": {
+      "user-manager": "Χρήστες",
+      "event-viewer": "Καταγραφή Συμβάντων"
+    }
   },
   "login": {
     "title": "Είσοδος",

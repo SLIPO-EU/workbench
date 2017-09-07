@@ -5,6 +5,15 @@ const { NavLink } = require('react-router-dom');
 const Immutable = require('immutable');
 
 import * as Roles from '../../model/role';
+import SecureContent from '../helpers/secure-content';
+
+const Sections = {
+  Resource: 'Resource',
+  Process: 'Process',
+  Recipe: 'Recipe',
+  Tool: 'Tool',
+  Admin: 'Admin',
+};
 
 class Sidebar extends React.Component {
   constructor(props) {
@@ -46,8 +55,8 @@ class Sidebar extends React.Component {
               </NavLink>
             </li>
 
-            <li className={'nav-item nav-dropdown ' + (expanded('/resource') ? 'open' : '')}>
-              <a className="nav-link nav-dropdown-toggle" onClick={() => (toggle('/resource'), false)}>
+            <li className={'nav-item nav-dropdown ' + (expanded(Sections.Resource) ? 'open' : '')}>
+              <a className="nav-link nav-dropdown-toggle" onClick={() => (toggle(Sections.Resource), false)}>
                 {'Resources'}
               </a>
               <ul className="nav-dropdown-items">
@@ -64,8 +73,8 @@ class Sidebar extends React.Component {
               </ul>
             </li>
 
-            <li className={'nav-item nav-dropdown ' + (expanded('/process') ? 'open' : '')}>
-              <a className="nav-link nav-dropdown-toggle" onClick={() => (toggle('/process'), false)}>
+            <li className={'nav-item nav-dropdown ' + (expanded(Sections.Process) ? 'open' : '')}>
+              <a className="nav-link nav-dropdown-toggle" onClick={() => (toggle(Sections.Process), false)}>
                 {'Data Processing'}
               </a>
               <ul className="nav-dropdown-items">
@@ -82,13 +91,13 @@ class Sidebar extends React.Component {
               </ul>
             </li>
 
-            <li className={'nav-item nav-dropdown ' + (expanded('/recipe') ? 'open' : '')}>
-              <a className="nav-link nav-dropdown-toggle" onClick={() => (toggle('/recipe'), false)}>
+            <li className={'nav-item nav-dropdown ' + (expanded(Sections.Recipe) ? 'open' : '')}>
+              <a className="nav-link nav-dropdown-toggle" onClick={() => (toggle(Sections.Recipe), false)}>
                 {'Recipes'}
               </a>
               <ul className="nav-dropdown-items">
                 <li className="nav-item">
-                  <NavLink to={'/recipe/overview'} className="nav-link" activeClassName="active">
+                  <NavLink to={'/recipe/explorer'} className="nav-link" activeClassName="active">
                     <i className="fa fa-book"></i>{'Overview'}
                   </NavLink>
                 </li>
@@ -100,8 +109,8 @@ class Sidebar extends React.Component {
               </ul>
             </li>
 
-            <li className={'nav-item nav-dropdown ' + (expanded('/tools') ? 'open' : '')}>
-              <a className="nav-link nav-dropdown-toggle" onClick={() => (toggle('/tools'), false)}>
+            <li className={'nav-item nav-dropdown ' + (expanded(Sections.Tool) ? 'open' : '')}>
+              <a className="nav-link nav-dropdown-toggle" onClick={() => (toggle(Sections.Tool), false)}>
                 {'Tools'}
               </a>
               <ul className="nav-dropdown-items">
@@ -112,9 +121,10 @@ class Sidebar extends React.Component {
                 </li>
               </ul>
             </li>
+
             {this.hasRole(Roles.ADMIN) &&
-              <li className={'nav-item nav-dropdown ' + (expanded('/admin') ? 'open' : '')}>
-                <a className="nav-link nav-dropdown-toggle" onClick={() => (toggle('/admin'), false)}>
+              <li className={'nav-item nav-dropdown ' + (expanded(Sections.Admin) ? 'open' : '')}>
+                <a className="nav-link nav-dropdown-toggle" onClick={() => (toggle(Sections.Admin), false)}>
                   {'Admin'}
                 </a>
                 <ul className="nav-dropdown-items">
@@ -123,14 +133,17 @@ class Sidebar extends React.Component {
                       <i className="fa fa-users"></i>{'Users'}
                     </NavLink>
                   </li>
-                  <li className="nav-item">
-                    <NavLink to={'/admin/event-viewer'} className="nav-link" activeClassName="active">
-                      <i className="fa fa-heartbeat"></i>{'Event Log'}
-                    </NavLink>
-                  </li>
+                  <SecureContent role={Roles.MAINTAINER}>
+                    <li className="nav-item">
+                      <NavLink to={'/admin/event-viewer'} className="nav-link" activeClassName="active">
+                        <i className="fa fa-heartbeat"></i>{'Event Log'}
+                      </NavLink>
+                    </li>
+                  </SecureContent>
                 </ul>
               </li>
             }
+            
           </ul>
         </nav>
       </div>

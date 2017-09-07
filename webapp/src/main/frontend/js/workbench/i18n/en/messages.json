@@ -4,9 +4,24 @@
     "el": "Greek"
   },
   "links": {
+    "home": "Home",
     "dashboard": "Dashboard",
-    "users": "Users",
-    "settings": "Settings"
+    "resource": {
+      "explorer": "Resource Explorer",
+      "registration": "Resource Registration"
+    },
+    "process": {
+      "scheduler": "Scheduler",
+      "design": "Process Designer"
+    },
+    "recipe": {
+      "explorer": "Recipe Explorer",
+      "design": "Recipe Designer"
+    },
+    "admin": {
+      "user-manager": "User Management",
+      "event-viewer": "Event Viewer"
+    }
   },
   "login": {
     "title": "Login",

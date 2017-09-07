@@ -1,24 +1,28 @@
-const React = require('react');
-const { Switch, Route, Redirect } = require('react-router-dom');
-const { Container } = require('reactstrap');
+import * as React from 'react';
+import { Switch, Route, Redirect } from 'react-router-dom';
+import { Container } from 'reactstrap';
 
-const Header = require('./layout/header');
-const Sidebar = require('./layout/sidebar');
-const Breadcrumb = require('./layout/breadcrumb');
-const Aside = require('./layout/aside');
-const Footer = require('./layout/footer');
-
-const routeInfo = require('../route-info');
-const { userPropType } = require('../common-prop-structs');
-
-const Dashboard = require('./views/dashboard');
+import Header from './layout/header';
+import Sidebar from './layout/sidebar';
+import Breadcrumb from './layout/breadcrumb';
+import Aside from './layout/aside';
+import Footer from './layout/footer';
 
 import * as Roles from '../model/role';
+import { userPropType } from '../common-prop-structs';
 
 import SecureRoute from './helpers/secure-route';
 
+import Dashboard from './views/dashboard';
+
 import ResourceExplorer from './views/resource-explorer';
 import ResourceRegisterForm from './views/resource-register-form';
+
+import Scheduler from './views/process-scheduler';
+import ProcessDesigner from './views/process-designer';
+
+import RecipeExplorer from './views/recipe-explorer';
+import RecipeDesigner from './views/recipe-designer';
 
 import UserManager from './views/user-manager';
 import EventViewer from './views/event-viewer';
@@ -101,7 +105,7 @@ class Home extends React.Component {
       this.state.asideOpen ? null : 'aside-menu-hidden',
       'aside-menu-' + (this.state.asideStyle || 'fixed'),
     ];
-    
+
     return (
       <div className={cssClasses.join(' ')}>
         <Header
@@ -118,11 +122,15 @@ class Home extends React.Component {
             <Container fluid>
               <Switch>
                 <Redirect from="/" to="/dashboard" exact />
-                <Route path="/dashboard" name={routeInfo.get('/dashboard').title} component={Dashboard} />
-                <Route path="/resource/explorer" name={routeInfo.get('/resource/explorer').title} component={ResourceExplorer} />
-                <Route path="/resource/register" name={routeInfo.get('/resource/register').title} component={ResourceRegisterForm} />
-                <SecureRoute path="/admin/user-manager" name={routeInfo.get('/admin/user-manager').title} component={UserManager} role={Roles.ADMIN} />
-                <SecureRoute path="/admin/event-viewer" name={routeInfo.get('/admin/event-viewer').title} component={EventViewer} role={Roles.MAINTAINER} />
+                <Route path="/dashboard" component={Dashboard} />
+                <Route path="/resource/explorer" component={ResourceExplorer} />
+                <Route path="/resource/register" component={ResourceRegisterForm} />
+                <Route path="/process/scheduler" component={Scheduler} />
+                <Route path="/process/design" component={ProcessDesigner} />
+                <Route path="/recipe/explorer" component={RecipeExplorer} />
+                <Route path="/recipe/design" component={RecipeDesigner} />
+                <SecureRoute path="/admin/user-manager" component={UserManager} role={Roles.ADMIN} />
+                <SecureRoute path="/admin/event-viewer" component={EventViewer} role={Roles.MAINTAINER} />
                 <Redirect push={true} to="/error/404" />
               </Switch>
             </Container>

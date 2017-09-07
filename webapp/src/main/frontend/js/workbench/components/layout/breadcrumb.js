@@ -1,13 +1,13 @@
-const React = require('react');
-const { Link } = require('react-router-dom');
-const { Breadcrumb, BreadcrumbItem } = require('reactstrap');
-
-const routeInfo = require('../../route-info');
+import * as React from 'react';
+import { Link } from 'react-router-dom';
+import { FormattedMessage } from 'react-intl';
+import { Breadcrumb, BreadcrumbItem } from 'reactstrap';
+import { getRouteFromPath } from '../../model/routes';
 
 const MAX_LENGTH = 3; // maximum number of parts for a breadcrumb
 
 module.exports = ({ location }) => {
-  var paths = location.pathname.split('/')
+  let paths = location.pathname.split('/')
     .slice(1, 1 + MAX_LENGTH)
     .reduce((res, part) => {
       if (part.length > 0) {
@@ -20,11 +20,17 @@ module.exports = ({ location }) => {
   return (
     <Breadcrumb>
       {paths.map((path) => {
-        var active = location.pathname == path;
-        var r = routeInfo.get(path);
-        return r == null ? null : (
+        let active = location.pathname == path;
+        let r = getRouteFromPath(path);
+        if (!r) {
+          return null;
+        }
+        let title = (
+          <FormattedMessage id={r.title} defaultMessage={r.defaultTitle} />
+        );
+        return (
           <BreadcrumbItem key={path} active={active}>
-            {active ? r.title : (<Link to={path}>{r.title}</Link>)}
+            {active ? title : (<Link to={path}>{title}</Link>)}
           </BreadcrumbItem>
         );
       })}
