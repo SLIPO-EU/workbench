@@ -4,7 +4,7 @@ class ResourceRegisterForm extends React.Component {
   render() {
     return (
       <div className="animated fadeIn">
-        Resource Registration Form
+        Resource Registration
       </div>
     );
   }
