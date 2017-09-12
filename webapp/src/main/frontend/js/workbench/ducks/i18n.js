@@ -12,8 +12,8 @@ const initialState = {
   messages: {},
 };
 
-// Reducers
-export const reduceI18n = (state = initialState, action) => {
+// Reducer
+export default (state = initialState, action) => {
   switch (action.type) {
     case REQUEST_MESSAGES:
       return state; // no-op

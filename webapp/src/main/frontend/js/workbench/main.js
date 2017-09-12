@@ -1,6 +1,10 @@
 const store = require('./store');
 const { renderRoot } = require('./root');
-const ducks = require('./ducks/');
+
+import { setCsrfToken } from './ducks/meta';
+import { changeLocale } from './ducks/i18n';
+import { refreshProfile } from './ducks/user';
+
 var rootSelector = document.currentScript.getAttribute('data-root') || '#root';
 
 // Bind top-level event handlers
@@ -17,9 +21,9 @@ document.addEventListener("DOMContentLoaded", function () {
   // Chain preliminary actions before initial rendering
 
   Promise.resolve()
-    .then(() => store.dispatch(ducks.meta.setCsrfToken(token)))
-    .then(() => store.dispatch(ducks.i18n.changeLocale(language)))
-    .then(() => store.dispatch(ducks.user.refreshProfile())
+    .then(() => store.dispatch(setCsrfToken(token)))
+    .then(() => store.dispatch(changeLocale(language)))
+    .then(() => store.dispatch(refreshProfile())
     // recover from an "Unauthorized" error
     .then(undefined, () => console.error('Cannot refresh user profile')))
     .then(() => renderRoot(rootEl));

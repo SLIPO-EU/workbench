@@ -22,7 +22,7 @@ const initialState = {
 };
 
 // Reducer
-export const reduceUser = (state = initialState, action) => {
+export default (state = initialState, action) => {
   switch (action.type) {
     case REQUEST_LOGIN:
       return state; // no-op

@@ -5,7 +5,7 @@ const REQUEST_CONFIGURATION = 'config/REQUEST_CONFIGURATION';
 const LOAD_CONFIGURATION = 'config/LOAD_CONFIGURATION';
 
 // Reducer
-export const reduceConfig = (state = {}, action) => {
+export default (state = {}, action) => {
   switch (action.type) {
     case REQUEST_CONFIGURATION:
       return state;
