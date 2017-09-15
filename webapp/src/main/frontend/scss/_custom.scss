@@ -37,3 +37,15 @@ section:after {
 .toastify__progress {
   z-index: 1030;
 }
+
+/*
+ * React-select
+ */
+
+.Select-control {
+  border-radius: 0;
+}
+
+.Select:focus, .is-focused:not(.is-open) > .Select-control {
+  border-color: #8ad4ee;
+}
