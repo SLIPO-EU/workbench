@@ -20,6 +20,7 @@ import ResourceRegisterForm from './views/resource-register-form';
 
 import Scheduler from './views/process-scheduler';
 import ProcessDesigner from './views/process-designer';
+import TripleGEO from './views/triplegeo';
 
 import RecipeExplorer from './views/recipe-explorer';
 import RecipeDesigner from './views/recipe-designer';
@@ -126,6 +127,7 @@ class Home extends React.Component {
                 <Route path="/resource/explorer" component={ResourceExplorer} />
                 <Route path="/resource/register" component={ResourceRegisterForm} />
                 <Route path="/process/scheduler" component={Scheduler} />
+                <Route path="/process/design/triplegeo" component={TripleGEO}/>
                 <Route path="/process/design" component={ProcessDesigner} />
                 <Route path="/recipe/explorer" component={RecipeExplorer} />
                 <Route path="/recipe/design" component={RecipeDesigner} />
