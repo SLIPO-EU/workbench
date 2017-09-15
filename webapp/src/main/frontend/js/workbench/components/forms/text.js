@@ -12,7 +12,7 @@ export function Text(props) {
       name={props.id} 
       id={props.id} 
       state={props.state}
-      value={props.value}
+      value={props.value || ''}
       onChange={e => typeof props.onChange === 'function' ? props.onChange(e.target.value) : null} 
     />
   );
