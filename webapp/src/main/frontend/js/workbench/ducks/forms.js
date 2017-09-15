@@ -1,33 +1,59 @@
 // Actions
-const SET = 'forms/SET';
-const RESET = 'forms/RESET';
-const SET_ERRORS = 'forms/SET_ERRORS';
-const RESET_ERRORS = 'forms/RESET_ERRORS';
+export const REGISTER = 'forms/REGISTER';
+export const RESET = 'forms/RESET';
+export const SET_VALUES = 'forms/SET_VALUES';
+export const RESET_VALUES = 'forms/RESET_VALUES';
+export const UPDATE_VALUES = 'forms/UPDATE_VALUES';
+export const SET_ERRORS = 'forms/SET_ERRORS';
+export const RESET_ERRORS = 'forms/RESET_ERRORS';
+
 
 // Reducer
 export default function (state = {}, action) {
   switch (action.type) {
-
-    case SET: {
+    case REGISTER: {
       const newState = { ...state };
+      if (newState[action.form]) {
+        console.warn(`Form ${action.form} already exists. Overriding`);
+      }
       newState[action.form] = {
         errors: {},
-        ...newState[action.form],
-        values: { ...action.formData },
+        values: action.initialValues || {},
+        initialValues: action.initialValues || {},
       };
-
       return newState;
     }
 
-    case RESET: {
-      const newState = { ...state };
-      newState[action.form] = { 
-        values: {},
-        errors: {},
-      };
+  case RESET: {
+    const newState = { ...state };
+    newState[action.form] = {
+      ...newState[action.form],
+      errors: {},
+      values: newState[action.form].initialValues,
+    };
+    return newState;
+  }
 
-      return newState;
-    }
+  case SET_VALUES: {
+    const newState = { ...state };
+    newState[action.form] = {
+      ...newState[action.form],
+      values: action.values,
+    };
+    return newState;
+  }
+
+  case UPDATE_VALUES: {
+    const newState = { ...state };
+    newState[action.form] = {
+      ...newState[action.form],
+      values: {
+        ...newState[action.form].values,
+        ...action.values,
+      },
+    };
+    return newState;
+  }
 
   case SET_ERRORS: {
     const newState = { ...state };
@@ -53,17 +79,41 @@ export default function (state = {}, action) {
 }
 
 // Action creators
-export const setForm = function (form, formData) {
+
+export const registerForm = function (form, initialValues) {
   return {
-    type: SET,
+    type: REGISTER,
     form,
-    formData,
+    initialValues,
   };
 };
 
 export const resetForm = function (form) {
   return {
     type: RESET,
+    form,
+  };
+};
+
+export const setFormValues = function (form, values) {
+  return {
+    type: SET_VALUES,
+    form,
+    values,
+  };
+};
+
+export const updateFormValues = function (form, values) {
+  return {
+    type: UPDATE_VALUES,
+    form,
+    values,
+  };
+};
+
+export const resetFormValues = function (form) {
+  return {
+    type: RESET_VALUES,
     form,
   };
 };
@@ -83,6 +133,7 @@ export const resetFormErrors = function (form) {
   };
 };
 
+
 // Validator argument can be sync or async function
 //
 // if async must return promise
@@ -92,13 +143,14 @@ export const resetFormErrors = function (form) {
 // if sync must 
 // return if validation successful
 // throw errors dict
-
-export const validateForm = function (form, validator) {
+export const validateForm = function (form, validator, accessor = (state => state.forms)) {
   return function(dispatch, getState) {
+    const formState = accessor(getState());
+
     dispatch(resetFormErrors(form));
     return Promise.resolve()
-    .then(() => validator(getState().forms[form] && getState().forms[form].values, getState()))
-    .then(() => getState().forms[form].values)
+    .then(() => validator(formState[form] && formState[form].values, getState()))
+    .then(() => formState[form].values)
     .catch((errors) => {
       dispatch(setFormErrors(form, errors));
       throw errors;

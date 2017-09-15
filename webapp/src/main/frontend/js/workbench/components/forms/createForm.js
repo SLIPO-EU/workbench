@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 
-import { setForm, resetForm, validateForm } from '../../ducks/forms';
+import { registerForm, resetForm, validateForm, setFormValues, updateFormValues } from '../../ducks/forms';
 
 class Form extends React.Component {
   componentWillMount() {
@@ -51,8 +51,10 @@ export default function createForm(id, model, validate = () => {}) {
   : ({ values: {}, errors: {} });
 
   const mapDispatchToProps = (dispatch) => bindActionCreators({ 
-    setForm,
+    registerForm,
     resetForm,
+    setFormValues,
+    updateFormValues,
     validateForm,
   }, dispatch);
 
@@ -61,12 +63,12 @@ export default function createForm(id, model, validate = () => {}) {
     ...stateProps,
     ...dispatchProps,
     ...ownProps,
-    registerForm: () => dispatchProps.setForm(id, model),
+    registerForm: () => dispatchProps.registerForm(id, model),
     setForm: (data) => dispatchProps.setForm(id, data),
     updateForm: (field, value) => {
-      const newValues = { ...stateProps.values };  
-      newValues[field] = value;
-      dispatchProps.setForm(id, newValues); 
+      const values = {};  
+      values[field] = value;
+      dispatchProps.updateFormValues(id, values); 
     },
     resetForm: () => dispatchProps.resetForm(id),
     validateForm: () => dispatchProps.validateForm(id, validate),
@@ -78,11 +80,6 @@ export default function createForm(id, model, validate = () => {}) {
     validate: PropTypes.func,
     initialValues: PropTypes.object,
     errors: PropTypes.object,
-  };
-
-  Form.defaultProps = {
-    validate: () => {},
-    initialValues: {},
   };
 
   return connect(mapStateToProps, mapDispatchToProps, mergeProps)(Form);
