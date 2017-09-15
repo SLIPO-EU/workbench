@@ -15,7 +15,7 @@ const model = {
   'targetCRS': 'EPSG:4326',
 };
 
-const validator = function(values, getState) {
+const validator = function(values, state) {
   const errors = {};
   if (!values['featureName']) {
     errors['featureName'] = 'Required for constructing the resource URI';
