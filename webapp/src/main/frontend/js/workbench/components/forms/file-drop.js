@@ -12,6 +12,12 @@ export class FileDrop extends React.Component {
       file: null,
     };
   }
+
+  componentWillMount() {
+    if (this.props.value) {
+      this.setState({ file: this.props.value });
+    }
+  }
 	
   render() {
     const { onChange, style } = this.props;

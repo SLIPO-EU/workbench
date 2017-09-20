@@ -82,6 +82,7 @@ function FileUpload(props) {
         label="Upload file"
         help="Click to select or drop file"
         onChange={(val) => setValue({ ...value, file: val })}
+        value={value && value.file}
         error={errors && errors.file}
       />
        
