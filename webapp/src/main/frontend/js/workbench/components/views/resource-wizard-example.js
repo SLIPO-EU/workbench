@@ -8,11 +8,10 @@ import formatFileSize from '../../util/file-size';
 const Wizard = createWizard(WizardItem);
 
 function WizardItem(props) {
-  const { id, title, description, children, hasPrevious, hasNext, isLast, onNextClicked, onPreviousClicked, reset, errors, completed, step, onComplete } = props;
+  const { id, title, description, children, hasPrevious, hasNext, isLast, onNextClicked, onPreviousClicked, reset, errors, completed, step, steps, onComplete } = props;
   return (
     <div>
-      <h3>Step {step}: {title}</h3>
-      <h5>{description}</h5>
+      <h5>Step {step.index+1} of {steps.length}: {step.title}</h5>
       <hr />
       { children }
       <div>
@@ -23,15 +22,10 @@ function WizardItem(props) {
               <div />
          }
          {
-           completed ?
-             <Button onClick={reset} style={{ float: 'right' }}>Start over?</Button>
-             :
-               (
-               hasNext ?
-                <Button className="next" onClick={onNextClicked} style={{float: 'right'}}>Next</Button>
-                :
-                  <Button className="complete" onClick={onComplete} style={{float: 'right'}}>Send</Button>
-               )
+           hasNext ?
+            <Button className="next" onClick={onNextClicked} style={{float: 'right'}}>Next</Button>
+            :
+              <Button className="complete" onClick={onComplete} style={{float: 'right'}}>Send</Button>
          }
         <br />
       </div>
@@ -95,7 +89,7 @@ function Confirmation(props) {
       <div>
         <h5>Resource</h5>
         <ul>
-          <li> Name: {resource.name}</li>
+          <li>Name: {resource.name}</li>
           <li>Description: {resource.description}</li>
           <li>Format: {resource.format}</li>
           <li>File: {resource.file.name + ', ' + formatFileSize(resource.file.size)}</li>
