@@ -24,57 +24,57 @@ export default function (state = {}, action) {
       return newState;
     }
 
-  case RESET: {
-    const newState = { ...state };
-    newState[action.form] = {
-      ...newState[action.form],
-      errors: {},
-      values: newState[action.form].initialValues,
-    };
-    return newState;
-  }
+    case RESET: {
+      const newState = { ...state };
+      newState[action.form] = {
+        ...newState[action.form],
+        errors: {},
+        values: newState[action.form].initialValues,
+      };
+      return newState;
+    }
 
-  case SET_VALUES: {
-    const newState = { ...state };
-    newState[action.form] = {
-      ...newState[action.form],
-      values: action.values,
-    };
-    return newState;
-  }
+    case SET_VALUES: {
+      const newState = { ...state };
+      newState[action.form] = {
+        ...newState[action.form],
+        values: action.values,
+      };
+      return newState;
+    }
 
-  case UPDATE_VALUES: {
-    const newState = { ...state };
-    newState[action.form] = {
-      ...newState[action.form],
-      values: {
-        ...newState[action.form].values,
-        ...action.values,
-      },
-    };
-    return newState;
-  }
+    case UPDATE_VALUES: {
+      const newState = { ...state };
+      newState[action.form] = {
+        ...newState[action.form],
+        values: {
+          ...newState[action.form].values,
+          ...action.values,
+        },
+      };
+      return newState;
+    }
 
-  case SET_ERRORS: {
-    const newState = { ...state };
-    newState[action.form] = {
-      ...newState[action.form],
-      errors: action.errors,
-    };
-    return newState;
-  }
+    case SET_ERRORS: {
+      const newState = { ...state };
+      newState[action.form] = {
+        ...newState[action.form],
+        errors: action.errors,
+      };
+      return newState;
+    }
 
-  case RESET_ERRORS: {
-    const newState = { ...state };
-    newState[action.form] = {
-      ...newState[action.form],
-      errors: {},
-    };
-    return newState;
-  }
+    case RESET_ERRORS: {
+      const newState = { ...state };
+      newState[action.form] = {
+        ...newState[action.form],
+        errors: {},
+      };
+      return newState;
+    }
 
-  default:
-    return state;
+    default:
+      return state;
   }
 }
 

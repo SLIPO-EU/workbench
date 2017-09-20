@@ -1,6 +1,3 @@
-const _ = require('lodash');
-const fetch = require('fetch');
-
 const actions = require('./api/fetch-actions');
 
 var api = {

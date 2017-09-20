@@ -1,12 +1,7 @@
 import React from 'react';
-import PropTypes from 'prop-types';
-import { bindActionCreators } from 'redux';
-import { connect } from 'react-redux';
 import { Button } from 'reactstrap';
 
-import { createForm, SelectField, TextField, PasswordField } from '../forms';
-
-import { setForm, resetForm } from '../../ducks/forms';
+import { createForm, SelectField, TextField } from '../forms';
 
 const model = {
   'serialization': 'N-TRIPLES',

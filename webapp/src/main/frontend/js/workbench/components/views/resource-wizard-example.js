@@ -1,7 +1,5 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import createWizard from 'react-wiz';
-import { toast } from 'react-toastify';
 import { Button } from 'reactstrap';
 
 import { TextField, SelectField, FileDropField } from '../forms/';
@@ -130,7 +128,7 @@ export default class ReactWizard extends React.Component {
               errors.file = 'File required';
             }
             if (!value.name) {
-               errors.name = 'File name required';
+              errors.name = 'File name required';
             }
             if (!value.format) {
               errors.format = 'Format required';
