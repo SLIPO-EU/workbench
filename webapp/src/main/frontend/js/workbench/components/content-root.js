@@ -1,24 +1,27 @@
-const React = require('react');
-const ReactRedux = require('react-redux');
-const { Switch, Route, Redirect } = require('react-router-dom');
-
-const { userPropType } = require('../common-prop-structs');
-
-const Home = require('./home');
-const LoginForm = require('./login-form');
-const RegisterForm = require('./register-form');
-const ResetPasswordForm = () => (<p>Todo: Reset password</p>);
+import * as React from 'react';
+import * as ReactRedux from 'react-redux';
+import { Switch, Route, Redirect } from 'react-router-dom';
 
 import { ToastContainer } from 'react-toastify';
 
+import { Pages, StaticRoutes, DynamicRoutes, ErrorPages } from '../model/routes';
+import { userPropType } from '../model/prop-types/user';
+
+import Home from './home';
+import LoginForm from './pages/login-form';
+import RegisterForm from './pages/register-form';
+
 import Page403 from './pages/page-403.js';
 import Page404 from './pages/page-404.js';
+
+import Placeholder from './helpers/placeholder';
 
 //
 // Presentational component
 //
 
 class ContentRoot extends React.Component {
+
   constructor(props) {
     super(props);
   }
@@ -30,23 +33,24 @@ class ContentRoot extends React.Component {
     if (!authenticated) {
       routes = (
         <Switch>
-          <Route path="/login" name="login" component={LoginForm} />
-          <Route path="/register" name="register" component={RegisterForm} />
-          <Route path="/reset-password" name="reset-password" component={ResetPasswordForm} />
-          <Redirect push={true} to="/login" />
+          <Route path={Pages.Login} name="login" component={LoginForm} />
+          <Route path={Pages.Register} name="register" component={RegisterForm} />
+          <Route path={Pages.ResetPassword} name="reset-password" component={Placeholder} />
+          <Redirect push={true} to={Pages.Login} />
         </Switch>
       );
     } else {
       routes = (
         <Switch>
           {/* Handle errors first */}
-          <Route path="/error/403" component={Page403} exact />
-          <Route path="/error/404" component={Page404} exact />
+          <Route path={ErrorPages.Forbidden} component={Page403} exact />
+          <Route path={ErrorPages.NotFound} component={Page404} exact />
           {/* Redirect for authenticated users. Navigation after a successful login operation
-              occurs after the component hierarchy is rendered due to state change and casues 
+              occurs after the component hierarchy is rendered due to state change and causes
               /error/404 to render */}
-          <Redirect from="/login" to="/dashboard" exact />
-          <Redirect from="/register" to="/dashboard" exact />
+          <Redirect from={Pages.Login} to={StaticRoutes.Dashboard} exact />
+          <Redirect from={Pages.Register} to={StaticRoutes.Dashboard} exact />
+          <Redirect from={Pages.ResetPassword} to={StaticRoutes.Dashboard} exact />
           {/* Default component */}
           <Route path="/" name="home" component={() => (<Home user={this.props.user} />)} />
         </Switch>

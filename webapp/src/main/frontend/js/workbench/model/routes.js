@@ -1,118 +1,237 @@
 import * as Roles from './role';
 
-const Dashboard = '[Dashboard] Initial page';
-
-const ResourceExplorer = '[Resources] Browse registered resources';
-const ResourceRegistration = '[Resources] Register resource';
-
-const Scheduler = '[Process] Scheduler';
-const ProcessDesigner = '[Process] Data integration process designer';
-
-const RecipeExplorer = '[Recipe] View recipes';
-const RecipeDesigner = '[Recipe] Design recipe';
-
-const UserManager = '[Admin] Manage user accounts';
-const EventViewer = '[Admin] Browser event logs';
+// TODO: Remove
+const TripleGEO = '/process/design/triplegeo';
 
 /**
- * Static link identifiers
+ * Routes for utility pages
  */
-export const StaticLinks = {
+const Login = '/login';
+const Register = '/register';
+const ResetPassword = '/reset-password';
+
+export const Pages = {
+  Login,
+  Register,
+  ResetPassword,
+  // TODO: Remove
+  TripleGEO,
+};
+
+/**
+ * Static routes
+ */
+
+const Dashboard = '/dashboard';
+
+const ResourceExplorer = '/resource/explore';
+const ResourceRegistration = '/resource/register';
+
+const ProcessExplorer = '/process/explore';
+
+const RecipeExplorer = '/recipe/explore';
+
+const SchemaExplorer = '/tools/schema/explore';
+
+const UserManager = '/admin/user-manager';
+const EventViewer = '/admin/event-viewer';
+
+export const StaticRoutes = {
   Dashboard,
   ResourceExplorer,
   ResourceRegistration,
-  Scheduler,
-  ProcessDesigner,
+  ProcessExplorer,
   RecipeExplorer,
-  RecipeDesigner,
+  SchemaExplorer,
   UserManager,
-  EventViewer
+  EventViewer,
 };
 
-const defaultLinks = [Dashboard, ResourceExplorer, Scheduler];
+/**
+ * Dynamic routes
+ */
 
-const routes = [
-  {
-    name: Dashboard,
-    path: '/dashboard',
+const ResourceViewer = '/resource/view/:id';
+
+const ProcessDesignerCreate = '/process/design';
+const ProcessDesignerEdit = '/process/design/:id';
+
+const ProcessExecutionViewer = '/process/view/:process/execution/:execution';
+
+const SchemaDesigner = '/tools/schema/view/:id';
+const DataViewer = '/tools/data/view/:id';
+
+export const DynamicRoutes = {
+  ResourceViewer,
+  ProcessDesignerCreate,
+  ProcessDesignerEdit,
+  ProcessExecutionViewer,
+  SchemaDesigner,
+  DataViewer,
+};
+
+/**
+ * Routes for error pages
+ */
+
+const Forbidden = '/error/403';
+const NotFound = '/error/404';
+
+export const ErrorPages = {
+  Forbidden,
+  NotFound,
+};
+
+const defaultLinks = [Dashboard, ResourceExplorer, ProcessExplorer];
+
+const routes = {
+  // Pages
+  [Login]: {
+    description: 'Login to workbench application',
+  },
+  [Register]: {
+    description: 'Register a new account',
+  },
+  [ResetPassword]: {
+    description: 'Reset user password',
+  },
+  // Static
+  [Dashboard]: {
+    description: 'Initial page',
     title: 'links.dashboard',
     defaultTitle: 'Dashboard',
-    links: [ResourceExplorer, Scheduler]
-  }, {
-    name: ResourceExplorer,
-    path: '/resource/explorer',
+    links: [ResourceExplorer, ProcessExplorer]
+  },
+  [ResourceExplorer]: {
+    description: 'Browse registered resources',
     title: 'links.resource.explorer',
     defaultTitle: 'Resource Explorer',
-    links: [Dashboard, Scheduler, ResourceRegistration]
-  }, {
-    name: ResourceRegistration,
-    path: '/resource/register',
+    links: [Dashboard, ProcessExplorer, ResourceRegistration]
+  },
+  [ResourceRegistration]: {
+    description: 'Register a new resource',
     title: 'links.resource.registration',
     defaultTitle: 'Resource Registration',
     links: defaultLinks
-  }, {
-    name: Scheduler,
-    path: '/process/scheduler',
-    title: 'links.process.scheduler',
-    defaultTitle: 'Scheduler',
-    links: [Dashboard, ResourceExplorer, ProcessDesigner]
-  }, {
-    name: ProcessDesigner,
-    path: '/process/design',
-    title: 'links.process.design',
-    defaultTitle: 'Process Designer',
-    links: defaultLinks
-  }, {
-    name: RecipeExplorer,
-    path: '/recipe/explorer',
+  },
+  [ProcessExplorer]: {
+    description: 'Browser system processes',
+    title: 'links.process.explorer',
+    defaultTitle: 'Process Explorer',
+    links: [Dashboard]
+  },
+  [RecipeExplorer]: {
+    description: 'Browser recipes',
     title: 'links.recipe.explorer',
-    defaultTitle: 'Recipes',
+    defaultTitle: 'Recipe Explorer',
     links: defaultLinks
-  }, {
-    name: RecipeDesigner,
-    path: '/recipe/design',
-    title: 'links.recipe.design',
-    defaultTitle: 'Recipe Designer',
+  },
+  [SchemaExplorer]: {
+    description: 'Browser schema mappings',
+    title: 'links.tools.schema-explorer',
+    defaultTitle: 'Schema Explorer',
     links: defaultLinks
-  }, {
-    name: UserManager,
-    path: '/admin/user-manager',
+  },
+  [UserManager]: {
+    description: 'Manage user accounts',
     title: 'links.admin.user-manager',
     defaultTitle: 'User Management',
     role: Roles.ADMIN,
-    links: defaultLinks
-  }, {
-    name: EventViewer,
-    path: '/admin/event-viewer',
+    links: [Dashboard, EventViewer],
+  },
+  [EventViewer]: {
+    description: 'Browse event logs',
     title: 'links.admin.event-viewer',
     defaultTitle: 'Event Viewer',
-    role: Roles.MAINTAINER,
+    role: Roles.ADMIN,
+    links: [Dashboard, UserManager],
+  },
+  // Dynamic
+  [ResourceViewer]: {
+    description: 'View/Update an existing resource',
+    title: 'links.resource.viewer',
+    defaultTitle: 'Resource Viewer',
     links: defaultLinks
   },
-];
+  [ProcessDesignerCreate]: {
+    description: 'Create a data integration processes',
+    title: 'links.process.designer',
+    defaultTitle: 'Process Designer',
+    links: defaultLinks
+  },
+  [ProcessDesignerEdit]: {
+    description: 'Update a data integration processes',
+    title: 'links.process.designer',
+    defaultTitle: 'Process Designer',
+    links: defaultLinks
+  },
+  [ProcessExecutionViewer]: {
+    description: 'View information about a process execution instance',
+    title: 'links.process.execution',
+    defaultTitle: 'Process Viewer',
+    links: defaultLinks
+  },
+  [SchemaDesigner]: {
+    description: 'View/Update schema mappings',
+    title: 'links.tools.schema-designer',
+    defaultTitle: 'Schema Editor',
+    links: defaultLinks
+  },
+  [DataViewer]: {
+    description: 'View a POI dataset',
+    title: 'links.tools.data-viewer',
+    defaultTitle: 'Data Viewer',
+    links: defaultLinks
+  },
+  // Error Pages
+  [Forbidden]: {
+    description: 'Forbidden',
+  },
+  [NotFound]: {
+    description: 'Not Found',
+  },
+  // TODO: Remove
+  [TripleGEO]: {
+    description: 'TripleGEO config',
+    title: 'Triple GEO',
+    defaultTitle: 'Triple GEO',
+  },
+};
 
-function getRouteFromProperty(prop, value) {
-  return routes.find(r => r[prop] === value);
+/**
+ * Find a route by its path e.g. /Dashboard
+ *
+ * @export
+ * @param {string} path - route path
+ * @returns
+ */
+export function getRoute(path) {
+  return routes[path];
 }
 
 /**
- * Search and return a route by its path e.g. /Dashboard
- * 
+ * Build a path given a route and optional parameters
+ *
  * @export
- * @param {any} path 
- * @returns 
+ * @param {string} path - The route name
+ * @param {string[]|object} params - Optional parameters to bind
  */
-export function getRouteFromPath(path) {
-  return getRouteFromProperty('path', path);
-}
+export function buildPath(path, params) {
+  let result = path || '/';
 
-/**
- * Search and return a route by its name e.g. {@link StaticLinks.Dashboard}
- * 
- * @export
- * @param {any} name 
- * @returns 
- */
-export function getRouteFromName(name) {
-  return getRouteFromProperty('name', name);
+  if (params) {
+    if (Array.isArray(params)) {
+      let re = /:\w+/i;
+      for (const value of params) {
+        result = result.replace(re, value);
+      }
+    } else {
+      for (const prop in params) {
+        let re = new RegExp(':' + prop, 'i');
+        result = result.replace(re, params[prop]);
+      }
+    }
+  }
+
+  return result;
 }

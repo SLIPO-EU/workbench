@@ -3,9 +3,9 @@ const PropTypes = require('prop-types');
 const ReactRedux = require('react-redux');
 const { Dropdown, DropdownMenu, DropdownItem } = require('reactstrap');
 
-const { userPropType } = require('../../common-prop-structs');
+import { userPropType } from '../../model/prop-types/user';
 
-import ShortcutList from './shortcut-list';
+import Toolbar from './toolbar';
 
 //
 // Presentational component
@@ -36,10 +36,10 @@ class Header extends React.Component {
           onClick={() => this.props.styleSidebar('mobile-show')}>
           <i className="fa fa-navicon"></i>
         </button>
-        <a className="navbar-brand" href="#"></a>
+        <a className="navbar-brand" target="_blank" href="http://www.slipo.eu/"></a>
 
         {/* left-aligned menu items */}
-        <ShortcutList user={this.props.user} toggleSidebar={this.props.toggleSidebar} />
+        <Toolbar user={this.props.user} toggleSidebar={this.props.toggleSidebar} />
 
         {/* right-aligned menu items */}
         <ul className="nav navbar-nav ml-auto">

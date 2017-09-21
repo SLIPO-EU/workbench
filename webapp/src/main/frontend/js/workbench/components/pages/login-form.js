@@ -6,6 +6,8 @@ const { FormattedMessage } = require('react-intl');
 
 import { toast } from 'react-toastify';
 
+import { Pages } from '../../model/routes';
+
 //
 // Presentational component
 //
@@ -76,7 +78,7 @@ class LoginForm extends React.Component {
                         </button>
                       </div>
                       <div className="col-6 text-right">
-                        <NavLink className="btn px-0" activeClassName="active" to="/reset-password">
+                        <NavLink className="btn px-0" activeClassName="active" to={Pages.ResetPassword}>
                           <FormattedMessage id="login.forgot-password" defaultMessage="Forgot password?" />
                         </NavLink>
                       </div>
@@ -91,7 +93,7 @@ class LoginForm extends React.Component {
                       <p>
                         <FormattedMessage id="register.subtitle" defaultMessage="Register for a new account" />
                       </p>
-                      <NavLink className="btn btn-primary active mt-3" to="/register">
+                      <NavLink className="btn btn-primary active mt-3" to={Pages.Register}>
                         <FormattedMessage id="register.register" defaultMessage="Register!" />
                       </NavLink>
                     </div>
@@ -116,7 +118,7 @@ LoginForm.propTypes = {
 // Container component
 //
 
-const { login, refreshProfile } = require('../ducks/user');
+const { login, refreshProfile } = require('../../ducks/user');
 const { push: navigateTo } = require('react-router-redux');
 
 const mapStateToProps = null;
@@ -126,10 +128,10 @@ const mapDispatchToProps = (dispatch) => ({
     dispatch(login(username, password))
       .then(() => dispatch(refreshProfile()))
       .then(() => toast.dismiss(),
-            () => {
-              toast.dismiss();
-              toast.error(<FormattedMessage id="login.failure" defaultMessage="The username or password is incorrect." />);
-            })
+      () => {
+        toast.dismiss();
+        toast.error(<FormattedMessage id="login.failure" defaultMessage="The username or password is incorrect." />);
+      })
       .catch((err) => null)
   ),
 });

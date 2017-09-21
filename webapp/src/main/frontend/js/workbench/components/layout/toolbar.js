@@ -2,16 +2,16 @@ import * as React from 'react';
 import * as PropTypes from 'prop-types';
 import { NavLink, withRouter } from 'react-router-dom';
 import { FormattedMessage } from 'react-intl';
-import { userPropType } from '../../common-prop-structs';
-import { getRouteFromPath, getRouteFromName } from '../../model/routes';
+import { userPropType } from '../../model/prop-types/user';
+import { getRoute } from '../../model/routes';
 
 /**
  * Renders a list of links based on route configuration and user roles
- * 
- * @class ShortcutList
+ *
+ * @class Toolbar
  * @extends {React.Component}
  */
-class ShortcutList extends React.Component {
+class Toolbar extends React.Component {
 
   constructor(props) {
     super(props);
@@ -19,10 +19,10 @@ class ShortcutList extends React.Component {
 
   /**
    * Determines if the current user has the specific role
-   * 
-   * @param {String} role 
-   * @returns 
-   * @memberof ShortcutList
+   *
+   * @param {String} role
+   * @returns
+   * @memberof Toolbar
    */
   hasRole(role) {
     if (!role) {
@@ -30,26 +30,26 @@ class ShortcutList extends React.Component {
     }
 
     let user = this.props.user;
-    return (user && user.profile.roles.indexOf(role) !== -1);
+    return (user && user.roles.indexOf(role) !== -1);
   }
 
   /**
    * Gets a list of li elements based on route configuration and user roles
-   * 
-   * @returns 
-   * @memberof ShortcutList
+   *
+   * @returns
+   * @memberof Toolbar
    */
   getLinks() {
-    let route = getRouteFromPath(this.props.location.pathname);
+    let route = getRoute(this.props.location.pathname);
     let links = [];
 
     if ((route) && (route.links)) {
-      for (let name of route.links) {
-        let r = getRouteFromName(name);
+      for (let path of route.links) {
+        let r = getRoute(path);
         if (this.hasRole(r.role)) {
           links.push(
-            <li className="nav-item px-3" key={r.name}>
-              <NavLink to={r.path} className="nav-link" activeClassName="active">
+            <li className="nav-item px-3" key={path}>
+              <NavLink to={path} className="nav-link" activeClassName="active">
                 <FormattedMessage id={r.title} defaultMessage={r.defaultTitle} />
               </NavLink>
             </li>
@@ -78,10 +78,9 @@ class ShortcutList extends React.Component {
   }
 }
 
-ShortcutList.propTypes = {
+Toolbar.propTypes = {
   user: userPropType,
   toggleSidebar: PropTypes.func.isRequired,
 };
 
-// Component must have access to router properties location and match
-export default withRouter(ShortcutList);
+export default withRouter(Toolbar);

@@ -21,6 +21,9 @@
     "admin": {
       "user-manager": "Χρήστες",
       "event-viewer": "Καταγραφή Συμβάντων"
+    },
+    "map": {
+      "viewer": "Προβολή Χάρτη"
     }
   },
   "login": {

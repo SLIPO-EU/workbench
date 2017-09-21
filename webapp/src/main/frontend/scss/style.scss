@@ -1,9 +1,40 @@
-@import "coreui/style";
+/*
+ * Import variables
+ */
 
-@import "buttons";
-@import "images";
+@import 'variables';
 
-// Import react-toastify styles
+/*
+ * Core UI
+ */
+
+@import 'coreui/style';
+
+/*
+ * Import styles for 3rd party components
+ */
+
 @import '../../../../node_modules/react-toastify/src/scss/main';
 
-@import "custom";
+/*
+ * Customize styles for 3rd party components
+ */
+
+@import 'vendor/react-toastify';
+@import 'vendor/react-select';
+
+/*
+ * Import SLIPO components
+ */
+
+@import 'card';
+@import 'chart';
+@import 'job-status';
+@import 'map';
+@import 'table';
+
+/**
+ * Apply custom styles
+ */
+
+@import 'custom';

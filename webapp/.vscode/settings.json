@@ -1,4 +1,4 @@
 {
-    "java.configuration.updateBuildConfiguration": "automatic",
-    "editor.tabSize": 2
+    "editor.tabSize": 2,
+    "beautify.tabSize": 2
 }

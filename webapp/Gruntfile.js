@@ -52,7 +52,7 @@ module.exports = function (grunt) {
           // The following will be resolved globally (shim) or via earlier vendor includes
           external: [
             'fetch', 'lodash', 'immutable', 'history', 'url-search-params', 'flat',
-            'moment', 'moment/locale/el', 
+            'moment', 'moment/locale/el',
             'react', 'react-dom', 'prop-types', 'react-router-dom',
             'redux', 'redux-logger', 'redux-thunk', 'react-router-redux', 'react-redux',
             'reactstrap', 'react-transition-group',

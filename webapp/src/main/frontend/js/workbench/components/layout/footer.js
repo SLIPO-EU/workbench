@@ -4,7 +4,7 @@ class Footer extends React.Component {
   render() {
     return (
       <footer className="app-footer">
-        <span className="float-right">Powered by <a href="http://">CoreUI</a></span>
+        <span className="float-right">Powered by <a target="_blank" href="http://coreui.io/">CoreUI</a></span>
       </footer>
     );
   }

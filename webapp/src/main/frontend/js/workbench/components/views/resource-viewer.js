@@ -1,12 +1,12 @@
 import * as React from 'react';
 
 /**
- * Browse and manage POI data integration process recipes
+ * View and update an existing resource
  *
- * @class RecipeExplorer
+ * @class ResourceViewer
  * @extends {React.Component}
  */
-class RecipeExplorer extends React.Component {
+class ResourceViewer extends React.Component {
 
   render() {
     return (
@@ -17,4 +17,4 @@ class RecipeExplorer extends React.Component {
 
 }
 
-export default RecipeExplorer;
+export default ResourceViewer;

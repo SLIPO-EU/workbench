@@ -1,9 +1,7 @@
 {
-  presets: [
-    "es2015",
+  "presets": [
+    "env",
     "stage-2",
-    "react", // transform JSX 
+    "react"
   ]
 }
-
-

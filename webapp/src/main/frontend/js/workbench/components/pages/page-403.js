@@ -2,6 +2,8 @@ import * as React from 'react';
 import { Container, Row, Col, Button } from 'reactstrap';
 import { NavLink } from 'react-router-dom';
 
+import { StaticRoutes } from '../../model/routes';
+
 export default class Page403 extends React.Component {
   render() {
     return (
@@ -14,7 +16,7 @@ export default class Page403 extends React.Component {
                 <h4 className='pt-3'>Oops! You shouldn't be here.</h4>
                 <p className='text-muted float-left'>The page you are looking for was not found or you do not have the required permission.</p>
               </div>
-              <NavLink to='/dashboard'>
+              <NavLink to={StaticRoutes.Dashboard}>
                 <Button color='danger'><i className='fa fa-home'></i>&nbsp; Take Me Home</Button>
               </NavLink>
             </Col>

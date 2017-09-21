@@ -1,15 +1,54 @@
-/**
- * Apply custom styles
+/*
+ * Override Core UI styles
  */
 
-$font: sans-serif;
+.main {
+  background-color: #e4e5e6;
+}
 
-body {
-   font-family: $font;
+.app-header.navbar {
+  .nav-item {
+    padding: 0px 10px;
+    min-width: 60px;
+  }
+  .navbar-brand {
+    padding: 0px;
+    background-image: url("../images/logo.png");
+    background-size: 90px auto;
+  }
+}
+
+.img-avatar {
+  height: 32px;
+  border-radius: 0px;
+}
+
+.breadcrumb {
+  margin-bottom: 1.4rem !important;
+  padding: 0.70rem 1rem !important;
+}
+
+.app-footer {
+  min-height: 51px;
+}
+
+
+/*
+ * Override Bootstrap styles
+ */
+
+.btn {
+  cursor: pointer;
+}
+
+.dropdown-item {
+  i {
+    color: #9da2a4;
+  }
 }
 
 section {
-   padding: 10px 0px;
+  padding: 10px 0px;
 }
 
 section:after {
@@ -17,35 +56,4 @@ section:after {
   display: block;
   float: none;
   clear: both;
-}
-
-.app-header.navbar {
-
-  .nav-item {
-    padding: 0px 10px;
-    min-width: 60px;
-  } 
-}
-
-/*
-* Fix z-ordering for react-toastify / CoreUI header component 
-*/
-.toastify {
-  z-index: 1030;
-}
-
-.toastify__progress {
-  z-index: 1030;
-}
-
-/*
- * React-select
- */
-
-.Select-control {
-  border-radius: 0;
-}
-
-.Select:focus, .is-focused:not(.is-open) > .Select-control {
-  border-color: #8ad4ee;
 }

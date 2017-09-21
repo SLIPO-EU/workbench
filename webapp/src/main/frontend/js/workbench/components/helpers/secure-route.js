@@ -2,6 +2,8 @@ import * as React from 'react';
 import * as ReactRedux from 'react-redux';
 import { Route, Redirect } from 'react-router-dom';
 
+import { Pages, ErrorPages } from '../../model/routes';
+
 class SecureRoute extends React.Component {
 
   constructor(props) {
@@ -14,7 +16,7 @@ class SecureRoute extends React.Component {
     }
 
     let user = this.props.user;
-    return (user && user.profile.roles.indexOf(role) !== -1);
+    return (user && user.roles.indexOf(role) !== -1);
   }
 
   render() {
@@ -23,7 +25,7 @@ class SecureRoute extends React.Component {
 
     if (!authenticated) {
       return (
-        <Redirect to="/login" />
+        <Redirect to={Pages.Login} />
       );
     }
     if (this.hasRole(role)) {
@@ -32,7 +34,7 @@ class SecureRoute extends React.Component {
       );
     }
     return (
-      <Redirect to="/error/403" />
+      <Redirect to={ErrorPages.Forbidden} />
     );
   }
 }
@@ -43,7 +45,7 @@ class SecureRoute extends React.Component {
 
 const mapStateToProps = (state) => {
   return {
-    user: state.user
+    user: state.user.profile
   };
 };
 

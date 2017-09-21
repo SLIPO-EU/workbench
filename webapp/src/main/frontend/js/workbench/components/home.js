@@ -1,33 +1,40 @@
 import * as React from 'react';
 import { Switch, Route, Redirect } from 'react-router-dom';
+
 import { Container } from 'reactstrap';
 
-import Header from './layout/header';
-import Sidebar from './layout/sidebar';
-import Breadcrumb from './layout/breadcrumb';
-import Aside from './layout/aside';
-import Footer from './layout/footer';
-
 import * as Roles from '../model/role';
-import { userPropType } from '../common-prop-structs';
+import { Pages, StaticRoutes, DynamicRoutes, ErrorPages } from '../model/routes';
+import { userPropType } from '../model/prop-types/user';
+
+import {
+  Aside,
+  Breadcrumb,
+  Footer,
+  Header,
+  Sidebar,
+} from './layout/';
 
 import SecureRoute from './helpers/secure-route';
 
-import Dashboard from './views/dashboard';
+import {
+  Dashboard,
+  ResourceExplorer,
+  ResourceRegistration,
+  ProcessExplorer,
+  RecipeExplorer,
+  SchemaExplorer,
+  UserManager,
+  EventViewer,
+  ResourceViewer,
+  ProcessDesigner,
+  ProcessExecutionViewer,
+  SchemaDesigner,
+  DataViewer,
+} from './views/';
 
-import ResourceExplorer from './views/resource-explorer';
-import ResourceRegisterForm from './views/resource-register-form';
-
-import Scheduler from './views/process-scheduler';
-import ProcessDesigner from './views/process-designer';
+// TODO: Remove
 import TripleGEO from './views/triplegeo';
-import ResourceWizard from './views/resource-wizard-example';
-
-import RecipeExplorer from './views/recipe-explorer';
-import RecipeDesigner from './views/recipe-designer';
-
-import UserManager from './views/user-manager';
-import EventViewer from './views/event-viewer';
 
 /////////////////////////////////////////////////////////////////
 //
@@ -121,21 +128,29 @@ class Home extends React.Component {
           <Route path="/" component={Sidebar} />
           <div className="main">
             <Route path="/" component={Breadcrumb} />
-            <Container fluid>
+            <Container fluid className="slipo-container">
               <Switch>
-                <Redirect from="/" to="/dashboard" exact />
-                <Route path="/dashboard" component={Dashboard} />
-                <Route path="/resource/explorer" component={ResourceExplorer} />
-                <Route path="/resource/register" component={ResourceRegisterForm} />
-                <Route path="/process/scheduler" component={Scheduler} />
-                <Route path="/process/design/triplegeo" component={TripleGEO}/>
-                <Route path="/process/design/resource" component={ResourceWizard}/>
-                <Route path="/process/design" component={ProcessDesigner} />
-                <Route path="/recipe/explorer" component={RecipeExplorer} />
-                <Route path="/recipe/design" component={RecipeDesigner} />
-                <SecureRoute path="/admin/user-manager" component={UserManager} role={Roles.ADMIN} />
-                <SecureRoute path="/admin/event-viewer" component={EventViewer} role={Roles.MAINTAINER} />
-                <Redirect push={true} to="/error/404" />
+                <Redirect from="/" to={StaticRoutes.Dashboard} exact />
+                {/* TODO: Remove */}
+                <Route path={Pages.TripleGEO} component={TripleGEO} exact />
+                {/* Dynamic */}
+                <Route path={DynamicRoutes.ResourceViewer} component={ResourceViewer} />
+                <Route path={DynamicRoutes.ProcessDesignerCreate} component={ProcessDesigner} />
+                <Route path={DynamicRoutes.ProcessDesignerEdit} component={ProcessDesigner} />
+                <Route path={DynamicRoutes.ProcessExecutionViewer} component={ProcessExecutionViewer} />
+                <Route path={DynamicRoutes.SchemaDesigner} component={SchemaDesigner} />
+                <Route path={DynamicRoutes.DataViewer} component={DataViewer} />
+                {/* Static */}
+                <Route path={StaticRoutes.Dashboard} component={Dashboard} />
+                <Route path={StaticRoutes.ResourceExplorer} component={ResourceExplorer} />
+                <Route path={StaticRoutes.ResourceRegistration} component={ResourceRegistration} />
+                <Route path={StaticRoutes.ProcessExplorer} component={ProcessExplorer} />
+                <Route path={StaticRoutes.RecipeExplorer} component={RecipeExplorer} />
+                <Route path={StaticRoutes.SchemaExplorer} component={SchemaExplorer} />
+                <SecureRoute path={StaticRoutes.UserManager} component={UserManager} role={Roles.ADMIN} />
+                <SecureRoute path={StaticRoutes.EventViewer} component={EventViewer} role={Roles.ADMIN} />
+                {/* Default */}
+                <Redirect push={true} to={ErrorPages.NotFound} />
               </Switch>
             </Container>
           </div>

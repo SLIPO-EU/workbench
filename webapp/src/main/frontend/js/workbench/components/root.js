@@ -2,7 +2,7 @@ const React = require('react');
 const ReactRedux = require('react-redux');
 const { BrowserRouter, Route } = require('react-router-dom');
 const ReactIntl = require('react-intl');
-const { basename, history } = require('../history');
+const { basename } = require('../history');
 
 //
 // Add locale-specific data for each supported locale
@@ -19,12 +19,13 @@ ReactIntl.addLocaleData(require('react-intl/locale-data/el'));
 const ContentRoot = require('./content-root');
 
 class Root extends React.Component {
+
   render() {
     var { locale, messages } = this.props;
 
     return (
       <ReactIntl.IntlProvider locale={locale} key={locale} messages={messages}>
-        <BrowserRouter basename={basename} history={history}>
+        <BrowserRouter basename={basename} >
           {/* wrap connected component in a Route to be aware of navigation */}
           <Route path="/" component={ContentRoot} />
         </BrowserRouter>

@@ -1,12 +1,12 @@
 import * as React from 'react';
 
 /**
- * Browse and manage POI data integration process recipes
+ * Create/Update a schema mapping definition
  *
- * @class RecipeExplorer
+ * @class SchemaDesigner
  * @extends {React.Component}
  */
-class RecipeExplorer extends React.Component {
+class SchemaDesigner extends React.Component {
 
   render() {
     return (
@@ -17,4 +17,4 @@ class RecipeExplorer extends React.Component {
 
 }
 
-export default RecipeExplorer;
+export default SchemaDesigner;

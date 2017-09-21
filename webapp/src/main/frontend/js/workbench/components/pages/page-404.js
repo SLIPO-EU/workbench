@@ -2,6 +2,8 @@ import * as React from 'react';
 import { Container, Row, Col, Button } from 'reactstrap';
 import { NavLink } from 'react-router-dom';
 
+import { StaticRoutes } from '../../model/routes';
+
 export default class Page404 extends React.Component {
   render() {
     return (
@@ -14,7 +16,7 @@ export default class Page404 extends React.Component {
                 <h4 className='pt-3'>Oops! You're lost.</h4>
                 <p className='text-muted float-left'>The page you are looking for was not found.</p>
               </div>
-              <NavLink to='/dashboard'>
+              <NavLink to={StaticRoutes.Dashboard}>
                 <Button color='primary'><i className='fa fa-home'></i>&nbsp; Take Me Home</Button>
               </NavLink>
             </Col>

@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
-   xmlns:th="http://www.thymeleaf.org"
-   xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4"
-   lang="en">
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4"
+      lang="en">
 
 <head>
   <meta charset="utf-8" />
@@ -15,25 +15,27 @@
 
   <meta name="_csrf" th:content="${_csrf.token}" />
   <meta name="_csrf_header" th:content="${_csrf.headerName}" />
-   
+
   <script th:if="${@environment.getActiveProfiles()[0] == 'production'}" th:src="@{/js/vendor/util.min.js}"></script>
   <script th:if="${@environment.getActiveProfiles()[0] == 'development'}" th:src="@{/js/vendor/util.js}"></script>
-  
+
   <script th:if="${@environment.getActiveProfiles()[0] == 'production'}" th:src="@{/js/vendor/react-with-redux.min.js}"></script>
   <script th:if="${@environment.getActiveProfiles()[0] == 'development'}" th:src="@{/js/vendor/react-with-redux.js}"></script>
-  
+
   <link rel="stylesheet" th:href="@{/vendor/coreui/css/font-awesome.min.css}" />
   <link rel="stylesheet" th:href="@{/vendor/coreui/css/simple-line-icons.css}" />
-  
+
   <link rel="stylesheet" th:href="@{/vendor/react-select/dist/react-select.css}" />
-  
+  <link rel="stylesheet" th:href="@{/vendor/react-table/react-table.css}" />
+
   <link rel="stylesheet" th:href="@{/css/style.css}" />
 </head>
 
 <body>
-   <div id="root"></div>
+  <div id="root"></div>
 </body>
 
 <script th:if="${@environment.getActiveProfiles()[0] == 'production'}" th:src="@{/js/workbench.min.js}"></script>
 <script th:if="${@environment.getActiveProfiles()[0] == 'development'}" th:src="@{/js/workbench.js}"></script>
+
 </html>

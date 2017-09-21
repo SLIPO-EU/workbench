@@ -5,7 +5,7 @@ import * as ReactRedux from 'react-redux';
 /**
  * Renders children only if a role name is provided as
  * a property and the user has the specific role
- * 
+ *
  * @class SecureContent
  * @extends {React.Component}
  */
@@ -22,7 +22,7 @@ class SecureContent extends React.Component {
       return false;
     }
 
-    return (user.profile.roles.indexOf(role) !== -1);
+    return (user.roles.indexOf(role) !== -1);
   }
 
   render() {
@@ -47,7 +47,7 @@ SecureContent.propTypes = {
 
 const mapStateToProps = (state) => {
   return {
-    user: state.user
+    user: state.user.profile
   };
 };
 

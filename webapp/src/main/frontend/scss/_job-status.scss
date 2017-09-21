@@ -1,0 +1,31 @@
+.slipo-job-status-failed {
+  padding: 4px 4px;
+  border-radius: 4px;
+  color: #D8000C;
+  background-color: #FFBABA;
+  text-align: center;
+}
+
+.slipo-job-status-stopped {
+  padding: 4px 4px;
+  border-radius: 4px;
+  color: #9F6000;
+  background-color: #FEEFB3;
+  text-align: center;
+}
+
+.slipo-job-status-running {
+  padding: 4px 4px;
+  border-radius: 4px;
+  color: #00529B;
+  background-color: #BDE5F8;
+  text-align: center;
+}
+
+.slipo-job-status-completed {
+  padding: 4px 4px;
+  border-radius: 4px;
+  color: #f3f3f3;
+  background-color: #51A351;
+  text-align: center;
+}

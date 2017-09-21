@@ -1,19 +1,20 @@
 import * as React from 'react';
 
 /**
- * Designer for creating and updating POI data integration processes
- * 
+ * Create/Update a POI data integration process
+ *
  * @class ProcessDesigner
  * @extends {React.Component}
  */
 class ProcessDesigner extends React.Component {
+
   render() {
     return (
       <div className="animated fadeIn">
-        Process Designer
       </div>
     );
   }
+
 }
 
 export default ProcessDesigner;
