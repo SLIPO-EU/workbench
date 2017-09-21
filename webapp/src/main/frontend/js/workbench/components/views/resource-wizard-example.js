@@ -46,9 +46,9 @@ function ForkStep(props) {
         value={value}
         error={errors}
         options={[
-          { value: 'resource' },
-          { value: 'url' },
-          { value: 'file' },
+          { value: 'resource', label: 'Resource list' },
+          { value: 'url', label: 'External url' },
+          { value: 'file', label: 'File upload' },
         ]}
       />
     </div>
@@ -145,27 +145,27 @@ function ConfirmationStep(props) {
     <div>
       <div>
         <ul>
-          <li>Input method: {fork}</li>
+          <li>Input method: {fork.label}</li>
         </ul>
         { 
-          fork === 'file' ?
+          fork.value === 'file' ?
             <ul>
               <li>Name: {file.name}</li>
               <li>Description: {file.description}</li>
-              <li>Format: {file.format}</li>
+              <li>Format: {file.format.label}</li>
               <li>File: {file.file.name + ', ' + formatFileSize(file.file.size)}</li>
             </ul>
             : null
         }
         {
-          fork === 'resource' ?
+          fork.value === 'resource' ?
             <ul>
-              <li>Resources: {resource.resources.join(', ')}</li>
+              <li>Resources: {resource.resources.map(r => r.label).join(', ')}</li>
             </ul>
             : null
         }
         {
-          fork === 'url' ?
+          fork.value === 'url' ?
             <ul>
               <li>Url: {url.url}</li>
             </ul>
@@ -179,15 +179,15 @@ function ConfirmationStep(props) {
 export default class ReactWizard extends React.Component {
   render() {
     return (
-      <div className="animated fadeIn" style={{ height: '100vh' }}>
+      <div className="animated fadeIn" style={{ width: 500 }}>
         <Wizard
-          onComplete={(values) => { console.log('completed with', values); }}
+          onComplete={(values) => { console.log('completed with', values); alert('completed'); }}
         >
         <ForkStep
           id="fork"
           title="Input mode"
-          initialValue="resource"
-          next={value => value} 
+          initialValue={{ value: 'resource', label: 'Resource list' }}
+          next={value => value.value} 
         />
         <UrlSelectStep
           id="url"
@@ -243,6 +243,7 @@ export default class ReactWizard extends React.Component {
           }}
           next={() => 'confirm'}
         />
+
         <ConfirmationStep
           id="confirm"
           title="Confirm"

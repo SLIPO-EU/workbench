@@ -10,11 +10,11 @@ export function MultiSelect(props) {
       name={props.id} 
       id={props.id} 
       multi
-      value={Array.isArray(props.value) ? props.value.map(v => ({ value: v, label: v })) : [{ value: props.value, label: props.value }]}
+      value={props.value}
       onChange={(val) => {
         if (typeof props.onChange === 'function') {
           if (Array.isArray(val)) {
-            props.onChange(val.map(v => v.value));
+            props.onChange(val);
           } else {
             props.onChange(null);
           }

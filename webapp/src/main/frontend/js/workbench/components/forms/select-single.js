@@ -9,12 +9,12 @@ export function Select(props) {
     <ReactSelect
       name={props.id} 
       id={props.id} 
-      value={{ value: props.value, label: props.value }}
+      value={props.value}
       clearable={false}
       onChange={(val) => {
         if (typeof props.onChange === 'function') {
-          if (val && val.value) {
-            props.onChange(val.value);
+          if (val) {
+            props.onChange(val);
           } else {
             props.onChange(null);
           }
