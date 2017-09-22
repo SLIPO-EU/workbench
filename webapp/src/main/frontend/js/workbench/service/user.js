@@ -12,8 +12,8 @@ var api = {
 
   login: (username, password, token) => {
     const loginForm = new FormData();
-    loginForm.set('username', username);
-    loginForm.set('password', password);
+    loginForm.append('username', username);
+    loginForm.append('password', password);
 
     return actions.submit('/login', token, loginForm);
   },
