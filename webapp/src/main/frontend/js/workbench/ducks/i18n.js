@@ -53,12 +53,12 @@ const requestMessages = (locale) => ({
 export const fetchMessages = (locale) => (dispatch) => {
   dispatch(requestMessages(locale));
   return getMessages(locale)
-  .then(r => dispatch(loadMessages(locale, r)));
+    .then(r => dispatch(loadMessages(locale, r)));
 };
 
 export const changeLocale = (locale) => (dispatch) => {
   dispatch(fetchMessages(locale))
     .then(
-    () => dispatch(setLocale(locale)),
-    () => console.warn("No messages for locale " + locale));
+      () => dispatch(setLocale(locale)),
+      () => console.warn("No messages for locale " + locale));
 };

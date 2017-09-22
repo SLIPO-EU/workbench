@@ -17,8 +17,8 @@ module.exports = (url, method, token, body) => fetch(url, {
   credentials: 'same-origin',
   body,
 })
-.then(checkStatus)
-.then(res => res.json())
-.then(checkError)
-.then(r => r.result);
+  .then(checkStatus)
+  .then(res => res.json())
+  .then(checkError)
+  .then(r => r.result);
 

@@ -149,11 +149,11 @@ export const validateForm = function (form, validator, accessor = (state => stat
 
     dispatch(resetFormErrors(form));
     return Promise.resolve()
-    .then(() => validator(formState[form] && formState[form].values, getState()))
-    .then(() => formState[form].values)
-    .catch((errors) => {
-      dispatch(setFormErrors(form, errors));
-      throw errors;
-    });
+      .then(() => validator(formState[form] && formState[form].values, getState()))
+      .then(() => formState[form].values)
+      .catch((errors) => {
+        dispatch(setFormErrors(form, errors));
+        throw errors;
+      });
   };
 };

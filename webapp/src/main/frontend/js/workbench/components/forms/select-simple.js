@@ -13,11 +13,11 @@ export function Select(props) {
       value={props.value}
       onChange={e => typeof props.onChange === 'function' ? props.onChange(e.target.value) : null} 
     >
-    {
-      props.options.map(option => (
-        <option key={option.value} value={option.value}>{option.label || option.value}</option>
+      {
+        props.options.map(option => (
+          <option key={option.value} value={option.value}>{option.label || option.value}</option>
         ))
-    }
+      }
     </Input>
   );
 }

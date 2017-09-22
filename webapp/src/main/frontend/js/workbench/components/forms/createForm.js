@@ -17,26 +17,27 @@ class Form extends React.Component {
           e.preventDefault();
           
           this.props.validateForm()
-          .then((values) => this.props.onSuccess(values))
-          .catch((error) => this.props.onFailure(error));
+            .then((values) => this.props.onSuccess(values))
+            .catch((error) => this.props.onFailure(error));
         }}
       >
-      {
-        React.Children.map(this.props.children, ((Child,i) => (
-          Child.props.id ?
-            <Child.type 
-              key={i} 
-              {...Child.props}
-              onChange={(value) => this.props.updateForm(Child.props.id, value)}
-              error={this.props.errors[Child.props.id]}
-              value={this.props.values[Child.props.id]}
-            />
-            : <Child.type 
+        {
+          React.Children.map(this.props.children, ((Child,i) => (
+            Child.props.id ?
+              <Child.type 
+                key={i} 
+                {...Child.props}
+                onChange={(value) => this.props.updateForm(Child.props.id, value)}
+                error={this.props.errors[Child.props.id]}
+                value={this.props.values[Child.props.id]}
+              />
+              : 
+              <Child.type 
                 key={i}
                 {...Child.props}
               />
           )))
-      }
+        }
       </form>
     );
   }
@@ -48,7 +49,8 @@ export default function createForm(id, model, validate = () => {}) {
     values: state.forms[id].values || {},
     errors: state.forms[id].errors || {},
   }) 
-  : ({ values: {}, errors: {} });
+    : 
+    ({ values: {}, errors: {} });
 
   const mapDispatchToProps = (dispatch) => bindActionCreators({ 
     registerForm,
