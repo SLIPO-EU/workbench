@@ -1,6 +1,7 @@
 package eu.slipo.workbench.rpc.controller;
 
 import java.io.IOException;
+import java.time.format.DateTimeParseException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -23,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -32,8 +34,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import eu.slipo.workbench.common.model.RestResponse;
 import eu.slipo.workbench.common.model.jobs.JobExecutionInfo;
 import eu.slipo.workbench.common.model.jobs.JobInstanceInfo;
+import eu.slipo.workbench.common.model.BasicErrorCode;
 import eu.slipo.workbench.common.model.ErrorCode;
-import eu.slipo.workbench.rpc.model.JobExecutionErrorCode;
+import eu.slipo.workbench.rpc.model.JobErrorCode;
+import eu.slipo.workbench.rpc.model.MissingJobParameterException;
 import eu.slipo.workbench.rpc.service.JobService;
 
 @RestController
@@ -76,41 +80,52 @@ public class JobController
     }
     
     /**
-     * Submit a new job.
+     * Submit a new job with a given map of parameters.
      * <p>
      * Note that this may or may not create a new job instance (since a previously stopped/failed
      * job instance may be restarted).
      * 
-     * @param jobName
-     * @param foo Fixme remove foo parameter
+     * @param jobName The job name (as registered)
+     * @param parametersMap A map of parameters 
      */
     @PostMapping(value = "/api/jobs/{jobName}/submit", consumes = "application/json")
-    public RestResponse<JobExecutionInfo> submit(@PathVariable String jobName, @RequestParam("foo") String foo)
-    {
-        // Todo Load default (per job) parameters from database or properties file
-        // Todo Load request-specific job parameters from request body
-        
-        // Prepare parameters for a job
-        
-        Map<String, JobParameter> parameters = new HashMap<>();
-        parameters.put("boo", new JobParameter(199L));
-        parameters.put("foo", new JobParameter(foo));
-        
-        // Submit job to job service
-        
-        logger.info("Starting job {} with parameters {}", jobName, parameters);
-        
-        JobExecution execution = null;
+    public RestResponse<JobExecutionInfo> submit(
+        @PathVariable String jobName, @RequestBody Map<String, Object> parametersMap)
+    {        
         String errorMessage = null;
         ErrorCode errorCode = null;
+        
+        // Prepare job parameters
+        
+        JobParameters parameters = null;
         try {
-            execution = jobService.start(jobName, new JobParameters(parameters));
-            logger.info("Started job as: {}", execution);
-        } catch (JobExecutionException ex) {
-            execution = null;
-            errorMessage = ex.getMessage();
-            errorCode = JobExecutionErrorCode.fromException(ex);
-            logger.info("Failed to start job: {}", errorMessage);
+            parameters = jobService.prepareParameters(jobName, parametersMap);
+        } catch (NumberFormatException | DateTimeParseException ex) {
+            parameters = null;
+            errorMessage = ex.getClass().getSimpleName() + ": " + ex.getMessage();
+            errorCode = JobErrorCode.JOB_INVALID_PARAMETERS;
+            logger.error("Failed to parse the value of a parameter: {}", errorMessage);
+        } catch (MissingJobParameterException ex) {
+            parameters = null;
+            errorMessage = "Missing parameter: " + ex.getMessage();
+            errorCode = JobErrorCode.JOB_MISSING_PARAMETER;
+            logger.error("Missing a (required) parameter: {}", ex.getMessage());
+        }
+        
+        // If job parameters are successfully prepared, submit the job to job service
+        
+        JobExecution execution = null;
+        if (parameters != null) {
+            logger.info("Starting job {} with parameters {}", jobName, parameters);
+            try {
+                execution = jobService.start(jobName, parameters);
+                logger.info("Started job as: {}", execution);
+            } catch (JobExecutionException ex) {
+                execution = null;
+                errorMessage = ex.getMessage();
+                errorCode = JobErrorCode.fromException(ex);
+                logger.error("Failed to start job {}: {}", jobName, ex.getMessage());
+            }
         }
         
         return execution == null?

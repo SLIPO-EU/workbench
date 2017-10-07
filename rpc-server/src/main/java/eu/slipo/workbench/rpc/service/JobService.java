@@ -1,8 +1,10 @@
 package eu.slipo.workbench.rpc.service;
 
+import java.time.format.DateTimeParseException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.springframework.batch.core.BatchStatus;
@@ -11,6 +13,8 @@ import org.springframework.batch.core.JobExecutionException;
 import org.springframework.batch.core.JobInstance;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.launch.NoSuchJobException;
+
+import eu.slipo.workbench.rpc.model.MissingJobParameterException;
 
 /**
  * A facade interface to interact with Spring Batch jobs.
@@ -34,7 +38,8 @@ public interface JobService
      * @return the started job execution
      * @throws JobExecutionException if the job could not be started (or restarted).
      */
-    JobExecution start(String jobName, JobParameters params) throws JobExecutionException;
+    JobExecution start(String jobName, JobParameters params) 
+        throws JobExecutionException;
     
     /**
      * Stop a running job execution ({@link JobExecution}). If given execution does
@@ -182,5 +187,30 @@ public interface JobService
     default JobExecution clearRunningExecution(String jobName, long instanceId) 
     {
         return clearRunningExecution(jobName, instanceId, BatchStatus.ABANDONED);
+    }
+    
+    /**
+     * Prepare job parameters for a given job: load defaults, merge runtime parameters into defaults, 
+     * convert to proper data types (if needed).
+     * <p>
+     * If a parameter acquires its default value by evaluating an expression, this evaluation should
+     * take place here.
+     * 
+     * @param providedParameters A map of runtime parameters
+     * @param jobName The job name
+     * 
+     * @throws MissingJobParameterException
+     * @throws NumberFormatException
+     * @throws DateTimeParseException
+     * 
+     * @return a new {@link JobParameters} instance
+     */
+    JobParameters prepareParameters(String jobName, Map<String,Object> providedParameters)
+        throws MissingJobParameterException;
+    
+    default JobParameters prepareParameters(String jobName)
+        throws MissingJobParameterException
+    {
+        return prepareParameters(jobName, Collections.emptyMap());
     }
 }

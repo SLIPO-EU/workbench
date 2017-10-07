@@ -47,7 +47,8 @@ public class BatchConfig
         return launcher;
     }
     
-    @Bean JobOperator jobOperator(JobLauncher launcher)
+    @Bean 
+    JobOperator jobOperator(JobLauncher launcher)
     {
         // Setup operator to use our launcher
         SimpleJobOperator operator = new SimpleJobOperator();

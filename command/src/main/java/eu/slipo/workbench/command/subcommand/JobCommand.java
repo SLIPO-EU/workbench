@@ -96,7 +96,7 @@ public class JobCommand implements SubCommand
         LIST,    // List registered job names or instances for a specific job
         START,   // Start a job by name, passing a map of parameters
         STOP,    // Stop a running job by identified by an  instance-id
-        STATUS,  // Poll status of a job by either its instance-id.
+        STATUS,  // Poll status of a job (by instance-id)
         CLEAR;   // Clear interrupted job executions (marking them as abandoned).
     }
     

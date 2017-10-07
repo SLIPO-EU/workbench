@@ -70,7 +70,7 @@ public class Job1Factory implements JobFactory
             // Retrieve something from step-level execution context
             int chunkIndex = stepExecutionContext.getInt("step1.chunk-index", 0);
             
-            try { Thread.sleep(5000); } // simulate some processing
+            try { Thread.sleep(1500); } // simulate some processing
             catch (InterruptedException ex) {
                 logger.info("Interrupted while sleeping!");
             }
@@ -105,7 +105,7 @@ public class Job1Factory implements JobFactory
                 "Executing with parameters={} step-exec-context={} exec-context={}",
                 parameters, stepContext.getStepExecutionContext(), stepContext.getJobExecutionContext());
             
-            Thread.sleep(3000);
+            Thread.sleep(2000);
             
             stepExecutionContext.put("step2.key1", "val21");    
             stepExecutionContext.put("step2.key2", "val22");

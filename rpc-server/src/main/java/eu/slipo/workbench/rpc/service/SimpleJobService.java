@@ -1,8 +1,12 @@
 package eu.slipo.workbench.rpc.service;
 
+import java.time.ZonedDateTime;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -16,7 +20,9 @@ import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionException;
 import org.springframework.batch.core.JobInstance;
+import org.springframework.batch.core.JobParameter.ParameterType;
 import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.JobParametersInvalidException;
 import org.springframework.batch.core.configuration.JobFactory;
 import org.springframework.batch.core.configuration.JobRegistry;
@@ -32,8 +38,14 @@ import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.batch.core.step.tasklet.StoppableTasklet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.expression.Expression;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+
+import eu.slipo.workbench.rpc.domain.JobParameterEntity;
+import eu.slipo.workbench.rpc.model.MissingJobParameterException;
+import eu.slipo.workbench.rpc.repository.JobParameterRepository;
 
 @Service
 public class SimpleJobService implements JobService
@@ -52,11 +64,17 @@ public class SimpleJobService implements JobService
     @Autowired
     private JobLauncher launcher;
     
+    @Autowired
+    private JobParameterRepository parametersRepository;
+    
     @Value("${slipo.rpc-server.job-service.stop-on-shutdown}")
     private boolean stopOnShutdown = false;
     
     @Value("${slipo.rpc-server.job-service.recover-on-init}")
     private boolean recoverOnInit = false;
+    
+    @Value("${slipo.rpc-server.job-service.ignore-unknown-parameters:false}")
+    private boolean ignoreUnknownParameters = false;
     
     /**
      * Initialize before this service bean is available.
@@ -295,5 +313,110 @@ public class SimpleJobService implements JobService
         repository.update(execution);
         
         return execution;
+    }
+
+    private SpelExpressionParser expressionParser = new SpelExpressionParser();
+    
+    @Override
+    public JobParameters prepareParameters(String jobName, Map<String, Object> providedParameters) 
+        throws MissingJobParameterException
+    {
+        JobParametersBuilder parametersBuilder = new JobParametersBuilder();
+        
+        // Fetch base parameters (descriptor for expected parameter along with defaults)
+        
+        List<JobParameterEntity> baseParameters = parametersRepository.findByJobName(jobName);
+        Set<String> baseKeys = baseParameters.stream().map(p -> p.getName())
+            .collect(Collectors.toSet());
+        
+        // Handle unknown parameters (i.e. those with no corresponding base parameter)
+        
+        if (!ignoreUnknownParameters) {
+            for (String key: providedParameters.keySet())
+                if (!baseKeys.contains(key)) {
+                    // Add another parameter: keep basic types if possible (else stringify)
+                    Object value = providedParameters.get(key);
+                    if (value instanceof Long || value instanceof Integer)
+                        parametersBuilder.addLong(key, ((Number) value).longValue());
+                    else if (value instanceof Double)
+                        parametersBuilder.addDouble(key, ((Double) value).doubleValue());
+                    else if (value instanceof Date)
+                        parametersBuilder.addDate(key, ((Date) value));
+                    else
+                        parametersBuilder.addString(key, value.toString());
+                }
+        }
+        
+        // Prepare known parameters: evaluate (if needed), cast to their expected type
+        
+        for (JobParameterEntity baseParameterEntity: baseParameters) {
+            String key = baseParameterEntity.getName();
+            boolean identifying = baseParameterEntity.isIdentifying();
+            // Determine the actual value of this parameter
+            Object value = providedParameters.get(key);
+            if (value == null) {
+                // No value is supplied: populate with default value
+                Object defaultValue = baseParameterEntity.getDefaultValue();
+                if (defaultValue == null) {
+                    String defaultExpression = baseParameterEntity.getDefaultExpression();
+                    if (defaultExpression != null) // evaluate as an expression
+                        defaultValue = expressionParser.parseExpression(defaultExpression)
+                            .getValue();
+                }
+                if (defaultValue == null) {
+                    boolean required = baseParameterEntity.isRequired();
+                    if (required)
+                        throw new MissingJobParameterException(key);
+                    else 
+                        continue; // skip this missing parameter
+                }
+                value = defaultValue;
+            }
+            // Convert value (if needed) and cast to expected type 
+            ParameterType parameterType = baseParameterEntity.getType();
+            switch (parameterType) {
+            case LONG:
+            {
+                Long y = null;
+                if (value instanceof Number)
+                    y = ((Number) value).longValue();
+                else
+                    y = Long.valueOf(value.toString());
+                parametersBuilder.addLong(key, y, identifying);
+            }
+            break;
+            case DOUBLE:
+                {
+                    Double y = null;
+                    if (value instanceof Number)
+                        y = ((Number) value).doubleValue();
+                    else 
+                        y = Double.valueOf(value.toString());
+                    parametersBuilder.addDouble(key, y, identifying);
+                }
+                break;
+            case DATE:
+                {
+                    Date y = null;
+                    if (value instanceof Date)
+                        y = (Date) value;
+                    else if (value instanceof ZonedDateTime)
+                        y = Date.from(((ZonedDateTime) value).toInstant());
+                    else if (value instanceof Long) // treat as milliseconds since Epoch 
+                        y = new Date(((Long) value).longValue());
+                    else // treat as an ISO-8601 formatted string
+                        y = Date.from(ZonedDateTime.parse(value.toString()).toInstant());
+                    parametersBuilder.addDate(key, y, identifying);
+                }
+                break;
+            case STRING:
+                parametersBuilder.addString(key, value.toString(), identifying);
+                break;
+            }
+        }
+        
+        // Build
+        
+        return parametersBuilder.toJobParameters();
     }
 }
