@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.batch.core.BatchStatus;
+import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionException;
 import org.springframework.batch.core.JobInstance;
@@ -54,13 +55,24 @@ public class JobController
      */
     private static JobExecutionInfo createExecutionInfo(JobExecution execution)
     {
-        JobExecutionInfo r = new JobExecutionInfo(); 
-        if (execution != null) {
-            r.setId(execution.getJobId());
-            r.setExecutionId(execution.getId());
-            r.setStarted(execution.getStartTime());
-            r.setFinished(execution.getEndTime());
+        if (execution == null)
+            return null;
+        
+        JobExecutionInfo r = new JobExecutionInfo();
+        
+        r.setId(execution.getJobId());
+        r.setExecutionId(execution.getId());
+        r.setStatus(execution.getStatus().name());
+        
+        ExitStatus exitStatus = execution.getExitStatus();
+        if (exitStatus != null) {
+            r.setExitStatus(exitStatus.getExitCode());
+            r.setExitDescription(exitStatus.getExitDescription());
         }
+        
+        r.setStarted(execution.getStartTime());
+        r.setFinished(execution.getEndTime());
+        
         return r;
     }
     
@@ -88,7 +100,9 @@ public class JobController
      * @param jobName The job name (as registered)
      * @param parametersMap A map of parameters 
      */
-    @PostMapping(value = "/api/jobs/{jobName}/submit", consumes = "application/json")
+    @PostMapping(
+        value = { "/api/jobs/{jobName}/submit", "/api/jobs/{jobName}/start"},
+        consumes = "application/json")
     public RestResponse<JobExecutionInfo> submit(
         @PathVariable String jobName, @RequestBody Map<String, Object> parametersMap)
     {        
@@ -209,7 +223,8 @@ public class JobController
         if (count > MAX_PAGE_SIZE || count <= 0)
             count = MAX_PAGE_SIZE;
         
-        logger.info("Fetching instances for job {}: start={} limit={}", 
+        logger.info(
+            "Fetching instances for job {} (starting at index {} with a page size of {})", 
             jobName, start, count);
         
         List<JobInstanceInfo> r = jobService.findInstances(jobName, start, count).stream()
@@ -229,8 +244,8 @@ public class JobController
     @PostMapping(value = "/api/jobs/{jobName}/clear-running-execution/{jobId}")
     public RestResponse<JobExecutionInfo> clearRunningExecution(@PathVariable String jobName, @PathVariable Long jobId)
     {
-        JobExecution x = jobService.clearRunningExecution(jobName, jobId);
-        return x == null? 
-            null : RestResponse.result(createExecutionInfo(x));
+        JobExecution execution = jobService.clearRunningExecution(jobName, jobId);
+        return execution == null? 
+            null : RestResponse.result(createExecutionInfo(execution));
     }
 }

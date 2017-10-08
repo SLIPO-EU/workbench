@@ -48,7 +48,7 @@ public class Command implements ApplicationRunner
      * @param pargs The list of (remaining) positional arguments
      * @param options The map of option arguments
      */
-    private void run(SubCommand subcommand, List<String> pargs, Map<String, String> options)
+    private void run(SubCommand subcommand, List<String> pargs, Map<String, List<String>> options)
     {
         int n = pargs.size();
         if (n == 0)
@@ -82,21 +82,19 @@ public class Command implements ApplicationRunner
         
         // Prepare optional arguments to be forwarded to subcommand
         
-        HashMap<String, String> options = new HashMap<>();
-        for (String key: args.getOptionNames()) {
-            List<String> vals = args.getOptionValues(key);
-            // If an option has multiple values, we keep only the 1st
-            options.put(key, vals.isEmpty()? null : vals.get(0));
-        }
+        HashMap<String, List<String>> options = new HashMap<>();
+        for (String key: args.getOptionNames())
+            options.put(key, args.getOptionValues(key));
         
         // Delegate to subcommand
         
         try {
             run(subcommand, pargs, options);
         } catch (ApplicationException e) {
-            // Format top-level exception and print stack-trace
-            e.withFormattedMessage(messageSource, Locale.getDefault())
-                .printStackTrace(System.err);
+            // Format this top-level application exception
+            ApplicationException e1 = 
+                e.withFormattedMessage(messageSource, Locale.getDefault());
+            logger.error("The subcommand has failed: {}", e1.getMessage());
         }
     } 
 

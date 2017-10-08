@@ -18,6 +18,6 @@ public class RestControllerAdvice
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public @ResponseBody RestResponse<Void> handleException(HttpMessageNotReadableException ex) 
     {
-        return RestResponse.error(BasicErrorCode.PARSE_ERROR, "Cannot parse input: " + ex.getMessage());
+        return RestResponse.error(BasicErrorCode.INPUT_NOT_READABLE, "Cannot parse input: " + ex.getMessage());
     }
 }

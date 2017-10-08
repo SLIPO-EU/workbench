@@ -41,7 +41,7 @@ public class HelpCommand implements SubCommand
     }
     
     @Override
-    public void run(Map<String, String> args)
+    public void run(Map<String, List<String>> args)
     {
         System.out.println("The following (sub)commands are available:");
         for (Entry<String, SubCommand> p: subcommands().entrySet()) {
@@ -51,7 +51,7 @@ public class HelpCommand implements SubCommand
     }
 
     @Override
-    public void run(String subcommandName, Map<String, String> options)
+    public void run(String subcommandName, Map<String, List<String>> options)
     {
         // Print help on a given subcommand
         SubCommand c = subcommandName.equals("help")? 
@@ -64,14 +64,14 @@ public class HelpCommand implements SubCommand
     }
 
     @Override
-    public void run(String subcommandName, String a2, Map<String, String> options)
+    public void run(String subcommandName, String a2, Map<String, List<String>> options)
     {
         // ignore any extra non-option arguments, just print help on subcommand
         run(subcommandName, options);
     }
     
     @Override
-    public void run(String subcommandName, String a2, String a3, Map<String, String> options)
+    public void run(String subcommandName, String a2, String a3, Map<String, List<String>> options)
     {
         // ignore any extra non-option arguments, just print help on subcommand
         run(subcommandName, options);

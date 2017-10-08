@@ -1,5 +1,6 @@
 package eu.slipo.workbench.command;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -28,7 +29,7 @@ public interface SubCommand
      * 
      * @param options
      */
-    void run(Map<String, String> options);
+    void run(Map<String, List<String>> options);
     
     /**
      * Run with 1 positional (non-option) argument and a map of options.
@@ -36,7 +37,7 @@ public interface SubCommand
      * @param a1 the 1st positional argument
      * @param options
      */
-    void run(String a1, Map<String, String> options);
+    void run(String a1, Map<String, List<String>> options);
     
     /**
      * Run with 2 positional (non-option) arguments and a map of options.
@@ -45,7 +46,7 @@ public interface SubCommand
      * @param a2 the 2nd positional argument
      * @param options
      */
-    void run(String a1, String a2, Map<String, String> options);
+    void run(String a1, String a2, Map<String, List<String>> options);
     
     /**
      * Run with 3 positional (non-option) arguments and a map of options.
@@ -55,5 +56,5 @@ public interface SubCommand
      * @param a3 the 3rd positional argument
      * @param options
      */
-    void run(String a1, String a2, String a3, Map<String, String> options);
+    void run(String a1, String a2, String a3, Map<String, List<String>> options);
 }

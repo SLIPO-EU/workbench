@@ -68,9 +68,9 @@ public class Job1Factory implements JobFactory
                 parameters, stepContext.getStepExecutionContext(), stepContext.getJobExecutionContext());
             
             // Retrieve something from step-level execution context
-            int chunkIndex = stepExecutionContext.getInt("step1.chunk-index", 0);
+            int chunkIndex = stepExecutionContext.getInt("step1.chunk-index", 0);            
             
-            try { Thread.sleep(1500); } // simulate some processing
+            try { Thread.sleep(3500); } // simulate some processing
             catch (InterruptedException ex) {
                 logger.info("Interrupted while sleeping!");
             }
@@ -119,7 +119,11 @@ public class Job1Factory implements JobFactory
         @Override
         public void validate(JobParameters parameters) throws JobParametersInvalidException
         {
-            // Validate, raise exception on invalid parameters            
+            // Validate, raise exception on invalid parameters
+            
+            Long foo = parameters.getLong("foo");
+            if (foo == null || foo < 199L)
+                throw new JobParametersInvalidException("Expected foo >= 199"); 
         }
     }
     

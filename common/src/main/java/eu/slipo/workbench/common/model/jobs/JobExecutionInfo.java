@@ -9,12 +9,25 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class JobExecutionInfo
 {
-    private String statusText;
+    /**
+     * A textual representation of the status (i.e batch-status) of a job.
+     */
+    private String status;
+    
+    /**
+     * A textual representation of the exit-status of a job.
+     */
+    private String exitStatus;
+    
+    /**
+     * A detailed description that may accompany the exit-status of a job
+     */
+    private String exitDescription;
     
     /**
      * The job execution id.
      */
-    private Long xid;
+    private Long executionId;
     
     /**
      * The job instance id.
@@ -30,31 +43,55 @@ public class JobExecutionInfo
     public JobExecutionInfo(long id, long executionId) 
     {
         this.id = id;
-        this.xid = executionId;
+        this.executionId = executionId;
     }
     
     @JsonProperty("status")
-    public String getStatusText()
+    public String getStatus()
     {
-        return statusText;
+        return status;
     }
 
     @JsonProperty("status")
-    public void setStatusText(String statusText)
+    public void setStatus(String statusText)
     {
-        this.statusText = statusText;
+        this.status = statusText;
     }
 
-    @JsonProperty("xid")
+    @JsonProperty("exitStatus")
+    public String getExitStatus()
+    {
+        return exitStatus;
+    }
+    
+    @JsonProperty("exitStatus")
+    public void setExitStatus(String statusText)
+    {
+        this.exitStatus = statusText;
+    }
+
+    @JsonProperty("exitDescription")
+    public String getExitDescription()
+    {
+        return exitDescription;
+    }
+
+    @JsonProperty("exitDescription")
+    public void setExitDescription(String description)
+    {
+        this.exitDescription = description;
+    }
+
+    @JsonProperty("executionId")
     public Long getExecutionId()
     {
-        return xid;
+        return executionId;
     }
     
-    @JsonProperty("xid")
+    @JsonProperty("executionId")
     public void setExecutionId(long xid)
     {
-        this.xid = xid;
+        this.executionId = xid;
     }
 
     @JsonProperty("id")
@@ -63,6 +100,7 @@ public class JobExecutionInfo
         return id;
     }
     
+    @JsonProperty("instanceId")
     public Long getInstanceId()
     {
         return id;

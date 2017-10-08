@@ -6,6 +6,8 @@ public class Error {
     
     private String description;
     
+    private Error() {}
+    
     public Error(ErrorCode code, String description) {
         this.code = code;
         this.description = description;
