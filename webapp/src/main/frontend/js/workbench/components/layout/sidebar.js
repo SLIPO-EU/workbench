@@ -1,8 +1,10 @@
 import * as React from 'react';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+
 import * as  PropTypes from 'prop-types';
 import { NavLink } from 'react-router-dom';
-import * as Immutable from 'immutable';
-
+import { toggle } from '../../ducks/menu';
 import * as Roles from '../../model/role';
 import { StaticRoutes, DynamicRoutes, buildPath } from '../../model/routes';
 
@@ -18,23 +20,15 @@ const Sections = {
 
 class Sidebar extends React.Component {
 
-  constructor(props) {
-    super(props);
-    this.state = {
-      expanded: new Immutable.Set(),
-    };
-  }
-
   render() {
     var { location } = this.props;
 
     var expanded = (p) => (
-      location.pathname.indexOf(p) >= 0 || this.state.expanded.has(p)
+      location.pathname.indexOf(p) >= 0 || this.props.expanded.has(p)
     );
 
     var toggle = (p) => {
-      var s = this.state.expanded;
-      this.setState({ expanded: s.has(p) ? s.remove(p) : s.add(p) });
+      this.props.toggle(p);
     };
 
     return (
@@ -143,4 +137,10 @@ Sidebar.propTypes = {
   }),
 };
 
-export default Sidebar;
+const mapStateToProps = (state) => ({
+  expanded: state.ui.menu.expanded,
+});
+
+const mapDispatchToProps = (dispatch) => bindActionCreators({ toggle }, dispatch);
+
+export default connect(mapStateToProps, mapDispatchToProps)(Sidebar);
