@@ -102,8 +102,8 @@ ContentRoot.propTypes = {
 
 const mapStateToProps = (state) => ({
   user: state.user.profile,
-  width: state.viewport.width,
-  height: state.viewport.height,
+  width: state.ui.viewport.width,
+  height: state.ui.viewport.height,
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({ resize }, dispatch);
