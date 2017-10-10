@@ -1,11 +1,14 @@
+import _ from 'lodash';
 import * as React from 'react';
 import * as ReactRedux from 'react-redux';
+import { bindActionCreators } from 'redux';
 import { Switch, Route, Redirect } from 'react-router-dom';
 
 import { ToastContainer } from 'react-toastify';
 
 import { Pages, StaticRoutes, DynamicRoutes, ErrorPages } from '../model/routes';
 import { userPropType } from '../model/prop-types/user';
+import { resize } from '../ducks/viewport';
 
 import Home from './home';
 import LoginForm from './pages/login-form';
@@ -19,11 +22,26 @@ import Placeholder from './helpers/placeholder';
 //
 // Presentational component
 //
-
 class ContentRoot extends React.Component {
 
   constructor(props) {
     super(props);
+  }
+
+  componentDidMount() {
+    this._listener = _.debounce(this._setViewport.bind(this), 150);
+    window.addEventListener('resize', this._listener);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('resize', this._listener);
+  }
+
+  _setViewport() {
+    this.props.resize(
+      document.documentElement.clientWidth, 
+      document.documentElement.clientHeight
+    );
   }
 
   render() {
@@ -84,9 +102,11 @@ ContentRoot.propTypes = {
 
 const mapStateToProps = (state) => ({
   user: state.user.profile,
+  width: state.viewport.width,
+  height: state.viewport.height,
 });
 
-const mapDispatchToProps = null;
+const mapDispatchToProps = (dispatch) => bindActionCreators({ resize }, dispatch);
 
 ContentRoot = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(ContentRoot);
 
