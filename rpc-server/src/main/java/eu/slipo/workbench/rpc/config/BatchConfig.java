@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.core.task.TaskExecutor;
 
-import eu.slipo.workbench.rpc.jobs.Job1Factory;
+import eu.slipo.workbench.rpc.jobs.Job1Config;
 
 @Configuration
 @EnableBatchProcessing(modular = true)
@@ -61,11 +61,11 @@ public class BatchConfig
     }
     
     //
-    // Define specific application contexts from job factories
+    // Define child application contexts for job/step factories 
     //
     
     @Bean
     public ApplicationContextFactory job1ContextFactory() {
-        return new GenericApplicationContextFactory(Job1Factory.class);
+        return new GenericApplicationContextFactory(Job1Config.class);
     }
  }
