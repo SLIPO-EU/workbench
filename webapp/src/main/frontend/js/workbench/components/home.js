@@ -33,9 +33,6 @@ import {
   DataViewer,
 } from './views/';
 
-// TODO: Remove
-import TripleGEO from './views/triplegeo';
-
 /////////////////////////////////////////////////////////////////
 //
 //    // Header options
@@ -132,7 +129,6 @@ class Home extends React.Component {
               <Switch>
                 <Redirect from="/" to={StaticRoutes.Dashboard} exact />
                 {/* TODO: Remove */}
-                <Route path={Pages.TripleGEO} component={TripleGEO} exact />
                 {/* Dynamic */}
                 <Route path={DynamicRoutes.ResourceViewer} component={ResourceViewer} />
                 <Route path={DynamicRoutes.ProcessDesignerCreate} component={ProcessDesigner} />

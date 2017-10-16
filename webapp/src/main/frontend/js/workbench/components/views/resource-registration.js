@@ -1,4 +1,7 @@
 import * as React from 'react';
+import * as ReactRedux from 'react-redux';
+import { bindActionCreators } from 'redux';
+import { push } from 'react-router-redux';
 
 import {
   Card,
@@ -7,7 +10,9 @@ import {
   Row,
 } from 'reactstrap';
 
-import ResourceWizard from './resource-wizard-example';
+import ResourceWizard from './resource/register/';
+import { createResource } from '../../ducks/data/resources';
+import { saveTempResource, clearTempResource } from '../../ducks/ui/views/resource-registration';
 
 /**
  * Register a new resource
@@ -23,7 +28,14 @@ class ResourceRegistration extends React.Component {
         <Col sm="12" md="12" lg="6">
           <Card>
             <CardBlock className="card-body">
-              <ResourceWizard />
+              <ResourceWizard 
+                saveTemp={this.props.saveTempResource}
+                clearTemp={this.props.clearTempResource}
+                initialActive={this.props.step}
+                initialValues={this.props.values}
+                createResource={this.props.createResource} 
+                goTo={this.props.goTo}
+              />
             </CardBlock>
           </Card>
         </Col>
@@ -33,4 +45,24 @@ class ResourceRegistration extends React.Component {
 
 }
 
-export default ResourceRegistration;
+const mapStateToProps = (state) => ({
+  values: state.ui.views.resources.registration.values,
+  step: state.ui.views.resources.registration.step,
+});
+const mapDispatchToProps = (dispatch) => bindActionCreators({ 
+  createResource, 
+  saveTempResource, 
+  clearTempResource, 
+  goTo: push,
+}, dispatch);
+
+const mergeProps = (stateProps, dispatchProps, ownProps) => {
+  return {
+    ...stateProps,
+    ...dispatchProps,
+    ...ownProps,
+
+  };
+};
+
+export default ReactRedux.connect(mapStateToProps, mapDispatchToProps, mergeProps)(ResourceRegistration);
