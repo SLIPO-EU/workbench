@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import Dropzone from 'react-dropzone';
 
 import decorateField from './formfield';
-import formatFileSize from '../../util/file-size';
+import formatFileSize from '../../../../util/file-size';
 
 export class FileDrop extends React.Component {
   constructor() {
