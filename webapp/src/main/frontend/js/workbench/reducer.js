@@ -1,16 +1,21 @@
 const Redux = require('redux');
 
-import { config, i18n, meta, user, forms, resources, viewport, menu } from './ducks';
+import { config, i18n, meta, user } from './ducks';
+import { viewport, menu } from './ducks/ui/';
+import { resourceRegistration } from './ducks/ui/views';
 
 module.exports = Redux.combineReducers({
   config,
   i18n,
   meta,
   user,
-  forms,
   ui: Redux.combineReducers({
     viewport,
     menu,
-    resources,
+    views: Redux.combineReducers({
+      resources: Redux.combineReducers({
+        registration: resourceRegistration,
+      }),
+    }),
   }),
 });
