@@ -4,11 +4,16 @@ import { config, i18n, meta, user } from './ducks';
 import { viewport, menu } from './ducks/ui/';
 import { resourceRegistration } from './ducks/ui/views';
 
+import { resources } from './ducks/data';
+
 module.exports = Redux.combineReducers({
   config,
   i18n,
   meta,
   user,
+  data: Redux.combineReducers({
+    resources,
+  }),
   ui: Redux.combineReducers({
     viewport,
     menu,
