@@ -4,7 +4,7 @@ import { bindActionCreators } from 'redux';
 
 import * as  PropTypes from 'prop-types';
 import { NavLink } from 'react-router-dom';
-import { toggle } from '../../ducks/menu';
+import { toggle } from '../../ducks/ui/menu';
 import * as Roles from '../../model/role';
 import { StaticRoutes, DynamicRoutes, buildPath } from '../../model/routes';
 

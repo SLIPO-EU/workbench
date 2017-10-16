@@ -8,7 +8,7 @@ import { ToastContainer } from 'react-toastify';
 
 import { Pages, StaticRoutes, DynamicRoutes, ErrorPages } from '../model/routes';
 import { userPropType } from '../model/prop-types/user';
-import { resize } from '../ducks/viewport';
+import { resize } from '../ducks/ui/viewport';
 
 import Home from './home';
 import LoginForm from './pages/login-form';
