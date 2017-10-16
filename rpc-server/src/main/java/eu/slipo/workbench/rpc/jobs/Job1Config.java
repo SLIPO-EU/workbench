@@ -19,9 +19,6 @@ import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.core.StepListener;
-import org.springframework.batch.core.annotation.AfterStep;
-import org.springframework.batch.core.annotation.BeforeStep;
-import org.springframework.batch.core.configuration.JobFactory;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
@@ -33,16 +30,10 @@ import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
-import org.springframework.stereotype.Component;
 
-/**
- * An example JobFactory implementation.
- */
-@Component("job1Factory")
-public class Job1Factory implements JobFactory
+
+public class Job1Config
 {
-    private static Logger logger = LoggerFactory.getLogger(Job1Factory.class); 
-    
     private static final String JOB_NAME = "job1";
     
     @Autowired
@@ -51,9 +42,9 @@ public class Job1Factory implements JobFactory
     @Autowired
     private StepBuilderFactory stepBuilderFactory;
     
-    private static class Step1 implements Tasklet
+    private static class Step1Tasklet implements Tasklet
     {
-        private static Logger logger = LoggerFactory.getLogger(Step1.class);
+        private static Logger logger = LoggerFactory.getLogger(Step1Tasklet.class);
         
         @Override
         public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext)
@@ -88,9 +79,9 @@ public class Job1Factory implements JobFactory
         }
     }
     
-    private static class Step2 implements Tasklet
+    private static class Step2Tasklet implements Tasklet
     {
-        private static Logger logger = LoggerFactory.getLogger(Step2.class);
+        private static Logger logger = LoggerFactory.getLogger(Step2Tasklet.class);
         
         @Override
         public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext)
@@ -129,6 +120,8 @@ public class Job1Factory implements JobFactory
     
     private static class ExecutionListener implements JobExecutionListener
     {
+        private static Logger logger = LoggerFactory.getLogger(ExecutionListener.class); 
+        
         @Override
         public void beforeJob(JobExecution execution)
         {
@@ -139,73 +132,60 @@ public class Job1Factory implements JobFactory
         public void afterJob(JobExecution execution)
         {
             JobInstance instance = execution.getJobInstance();
-            logger.info("After #{}: status={} exit-status={}", 
+            logger.info("After job #{}: status={} exit-status={}", 
                 instance.getInstanceId(), execution.getStatus(), execution.getExitStatus());
         }  
     }
     
+    @Bean
     private Step step1()
     {
         // A listener to promote (part of) step-level context to execution-level context
-        ExecutionContextPromotionListener stepContextListener = 
-            new ExecutionContextPromotionListener();
-        stepContextListener.setKeys(new String[] {"step1.key1"});
-        stepContextListener.setStrict(true);
+        ExecutionContextPromotionListener listener = new ExecutionContextPromotionListener();
+        listener.setKeys(new String[] {"step1.key1"});
+        listener.setStrict(true);
         try {
-            stepContextListener.afterPropertiesSet();
+            listener.afterPropertiesSet();
         } catch (Exception e) {
-            stepContextListener = null;
+            listener = null;
         }
         
         // Build step
         return stepBuilderFactory.get("step1")
-            .tasklet(new Step1())
-            .listener(stepContextListener)
+            .tasklet(new Step1Tasklet())
+            .listener(listener)
             .build();
     }
 
+    @Bean
     private Step step2()
     {
         // A listener to promote (part of) step-level context to execution-level context
-        ExecutionContextPromotionListener stepContextListener = 
-            new ExecutionContextPromotionListener();
-        stepContextListener.setKeys(new String[] {"step2.key1"});
-        stepContextListener.setStrict(true);
+        ExecutionContextPromotionListener listener = new ExecutionContextPromotionListener();
+        listener.setKeys(new String[] {"step2.key1"});
+        listener.setStrict(true);
         try {
-            stepContextListener.afterPropertiesSet();
+            listener.afterPropertiesSet();
         } catch (Exception e) {
-            stepContextListener = null;
+            listener = null;
         }
         
         return stepBuilderFactory.get("step2")
-            .tasklet(new Step2())
-            .listener(stepContextListener)
+            .tasklet(new Step2Tasklet())
+            .listener(listener)
             .build();
     }
 
-    @Override
-    public Job createJob()
+    @Bean
+    public Job job1(Step step1, Step step2)
     {
-        // Build job
         return jobBuilderFactory.get(JOB_NAME)
             .incrementer(new RunIdIncrementer())
             .validator(new Validator())
-            .start(step1())
-            .next(step2())
+            .start(step1)
+            .next(step2)
             .listener(new ExecutionListener())
             //.preventRestart()
             .build();
-    }
-
-    @Override
-    public String getJobName()
-    {
-        return JOB_NAME;
-    }
-    
-    @Bean
-    public Job job1()
-    {
-        return createJob();
     }
 }
