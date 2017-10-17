@@ -19,6 +19,8 @@ import SecureRoute from './helpers/secure-route';
 
 import {
   Dashboard,
+  Profile,
+  Settings,
   ResourceExplorer,
   ResourceRegistration,
   ProcessExplorer,
@@ -138,6 +140,8 @@ class Home extends React.Component {
                 <Route path={DynamicRoutes.DataViewer} component={DataViewer} />
                 {/* Static */}
                 <Route path={StaticRoutes.Dashboard} component={Dashboard} />
+                <Route path={StaticRoutes.Profile} component={Profile} />
+                <Route path={StaticRoutes.Settings} component={Settings} />
                 <Route path={StaticRoutes.ResourceExplorer} component={ResourceExplorer} />
                 <Route path={StaticRoutes.ResourceRegistration} component={ResourceRegistration} />
                 <Route path={StaticRoutes.ProcessExplorer} component={ProcessExplorer} />

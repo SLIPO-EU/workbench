@@ -1,9 +1,16 @@
-const React = require('react');
-const PropTypes = require('prop-types');
-const ReactRedux = require('react-redux');
-const { Dropdown, DropdownMenu, DropdownItem } = require('reactstrap');
+import * as React from 'react';
+import * as PropTypes from 'prop-types';
+import * as ReactRedux from 'react-redux';
+import { Link, withRouter } from 'react-router-dom';
+import { FormattedMessage } from 'react-intl';
+import {
+  Dropdown,
+  DropdownMenu,
+  DropdownItem
+} from 'reactstrap';
 
 import { userPropType } from '../../model/prop-types/user';
+import { StaticRoutes } from '../../model/routes';
 
 import Toolbar from './toolbar';
 
@@ -18,6 +25,8 @@ class Header extends React.Component {
     super(props);
 
     this._toggleDropdown = this._toggleDropdown.bind(this);
+    this._showProfile = this._showProfile.bind(this);
+    this._showSettings = this._showSettings.bind(this);
 
     this.state = {
       dropdownOpen: false,
@@ -26,6 +35,14 @@ class Header extends React.Component {
 
   _toggleDropdown() {
     this.setState({ dropdownOpen: !this.state.dropdownOpen });
+  }
+
+  _showProfile() {
+    this.props.history.push(StaticRoutes.Profile);
+  }
+
+  _showSettings() {
+    this.props.history.push(StaticRoutes.Settings);
   }
 
   render() {
@@ -43,44 +60,25 @@ class Header extends React.Component {
 
         {/* right-aligned menu items */}
         <ul className="nav navbar-nav ml-auto">
-          <li className="nav-item d-md-down-none">
-            <a className="nav-link" href="#">
+          <li className="nav-item d-md-down-none alert">
+            <Link to={StaticRoutes.EventViewer} className="nav-link">
               <i className="icon-bell"></i><span className="badge badge-pill badge-info">5</span>
-            </a>
+            </Link>
           </li>
-          <li className="nav-item d-md-down-none">
+          <li className="nav-item d-md-down-none lang-select">
             <SelectLanguage />
           </li>
           <li className="nav-item">
             <Dropdown isOpen={this.state.dropdownOpen} toggle={this._toggleDropdown}>
-              <button onClick={this._toggleDropdown} className="nav-link dropdown-toggle" data-toggle="dropdown" type="button"
+              <button onClick={this._toggleDropdown} className="nav-link dropdown-toggle no-outline" data-toggle="dropdown" type="button"
                 aria-haspopup="true" aria-expanded={this.state.dropdownOpen}>
-                <img src={'https://github.com/identicons/drmalex07.png'} className="img-avatar"
-                  alt={this.props.user.username}
-                />
                 <span className="d-md-down-none">{this.props.user.username}</span>
               </button>
               <DropdownMenu className="dropdown-menu-right">
-                <DropdownItem header className="text-center">
-                  <strong>{'Notifications'}</strong>
-                </DropdownItem>
-                <DropdownItem className="btn">
-                  <i className="fa fa-envelope-o"></i>&nbsp;{'Messages'}<span className="badge badge-success">42</span>
-                </DropdownItem>
-                <DropdownItem className="btn">
-                  <i className="fa fa-tasks"></i>&nbsp;{'Tasks'}<span className="badge badge-danger">42</span>
-                </DropdownItem>
-                <DropdownItem className="btn">
-                  <i className="fa fa-comments"></i>&nbsp;{'Comments'}<span className="badge badge-warning">42</span>
-                </DropdownItem>
-                {/*<DropdownItem divider />*/}
-                <DropdownItem header className="text-center">
-                  <strong>{'Account'}</strong>
-                </DropdownItem>
-                <DropdownItem className="btn">
+                <DropdownItem className="btn" onClick={this._showProfile}>
                   <i className="fa fa-user"></i>&nbsp;{'Profile'}
                 </DropdownItem>
-                <DropdownItem className="btn">
+                <DropdownItem className="btn" onClick={this._showSettings}>
                   <i className="fa fa-wrench"></i>&nbsp;{'Settings'}
                 </DropdownItem>
                 <DropdownItem className="btn" onClick={this.props.logout}>
@@ -127,6 +125,6 @@ const mapDispatchToProps = (dispatch) => ({
   ),
 });
 
-Header = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(Header);
+Header = withRouter(ReactRedux.connect(mapStateToProps, mapDispatchToProps)(Header));
 
 module.exports = Header;

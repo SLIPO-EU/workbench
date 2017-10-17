@@ -23,6 +23,8 @@ export const Pages = {
  */
 
 const Dashboard = '/dashboard';
+const Profile = '/profile';
+const Settings = '/settings';
 
 const ResourceExplorer = '/resource/explore';
 const ResourceRegistration = '/resource/register';
@@ -38,6 +40,8 @@ const EventViewer = '/admin/event-viewer';
 
 export const StaticRoutes = {
   Dashboard,
+  Profile,
+  Settings,
   ResourceExplorer,
   ResourceRegistration,
   ProcessExplorer,
@@ -101,6 +105,18 @@ const routes = {
     title: 'links.dashboard',
     defaultTitle: 'Dashboard',
     links: [ResourceExplorer, ProcessExplorer]
+  },
+  [Profile]: {
+    description: 'Profile',
+    title: 'links.profile',
+    defaultTitle: 'Profile',
+    links: defaultLinks
+  },
+  [Settings]: {
+    description: 'Settings',
+    title: 'links.settings',
+    defaultTitle: 'Settings',
+    links: defaultLinks
   },
   [ResourceExplorer]: {
     description: 'Browse registered resources',

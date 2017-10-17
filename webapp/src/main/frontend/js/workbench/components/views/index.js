@@ -1,4 +1,6 @@
 import Dashboard from './dashboard';
+import Profile from './profile';
+import Settings from './settings';
 import DataViewer from './data-viewer';
 import EventViewer from './event-viewer';
 import ProcessDesigner from './process-designer';
@@ -14,6 +16,8 @@ import UserManager from './user-manager';
 
 export {
   Dashboard,
+  Profile,
+  Settings,
   ResourceExplorer,
   ResourceRegistration,
   ProcessExplorer,
