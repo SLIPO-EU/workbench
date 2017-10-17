@@ -57,3 +57,20 @@ section:after {
   float: none;
   clear: both;
 }
+
+/*
+ * Custom styles
+ */
+
+.no-outline:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.nav-item.alert {
+  margin-top: 5px !important;
+}
+
+.lang-select {
+  margin-top: -2px !important;
+}

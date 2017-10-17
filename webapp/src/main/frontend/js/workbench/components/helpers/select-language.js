@@ -34,7 +34,7 @@ class SelectLanguage extends React.Component {
 
     return (
       <Dropdown isOpen={this.state.open} toggle={() => this.setState({ open: !this.state.open })}>
-        <DropdownToggle caret size="sm">
+        <DropdownToggle caret size="sm" className="no-outline">
           <FormattedMessage id={languageInfo.titleId} defaultMessage={languageInfo.title} />
         </DropdownToggle>
         <DropdownMenu>
