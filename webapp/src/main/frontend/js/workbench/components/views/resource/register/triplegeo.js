@@ -48,7 +48,7 @@ export const validator = function (values, cleared) {
   if (!values['defaultLang']) {
     errors['defaultLang'] = 'Select default language';
   }
-  if (cleared.metadata.format.value === 'CSV') {
+  if (cleared && cleared.metadata.format.value === 'CSV') {
     if (!values['delimiter']) {
       errors['delimiter'] = 'Required for CSV';
     } 
@@ -122,7 +122,7 @@ export const Component = (props) => {
         help="Parameter that specifies particular values (e.g., UNK) in attributes that should not be exported as literals. By default, NULL values in attributes are suppressed and never exported"
       />
       { 
-        props.values.metadata.format.value === 'CSV' ?
+        props.values.metadata && props.values.metadata.format.value === 'CSV' ?
           <div>
             <TextField
               {...props}
