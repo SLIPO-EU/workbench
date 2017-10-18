@@ -42,6 +42,7 @@
   "dashboard": {
     "card": {
       "jobs": "Jobs",
+      "resources": "Resources",
       "quota": "Quota",
       "events": "Events"
     }
