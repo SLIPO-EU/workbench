@@ -36,6 +36,17 @@ function WizardItem(props) {
             :
             <div />
         }
+        <Button
+          color="warning"
+          className="reset"
+          onClick={() => {
+            clearTemp();
+            setTimeout(reset, 200);
+          }}
+          style={{float: 'left', marginLeft: hasPrevious ? 20 : 0}}
+        >
+          Start over
+        </Button>
         {
           hasNext ?
             <Button 
@@ -68,18 +79,7 @@ function WizardItem(props) {
             >
               Submit
             </Button>
-        }
-        <Button
-          color="warning"
-          className="reset"
-          onClick={() => {
-            clearTemp();
-            setTimeout(reset, 200);
-          }}
-          style={{float: 'right', marginRight: 10}}
-        >
-          Start over
-        </Button>
+        }        
         <br />
       </div>
     </div>

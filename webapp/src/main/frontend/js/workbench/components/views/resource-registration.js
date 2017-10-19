@@ -1,7 +1,6 @@
 import * as React from 'react';
 import * as ReactRedux from 'react-redux';
 import { bindActionCreators } from 'redux';
-import { push } from 'react-router-redux';
 
 import {
   Card,
@@ -34,7 +33,7 @@ class ResourceRegistration extends React.Component {
                 initialActive={this.props.step}
                 initialValues={this.props.values}
                 createResource={this.props.createResource} 
-                goTo={this.props.goTo}
+                goTo={this.props.history.push}
               />
             </CardBlock>
           </Card>
@@ -53,7 +52,6 @@ const mapDispatchToProps = (dispatch) => bindActionCreators({
   createResource, 
   saveTempResource, 
   clearTempResource, 
-  goTo: push,
 }, dispatch);
 
 const mergeProps = (stateProps, dispatchProps, ownProps) => {

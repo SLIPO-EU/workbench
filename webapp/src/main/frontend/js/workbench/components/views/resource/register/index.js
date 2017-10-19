@@ -2,6 +2,7 @@ import React from 'react';
 import { toast } from 'react-toastify';
 
 import { MultiStep } from '../../../helpers/forms/';
+import { StaticRoutes } from '../../../../model/routes';
 
 import * as type from './type';
 import * as externalUrl from './url-select';
@@ -20,21 +21,20 @@ export default function ResourceWizard(props) {
       <MultiStep
         initialActive={props.initialActive}
         onComplete={(values) => { 
-          console.log('completed with', values);
-          toast.dismiss();
-          toast.success(<span>Resource registration succeeded!</span>);
+          if (values.type.path.value === 'UPLOAD') {
+            toast.dismiss();
+            toast.success(<span>Resource registration succeeded!</span>);
 
-          if (values.type.value === 'UPLOAD') {
             props.createResource({ 
               id: values.metadata.name, 
               name: values.metadata.name, 
               description: values.metadata.description, 
               format: values.metadata.format.label, 
-            });
+            })
+            .then(() => props.goTo(StaticRoutes.ResourceExplorer));
           }
         }}
         childrenProps={{
-          goTo: props.goTo,
           saveTemp: props.saveTemp,
           clearTemp: props.clearTemp,
         }}
@@ -64,7 +64,7 @@ export default function ResourceWizard(props) {
           id="upload"
           title="Upload resource"
           description=""
-          initialValue={props.initialValues.file || fileUpload.initialValue}
+          initialValue={props.initialValues.upload || fileUpload.initialValue}
           validate={fileUpload.validator}
           next={() => 'metadata'}
         />
