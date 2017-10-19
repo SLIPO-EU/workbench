@@ -6,7 +6,7 @@ function WizardItem(props) {
   const { children, onNextClicked, onComplete, onValidationFail = (err) => {} } = props;
   return (
     <div>
-      <div className="wizard-child" style={{ minHeight: 340 }}>
+      <div className="wizard-child">
         { children }
       </div>
       <Button 
@@ -26,6 +26,10 @@ const SingleStepWizard = createWizard(WizardItem);
 
 SingleStepWizard.defaultProps = {
   promiseOnNext: true,
+};
+
+SingleStepWizard.propTypes = {
+  children: React.PropTypes.element.isRequired,
 };
 
 export default SingleStepWizard;
