@@ -4,6 +4,7 @@ import Settings from './settings';
 import DataViewer from './data-viewer';
 import EventViewer from './event-viewer';
 import ProcessDesigner from './process-designer';
+import ProcessDesignerSidebar from './process-designer-sidebar';
 import ProcessExecutionViewer from './process-execution-viewer';
 import ProcessExplorer from './process-explorer';
 import RecipeExplorer from './recipe-explorer';
@@ -13,6 +14,7 @@ import ResourceViewer from './resource-viewer';
 import SchemaDesigner from './schema-designer';
 import SchemaExplorer from './schema-explorer';
 import UserManager from './user-manager';
+import ContextSidebar from './context-sidebar';
 
 export {
   Dashboard,
@@ -27,7 +29,9 @@ export {
   EventViewer,
   ResourceViewer,
   ProcessDesigner,
+  ProcessDesignerSidebar,
   ProcessExecutionViewer,
   SchemaDesigner,
   DataViewer,
+  ContextSidebar,
 };

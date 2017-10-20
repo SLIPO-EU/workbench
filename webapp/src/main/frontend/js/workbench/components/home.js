@@ -64,6 +64,7 @@ class Home extends React.Component {
 
     this._toggleSidebar = this._toggleSidebar.bind(this);
     this._styleSidebar = this._styleSidebar.bind(this);
+    this._setAsideMenuVisibility = this._setAsideMenuVisibility.bind(this);
     this._toggleAsideMenu = this._toggleAsideMenu.bind(this);
     this._styleAsideMenu = this._styleAsideMenu.bind(this);
 
@@ -86,6 +87,10 @@ class Home extends React.Component {
     }
 
     this.setState({ sidebarStyle: style });
+  }
+
+  _setAsideMenuVisibility(value) {
+    this.setState({ asideOpen: value });
   }
 
   _toggleAsideMenu() {
@@ -120,6 +125,7 @@ class Home extends React.Component {
           user={this.props.user}
           toggleSidebar={this._toggleSidebar}
           styleSidebar={this._styleSidebar}
+          setAsideMenuVisibility={this._setAsideMenuVisibility}
           toggleAsideMenu={this._toggleAsideMenu}
           styleAsideMenu={this._styleAsideMenu}
         />

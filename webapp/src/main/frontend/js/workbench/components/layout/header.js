@@ -13,6 +13,7 @@ import { userPropType } from '../../model/prop-types/user';
 import { StaticRoutes } from '../../model/routes';
 
 import Toolbar from './toolbar';
+import AsideToggle from './aside-toggle';
 
 //
 // Presentational component
@@ -88,12 +89,7 @@ class Header extends React.Component {
             </Dropdown>
           </li>
           {/* toggle aside menu */}
-          <li className="nav-item d-md-down-none">
-            <button className="nav-link navbar-toggler aside-menu-toggler" type="button"
-              onClick={this.props.toggleAsideMenu}>
-              <i className="fa fa-navicon"></i>
-            </button>
-          </li>
+          <AsideToggle toggleAsideMenu={this.props.toggleAsideMenu} setAsideMenuVisibility={this.props.setAsideMenuVisibility} />
         </ul>
 
       </header>
@@ -106,6 +102,7 @@ Header.propTypes = {
   logout: PropTypes.func.isRequired,
   toggleSidebar: PropTypes.func.isRequired,
   styleSidebar: PropTypes.func.isRequired,
+  setAsideMenuVisibility: PropTypes.func.isRequired,
   toggleAsideMenu: PropTypes.func.isRequired,
   styleAsideMenu: PropTypes.func.isRequired,
 };

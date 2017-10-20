@@ -1,4 +1,17 @@
+/**
+ * Libraries
+ */
+import pathToRegexp from 'path-to-regexp';
+
+/**
+ * Model
+ */
 import * as Roles from './role';
+
+/**
+ * Components
+ */
+import ProcessDesignerSidebar  from '../components/views/process-designer-sidebar';
 
 // TODO: Remove
 const TripleGEO = '/process/design/triplegeo';
@@ -86,6 +99,9 @@ export const ErrorPages = {
   NotFound,
 };
 
+/**
+ * Default links
+ */
 const defaultLinks = [Dashboard, ResourceExplorer, ProcessExplorer];
 
 const routes = {
@@ -134,7 +150,7 @@ const routes = {
     description: 'Browser system processes',
     title: 'links.process.explorer',
     defaultTitle: 'Process Explorer',
-    links: [Dashboard]
+    links: [Dashboard, ProcessDesignerCreate]
   },
   [RecipeExplorer]: {
     description: 'Browser recipes',
@@ -173,13 +189,15 @@ const routes = {
     description: 'Create a data integration processes',
     title: 'links.process.designer',
     defaultTitle: 'Process Designer',
-    links: defaultLinks
+    links: defaultLinks,
+    contextComponent: ProcessDesignerSidebar
   },
   [ProcessDesignerEdit]: {
     description: 'Update a data integration processes',
     title: 'links.process.designer',
     defaultTitle: 'Process Designer',
-    links: defaultLinks
+    links: defaultLinks,
+    contextComponent: ProcessDesignerSidebar
   },
   [ProcessExecutionViewer]: {
     description: 'View information about a process execution instance',
@@ -218,11 +236,33 @@ const routes = {
  * Find a route by its path e.g. /Dashboard
  *
  * @export
- * @param {string} path - route path
- * @returns
+ * @param {string} path - the route path
+ * @returns the route properties
  */
 export function getRoute(path) {
-  return routes[path];
+  if (routes.hasOwnProperty(path)) {
+    return routes[path];
+  }
+  return null;
+}
+
+/**
+ * Matches the given path to an existing route and returns the route or null
+ * if no match is found
+ *
+ * @export
+ * @param {any} path - the route path to match
+ * @returns the route that matched the given path or null if no match is found
+ */
+export function matchRoute(path) {
+  for (let route in routes) {
+    let re = pathToRegexp(route);
+    if (re.test(path)) {
+      return route;
+    }
+  }
+
+  return null;
 }
 
 /**
@@ -242,12 +282,9 @@ export function buildPath(path, params) {
         result = result.replace(re, value);
       }
     } else {
-      for (const prop in params) {
-        let re = new RegExp(':' + prop, 'i');
-        result = result.replace(re, params[prop]);
-      }
+      let toPath = pathToRegexp.compile(path);
+      result = toPath(params);
     }
   }
-
   return result;
 }
