@@ -20,8 +20,8 @@ class Toolbar extends React.Component {
   /**
    * Determines if the current user has the specific role
    *
-   * @param {String} role
-   * @returns
+   * @param {String} role - the role
+   * @returns true if the user has the given role
    * @memberof Toolbar
    */
   hasRole(role) {
@@ -36,7 +36,7 @@ class Toolbar extends React.Component {
   /**
    * Gets a list of li elements based on route configuration and user roles
    *
-   * @returns
+   * @returns a list of {@code li} elements for each route link
    * @memberof Toolbar
    */
   getLinks() {

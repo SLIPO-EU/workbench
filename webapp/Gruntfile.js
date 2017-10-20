@@ -45,6 +45,7 @@ module.exports = function (grunt) {
     browserify: {
       options: {
         /* moved to package.json */
+        watch: true,
       },
       'workbench': {
         options: {
@@ -117,6 +118,13 @@ module.exports = function (grunt) {
       options: {
         mode: '0644',
       },
+      'apidoc': {
+        expand: true,
+        filter: 'isFile',
+        cwd: 'apidoc/docs/',
+        src: ['**/*'],
+        dest: '<%= targetDir %>/docs/',
+      },
       'workbench-scripts': {
         files: [
           {
@@ -186,9 +194,12 @@ module.exports = function (grunt) {
 
 
     watch: {
+      options: {
+        interrupt: true
+      },
       'workbench-scripts': {
         files: ['<%= sourceDir %>/js/workbench/**/*.js'],
-        tasks: ['build:workbench', 'copy:workbench-scripts'],
+        tasks: ['copy:workbench-scripts'],
       },
       'workbench-i18n-data': {
         files: ['<%= sourceDir %>/js/workbench/i18n/**/*.json'],
@@ -201,6 +212,17 @@ module.exports = function (grunt) {
       },
     },
 
+    apidoc: {
+      'webapp-action': {
+        src: "apidoc/src/webapp-action",
+        dest: "apidoc/docs/webapp-action",
+        template: "apidoc/template",
+        options: {
+          debug: false,
+          includeFilters: [".*\\.js$"]
+        }
+      }
+    },
 
     jsdoc: {
       'workbench': {
@@ -228,13 +250,23 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-sass');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-eslint');
+  grunt.loadNpmTasks('grunt-apidoc');
   grunt.loadNpmTasks('grunt-jsdoc');
   grunt.loadNpmTasks('grunt-browserify');
 
+  //
+  // Events
+  //
+
+  grunt.event.on('watch', function (action, filepath, target) {
+    grunt.log.writeln(target + ': ' + filepath + ' has ' + action);
+  });
 
   //
   // Register new tasks
   //
+
+  grunt.registerTask('docs', ['apidoc', 'jsdoc', 'copy:apidoc']);
 
   grunt.registerTask('browserify:vendor', [
     'browserify:vendor-util', 'browserify:vendor-react',
@@ -257,5 +289,7 @@ module.exports = function (grunt) {
   ]);
   grunt.registerTask('deploy', ['copy']);
 
-  grunt.registerTask('default', ['build', 'deploy']);
+  grunt.registerTask('default', ['build', 'docs', 'deploy']);
+
+  grunt.registerTask('develop', ['clean', 'build', 'copy', 'watch']);
 };

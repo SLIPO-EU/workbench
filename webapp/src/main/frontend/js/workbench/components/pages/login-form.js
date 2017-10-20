@@ -119,7 +119,6 @@ LoginForm.propTypes = {
 //
 
 const { login, refreshProfile } = require('../../ducks/user');
-const { push: navigateTo } = require('react-router-redux');
 
 const mapStateToProps = null;
 
