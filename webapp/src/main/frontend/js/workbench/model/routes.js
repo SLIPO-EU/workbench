@@ -4,6 +4,11 @@
 import pathToRegexp from 'path-to-regexp';
 
 /**
+ * Components
+ */
+import ProcessDesignerSidebar  from '../components/views/process-designer-sidebar';
+
+/**
  * Model
  */
 import * as Roles from './role';
