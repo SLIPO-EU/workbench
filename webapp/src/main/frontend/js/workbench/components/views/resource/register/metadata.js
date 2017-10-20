@@ -22,7 +22,7 @@ export const validator = (value) => {
   if (!value.name) {
     errors.name = 'File name required';
   }
-  if (!value.format || !value.format.value) {
+  if (!value.format) {
     errors.format = 'Format required';
   }
   if (!value.description || value.description.length < 5) {

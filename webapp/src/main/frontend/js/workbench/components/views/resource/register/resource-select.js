@@ -1,5 +1,5 @@
 import React from 'react';
-import { MultiSelectField } from '../../../helpers/forms/wizard-fields/';
+import { SelectField } from '../../../helpers/forms/wizard-fields/';
 
 const availableResources = [
   { value: 'Resource 1', },
@@ -8,13 +8,13 @@ const availableResources = [
 ];
 
 export const initialValue = {
-  resources: [],
+  resource: null,
 };
 export const validator = (value) => {
   const errors = {};
 
-  if (!value.resources || (value.resources && !value.resources.length)) {
-    errors.resources = 'Select at least 1 resource';
+  if (!value.resource) {
+    errors.resource = 'Select a resource';
   }
   if (Object.keys(errors).length) {
     throw errors;
@@ -24,11 +24,11 @@ export const validator = (value) => {
 export const Component = (props) => {
   return (
     <div>
-      <MultiSelectField
+      <SelectField
         {...props}
-        id="resources"
-        label="Resources"
-        help="Select resources from list"
+        id="resource"
+        label="Resource"
+        help="Select resource from list"
         options={availableResources}
       />
     </div>

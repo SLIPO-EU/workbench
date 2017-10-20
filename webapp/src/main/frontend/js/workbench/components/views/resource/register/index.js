@@ -21,15 +21,14 @@ export default function ResourceWizard(props) {
       <MultiStep
         initialActive={props.initialActive}
         onComplete={(values) => { 
-          if (values.type.path.value === 'UPLOAD') {
+          if (values.type.path === 'UPLOAD' || values.type.path === 'FILESYSTEM') {
             toast.dismiss();
             toast.success(<span>Resource registration succeeded!</span>);
 
             props.createResource({ 
-              id: values.metadata.name, 
-              name: values.metadata.name, 
-              description: values.metadata.description, 
-              format: values.metadata.format.label, 
+              configuration: values.triplegeo || null,
+              metadata: values.metadata,
+              source: values.type.path,
             })
             .then(() => props.goTo(StaticRoutes.ResourceExplorer));
           }
@@ -43,7 +42,7 @@ export default function ResourceWizard(props) {
           id="type"
           title="Input mode"
           initialValue={props.initialValues.type || type.initialValue}
-          next={value => value.path.value.toLowerCase()}
+          next={value => value.path.toLowerCase()}
         />
         <externalUrl.Component
           id="external"
@@ -53,11 +52,11 @@ export default function ResourceWizard(props) {
           next={() => 'confirm'}
         />
         <resource.Component
-          id="existing"
+          id="filesystem"
           title="Select resource"
-          initialValue={props.initialValues.resource || resource.initialValue}
+          initialValue={props.initialValues.filesystem || resource.initialValue}
           validate={resource.validator}
-          next={() => 'confirm'}
+          next={() => 'metadata'}
         />
 
         <fileUpload.Component
@@ -74,7 +73,7 @@ export default function ResourceWizard(props) {
           description=""
           initialValue={props.initialValues.metadata || metadata.initialValue}
           validate={metadata.validator}
-          next={(value) => value.format && value.format.value !== 'RDF' ? 'triplegeo' : 'confirm'}
+          next={(value) => value.format !== 'RDF' ? 'triplegeo' : 'confirm'}
         />
         <harvester.Component
           id="harvester"
