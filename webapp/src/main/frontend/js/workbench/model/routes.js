@@ -1,8 +1,5 @@
 import * as Roles from './role';
 
-// TODO: Remove
-const TripleGEO = '/process/design/triplegeo';
-
 /**
  * Routes for utility pages
  */
@@ -14,8 +11,6 @@ export const Pages = {
   Login,
   Register,
   ResetPassword,
-  // TODO: Remove
-  TripleGEO,
 };
 
 /**
@@ -205,12 +200,6 @@ const routes = {
   },
   [NotFound]: {
     description: 'Not Found',
-  },
-  // TODO: Remove
-  [TripleGEO]: {
-    description: 'TripleGEO config',
-    title: 'Triple GEO',
-    defaultTitle: 'Triple GEO',
   },
 };
 
