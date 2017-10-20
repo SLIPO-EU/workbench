@@ -34,6 +34,10 @@ public enum EnumResourceType {
         return value;
     }
 
+    public String getKey() {
+        return (this.getClass().getSimpleName() + '.' + name());
+    }
+
     public static EnumResourceType fromString(String value) {
         for (EnumResourceType item : EnumResourceType.values()) {
             if (item.name().equalsIgnoreCase(value)) {

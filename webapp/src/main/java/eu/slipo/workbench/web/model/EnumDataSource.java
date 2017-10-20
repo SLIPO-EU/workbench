@@ -46,6 +46,10 @@ public enum EnumDataSource {
         return value;
     }
 
+    public String getKey() {
+        return (this.getClass().getSimpleName() + '.' + name());
+    }
+
     public static EnumDataSource fromString(String value) {
         for (EnumDataSource item : EnumDataSource.values()) {
             if (item.name().equalsIgnoreCase(value)) {
