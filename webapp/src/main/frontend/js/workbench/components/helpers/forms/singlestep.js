@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import createWizard from 'react-wiz';
 import { Button } from 'reactstrap';
 
@@ -29,7 +30,7 @@ SingleStepWizard.defaultProps = {
 };
 
 SingleStepWizard.propTypes = {
-  children: React.PropTypes.element.isRequired,
+  children: PropTypes.element.isRequired,
 };
 
 export default SingleStepWizard;
