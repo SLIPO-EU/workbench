@@ -7,7 +7,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import eu.slipo.workbench.common.model.RestResponse;
 import eu.slipo.workbench.web.model.EnumDataFormat;
@@ -72,6 +74,20 @@ public class ResourceController {
      */
     @RequestMapping(value = "/action/resource/register", method = RequestMethod.PUT, produces = "application/json")
     public RestResponse<?> registerResource(Authentication authentication, @RequestBody ResourceRegistration data) {
+        return RestResponse.result(null);
+    }
+
+    /**
+     * Schedules the execution of a process for registering an uploaded resource
+     *
+     * @param authentication the authenticated principal
+     * @param file uploaded resource file
+     * @param data registration data
+     * @return
+     */
+    @RequestMapping(value = "/action/resource/upload", method = RequestMethod.PUT, produces = "application/json")
+    public RestResponse<?> uploadResource(
+        Authentication authentication, @RequestPart("file") MultipartFile file, @RequestPart("data") ResourceRegistration data) {
         return RestResponse.result(null);
     }
 

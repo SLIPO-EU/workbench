@@ -42,6 +42,10 @@ public enum EnumOperation {
         return value;
     }
 
+    public String getKey() {
+        return (this.getClass().getSimpleName() + '.' + name());
+    }
+
     public static EnumOperation fromString(String value) {
         for (EnumOperation item : EnumOperation.values()) {
             if (item.name().equalsIgnoreCase(value)) {

@@ -70,6 +70,10 @@ public enum EnumDataFormat {
         return value;
     }
 
+    public String getKey() {
+        return (this.getClass().getSimpleName() + '.' + name());
+    }
+
     public static EnumDataFormat fromString(String value) {
         if (StringUtils.isBlank(value)) {
             return EnumDataFormat.UNDEFINED;

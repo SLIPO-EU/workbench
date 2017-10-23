@@ -8,6 +8,9 @@
     "filename": "./header.md"
   },
   "order": [
+    "Configuration",
+    "Load",
+
     "File System",
     "Browse"
   ],

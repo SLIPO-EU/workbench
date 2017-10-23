@@ -1,5 +1,5 @@
 /**
- * @api {post} action/file-system Browse folder
+ * @api {get} action/file-system Browse folder
  * @apiVersion 1.0.0
  * @apiName Browse
  * @apiGroup File System
@@ -17,8 +17,7 @@
  * indicating success of the operation.
  * @apiSuccess                            {Object[]}  errors            Array of <code>Error</code>
  * @apiSuccess                            {Object}    result            An instance of <code>Folder</code>. If value of
- * <code>success</code> is <code>false</code>,
- * <code>result</code> is <code>undefined</code>
+ * <code>success</code> is <code>false</code>, <code>result</code> is <code>undefined</code>
  *
  * @apiSuccess (Folder)                   {String}    name              Folder name
  * @apiSuccess (Folder)                   {String}    path              Relative path to the server file system
