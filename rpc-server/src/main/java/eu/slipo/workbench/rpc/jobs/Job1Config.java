@@ -1,6 +1,8 @@
 package eu.slipo.workbench.rpc.jobs;
 
 import java.util.Map;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,16 +22,26 @@ import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.core.StepListener;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
+import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.listener.ExecutionContextPromotionListener;
+import org.springframework.batch.core.listener.JobExecutionListenerSupport;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.scope.context.StepContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+
+import com.spotify.docker.client.DockerClient;
+
+import eu.slipo.workbench.rpc.jobs.listener.ExecutionContextPromotionListeners;
+import eu.slipo.workbench.rpc.jobs.tasklet.docker.CreateContainerTasklet;
+import eu.slipo.workbench.rpc.jobs.tasklet.docker.RunContainerTasklet;
 
 
 public class Job1Config
@@ -54,8 +66,7 @@ public class Job1Config
             StepExecution stepExecution = stepContext.getStepExecution();
             ExecutionContext stepExecutionContext = stepExecution.getExecutionContext();
             
-            logger.info(
-                "Executing with parameters={} step-exec-context={} exec-context={}",
+            logger.info("Executing with parameters={} step-exec-context={} exec-context={}",
                 parameters, stepContext.getStepExecutionContext(), stepContext.getJobExecutionContext());
             
             // Retrieve something from step-level execution context
@@ -92,8 +103,7 @@ public class Job1Config
             StepExecution stepExecution = stepContext.getStepExecution();
             ExecutionContext stepExecutionContext = stepExecution.getExecutionContext();
             
-            logger.info(
-                "Executing with parameters={} step-exec-context={} exec-context={}",
+            logger.info("Executing with parameters={} step-exec-context={} exec-context={}",
                 parameters, stepContext.getStepExecutionContext(), stepContext.getJobExecutionContext());
             
             Thread.sleep(2000);
@@ -103,6 +113,74 @@ public class Job1Config
     
             return RepeatStatus.FINISHED;
         }
+    }
+    
+    @Bean
+    @JobScope
+    public CreateContainerTasklet createEchoContainerTasklet(
+        DockerClient dockerClient,
+        @Value("${slipo.rpc-server.docker.volumes.data-dir}") String dataDir,
+        @Value("#{jobExecution.id}") Long executionId,
+        @Value("#{jobExecution.jobInstance.id}") Long jobId)
+    {
+        final String containerName = String.format("workbench-echo-%d", jobId);
+        
+        return CreateContainerTasklet.builder()
+            .client(dockerClient)
+            .name(containerName)
+            .container(configurer -> configurer
+                .image("debian:8.9")
+                .volume(Paths.get(dataDir, "echo/output"), Paths.get("/var/local/hello-spring/output"))
+                .volume(Paths.get(dataDir, "echo/input"), Paths.get("/var/local/hello-spring/input"), true)
+                .env("Foo", "Baz")
+                .command("bash", "-c",
+                    "echo Started with Foo=${Foo} at $(date);" +
+                    "sleep 2; echo Read input file: $(cat /var/local/hello-spring/input/greeting.txt);" +
+                    "sleep 2; echo Done at $(date)"))
+            .build();
+    }
+    
+    @Bean
+    @JobScope
+    public RunContainerTasklet runEchoContainerTasklet(
+        DockerClient dockerClient,
+        @Value("#{jobExecutionContext['echo.containerId']}") String containerId)
+    {
+        RunContainerTasklet tasklet = RunContainerTasklet.builder()
+            .client(dockerClient)
+            .checkInterval(1000L)
+            .timeout(7000L)
+            .container(containerId)
+            .removeOnFinished(false)
+            .build();
+        return tasklet;
+    }
+    
+    @Bean
+    public Step createEchoContainerStep(
+        @Qualifier("createEchoContainerTasklet") CreateContainerTasklet tasklet) 
+        throws Exception
+    {
+        StepExecutionListener stepContextListener = ExecutionContextPromotionListeners
+            .fromKeys("containerId", "containerName").prefix("echo")
+            .build();
+        
+        return stepBuilderFactory.get("createEchoContainer")
+            .tasklet(tasklet)
+            .listener(tasklet)
+            .listener(stepContextListener)
+            .build();   
+    }
+    
+    @Bean
+    public Step runEchoContainerStep(
+        @Qualifier("runEchoContainerTasklet") RunContainerTasklet tasklet) 
+        throws Exception
+    {       
+        return stepBuilderFactory.get("runEchoContainer")
+            .tasklet(tasklet)
+            .listener(tasklet)
+            .build();
     }
     
     private static class Validator implements JobParametersValidator
@@ -118,22 +196,15 @@ public class Job1Config
         }
     }
     
-    private static class ExecutionListener implements JobExecutionListener
+    private static class ExecutionListener extends JobExecutionListenerSupport
     {
         private static Logger logger = LoggerFactory.getLogger(ExecutionListener.class); 
-        
-        @Override
-        public void beforeJob(JobExecution execution)
-        {
-            // no-op  
-        }
 
         @Override
         public void afterJob(JobExecution execution)
         {
-            JobInstance instance = execution.getJobInstance();
             logger.info("After job #{}: status={} exit-status={}", 
-                instance.getInstanceId(), execution.getStatus(), execution.getExitStatus());
+                execution.getJobInstance().getId(), execution.getStatus(), execution.getExitStatus());
         }  
     }
     
@@ -177,15 +248,17 @@ public class Job1Config
     }
 
     @Bean
-    public Job job1(Step step1, Step step2)
+    public Job job1(
+        Step step1, Step step2, Step createEchoContainerStep, Step runEchoContainerStep)
     {
         return jobBuilderFactory.get(JOB_NAME)
             .incrementer(new RunIdIncrementer())
             .validator(new Validator())
-            .start(step1)
-            .next(step2)
             .listener(new ExecutionListener())
-            //.preventRestart()
+            .start(step1)
+            //.next(step2)
+            .next(createEchoContainerStep)
+            .next(runEchoContainerStep)
             .build();
     }
 }
