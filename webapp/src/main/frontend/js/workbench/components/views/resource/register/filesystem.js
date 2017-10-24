@@ -1,12 +1,5 @@
 import React from 'react';
 import { FileSelectField } from '../../../helpers/forms/wizard-fields/';
-import formatFileSize from '../../../../util/file-size';
-
-const availableResources = [
-  { value: 'Resource 1', },
-  { value: 'Resource 2', },
-  { value: 'Resource 3', },
-];
 
 export const initialValue = {
   resource: null,
