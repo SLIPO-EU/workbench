@@ -25,12 +25,15 @@ export default function ResourceWizard(props) {
             toast.dismiss();
             toast.success(<span>Resource registration succeeded!</span>);
 
-            props.createResource({ 
+            const data = { 
               configuration: values.triplegeo || null,
               metadata: values.metadata,
               source: values.type.path,
-            })
-            .then(() => props.goTo(StaticRoutes.ResourceExplorer));
+            };
+            const file = values.upload && values.upload.file || null;
+
+            props.createResource(data, file)
+              .then(() => props.goTo(StaticRoutes.ResourceExplorer));
           }
         }}
         childrenProps={{

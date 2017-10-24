@@ -1,49 +1,19 @@
 const actions = require('./api/fetch-actions');
 
-let resources = [
-  {
-    id: '1',
-    name: 'Resource 1',
-    description: 'This is a test resource',
-    format: 'SHAPEFILE',
-  },
-  {
-    id: '2',
-    name: 'Resource 2',
-    description: 'This is another test resource',
-    format: 'GEOJSON',
-  },
-];
-
-const mockActions = {
- 
-  get: (url, token, index, offset) => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        resolve(resources);
-      }, 500);
-    });
-  },
-
-  post: (url, token, data) => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        resources.push(data);
-        resolve(data);
-      }, 500);
-    });
-  },
-
-};
-
 module.exports = {
-  fetch: (index, offset, token) => {
-    return mockActions.get('/action/resources', token, index, offset);
+  fetch: (data, token) => {
+    return actions.post('/action/resource/query', token, data);
   },
-  create: (data, token) => {
-    if (!data.id) {
-      throw new Error('No resource id provided');
-    }
-    return mockActions.post('/action/resources', token, data);
+  upload: (data, file, token) => {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('data', new Blob([JSON.stringify(data)], { 
+      type: 'application/json'
+    })); 
+
+    return actions.submit('/action/resource/upload', token, form, 'PUT');
+  },
+  register: (data, token) => {
+    return actions.put('/action/resource/register', token, data);
   },
 };

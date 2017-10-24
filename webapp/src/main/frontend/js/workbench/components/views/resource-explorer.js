@@ -22,7 +22,7 @@ import { fetchResources } from '../../ducks/data/resources';
 class ResourceExplorer extends React.Component {
 
   componentWillMount() {
-    this.props.fetchResources();
+    this.props.fetchResources({});
   }
 
   render() {
