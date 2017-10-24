@@ -1,5 +1,6 @@
 import React from 'react';
-import { SelectField } from '../../../helpers/forms/wizard-fields/';
+import { FileSelectField } from '../../../helpers/forms/wizard-fields/';
+import formatFileSize from '../../../../util/file-size';
 
 const availableResources = [
   { value: 'Resource 1', },
@@ -14,7 +15,7 @@ export const validator = (value) => {
   const errors = {};
 
   if (!value.resource) {
-    errors.resource = 'Select a resource';
+    errors.resource = 'No resource selected';
   }
   if (Object.keys(errors).length) {
     throw errors;
@@ -24,12 +25,12 @@ export const validator = (value) => {
 export const Component = (props) => {
   return (
     <div>
-      <SelectField
+      <FileSelectField
         {...props}
         id="resource"
-        label="Resource"
-        help="Select resource from list"
-        options={availableResources}
+        label="File system resource"
+        help="Click on resource to select"
+        data={props.resources}
       />
     </div>
   );

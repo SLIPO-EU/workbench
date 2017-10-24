@@ -9,6 +9,7 @@ import { ToastContainer } from 'react-toastify';
 import { Pages, StaticRoutes, DynamicRoutes, ErrorPages } from '../model/routes';
 import { userPropType } from '../model/prop-types/user';
 import { resize } from '../ducks/ui/viewport';
+import { getFilesystem } from '../ducks/config';
 
 import Home from './home';
 import LoginForm from './pages/login-form';
@@ -27,6 +28,18 @@ class ContentRoot extends React.Component {
   constructor(props) {
     super(props);
   }
+  
+  componentWillMount() {
+    if (this.props.user != null) {
+      this._getFileSystem();
+    }
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (this.props.user == null && nextProps.user != null) {
+      this._getFileSystem();
+    }
+  }
 
   componentDidMount() {
     this._listener = _.debounce(this._setViewport.bind(this), 150);
@@ -35,6 +48,10 @@ class ContentRoot extends React.Component {
 
   componentWillUnmount() {
     window.removeEventListener('resize', this._listener);
+  }
+
+  _getFileSystem() {
+    this.props.getFilesystem('');
   }
 
   _setViewport() {
@@ -104,7 +121,7 @@ const mapStateToProps = (state) => ({
   user: state.user.profile,
 });
 
-const mapDispatchToProps = (dispatch) => bindActionCreators({ resize }, dispatch);
+const mapDispatchToProps = (dispatch) => bindActionCreators({ resize, getFilesystem }, dispatch);
 
 ContentRoot = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(ContentRoot);
 

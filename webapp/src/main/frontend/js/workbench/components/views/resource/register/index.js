@@ -11,7 +11,7 @@ import * as harvesterConfig from './harvester-config';
 import * as fileUpload from './file-upload';
 import * as metadata from './metadata';
 import * as triplegeo from './triplegeo';
-import * as resource from './resource-select';
+import * as filesystem from './filesystem';
 import * as confirmation from './confirmation';
 
 
@@ -51,12 +51,13 @@ export default function ResourceWizard(props) {
           validate={externalUrl.validator}
           next={() => 'confirm'}
         />
-        <resource.Component
+        <filesystem.Component
           id="filesystem"
           title="Select resource"
-          initialValue={props.initialValues.filesystem || resource.initialValue}
-          validate={resource.validator}
+          initialValue={props.initialValues.filesystem || filesystem.initialValue}
+          validate={filesystem.validator}
           next={() => 'metadata'}
+          resources={props.fsResources}
         />
 
         <fileUpload.Component

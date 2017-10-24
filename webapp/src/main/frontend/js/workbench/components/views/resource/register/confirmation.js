@@ -23,7 +23,7 @@ export const Component = (props) => {
         {
           type.path === 'FILESYSTEM' ?
             <ul>
-              <li>Resource: {filesystem.resource}</li>
+              <li>Resource: {filesystem.resource.path}</li>
               <li>Name: {metadata.name}</li>
               <li>Description: {metadata.description}</li>
               <li>Format: {metadata.format}</li>
