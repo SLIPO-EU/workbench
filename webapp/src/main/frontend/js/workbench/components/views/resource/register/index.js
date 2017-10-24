@@ -42,6 +42,7 @@ export default function ResourceWizard(props) {
           id="type"
           title="Input mode"
           initialValue={props.initialValues.type || type.initialValue}
+          validate={type.validator}
           next={value => value.path.toLowerCase()}
         />
         <externalUrl.Component
