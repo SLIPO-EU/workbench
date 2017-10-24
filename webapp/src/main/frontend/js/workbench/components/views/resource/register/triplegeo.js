@@ -48,7 +48,7 @@ export const validator = function (values, cleared) {
   if (!values['defaultLang']) {
     errors['defaultLang'] = 'Select default language';
   }
-  if (cleared && cleared.metadata && cleared.metadata.format.value === 'CSV') {
+  if (cleared && cleared.metadata && cleared.metadata.format === 'CSV') {
     if (!values['delimiter']) {
       errors['delimiter'] = 'Required for CSV';
     } 
