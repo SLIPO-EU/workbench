@@ -39,7 +39,7 @@ import org.springframework.context.annotation.Bean;
 
 import com.spotify.docker.client.DockerClient;
 
-import eu.slipo.workbench.rpc.jobs.listener.ExecutionContextKeyMappingPromotionListener;
+import eu.slipo.workbench.rpc.jobs.listener.ExecutionContextPromotionListeners;
 import eu.slipo.workbench.rpc.jobs.tasklet.docker.CreateContainerTasklet;
 import eu.slipo.workbench.rpc.jobs.tasklet.docker.RunContainerTasklet;
 
@@ -161,8 +161,9 @@ public class Job1Config
         @Qualifier("createEchoContainerTasklet") CreateContainerTasklet tasklet) 
         throws Exception
     {
-        StepExecutionListener stepContextListener = ExecutionContextKeyMappingPromotionListener
-            .createWithPrefix(new String[] {"containerId"}, "echo");
+        StepExecutionListener stepContextListener = ExecutionContextPromotionListeners
+            .fromKeys("containerId", "containerName").prefix("echo")
+            .build();
         
         return stepBuilderFactory.get("createEchoContainer")
             .tasklet(tasklet)
