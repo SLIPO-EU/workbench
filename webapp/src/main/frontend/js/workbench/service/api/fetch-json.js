@@ -3,12 +3,7 @@ const fetch = require('fetch');
 const { checkStatus } = require('../util/check-fetch-status');
 const { checkError } = require('../util/check-json');
 
-const headers = {
-  'accept': 'application/json',
-  'x-requested-with': 'XMLHttpRequest',
-};
-
-module.exports = (url, method, token, body) => fetch(url, {
+module.exports = (url, method, token, body, headers) => fetch(url, {
   method, 
   headers: {
     ...headers,
