@@ -40,29 +40,36 @@ const removeResource = (id) => ({
 });
 
 // Thunk actions
-export const fetchResources = (index, offset) => (dispatch, getState) => {
+export const fetchResources = (data) => (dispatch, getState) => {
   const { meta: { csrfToken: token } } = getState();
   dispatch(requestResources());
-  return resourceService.fetch(index, offset, token)
+  return resourceService.fetch(data, token)
     .then((resources) => {
       dispatch(receiveResources(resources));
     })
     .catch((err) => {
       console.error('Failed loading resources:', err);
-      throw err;
     });
 };
 
-export const createResource = (data) => (dispatch, getState) => {
+export const createResource = (data, file = null) => (dispatch, getState) => {
   const { meta: { csrfToken: token } } = getState();
-  return resourceService.create(data, token)
-    .then((resource) => {
-      dispatch(fetchResources());
-    })
-    .catch((err) => {
-      console.error('Failed creating resource:', err);
-      throw err;
-    });
+
+  if (file != null) {
+    return resourceService.upload(data, file, token)
+      .then((resource) => {
+      })
+      .catch((err) => {
+        console.error('Failed uploading resource:', err);
+      });
+  } else {
+    return resourceService.register(data, token)
+      .then((resource) => {
+      })
+      .catch((err) => {
+        console.error('Failed creating resource:', err);
+      });
+  }
 };
 
 // Reducer

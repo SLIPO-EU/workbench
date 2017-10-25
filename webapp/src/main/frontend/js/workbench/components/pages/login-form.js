@@ -127,10 +127,10 @@ const mapDispatchToProps = (dispatch) => ({
     dispatch(login(username, password))
       .then(() => dispatch(refreshProfile()))
       .then(() => toast.dismiss(),
-      () => {
-        toast.dismiss();
-        toast.error(<FormattedMessage id="login.failure" defaultMessage="The username or password is incorrect." />);
-      })
+        () => {
+          toast.dismiss();
+          toast.error(<FormattedMessage id="login.failure" defaultMessage="The username or password is incorrect." />);
+        })
       .catch((err) => null)
   ),
 });

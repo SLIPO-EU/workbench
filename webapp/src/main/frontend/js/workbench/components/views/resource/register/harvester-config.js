@@ -8,7 +8,7 @@ export const validator = () => {};
 export const Component = (props) => {
   const { values } = props;
   const { type } = values.harvester;
-  if (type.value === 'OSM') {
+  if (type === 'OSM') {
     return (
       <div>
         <TextField
@@ -25,7 +25,7 @@ export const Component = (props) => {
         />
       </div>
     );
-  } else if (type.value === 'X') {
+  } else if (type === 'X') {
     return (
       <div>
         <TextField

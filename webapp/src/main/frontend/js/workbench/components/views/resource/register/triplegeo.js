@@ -27,11 +27,11 @@ const languages = [
 ];
 
 export const initialValue = {
-  'serialization': serializations[2],
-  'targetOntology': ontologies[1],
-  'sourceCRS': crs[0],
-  'targetCRS': crs[1],
-  'defaultLang': languages[0],
+  'serialization': serializations[2].value,
+  'targetOntology': ontologies[1].value,
+  'sourceCRS': crs[0].value,
+  'targetCRS': crs[1].value,
+  'defaultLang': languages[0].value,
 };
 
 export const validator = function (values, cleared) {
@@ -48,7 +48,7 @@ export const validator = function (values, cleared) {
   if (!values['defaultLang']) {
     errors['defaultLang'] = 'Select default language';
   }
-  if (cleared && cleared.metadata && cleared.metadata.format.value === 'CSV') {
+  if (cleared && cleared.metadata && cleared.metadata.format === 'CSV') {
     if (!values['delimiter']) {
       errors['delimiter'] = 'Required for CSV';
     } 
@@ -122,7 +122,7 @@ export const Component = (props) => {
         help="Parameter that specifies particular values (e.g., UNK) in attributes that should not be exported as literals. By default, NULL values in attributes are suppressed and never exported"
       />
       { 
-        props.values.metadata && props.values.metadata.format.value === 'CSV' ?
+        props.values.metadata && props.values.metadata.format === 'CSV' ?
           <div>
             <TextField
               {...props}

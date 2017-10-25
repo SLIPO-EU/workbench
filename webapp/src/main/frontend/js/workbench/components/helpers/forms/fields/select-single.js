@@ -5,22 +5,23 @@ import ReactSelect from 'react-select';
 import decorateField from './formfield';
 
 export function Select(props) {
+  const options = props.options.map(option => ({ value: option.value, label: option.label || option.value }));
   return (
     <ReactSelect
       name={props.id} 
       id={props.id} 
-      value={props.value}
+      value={options.find(opt => opt.value === props.value)}
       clearable={false}
       onChange={(val) => {
         if (typeof props.onChange === 'function') {
-          if (val) {
-            props.onChange(val);
+          if (val && val.value) {
+            props.onChange(val.value);
           } else {
             props.onChange(null);
           }
         }
       }} 
-      options={props.options.map(option => ({ value: option.value, label: option.label ? option.label : option.value }))}
+      options={options}
     />
   );
 }

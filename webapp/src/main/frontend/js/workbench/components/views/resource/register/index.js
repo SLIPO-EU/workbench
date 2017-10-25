@@ -11,7 +11,7 @@ import * as harvesterConfig from './harvester-config';
 import * as fileUpload from './file-upload';
 import * as metadata from './metadata';
 import * as triplegeo from './triplegeo';
-import * as resource from './resource-select';
+import * as filesystem from './filesystem';
 import * as confirmation from './confirmation';
 
 
@@ -21,17 +21,19 @@ export default function ResourceWizard(props) {
       <MultiStep
         initialActive={props.initialActive}
         onComplete={(values) => { 
-          if (values.type.path.value === 'UPLOAD') {
+          if (values.type.path === 'UPLOAD' || values.type.path === 'FILESYSTEM') {
             toast.dismiss();
             toast.success(<span>Resource registration succeeded!</span>);
 
-            props.createResource({ 
-              id: values.metadata.name, 
-              name: values.metadata.name, 
-              description: values.metadata.description, 
-              format: values.metadata.format.label, 
-            })
-            .then(() => props.goTo(StaticRoutes.ResourceExplorer));
+            const data = { 
+              configuration: values.triplegeo || null,
+              metadata: values.metadata,
+              source: values.type.path,
+            };
+            const file = values.upload && values.upload.file || null;
+
+            props.createResource(data, file)
+              .then(() => props.goTo(StaticRoutes.ResourceExplorer));
           }
         }}
         childrenProps={{
@@ -43,7 +45,8 @@ export default function ResourceWizard(props) {
           id="type"
           title="Input mode"
           initialValue={props.initialValues.type || type.initialValue}
-          next={value => value.path.value.toLowerCase()}
+          validate={type.validator}
+          next={value => value.path.toLowerCase()}
         />
         <externalUrl.Component
           id="external"
@@ -52,12 +55,13 @@ export default function ResourceWizard(props) {
           validate={externalUrl.validator}
           next={() => 'confirm'}
         />
-        <resource.Component
-          id="existing"
+        <filesystem.Component
+          id="filesystem"
           title="Select resource"
-          initialValue={props.initialValues.resource || resource.initialValue}
-          validate={resource.validator}
-          next={() => 'confirm'}
+          initialValue={props.initialValues.filesystem || filesystem.initialValue}
+          validate={filesystem.validator}
+          next={() => 'metadata'}
+          resources={props.fsResources}
         />
 
         <fileUpload.Component
@@ -74,7 +78,7 @@ export default function ResourceWizard(props) {
           description=""
           initialValue={props.initialValues.metadata || metadata.initialValue}
           validate={metadata.validator}
-          next={(value) => value.format && value.format.value !== 'RDF' ? 'triplegeo' : 'confirm'}
+          next={(value) => value.format !== 'RDF' ? 'triplegeo' : 'confirm'}
         />
         <harvester.Component
           id="harvester"
