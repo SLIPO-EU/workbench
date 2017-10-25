@@ -34,7 +34,7 @@ class ResourceRegistration extends React.Component {
                 initialValues={this.props.values}
                 createResource={this.props.createResource} 
                 goTo={this.props.history.push}
-                fsResources={this.props.fsResources}
+                filesystem={this.props.filesystem}
               />
             </CardBlock>
           </Card>
@@ -48,7 +48,7 @@ class ResourceRegistration extends React.Component {
 const mapStateToProps = (state) => ({
   values: state.ui.views.resources.registration.values,
   step: state.ui.views.resources.registration.step,
-  fsResources: state.config.filesystem.files,
+  filesystem: state.config.filesystem,
 
 });
 const mapDispatchToProps = (dispatch) => bindActionCreators({ 

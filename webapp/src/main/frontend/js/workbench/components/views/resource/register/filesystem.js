@@ -23,7 +23,6 @@ export const Component = (props) => {
         id="resource"
         label="File system resource"
         help="Click on resource to select"
-        data={props.resources}
       />
     </div>
   );

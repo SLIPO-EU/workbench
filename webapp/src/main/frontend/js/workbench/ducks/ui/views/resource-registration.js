@@ -1,8 +1,8 @@
 // viewport.js
 
 // Actions
-const SET = 'resources/SET';
-const RESET = 'resources/RESET';
+const SET = 'ui/resource-registration/SET';
+const RESET = 'ui/resource-registration/RESET';
 
 // Reducer
 const initialState = {
