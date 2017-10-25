@@ -2,7 +2,7 @@ const Redux = require('redux');
 
 import { config, i18n, meta, user } from './ducks';
 import { viewport, menu } from './ducks/ui/';
-import { resourceRegistration } from './ducks/ui/views';
+import { resourceRegistration, resourceExplorer } from './ducks/ui/views';
 
 import { resources } from './ducks/data';
 
@@ -20,6 +20,7 @@ module.exports = Redux.combineReducers({
     views: Redux.combineReducers({
       resources: Redux.combineReducers({
         registration: resourceRegistration,
+        explorer: resourceExplorer,
       }),
     }),
   }),

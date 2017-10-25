@@ -1,17 +1,19 @@
 import * as React from 'react';
 import * as ReactRedux from 'react-redux';
-import { FormattedTime } from 'react-intl';
 import { bindActionCreators } from 'redux';
 import {
   Card, CardBlock, CardTitle, Row, Col,
   ButtonToolbar, Button, ButtonGroup, Label, Input
 } from 'reactstrap';
+import moment from 'moment';
+import { FormattedTime } from 'react-intl';
 
 import Placeholder from './placeholder';
-
-import moment from 'moment';
+import { Filters, ResourceDetails, Resources } from './resource/explorer/';
 
 import { fetchResources } from '../../ducks/data/resources';
+import { setPager, resetPager, setFilter, resetFilters, setSelectedResource } from '../../ducks/ui/views/resource-explorer';
+
 
 /**
  * Browse and manage resources
@@ -38,22 +40,39 @@ class ResourceExplorer extends React.Component {
                     <div className="small text-muted">Last Update: <FormattedTime value={moment().toDate()} day='numeric' month='numeric' year='numeric' /></div>
                   </Col>
                 </Row>
-                <Row style={{ height: 200 }} className="mb-2">
+                <Row style={{ height: 100 }} className="mb-2">
                   <Col>
-                    <Placeholder label="Filter" iconClass="fa fa-filter" />
+                    <Filters 
+                      filters={this.props.filters}
+                      setFilter={this.props.setFilter}
+                      resetFilters={this.props.resetFilters}
+                      fetchResources={this.props.fetchResources}
+                    />
                   </Col>
                 </Row>
-                <Row style={{ height: 400 }} className="mb-2">
+                <Row style={{ minHeight: 450 }} className="mb-2">
                   <Col>
-                    <Placeholder label="Resources" iconClass="fa fa-table" />
+                    <Resources 
+                      resources={this.props.resources}
+                      pager={this.props.pager}
+                      setPager={this.props.setPager}
+                      resetPager={this.props.resetPager}
+                      fetchResources={this.props.fetchResources}
+                      setSelectedResource={this.props.setSelectedResource}
+                      selectedResource={this.props.selectedResource}
+                    />
                   </Col>
                   <Col>
                     <Placeholder label="Map" iconClass="fa fa-map-o" />
                   </Col>
                 </Row>
-                <Row style={{ height: 400 }} className="mb-2">
+                <Row style={{ minHeight: 450, marginTop: 30 }} className="mb-2">
                   <Col>
-                    <Placeholder label="Details" iconClass="fa fa-database" />
+                    <h3>Details</h3>
+                    <ResourceDetails
+                      resources={this.props.resources.items}
+                      detailed={this.props.selectedResource}
+                    />
                   </Col>
                 </Row>
               </CardBlock>
@@ -68,9 +87,12 @@ class ResourceExplorer extends React.Component {
 
 const mapStateToProps = (state) => ({
   resources: state.data.resources,
+  pager: state.ui.views.resources.explorer.pager,
+  filters: state.ui.views.resources.explorer.filters,
+  selectedResource: state.ui.views.resources.explorer.selected,
 });
 
-const mapDispatchToProps = (dispatch) => bindActionCreators({ fetchResources }, dispatch);
+const mapDispatchToProps = (dispatch) => bindActionCreators({ fetchResources, setFilter, resetFilters, setPager, resetPager, setSelectedResource }, dispatch);
 
 const mergeProps = (stateProps, dispatchProps, ownProps) => {
   return {
