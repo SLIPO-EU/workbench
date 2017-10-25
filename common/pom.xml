@@ -85,5 +85,20 @@
             <version>59.1</version>
         </dependency>
 
+       <!-- apache.commons.* utilities -->
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.6</version>
+        </dependency>
+
+        <dependency>
+            <!-- The org.apache.commons:commons-io artifact was renamed to commons-io:commons-io -->
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.5</version>
+        </dependency>
+
     </dependencies>
 </project>
