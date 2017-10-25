@@ -48,9 +48,8 @@ export class FileSelect extends React.Component {
     };
   }
   _getParentDir(level) {
-    const i = 0;
     let folder = this.props.filesystem;
-    while (i < level && folder) {
+    while (folder) {
       folder = folder.folders;
     }
     return folder;
