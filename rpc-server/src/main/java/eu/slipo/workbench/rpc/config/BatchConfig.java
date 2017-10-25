@@ -15,13 +15,16 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.task.TaskExecutor;
 
 import eu.slipo.workbench.rpc.jobs.Job1Config;
+import eu.slipo.workbench.rpc.jobs.TriplegeoJobConfig;
 
 @Configuration
+@PropertySource("classpath:config/batch.properties")
 @EnableBatchProcessing(modular = true)
-@DependsOn("dataSource") // because of job repository
+@DependsOn("dataSource")
 public class BatchConfig 
 {
     @Autowired
@@ -67,5 +70,10 @@ public class BatchConfig
     @Bean
     public ApplicationContextFactory job1ContextFactory() {
         return new GenericApplicationContextFactory(Job1Config.class);
+    }
+    
+    @Bean
+    public ApplicationContextFactory triplegeoJobContextFactory() {
+        return new GenericApplicationContextFactory(TriplegeoJobConfig.class);
     }
  }
