@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
+import eu.slipo.workbench.web.model.process.TripleGeoConfiguration;
+
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "source")
 @JsonSubTypes({
     @Type(value = UploadResourceRegistration.class, name = "UPLOAD"),

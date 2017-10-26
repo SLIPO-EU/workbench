@@ -1,10 +1,19 @@
-package eu.slipo.workbench.web.model;
+package eu.slipo.workbench.web.model.process;
+
+import eu.slipo.workbench.web.model.EnumDataFormat;
+import eu.slipo.workbench.web.model.EnumTool;
 
 public class TripleGeoConfiguration extends ToolConfiguration {
 
     public TripleGeoConfiguration() {
-        this.operation = EnumOperation.TRANSFORM;
+        super();
+        this.tool = EnumTool.TRIPLE_GEO;
     }
+
+    /**
+     * Input format
+     */
+    private EnumDataFormat inputFormat;
 
     /**
      * Target ontology
@@ -94,6 +103,14 @@ public class TripleGeoConfiguration extends ToolConfiguration {
      * default, the value will be English
      */
     private String defaultLang = "en";
+
+    public EnumDataFormat getInputFormat() {
+        return inputFormat;
+    }
+
+    public void setInputFormat(EnumDataFormat inputFormat) {
+        this.inputFormat = inputFormat;
+    }
 
     public String getOntology() {
         return ontology;

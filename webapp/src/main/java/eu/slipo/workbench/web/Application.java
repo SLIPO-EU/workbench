@@ -1,11 +1,11 @@
 package eu.slipo.workbench.web;
 
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.web.support.SpringBootServletInitializer;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.web.support.SpringBootServletInitializer;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 
 @SpringBootApplication(
     scanBasePackageClasses = {
@@ -22,21 +22,22 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
         eu.slipo.workbench.web.domain._Marker.class,
     }
 )
+@EnableGlobalMethodSecurity(securedEnabled = true)
 public class Application extends SpringBootServletInitializer {
-   
+
     /**
      * Used when packaging as a WAR application
      */
     @Override
-    protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) 
+    protected SpringApplicationBuilder configure(SpringApplicationBuilder builder)
     {
         return builder.sources(Application.class);
     }
-    
+
     /**
      * Used when packaging as a standalone JAR (the server is embedded)
      */
-    public static void main(String[] args) 
+    public static void main(String[] args)
     {
         SpringApplication.run(Application.class, args);
     }

@@ -16,21 +16,25 @@ public enum EnumOperation {
      */
     UNDEFINED(0),
     /**
+     * Register resource to catalog
+     */
+    REGISTER(1),
+    /**
      * Data transformation
      */
-    TRANSFORM(1),
+    TRANSFORM(2),
     /**
      * POI RDF dataset interlinking
      */
-    INTERLINK(2),
+    INTERLINK(3),
     /**
      * POI RDF dataset and linked data fusion
      */
-    FUSION(3),
+    FUSION(4),
     /**
      * POI RDF dataset enrichment
      */
-    ENRICHEMENT(4);
+    ENRICHEMENT(5);
 
     private final int value;
 

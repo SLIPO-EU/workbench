@@ -6,42 +6,24 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-public class DirectoryInfo {
-
-    private String name;
-
-    private String path;
-
-    private ZonedDateTime createdOn;
+/**
+ * The file system entry of a directory
+ */
+public class DirectoryInfo extends FileSystemEntry {
 
     private List<FileInfo> files = new ArrayList<FileInfo>();
 
     private List<DirectoryInfo> folders = new ArrayList<DirectoryInfo>();
 
     public DirectoryInfo(String name, String path, ZonedDateTime createdOn) {
-        this.name = name;
-        this.path = path;
-        this.createdOn = createdOn;
+        super(0, name, path, createdOn);
     }
 
     public DirectoryInfo(String name, String path, ZonedDateTime createdOn, List<FileInfo> files, List<DirectoryInfo> folders) {
-        this.name = name;
-        this.path = path;
-        this.createdOn = createdOn;
+        super(0, name, path, createdOn);
+
         this.files.addAll(files);
         this.folders.addAll(folders);
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getPath() {
-        return path;
-    }
-
-    public ZonedDateTime getCreatedOn() {
-        return createdOn;
     }
 
     public List<FileInfo> getFiles() {
@@ -56,6 +38,7 @@ public class DirectoryInfo {
         return (files.size() + folders.size());
     }
 
+    @Override
     public int getSize() {
         return files.stream().mapToInt(f -> f.getSize()).sum();
     }

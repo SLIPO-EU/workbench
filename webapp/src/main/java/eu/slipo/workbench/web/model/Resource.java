@@ -26,7 +26,7 @@ public class Resource {
 
     private ZonedDateTime updatedOn;
 
-    private File file;
+    private FileSystemEntry file;
 
     private UUID table;
 
@@ -101,11 +101,11 @@ public class Resource {
         this.updatedOn = updatedOn;
     }
 
-    public File getFile() {
+    public FileSystemEntry getFile() {
         return file;
     }
 
-    public void setFile(File file) {
+    public void setFile(FileSystemEntry file) {
         this.file = file;
     }
 

@@ -1,21 +1,23 @@
 package eu.slipo.workbench.web.model;
 
-import org.springframework.web.multipart.MultipartFile;
-
 public class UploadResourceRegistration extends ResourceRegistration {
 
-    private MultipartFile[] files;
+    /**
+     * Index of the uploaded file
+     */
+    private int fileIndex;
 
     public UploadResourceRegistration() {
         super();
         this.source = EnumDataSource.UPLOAD;
     }
 
-    public MultipartFile[] getFiles() {
-        return files;
+    public int getFileIndex() {
+        return fileIndex;
     }
 
-    public void setFiles(MultipartFile[] files) {
-        this.files = files;
+    public void setFileIndex(int fileIndex) {
+        this.fileIndex = fileIndex;
     }
+
 }
