@@ -1,4 +1,6 @@
 import * as React from 'react';
+import * as ReactRedux from 'react-redux';
+import { bindActionCreators } from 'redux';
 import { Link } from 'react-router-dom';
 import { FormattedTime } from 'react-intl';
 import {
@@ -16,14 +18,20 @@ import Card from '../helpers/card';
 import Table from '../helpers/table';
 import BarChart from '../helpers/chart';
 
-class Dashboard extends React.Component {
+import { fetchDashboardData } from '../../ducks/ui/views/dashboard';
 
+class Dashboard extends React.Component {
+  componentWillMount(){
+    console.log("emphkamen stp mount:", this.props);
+    this.props.fetchDashboardData(); 
+  }
+  
   render() {
     return (
       <div className="animated fadeIn">
         <div className="row">
           <div className="col-sm-12 col-md-6 col-lg-3">
-            <Card { ...CardConfig.ResourceCardConfig} />
+            <Card { ...CardConfig.ResourceCardConfig(this.props.stats.resources)} />
           </div>
           <div className="col-sm-12 col-md-6 col-lg-3">
             <Card { ...CardConfig.JobCardConfig} />
@@ -32,7 +40,7 @@ class Dashboard extends React.Component {
             <Card { ...CardConfig.QuotaCardConfig} />
           </div>
           <div className="col-sm-12 col-md-6 col-lg-3">
-            <Card { ...CardConfig.EventCardConfig} />
+            <Card { ...CardConfig.EventCardConfig(this.props.stats.events)} />
           </div>
         </div>
         <Row>
@@ -130,7 +138,7 @@ class Dashboard extends React.Component {
                 </Row>
                 <div>
                   <Table
-                    data={TableConfig.ResourceGridData}
+                    data={TableConfig.ResourceGridData(this.props.resources)}
                     columns={TableConfig.ResourceGridColumns}
                   />
                 </div>
@@ -165,7 +173,7 @@ class Dashboard extends React.Component {
                 </Row>
                 <div>
                   <Table
-                    data={TableConfig.EventGridData}
+                    data={TableConfig.EventGridData(this.props.events)}
                     columns={TableConfig.EventGridColumns}
                   />
                 </div>
@@ -178,4 +186,27 @@ class Dashboard extends React.Component {
   }
 }
 
-export default Dashboard;
+//export default Dashboard;
+
+
+
+const mapStateToProps = (state) => ({
+  stats: state.ui.views.dashboard.statistics,
+  resources: state.ui.views.dashboard.resources,
+  events: state.ui.views.dashboard.events,
+  //pager: state.ui.views.resources.explorer.pager,
+  //filters: state.ui.views.resources.explorer.filters,
+  //givenName: state.user.profile.givenName,
+});
+
+const mapDispatchToProps = (dispatch) => bindActionCreators({ fetchDashboardData }, dispatch);
+
+/*const mergeProps = (stateProps, dispatchProps, ownProps) => {
+  return {
+    ...stateProps,
+    ...dispatchProps,
+    ...ownProps,
+  };
+};*/
+
+export default ReactRedux.connect(mapStateToProps, mapDispatchToProps)(Dashboard);
