@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as ReactRedux from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { Link } from 'react-router-dom';
-import { FormattedTime } from 'react-intl';
+import { FormattedTime, injectIntl } from 'react-intl';
 import {
   Card as ReactCard, CardBlock, CardTitle, Row, Col,
   ButtonToolbar, Button, ButtonGroup, Label, Input
@@ -22,16 +22,16 @@ import { fetchDashboardData } from '../../ducks/ui/views/dashboard';
 
 class Dashboard extends React.Component {
   componentWillMount(){
-    console.log("emphkamen stp mount:", this.props);
     this.props.fetchDashboardData(); 
   }
   
   render() {
+    
     return (
       <div className="animated fadeIn">
         <div className="row">
           <div className="col-sm-12 col-md-6 col-lg-3">
-            <Card { ...CardConfig.ResourceCardConfig(this.props.stats.resources)} />
+            <Card { ...CardConfig.ResourceCardConfig(this.props.stats.resources, this.props.intl)} />
           </div>
           <div className="col-sm-12 col-md-6 col-lg-3">
             <Card { ...CardConfig.JobCardConfig} />
@@ -40,7 +40,7 @@ class Dashboard extends React.Component {
             <Card { ...CardConfig.QuotaCardConfig} />
           </div>
           <div className="col-sm-12 col-md-6 col-lg-3">
-            <Card { ...CardConfig.EventCardConfig(this.props.stats.events)} />
+            <Card { ...CardConfig.EventCardConfig(this.props.stats.events, this.props.intl)} />
           </div>
         </div>
         <Row>
@@ -201,12 +201,12 @@ const mapStateToProps = (state) => ({
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({ fetchDashboardData }, dispatch);
 
-/*const mergeProps = (stateProps, dispatchProps, ownProps) => {
+const mergeProps = (stateProps, dispatchProps, ownProps) => {
   return {
     ...stateProps,
     ...dispatchProps,
     ...ownProps,
   };
-};*/
+};
 
-export default ReactRedux.connect(mapStateToProps, mapDispatchToProps)(Dashboard);
+export default ReactRedux.connect(mapStateToProps, mapDispatchToProps, mergeProps)(injectIntl(Dashboard));

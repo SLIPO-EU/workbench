@@ -22,7 +22,7 @@ export const JobCardConfig = {
   iconClass: 'fa fa-cog',
 };
 
-export const ResourceCardConfig = (props) => ({
+export const ResourceCardConfig = (props, intl) => ({
   title: 'dashboard.card.resources',
   items: [{
     value: props.total,
@@ -36,8 +36,7 @@ export const ResourceCardConfig = (props) => ({
   }],
   color: '#ffffff',
   background: '#999999',
-  footer: props.updatedOn && props.updatedOn.toString() || 'just now man',
-  //footer: props.intl.formatRelative(props.updatedOn),
+  footer: intl.formatRelative(props.updatedOn),
   link: {
     path: StaticRoutes.ResourceExplorer,
     label: 'See more...',
@@ -63,7 +62,7 @@ export const QuotaCardConfig = {
   iconClass: 'fa fa-cubes',
 };
 
-export const EventCardConfig = (props) => ({
+export const EventCardConfig = (props, intl) => ({
   title: 'dashboard.card.events',
   items: [{
     value: props.error,
@@ -77,8 +76,7 @@ export const EventCardConfig = (props) => ({
   }],
   color: '#ffffff',
   background: '#5cb85c',
-  footer:  props.updatedOn && props.updatedOn.toString() || 'just now man',
-  //footer: props.intl.formatRelative(props.updatedOn),
+  footer: intl.formatRelative(props.updatedOn),
   link: {
     path: StaticRoutes.EventViewer,
     label: 'See more...',

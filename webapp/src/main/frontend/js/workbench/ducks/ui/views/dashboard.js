@@ -63,7 +63,6 @@ export const fetchDashboardData = () => (dispatch, getState) => {
   dispatch(requestDashboardData());
   return dashboardService.fetch(token)
     .then((data) => {
-      console.log("eftakane ta data:", data);
       dispatch(receiveDashboardData(data));
     })
     .catch((err) => {
