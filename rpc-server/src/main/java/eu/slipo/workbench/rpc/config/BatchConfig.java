@@ -1,9 +1,8 @@
 package eu.slipo.workbench.rpc.config;
 
+
 import org.springframework.batch.core.configuration.JobRegistry;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
-import org.springframework.batch.core.configuration.support.ApplicationContextFactory;
-import org.springframework.batch.core.configuration.support.GenericApplicationContextFactory;
 import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.launch.JobOperator;
@@ -11,19 +10,15 @@ import org.springframework.batch.core.launch.support.SimpleJobLauncher;
 import org.springframework.batch.core.launch.support.SimpleJobOperator;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.task.TaskExecutor;
 
-import eu.slipo.workbench.rpc.jobs.Job1Config;
-import eu.slipo.workbench.rpc.jobs.TriplegeoJobConfig;
-
 @Configuration
 @PropertySource("classpath:config/batch.properties")
-@EnableBatchProcessing(modular = true)
+@EnableBatchProcessing
 @DependsOn("dataSource")
 public class BatchConfig 
 {
@@ -61,19 +56,5 @@ public class BatchConfig
         operator.setJobRepository(repository);
         
         return operator;
-    }
-    
-    //
-    // Define child application contexts for job/step factories 
-    //
-    
-    @Bean
-    public ApplicationContextFactory job1ContextFactory() {
-        return new GenericApplicationContextFactory(Job1Config.class);
-    }
-    
-    @Bean
-    public ApplicationContextFactory triplegeoJobContextFactory() {
-        return new GenericApplicationContextFactory(TriplegeoJobConfig.class);
     }
  }
