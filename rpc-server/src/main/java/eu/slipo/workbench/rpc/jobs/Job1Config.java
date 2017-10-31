@@ -21,6 +21,7 @@ import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.core.StepListener;
+import org.springframework.batch.core.configuration.JobFactory;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
@@ -36,6 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Component;
 
 import com.spotify.docker.client.DockerClient;
 
@@ -43,7 +45,7 @@ import eu.slipo.workbench.rpc.jobs.listener.ExecutionContextPromotionListeners;
 import eu.slipo.workbench.rpc.jobs.tasklet.docker.CreateContainerTasklet;
 import eu.slipo.workbench.rpc.jobs.tasklet.docker.RunContainerTasklet;
 
-
+@Component
 public class Job1Config
 {
     private static final String JOB_NAME = "job1";
@@ -62,29 +64,22 @@ public class Job1Config
         public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext)
         {
             StepContext stepContext = chunkContext.getStepContext();
-            Map<String, Object> parameters = stepContext.getJobParameters();
-            StepExecution stepExecution = stepContext.getStepExecution();
-            ExecutionContext stepExecutionContext = stepExecution.getExecutionContext();
+            ExecutionContext executionContext = stepContext.getStepExecution().getExecutionContext();
             
             logger.info("Executing with parameters={} step-exec-context={} exec-context={}",
-                parameters, stepContext.getStepExecutionContext(), stepContext.getJobExecutionContext());
+                stepContext.getJobParameters(), executionContext, stepContext.getJobExecutionContext());
             
-            // Retrieve something from step-level execution context
-            int chunkIndex = stepExecutionContext.getInt("step1.chunk-index", 0);            
+            int chunkIndex = executionContext.getInt("step1.chunk-index", 0);            
             
             try { Thread.sleep(3500); } // simulate some processing
             catch (InterruptedException ex) {
                 logger.info("Interrupted while sleeping!");
             }
-            
             chunkIndex++; // pretend that some progress is done
             
-            // Note: Can only write to step-level execution context
-            stepExecutionContext.putInt("step1.chunk-index", chunkIndex);
-            stepExecutionContext.put("step1.key1", "val11");
-            stepExecutionContext.put("step1.key2", "val12");
-           
-            // A chunk is processed; cycle through same step
+            executionContext.putInt("step1.chunk-index", chunkIndex);
+            executionContext.put("step1.key1", "val11");
+            executionContext.put("step1.key2", "val12");
             logger.info("Done with chunk #{}", chunkIndex);
             return RepeatStatus.continueIf(chunkIndex < 12);
         }
@@ -99,23 +94,19 @@ public class Job1Config
             throws InterruptedException
         {
             StepContext stepContext = chunkContext.getStepContext();
-            Map<String, Object> parameters = stepContext.getJobParameters();
-            StepExecution stepExecution = stepContext.getStepExecution();
-            ExecutionContext stepExecutionContext = stepExecution.getExecutionContext();
+            ExecutionContext executionContext = stepContext.getStepExecution().getExecutionContext();
             
             logger.info("Executing with parameters={} step-exec-context={} exec-context={}",
-                parameters, stepContext.getStepExecutionContext(), stepContext.getJobExecutionContext());
+                stepContext.getJobParameters(), executionContext, stepContext.getJobExecutionContext());
             
-            Thread.sleep(2000);
-            
-            stepExecutionContext.put("step2.key1", "val21");    
-            stepExecutionContext.put("step2.key2", "val22");
-    
+            Thread.sleep(15000L);
+            executionContext.put("step2.key1", "val21");    
+            executionContext.put("step2.key2", "val22");
             return RepeatStatus.FINISHED;
         }
     }
     
-    @Bean
+    @Bean("job1.createEchoContainerTasklet")
     @JobScope
     public CreateContainerTasklet createEchoContainerTasklet(
         DockerClient dockerClient,
@@ -140,7 +131,7 @@ public class Job1Config
             .build();
     }
     
-    @Bean
+    @Bean("job1.runEchoContainerTasklet")
     @JobScope
     public RunContainerTasklet runEchoContainerTasklet(
         DockerClient dockerClient,
@@ -156,9 +147,9 @@ public class Job1Config
         return tasklet;
     }
     
-    @Bean
+    @Bean("job1.createEchoContainerStep")
     public Step createEchoContainerStep(
-        @Qualifier("createEchoContainerTasklet") CreateContainerTasklet tasklet) 
+        @Qualifier("job1.createEchoContainerTasklet") CreateContainerTasklet tasklet) 
         throws Exception
     {
         StepExecutionListener stepContextListener = ExecutionContextPromotionListeners
@@ -172,9 +163,9 @@ public class Job1Config
             .build();   
     }
     
-    @Bean
+    @Bean("job1.runEchoContainerStep")
     public Step runEchoContainerStep(
-        @Qualifier("runEchoContainerTasklet") RunContainerTasklet tasklet) 
+        @Qualifier("job1.runEchoContainerTasklet") RunContainerTasklet tasklet) 
         throws Exception
     {       
         return stepBuilderFactory.get("runEchoContainer")
@@ -182,83 +173,80 @@ public class Job1Config
             .listener(tasklet)
             .build();
     }
-    
-    private static class Validator implements JobParametersValidator
-    {
-        @Override
-        public void validate(JobParameters parameters) throws JobParametersInvalidException
-        {
-            // Validate, raise exception on invalid parameters
-            
-            Long foo = parameters.getLong("foo");
-            if (foo == null || foo < 199L)
-                throw new JobParametersInvalidException("Expected foo >= 199"); 
-        }
-    }
-    
-    private static class ExecutionListener extends JobExecutionListenerSupport
-    {
-        private static Logger logger = LoggerFactory.getLogger(ExecutionListener.class); 
 
-        @Override
-        public void afterJob(JobExecution execution)
-        {
-            logger.info("After job #{}: status={} exit-status={}", 
-                execution.getJobInstance().getId(), execution.getStatus(), execution.getExitStatus());
-        }  
-    }
-    
-    @Bean
+    @Bean("job1.step1")
     private Step step1()
     {
-        // A listener to promote (part of) step-level context to execution-level context
-        ExecutionContextPromotionListener listener = new ExecutionContextPromotionListener();
-        listener.setKeys(new String[] {"step1.key1"});
-        listener.setStrict(true);
-        try {
-            listener.afterPropertiesSet();
-        } catch (Exception e) {
-            listener = null;
-        }
-        
-        // Build step
         return stepBuilderFactory.get("step1")
             .tasklet(new Step1Tasklet())
-            .listener(listener)
+            .listener(
+                ExecutionContextPromotionListeners.fromKeys("step1.key1").build())
             .build();
     }
 
-    @Bean
+    @Bean("job1.step2")
     private Step step2()
     {
-        // A listener to promote (part of) step-level context to execution-level context
-        ExecutionContextPromotionListener listener = new ExecutionContextPromotionListener();
-        listener.setKeys(new String[] {"step2.key1"});
-        listener.setStrict(true);
-        try {
-            listener.afterPropertiesSet();
-        } catch (Exception e) {
-            listener = null;
-        }
-        
         return stepBuilderFactory.get("step2")
             .tasklet(new Step2Tasklet())
-            .listener(listener)
+            .listener(
+                ExecutionContextPromotionListeners.fromKeys("step2.key1").build())
             .build();
     }
-
-    @Bean
-    public Job job1(
-        Step step1, Step step2, Step createEchoContainerStep, Step runEchoContainerStep)
+    
+    @Bean("job1.job")
+    public Job job(
+        @Qualifier("job1.step1") Step step1, 
+        @Qualifier("job1.step2") Step step2,
+        @Qualifier("job1.createEchoContainerStep") Step createEchoContainerStep, 
+        @Qualifier("job1.runEchoContainerStep") Step runEchoContainerStep)
     {
+        JobExecutionListener listener = new JobExecutionListenerSupport() {
+            @Override
+            public void afterJob(JobExecution execution)
+            {
+                System.err.printf(" ** After job #%d: status=%s exit-status=%s%n", 
+                    execution.getJobInstance().getId(), 
+                    execution.getStatus(), execution.getExitStatus());
+            }  
+        }; 
+        
+        JobParametersValidator parametersValidator = new JobParametersValidator() {
+            @Override
+            public void validate(JobParameters parameters) throws JobParametersInvalidException
+            {
+                if (parameters.getLong("foo", 0L) < 199L)
+                    throw new JobParametersInvalidException("Expected foo >= 199"); 
+            }
+        };
+        
         return jobBuilderFactory.get(JOB_NAME)
             .incrementer(new RunIdIncrementer())
-            .validator(new Validator())
-            .listener(new ExecutionListener())
+            .validator(parametersValidator)
+            .listener(listener)
             .start(step1)
-            //.next(step2)
+            .next(step2)
             .next(createEchoContainerStep)
             .next(runEchoContainerStep)
             .build();
+    }
+    
+    @Bean("job1.jobFactory")
+    public JobFactory jobFactory(@Qualifier("job1.job") Job job1)
+    {
+        return new JobFactory()
+        {
+            @Override
+            public String getJobName()
+            {
+                return "job1";
+            }
+            
+            @Override
+            public Job createJob()
+            {
+                return job1;
+            }
+        };
     }
 }

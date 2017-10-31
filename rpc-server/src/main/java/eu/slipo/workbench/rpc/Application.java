@@ -13,6 +13,7 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
         eu.slipo.workbench.rpc.config._Marker.class,
         eu.slipo.workbench.rpc.service._Marker.class,
         eu.slipo.workbench.rpc.controller._Marker.class,
+        eu.slipo.workbench.rpc.jobs._Marker.class,
     }
 )
 @EntityScan(

@@ -3,3 +3,5 @@
 
 /src/main/resources/config/*.properties
 /src/main/resources/config/*.xml
+
+ScratchController.java
