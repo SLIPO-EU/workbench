@@ -75,17 +75,17 @@ export const JobGridColumns = [{
 }];
 
 /**
- * Event grid sample data
+ * Event grid data maper
  */
-export const EventGridData = [{
-  level: 'ERROR',
-  category: 'Authentication',
-  code: 'Login',
-  createdOn: moment().add(-1, 'hours').toDate(),
-  message: 'Authentication has failed for user \'admin\'',
-  source: '192.168.0.2',
-  account: 'admin',
-}];
+export const EventGridData = (events) => events.map(event => ({  
+  level: event.level,
+  category: event.category,
+  code: event.code,
+  createdOn: moment(event.createdOn).toDate(),
+  message: event.message,
+  source: event.clientAddress,
+  account: event.userName,
+}));
 
 /**
  * Event grid sample column configuration
@@ -110,7 +110,7 @@ export const EventGridColumns = [{
       <FormattedTime value={props.value} day='numeric' month='numeric' year='numeric' />
     );
   },
-  minWidth: 250
+  minWidth: 132
 }, {
   id: 'message',
   Header: 'Message',
@@ -127,16 +127,16 @@ export const EventGridColumns = [{
 }];
 
 /**
- * Resource grid sample data
+ * Resource grid data
  */
-export const ResourceGridData = [{
-  id: 1,
-  name: 'POI data from OSM',
-  version: '10',
-  createdOn: moment().add(30, 'days').add(4, 'hours').toDate(),
-  count: 12030,
-  process: 1
-}];
+export const ResourceGridData = (resources) => resources.map(resource => ({
+  id: resource.id,
+  name: resource.metadata.name,
+  version: resource.version,
+  createdOn: moment(resource.createdOn).toDate(),
+  count: resource.metadata.size,
+  process:  resource.jobExecutionId,
+}));
 
 /**
  * Resource grid sample column configuration
@@ -150,14 +150,14 @@ export const ResourceGridColumns = [{
   accessor: 'process',
   Cell: props => {
     return (
-      <Link style={{ color: '#00bcf2' }} to={buildPath(DynamicRoutes.DataViewer, { id: props.value })}><i className='fa fa-map'></i></Link>
+      props.value ? <Link style={{ color: '#00bcf2' }} to={buildPath(DynamicRoutes.DataViewer, { id: props.value })}><i className='fa fa-map'></i></Link> : <span className='fa fa-chain-broken'> </span>
     );
   },
   style: { 'textAlign': 'center' },
 }, {
   Header: 'Name',
   accessor: 'name',
-  minWidth: 300,
+  minWidth: 100,
   Cell: props => {
     return (
       <Link to={buildPath(DynamicRoutes.ResourceViewer, [props.row.id])}>{props.value}</Link>
