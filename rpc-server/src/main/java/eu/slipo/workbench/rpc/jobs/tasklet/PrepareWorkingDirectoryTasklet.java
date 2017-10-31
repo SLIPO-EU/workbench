@@ -265,20 +265,6 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
         return inputFormat;
     }
     
-    public Set<String> configKeys()
-    {
-        return config.keySet();
-    }
-    
-    public Map<String,Path> configPaths()
-    {
-        Map<String,Path> map = new LinkedHashMap<>();
-        Set<String> keys = config.keySet();
-        for (String key: keys)
-            map.put(key, config.get(key).getFirst());
-        return map;
-    }
-    
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext context)
         throws Exception
@@ -294,35 +280,37 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
         
         // Link to each input from inside input directory
         
-        List<String> names = new ArrayList<>(input.size());
+        // Todo Handle the case of a single archive input (with 1 level of nesting)
+        // Unpack contents in input directory, expand names to unpacked filenames
+        
+        List<String> inputNames = new ArrayList<>(input.size());
         for (Path inputPath: input) {
-           String name = createLinkFromInputDirectory(inputPath);
-           names.add(name);
+            String name = inputPath.getFileName().toString();
+            createLinkFromInputDirectory(inputPath, name);
+            inputNames.add(name);
         }
        
         // Generate configuration files inside working directory
         
         for (Pair<Path, Supplier<String>> pair: config.values()) {
-            Supplier<String> dataSupplier = pair.getSecond();
+            Supplier<String> g = pair.getSecond();
             Files.write(
                 workDir.resolve(pair.getFirst()),
-                dataSupplier.get().getBytes(StandardCharsets.UTF_8),
+                g.get().getBytes(StandardCharsets.ISO_8859_1),
                 StandardOpenOption.CREATE_NEW);
         }
         
         // Update execution context
         
-        final String itemDelimiter = ";";
-        
         executionContext.putString(Keys.WORK_DIR, workDir.toString());
         executionContext.putString(Keys.INPUT_DIR, inputDir.toString());
         executionContext.putString(Keys.OUTPUT_DIR, outputDir.toString());
-        executionContext.putString(Keys.INPUT, String.join(itemDelimiter, names));
+        executionContext.put(Keys.INPUT, inputNames);
         
-        Set<String> configKeys = config.keySet();
-        executionContext.putString(Keys.CONFIG, configKeys.stream()
-            .map(key -> key + "=" + config.get(key).getFirst())
-            .collect(Collectors.joining(itemDelimiter)));
+        Map<String,String> configNames = new LinkedHashMap<>(config.size());
+        for (String key: config.keySet())
+            configNames.put(key, config.get(key).getFirst().toString());
+        executionContext.put(Keys.CONFIG, configNames);
 
         return RepeatStatus.FINISHED;
     }
@@ -337,15 +325,13 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
      * Note that in the later case (symbolic link), we assume that no input will be moved/deleted 
      * throughout the whole job execution! 
      * 
-     * @param inputPath
-     * @return the link name 
+     * @param inputPath The input path to link to
+     * @param name The link name
      * @throws IOException 
      */
-    private String createLinkFromInputDirectory(Path inputPath) 
+    private void createLinkFromInputDirectory(Path inputPath, String name) 
         throws IOException
     {
-        Path name = inputPath.getFileName();
-        
         Path dst = inputDir.resolve(name);
         Path link = null;
         try {
@@ -357,7 +343,5 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
         if (link == null) {
             link = Files.createSymbolicLink(dst, inputPath);
         }
-        
-        return name.toString();
     }
 }
