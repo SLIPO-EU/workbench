@@ -13,6 +13,7 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -55,6 +56,7 @@ import com.spotify.docker.client.DockerClient;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.rpc.jobs.listener.ExecutionContextPromotionListeners;
+import eu.slipo.workbench.rpc.jobs.tasklet.PrepareWorkingDirectoryTasklet;
 import eu.slipo.workbench.rpc.jobs.tasklet.docker.CreateContainerTasklet;
 import eu.slipo.workbench.rpc.jobs.tasklet.docker.RunContainerTasklet;
 
@@ -68,6 +70,16 @@ public class TriplegeoJobConfig
     
     private static final FileAttribute<?> DIRECTORY_ATTRIBUTE = 
         PosixFilePermissions.asFileAttribute(DIRECTORY_PERMISSIONS);
+        
+    /**
+     * The default key for the (single) configuration file
+     */
+    public static final String CONFIG_KEY = "options";
+    
+    /**
+     * The default filename for the (single) configuration file
+     */
+    public static final String CONFIG_FILENAME = "options.conf";
     
     /**
      * The root directory on the docker host, under which we bind-mount volumes.
@@ -121,7 +133,6 @@ public class TriplegeoJobConfig
     private void initialize() throws IOException
     {
         // Create root data directory for our job executions
-        
         try {
             Files.createDirectory(dataDir, DIRECTORY_ATTRIBUTE); 
         } catch (FileAlreadyExistsException e) {
@@ -129,138 +140,103 @@ public class TriplegeoJobConfig
         }
     }
     
-    private static class PrepareWorkingDirectoryTasklet implements Tasklet
+    private Properties buildConfigProperties(
+        EnumDataFormat inputFormat, EnumDataFormat outputFormat, String featureName)
     {
-        private final Path workDir;
+        Properties p = new Properties();
         
-        private final Path inputDir;
+        p.setProperty("inputFormat", inputFormat.name());
+        p.setProperty("serialization", outputFormat.name());
+        p.setProperty("featureName", featureName);
         
-        private final Path outputDir;
+        // Populate with defaults
         
-        private final List<Path> input;
+        p.setProperty("tmpDir", "/tmp");
+        p.setProperty("targetOntology", "GeoSPARQL");
+        p.setProperty("prefixFeatureNS", "georesource");
+        p.setProperty("nsFeatureURI", "http://slipo.eu/geodata#");
+        p.setProperty("prefixGeometryNS", "geo");
+        p.setProperty("nsGeometryURI", "http://www.opengis.net/ont/geosparql#");
         
-        private final EnumDataFormat inputFormat;
+        p.setProperty("defaultLang", "en");
         
-        private PrepareWorkingDirectoryTasklet(Path workDir, List<Path> input, EnumDataFormat format)
-        {
-            this.workDir = workDir.toAbsolutePath();
-            this.inputDir = this.workDir.resolve("input");
-            this.outputDir = this.workDir.resolve("output");
-            this.input = input;
-            this.inputFormat = format;
+        // Populate with per-inputFormat defaults
+        
+        switch (inputFormat) {
+        case CSV:
+            p.setProperty("mode", "STREAM");
+            p.setProperty("delimiter", "|");
+            p.setProperty("attrKey", "id");
+            p.setProperty("attrName", "name");
+            p.setProperty("attrCategory", "type");
+            p.setProperty("attrX", "lon");
+            p.setProperty("attrY", "lat");
+            p.setProperty("valIgnore", "UNK");
+            break;
+        case SHAPEFILE:
+            p.setProperty("mode", "GRAPH");
+            p.setProperty("attrKey", "id");
+            p.setProperty("attrName", "name");
+            p.setProperty("attrCategory", "type");
+            p.setProperty("valIgnore", "UNK");
+            break;
+        case GEOJSON:
+            p.setProperty("mode", "STREAM");
+            p.setProperty("attrKey", "id");
+            p.setProperty("attrName", "name");
+            p.setProperty("attrCategory", "type");
+            p.setProperty("valIgnore", "null");
+            break;
+        case GPX:
+            p.setProperty("mode", "STREAM");
+            p.setProperty("attrKey", "name");
+            p.setProperty("attrName", "name");
+            p.setProperty("valIgnore", "UNK");
+            break;
+        case OSM:
+            break;
+        default:
+            break;
         }
-
-        public PrepareWorkingDirectoryTasklet(Path workDir, String[] input, EnumDataFormat format)
-        {
-            this(
-                workDir, 
-                Arrays.stream(input).map(Paths::get).collect(Collectors.toList()),
-                format);
-        }
         
-        public PrepareWorkingDirectoryTasklet(Path workDir, Path[] input, EnumDataFormat format)
-        {
-            this(workDir, Arrays.asList(input), format);
-        }
-        
-        public PrepareWorkingDirectoryTasklet(Path workDir, String input, EnumDataFormat format)
-        {
-            this(workDir, input.split(File.pathSeparator), format);
-        }
-        
-        @Override
-        public RepeatStatus execute(StepContribution contribution, ChunkContext context)
-            throws Exception
-        {
-            StepExecution stepExecution = context.getStepContext().getStepExecution();
-            ExecutionContext executionContext = stepExecution.getExecutionContext();
-            
-            // Create working directory hierarchy (unique per job instance)
-            
-            Files.createDirectory(workDir, DIRECTORY_ATTRIBUTE);
-            Files.createDirectory(inputDir, DIRECTORY_ATTRIBUTE);
-            Files.createDirectory(outputDir, DIRECTORY_ATTRIBUTE);
-            
-            // Link to each input from inside input directory
-            // Todo Filter (?) input by extension of specified data-format
-            
-            List<String> names = new ArrayList<>(input.size());
-            for (Path inputPath: input) {
-               String name = createLinkFromInputDirectory(inputPath);
-               names.add(name);
-            }
-           
-            // Todo Generate configuration file inside working directory
-            
-            // Update execution context
-            
-            executionContext.putString("workDir", workDir.toString());
-            executionContext.putString("inputDir", inputDir.toString());
-            executionContext.putString("outputDir", outputDir.toString());
-            executionContext.putString("inputFormat", inputFormat.name());
-            executionContext.putString("input", String.join(File.pathSeparator, names));
-            executionContext.putString("configFile", "options.conf");
-            
-            return null;
-        }
-
-        /**
-         * Link to the given input file from inside our input directory.
-         * 
-         * <p>
-         * A shallow link will be created, i.e. there is no attempt to create a nested structure 
-         * inside input directory. If a hard link cannot be created (because of file-system limitations),
-         * we reside to a symbolic link. 
-         * Note that in the later case (symbolic link), we assume that no input will be moved/deleted 
-         * throughout the whole job execution! 
-         * 
-         * @param inputPath
-         * @return the link name 
-         * @throws IOException 
-         */
-        private String createLinkFromInputDirectory(Path inputPath) throws IOException
-        {
-            Path name = inputPath.getFileName();
-            
-            Path dst = inputDir.resolve(name);
-            Path link = null;
-            try {
-                link = Files.createLink(dst, inputPath);
-            } catch (FileSystemException e) {
-                link = null;
-            }
-            
-            if (link == null) {
-                link = Files.createSymbolicLink(dst, inputPath);
-            }
-            
-            return name.toString();
-        }
+        return p;
     }
     
     /**
-     * Α tasklet to prepare the working directory for a job instance.
+     * Α tasklet to prepare the working directory for a Triplegeo job instance.
      */
     @Bean("triplegeo.prepareWorkingDirectoryTasklet")
     @JobScope
     public PrepareWorkingDirectoryTasklet prepareWorkingDirectoryTasklet(
-        @Value("#{jobParameters['inputFormat']}") String inputFormat,
-        @Value("#{jobParameters['input']}") String input,
+        @Value("#{jobExecutionContext['inputFormat']}") String inputFormat,
+        @Value("#{jobExecutionContext['outputFormat']}") String outputFormat,
+        @Value("#{jobExecutionContext['input']}") String inputFiles,
+        @Value("#{jobExecutionContext['featureName']}") String featureName,
         @Value("#{jobExecution.jobInstance.id}") Long jobId) 
     {
         Path workDir = dataDir.resolve(String.valueOf(jobId));
         
-        return new PrepareWorkingDirectoryTasklet(
-            workDir, input, EnumDataFormat.valueOf(inputFormat));
+        EnumDataFormat inputDataFormat = EnumDataFormat.valueOf(inputFormat);
+        EnumDataFormat outputDataFormat = EnumDataFormat.valueOf(outputFormat);
+        
+        Properties configProperties = 
+            buildConfigProperties(inputDataFormat, outputDataFormat, featureName);
+        
+        return PrepareWorkingDirectoryTasklet.builder()
+            .workingDirectory(workDir)
+            .input(inputFiles.split(File.pathSeparator))
+            .inputFormat(inputDataFormat)
+            .config(CONFIG_KEY, CONFIG_FILENAME, configProperties)
+            .build();
     }
     
     @Bean("triplegeo.prepareWorkingDirectoryStep")
     public Step prepareWorkingDirectoryStep(
-        @Qualifier("triplegeo.prepareWorkingDirectoryTasklet") Tasklet tasklet) 
+        @Qualifier("triplegeo.prepareWorkingDirectoryTasklet") PrepareWorkingDirectoryTasklet tasklet) 
         throws Exception
     {
         StepExecutionListener stepContextListener = ExecutionContextPromotionListeners
-            .fromKeys("workDir", "input", "inputFormat", "inputDir", "outputDir", "config")
+            .fromKeys("workDir", "inputDir", "input", "outputDir", "config")
             .strict(true)
             .build();
         
@@ -349,11 +325,31 @@ public class TriplegeoJobConfig
         private static Logger logger = LoggerFactory.getLogger(ExecutionListener.class); 
 
         @Override
+        public void beforeJob(JobExecution execution)
+        {
+            JobParameters parameters = execution.getJobParameters();
+            ExecutionContext executionContext = execution.getExecutionContext();
+            
+            // Initialize execution-context from job parameters
+            
+            executionContext.putString("inputFormat", 
+                parameters.getString("inputFormat", "SHAPEFILE"));
+            
+            executionContext.putString("outputFormat", 
+                parameters.getString("outputFormat", "TURTLE"));
+           
+            executionContext.putString("input", parameters.getString("input"));
+            
+            executionContext.putString("featureName", parameters.getString("featureName"));
+        }
+        
+        @Override
         public void afterJob(JobExecution execution)
         {
-            JobInstance r = execution.getJobInstance();
-            logger.info("After {}#{}: status={} exit-status={}", 
-                r.getJobName(), r.getId(), execution.getStatus(), execution.getExitStatus());
+            JobInstance instance = execution.getJobInstance();
+            logger.info("After job {}#{}: status={} exit-status={}", 
+                instance.getJobName(), instance.getId(), 
+                execution.getStatus(), execution.getExitStatus());
         }  
     }
     

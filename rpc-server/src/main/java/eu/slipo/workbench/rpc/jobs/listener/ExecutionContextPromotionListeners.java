@@ -112,7 +112,6 @@ public class ExecutionContextPromotionListeners
         
         public KeyMappingPromotionListener(String[] keys, Function<String, String> keyMapper)
         {
-            Assert.notNull(keys, "Expected a non null array of keys");
             Assert.notEmpty(keys, "Expected a non empty array of keys");
             this.keys = keys;
             this.keyMapper = keyMapper;
@@ -151,7 +150,8 @@ public class ExecutionContextPromotionListeners
                     for (String key : keys) {
                         if (stepContext.containsKey(key)) {
                             String key1 = keyMapper != null? keyMapper.apply(key) : key;
-                            jobContext.put(key1, stepContext.get(key));
+                            if (key1 != null && !key1.isEmpty()) 
+                                jobContext.put(key1, stepContext.get(key));
                         } else if (strict) {
                             throw new IllegalStateException(
                                 "The key [" + key +"] was not found into step context");
