@@ -19,8 +19,8 @@ public class JobRegistrar
     JobRegistry registry;
     
     @Autowired
-    @Qualifier("job1.jobFactory") 
-    JobFactory job1JobFactory;
+    @Qualifier("greeting.jobFactory") 
+    JobFactory greetingJobFactory;
     
     @Autowired
     @Qualifier("triplegeo.jobFactory") 
@@ -37,7 +37,7 @@ public class JobRegistrar
     @PostConstruct
     private void registerFactories() throws DuplicateJobException
     {
-        registry.register(job1JobFactory);
+        registry.register(greetingJobFactory);
         registry.register(triplegeoJobFactory);
     }
 }

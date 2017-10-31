@@ -64,7 +64,7 @@ import eu.slipo.workbench.rpc.jobs.tasklet.docker.CreateContainerTasklet;
 import eu.slipo.workbench.rpc.jobs.tasklet.docker.RunContainerTasklet;
 
 @Component
-public class TriplegeoJobConfig
+public class TriplegeoJobConfiguration
 {
     private static final String JOB_NAME = "triplegeo";
     
@@ -450,6 +450,8 @@ public class TriplegeoJobConfig
         public void validate(JobParameters parameters) throws JobParametersInvalidException
         {
             // Validate, raise exception on invalid parameters 
+            
+            // Todo: Maybe replace with bean validation on the configuration object
             
             String input = parameters.getString("input");
             if (StringUtils.isEmpty(input))

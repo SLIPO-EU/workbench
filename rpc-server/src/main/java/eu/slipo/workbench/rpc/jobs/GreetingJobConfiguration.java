@@ -46,9 +46,9 @@ import eu.slipo.workbench.rpc.jobs.tasklet.docker.CreateContainerTasklet;
 import eu.slipo.workbench.rpc.jobs.tasklet.docker.RunContainerTasklet;
 
 @Component
-public class Job1Config
+public class GreetingJobConfiguration
 {
-    private static final String JOB_NAME = "job1";
+    private static final String JOB_NAME = "greeting";
     
     @Autowired
     private JobBuilderFactory jobBuilderFactory;
@@ -106,7 +106,7 @@ public class Job1Config
         }
     }
     
-    @Bean("job1.createEchoContainerTasklet")
+    @Bean("greeting.createEchoContainerTasklet")
     @JobScope
     public CreateContainerTasklet createEchoContainerTasklet(
         DockerClient dockerClient,
@@ -131,7 +131,7 @@ public class Job1Config
             .build();
     }
     
-    @Bean("job1.runEchoContainerTasklet")
+    @Bean("greeting.runEchoContainerTasklet")
     @JobScope
     public RunContainerTasklet runEchoContainerTasklet(
         DockerClient dockerClient,
@@ -147,9 +147,9 @@ public class Job1Config
         return tasklet;
     }
     
-    @Bean("job1.createEchoContainerStep")
+    @Bean("greeting.createEchoContainerStep")
     public Step createEchoContainerStep(
-        @Qualifier("job1.createEchoContainerTasklet") CreateContainerTasklet tasklet) 
+        @Qualifier("greeting.createEchoContainerTasklet") CreateContainerTasklet tasklet) 
         throws Exception
     {
         StepExecutionListener stepContextListener = ExecutionContextPromotionListeners
@@ -163,9 +163,9 @@ public class Job1Config
             .build();   
     }
     
-    @Bean("job1.runEchoContainerStep")
+    @Bean("greeting.runEchoContainerStep")
     public Step runEchoContainerStep(
-        @Qualifier("job1.runEchoContainerTasklet") RunContainerTasklet tasklet) 
+        @Qualifier("greeting.runEchoContainerTasklet") RunContainerTasklet tasklet) 
         throws Exception
     {       
         return stepBuilderFactory.get("runEchoContainer")
@@ -174,7 +174,7 @@ public class Job1Config
             .build();
     }
 
-    @Bean("job1.step1")
+    @Bean("greeting.step1")
     private Step step1()
     {
         return stepBuilderFactory.get("step1")
@@ -184,7 +184,7 @@ public class Job1Config
             .build();
     }
 
-    @Bean("job1.step2")
+    @Bean("greeting.step2")
     private Step step2()
     {
         return stepBuilderFactory.get("step2")
@@ -194,12 +194,12 @@ public class Job1Config
             .build();
     }
     
-    @Bean("job1.job")
+    @Bean("greeting.job")
     public Job job(
-        @Qualifier("job1.step1") Step step1, 
-        @Qualifier("job1.step2") Step step2,
-        @Qualifier("job1.createEchoContainerStep") Step createEchoContainerStep, 
-        @Qualifier("job1.runEchoContainerStep") Step runEchoContainerStep)
+        @Qualifier("greeting.step1") Step step1, 
+        @Qualifier("greeting.step2") Step step2,
+        @Qualifier("greeting.createEchoContainerStep") Step createEchoContainerStep, 
+        @Qualifier("greeting.runEchoContainerStep") Step runEchoContainerStep)
     {
         JobExecutionListener listener = new JobExecutionListenerSupport() {
             @Override
@@ -231,21 +231,21 @@ public class Job1Config
             .build();
     }
     
-    @Bean("job1.jobFactory")
-    public JobFactory jobFactory(@Qualifier("job1.job") Job job1)
+    @Bean("greeting.jobFactory")
+    public JobFactory jobFactory(@Qualifier("greeting.job") Job job)
     {
         return new JobFactory()
         {
             @Override
             public String getJobName()
             {
-                return "job1";
+                return "greeting";
             }
             
             @Override
             public Job createJob()
             {
-                return job1;
+                return job;
             }
         };
     }
