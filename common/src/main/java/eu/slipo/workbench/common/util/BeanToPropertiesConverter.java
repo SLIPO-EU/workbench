@@ -5,12 +5,17 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Properties;
+import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.Assert;
 
 import static java.util.Collections.singleton;
 
@@ -31,22 +36,19 @@ import static org.apache.commons.collections4.IterableUtils.chainedIterable;
 /**
  * Convert a bean to a (flat) map of properties ({@link Properties}).  
  * <p>
- * This converter is simply traversing the parse tree generated from Jackson 
- * object mapper ({@link ObjectMapper}), adding properties to a target map of properties.
+ * This converter is based on Jackson's {@link ObjectMapper}) for performing JSON to/from 
+ * object mappings.
  */
 public class BeanToPropertiesConverter
 {
     private static final ObjectMapper objectMapper = new ObjectMapper();
         
     private static class TreeVisitor 
-    {
-        private final JsonNode root;
-    
+    {    
         private final Properties properties;
         
         public TreeVisitor(JsonNode root)
         {
-            this.root = root;
             this.properties = new Properties();
             objectToProperties(root, null);
         }
@@ -325,16 +327,119 @@ public class BeanToPropertiesConverter
         }
     }
     
+    /**
+     * Convert a bean to a map of properties by using an intermediate JSON serialization.
+     *  
+     * @param value The bean to be converted
+     */
     public static Properties valueToProperties(Object value)
     {
         JsonNode root = objectMapper.valueToTree(value);
         return (new TreeVisitor(root)).getProperties();
     }
     
+    /**
+     * Create a bean from a map of properties.
+     * 
+     * @param props The given map of properties
+     * @param valueType The target type
+     * @throws JsonProcessingException
+     */
     public static <T extends Serializable> T propertiesToValue(Properties props, Class<T> valueType) 
         throws JsonProcessingException
     {
         JsonNode root = (new TreeBuilder(props)).getRoot();
         return objectMapper.treeToValue(root, valueType);
-    }   
+    }
+    
+    /**
+     * Create a bean from a map of properties.
+     * <p>
+     * Note that this method will not examine nested maps/arrays into given map, i.e. it will
+     * consider the map as a flat map of properties (see {@link Properties}). If nested structure
+     * should be examined, then an ordinary JSON deserialization is preferable.  
+     * 
+     * @param map A map with property-like keys (e.g. "foo.baz") mapping to arbitrary values. 
+     * @param valueType The target type
+     * @throws JsonProcessingException
+     */
+    public static <T extends Serializable> T propertiesToValue(Map<String,Object> map, Class<T> valueType) 
+        throws JsonProcessingException
+    {
+        Properties props = new Properties();
+        props.putAll(map);
+        return propertiesToValue(props, valueType);
+    }
+    
+    /**
+     * Create a bean from a map of properties lying under a certain root property.
+     * 
+     * @param props The given map of properties
+     * @param rootPropertyName The name of the root property (without the trailing dot) for 
+     *   properties we are interested into.  
+     * @param valueType The target type
+     * @throws JsonProcessingException
+     */
+    public static <T extends Serializable> T propertiesToValue(
+            Properties props, String rootPropertyName, Class<T> valueType) 
+        throws JsonProcessingException
+    {
+        Assert.isTrue(!StringUtils.isEmpty(rootPropertyName), 
+            "Expected a non-empty root property name");
+
+        final String prefix = rootPropertyName + '.';
+        final int prefixLen = prefix.length();
+        
+        Properties p1 = new Properties();
+        for (Object key: props.keySet()) {
+            String k = (String) key;
+            if (k.startsWith(prefix))
+                p1.put(k.substring(prefixLen), props.get(k));
+        }
+        
+        return propertiesToValue(p1, valueType);
+    }
+    
+    /**
+     * @see BeanToPropertiesConverter#propertiesToValue(Properties, String, Class)
+     */
+    public static <T extends Serializable> T propertiesToValue(
+            Map<String,Object> map, String rootPropertyName, Class<T> valueType) 
+        throws JsonProcessingException
+    {
+        Assert.isTrue(!StringUtils.isEmpty(rootPropertyName), 
+            "Expected a non-empty root property name");
+
+        final String prefix = rootPropertyName + '.';
+        final int prefixLen = prefix.length();
+        
+        Properties p1 = new Properties();
+        for (String k: map.keySet())
+            if (k.startsWith(prefix))
+                p1.put(k.substring(prefixLen), map.get(k));
+        
+        return propertiesToValue(p1, valueType);
+    }
+    
+    /**
+     * @see BeanToPropertiesConverter#propertiesToValue(Properties, String, Class)
+     */
+    public static <T extends Serializable> T propertiesToValue(
+            SortedMap<String,Object> map, String rootPropertyName, Class<T> valueType) 
+        throws JsonProcessingException
+    {
+        Assert.isTrue(!StringUtils.isEmpty(rootPropertyName), 
+            "Expected a non-empty root property name");
+
+        final String prefix = rootPropertyName + '.';
+        final String startKey = prefix;
+        final String endKey = rootPropertyName + '/';
+        final int prefixLen = prefix.length();
+        
+        Properties p1 = new Properties();
+        for (String k: map.subMap(startKey, endKey).keySet())
+            p1.put(k.substring(prefixLen), map.get(k));
+        
+        return propertiesToValue(p1, valueType);
+    }
 }

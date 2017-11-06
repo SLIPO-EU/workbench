@@ -134,7 +134,7 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
             Assert.isTrue(!this.config.containsKey(key), 
                 "The configuration key of [" + key +"] is already present");
             
-            Supplier<String> dataSupplier = new Supplier<String>()
+            Supplier<String> configDataSupplier = new Supplier<String>()
             {
                 @Override
                 public String get()
@@ -151,7 +151,7 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
                 }
             };
             
-            this.config.put(key, Pair.of(Paths.get(name), dataSupplier));
+            this.config.put(key, Pair.of(Paths.get(name), configDataSupplier));
             return this;
         }
         
@@ -175,6 +175,8 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
                 "A non-null configuration object is required");
             Assert.isTrue(!this.config.containsKey(key), 
                 "The configuration key of [" + key +"] is already present");
+            
+            Supplier<String> configDataSupplier = null;
             
             // Todo Use a Supplier<String> that serializes configData into XML
             
@@ -208,12 +210,14 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
         public static final String WORK_DIR = "workDir";
         
         public static final String INPUT_DIR = "inputDir";
+       
+        public static final String INPUT_FILES = "inputFiles";
         
+        public static final String INPUT_FORMAT = "inputFormat";
+       
         public static final String OUTPUT_DIR = "outputDir";
         
-        public static final String INPUT = "input";
-        
-        public static final String CONFIG = "config";
+        public static final String CONFIG = "configByName";
     }
     
     private final Path workDir;
@@ -283,20 +287,21 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
         // Todo Handle the case of a single archive input (with 1 level of nesting)
         // Unpack contents in input directory, expand names to unpacked filenames
         
-        List<String> inputNames = new ArrayList<>(input.size());
+        List<String> inputFiles = new ArrayList<>(input.size());
         for (Path inputPath: input) {
             String name = inputPath.getFileName().toString();
             createLinkFromInputDirectory(inputPath, name);
-            inputNames.add(name);
+            inputFiles.add(name);
         }
        
         // Generate configuration files inside working directory
         
         for (Pair<Path, Supplier<String>> pair: config.values()) {
-            Supplier<String> g = pair.getSecond();
+            Supplier<String> configDataSupplier = pair.getSecond();
+            String configData = configDataSupplier.get();
             Files.write(
                 workDir.resolve(pair.getFirst()),
-                g.get().getBytes(StandardCharsets.ISO_8859_1),
+                configData.getBytes(StandardCharsets.UTF_8),
                 StandardOpenOption.CREATE_NEW);
         }
         
@@ -304,13 +309,15 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
         
         executionContext.putString(Keys.WORK_DIR, workDir.toString());
         executionContext.putString(Keys.INPUT_DIR, inputDir.toString());
-        executionContext.putString(Keys.OUTPUT_DIR, outputDir.toString());
-        executionContext.put(Keys.INPUT, inputNames);
+        executionContext.putString(Keys.INPUT_FORMAT, inputFormat.name());
+        executionContext.put(Keys.INPUT_FILES, inputFiles);
         
-        Map<String,String> configNames = new LinkedHashMap<>(config.size());
+        executionContext.putString(Keys.OUTPUT_DIR, outputDir.toString());
+        
+        Map<String,String> configByName = new LinkedHashMap<>(config.size());
         for (String key: config.keySet())
-            configNames.put(key, config.get(key).getFirst().toString());
-        executionContext.put(Keys.CONFIG, configNames);
+            configByName.put(key, config.get(key).getFirst().toString());
+        executionContext.put(Keys.CONFIG, configByName);
 
         return RepeatStatus.FINISHED;
     }

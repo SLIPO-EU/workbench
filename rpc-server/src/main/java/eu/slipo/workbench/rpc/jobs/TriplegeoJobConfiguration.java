@@ -57,6 +57,8 @@ import org.springframework.util.StringUtils;
 import com.spotify.docker.client.DockerClient;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
+import eu.slipo.workbench.common.model.tool.ToolConfigurationSupport;
+import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.rpc.jobs.listener.ExecutionContextPromotionListeners;
 import eu.slipo.workbench.rpc.jobs.listener.LoggingJobExecutionListener;
 import eu.slipo.workbench.rpc.jobs.tasklet.PrepareWorkingDirectoryTasklet;
@@ -114,6 +116,9 @@ public class TriplegeoJobConfiguration
     private StepBuilderFactory stepBuilderFactory;
     
     @Autowired
+    private Step breakpointStep;
+    
+    @Autowired
     private DockerClient docker;
    
     @Autowired
@@ -152,129 +157,16 @@ public class TriplegeoJobConfiguration
             // The directory already exists
         }
     }
-    
-    /**
-     * Map a data format ({@link EnumDataFormat}) to a name recognizable by Triplegeo tool.
-     * <p>
-     * Todo: This should be part of a separate tool configuration class
-     * 
-     * @param dataFormat
-     */
-    private String mapDataFormatToName(EnumDataFormat dataFormat)
-    {
-        String name = null;
-        
-        switch (dataFormat)
-        {
-        case CSV:
-        case GPX:
-        case SHAPEFILE:
-        case GEOJSON:
-        case N3:
-        case TURTLE:
-        case OSM:
-            name = dataFormat.name();
-            break;
-        case N_TRIPLES:
-            name = "N-TRIPLES";
-            break;
-        case RDF_XML:
-            name = "RDF/XML";
-            break;
-        case RDF_XML_ABBREV:
-            name = "RDF/XML-ABBREV";
-            break;
-        default:
-            name = "";
-            break;
-        }
-        return name;
-    }
 
-    /**
-     * Build a map of properties as expected by Triplegeo tool
-     * <p>
-     * Todo: This should be part of a separate tool configuration class
-     * 
-     * @param inputFormat
-     * @param outputFormat
-     * @param executionContext The job execution-context
-     * @return
-     */
-    private Properties buildConfigProperties(
-        EnumDataFormat inputFormat, EnumDataFormat outputFormat, Map<String,Object> executionContext)
-    {
-        Properties p = new Properties();
-        
-        p.setProperty("inputFormat", mapDataFormatToName(inputFormat));
-        p.setProperty("serialization", mapDataFormatToName(outputFormat));
-        
-        // Create placeholders for later values 
-        
-        p.setProperty("inputFiles", ""); 
-        p.setProperty("outputDir", "");
-        
-        // Populate with defaults
-        
-        p.setProperty("featureName", 
-            (String) executionContext.get("featureName"));
-        
-        p.setProperty("tmpDir", "/tmp");
-        
-        p.setProperty("targetOntology", 
-            (String) executionContext.getOrDefault("targetOntology", "GeoSPARQL"));       
-        
-        p.setProperty("prefixFeatureNS", "georesource");
-        p.setProperty("nsFeatureURI", "http://slipo.eu/geodata#");
-        p.setProperty("prefixGeometryNS", "geo");
-        p.setProperty("nsGeometryURI", "http://www.opengis.net/ont/geosparql#");
-        p.setProperty("defaultLang", "en");
-        
-        p.setProperty("attrKey", 
-            (String) executionContext.getOrDefault("attrKey", "id"));
-        p.setProperty("attrName", 
-            (String) executionContext.getOrDefault("attrName", "name"));
-        p.setProperty("attrCategory", 
-            (String) executionContext.getOrDefault("attrCategory", "type"));
-        p.setProperty("valIgnore", 
-            (String) executionContext.getOrDefault("valIgnore", "UNK"));
-        
-        // Populate or override with per-inputFormat defaults
-        
-        switch (inputFormat) {
-        case CSV:
-            p.setProperty("mode", "STREAM");
-            p.setProperty("delimiter", 
-                (String) executionContext.getOrDefault("delimiter", "|"));
-            p.setProperty("attrX", 
-                (String) executionContext.getOrDefault("attrX", "lon"));
-            p.setProperty("attrY", 
-                (String) executionContext.getOrDefault("attrY", "lat"));
-            break;
-        case SHAPEFILE:
-            p.setProperty("mode", "GRAPH");
-            break;
-        case GEOJSON:
-            p.setProperty("mode", "STREAM");
-            break;
-        case GPX:
-            p.setProperty("mode", "STREAM");
-            p.setProperty("attrKey", "name");
-            p.setProperty("attrName", "name");
-            break;
-        default:
-            break;
-        }
-        
-        return p;
-    }
-    
     /**
      * A tasklet to map job parameters into step-wide execution context.
      */
     @Bean("triplegeo.setupExecutionContextTasklet")
     public Tasklet setupExecutionContextTasklet()
     {
+        // We assume that all triplegeo-related parameters are grouped under this root property
+        final String parametersRootPropertyName = "triplegeo";
+        
         return new Tasklet()
         {
             @Override
@@ -285,16 +177,10 @@ public class TriplegeoJobConfiguration
                 ExecutionContext executionContext = stepContext.getStepExecution().getExecutionContext();
                 Map<String,Object> parameters = stepContext.getJobParameters();
                 
-                executionContext.putString("inputFormat", 
-                    (String) parameters.getOrDefault("inputFormat", "CSV"));
+                TriplegeoConfiguration config = ToolConfigurationSupport
+                    .fromProperties(parameters, parametersRootPropertyName, TriplegeoConfiguration.class);
                 
-                executionContext.putString("outputFormat", 
-                    (String) parameters.getOrDefault("outputFormat", "TURTLE"));
-                
-                executionContext.putString("input", (String) parameters.get("input"));
-                
-                executionContext.putString("featureName", 
-                    (String) parameters.getOrDefault("featureName", "points"));
+                executionContext.put("config", config);
                 
                 return RepeatStatus.FINISHED;
             }
@@ -306,7 +192,8 @@ public class TriplegeoJobConfiguration
         @Qualifier("triplegeo.setupExecutionContextTasklet") Tasklet tasklet)
     {
         StepExecutionListener stepContextListener = ExecutionContextPromotionListeners
-            .fromKeys("inputFormat", "input", "outputFormat", "featureName")
+            .fromKeys("config")
+            .prefix("triplegeo")
             .strict(true)
             .build();
         
@@ -322,26 +209,16 @@ public class TriplegeoJobConfiguration
     @Bean("triplegeo.prepareWorkingDirectoryTasklet")
     @JobScope
     public PrepareWorkingDirectoryTasklet prepareWorkingDirectoryTasklet(
-        @Value("#{jobExecutionContext}") Map<String,Object> executionContext,
+        @Value("#{jobExecutionContext['triplegeo.config']}") TriplegeoConfiguration config,
         @Value("#{jobExecution.jobInstance.id}") Long jobId) 
     {
         Path workDir = dataDir.resolve(String.format("%04x", jobId));
         
-        String inputFormat = (String) executionContext.get("inputFormat");
-        EnumDataFormat inputDataFormat = EnumDataFormat.valueOf(inputFormat);
-        String outputFormat = (String) executionContext.get("outputFormat");
-        EnumDataFormat outputDataFormat = EnumDataFormat.valueOf(outputFormat);
-        
-        String inputFiles = (String) executionContext.get("input");
-        
-        Properties configProperties = buildConfigProperties(
-            inputDataFormat, outputDataFormat, executionContext);
-        
         return PrepareWorkingDirectoryTasklet.builder()
             .workingDirectory(workDir)
-            .input(inputFiles.split(File.pathSeparator))
-            .inputFormat(inputDataFormat)
-            .config(CONFIG_KEY, CONFIG_FILENAME, configProperties)
+            .input(config.getInput())
+            .inputFormat(config.getInputFormat())
+            .config(CONFIG_KEY, CONFIG_FILENAME, config.toProperties())
             .build();
     }
     
@@ -351,7 +228,9 @@ public class TriplegeoJobConfiguration
         throws Exception
     {
         StepExecutionListener stepContextListener = ExecutionContextPromotionListeners
-            .fromKeys("workDir", "inputDir", "input", "outputDir", "config")
+            .fromKeys(
+                "workDir", "inputDir", "inputFiles", "inputFormat", "outputDir", "configByName")
+            .prefix("triplegeo.workspace")
             .strict(true)
             .build();
         
@@ -366,40 +245,39 @@ public class TriplegeoJobConfiguration
     public CreateContainerTasklet createContainerTasklet(
         @Value("${slipo.rpc-server.tools.triplegeo.docker.image}") String imageName,
         @Value("#{jobExecution.jobInstance.id}") Long jobId,
-        @Value("#{jobExecutionContext}") Map<String,Object> executionContext)
+        @Value("#{jobExecutionContext['triplegeo.workspace.workDir']}") String workDir, 
+        @Value("#{jobExecutionContext['triplegeo.workspace.inputDir']}") String inputDir,
+        @Value("#{jobExecutionContext['triplegeo.workspace.inputFormat']}") String inputFormatName,
+        @Value("#{jobExecutionContext['triplegeo.workspace.inputFiles']}") List<String> inputFiles,
+        @Value("#{jobExecutionContext['triplegeo.workspace.outputDir']}") String outputDir,
+        @Value("#{jobExecutionContext['triplegeo.workspace.configByName']}") Map<String, String> configByName)
     {
-        Path workDir = Paths.get((String) executionContext.get("workDir")); 
-        Path inputDir = Paths.get((String) executionContext.get("inputDir"));
-        Path outputDir = Paths.get((String) executionContext.get("outputDir"));
+        String containerName = String.format("triplegeo-%04x", jobId);
         
         Path containerInputDir = containerDataDir.resolve("input");
         Path containerOutputDir = containerDataDir.resolve("output");
+        Path containerConfigDir = containerDataDir;
         
-        String inputFormat = (String) executionContext.get("inputFormat");
-        EnumDataFormat inputDataFormat = EnumDataFormat.valueOf(inputFormat);
-        String inputNameExtension = inputDataFormat.getFilenameExtension();
-        
-        List<?> inputNames = (List<?>) executionContext.get("input");
-        String input = inputNames.stream()
-            .map(name -> (String) name)
+        EnumDataFormat inputFormat = EnumDataFormat.valueOf(inputFormatName);
+        String inputNameExtension = inputFormat.getFilenameExtension();
+       
+        String input = inputFiles.stream()
             .filter(name -> StringUtils.getFilenameExtension(name).equals(inputNameExtension))
             .map(name -> containerInputDir.resolve(name).toString())
             .collect(Collectors.joining(File.pathSeparator));
         
-        Map<?,?> configNames = (Map<?,?>) executionContext.get("config");
-        Path configPath = workDir.resolve((String) configNames.get(CONFIG_KEY));
-        
-        String containerName = String.format("triplegeo-%04x", jobId);
+        Path configPath = Paths.get(workDir).resolve(configByName.get(CONFIG_KEY));
         
         return CreateContainerTasklet.builder()
             .client(docker)
             .name(containerName)
             .container(configurer -> configurer
                 .image(imageName)
-                .volume(inputDir, containerInputDir)
-                .volume(outputDir, containerOutputDir)
-                .volume(configPath, containerDataDir.resolve(CONFIG_FILENAME), true)
+                .volume(Paths.get(inputDir), containerInputDir)
+                .volume(Paths.get(outputDir), containerOutputDir)
+                .volume(configPath, containerConfigDir.resolve(CONFIG_FILENAME), true)
                 .env("INPUT_FILE", input)
+                .env("CONFIG_FILE", containerConfigDir.resolve(CONFIG_FILENAME).toString())
                 .env("OUTPUT_DIR", containerOutputDir.toString()))
             .build();
     }
@@ -411,6 +289,7 @@ public class TriplegeoJobConfiguration
     {
         StepExecutionListener stepContextListener = ExecutionContextPromotionListeners
             .fromKeys("containerId", "containerName")
+            .prefix("triplegeo")
             .build();
         
         return stepBuilderFactory.get("triplegeo.createContainer")
@@ -422,7 +301,7 @@ public class TriplegeoJobConfiguration
     @Bean("triplegeo.runContainerTasklet")
     @JobScope
     public RunContainerTasklet runContainerTasklet(
-        @Value("#{jobExecutionContext['containerName']}") String containerName)
+        @Value("#{jobExecutionContext['triplegeo.containerName']}") String containerName)
     {
         return RunContainerTasklet.builder()
             .client(docker)
@@ -444,61 +323,6 @@ public class TriplegeoJobConfiguration
             .build();
     }
     
-    private static class Validator implements JobParametersValidator
-    {
-        @Override
-        public void validate(JobParameters parameters) throws JobParametersInvalidException
-        {
-            // Validate, raise exception on invalid parameters 
-            
-            // Todo: Maybe replace with bean validation on the configuration object
-            
-            String input = parameters.getString("input");
-            if (StringUtils.isEmpty(input))
-                throw new JobParametersInvalidException(
-                    "The `input` parameter is missing (must contain a colon-separated list of inputs)");
-            
-            String inputFormat = parameters.getString("inputFormat", "");
-            try {
-                EnumDataFormat f = EnumDataFormat.valueOf(inputFormat);
-            } catch (IllegalArgumentException e) {
-                throw new JobParametersInvalidException(
-                    "The `inputFormat` parameter is either missing or not recognized");
-            }
-            
-            String outputFormat = parameters.getString("outputFormat", "");
-            try {
-                EnumDataFormat f = EnumDataFormat.valueOf(outputFormat);
-            } catch (IllegalArgumentException e) {
-                throw new JobParametersInvalidException(
-                    "The `outputFormat` parameter is either missing or not recognized");
-            }
-            
-            String featureName = parameters.getString("featureName");
-            if (StringUtils.isEmpty(featureName))
-                throw new JobParametersInvalidException(
-                    "The `featureName` parameter is missing");
-        }
-    }
-    
-    @Bean("triplegeo.job")
-    public Job job(
-        @Qualifier("triplegeo.setupExecutionContextStep") Step setupExecutionContextStep,
-        @Qualifier("triplegeo.prepareWorkingDirectoryStep") Step prepareWorkingDirectoryStep,
-        @Qualifier("triplegeo.createContainerStep") Step createContainerStep, 
-        @Qualifier("triplegeo.runContainerStep") Step runContainerStep)
-    {
-        return jobBuilderFactory.get(JOB_NAME)
-            .incrementer(new RunIdIncrementer())
-            .validator(new Validator())
-            .listener(new LoggingJobExecutionListener())
-            .start(setupExecutionContextStep)
-            .next(prepareWorkingDirectoryStep)
-            .next(createContainerStep)
-            .next(runContainerStep)
-            .build();
-    }
-    
     @Bean("triplegeo.flow")
     public Flow flow(
         @Qualifier("triplegeo.prepareWorkingDirectoryStep") Step prepareWorkingDirectoryStep,
@@ -510,6 +334,26 @@ public class TriplegeoJobConfiguration
             .next(createContainerStep)
             .next(runContainerStep)
             .end();
+    }
+    
+    @Bean("triplegeo.job")
+    public Job job(
+        @Qualifier("triplegeo.setupExecutionContextStep") Step setupExecutionContextStep,
+        @Qualifier("triplegeo.flow") Flow flow)
+    {
+        // The standalone "triplegeo" job is built on top of the basic flow.
+        
+        // Wrap the basic flow as a Step, so it can be a component of a job
+        Step flowStep = stepBuilderFactory.get("triplegeo.flow")
+            .flow(flow)
+            .build();
+        
+        return jobBuilderFactory.get(JOB_NAME)
+            .incrementer(new RunIdIncrementer())
+            .listener(new LoggingJobExecutionListener())
+            .start(setupExecutionContextStep)
+            .next(flowStep)
+            .build();
     }
     
     @Bean("triplegeo.jobFactory")
