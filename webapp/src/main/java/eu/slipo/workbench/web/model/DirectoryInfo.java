@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * The file system entry of a directory
+ * A file system entry for a directory
  */
 public class DirectoryInfo extends FileSystemEntry {
 

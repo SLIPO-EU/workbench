@@ -1,4 +1,4 @@
-package eu.slipo.workbench.web.model;
+package eu.slipo.workbench.web.model.resource;
 
 import java.io.IOException;
 
@@ -31,10 +31,7 @@ public enum EnumDataSource {
      * Data loaded from a public external URL
      */
     EXTERNAL_URL(4),
-    /**
-     * Resource is the result of a data integration process e.g. FAGI fusion operation
-     */
-    COMPUTED(5);
+    ;
 
     private final int value;
 

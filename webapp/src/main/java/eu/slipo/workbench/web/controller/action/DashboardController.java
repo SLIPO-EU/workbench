@@ -1,6 +1,7 @@
 package eu.slipo.workbench.web.controller.action;
 
 import java.time.ZonedDateTime;
+import java.util.UUID;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -10,12 +11,11 @@ import org.springframework.web.bind.annotation.RestController;
 import eu.slipo.workbench.common.model.RestResponse;
 import eu.slipo.workbench.web.model.Dashboard;
 import eu.slipo.workbench.web.model.EnumDataFormat;
-import eu.slipo.workbench.web.model.EnumDataSource;
 import eu.slipo.workbench.web.model.EnumResourceType;
 import eu.slipo.workbench.web.model.Event;
-import eu.slipo.workbench.web.model.FileInfo;
-import eu.slipo.workbench.web.model.Resource;
-import eu.slipo.workbench.web.model.ResourceMetadata;
+import eu.slipo.workbench.web.model.resource.EnumDataSource;
+import eu.slipo.workbench.web.model.resource.ResourceRecord;
+import eu.slipo.workbench.web.model.resource.ResourceMetadataView;
 
 /**
  * Actions for querying generic application data
@@ -40,7 +40,7 @@ public class DashboardController {
 
         for (int i = 0; i < 10; i++) {
             long id = i + 1;
-            Resource resource = this.createResource(id, 1);
+            ResourceRecord resource = this.createResource(id, 1);
 
             resource.addVersion(this.createResource(id, 2));
             resource.addVersion(this.createResource(id, 3));
@@ -71,24 +71,26 @@ public class DashboardController {
             "Login");
     }
 
-    private Resource createResource(long id, int version) {
-        Resource resource = new Resource(id, version);
+    private ResourceRecord createResource(long id, int version) {
+        ResourceRecord resource = new ResourceRecord(id, version);
 
+        resource.setType(EnumResourceType.POI_DATA);
+        resource.setDataSource(EnumDataSource.UPLOAD);
+        resource.setInputFormat(EnumDataFormat.GPX);
+        resource.setOutputFormat(EnumDataFormat.N_TRIPLES);
+        resource.setProcessExecutionId(1L);
         resource.setCreatedOn(ZonedDateTime.now());
         resource.setUpdatedOn(resource.getCreatedOn());
+        resource.setTable(UUID.randomUUID());
+        resource.setFileName("file.xml");
+        resource.setFileSize((int) (Math.random() * 1024 * 1024) + 100);
 
-        resource.setFile(new FileInfo(10, "file.xml", "storage/file.xml", ZonedDateTime.now()));
-
-        resource.setSource(EnumDataSource.UPLOAD);
-        resource.setType(EnumResourceType.POI_DATA);
 
         resource.setMetadata(
-            new ResourceMetadata(
+            new ResourceMetadataView(
                 String.format("Resource %d", id),
                 "Uploaded sample POI data",
-                (int) (Math.random() * 1024*1204 + 100),
-                EnumDataFormat.CSV,
-                EnumDataFormat.N_TRIPLES
+                (int) (Math.random() * 1024*1204 + 100)
             )
         );
 

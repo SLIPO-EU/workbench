@@ -2,6 +2,9 @@ package eu.slipo.workbench.web.model;
 
 import java.time.ZonedDateTime;
 
+/**
+ * Event log data
+ */
 public class Event {
 
     private String module;

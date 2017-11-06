@@ -22,7 +22,8 @@ public enum EnumResourceType {
     /**
      * POI linked data
      */
-    POI_LINKED_DATA(2);
+    POI_LINKED_DATA(2),
+    ;
 
     private final int value;
 

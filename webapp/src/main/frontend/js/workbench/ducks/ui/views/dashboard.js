@@ -1,11 +1,19 @@
-// dashboar.js
+// dashboard.js
 import dashboardService from '../../../service/dashboard';
 // Actions
 const REQUEST_DASHBOARD_DATA = 'ui/dashboard/REQUEST_DASHBOARD_DATA';
 const RECEIVE_DASHBOARD_DATA = 'ui/dashboard/RECEIVE_DASHBOARD_DATA';
+const CHANGE_CARD_FILTER = 'ui/dashboard/CHANGE_CARD_FILTER';
+
 
 // Reducer
 const initialState = {
+  filters:{
+    resources: "all",
+    events: "allEvents",
+    processExplorer:"allProcess",
+    
+  },
   resources:[],
   events: [],
   statistics:{
@@ -40,7 +48,14 @@ export default (state = initialState, action) => {
           } 
         } 
       };
-
+    case CHANGE_CARD_FILTER:
+      return {
+        ...state,
+        filters:{
+          ...state.filters,
+          [action.cardname]: action.selection,
+        },
+      };
     default:
       return state;
   }
@@ -56,6 +71,12 @@ const receiveDashboardData = (data) => ({
   data,
 });
 
+const changeCardFilter = (cardname, selection) => ({
+  type: CHANGE_CARD_FILTER,
+  cardname,
+  selection,
+});
+
 
 // Thunk actions
 export const fetchDashboardData = () => (dispatch, getState) => {
@@ -68,4 +89,8 @@ export const fetchDashboardData = () => (dispatch, getState) => {
     .catch((err) => {
       console.error('Failed loading resources:', err);
     });
+};
+
+export const changeDashboardFilter = (cardname, selection) => (dispatch) => {
+  dispatch(changeCardFilter(cardname, selection));
 };

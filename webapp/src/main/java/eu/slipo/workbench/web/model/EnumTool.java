@@ -34,7 +34,8 @@ public enum EnumTool {
     /**
      * POI RDF dataset enrichment component
      */
-    DEER(5);
+    DEER(5),
+    ;
 
     private final int value;
 

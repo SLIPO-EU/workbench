@@ -1,5 +1,8 @@
 package eu.slipo.workbench.web.model;
 
+/**
+ * Generic query with data pagination support
+ */
 public class Query {
 
     private QueryPagingOptions pagingOptions;

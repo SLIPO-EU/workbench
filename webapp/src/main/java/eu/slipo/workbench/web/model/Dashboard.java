@@ -5,13 +5,18 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import eu.slipo.workbench.web.model.resource.ResourceRecord;
+
+/**
+ * Dashboard data
+ */
 public class Dashboard {
 
     private ZonedDateTime updatedOn = ZonedDateTime.now();
 
     private StatisticsCollection statistics;
 
-    private List<Resource> resources = new ArrayList<Resource>();
+    private List<ResourceRecord> resources = new ArrayList<ResourceRecord>();
 
     private List<Event> events = new ArrayList<Event>();
 
@@ -23,7 +28,7 @@ public class Dashboard {
         return statistics;
     }
 
-    public List<Resource> getResources() {
+    public List<ResourceRecord> getResources() {
         return Collections.unmodifiableList(resources);
     }
 
@@ -31,7 +36,7 @@ public class Dashboard {
         return Collections.unmodifiableList(events);
     }
 
-    public void addResouce(Resource r) {
+    public void addResouce(ResourceRecord r) {
         this.resources.add(r);
     }
 

@@ -1,5 +1,10 @@
 package eu.slipo.workbench.web.model;
 
+/**
+ * Generic key value item
+ *
+ * @param <Key> the key type
+ */
 public class ValueListItem<Key> {
 
     private Key key;

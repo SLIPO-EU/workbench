@@ -5,8 +5,11 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-import eu.slipo.workbench.web.model.EnumDataSource;
+import eu.slipo.workbench.web.model.resource.EnumDataSource;
 
+/**
+ * A process input resource
+ */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "type")
 @JsonSubTypes({
     @Type(value = FileProcessResource.class, name = "FILE"),
@@ -21,11 +24,15 @@ public abstract class ProcessResource {
 
     protected int index;
 
-    public ProcessResource() {
+    protected ProcessResource() {
 
     }
 
-    public ProcessResource(int index, EnumProcessResource type) {
+    protected ProcessResource(EnumProcessResource type) {
+        this.type = type;
+    }
+
+    protected ProcessResource(int index, EnumProcessResource type) {
         this.index = index;
         this.type = type;
     }

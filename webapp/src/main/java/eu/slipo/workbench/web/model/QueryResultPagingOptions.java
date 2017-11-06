@@ -1,5 +1,8 @@
 package eu.slipo.workbench.web.model;
 
+/**
+ * Query result pagination options
+ */
 public class QueryResultPagingOptions extends QueryPagingOptions {
 
     public int count;

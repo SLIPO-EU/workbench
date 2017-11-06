@@ -20,16 +20,29 @@ export default function ResourceWizard(props) {
     <div className="animated fadeIn">
       <MultiStep
         initialActive={props.initialActive}
-        onComplete={(values) => { 
+        onComplete={(values) => {
           if (values.type.path === 'UPLOAD' || values.type.path === 'FILESYSTEM') {
             toast.dismiss();
             toast.success(<span>Resource registration succeeded!</span>);
 
-            const data = { 
+            const data = {
               configuration: values.triplegeo || null,
               metadata: values.metadata,
-              source: values.type.path,
             };
+            switch(values.type.path) {
+              case 'UPLOAD':
+                data.dataSource = {
+                  type: values.type.path,
+                  fileIndex: 0,
+                };
+                break;
+              case 'FILESYSTEM':
+                data.dataSource = {
+                  type: values.type.path,
+                  path: values.filesystem.resource.path,
+                };
+                break;
+            }
             const file = values.upload && values.upload.file || null;
 
             props.createResource(data, file)
@@ -51,7 +64,7 @@ export default function ResourceWizard(props) {
         <externalUrl.Component
           id="external"
           title="Select external url"
-          initialValue={props.initialValues.url || externalUrl.initialValue}              
+          initialValue={props.initialValues.url || externalUrl.initialValue}
           validate={externalUrl.validator}
           next={() => 'confirm'}
         />

@@ -58,7 +58,8 @@ public enum EnumDataFormat {
      * N3 or Notation3, a non-standard serialization that is very similar to Turtle, but
      * has some additional features, such as the ability to define inference rules
      */
-    N3(10);
+    N3(10),
+    ;
 
     private final int value;
 

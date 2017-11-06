@@ -1,16 +1,17 @@
-package eu.slipo.workbench.web.model;
+package eu.slipo.workbench.web.model.resource;
 
 import eu.slipo.workbench.common.model.ErrorCode;
 
-public enum ResourceErrorCode implements ErrorCode
-{
+/**
+ * Error codes for resource operations
+ */
+public enum ResourceErrorCode implements ErrorCode {
     UNKNOWN,
     DATASOURCE_NOT_SUPPORTED,
     ;
 
     @Override
-    public String key()
-    {
+    public String key() {
         return (this.getClass().getSimpleName() + '.' + name());
     }
 

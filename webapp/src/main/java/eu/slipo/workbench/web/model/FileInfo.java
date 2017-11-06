@@ -3,7 +3,7 @@ package eu.slipo.workbench.web.model;
 import java.time.ZonedDateTime;
 
 /**
- * The file system entry of a file
+ * A file system entry for a file
  */
 public class FileInfo extends FileSystemEntry {
 
