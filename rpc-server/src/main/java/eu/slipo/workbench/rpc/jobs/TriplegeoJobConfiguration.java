@@ -159,7 +159,7 @@ public class TriplegeoJobConfiguration
     }
 
     /**
-     * A tasklet to map job parameters into step-wide execution context.
+     * A tasklet to map job parameters into step execution-context.
      */
     @Bean("triplegeo.setupExecutionContextTasklet")
     public Tasklet setupExecutionContextTasklet()
@@ -364,7 +364,7 @@ public class TriplegeoJobConfiguration
             @Override
             public String getJobName()
             {
-                return "triplegeo";
+                return JOB_NAME;
             }
             
             @Override
