@@ -1,24 +1,25 @@
 package eu.slipo.workbench.web.model.process;
 
 import eu.slipo.workbench.web.model.EnumTool;
-import eu.slipo.workbench.web.model.ResourceMetadataRegistration;
+import eu.slipo.workbench.web.model.resource.ResourceMetadataCreate;
 
+/**
+ * Catalog configuration
+ */
 public class MetadataRegistrationConfiguration extends ToolConfiguration {
 
-    private ResourceMetadataRegistration metadata;
+    private ResourceMetadataCreate metadata;
 
     public MetadataRegistrationConfiguration() {
-        super();
-        this.tool = EnumTool.CATALOG;
+        super(EnumTool.CATALOG);
     }
 
-    public MetadataRegistrationConfiguration(ResourceMetadataRegistration metadata) {
-        super();
-        this.tool = EnumTool.CATALOG;
+    public MetadataRegistrationConfiguration(ResourceMetadataCreate metadata) {
+        super(EnumTool.CATALOG);
         this.metadata = metadata;
     }
 
-    public ResourceMetadataRegistration getMetadata() {
+    public ResourceMetadataCreate getMetadata() {
         return metadata;
     }
 

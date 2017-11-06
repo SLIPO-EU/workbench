@@ -1,8 +1,13 @@
-package eu.slipo.workbench.web.model;
+package eu.slipo.workbench.web.model.resource;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-public class ResourceMetadataRegistration {
+import eu.slipo.workbench.web.model.EnumDataFormat;
+
+/**
+ * Resource metadata create model
+ */
+public class ResourceMetadataCreate {
 
     private String name;
 
@@ -11,14 +16,14 @@ public class ResourceMetadataRegistration {
     @JsonDeserialize(using = EnumDataFormat.Deserializer.class)
     private EnumDataFormat format;
 
-    protected ResourceMetadataRegistration() {
+    protected ResourceMetadataCreate() {
 
     }
 
-    public ResourceMetadataRegistration(
-            String name,
-            String description,
-            EnumDataFormat format) {
+    public ResourceMetadataCreate(
+        String name,
+        String description,
+        EnumDataFormat format) {
 
         this.name = name;
         this.description = description;

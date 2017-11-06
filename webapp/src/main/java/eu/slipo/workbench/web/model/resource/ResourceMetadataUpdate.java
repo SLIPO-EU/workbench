@@ -1,5 +1,8 @@
-package eu.slipo.workbench.web.model;
+package eu.slipo.workbench.web.model.resource;
 
+/**
+ * Resource metadata update model
+ */
 public class ResourceMetadataUpdate {
 
     private String name;
@@ -21,6 +24,5 @@ public class ResourceMetadataUpdate {
     public void setDescription(String description) {
         this.description = description;
     }
-
 
 }

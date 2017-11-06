@@ -7,6 +7,7 @@ import java.time.ZonedDateTime;
 import java.util.UUID;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,19 +23,18 @@ import org.springframework.web.multipart.MultipartFile;
 import eu.slipo.workbench.common.model.BasicErrorCode;
 import eu.slipo.workbench.common.model.RestResponse;
 import eu.slipo.workbench.web.model.EnumDataFormat;
-import eu.slipo.workbench.web.model.EnumDataSource;
 import eu.slipo.workbench.web.model.EnumResourceType;
-import eu.slipo.workbench.web.model.FileInfo;
 import eu.slipo.workbench.web.model.QueryPagingOptions;
 import eu.slipo.workbench.web.model.QueryResult;
-import eu.slipo.workbench.web.model.Resource;
-import eu.slipo.workbench.web.model.ResourceErrorCode;
-import eu.slipo.workbench.web.model.ResourceMetadata;
-import eu.slipo.workbench.web.model.ResourceMetadataUpdate;
-import eu.slipo.workbench.web.model.ResourceQuery;
-import eu.slipo.workbench.web.model.ResourceRegistration;
-import eu.slipo.workbench.web.model.process.ProcessConfiguration;
-import eu.slipo.workbench.web.model.process.ProcessConfigurationBuilder;
+import eu.slipo.workbench.web.model.process.ProcessDesignerUpdateModel;
+import eu.slipo.workbench.web.model.process.ProcessDesignerUpdateModelBuilder;
+import eu.slipo.workbench.web.model.resource.EnumDataSource;
+import eu.slipo.workbench.web.model.resource.ResourceRecord;
+import eu.slipo.workbench.web.model.resource.ResourceErrorCode;
+import eu.slipo.workbench.web.model.resource.ResourceMetadataUpdate;
+import eu.slipo.workbench.web.model.resource.ResourceMetadataView;
+import eu.slipo.workbench.web.model.resource.ResourceQuery;
+import eu.slipo.workbench.web.model.resource.ResourceRegistrationRequest;
 
 /**
  * Actions for managing resources
@@ -58,7 +58,7 @@ public class ResourceController {
      * @return a list of resources
      */
     @RequestMapping(value = "/action/resource/query", method = RequestMethod.POST, produces = "application/json")
-    public RestResponse<QueryResult<Resource>> search(Authentication authentication, @RequestBody ResourceQuery data) {
+    public RestResponse<QueryResult<ResourceRecord>> search(Authentication authentication, @RequestBody ResourceQuery data) {
         QueryPagingOptions pagingOptions = data.getPagingOptions();
         if (pagingOptions == null) {
             pagingOptions = new QueryPagingOptions();
@@ -73,13 +73,19 @@ public class ResourceController {
 
         int count = (pagingOptions.pageIndex + 1) * pagingOptions.pageSize + (int) (Math.random() * 100);
 
-        QueryResult<Resource> result = new QueryResult<Resource>(pagingOptions, count);
+        QueryResult<ResourceRecord> result = new QueryResult<ResourceRecord>(pagingOptions, count);
 
         long id = pagingOptions.pageIndex + pagingOptions.pageSize + 1;
 
         for (int i = 0; i < pagingOptions.pageSize; i++) {
             id += i;
-            result.addItem(this.createResource(id, 1));
+            int versions = (int) (Math.random() * 10F);
+
+            ResourceRecord resource = this.createResource(id, 1);
+            for (int j = 0; j < versions; j++) {
+                resource.addVersion(this.createResource(id, j + 2));
+            }
+            result.addItem(resource);
         }
 
         return RestResponse.result(result);
@@ -93,14 +99,17 @@ public class ResourceController {
      * @return the process configuration
      */
     @RequestMapping(value = "/action/resource/register", method = RequestMethod.PUT, produces = "application/json")
-    public RestResponse<?> registerResource(Authentication authentication, @RequestBody ResourceRegistration data) {
-        // Convert registration data to a process configuration instance
-        ProcessConfigurationBuilder builder = new ProcessConfigurationBuilder();
+    public RestResponse<?> registerResource(Authentication authentication, @RequestBody ResourceRegistrationRequest request) {
+        // Action does not support file uploading
+        if (request.getDataSource().getType() == EnumDataSource.UPLOAD) {
+            return RestResponse.error(ResourceErrorCode.DATASOURCE_NOT_SUPPORTED, "Data source of type 'UPLOAD' is not supported.");
+        }
 
-        ProcessConfiguration process =  builder
-            .transientResource(1, data)
-            .transform(data.getConfiguration(), 1, 2)
-            .register(data.getMetadata(), 2)
+        // Convert registration data to a process configuration instance
+        ProcessDesignerUpdateModel process =  ProcessDesignerUpdateModelBuilder
+            .create()
+            .transientResource(1, request.getDataSource(), request.getConfiguration())
+            .register(request.getMetadata(), 1)
             .build();
 
         // TODO: Submit request to service
@@ -118,24 +127,23 @@ public class ResourceController {
      */
     @RequestMapping(value = "/action/resource/upload", method = RequestMethod.PUT, produces = "application/json")
     public RestResponse<?> uploadResource(
-            Authentication authentication, @RequestPart("file") MultipartFile file,
-            @RequestPart("data") ResourceRegistration data) {
+            Authentication authentication,
+            @RequestPart("file") MultipartFile file,
+            @RequestPart("data") ResourceRegistrationRequest request) {
         try {
             // Action supports only file uploading
-            if (data.getSource() != EnumDataSource.UPLOAD) {
+            if (request.getDataSource().getType() != EnumDataSource.UPLOAD) {
                 return RestResponse.error(ResourceErrorCode.DATASOURCE_NOT_SUPPORTED, "Only data source of type 'UPLOAD' is supported.");
             }
 
             // Create a temporary file
-            final String inputFile = createTemporaryFilename(file.getBytes());
+            final String inputFile = createTemporaryFilename(file.getBytes(), FilenameUtils.getExtension(file.getOriginalFilename()));
 
             // Convert registration data to a process configuration instance
-            ProcessConfigurationBuilder builder = new ProcessConfigurationBuilder();
-
-            ProcessConfiguration process =  builder
-                .fileResource(1, inputFile)
-                .transform(data.getConfiguration(), 1, 2)
-                .register(data.getMetadata(), 2)
+            ProcessDesignerUpdateModel process =  ProcessDesignerUpdateModelBuilder
+                .create()
+                .fileResource(1, inputFile, request.getConfiguration())
+                .register(request.getMetadata(), 1)
                 .build();
 
             //  TODO: Submit request to service
@@ -156,14 +164,14 @@ public class ResourceController {
      * @return the resource metadata
      */
     @RequestMapping(value = "/action/resource/{id}", method = RequestMethod.GET, produces = "application/json")
-    public RestResponse<Resource> getResource(Authentication authentication, @PathVariable long id) {
-        Resource resource = this.createResource(id, 1);
+    public RestResponse<ResourceRecord> getResource(Authentication authentication, @PathVariable long id) {
+        ResourceRecord resource = this.createResource(id, 1);
 
         resource.addVersion(this.createResource(id, 2));
         resource.addVersion(this.createResource(id, 3));
         resource.addVersion(this.createResource(id, 4));
 
-        return RestResponse.<Resource>result(resource);
+        return RestResponse.<ResourceRecord>result(resource);
     }
 
     /**
@@ -175,21 +183,13 @@ public class ResourceController {
      */
     @RequestMapping(value = "/action/resource/{id}", method = RequestMethod.POST, produces = "application/json")
     public RestResponse<?> updateResource(Authentication authentication,  @PathVariable long id, @RequestBody ResourceMetadataUpdate data) {
-        ResourceMetadata metadata = new ResourceMetadata(
-            data.getName(),
-            data.getDescription(),
-            (int) (Math.random() * 100 + 100),
-            EnumDataFormat.CSV,
-            EnumDataFormat.N_TRIPLES
-        );
-
-        Resource resource = this.createResource(id, 1, metadata);
+        ResourceRecord resource = this.createResource(id, 1, data);
 
         resource.addVersion(this.createResource(id, 2));
         resource.addVersion(this.createResource(id, 3));
         resource.addVersion(this.createResource(id, 4));
 
-        return RestResponse.<Resource>result(resource);
+        return RestResponse.<ResourceRecord>result(resource);
     }
 
     /**
@@ -224,54 +224,54 @@ public class ResourceController {
      * @return a unique filename.
      * @throws IOException in case of an I/O error
      */
-    private String createTemporaryFilename(byte[] data) throws IOException {
+    private String createTemporaryFilename(byte[] data, String extension) throws IOException {
+
         // Create working directory if not already exists
         FileUtils.forceMkdir(new File(workingDirectory));
 
         String filename = Paths.get(workingDirectory, UUID.randomUUID().toString()).toString();
+        filename += (extension == null ? "" : "." + extension);
 
         FileUtils.writeByteArrayToFile(new File(filename), data);
 
         return filename;
     }
 
-    private Resource createResource(long id, int version) {
+    private ResourceRecord createResource(long id, int version) {
         return this.createResource(id, version, null);
     }
 
-    private Resource createResource(long id, int version, ResourceMetadata metadata) {
-        Resource resource = new Resource(id, version);
+    private ResourceRecord createResource(long id, int version, ResourceMetadataUpdate metadata) {
+        ResourceRecord resource = new ResourceRecord(id, version);
 
+        resource.setType(EnumResourceType.POI_DATA);
+        resource.setDataSource(EnumDataSource.UPLOAD);
+        resource.setInputFormat(EnumDataFormat.GPX);
+        resource.setOutputFormat(EnumDataFormat.N_TRIPLES);
+        resource.setProcessExecutionId(1L);
         resource.setCreatedOn(ZonedDateTime.now());
         resource.setUpdatedOn(resource.getCreatedOn());
+        resource.setTable(UUID.randomUUID());
+        resource.setFileName("file.xml");
+        resource.setFileSize((int) (Math.random() * 1024 * 1024) + 100);
 
-        resource.setFile(new FileInfo(10, "file.xml", "storage/file.xml", ZonedDateTime.now()));
-
-        resource.setSource(EnumDataSource.UPLOAD);
-        resource.setType(EnumResourceType.POI_DATA);
-
-        if(metadata!=null) {
+        if (metadata != null) {
             resource.setMetadata(
-                new ResourceMetadata(
+                new ResourceMetadataView(
                     metadata.getName(),
                     metadata.getDescription(),
-                    (int) (Math.random() * 100 + 100),
-                    metadata.getSourceFormat(),
-                    EnumDataFormat.N_TRIPLES
+                    (int) (Math.random() * 100 + 100)
                 )
             );
         } else {
             resource.setMetadata(
-                new ResourceMetadata(
+                new ResourceMetadataView(
                     String.format("Resource %d", id),
                     "Uploaded sample POI data",
-                    (int) (Math.random() * 100 + 100),
-                    EnumDataFormat.CSV,
-                    EnumDataFormat.N_TRIPLES
+                    (int) (Math.random() * 100 + 100)
                 )
             );
         }
-
 
         return resource;
     }

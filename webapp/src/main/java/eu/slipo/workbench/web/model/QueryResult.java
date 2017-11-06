@@ -4,6 +4,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Generic query result
+ *
+ * @param <Result> the result class
+ */
 public class QueryResult<Result> {
 
     private QueryResultPagingOptions pagingOptions;

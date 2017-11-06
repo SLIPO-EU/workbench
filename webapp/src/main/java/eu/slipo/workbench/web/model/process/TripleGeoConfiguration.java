@@ -1,18 +1,24 @@
 package eu.slipo.workbench.web.model.process;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
 import eu.slipo.workbench.web.model.EnumDataFormat;
 import eu.slipo.workbench.web.model.EnumTool;
 
+/**
+ * TripleGEO configuration
+ *
+ */
 public class TripleGeoConfiguration extends ToolConfiguration {
 
     public TripleGeoConfiguration() {
-        super();
-        this.tool = EnumTool.TRIPLE_GEO;
+        super(EnumTool.TRIPLE_GEO);
     }
 
     /**
      * Input format
      */
+    @JsonDeserialize(using = EnumDataFormat.Deserializer.class)
     private EnumDataFormat inputFormat;
 
     /**
@@ -108,136 +114,68 @@ public class TripleGeoConfiguration extends ToolConfiguration {
         return inputFormat;
     }
 
-    public void setInputFormat(EnumDataFormat inputFormat) {
-        this.inputFormat = inputFormat;
-    }
-
     public String getOntology() {
         return ontology;
-    }
-
-    public void setOntology(String ontology) {
-        this.ontology = ontology;
     }
 
     public String getAttrKey() {
         return attrKey;
     }
 
-    public void setAttrKey(String attrKey) {
-        this.attrKey = attrKey;
-    }
-
     public String getAttrName() {
         return attrName;
-    }
-
-    public void setAttrName(String attrName) {
-        this.attrName = attrName;
     }
 
     public String getAttrCategory() {
         return attrCategory;
     }
 
-    public void setAttrCategory(String attrCategory) {
-        this.attrCategory = attrCategory;
-    }
-
     public String getValIgnore() {
         return valIgnore;
-    }
-
-    public void setValIgnore(String valIgnore) {
-        this.valIgnore = valIgnore;
     }
 
     public String getDelimiter() {
         return delimiter;
     }
 
-    public void setDelimiter(String delimiter) {
-        this.delimiter = delimiter;
-    }
-
     public String getAttrX() {
         return attrX;
-    }
-
-    public void setAttrX(String attrX) {
-        this.attrX = attrX;
     }
 
     public String getAttrY() {
         return attrY;
     }
 
-    public void setAttrY(String attrY) {
-        this.attrY = attrY;
-    }
-
     public String getFeatureName() {
         return featureName;
-    }
-
-    public void setFeatureName(String featureName) {
-        this.featureName = featureName;
     }
 
     public String getNsFeatureURI() {
         return nsFeatureURI;
     }
 
-    public void setNsFeatureURI(String nsFeatureURI) {
-        this.nsFeatureURI = nsFeatureURI;
-    }
-
     public String getPrefixFeatureNS() {
         return prefixFeatureNS;
-    }
-
-    public void setPrefixFeatureNS(String prefixFeatureNS) {
-        this.prefixFeatureNS = prefixFeatureNS;
     }
 
     public String getNsGeometryURI() {
         return nsGeometryURI;
     }
 
-    public void setNsGeometryURI(String nsGeometryURI) {
-        this.nsGeometryURI = nsGeometryURI;
-    }
-
     public String getPrefixGeometryNS() {
         return prefixGeometryNS;
-    }
-
-    public void setPrefixGeometryNS(String prefixGeometryNS) {
-        this.prefixGeometryNS = prefixGeometryNS;
     }
 
     public String getSourceCRS() {
         return sourceCRS;
     }
 
-    public void setSourceCRS(String sourceCRS) {
-        this.sourceCRS = sourceCRS;
-    }
-
     public String getTargetCRS() {
         return targetCRS;
     }
 
-    public void setTargetCRS(String targetCRS) {
-        this.targetCRS = targetCRS;
-    }
-
     public String getDefaultLang() {
         return defaultLang;
-    }
-
-    public void setDefaultLang(String defaultLang) {
-        this.defaultLang = defaultLang;
     }
 
 }

@@ -1,28 +1,34 @@
 package eu.slipo.workbench.web.model.process;
 
+import eu.slipo.workbench.web.model.resource.ResourceIdentifier;
+
+/**
+ * A process input resource that already exists in the resource catalog
+ */
 public class CatalogProcessResource extends ProcessResource {
 
-    private long id;
+    private ResourceIdentifier resource;
 
-    private int version;
-
-    public CatalogProcessResource() {
-        super();
-        this.type = EnumProcessResource.CATALOG;
+    protected CatalogProcessResource() {
+        super(EnumProcessResource.CATALOG);
     }
 
-    public CatalogProcessResource(int index, long id, int version) {
+    public CatalogProcessResource(int index, long id, long version) {
         super(index, EnumProcessResource.CATALOG);
-        this.id = id;
-        this.version = version;
+        this.resource = new ResourceIdentifier(id, version);
+    }
+
+    public CatalogProcessResource(int index, ResourceIdentifier resource) {
+        super(index, EnumProcessResource.CATALOG);
+        this.resource = resource.clone();
     }
 
     public long getId() {
-        return id;
+        return this.resource.getId();
     }
 
-    public int getVersion() {
-        return version;
+    public long getVersion() {
+        return this.resource.getVersion();
     }
 
 }

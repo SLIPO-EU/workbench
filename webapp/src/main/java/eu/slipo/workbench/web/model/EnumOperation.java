@@ -34,7 +34,8 @@ public enum EnumOperation {
     /**
      * POI RDF dataset enrichment
      */
-    ENRICHEMENT(5);
+    ENRICHEMENT(5),
+    ;
 
     private final int value;
 

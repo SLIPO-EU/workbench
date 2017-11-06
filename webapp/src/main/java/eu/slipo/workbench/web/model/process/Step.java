@@ -8,6 +8,9 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import eu.slipo.workbench.web.model.EnumOperation;
 import eu.slipo.workbench.web.model.EnumTool;
 
+/**
+ * A process step
+ */
 public class Step {
 
     private int index;
@@ -30,7 +33,7 @@ public class Step {
 
     private Integer output;
 
-    public Step() {
+    protected Step() {
 
     }
 
