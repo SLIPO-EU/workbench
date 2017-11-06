@@ -10,7 +10,7 @@ const CHANGE_CARD_FILTER = 'ui/dashboard/CHANGE_CARD_FILTER';
 const initialState = {
   filters:{
     resources: "all",
-    events: "allEvents",
+    events: "ALL",
     processExplorer:"allProcess",
     
   },
@@ -71,7 +71,7 @@ const receiveDashboardData = (data) => ({
   data,
 });
 
-const changeCardFilter = (cardname, selection) => ({
+export const changeDashboardFilter = (cardname, selection) => ({
   type: CHANGE_CARD_FILTER,
   cardname,
   selection,
@@ -89,8 +89,4 @@ export const fetchDashboardData = () => (dispatch, getState) => {
     .catch((err) => {
       console.error('Failed loading resources:', err);
     });
-};
-
-export const changeDashboardFilter = (cardname, selection) => (dispatch) => {
-  dispatch(changeCardFilter(cardname, selection));
 };

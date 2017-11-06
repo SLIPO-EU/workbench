@@ -117,17 +117,17 @@ const mergeProps = (stateProps, dispatchProps, ownProps) => {
       resVisible = stateProps.resources;
       break;
     case 'new':
-      resVisible = stateProps.resources.filter( resource => moment(resource.createdOn ).isAfter(moment().subtract(7,'d')));
+      resVisible = stateProps.resources.filter(resource => moment(resource.createdOn).isAfter(moment().subtract(7,'d')));
       break;
     case 'updated':
-      resVisible = stateProps.resources.filter( resource => moment(resource.updatedOn ).isAfter(moment().subtract(7,'d')));
+      resVisible = stateProps.resources.filter(resource => moment(resource.updatedOn).isAfter(moment().subtract(7,'d')) && (resource.updatedOn!==resource.createdOn) );
   }
    
   return {
     ...stateProps,
     ...dispatchProps,
     ...ownProps,
-    events: stateProps.filters.events  ===  'allEvents' ?  stateProps.events : stateProps.events.filter(event => event.level === stateProps.filters.events),
+    events: stateProps.filters.events  ===  "ALL" ?  stateProps.events : stateProps.events.filter(event => event.level === stateProps.filters.events),
     resources: resVisible, 
   };
 };
