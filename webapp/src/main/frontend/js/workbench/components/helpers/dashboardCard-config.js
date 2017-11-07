@@ -30,15 +30,15 @@ export const DashboardEventsConfig = {
   changedOn: new Date(),
   cardFilters: [
     {
-      id:"allEvents",
+      id:"ALL",
       name:"All",
     },
     {
-      id:'error',
+      id:"ERROR",
       name:"Error",
     }, 
     {
-      id:'warning',
+      id:"WARNING",
       name:"Warning",
     }],
 };
