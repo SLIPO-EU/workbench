@@ -10,71 +10,63 @@ public enum EnumDataFormat
     /**
      * Comma-Separated Values
      */
-    CSV(1, "csv"),
+    CSV("csv"),
     
     /**
      * GPS Exchange Format
      */
-    GPX(2, "gpx"),
+    GPX("gpx"),
     
     /**
      * JSON encoded geographic data structures
      */
-    GEOJSON(3, "geojson"),
+    GEOJSON("geojson"),
     
     /**
      * Open Street Maps XML format
      */
-    OSM(4, "xml"),
+    OSM("xml"),
     
     /**
      * ESRI shape file
      */
-    SHAPEFILE(5, "shp"),
+    SHAPEFILE("shp"),
     
     /**
      * W3C standard RDF serialization format
      */
-    RDF_XML(6, "rdf"),
+    RDF_XML("rdf"),
     
     /**
      * A format using the RDF/XML abbreviations to provide a more compact readable format
      */
-    RDF_XML_ABBREV(7, "rdf"),
+    RDF_XML_ABBREV("rdf"),
     
     /**
      * Turtle, a compact, human-friendly format
      */
-    TURTLE(8, "ttl"),
+    TURTLE("ttl"),
     
     /**
      * N-Triples, a very simple, easy-to-parse, line-based format that is not as compact
      * as Turtle
      */
-    N_TRIPLES(9, "nt"),
+    N_TRIPLES("nt"),
     
     /**
      * N3 or Notation3, a non-standard serialization that is very similar to Turtle, but
      * has some additional features, such as the ability to define inference rules
      */
-    N3(10, "n3");
-    
-    private final int value;
+    N3("n3");
     
     /**
      * The default filename extension for files of this data format.
      */
     private final String filenameExtension;
     
-    private EnumDataFormat(int value, String filenameExtension) 
+    private EnumDataFormat(String filenameExtension) 
     {
-        this.value = value;
         this.filenameExtension = filenameExtension;
-    }
-
-    public int getValue() 
-    {
-        return value;
     }
     
     public String getFilenameExtension()
@@ -89,18 +81,7 @@ public enum EnumDataFormat
                 if (e.name().equalsIgnoreCase(name))
                     return e;
         }
-        
-        throw new IllegalArgumentException(
-            "No enum constant associated with name: " + name);
+        return null;
     }
-    
-    public static EnumDataFormat fromInt(int value)
-    {
-        for (EnumDataFormat e: EnumDataFormat.values())
-            if (e.value == value)
-                return e;
-        
-        throw new IllegalArgumentException(
-            "No enum constant associated with integer value: " + value);
-    }
+
 }
