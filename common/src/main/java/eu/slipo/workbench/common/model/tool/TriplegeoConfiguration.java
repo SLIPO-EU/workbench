@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 
+import org.hibernate.validator.constraints.URL;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -252,19 +253,21 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
     //
     // Getters / Setters
     //
-   
-    @NotEmpty
+    
+    @JsonIgnore
     public EnumDataFormat getInputFormat()
     {
         return inputFormat;
     }
     
+    @JsonIgnore
     public void setInputFormat(EnumDataFormat inputFormat)
     {
         this.inputFormat = inputFormat;
     }
     
     @JsonProperty("inputFormat")
+    @NotEmpty
     public String getInputFormatAsString()
     {
         DataFormat dataFormat = inputFormat == null? null : DataFormat.from(inputFormat);
@@ -309,7 +312,6 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
     }
     
     @JsonIgnore
-    @NotNull
     public EnumDataFormat getOutputFormat()
     {
         return outputFormat;
@@ -345,6 +347,7 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
         this.outputDir = outputDir;
     }
     
+    @JsonIgnore
     public Path getOutputDir()
     {
         return outputDir;
@@ -368,6 +371,7 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
         this.tmpDir = tmpDir;
     }
     
+    @JsonIgnore
     public Path getTmpDir()
     {
         return tmpDir;
@@ -442,6 +446,7 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
     }
         
     @JsonProperty("nsFeatureURI")
+    @URL
     public String getFeatureNamespaceUri()
     {
         return featureNamespaceUri;
@@ -466,6 +471,7 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
     }
     
     @JsonProperty("nsGeometryURI")
+    @URL
     public String getGeometryNamespaceUri()
     {
         return geometryNamespaceUri;

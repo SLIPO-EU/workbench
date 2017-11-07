@@ -3,7 +3,6 @@ package eu.slipo.workbench.rpc.jobs;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -19,6 +18,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +41,6 @@ import org.springframework.batch.core.configuration.annotation.StepBuilderFactor
 import org.springframework.batch.core.job.builder.FlowBuilder;
 import org.springframework.batch.core.job.flow.Flow;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
-import org.springframework.batch.core.listener.JobExecutionListenerSupport;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.scope.context.StepContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
@@ -56,7 +56,9 @@ import org.springframework.util.StringUtils;
 
 import com.spotify.docker.client.DockerClient;
 
+import eu.slipo.workbench.common.model.ApplicationException;
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
+import eu.slipo.workbench.common.model.tool.InvalidConfigurationException;
 import eu.slipo.workbench.common.model.tool.ToolConfigurationSupport;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.rpc.jobs.listener.ExecutionContextPromotionListeners;
@@ -114,9 +116,6 @@ public class TriplegeoJobConfiguration
 
     @Autowired
     private StepBuilderFactory stepBuilderFactory;
-    
-    @Autowired
-    private Step breakpointStep;
     
     @Autowired
     private DockerClient docker;
@@ -200,6 +199,37 @@ public class TriplegeoJobConfiguration
         return stepBuilderFactory.get("triplegeo.setupExecutionContext")
             .tasklet(tasklet)
             .listener(stepContextListener)
+            .build();
+    }
+    
+    @Bean("triplegeo.validateConfigurationTasklet")
+    @JobScope
+    public Tasklet validateConfigurationTasklet(
+        @Qualifier("defaultBeanValidator") Validator validator,
+        @Value("#{jobExecutionContext['triplegeo.config']}") TriplegeoConfiguration config)
+    {
+        return new Tasklet()
+        {
+            @Override
+            public RepeatStatus execute(StepContribution contribution, ChunkContext context)
+                throws Exception
+            {
+                Set<ConstraintViolation<TriplegeoConfiguration>> errors = 
+                    validator.validate(config);
+                if (!errors.isEmpty()) {
+                    throw InvalidConfigurationException.fromErrors(errors);
+                }
+                return RepeatStatus.FINISHED;
+            }
+        };
+    }
+    
+    @Bean("triplegeo.validateConfigurationStep")
+    public Step validateConfigurationStep(
+        @Qualifier("triplegeo.validateConfigurationTasklet") Tasklet tasklet)
+    {
+        return stepBuilderFactory.get("triplegeo.validateConfiguration")
+            .tasklet(tasklet)
             .build();
     }
     
@@ -325,12 +355,14 @@ public class TriplegeoJobConfiguration
     
     @Bean("triplegeo.flow")
     public Flow flow(
+        @Qualifier("triplegeo.validateConfigurationStep") Step validateConfigurationStep,
         @Qualifier("triplegeo.prepareWorkingDirectoryStep") Step prepareWorkingDirectoryStep,
         @Qualifier("triplegeo.createContainerStep") Step createContainerStep, 
         @Qualifier("triplegeo.runContainerStep") Step runContainerStep)
     {
         return new FlowBuilder<Flow>("triplegeo.flow")
-            .start(prepareWorkingDirectoryStep)
+            .start(validateConfigurationStep)
+            .next(prepareWorkingDirectoryStep)
             .next(createContainerStep)
             .next(runContainerStep)
             .end();
@@ -344,7 +376,7 @@ public class TriplegeoJobConfiguration
         // The standalone "triplegeo" job is built on top of the basic flow.
         
         // Wrap the basic flow as a Step, so it can be a component of a job
-        Step flowStep = stepBuilderFactory.get("triplegeo.flow")
+        Step flowStep = stepBuilderFactory.get("triplegeo.stepIntoFlow")
             .flow(flow)
             .build();
         
