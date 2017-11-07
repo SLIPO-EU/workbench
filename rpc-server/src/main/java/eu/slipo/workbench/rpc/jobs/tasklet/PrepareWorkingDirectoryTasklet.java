@@ -1,7 +1,9 @@
 package eu.slipo.workbench.rpc.jobs.tasklet;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -17,7 +19,6 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,11 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.StepExecution;
@@ -34,8 +40,7 @@ import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.data.util.Pair;
 import org.springframework.util.Assert;
-
-import com.google.common.base.Functions;
+import org.springframework.util.StringUtils;
 
 import eu.slipo.workbench.common.model.ApplicationException;
 import eu.slipo.workbench.common.model.BasicErrorCode;
@@ -46,12 +51,37 @@ import eu.slipo.workbench.common.model.poi.EnumDataFormat;
  */
 public class PrepareWorkingDirectoryTasklet implements Tasklet
 {
+    private static final Logger logger = LoggerFactory.getLogger(PrepareWorkingDirectoryTasklet.class);
+    
     private static final Set<PosixFilePermission> DIRECTORY_PERMISSIONS = 
         PosixFilePermissions.fromString("rwxr-xr-x");
     
     private static final FileAttribute<?> DIRECTORY_ATTRIBUTE = 
         PosixFilePermissions.asFileAttribute(DIRECTORY_PERMISSIONS);
     
+    /**
+     * A flag indicating the default behavior on whether a input given as a ZIP archive
+     * should be unpacked into our input directory.
+     */
+    private static final boolean UNPACK_ZIP_ARCHIVE = true;
+    
+    /**
+     * A set of file extensions to be recognized as ZIP archives
+     */
+    private static final List<String> ZIP_FILE_EXTENSIONS = Arrays.asList("zip", "z", "ZIP", "Z");
+    
+    /**
+     * Check if a given path matches one expected for a ZIP archive
+     */
+    private static boolean matchesNameOfZipArchive(Path path)
+    {
+        return ZIP_FILE_EXTENSIONS.contains(
+            StringUtils.getFilenameExtension(path.getFileName().toString()));
+    }
+    
+    /**
+     * A builder for the enclosing class
+     */
     public static class Builder 
     {
         private Path workDir;
@@ -61,6 +91,8 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
         private EnumDataFormat inputFormat;
         
         private Map<String, Pair<Path, Supplier<String>>> config = new LinkedHashMap<>();
+        
+        private Boolean unzip;
         
         /**
          * Set working directory
@@ -114,6 +146,18 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
         }
         
         /**
+         * Set whether a single input given as a ZIP archive should be extracted into 
+         * our input directory. If so, all ZIP entries will be extracted discarding their 
+         * directory prefix (if any).
+         * @param flag
+         */
+        public Builder unzipIfNeeded(boolean flag)
+        {
+            this.unzip = flag;
+            return this;
+        }
+        
+        /**
          * Add a configuration file (of properties) under this working directory.
          * 
          * @param key The key for this (part of) configuration.
@@ -133,6 +177,9 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
                 "A non-null map of properties is required");
             Assert.isTrue(!this.config.containsKey(key), 
                 "The configuration key of [" + key +"] is already present");
+            
+            // Todo: Examine if using ToolConfiguration.toString is a better approach
+            // in order to abstract the actual configuration format (properties or XML).
             
             Supplier<String> configDataSupplier = new Supplier<String>()
             {
@@ -193,6 +240,9 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
             if (inputFormat != null)
                 tasklet.setInputFormat(inputFormat);
             
+            if (unzip != null)
+                tasklet.setUnzip(unzip);
+            
             return tasklet;
         }
     }
@@ -234,6 +284,8 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
     
     private FileAttribute<?> directoryAttribute = DIRECTORY_ATTRIBUTE;
     
+    private boolean unzip = UNPACK_ZIP_ARCHIVE;
+    
     private PrepareWorkingDirectoryTasklet(
         Path workDir, List<Path> input, Map<String, Pair<Path, Supplier<String>>> config)
     {
@@ -247,6 +299,11 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
     private void setInputFormat(EnumDataFormat format)
     {
         this.inputFormat = format;
+    }
+    
+    private void setUnzip(boolean flag)
+    {
+        this.unzip = flag;
     }
     
     public Path workDir()
@@ -282,16 +339,31 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
         Files.createDirectory(inputDir, directoryAttribute);
         Files.createDirectory(outputDir, directoryAttribute);
         
-        // Link to each input from inside input directory
+        // Put (extract or link) each input into our input directory
         
-        // Todo Handle the case of a single archive input (with 1 level of nesting)
-        // Unpack contents in input directory, expand names to unpacked filenames
-        
-        List<String> inputFiles = new ArrayList<>(input.size());
-        for (Path inputPath: input) {
-            String name = inputPath.getFileName().toString();
-            createLinkFromInputDirectory(inputPath, name);
-            inputFiles.add(name);
+        List<String> inputFiles = new ArrayList<>();
+        if (!input.isEmpty()) {
+            if (unzip && (input.size() == 1) && matchesNameOfZipArchive(input.get(0))) {
+                // The input archive should be extracted inside input directory
+                try (ZipFile zipfile = new ZipFile(input.get(0).toString())) {
+                    List<String> entryNames = zipfile.stream()
+                        .filter(e -> !e.isDirectory())
+                        .map(e -> e.getName())
+                        .collect(Collectors.toList());
+                    for (String entryName: entryNames) {
+                        String name = Paths.get(entryName).getFileName().toString();
+                        extractToInputDirectory(zipfile, entryName, name);
+                        inputFiles.add(name);
+                    }
+                }
+            } else {
+                // Link to each input from inside input directory
+                for (Path inputPath: input) {
+                    String name = inputPath.getFileName().toString();
+                    createLinkFromInputDirectory(inputPath, name);
+                    inputFiles.add(name);
+                }
+            }
         }
        
         // Generate configuration files inside working directory
@@ -321,7 +393,24 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
 
         return RepeatStatus.FINISHED;
     }
-
+    
+    /**
+     * Extract a named ZIP entry inside our input directory.
+     * 
+     * @param zipfile An opened ZipFile handle
+     * @param entryName The entry name
+     * @param name The name of the extracted file (relative to input directory)
+     * @throws IOException
+     */
+    private void extractToInputDirectory(ZipFile zipfile, String entryName, String name)
+        throws IOException
+    {
+        ZipEntry e = zipfile.getEntry(entryName);
+        try (InputStream in = new BufferedInputStream(zipfile.getInputStream(e))) {
+            Files.copy(in, inputDir.resolve(name));
+        }
+    }
+    
     /**
      * Link to the given input file from inside our input directory.
      * 
@@ -333,7 +422,7 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
      * throughout the whole job execution! 
      * 
      * @param inputPath The input path to link to
-     * @param name The link name
+     * @param name The link name (relative to input directory)
      * @throws IOException 
      */
     private void createLinkFromInputDirectory(Path inputPath, String name) 
