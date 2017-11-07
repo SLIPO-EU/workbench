@@ -1,5 +1,7 @@
 package eu.slipo.workbench.common.model.poi;
 
+import java.util.List;
+
 /**
  * Enumeration for supported data formats.
  */
@@ -56,14 +58,14 @@ public enum EnumDataFormat
      * has some additional features, such as the ability to define inference rules
      */
     N3(10, "n3");
-
+    
     private final int value;
     
     /**
      * The default filename extension for files of this data format.
      */
     private final String filenameExtension;
-
+    
     private EnumDataFormat(int value, String filenameExtension) 
     {
         this.value = value;
