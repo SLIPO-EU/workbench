@@ -4,7 +4,8 @@ public enum BasicErrorCode implements ErrorCode
 {
     UNKNOWN,
     NOT_IMPLEMENTED,
-
+    NOT_SUPPORTED,
+    
     INPUT_NOT_READABLE, // input cannot be parsed
     INPUT_INVALID,      // input is readable but invalid
 

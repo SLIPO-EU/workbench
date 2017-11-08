@@ -1,9 +1,7 @@
-package eu.slipo.workbench.common.util;
+package eu.slipo.workbench.common.service.util;
 
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
@@ -14,36 +12,83 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
-import static java.util.Collections.singleton;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import static org.apache.commons.collections4.IterableUtils.chainedIterable;
 
-/**
- * Convert a bean to a (flat) map of properties ({@link Properties}).  
- * <p>
- * This converter is based on Jackson's {@link ObjectMapper}) for performing JSON to/from 
- * object mappings.
- */
-public class BeanToPropertiesConverter
+@Service
+public class JsonBasedPropertiesConverterService implements PropertiesConverterService
 {
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static enum FieldType { LEAF, OBJECT, ARRAY };
+    
+    private static class FieldToken { 
         
-    private static class TreeVisitor 
+        private final FieldType type;
+        
+        private final String name;
+        
+        private final Integer index;
+        
+        private FieldToken(FieldType type, String name)
+        {
+            this.type = type;
+            this.name = name;
+            this.index = null;
+        }
+        
+        private FieldToken(FieldType type, String name, int index)
+        {
+            this.type = type;
+            this.name = name;
+            this.index = index;
+        }
+        
+        @Override
+        public int hashCode()
+        {                
+            return name == null? 0 : name.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (this == obj)
+                return true;
+            if (obj == null || getClass() != obj.getClass())
+                return false;
+            
+            FieldToken other = (FieldToken) obj;
+            if (name == null) {
+                if (other.name != null)
+                    return false;
+            } else if (!name.equals(other.name))
+                return false;
+            return true;
+        }
+
+        private static FieldToken of(FieldType type, String name, int index)
+        {
+            return new FieldToken(type, name, index);
+        }
+        
+        private static FieldToken of(FieldType type, String name)
+        {
+            return new FieldToken(type, name);
+        }
+    };
+    
+    private static final String SENTINEL_KEY = String.valueOf(Character.MAX_VALUE);
+    
+    private class TreeVisitor 
     {    
         private final Properties properties;
         
@@ -101,68 +146,8 @@ public class BeanToPropertiesConverter
         }
     }
     
-    private static class TreeBuilder
-    {
-        private static enum FieldType { LEAF, OBJECT, ARRAY };
-      
-        private static class FieldToken { 
-            
-            private final FieldType type;
-            
-            private final String name;
-            
-            private final Integer index;
-            
-            private FieldToken(FieldType type, String name)
-            {
-                this.type = type;
-                this.name = name;
-                this.index = null;
-            }
-            
-            private FieldToken(FieldType type, String name, int index)
-            {
-                this.type = type;
-                this.name = name;
-                this.index = index;
-            }
-            
-            @Override
-            public int hashCode()
-            {                
-                return name == null? 0 : name.hashCode();
-            }
-
-            @Override
-            public boolean equals(Object obj)
-            {
-                if (this == obj)
-                    return true;
-                if (obj == null || getClass() != obj.getClass())
-                    return false;
-                
-                FieldToken other = (FieldToken) obj;
-                if (name == null) {
-                    if (other.name != null)
-                        return false;
-                } else if (!name.equals(other.name))
-                    return false;
-                return true;
-            }
-
-            private static FieldToken of(FieldType type, String name, int index)
-            {
-                return new FieldToken(type, name, index);
-            }
-            
-            private static FieldToken of(FieldType type, String name)
-            {
-                return new FieldToken(type, name);
-            }
-        };
-     
-        private static final String SENTINEL_KEY = String.valueOf(Character.MAX_VALUE);
-        
+    private class TreeBuilder
+    {           
         private final JsonNode root;
         
         private final Properties properties;
@@ -187,7 +172,7 @@ public class BeanToPropertiesConverter
             
             String groupKey = null; // a group starting on this key
             FieldToken token1 = null; // the previous token (for the previous group)
-            for (String key: chainedIterable(keys, singleton(SENTINEL_KEY))) {
+            for (String key: chainedIterable(keys, Collections.singleton(SENTINEL_KEY))) {
                 FieldToken token = null;
                 // Parse field token for this key
                 if (key != SENTINEL_KEY) { 
@@ -250,7 +235,7 @@ public class BeanToPropertiesConverter
             
             String groupKey = null; // a group starting on this key
             FieldToken token1 = null; // the previous token (for the previous group)
-            for (String key: chainedIterable(keys, singleton(SENTINEL_KEY))) {
+            for (String key: chainedIterable(keys, Collections.singleton(SENTINEL_KEY))) {
                 FieldToken token = null;
                 // Parse field token for this key
                 if (key != SENTINEL_KEY) { 
@@ -327,62 +312,47 @@ public class BeanToPropertiesConverter
         }
     }
     
+    @Autowired
+    private ObjectMapper objectMapper;
+    
     /**
      * Convert a bean to a map of properties by using an intermediate JSON serialization.
-     *  
-     * @param value The bean to be converted
      */
-    public static Properties valueToProperties(Object value)
+    @Override
+    public Properties valueToProperties(Object value)
     {
         JsonNode root = objectMapper.valueToTree(value);
         return (new TreeVisitor(root)).getProperties();
     }
-    
-    /**
-     * Create a bean from a map of properties.
-     * 
-     * @param props The given map of properties
-     * @param valueType The target type
-     * @throws JsonProcessingException
-     */
-    public static <T extends Serializable> T propertiesToValue(Properties props, Class<T> valueType) 
-        throws JsonProcessingException
+
+    @Override
+    public <T extends Serializable> T propertiesToValue(Properties props, Class<T> valueType)
+        throws ConversionFailedException
     {
         JsonNode root = (new TreeBuilder(props)).getRoot();
-        return objectMapper.treeToValue(root, valueType);
+        T value = null;
+        try {
+            value = objectMapper.treeToValue(root, valueType);
+        } catch (JsonProcessingException ex) {
+            throw new ConversionFailedException(
+                "Failed to convert properties to a value of [" + valueType.getName() + "]" , ex);
+        }
+        return value;
     }
-    
-    /**
-     * Create a bean from a map of properties.
-     * <p>
-     * Note that this method will not examine nested maps/arrays into given map, i.e. it will
-     * consider the map as a flat map of properties (see {@link Properties}). If nested structure
-     * should be examined, then an ordinary JSON deserialization is preferable.  
-     * 
-     * @param map A map with property-like keys (e.g. "foo.baz") mapping to arbitrary values. 
-     * @param valueType The target type
-     * @throws JsonProcessingException
-     */
-    public static <T extends Serializable> T propertiesToValue(Map<String,Object> map, Class<T> valueType) 
-        throws JsonProcessingException
+
+    @Override
+    public <T extends Serializable> T propertiesToValue(Map<String, Object> map, Class<T> valueType)
+        throws ConversionFailedException
     {
         Properties props = new Properties();
         props.putAll(map);
         return propertiesToValue(props, valueType);
     }
-    
-    /**
-     * Create a bean from a map of properties lying under a certain root property.
-     * 
-     * @param props The given map of properties
-     * @param rootPropertyName The name of the root property (without the trailing dot) for 
-     *   properties we are interested into.  
-     * @param valueType The target type
-     * @throws JsonProcessingException
-     */
-    public static <T extends Serializable> T propertiesToValue(
+
+    @Override
+    public <T extends Serializable> T propertiesToValue(
             Properties props, String rootPropertyName, Class<T> valueType) 
-        throws JsonProcessingException
+        throws ConversionFailedException
     {
         Assert.isTrue(!StringUtils.isEmpty(rootPropertyName), 
             "Expected a non-empty root property name");
@@ -399,13 +369,11 @@ public class BeanToPropertiesConverter
         
         return propertiesToValue(p1, valueType);
     }
-    
-    /**
-     * @see BeanToPropertiesConverter#propertiesToValue(Properties, String, Class)
-     */
-    public static <T extends Serializable> T propertiesToValue(
-            Map<String,Object> map, String rootPropertyName, Class<T> valueType) 
-        throws JsonProcessingException
+
+    @Override
+    public <T extends Serializable> T propertiesToValue(
+            Map<String, Object> map, String rootPropertyName, Class<T> valueType) 
+        throws ConversionFailedException
     {
         Assert.isTrue(!StringUtils.isEmpty(rootPropertyName), 
             "Expected a non-empty root property name");
@@ -420,13 +388,11 @@ public class BeanToPropertiesConverter
         
         return propertiesToValue(p1, valueType);
     }
-    
-    /**
-     * @see BeanToPropertiesConverter#propertiesToValue(Properties, String, Class)
-     */
-    public static <T extends Serializable> T propertiesToValue(
-            SortedMap<String,Object> map, String rootPropertyName, Class<T> valueType) 
-        throws JsonProcessingException
+
+    @Override
+    public <T extends Serializable> T propertiesToValue(
+            SortedMap<String, Object> map, String rootPropertyName, Class<T> valueType) 
+        throws ConversionFailedException
     {
         Assert.isTrue(!StringUtils.isEmpty(rootPropertyName), 
             "Expected a non-empty root property name");
@@ -442,4 +408,5 @@ public class BeanToPropertiesConverter
         
         return propertiesToValue(p1, valueType);
     }
+
 }

@@ -12,7 +12,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 
+import org.hibernate.validator.constraints.URL;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -178,14 +180,14 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
     private String geometryUriPrefix = "geo";
 
     /**
-     * The coordinate reference system (CRS) for input data. Default is EPSG:4326
+     * The coordinate reference system (CRS) for input data (eg "EPSG:4326")
      */
-    private String sourceCRS = "EPSG:4326";
+    private String sourceCRS;
 
     /**
-     * The coordinate reference system (CRS) for output data. Default is EPSG:4326
+     * The coordinate reference system (CRS) for output data (e.g "EPSG:4326")
      */
-    private String targetCRS = "EPSG:4326";
+    private String targetCRS;
 
     /**
      * The default language for labels created in output RDF. The default is "en".
@@ -251,19 +253,21 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
     //
     // Getters / Setters
     //
-   
-    @NotEmpty
+    
+    @JsonIgnore
     public EnumDataFormat getInputFormat()
     {
         return inputFormat;
     }
     
+    @JsonIgnore
     public void setInputFormat(EnumDataFormat inputFormat)
     {
         this.inputFormat = inputFormat;
     }
     
     @JsonProperty("inputFormat")
+    @NotEmpty
     public String getInputFormatAsString()
     {
         DataFormat dataFormat = inputFormat == null? null : DataFormat.from(inputFormat);
@@ -308,7 +312,6 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
     }
     
     @JsonIgnore
-    @NotNull
     public EnumDataFormat getOutputFormat()
     {
         return outputFormat;
@@ -344,6 +347,7 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
         this.outputDir = outputDir;
     }
     
+    @JsonIgnore
     public Path getOutputDir()
     {
         return outputDir;
@@ -367,6 +371,7 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
         this.tmpDir = tmpDir;
     }
     
+    @JsonIgnore
     public Path getTmpDir()
     {
         return tmpDir;
@@ -441,6 +446,7 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
     }
         
     @JsonProperty("nsFeatureURI")
+    @URL
     public String getFeatureNamespaceUri()
     {
         return featureNamespaceUri;
@@ -465,6 +471,7 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
     }
     
     @JsonProperty("nsGeometryURI")
+    @URL
     public String getGeometryNamespaceUri()
     {
         return geometryNamespaceUri;
@@ -576,6 +583,7 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
     }
     
     @JsonProperty("sourceCRS")
+    @Pattern(regexp = "epsg:(\\d)+", flags = {Pattern.Flag.CASE_INSENSITIVE})
     public String getSourceCRS()
     {
         return sourceCRS;
@@ -588,14 +596,11 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
     }
     
     @JsonProperty("targetCRS")
+    @Pattern(regexp = "epsg:(\\d)+", flags = {Pattern.Flag.CASE_INSENSITIVE})
     public String getTargetCRS()
     {
         return targetCRS;
     }
-    
-    
-    
-    
     
     @JsonProperty("defaultLang")
     public String getDefaultLang()
