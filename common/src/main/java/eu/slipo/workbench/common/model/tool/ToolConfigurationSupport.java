@@ -4,9 +4,6 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.beanutils.BeanUtils;
-import com.fasterxml.jackson.core.JsonProcessingException;
-
-import eu.slipo.workbench.common.util.BeanToPropertiesConverter;
 
 /**
  * An abstract class providing support for common copy/serialize/deserialize functionality.
@@ -14,69 +11,6 @@ import eu.slipo.workbench.common.util.BeanToPropertiesConverter;
 @SuppressWarnings("serial")
 public abstract class ToolConfigurationSupport implements ToolConfiguration
 {
-    /**
-     * Convert this object to a map of properties ({@link Properties}).
-     */
-    public Properties toProperties()
-    {
-        return BeanToPropertiesConverter.valueToProperties(this);
-    }
-    
-    /**
-     * Create a configuration bean from a map of properties.
-     * 
-     * @param props The map of properties
-     * @param resultType The class of the result object
-     * 
-     * @throws JsonProcessingException if underlying JSON deserialization fails 
-     */
-    public static <B extends ToolConfigurationSupport> B fromProperties(
-            Properties props, Class<B> resultType) 
-        throws JsonProcessingException
-    {
-        return BeanToPropertiesConverter.propertiesToValue(props, resultType);
-    }
-    
-    /**
-     * Create a configuration bean from a map of properties.
-     * 
-     * @param props
-     * @param rootPropertyName The name of the root property (without the trailing dot) to search under
-     * @param resultType
-     * @throws JsonProcessingException
-     */
-    public static <B extends ToolConfigurationSupport> B fromProperties(
-            Properties props, String rootPropertyName, Class<B> resultType) 
-        throws JsonProcessingException
-    {
-        return BeanToPropertiesConverter.propertiesToValue(props, rootPropertyName, resultType);
-    }
-    
-    /**
-     * Create a configuration bean from a map of properties.
-     * @see ToolConfigurationSupport#fromProperties(Properties, Class)
-     * 
-     * @param map The map of properties
-     * @param resultType The class of the result object
-     * @throws JsonProcessingException
-     */
-    public static <B extends ToolConfigurationSupport> B fromProperties(
-            Map<String,Object> map, Class<B> resultType) 
-        throws JsonProcessingException
-    {
-        return BeanToPropertiesConverter.propertiesToValue(map, resultType);
-    }
-    
-    /**
-     * @see ToolConfigurationSupport#fromProperties(Properties, String, Class)
-     */
-    public static <B extends ToolConfigurationSupport> B fromProperties(
-        Map<String,Object> map, String rootPropertyName, Class<B> resultType) 
-    throws JsonProcessingException
-    {
-        return BeanToPropertiesConverter.propertiesToValue(map, rootPropertyName, resultType);
-    }
-    
     /**
      * Clone this bean in a field-wise manner. All fields are shallow copies using reflective 
      * getter/setter methods.  
@@ -102,8 +36,4 @@ public abstract class ToolConfigurationSupport implements ToolConfiguration
     {
         return resultType.cast(BeanUtils.cloneBean(this));
     }
-    
-    //
-    // Todo Provide support methods for XML serialization/deserialization
-    //
 }

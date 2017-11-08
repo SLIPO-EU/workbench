@@ -45,6 +45,9 @@ import org.springframework.util.StringUtils;
 import eu.slipo.workbench.common.model.ApplicationException;
 import eu.slipo.workbench.common.model.BasicErrorCode;
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
+import eu.slipo.workbench.common.model.tool.EnumConfigurationFormat;
+import eu.slipo.workbench.common.model.tool.ToolConfiguration;
+import eu.slipo.workbench.common.service.tool.ConfigurationGeneratorService;
 
 /**
  * A tasklet that prepares a working directory.
@@ -80,19 +83,69 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
     }
     
     /**
+     * Describe a configuration entry.
+     */
+    private static class ConfigurationSpec
+    {
+        /** Path (relative to working directory) where this configuration should be placed */
+        private final Path path;
+        
+        /** The source for this configuration */
+        private final Object source;
+        
+        /** The desired configuration format for which configuration should be generated */
+        private final EnumConfigurationFormat configFormat;
+
+        private ConfigurationSpec(Path path, Object source, EnumConfigurationFormat configFormat)
+        {
+            this.path = path;
+            this.source = source;
+            this.configFormat = configFormat;
+        }
+        
+        public EnumConfigurationFormat getFormat()
+        {
+            return configFormat;
+        }
+        
+        public Object getSource()
+        {
+            return source;
+        }
+        
+        public Path getPath()
+        {
+            return path;
+        }
+    }
+    
+    /**
      * A builder for the enclosing class
      */
     public static class Builder 
     {
+        private ConfigurationGeneratorService configurationGeneratorService;
+        
         private Path workDir;
         
         private List<Path> input = Collections.emptyList();
         
         private EnumDataFormat inputFormat;
         
-        private Map<String, Pair<Path, Supplier<String>>> config = new LinkedHashMap<>();
+        private Map<String, ConfigurationSpec> config = new LinkedHashMap<>();
         
         private Boolean unzip;
+        
+        /**
+         * Set the configuration-generator service to be used 
+         * @param service
+         */
+        public Builder configurationGeneratorService(ConfigurationGeneratorService service)
+        {
+            Assert.notNull(service, "Expected an non-null service instance");
+            this.configurationGeneratorService = service;
+            return this;
+        }
         
         /**
          * Set working directory
@@ -100,10 +153,8 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
          */
         public Builder workingDirectory(Path workDir)
         {
-            Assert.notNull(workDir, 
-                "Expected a non-null directory");
-            Assert.isTrue(workDir.isAbsolute(), 
-                "Expected an absolute path as working directory");
+            Assert.notNull(workDir, "Expected a non-null directory");
+            Assert.isTrue(workDir.isAbsolute(), "Expected an absolute path as working directory");
             this.workDir = workDir;
             return this;
         }
@@ -151,7 +202,7 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
          * directory prefix (if any).
          * @param flag
          */
-        public Builder unzipIfNeeded(boolean flag)
+        public Builder unzipIfArchive(boolean flag)
         {
             this.unzip = flag;
             return this;
@@ -161,81 +212,56 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
          * Add a configuration file (of properties) under this working directory.
          * 
          * @param key The key for this (part of) configuration.
-         * @param name The relative name under which this configuration should be stored
-         *    under working directory. 
+         * @param name The filename for this configuration (resolved against working directory)
          * @param properties The actual configuration as a map of properties.
          */
         public Builder config(String key, String name, Properties properties)
         {
-            Assert.notNull(key, 
-                "A key is required for a configuration");
-            Assert.isTrue(key.matches("[a-zA-Z][-_0-9a-zA-Z]*"), 
-                "The key contains invalid characters");
-            Assert.notNull(name, 
-                "A name is required for a configuration");
-            Assert.notNull(properties, 
-                "A non-null map of properties is required");
-            Assert.isTrue(!this.config.containsKey(key), 
-                "The configuration key of [" + key +"] is already present");
+            Assert.notNull(key, "A key is required for a configuration");
+            Assert.isTrue(key.matches("[a-zA-Z][-_0-9a-zA-Z]*"), "The key contains invalid characters");
+            Assert.isTrue(!StringUtils.isEmpty(name), "A name is required for a configuration");
+            Assert.notNull(properties, "A non-null map of properties is required");
+                        
+            Path namePath = Paths.get(name);
+            Assert.isTrue(namePath.getNameCount() == 1, "The name cannot be nested in directories");
             
-            // Todo: Examine if using ToolConfiguration.toString is a better approach
-            // in order to abstract the actual configuration format (properties or XML).
-            
-            Supplier<String> configDataSupplier = new Supplier<String>()
-            {
-                @Override
-                public String get()
-                {
-                    String result = null;
-                    try (StringWriter writer = new StringWriter()) {
-                        properties.store(writer, "This configuration is auto-generated");
-                        result = writer.toString();
-                    } catch (IOException e) {
-                        throw ApplicationException.fromMessage(
-                            e, BasicErrorCode.IO_ERROR, "Failed to write properties configuration");
-                    }
-                    return result;
-                }
-            };
-            
-            this.config.put(key, Pair.of(Paths.get(name), configDataSupplier));
+            config.put(key, new ConfigurationSpec(namePath, properties, EnumConfigurationFormat.PROPERTIES));
             return this;
         }
         
         /**
-         * Add a configuration file (of XML) under this working directory.
+         * Add a tool-specific configuration file under this working directory.
          * 
          * @param key The key for this (part of) configuration.
-         * @param name The relative name under which this configuration should be stored
-         *    under working directory.
-         * @param configData The actual configuration data which should be XML serializable
+         * @param name The filename for this configuration (resolved against working directory).
+         * @param source The actual configuration object from which configuration will be derived
+         * @param configFormat The desired configuration format 
          */
-        public Builder config(String key, Path name, Object configData)
+        public Builder config(
+            String key, String name, ToolConfiguration source, EnumConfigurationFormat configFormat)
         {
-            Assert.notNull(key, 
-                "A key is required for a configuration");
-            Assert.isTrue(key.matches("[a-zA-Z][-_0-9a-zA-Z]*"), 
-                "The key contains invalid characters");
-            Assert.notNull(name, 
-                "A name is required for a configuration");
-            Assert.notNull(configData, 
-                "A non-null configuration object is required");
-            Assert.isTrue(!this.config.containsKey(key), 
-                "The configuration key of [" + key +"] is already present");
+            Assert.notNull(key, "A key is required for a configuration");
+            Assert.isTrue(key.matches("[a-zA-Z][-_0-9a-zA-Z]*"), "The key contains invalid characters");
+            Assert.isTrue(!StringUtils.isEmpty(name), "A name is required for a configuration");
+            Assert.notNull(source, "A non-null configuration object is required");
+            Assert.notNull(configFormat, "A non-null configuration format is required");
             
-            Supplier<String> configDataSupplier = null;
+            Path namePath = Paths.get(name);
+            Assert.isTrue(namePath.getNameCount() == 1, "The name cannot be nested in directories");
             
-            // Todo Use a Supplier<String> that serializes configData into XML
-            
-            return null;
+            config.put(key, new ConfigurationSpec(namePath, source, configFormat));
+            return this;
         }
         
         public PrepareWorkingDirectoryTasklet build()
         {
+            Assert.state(configurationGeneratorService != null, 
+                "A configuration-generator service is needed to generate textual representation " +
+                "for several tool-specific configuration sources");
             Assert.state(workDir != null, "A working directory is required");
             
-            PrepareWorkingDirectoryTasklet tasklet = 
-                new PrepareWorkingDirectoryTasklet(workDir, input, config);
+            PrepareWorkingDirectoryTasklet tasklet = new PrepareWorkingDirectoryTasklet(
+                workDir, input, config, configurationGeneratorService);
             
             if (inputFormat != null)
                 tasklet.setInputFormat(inputFormat);
@@ -267,8 +293,10 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
        
         public static final String OUTPUT_DIR = "outputDir";
         
-        public static final String CONFIG = "configByName";
+        public static final String CONFIG_BY_NAME = "configByName";
     }
+    
+    private final ConfigurationGeneratorService configurationGeneratorService;
     
     private final Path workDir;
     
@@ -278,7 +306,7 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
     
     private final List<Path> input;
     
-    private final Map<String, Pair<Path, Supplier<String>>> config;
+    private final Map<String, ConfigurationSpec> config;
     
     private EnumDataFormat inputFormat;
     
@@ -287,8 +315,10 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
     private boolean unzip = UNPACK_ZIP_ARCHIVE;
     
     private PrepareWorkingDirectoryTasklet(
-        Path workDir, List<Path> input, Map<String, Pair<Path, Supplier<String>>> config)
+        Path workDir, List<Path> input, Map<String, ConfigurationSpec> config,
+        ConfigurationGeneratorService configurationGeneratorService)
     {
+        this.configurationGeneratorService = configurationGeneratorService;
         this.workDir = workDir.toAbsolutePath();
         this.input = input;
         this.config = config;
@@ -333,18 +363,22 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
         StepExecution stepExecution = context.getStepContext().getStepExecution();
         ExecutionContext executionContext = stepExecution.getExecutionContext();
         
+        //
         // Create working directory hierarchy
+        //
         
         Files.createDirectory(workDir, directoryAttribute);
         Files.createDirectory(inputDir, directoryAttribute);
         Files.createDirectory(outputDir, directoryAttribute);
         
+        //
         // Put (extract or link) each input into our input directory
+        //
         
         List<String> inputFiles = new ArrayList<>();
         if (!input.isEmpty()) {
             if (unzip && (input.size() == 1) && matchesNameOfZipArchive(input.get(0))) {
-                // The input archive should be extracted inside input directory
+                // The input archive should be extracted to input directory
                 try (ZipFile zipfile = new ZipFile(input.get(0).toString())) {
                     List<String> entryNames = zipfile.stream()
                         .filter(e -> !e.isDirectory())
@@ -366,18 +400,22 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
             }
         }
        
+        //
         // Generate configuration files inside working directory
+        //
         
-        for (Pair<Path, Supplier<String>> pair: config.values()) {
-            Supplier<String> configDataSupplier = pair.getSecond();
-            String configData = configDataSupplier.get();
+        for (ConfigurationSpec u: config.values()) {
+            String configData = 
+                configurationGeneratorService.generate(u.getSource(), u.getFormat());
             Files.write(
-                workDir.resolve(pair.getFirst()),
+                workDir.resolve(u.getPath()),
                 configData.getBytes(StandardCharsets.UTF_8),
                 StandardOpenOption.CREATE_NEW);
         }
         
+        //
         // Update execution context
+        //
         
         executionContext.putString(Keys.WORK_DIR, workDir.toString());
         executionContext.putString(Keys.INPUT_DIR, inputDir.toString());
@@ -388,8 +426,8 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
         
         Map<String,String> configByName = new LinkedHashMap<>(config.size());
         for (String key: config.keySet())
-            configByName.put(key, config.get(key).getFirst().toString());
-        executionContext.put(Keys.CONFIG, configByName);
+            configByName.put(key, config.get(key).getPath().toString());
+        executionContext.put(Keys.CONFIG_BY_NAME, configByName);
 
         return RepeatStatus.FINISHED;
     }

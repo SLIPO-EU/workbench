@@ -58,9 +58,12 @@ import com.spotify.docker.client.DockerClient;
 
 import eu.slipo.workbench.common.model.ApplicationException;
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
+import eu.slipo.workbench.common.model.tool.EnumConfigurationFormat;
 import eu.slipo.workbench.common.model.tool.InvalidConfigurationException;
 import eu.slipo.workbench.common.model.tool.ToolConfigurationSupport;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
+import eu.slipo.workbench.common.service.tool.ConfigurationGeneratorService;
+import eu.slipo.workbench.common.service.util.PropertiesConverterService;
 import eu.slipo.workbench.rpc.jobs.listener.ExecutionContextPromotionListeners;
 import eu.slipo.workbench.rpc.jobs.listener.LoggingJobExecutionListener;
 import eu.slipo.workbench.rpc.jobs.tasklet.PrepareWorkingDirectoryTasklet;
@@ -121,6 +124,9 @@ public class TriplegeoJobConfiguration
     private DockerClient docker;
    
     @Autowired
+    private PropertiesConverterService propertiesConverterService;
+    
+    @Autowired
     private void setDataDirectory(
         @Value("${slipo.rpc-server.docker.volumes.data-dir}") String dir)
     {
@@ -176,8 +182,8 @@ public class TriplegeoJobConfiguration
                 ExecutionContext executionContext = stepContext.getStepExecution().getExecutionContext();
                 Map<String,Object> parameters = stepContext.getJobParameters();
                 
-                TriplegeoConfiguration config = ToolConfigurationSupport
-                    .fromProperties(parameters, parametersRootPropertyName, TriplegeoConfiguration.class);
+                TriplegeoConfiguration config = propertiesConverterService.propertiesToValue(
+                    parameters, parametersRootPropertyName, TriplegeoConfiguration.class);
                 
                 executionContext.put("config", config);
                 
@@ -239,6 +245,7 @@ public class TriplegeoJobConfiguration
     @Bean("triplegeo.prepareWorkingDirectoryTasklet")
     @JobScope
     public PrepareWorkingDirectoryTasklet prepareWorkingDirectoryTasklet(
+        ConfigurationGeneratorService configurationGeneratorService,
         @Value("#{jobExecutionContext['triplegeo.config']}") TriplegeoConfiguration config,
         @Value("#{jobExecution.jobInstance.id}") Long jobId) 
     {
@@ -248,7 +255,8 @@ public class TriplegeoJobConfiguration
             .workingDirectory(workDir)
             .input(config.getInput())
             .inputFormat(config.getInputFormat())
-            .config(CONFIG_KEY, CONFIG_FILENAME, config.toProperties())
+            .configurationGeneratorService(configurationGeneratorService)
+            .config(CONFIG_KEY, CONFIG_FILENAME, config, EnumConfigurationFormat.PROPERTIES)
             .build();
     }
     

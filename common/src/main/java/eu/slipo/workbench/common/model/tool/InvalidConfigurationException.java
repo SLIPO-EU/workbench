@@ -11,7 +11,7 @@ import javax.validation.ConstraintViolation;
 import org.springframework.util.Assert;
 
 /**
- * An exception representing invalid configuration for a tool. 
+ * An exception thrown to indicate that invalid configuration passed for a tool. 
  */
 @SuppressWarnings("serial")
 public class InvalidConfigurationException extends RuntimeException
