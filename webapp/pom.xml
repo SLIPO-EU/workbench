@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>workbench-webapp</artifactId>
-    <packaging>jar</packaging>
+    <packaging>war</packaging>
 
     <name>slipo-workbench-webapp</name>
 
@@ -88,16 +88,28 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-        
+       
         <!-- If packaging to WAR, mark dependency on embedded server as provided -->
-        <!--
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-tomcat</artifactId>
             <scope>provided</scope>
         </dependency> 
-        --> 
         
+        <!-- JDBC drivers -->    
+
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
         <!-- log4j2 lifecycle hooks in web context  -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
@@ -141,6 +153,7 @@
         <plugins>
 
             <!-- Use Spring-Boot to package as standalone executable JAR -->
+            <!--
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -155,7 +168,8 @@
                     </execution>
                 </executions>
             </plugin>
-           
+            -->
+
             <!-- Copy additional resources under target directory -->  
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -233,14 +247,14 @@
                 <artifactId>maven-antrun-plugin</artifactId>
                 <executions>
                     <execution>
-                        <!-- Create a symbolic link to current target JAR -->
-                        <id>link-to-target-jar</id>
+                        <!-- Create a symbolic link to current target WAR -->
+                        <id>link-to-target-war</id>
                         <phase>package</phase>
                         <goals><goal>run</goal></goals>
                         <configuration>
                             <target>
-                                <symlink overwrite="yes" link="${project.build.directory}/${project.artifactId}.jar" 
-                                    resource="${project.artifactId}-${project.version}-exec.jar"/>
+                                <symlink overwrite="yes" link="${project.build.directory}/${project.artifactId}.war" 
+                                    resource="${project.artifactId}-${project.version}.war"/>
                             </target>
                         </configuration>
                     </execution>
