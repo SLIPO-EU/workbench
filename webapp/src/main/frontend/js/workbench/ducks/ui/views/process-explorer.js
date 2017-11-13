@@ -28,7 +28,6 @@ export default (state = initialState, action) => {
         ...action.data,
       }; 
     case SET_PAGER:
-    console.log(action.pager)
       return {
         ...state, 
         pagingOptions: {
