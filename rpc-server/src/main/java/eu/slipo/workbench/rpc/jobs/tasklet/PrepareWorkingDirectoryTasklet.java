@@ -94,26 +94,26 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
         private final Object source;
         
         /** The desired configuration format for which configuration should be generated */
-        private final EnumConfigurationFormat configFormat;
+        private final EnumConfigurationFormat format;
 
-        private ConfigurationSpec(Path path, Object source, EnumConfigurationFormat configFormat)
+        private ConfigurationSpec(Path path, Object source, EnumConfigurationFormat format)
         {
             this.path = path;
             this.source = source;
-            this.configFormat = configFormat;
+            this.format = format;
         }
         
-        public EnumConfigurationFormat getFormat()
+        public EnumConfigurationFormat format()
         {
-            return configFormat;
+            return format;
         }
         
-        public Object getSource()
+        public Object source()
         {
             return source;
         }
         
-        public Path getPath()
+        public Path path()
         {
             return path;
         }
@@ -406,9 +406,9 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
         
         for (ConfigurationSpec u: config.values()) {
             String configData = 
-                configurationGeneratorService.generate(u.getSource(), u.getFormat());
+                configurationGeneratorService.generate(u.source(), u.format());
             Files.write(
-                workDir.resolve(u.getPath()),
+                workDir.resolve(u.path()),
                 configData.getBytes(StandardCharsets.UTF_8),
                 StandardOpenOption.CREATE_NEW);
         }
@@ -424,9 +424,9 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
         
         executionContext.putString(Keys.OUTPUT_DIR, outputDir.toString());
         
-        Map<String,String> configByName = new LinkedHashMap<>(config.size());
-        for (String key: config.keySet())
-            configByName.put(key, config.get(key).getPath().toString());
+        Map<String,String> configByName = new LinkedHashMap<>();
+        for (Map.Entry<String, ConfigurationSpec> p: config.entrySet())
+            configByName.put(p.getKey(), p.getValue().path().toString());
         executionContext.put(Keys.CONFIG_BY_NAME, configByName);
 
         return RepeatStatus.FINISHED;
