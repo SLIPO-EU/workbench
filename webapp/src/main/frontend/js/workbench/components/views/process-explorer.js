@@ -13,12 +13,11 @@ import { Filters } from './resource/explorer/'; // STC
 
 // Import React Table
 import ReactTable from "react-table";
-import { Processes } from "./process";
+import { Processes , ProcessExecutions , ExecutionDetails } from "./process";
 
 
 import moment from 'moment';
-import { fetchProcessData, setPager, setSelectedProcess } from '../../ducks/ui/views/process-explorer';
-
+import { fetchProcessData, setPager, setSelectedProcess, setSelectedExecution } from '../../ducks/ui/views/process-explorer';
 
 /**
  * Component for managing job scheduling
@@ -53,7 +52,7 @@ class ProcessExplorer extends React.Component {
                     />
                   </Col>
                 </Row>
-                <Row style={{ height: 400 }} className="mb-2">
+                <Row style={{ height: 400, marginBottom: 20}} className="mb-2">
                   <Col>
                     <Processes
                       processes={this.props.processes}
@@ -64,14 +63,22 @@ class ProcessExplorer extends React.Component {
                     />
                   </Col>
                 </Row>
-                <Row style={{ height: 400 }} className="mb-2">
+                <Row style={{ minHeight: 450, marginTop: 40 }} className="mb-2">
                   <Col>
-                    <Placeholder label="Executions" iconClass="fa fa-table" />
+                    <h3>Executions</h3>
+                    <ProcessExecutions
+                      processes={this.props.processes.items}
+                      detailed={this.props.processes.selected}
+                      selectedFields={this.props.selectedFields}
+                      setSelectedExecution= {this.props.setSelectedExecution}
+                      selectedExecution={this.props.processes.selectedExecution}
+                      selectedProcess={this.props.processes.selected}
+                    />
                   </Col>
-                </Row>
-                <Row style={{ height: 400 }} className="mb-2">
-                  <Col>
-                    <Placeholder label="Details" iconClass="fa fa-database" />
+                  <Col xs="3">
+                    <h3>Details</h3>
+                    <ExecutionDetails 
+                      steps= {this.props.processes.executionStatus.steps} />
                   </Col>
                 </Row>
               </CardBlock>
@@ -86,6 +93,7 @@ class ProcessExplorer extends React.Component {
 
 const mapStateToProps = (state) => ({
   processes: state.ui.views.processes,
+  selectedFields: state.ui.views.processes.selectedFields,
   //pager: state.ui.views.processes.pagingOptions,
   //resources: state.ui.views.dashboard.resources,
   //events: state.ui.views.dashboard.events,
@@ -93,6 +101,6 @@ const mapStateToProps = (state) => ({
   //givenName: state.user.profile.givenName,
 });
 
-const mapDispatchToProps = (dispatch) => bindActionCreators({ fetchProcessData, setPager, setSelectedProcess }, dispatch);
+const mapDispatchToProps = (dispatch) => bindActionCreators({ fetchProcessData, setPager, setSelectedProcess, setSelectedExecution }, dispatch);
 
 export default ReactRedux.connect(mapStateToProps, mapDispatchToProps)(ProcessExplorer);

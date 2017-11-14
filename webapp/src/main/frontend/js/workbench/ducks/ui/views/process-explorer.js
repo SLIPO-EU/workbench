@@ -5,8 +5,9 @@ const RECEIVE_PROCESS_DATA = 'ui/processExplorer/RECEIVE_PROCESS_DATA';
 const SET_PAGER = 'ui/processExplorer/SET_PAGER';
 const SET_SELECTED = 'ui/processExplorer/SET_SELECTED';
 const RESET_SELECTED = 'ui/processExplorer/RESET_SELECTED';
-
-
+const RECEIVE_EXECUTIONS_DATA = 'ui/processExplorer/RECEIVE_EXECUTIONS_DATA';
+const SET_SELECTED_EXECUTION = 'ui/processExplorer/SET_SELECTED_EXECUTION';
+const RECEIVE_EXECUTIONS_DETAILS = 'ui/processExplorer/RECEIVE_EXECUTIONS_DETAILS';
 
 // Reducer
 const initialState = {
@@ -17,7 +18,9 @@ const initialState = {
     pageSize: 10,
   },
   selected: null,
-
+  selectedExecution:null,
+  selectedFields: [],
+  executionStatus: [],
 };
 
 export default (state = initialState, action) => {
@@ -26,6 +29,11 @@ export default (state = initialState, action) => {
       return {
         ...state,
         ...action.data,
+      }; 
+    case RECEIVE_EXECUTIONS_DATA:
+      return {
+        ...state,
+        selectedFields: action.data,
       }; 
     case SET_PAGER:
       return {
@@ -39,12 +47,25 @@ export default (state = initialState, action) => {
       return {
         ...state,
         selected: action.selected,
+        selectedExecution: initialState.selectedExecution,
+        executionStatus: initialState.executionStatus,
       };
-
+    case SET_SELECTED_EXECUTION:
+      return {
+        ...state,
+        selectedExecution: action.selected,
+      };
+    case RECEIVE_EXECUTIONS_DETAILS:
+      return {
+        ...state,
+        executionStatus: action.data,
+      }; 
     case RESET_SELECTED:
       return {
         ...state,
         selected: initialState.selected,
+        selectedExecution: initialState.selectedExecution,
+        executionStatus: initialState.executionStatus,
       };      
     default:
       return state;
@@ -61,20 +82,36 @@ const receiveProcessData = (data) => ({
   data,
 });
 
+const receiveExecutionsData = (data) => ({
+  type: RECEIVE_EXECUTIONS_DATA,
+  data,
+});
+
+
 export const setPager = (pager) => ({
   type: SET_PAGER,
   pager,
 });
 
-export const setSelectedProcess = (selected) => ({
-  type: SET_SELECTED,
+export const setSelectedEx = (selected) => ({
+  type: SET_SELECTED_EXECUTION,
   selected,
 });
+
+const receiveExecutionsDetails = (data) => ({
+  type: RECEIVE_EXECUTIONS_DETAILS,
+  data,
+});
+
 
 export const resetSelectedProcess = () => ({
   type: RESET_SELECTED,
 });
 
+export const setSelected = (selected) => ({
+  type: SET_SELECTED,
+  selected,
+});
 
 // Thunk actions
 export const fetchProcessData = (options) => (dispatch, getState) => {
@@ -87,7 +124,7 @@ export const fetchProcessData = (options) => (dispatch, getState) => {
       pageSize: 10,
       ...options
     },
-    };
+  };
     
   return processService.fetch(tt)
     .then((data) => {
@@ -97,3 +134,30 @@ export const fetchProcessData = (options) => (dispatch, getState) => {
       console.error('Failed loading processes:', err);
     });
 };
+
+export const setSelectedProcess = (selected) => (dispatch, getState) => {
+  const { meta: { csrfToken: token } } = getState();
+  dispatch( setSelected(selected));
+ 
+  return processService.fetchExecutions(selected)
+    .then((data) => {
+      dispatch(receiveExecutionsData(data));
+    })
+    .catch((err) => {
+      console.error('Failed loading executions:', err);
+    });
+};
+
+export const setSelectedExecution = (selected) => (dispatch, getState) => {
+  const { meta: { csrfToken: token } } = getState();
+  dispatch( setSelectedEx(selected.execution));
+ 
+  return processService.fetchExecutionDetails(selected)
+    .then((data) => {
+      dispatch(receiveExecutionsDetails(data));
+    })
+    .catch((err) => {
+      console.error('Failed loading execution Details:', err);
+    });
+};
+

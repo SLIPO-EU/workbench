@@ -20,15 +20,15 @@ const processColumns = [
         <span style={{
           color: row.value === 'error' ? '#ff2e00'
             : row.value === 'idle' ? '#ffbf00'
-            : '#57d500',
+              : '#57d500',
           transition: 'all .3s ease',
           animation: 'blinking 1s linear infinite'
         }}>
           &#x25cf;
         </span> {
           row.value === 'idle' ? 'Complete'
-          : row.value === 'error' ? `Failed`
-          : 'Running'
+            : row.value === 'error' ? `Failed`
+              : 'Running'
         }
       </span>
   },
