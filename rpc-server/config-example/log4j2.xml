@@ -20,8 +20,7 @@
         </RollingFile>
 
         <JDBC name="table" tableName="public.log4j_message">
-            <ConnectionFactory 
-                class="eu.slipo.workbench.common.logging.jdbc.ConnectionFactory" method="dataSource" />
+            <DataSource jndiName="java:/comp/env/jdbc/slipo-workbench" />
             <Column name="application" literal="'rpc-server'" />
             <Column name="generated" isEventTimestamp="true" />
             <Column name="level" pattern="%level" isUnicode="false" />
