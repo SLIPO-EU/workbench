@@ -9,10 +9,24 @@ import moment from 'moment';
 import { FormattedTime } from 'react-intl';
 
 import Placeholder from './placeholder';
-import { Filters, ResourceDetails, Resources } from './resource/explorer/';
+import {
+  Filters,
+  ResourceDetails,
+  Resources
+} from './resource/explorer/';
 
 import { fetchResources } from '../../ducks/data/resources';
-import { setPager, resetPager, setFilter, resetFilters, setSelectedResource } from '../../ducks/ui/views/resource-explorer';
+import {
+  setPager,
+  resetPager,
+  setFilter,
+  resetFilters,
+  setSelectedResource
+} from '../../ducks/ui/views/resource-explorer';
+import {
+  addResourceToBag,
+  removeResourceFromBag
+} from '../../ducks/ui/views/process-designer';
 
 
 /**
@@ -37,12 +51,14 @@ class ResourceExplorer extends React.Component {
               <CardBlock className="card-body">
                 <Row className="mb-2">
                   <Col >
-                    <div className="small text-muted">Last Update: <FormattedTime value={moment().toDate()} day='numeric' month='numeric' year='numeric' /></div>
+                    <div className="small text-muted">
+                      Last Update: <FormattedTime value={moment().toDate()} day='numeric' month='numeric' year='numeric' />
+                    </div>
                   </Col>
                 </Row>
                 <Row style={{ height: 100 }} className="mb-2">
                   <Col>
-                    <Filters 
+                    <Filters
                       filters={this.props.filters}
                       setFilter={this.props.setFilter}
                       resetFilters={this.props.resetFilters}
@@ -52,7 +68,7 @@ class ResourceExplorer extends React.Component {
                 </Row>
                 <Row style={{ minHeight: 450 }} className="mb-2">
                   <Col>
-                    <Resources 
+                    <Resources
                       resources={this.props.resources}
                       pager={this.props.pager}
                       setPager={this.props.setPager}
@@ -60,6 +76,7 @@ class ResourceExplorer extends React.Component {
                       fetchResources={this.props.fetchResources}
                       setSelectedResource={this.props.setSelectedResource}
                       selectedResource={this.props.selectedResource}
+                      addResourceToBag={this.props.addResourceToBag}
                     />
                   </Col>
                   <Col>
@@ -92,7 +109,15 @@ const mapStateToProps = (state) => ({
   selectedResource: state.ui.views.resources.explorer.selected,
 });
 
-const mapDispatchToProps = (dispatch) => bindActionCreators({ fetchResources, setFilter, resetFilters, setPager, resetPager, setSelectedResource }, dispatch);
+const mapDispatchToProps = (dispatch) => bindActionCreators({
+  fetchResources,
+  setFilter,
+  resetFilters,
+  setPager,
+  resetPager,
+  setSelectedResource,
+  addResourceToBag
+}, dispatch);
 
 const mergeProps = (stateProps, dispatchProps, ownProps) => {
   return {
