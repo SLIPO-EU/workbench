@@ -6,8 +6,8 @@
             <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} [%t] %-5p %c{1.}:%L - %m%n" />
         </Console>
 
-        <RollingFile name="file" filename="${sys:catalina.home}/logs/workbench-rpc.log"
-            filepattern="${sys:catalina.home}/logs/service-%d{MM-dd-yyyy}-%i.log.gz">
+        <RollingFile name="file" filename="${sys:catalina.base}/logs/workbench-rpc.log"
+            filepattern="${sys:catalina.base}/logs/service-%d{MM-dd-yyyy}-%i.log.gz">
             <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1.}:%L - %m%n" />
             <Policies>
                 <SizeBasedTriggeringPolicy size="25 MB" />
