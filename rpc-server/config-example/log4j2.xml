@@ -1,17 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN">
     
-    <Properties>
-        <Property name="baseDir">./logs</Property>
-    </Properties>
-    
     <Appenders>
         <Console name="console" target="SYSTEM_ERR">
             <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} [%t] %-5p %c{1.}:%L - %m%n" />
         </Console>
 
-        <RollingFile name="file" filename="${baseDir}/workbench-rpc.log"
-            filepattern="${baseDir}/service-%d{MM-dd-yyyy}-%i.log.gz">
+        <RollingFile name="file" filename="${sys:catalina.home}/logs/workbench-rpc.log"
+            filepattern="${sys:catalina.home}/logs/service-%d{MM-dd-yyyy}-%i.log.gz">
             <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1.}:%L - %m%n" />
             <Policies>
                 <SizeBasedTriggeringPolicy size="25 MB" />
@@ -20,8 +16,7 @@
         </RollingFile>
 
         <JDBC name="table" tableName="public.log4j_message">
-            <ConnectionFactory 
-                class="eu.slipo.workbench.common.logging.jdbc.ConnectionFactory" method="dataSource" />
+            <DataSource jndiName="java:/comp/env/jdbc/slipo-workbench" />
             <Column name="application" literal="'rpc-server'" />
             <Column name="generated" isEventTimestamp="true" />
             <Column name="level" pattern="%level" isUnicode="false" />
