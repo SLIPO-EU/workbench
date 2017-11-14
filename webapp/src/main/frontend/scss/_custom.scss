@@ -32,6 +32,15 @@
   min-height: 51px;
 }
 
+.card-block .tab-content {
+  margin-top: -1px;
+  border: 1px solid #cfd8dc;
+}
+
+.nav-tabs .nav-item {
+  cursor: pointer;
+}
+
 
 /*
  * Override Bootstrap styles
@@ -57,6 +66,7 @@ section:after {
   float: none;
   clear: both;
 }
+
 
 /*
  * Custom styles

@@ -5,8 +5,6 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-import eu.slipo.workbench.web.model.resource.EnumDataSource;
-
 /**
  * A process input resource
  */
@@ -19,7 +17,7 @@ import eu.slipo.workbench.web.model.resource.EnumDataSource;
 })
 public abstract class ProcessResource {
 
-    @JsonDeserialize(using = EnumDataSource.Deserializer.class)
+    @JsonDeserialize(using = EnumProcessResource.Deserializer.class)
     protected EnumProcessResource type;
 
     protected int index;

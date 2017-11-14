@@ -6,7 +6,7 @@ import pathToRegexp from 'path-to-regexp';
 /**
  * Components
  */
-import ProcessDesignerSidebar  from '../components/views/process-designer-sidebar';
+import ProcessDesignerSidebar from '../components/views/process/designer/sidebar';
 
 /**
  * Model
@@ -133,7 +133,8 @@ const routes = {
     description: 'Browse registered resources',
     title: 'links.resource.explorer',
     defaultTitle: 'Resource Explorer',
-    links: [Dashboard, ProcessExplorer, ResourceRegistration]
+    links: [Dashboard, ProcessExplorer, ResourceRegistration, ProcessDesignerCreate],
+    contextComponent: ProcessDesignerSidebar,
   },
   [ResourceRegistration]: {
     description: 'Register a new resource',

@@ -1,10 +1,20 @@
 import * as React from 'react';
 import { Switch, Route, Redirect } from 'react-router-dom';
 
+import HTML5Backend from 'react-dnd-html5-backend';
+import { DragDropContext } from 'react-dnd';
+
 import { Container } from 'reactstrap';
 
 import * as Roles from '../model/role';
-import { Pages, StaticRoutes, DynamicRoutes, ErrorPages } from '../model/routes';
+
+import {
+  Pages,
+  StaticRoutes,
+  DynamicRoutes,
+  ErrorPages
+} from '../model/routes';
+
 import { userPropType } from '../model/prop-types/user';
 
 import {
@@ -58,6 +68,7 @@ import {
 //
 /////////////////////////////////////////////////////////////////
 
+@DragDropContext(HTML5Backend)
 class Home extends React.Component {
   constructor(props) {
     super(props);
