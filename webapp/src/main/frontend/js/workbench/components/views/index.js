@@ -4,7 +4,6 @@ import Settings from './settings';
 import DataViewer from './data-viewer';
 import EventViewer from './event-viewer';
 import ProcessDesigner from './process-designer';
-import ProcessDesignerSidebar from './process-designer-sidebar';
 import ProcessExecutionViewer from './process-execution-viewer';
 import ProcessExplorer from './process-explorer';
 import RecipeExplorer from './recipe-explorer';
@@ -29,7 +28,6 @@ export {
   EventViewer,
   ResourceViewer,
   ProcessDesigner,
-  ProcessDesignerSidebar,
   ProcessExecutionViewer,
   SchemaDesigner,
   DataViewer,

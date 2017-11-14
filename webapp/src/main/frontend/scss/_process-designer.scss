@@ -1,0 +1,357 @@
+/*
+ * Variables
+ */
+
+$slipo-pd-process-background: #9E9E9E !default;
+$slipo-pd-data-source-color: #616161 !default;
+$slipo-pd-operation-color: #1A237E !default;
+$slipo-pd-harvester-color: #b71c1c !default;
+$slipo-pd-resource-color: #616161 !default;
+$slipo-pd-step-input-color: #616161 !default;
+$slipo-pd-step-color: #616161 !default;
+
+/*
+ * Misc
+ */
+
+.slipo-pd-tip {
+  font-size: 0.7rem;
+}
+
+
+/*
+ * Designer
+ */
+
+.slipo-pd-process {
+  display: flex;
+  flex-wrap: wrap;
+  min-height: 300px;
+  border-radius: 2px;
+  border: 1px solid transparent;
+}
+
+.slipo-pd-process-can-drop {
+  border: 1px solid $slipo-pd-process-background;
+}
+
+.slipo-pd-process-label {
+  position: absolute;
+  top: 50%;
+  width: 100%;
+  font-size: 40px;
+  margin-top: -20px;
+  text-align: center;
+  color: $slipo-pd-step-color;
+}
+
+
+/*
+ * Designer items
+ */
+
+.slipo-pd-item {
+  min-width: 5rem;
+  height: 5rem;
+  border-radius: 0.25rem;
+  margin: 0.25rem;
+  display: inline-block;
+  opacity: 1;
+  cursor: move;
+}
+
+.slipo-pd-item-is-dragging {
+  opacity: 0.5;
+}
+
+.slipo-pd-item-label {
+  text-align: center;
+  padding: 0px 5px;
+}
+
+
+/*
+ * Data Source
+ */
+
+.slipo-pd-data-source {
+  border: 1px solid $slipo-pd-data-source-color;
+}
+
+.slipo-pd-data-source:first-child {
+  margin-left: 0;
+}
+
+.slipo-pd-data-source-icon {
+  text-align: center;
+  font-size: 2rem;
+}
+
+
+/*
+ * Operation
+ */
+
+.slipo-pd-operation {
+  border: 1px solid $slipo-pd-operation-color;
+}
+
+.slipo-pd-operation:first-child {
+  margin-left: 0;
+}
+
+.slipo-pd-operation-icon {
+  text-align: center;
+  font-size: 2rem;
+}
+
+
+/*
+ * Harvester
+ */
+
+.slipo-pd-harvester {
+  border: 1px solid $slipo-pd-harvester-color;
+}
+
+.slipo-pd-harvester:first-child {
+  margin-left: 0;
+}
+
+.slipo-pd-harvester-icon {
+  text-align: center;
+  font-size: 2rem;
+}
+
+
+/*
+ * Sidebar
+ */
+
+.slipo-pd-sidebar-resource-list {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  height: 50vh;
+  overflow-y: scroll;
+  margin-right: -18px;
+}
+
+
+/*
+ * Resource
+ */
+
+.slipo-pd-resource {
+  width: 100%;
+  height: 5rem;
+  border: 1px solid $slipo-pd-resource-color;
+  border-radius: 0.25rem;
+  margin: 0.25rem 0rem;
+  display: inline-block;
+  opacity: 1;
+  cursor: move;
+}
+
+.slipo-pd-resource-is-dragging {
+  opacity: 0.5;
+}
+
+.slipo-pd-resource:last-child {
+  margin-bottom: 0;
+}
+
+.slipo-pd-resource-icon {
+  text-align: center;
+  font-size: 2rem;
+}
+
+.slipo-pd-resource-label {
+  text-align: center;
+}
+
+.slipo-pd-resource-actions {
+  display: none;
+  position: relative;
+}
+
+.slipo-pd-resource-delete {
+  right: 5px;
+  position: absolute;
+  top: 5px;
+  cursor: pointer;
+}
+
+.slipo-pd-resource-view {
+  right: 4px;
+  position: absolute;
+  top: 25px;
+  cursor: pointer;
+}
+
+.slipo-pd-resource:hover .slipo-pd-resource-actions {
+  display: block;
+}
+
+
+/*
+ * Step
+ */
+
+.slipo-pd-step {
+  min-width: 240px;
+  min-height: 100px;
+  margin: 5px;
+  border: 1px solid $slipo-pd-step-color;
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+}
+
+.slipo-pd-step-active {
+  border-width: 2px;
+}
+
+.slipo-pd-step-header {
+  border-bottom: 1px solid $slipo-pd-step-color;
+  padding: 5px 11px;
+}
+
+.slipo-pd-step-invalid {
+  border-color: #b71c1c;
+}
+
+.slipo-pd-step-actions {
+  float: right;
+  cursor: pointer;
+}
+
+.slipo-pd-step-action {
+  margin-left: 5px;
+}
+
+.slipo-pd-step-footer {
+  padding: 5px;
+  color: #263238;
+}
+
+
+/*
+ * Step input container
+ */
+
+.slipo-pd-step-input-container-wrapper {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.slipo-pd-step-input-container {
+  border-radius: 4px;
+  margin: 10px;
+  display: flex;
+  flex-direction: column;
+  border: dotted 1px $slipo-pd-step-color;
+  padding: 0.25rem;
+  min-height: 150px;
+  flex-grow: 1;
+}
+
+.slipo-pd-step-input-container-full {
+  border: none;
+}
+
+
+/*
+ * Step input
+ */
+
+.slipo-pd-step-input {
+  width: 100%;
+  height: 5rem;
+  border: 1px solid $slipo-pd-step-input-color;
+  border-radius: 0.25rem;
+  margin-bottom: 1rem;
+  display: inline-block;
+}
+
+.slipo-pd-step-input-active {
+  border-width: 2px;
+}
+
+.slipo-pd-step-input-invalid {
+  border-color: #b71c1c;
+}
+
+.slipo-pd-step-input:last-child {
+  margin-bottom: 0;
+}
+
+.slipo-pd-step-input-icon {
+  text-align: center;
+  font-size: 2rem;
+}
+
+.slipo-pd-step-input-label {
+  text-align: center;
+}
+
+
+/*
+ * Step input resource
+ */
+
+.slipo-pd-step-resource-actions {
+  display: none;
+  position: relative;
+}
+
+.slipo-pd-step-resource-action {
+  position: absolute;
+  cursor: pointer;
+}
+
+.slipo-pd-step-resource-delete {
+  right: 5px;
+  top: 5px;
+}
+
+.slipo-pd-step-resource-view {
+  right: 4px;
+  top: 25px;
+}
+
+.slipo-pd-step-input:hover .slipo-pd-step-resource-actions,
+.slipo-pd-step-input-active .slipo-pd-step-resource-actions {
+  display: block;
+}
+
+
+/*
+ * Step input data source
+ */
+
+.slipo-pd-step-data-source-actions {
+  display: none;
+  position: relative;
+}
+
+.slipo-pd-step-data-source-action {
+  position: absolute;
+  cursor: pointer;
+}
+
+.slipo-pd-step-data-source-delete {
+  right: 5px;
+  top: 5px;
+}
+
+.slipo-pd-step-data-source-config {
+  right: 4px;
+  top: 25px;
+}
+
+.slipo-pd-step-input:hover .slipo-pd-step-data-source-actions,
+.slipo-pd-step-input-active .slipo-pd-step-data-source-actions {
+  display: block;
+}
