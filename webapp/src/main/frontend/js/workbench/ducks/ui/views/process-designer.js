@@ -3,7 +3,9 @@ import {
   EnumProcessInput,
   EnumResourceType,
   EnumViews,
-} from '../../../components/views/process/designer/constants';
+  ResourceTypeIcons,
+  ToolTitles,
+} from '../../../components/views/process/designer';
 
 /*
  * Actions
@@ -32,6 +34,9 @@ const ADD_RESOURCE_TO_BAG = 'ui/process-designer/ADD_RESOURCE_TO_BAG';
 const REMOVE_RESOURCE_FROM_BAG = 'ui/process-designer/REMOVE_RESOURCE_FROM_BAG';
 const SELECT_RESOURCE = 'ui/process-designer/SELECT_RESOURCE';
 
+const UNDO = 'ui/process-designer/UNDO';
+const REDO = 'ui/process-designer/REDO';
+
 /*
  * Initial state
  */
@@ -56,7 +61,9 @@ const initialState = {
   // Resource bag items
   resources: [],
   // Process steps
-  steps: []
+  steps: [],
+  undo: [[]],
+  redo: [],
 };
 
 /*
@@ -215,9 +222,37 @@ function stepReducer(state, action) {
           })
         };
       });
+
+    case UNDO:
+      return undoReducer(state, action);
+
+    case REDO:
+      return redoReducer(state, action);
+
     default:
       return state;
   }
+}
+
+/**
+ * Reorders steps
+ *
+ * @param {any} state
+ * @param {any} action
+ */
+function moveStepReducer(state, action) {
+  if (action.type === MOVE_STEP) {
+    const result = [...state];
+    const step = result.splice(action.dragOrder, 1);
+    result.splice(action.hoverOrder, 0, step[0]);
+    return result.map((value, index) => {
+      return {
+        ...value,
+        order: index,
+      };
+    });
+  }
+  return state;
 }
 
 /**
@@ -226,24 +261,68 @@ function stepReducer(state, action) {
  *
  * @param {any} state
  * @param {any} action
- * @returns
+ * @returns the new state
  */
 function addStepReducer(state, action) {
   if (action.type == ADD_STEP) {
     const stepIndex = ++state.counters.step;
     const resourceIndex = ++state.counters.resource;
 
+    // Create step
+    const step = {
+      ...action.step,
+      resources: [],
+      dataSources: [],
+      configuration: null,
+      index: stepIndex,
+    };
+
+    // Update step tile
+    step.title = `${ToolTitles[step.tool]} ${stepIndex}`;
+
+    // Add step output to the resource list
     const resources = [...state.resources];
     if (action.step.tool !== EnumTool.CATALOG) {
       resources.push({
         index: resourceIndex,
         inputType: EnumProcessInput.OUTPUT,
         resourceType: (action.step.tool == EnumTool.LIMES ? EnumResourceType.LINKED : EnumResourceType.POI),
-        title: `${action.step.title} : Output`,
-        iconClass: (action.step.tool == EnumTool.LIMES ? 'fa fa-random' : 'fa fa-database'),
+        title: `${step.title} : Output`,
+        iconClass: (action.step.tool == EnumTool.LIMES ? ResourceTypeIcons[EnumResourceType.LINKED] : ResourceTypeIcons[EnumResourceType.POI]),
         dependencies: [],
         stepIndex: stepIndex,
       });
+    }
+
+    // 1. Move TripleGeo steps to the start of the array
+    // 2. Move Catalog step to the end of the array
+    let steps = [...state.steps];
+    const tripleGeoIndex = state.steps.reduce((result, value, index) => {
+      if (value.tool === EnumTool.TripleGeo) {
+        return index;
+      }
+      return result;
+    }, -1);
+    const catalogIndex = state.steps.reduce((result, value, index) => {
+      if (value.tool === EnumTool.CATALOG) {
+        return index;
+      }
+      return -1;
+    }, -1);
+
+    switch (action.step.tool) {
+      case EnumTool.TripleGeo:
+        steps.splice(tripleGeoIndex + 1, 0, step);
+        break;
+      case EnumTool.CATALOG:
+        steps.push(step);
+        break;
+      default:
+        if (catalogIndex < 0) {
+          steps.push(step);
+        } else {
+          steps.splice(catalogIndex, 0, step);
+        }
     }
 
     return {
@@ -253,14 +332,14 @@ function addStepReducer(state, action) {
         step: stepIndex,
         resource: resourceIndex,
       },
-      steps: [...state.steps, {
-        ...action.step,
-        resources: [],
-        dataSources: [],
-        configuration: null,
-        index: stepIndex,
-      }],
-      resources: resources,
+      // Reset ordering
+      steps: steps.map((value, index) => {
+        return {
+          ...value,
+          order: index,
+        };
+      }),
+      resources,
     };
   }
   return state;
@@ -311,7 +390,7 @@ function resourceReducer(state, action) {
  *
  * @param {any} state
  * @param {any} action
- * @returns
+ * @returns the new state
  */
 function addResourceToBagReducer(state, action) {
   if (action.type == ADD_RESOURCE_TO_BAG) {
@@ -349,7 +428,43 @@ function addResourceToBagReducer(state, action) {
   return state;
 }
 
+function undoReducer(state, action) {
+  if (state.undo.length === 1) {
+    return state;
+  }
+  const undo = [...state.undo];
+  const current = undo.splice(undo.length - 1, 1);
+  const redo = [current[0], ...state.redo];
+
+  return {
+    ...state,
+    steps: [...undo[undo.length - 1]],
+    undo,
+    redo,
+  };
+}
+
+function redoReducer(state, action) {
+  if (state.undo.length === 0) {
+    return state;
+  }
+  const undo = [...state.undo];
+  const redo = [...state.redo];
+
+  const current = redo.splice(0, 1);
+  undo.push(current[0]);
+
+  return {
+    ...state,
+    steps: [...undo[undo.length - 1]],
+    undo,
+    redo,
+  };
+}
+
 export default (state = initialState, action) => {
+  let newState = state;
+
   switch (action.type) {
     case RESET:
       return {
@@ -357,15 +472,26 @@ export default (state = initialState, action) => {
         counters: counterReducer(state.counters, action),
         steps: [],
         resources: resourceReducer(state.resources, action),
+        undo: [[]],
+        redo: [],
       };
+
     case ADD_STEP:
-      return addStepReducer(state, action);
+      newState = addStepReducer(state, action);
+      break;
 
     case REMOVE_STEP:
-      return {
+      newState = {
         ...state,
         steps: stepReducer(state.steps, action),
         resources: resourceReducer(state.resources, action),
+      };
+      break;
+
+    case MOVE_STEP:
+      return {
+        ...state,
+        steps: moveStepReducer(state.steps, action),
       };
 
     case CONFIGURE_STEP_BEGIN:
@@ -379,7 +505,7 @@ export default (state = initialState, action) => {
       };
 
     case CONFIGURE_STEP_END:
-      return {
+      newState = {
         ...state,
         view: {
           type: EnumViews.Designer,
@@ -394,20 +520,23 @@ export default (state = initialState, action) => {
           return step;
         })
       };
+      break;
 
     case ADD_STEP_INPUT:
     case REMOVE_STEP_INPUT:
-      return {
+      newState = {
         ...state,
         steps: stepReducer(state.steps, action),
       };
+      break;
 
     case ADD_STEP_DATA_SOURCE:
     case REMOVE_STEP_DATA_SOURCE:
-      return {
+      newState = {
         ...state,
         steps: stepReducer(state.steps, action),
       };
+      break;
 
     case CONFIGURE_DATA_SOURCE_BEGIN:
       return {
@@ -421,7 +550,7 @@ export default (state = initialState, action) => {
       };
 
     case CONFIGURE_DATA_SOURCE_END:
-      return {
+      newState = {
         ...state,
         view: {
           type: EnumViews.Designer,
@@ -444,17 +573,19 @@ export default (state = initialState, action) => {
           return step;
         })
       };
+      break;
 
     case ADD_RESOURCE_TO_BAG:
       return addResourceToBagReducer(state, action);
 
     case REMOVE_RESOURCE_FROM_BAG:
-      return {
+      newState = {
         ...state,
         counters: counterReducer(state.counters, action),
         steps: stepReducer(state.steps, action),
         resources: resourceReducer(state.resources, action),
       };
+      break;
 
     case SELECT_STEP:
     case SELECT_STEP_INPUT:
@@ -465,9 +596,19 @@ export default (state = initialState, action) => {
         active: activeReducer(state.active, action)
       };
 
+    case UNDO:
+    case REDO:
+      return stepReducer(state, action);
+
     default:
       return state;
   }
+
+  return {
+    ...newState,
+    undo: [...newState.undo, newState.steps],
+    redo: [],
+  };
 };
 
 /*
@@ -484,6 +625,14 @@ export const addStep = function (step) {
   return {
     type: ADD_STEP,
     step,
+  };
+};
+
+export const moveStep = function (dragOrder, hoverOrder) {
+  return {
+    type: MOVE_STEP,
+    dragOrder,
+    hoverOrder,
   };
 };
 
@@ -601,5 +750,17 @@ export const setActiveResource = function (resource) {
   return {
     type: SELECT_RESOURCE,
     resource,
+  };
+};
+
+export const undo = function () {
+  return {
+    type: UNDO,
+  };
+};
+
+export const redo = function () {
+  return {
+    type: REDO,
   };
 };

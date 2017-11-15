@@ -85,6 +85,7 @@ export const EnumDragSource = {
   Harvester: 'Harvester',
   Operation: 'Operation',
   Resource: 'Resource',
+  Step: 'Step',
 };
 
 /**

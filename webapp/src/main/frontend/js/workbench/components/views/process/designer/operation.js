@@ -7,7 +7,7 @@ import {
   EnumToolboxItem,
   EnumTool,
   EnumOperation,
-  EnumDragSource
+  EnumDragSource,
 } from './constants';
 
 /**
@@ -18,7 +18,7 @@ const operationSource = {
    * Returns a plain JavaScript object describing the data being dragged
    *
    * @param {any} props
-   * @returns
+   * @returns a plain JavaScript object
    */
   beginDrag(props) {
     return {

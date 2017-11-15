@@ -10,7 +10,17 @@ export {
   EnumToolboxItem,
   EnumViews,
 } from './constants';
-
+export {
+  DataSourceIcons,
+  DataSourceTitles,
+  HarvesterIcons,
+  HarvesterTitles,
+  ResourceTypeIcons,
+  ToolDefaultOperation,
+  ToolIcons,
+  ToolInput,
+  ToolTitles,
+} from './config';
 export { default as DataSource } from './data-source';
 export { default as DataSourceConfig } from './data-source-config';
 export { default as Designer } from './designer';
@@ -25,4 +35,3 @@ export { default as StepDataSourceContainer } from './step-data-source-container
 export { default as StepInput } from './step-input';
 export { default as StepInputContainer } from './step-input-container';
 export { default as Toolbox } from './toolbox';
-export { default as ToolConfiguration } from './tool-config';

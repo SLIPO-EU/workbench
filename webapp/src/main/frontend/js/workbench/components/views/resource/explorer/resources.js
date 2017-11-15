@@ -4,8 +4,9 @@ import { FormattedTime } from 'react-intl';
 
 import {
   EnumResourceType,
-  EnumProcessInput
-} from '../../process/designer/constants';
+  EnumProcessInput,
+  ResourceTypeIcons,
+} from '../../process/designer';
 
 const resourceColumns = [
   {
@@ -108,7 +109,7 @@ export default function Resources(props) {
                 id: rowInfo.original.id,
                 version: rowInfo.original.version,
                 title: rowInfo.original.metadata.name,
-                iconClass: (rowInfo.original.type === EnumResourceType.POI ? 'fa fa-database' : 'fa fa-random'),
+                iconClass: ResourceTypeIcons[rowInfo.original.type],
               });
               break;
             default:

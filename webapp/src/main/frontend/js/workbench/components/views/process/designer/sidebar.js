@@ -21,7 +21,7 @@ class Sidebar extends React.Component {
    *
    * @param {any} resource
    * @param {any} index
-   * @returns
+   * @returns a {@link ProcessInput} component instance
    * @memberof Sidebar
    */
   renderResource(resource, index) {

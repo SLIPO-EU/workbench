@@ -9,17 +9,17 @@ import {
   EnumProcessInput,
   EnumResourceType,
 } from './constants';
-import { ToolConfiguration } from './tool-config';
+import { ToolInput } from './config';
 import StepInput from './step-input';
 
 /**
  * Returns plain JavaScript object with required input counters
  *
  * @param {any} step
- * @returns
+ * @returns a plain JavaScript object
  */
 function getRequiredResources(step) {
-  let { poi, linked, any } = ToolConfiguration[step.tool];
+  let { poi, linked, any } = ToolInput[step.tool];
 
   let counters = step.resources.reduce((counters, resource) => {
     switch (resource.resourceType) {
@@ -65,7 +65,7 @@ const containerTarget = {
    *
    * @param {any} props
    * @param {any} monitor
-   * @returns
+   * @returns true if the item is accepted
    */
   canDrop(props, monitor) {
     const resource = monitor.getItem();
@@ -115,7 +115,7 @@ class StepInputContainer extends React.Component {
    * Renders a single {@link StepInput}
    *
    * @param {any} resource
-   * @returns
+   * @returns a {@link StepInput} component instance
    * @memberof StepInputContainer
    */
   renderResource(resource) {

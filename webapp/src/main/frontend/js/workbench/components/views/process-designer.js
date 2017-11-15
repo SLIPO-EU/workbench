@@ -22,6 +22,7 @@ import {
   reset,
   addStep,
   removeStep,
+  moveStep,
   configureStepBegin,
   configureStepEnd,
   addStepInput,
@@ -34,6 +35,8 @@ import {
   setActiveStepInput,
   setActiveStepDataSource,
   setActiveResource,
+  undo,
+  redo,
 } from '../../ducks/ui/views/process-designer';
 
 /**
@@ -65,6 +68,8 @@ class ProcessDesigner extends React.Component {
                   <Row>
                     <Col>
                       <Button color="warning" onClick={this.props.reset} className="float-left">Clear</Button>
+                      <Button color="default" onClick={this.props.undoAction} className="float-left ml-3" disabled={this.props.undo.length === 1}>Undo</Button>
+                      <Button color="default" onClick={this.props.redoAction} className="float-left ml-3" disabled={this.props.redo.length === 0}>Redo</Button>
                       <Button color="primary" className="float-right">Save</Button>
                     </Col>
                   </Row>
@@ -72,12 +77,13 @@ class ProcessDesigner extends React.Component {
                 <CardBlock className="card-body">
                   <Row className="mb-2">
                     <Col style={{ padding: '9px' }}>
-                      < Designer
+                      <Designer
                         active={this.props.active}
                         steps={this.props.steps}
                         addStep={this.props.addStep}
                         configureStepBegin={this.props.configureStepBegin}
                         removeStep={this.props.removeStep}
+                        moveStep={this.props.moveStep}
                         addStepInput={this.props.addStepInput}
                         removeStepInput={this.props.removeStepInput}
                         addStepDataSource={this.props.addStepDataSource}
@@ -120,12 +126,15 @@ const mapStateToProps = (state) => ({
   view: state.ui.views.process.designer.view,
   active: state.ui.views.process.designer.active,
   steps: state.ui.views.process.designer.steps,
+  undo: state.ui.views.process.designer.undo,
+  redo: state.ui.views.process.designer.redo,
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
   reset,
   addStep,
   removeStep,
+  moveStep,
   configureStepBegin,
   configureStepEnd,
   addStepInput,
@@ -138,6 +147,8 @@ const mapDispatchToProps = (dispatch) => bindActionCreators({
   setActiveStepInput,
   setActiveStepDataSource,
   setActiveResource,
+  undoAction: undo,
+  redoAction: redo,
 }, dispatch);
 
 const mergeProps = (stateProps, dispatchProps, ownProps) => {

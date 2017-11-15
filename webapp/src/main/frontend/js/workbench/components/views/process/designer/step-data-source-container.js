@@ -9,17 +9,17 @@ import {
   EnumProcessInput,
   EnumResourceType,
 } from './constants';
-import { ToolConfiguration } from './tool-config';
+import { ToolInput } from './config';
 import StepDataSource from './step-data-source';
 
 /**
  * Returns plain JavaScript object with required input counters
  *
  * @param {any} step
- * @returns
+ * @returns a plain JavaScript object
  */
 function getRequiredDataSources(step) {
-  let { source } = ToolConfiguration[step.tool];
+  let { source } = ToolInput[step.tool];
 
   return {
     source: source - step.dataSources.length,
@@ -50,7 +50,7 @@ const containerTarget = {
    *
    * @param {any} props
    * @param {any} monitor
-   * @returns
+   * @returns true if the item is accepted
    */
   canDrop(props, monitor) {
     const dataSource = monitor.getItem();
@@ -81,7 +81,7 @@ class StepDataSourceContainer extends React.Component {
    * Renders a single {@link StepDataSource}
    *
    * @param {any} dataSource
-   * @returns
+   * @returns a {@link StepDataSourceContainer} component instance
    * @memberof StepDataSourceContainer
    */
   renderDataSource(dataSource) {

@@ -6,7 +6,7 @@ import { changeLocale } from './ducks/i18n';
 import { refreshProfile } from './ducks/user';
 
 // TODO : Remove resource initialization
-import { EnumProcessInput, EnumResourceType } from './components/views/process/designer';
+import { EnumProcessInput, EnumResourceType, ResourceTypeIcons } from './components/views/process/designer';
 import { addResourceToBag } from './ducks/ui/views/process-designer';
 
 var rootSelector = document.currentScript.getAttribute('data-root') || '#root';
@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", function () {
         id: 1,
         version: 1,
         title: 'OSM Athens POI Data',
-        iconClass: 'fa fa-database',
+        iconClass: ResourceTypeIcons[EnumResourceType.POI],
         dependencies: [],
       }));
       store.dispatch(addResourceToBag({
@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", function () {
         id: 2,
         version: 1,
         title: 'Get Athens POI Data',
-        iconClass: 'fa fa-database',
+        iconClass: ResourceTypeIcons[EnumResourceType.POI],
         dependencies: [],
       }));
       store.dispatch(addResourceToBag({
@@ -56,7 +56,7 @@ document.addEventListener("DOMContentLoaded", function () {
         id: 3,
         version: 2,
         title: 'Athens Restaurants',
-        iconClass: 'fa fa-random',
+        iconClass: ResourceTypeIcons[EnumResourceType.LINKED],
         dependencies: [{
           index: 0,
           inputType: EnumProcessInput.CATALOG,
@@ -64,7 +64,7 @@ document.addEventListener("DOMContentLoaded", function () {
           id: 1,
           version: 1,
           title: 'OSM Athens POI Data',
-          iconClass: 'fa fa-database',
+          iconClass: ResourceTypeIcons[EnumResourceType.POI],
         }, {
           index: 1,
           inputType: EnumProcessInput.CATALOG,
@@ -72,7 +72,7 @@ document.addEventListener("DOMContentLoaded", function () {
           id: 2,
           version: 1,
           title: 'Get Athens POI Data',
-          iconClass: 'fa fa-database',
+          iconClass: ResourceTypeIcons[EnumResourceType.POI],
         }],
       }));
     })
