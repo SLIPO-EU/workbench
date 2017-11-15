@@ -92,8 +92,8 @@ class ProcessExplorer extends React.Component {
 }
 
 const mapStateToProps = (state) => ({
-  processes: state.ui.views.processes,
-  selectedFields: state.ui.views.processes.selectedFields,
+  processes: state.ui.views.process.explorer,
+  selectedFields: state.ui.views.process.explorer.selectedFields,
   //pager: state.ui.views.processes.pagingOptions,
   //resources: state.ui.views.dashboard.resources,
   //events: state.ui.views.dashboard.events,
