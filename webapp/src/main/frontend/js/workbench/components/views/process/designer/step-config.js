@@ -4,6 +4,11 @@ import {
   Button, Card, CardBlock, Row, Col,
 } from 'reactstrap';
 
+import * as metadata from '../../resource/register/metadata';
+import * as triplegeo from '../../resource/register/triple';
+
+import { SingleStep } from '../../../helpers/forms/';
+
 /**
  * Presentational component that wraps the step configuration options
  *
@@ -40,12 +45,29 @@ class StepConfig extends React.Component {
               <i className={this.props.step.iconClass + ' mr-2'}></i><span>{this.props.step.title}</span>
             </Col>
           </Row>
-          <Row className="mb-2">
-            <Col>
-              <Button color="danger" onClick={(e) => { this.cancel(e); }} className="float-left">Cancel</Button>
-              <Button color="primary" onClick={(e) => { this.save(e); }} className="float-right">Save</Button>
-            </Col>
-          </Row>
+          { this.props.step.tool=== 'TripleGeo'?(
+            <SingleStep
+              onComplete={(values) => { this.props.configureStepEnd(this.props.step,values);}}
+            >
+              <triplegeo.Component
+                id="triplegeo"
+                title="TripleGeo"
+                initialValue={triplegeo.initialValue}
+                validate={triplegeo.validator}
+              />    
+            </SingleStep>)
+            :
+            (<SingleStep
+              onComplete={(values) => { this.props.configureStepEnd(this.props.step,values);}}
+            >
+              <metadata.Component
+                id="register"
+                title="Register Resource"
+                initialValue={metadata.initialValue}
+                validate={metadata.validator}
+              />    
+            </SingleStep>)}
+          <Button color="danger" onClick={(e) => { this.cancel(e); }} className="float-left">Cancel</Button>
         </CardBlock>
       </Card>
     );
@@ -53,3 +75,7 @@ class StepConfig extends React.Component {
 }
 
 export default StepConfig;
+
+
+
+

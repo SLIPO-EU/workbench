@@ -35,3 +35,4 @@ export { default as StepDataSourceContainer } from './step-data-source-container
 export { default as StepInput } from './step-input';
 export { default as StepInputContainer } from './step-input-container';
 export { default as Toolbox } from './toolbox';
+export { default as ResourceConfigWizard } from './data-source-config-wizard';

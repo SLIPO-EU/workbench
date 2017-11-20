@@ -20,7 +20,6 @@ export const JobCardConfig = (r) =>({
 });
 
 export default function ExecutionDetails(props) {
-  console.log(props.steps);
   if (props.steps!= null) {
     return props.steps.map(step => (
       <div key={step.id}>
