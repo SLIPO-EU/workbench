@@ -76,6 +76,7 @@ class ResourceExplorer extends React.Component {
                       fetchResources={this.props.fetchResources}
                       setSelectedResource={this.props.setSelectedResource}
                       selectedResource={this.props.selectedResource}
+                      selectedResourceVersion={this.props.selectedResourceVersion}
                       addResourceToBag={this.props.addResourceToBag}
                     />
                   </Col>
@@ -89,6 +90,7 @@ class ResourceExplorer extends React.Component {
                     <ResourceDetails
                       resources={this.props.resources.items}
                       detailed={this.props.selectedResource}
+                      selectedResourceVersion={this.props.selectedResourceVersion}                      
                     />
                   </Col>
                 </Row>
@@ -107,6 +109,7 @@ const mapStateToProps = (state) => ({
   pager: state.ui.views.resources.explorer.pager,
   filters: state.ui.views.resources.explorer.filters,
   selectedResource: state.ui.views.resources.explorer.selected,
+  selectedResourceVersion: state.ui.views.resources.explorer.version,  
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({

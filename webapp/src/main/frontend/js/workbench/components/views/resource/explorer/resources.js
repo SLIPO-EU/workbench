@@ -11,7 +11,7 @@ import {
 const resourceColumns = [
   {
     expander: true,
-    Header: 'Ver',
+    Header: 'Version',
     width: 45,
     Expander: ({ isExpanded, ...rest }) => {
       if (rest.original.versions.length > 0) {
@@ -39,6 +39,7 @@ const resourceColumns = [
       );
     },
     style: { 'textAlign': 'center' },
+    maxWidth: 50,
   }, {
     Header: 'Name',
     id: 'name',
@@ -55,6 +56,22 @@ const resourceSubColumns = [
     Header: 'Version',
     accessor: 'version',
     maxWidth: 60,
+  },
+  {
+    Header: 'id',
+    accessor: 'id',
+    show: false
+  },
+  {
+    Header: 'Actions',
+    id: 'actions',
+    Cell: props => {
+      return (
+        <i data-action="add-to-bag" className='fa fa-bookmark-o'></i>
+      );
+    },
+    style: { 'textAlign': 'center' },
+    maxWidth: 50,
   },
   {
     Header: 'Size',
@@ -93,7 +110,7 @@ export default function Resources(props) {
       }}
       getTrProps={(state, rowInfo) => ({
         onClick: (e) => {
-          props.setSelectedResource(rowInfo.row.id);
+          props.setSelectedResource(rowInfo.row.id, rowInfo.original.version);
         },
         style: {
           background: rowInfo && props.selectedResource === rowInfo.row.id ? '#20a8d8' : null,
@@ -137,7 +154,36 @@ export default function Resources(props) {
                   noDataText="No other versions"
                   defaultPageSize={Object.keys(row.original.versions).length}
                   showPagination={false}
-                  getTrProps={() => ({ style: { lineHeight: 0.8 } })}
+                  getTrProps={(state, rowInfo) => ({
+                    onClick: (e) => {
+                      props.setSelectedResource(rowInfo.row.id, rowInfo.row.version);
+                    },
+                    style: {
+                      lineHeight: 0.8 ,
+                      background: rowInfo && props.selectedResourceVersion === rowInfo.row.version ? '#20a8d8' : null,
+                    }
+                  })}
+                  getTdProps={(state, rowInfo, column) => ({
+                    onClick: (e, handleOriginal) => {
+                      switch (e.target.getAttribute('data-action')) {
+                        case 'add-to-bag':
+                          props.addResourceToBag({
+                            inputType: EnumProcessInput.CATALOG,
+                            resourceType: rowInfo.original.type,
+                            id: rowInfo.original.id,
+                            version: rowInfo.original.version,
+                            title: rowInfo.original.metadata.name,
+                            iconClass: ResourceTypeIcons[rowInfo.original.type],
+                          });
+                          break;
+                        default:
+                          if (handleOriginal) {
+                            handleOriginal();
+                          }
+                          break;
+                      }
+                    }
+                  })}
                 />
               </div>
             );
