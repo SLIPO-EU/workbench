@@ -39,6 +39,26 @@ const resourceDetailsColumns = [
 export default function ResourceDetails(props) {
   const selectedResource = props.resources && props.resources.find(r => r.id === props.detailed);
   if (!selectedResource) return <div>-</div>;
+  console.log(selectedResource);
+  if (selectedResource.version !== props.selectedResourceVersion){
+    const selectedResource2 = selectedResource.versions.find(r => r.version === props.selectedResourceVersion);
+    const selectedResourceFields = Object.keys(selectedResource2).map((key) => ({
+      field: key,
+      value: selectedResource2[key],
+    }));
+    return (
+      <ReactTable
+        name="Resource explore"
+        id="resource-explore"
+        columns={resourceDetailsColumns}
+        data={selectedResourceFields}
+        defaultPageSize={selectedResourceFields.length}
+        showPagination={false}
+        className="-striped -highlight"
+      />
+    );
+  }
+
   const selectedResourceFields = Object.keys(selectedResource).map((key) => ({
     field: key,
     value: selectedResource[key],
@@ -54,4 +74,5 @@ export default function ResourceDetails(props) {
       className="-striped -highlight"
     />
   );
+
 }

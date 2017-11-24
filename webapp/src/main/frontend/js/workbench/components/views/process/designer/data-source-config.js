@@ -4,53 +4,59 @@ import {
   Button, Card, CardBlock, Row, Col,
 } from 'reactstrap';
 
-/**
- * Presentational component that wraps the data source configuration options
- *
- * @class DataSourceConfig
- * @extends {React.Component}
- */
+import { ResourceConfigWizard } from './';
+import * as ReactRedux from 'react-redux';
+import { bindActionCreators } from 'redux';
+
+import { saveTempConfig, clearTempConfig } from '../../../../ducks/ui/views/process-config-step';
+import { configureStepEnd } from '../../../../ducks/ui/views/process-designer';
+
+
 class DataSourceConfig extends React.Component {
-
-  constructor(props) {
-    super(props);
-  }
-
-  static propTypes = {
-    step: PropTypes.object.isRequired,
-    dataSource: PropTypes.object.isRequired,
-    configuration: PropTypes.object,
-    configureStepDataSourceEnd: PropTypes.func.isRequired,
-  }
-
-  save(e) {
-    // TODO: Return a valid configuration
-    this.props.configureStepDataSourceEnd(this.props.step, this.props.dataSource, {});
-  }
-
-  cancel(e) {
-    this.props.configureStepDataSourceEnd(this.props.step, this.props.dataSource, null);
-  }
 
   render() {
     return (
-      <Card>
-        <CardBlock className="card-body">
-          <Row className="mb-2">
-            <Col>
-              <i className={this.props.dataSource.iconClass + ' mr-2'}></i><span>{this.props.dataSource.title}</span>
-            </Col>
-          </Row>
-          <Row className="mb-2">
-            <Col>
-              <Button color="danger" onClick={(e) => { this.cancel(e); }} className="float-left">Cancel</Button>
-              <Button color="primary" onClick={(e) => { this.save(e); }} className="float-right">Save</Button>
-            </Col>
-          </Row>
-        </CardBlock>
-      </Card>
+      <Row>
+        <Col sm="12" md="12" lg="6">
+          <Card>
+            <CardBlock className="card-body">
+              <ResourceConfigWizard 
+                configureStepEnd={this.props.configureStepEnd}
+                stepId= {this.props.step}
+                saveTemp={this.props.saveTempConfig}
+                clearTemp={() => (this.props.configureStepEnd(this.props.step,null))}
+                initialActive={ this.props.dataSource.source==="FILESYSTEM" ? "FILESYSTEM" : this.props.dataSource.source==="EXTERNAL_URL" ? "external" : "metadata" }
+                initialValues={this.props.values}
+                filesystem={this.props.filesystem}
+              />
+            </CardBlock>
+          </Card>
+        </Col>
+      </Row>
     );
   }
+
 }
 
-export default DataSourceConfig;
+
+const mapStateToProps = (state) => ({
+  values: state.ui.views.process.configuration.values,
+  filesystem: state.config.filesystem,
+
+});
+const mapDispatchToProps = (dispatch) => bindActionCreators({  
+  saveTempConfig, 
+  clearTempConfig, 
+  configureStepEnd,
+}, dispatch);
+
+const mergeProps = (stateProps, dispatchProps, ownProps) => {
+  return {
+    ...stateProps,
+    ...dispatchProps,
+    ...ownProps,
+
+  };
+};
+
+export default ReactRedux.connect(mapStateToProps, mapDispatchToProps, mergeProps)(DataSourceConfig);

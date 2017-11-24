@@ -22,6 +22,7 @@ const initialState = {
     bbox: null,
   },
   selected: null,
+  version: null,
 };
 
 export default (state = initialState, action) => {
@@ -60,6 +61,7 @@ export default (state = initialState, action) => {
       return {
         ...state,
         selected: action.selected,
+        version: action.version,
       };
 
     case RESET_SELECTED:
@@ -93,9 +95,10 @@ export const resetFilters = () => ({
   type: RESET_FILTERS,
 });
 
-export const setSelectedResource = (selected) => ({
+export const setSelectedResource = (selected, version) => ({
   type: SET_SELECTED,
   selected,
+  version,
 });
 
 export const resetSelectedResource = () => ({
