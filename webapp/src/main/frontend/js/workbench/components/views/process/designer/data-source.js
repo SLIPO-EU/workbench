@@ -7,6 +7,7 @@ import {
   EnumToolboxItem,
   EnumDataSource,
   EnumDragSource,
+  EnumHarvester,
 } from './constants';
 
 /**
@@ -23,6 +24,7 @@ const dataSource = {
     return {
       type: EnumToolboxItem.DataSource,
       source: props.source,
+      harvester: props.harvester,
       title: props.title,
       iconClass: props.iconClass,
     };
@@ -50,16 +52,26 @@ class DataSource extends React.Component {
     // Data source description
     title: PropTypes.string.isRequired,
 
-    // Data source icon
+    // Data source icon class
     iconClass: PropTypes.string.isRequired,
 
     // Data source type
     source: function (props, propName, componentName) {
-      if (props[propName] == EnumDataSource.HARVESTER) {
-        return new Error(`Invalid data source type [${EnumDataSource.HARVESTER}] found. Use [Harvester] component instead.`);
-      }
       for (let prop in EnumDataSource) {
         if (EnumDataSource[prop] === props[propName]) {
+          return null;
+        }
+      }
+      return new Error(`Invalid value for property [${propName}].`);
+    },
+
+    // Harvester type (required only by EnumDataSource.HARVESTER data sources)
+    harvester: function (props, propName, componentName) {
+      if (props['source'] !== EnumDataSource.HARVESTER) {
+        return null;
+      }
+      for (let prop in EnumHarvester) {
+        if (EnumHarvester[prop] === props[propName]) {
           return null;
         }
       }
@@ -78,11 +90,17 @@ class DataSource extends React.Component {
       <div className={
         classnames({
           "slipo-pd-item": true,
-          "slipo-pd-data-source": true,
+          "slipo-pd-data-source": (this.props.source !== EnumDataSource.HARVESTER),
+          "slipo-pd-harvester": (this.props.source === EnumDataSource.HARVESTER),
           "slipo-pd-item-is-dragging": isDragging,
         })
       }>
-        <div className="slipo-pd-data-source-icon">
+        <div className={
+          classnames({
+            "slipo-pd-data-source-icon": (this.props.source !== EnumDataSource.HARVESTER),
+            "slipo-pd-harvester-icon": (this.props.source === EnumDataSource.HARVESTER),
+          })
+        }>
           <i className={this.props.iconClass}></i>
         </div>
         <div className="slipo-pd-item-label">

@@ -4,11 +4,15 @@ import { DragSource, DropTarget } from 'react-dnd';
 import classnames from 'classnames';
 
 import {
-  EnumTool,
-  EnumToolboxItem,
   EnumDragSource,
+  EnumStepProperty,
+  EnumResourceType,
+  EnumSelection,
+  EnumTool,
 } from './constants';
-
+import {
+  ToolInput
+} from './config';
 import StepInputContainer from './step-input-container';
 import StepDataSourceContainer from './step-data-source-container';
 
@@ -81,18 +85,6 @@ const stepTarget = {
       return;
     }
 
-    // Determine rectangle on screen
-    const hoverBoundingRect = component.decoratedComponentInstance._element.getBoundingClientRect();
-
-    // Get vertical middle
-    const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
-
-    // Determine mouse position
-    const clientOffset = monitor.getClientOffset();
-
-    // Get pixels to the top
-    const hoverClientY = clientOffset.y - hoverBoundingRect.top;
-
     // Time to actually perform the action
     props.moveStep(dragOrder, hoverOrder);
 
@@ -144,7 +136,9 @@ const stepTarget = {
 class Step extends React.Component {
 
   constructor(props) {
-    super();
+    super(props);
+
+    this.setTitle = this.setTitle.bind(this);
   }
 
   static propTypes = {
@@ -153,11 +147,19 @@ class Step extends React.Component {
       order: PropTypes.number.isRequired,
       index: PropTypes.number.isRequired,
     }),
+    resources: PropTypes.arrayOf(PropTypes.shape({
+      index: PropTypes.number.isRequired,
+      inputType: PropTypes.string.isRequired,
+      resourceType: PropTypes.string.isRequired,
+      title: PropTypes.string.isRequired,
+      iconClass: PropTypes.string.isRequired,
+    })).isRequired,
 
     // Action creators
     removeStep: PropTypes.func.isRequired,
     moveStep: PropTypes.func.isRequired,
     configureStepBegin: PropTypes.func.isRequired,
+    setStepProperty: PropTypes.func.isRequired,
 
     addStepInput: PropTypes.func.isRequired,
     removeStepInput: PropTypes.func.isRequired,
@@ -177,6 +179,42 @@ class Step extends React.Component {
   };
 
   /**
+   * Returns plain JavaScript object with required input counters
+   *
+   * @param {any} step
+   * @returns a plain JavaScript object
+   */
+  isInputMissing() {
+    const step = this.props.step;
+    const { source, poi, linked, any } = ToolInput[step.tool];
+
+    const counters = this.props.resources.reduce((counters, resource) => {
+      switch (resource.resourceType) {
+        case EnumResourceType.POI:
+          counters.poi++;
+          break;
+        case EnumResourceType.LINKED:
+          counters.linked++;
+          break;
+      }
+
+      return counters;
+    }, { poi: 0, linked: 0 });
+
+    return (
+      ((poi - counters.poi) > 0) ||
+      ((linked - counters.linked) > 0) ||
+      ((any - counters.poi - counters.linked) > 0) ||
+      ((source - step.dataSources.length) > 0)
+    );
+  }
+
+
+  setTitle(e) {
+    this.props.setStepProperty(this.props.step.index, EnumStepProperty.Title, e.target.value);
+  }
+
+  /**
    * Resolve step icon class
    *
    * @returns a CSS class
@@ -184,29 +222,9 @@ class Step extends React.Component {
    */
   getIconClassName() {
     if (this.props.step.iconClass) {
-      return this.props.step.iconClass;
+      return this.props.step.iconClass + ' mr-2 slipo-pd-step-icon';
     }
-    return 'fa fa-cogs mr-2';
-  }
-
-  /**
-   * Resolve step title
-   *
-   * @returns a string
-   * @memberof Step
-   */
-  getTitle() {
-    if (this.props.step.title) {
-      return this.props.step.title;
-    }
-    switch (this.props.step.type) {
-      case EnumToolboxItem.Operation:
-        return this.props.step.tool;
-      case EnumToolboxItem.Harvester:
-        return this.props.step.harvester;
-      case EnumToolboxItem.DataSource:
-        return this.props.step.source;
-    }
+    return 'fa fa-cogs mr-2 slipo-pd-step-icon';
   }
 
   /**
@@ -226,7 +244,9 @@ class Step extends React.Component {
    *
    * @memberof Step
    */
-  select() {
+  select(e) {
+    e.stopPropagation();
+
     this.props.setActiveStep(this.props.step);
   }
 
@@ -250,9 +270,23 @@ class Step extends React.Component {
    */
   isActive() {
     return (
-      (this.props.active.step == this.props.step.index) &&
-      (this.props.active.stepInput == null) &&
-      (this.props.active.stepDataSource == null)
+      (this.props.active.type === EnumSelection.Step) &&
+      (this.props.active.step === this.props.step.index)
+    );
+  }
+
+  /**
+   * Resolve if step configuration is valid
+   *
+   * @returns return true if the step configuration is valid
+   * @memberof Step
+   */
+  isValid() {
+    return (
+      (this.props.step.title) &&
+      (this.props.step.configuration) &&
+      (!this.props.step.errors || Object.keys(this.props.step.errors).length === 0) &&
+      (!this.isInputMissing())
     );
   }
 
@@ -270,34 +304,47 @@ class Step extends React.Component {
             classnames({
               "slipo-pd-step": true,
               "slipo-pd-step-active": this.isActive(),
-              "slipo-pd-step-invalid": (!this.props.step.configuration),
+              "slipo-pd-step-invalid": !this.isValid(),
             })
           }
-          onClick={() => this.select()}
-          ref={(el) => { this._element = el; }}
+          onClick={(e) => this.select(e)}
         >
           <div className={
             classnames({
               "slipo-pd-step-header": true,
-              "slipo-pd-step-invalid": (!this.props.step.configuration),
+              "slipo-pd-step-invalid": !this.isValid(),
             })
           }>
-            <i className={this.getIconClassName()}></i> <span>{this.getTitle()}</span>
+            <i className={this.getIconClassName()}></i>
+            <input
+              id={`step-${this.props.step.index}-title`}
+              className={
+                classnames({
+                  "slipo-pd-step-title-input": true,
+                  "slipo-pd-step-title-input-invalid": (!this.props.step.title)
+                })
+              }
+              value={this.props.step.title}
+              ref={(el) => { this._titleElement = el; }}
+              onClick={(e) => { this._titleElement.focus; this._titleElement.select(e); }}
+              onChange={this.setTitle}
+            />
             <div className="slipo-pd-step-actions">
               <i className="slipo-pd-step-action slipo-pd-step-config fa fa-wrench" onClick={(e) => { this.configure(e); }}></i>
               <i className="slipo-pd-step-action slipo-pd-step-delete fa fa-trash" onClick={(e) => { this.remove(e); }}></i>
             </div>
           </div>
-          {this.props.step.type == EnumToolboxItem.Operation && this.props.step.tool != EnumTool.TripleGeo &&
+          {this.props.step.tool != EnumTool.TripleGeo &&
             < StepInputContainer
               active={this.props.active}
               step={this.props.step}
+              resources={this.props.resources}
               addStepInput={this.props.addStepInput}
               removeStepInput={this.props.removeStepInput}
               setActiveStepInput={this.props.setActiveStepInput}
             />
           }
-          {this.props.step.type == EnumToolboxItem.Operation && this.props.step.tool == EnumTool.TripleGeo &&
+          {this.props.step.tool == EnumTool.TripleGeo &&
             <StepDataSourceContainer
               active={this.props.active}
               step={this.props.step}
@@ -307,7 +354,7 @@ class Step extends React.Component {
               setActiveStepDataSource={this.props.setActiveStepDataSource}
             />
           }
-        </div>
+        </div >
       )
     );
   }

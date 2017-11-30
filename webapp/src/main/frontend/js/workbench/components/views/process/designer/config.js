@@ -4,6 +4,7 @@ import {
   EnumOperation,
   EnumResourceType,
   EnumTool,
+  EnumProcessInput,
 } from './constants';
 
 /**
@@ -77,6 +78,13 @@ export const ToolDefaultOperation = {
   [EnumTool.CATALOG]: EnumOperation.Registration,
 };
 
+/**
+ * Default process input type icons
+ */
+export const ProcessInputIcons = {
+  [EnumProcessInput.CATALOG]: 'fa fa-book',
+  [EnumProcessInput.OUTPUT]: 'fa fa-cog',
+};
 
 /**
  * Static configuration of tool input requirements
@@ -93,18 +101,20 @@ export const ToolInput = {
     poi: 2,
     linked: 0,
     any: 0,
-  }, [EnumTool.FAGI]: {
+  },
+  [EnumTool.FAGI]: {
     source: 0,
-    poi: 2,
+    poi: 0,
     linked: 1,
     any: 0,
-  }
-  , [EnumTool.DEER]: {
+  },
+  [EnumTool.DEER]: {
     source: 0,
     poi: 1,
     linked: 0,
     any: 0,
-  }, [EnumTool.CATALOG]: {
+  },
+  [EnumTool.CATALOG]: {
     source: 0,
     poi: 0,
     linked: 0,

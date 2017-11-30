@@ -38,8 +38,8 @@ public class ResourceMetadataView {
 
         this.name = name;
         this.description = description;
-        this.boundingBox = boundingBox;
         this.size = size;
+        this.boundingBox = boundingBox;
     }
 
     public String getName() {
@@ -50,12 +50,12 @@ public class ResourceMetadataView {
         return description;
     }
 
-    public Geometry getBoundingBox() {
-        return boundingBox;
-    }
-
     public Integer getSize() {
         return size;
+    }
+
+    public Geometry getBoundingBox() {
+        return boundingBox;
     }
 
 }

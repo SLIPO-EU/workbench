@@ -1,5 +1,5 @@
 import React from 'react';
-import { SelectField, TextField } from '../../../helpers/forms/wizard-fields/';
+import { SelectField, TextField } from '../../../helpers/forms/form-fields/';
 
 const supportedFiles = [
   { value: 'SHAPEFILE' },
@@ -55,7 +55,7 @@ export const Component = (props) => {
         label="Resource type"
         help="Upload file format"
         options={supportedFiles}
-      /> 
+      />
     </div>
   );
 };

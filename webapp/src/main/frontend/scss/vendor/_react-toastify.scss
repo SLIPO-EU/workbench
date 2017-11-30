@@ -7,10 +7,6 @@
  * Update z-ordering for react-toastify to render on top of toolbar menu
  */
 
-.toastify {
-  z-index: 1030;
-}
-
-.toastify__progress {
-  z-index: 1030;
+.slipo-toastify {
+  z-index: 1030 !important;
 }

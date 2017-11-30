@@ -6,23 +6,19 @@ import * as type from '../../resource/register/type';
 import * as externalUrl from '../../resource/register/url-select';
 import * as harvester from '../../resource/register/harvester-select';
 import * as harvesterConfig from '../../resource/register/harvester-config';
-import * as fileUpload from '../../resource/register/file-upload';
 import * as metadata from '../../resource/register/metadata';
 import * as triplegeo from '../../resource/register/triplegeo';
 import * as filesystem from '../../resource/register/filesystem';
-import * as confirmation from '../../resource/register/confirmation';
-import * as csvMetadata from '../../resource/register/csv-metadata';
 
+export default function DataSourceConfigWizard(props) {
 
-export default function ResourceConfigWizard(props) {
-
-  switch (props.initialActive){
+  switch (props.initialActive) {
     case "FILESYSTEM":
       return (
         <div className="animated fadeIn">
           <DataSourceStep
             initialActive="filesystem"
-            onComplete={(values) => {  console.log(values); props.configureStepEnd(props.stepId,values);}}
+            onComplete={(values) => { props.configureStepEnd(props.stepId, values); }}
             childrenProps={{
               saveTemp: props.saveTemp,
               clearTemp: props.clearTemp,
@@ -51,7 +47,7 @@ export default function ResourceConfigWizard(props) {
         <div className="animated fadeIn">
           <DataSourceStep
             initialActive={props.initialActive.toLowerCase()}
-            onComplete={(values) => {  console.log(values); props.configureStepEnd(props.stepId,values);}}
+            onComplete={(values) => { props.configureStepEnd(props.stepId, values); }}
             childrenProps={{
               saveTemp: props.saveTemp,
               clearTemp: props.clearTemp,
@@ -70,9 +66,8 @@ export default function ResourceConfigWizard(props) {
               description=""
               initialValue={props.initialValues.metadata || metadata.initialValue}
               validate={metadata.validator}
-              //next={(value) =>  'confirm'}
+            //next={(value) =>  'confirm'}
             />
-            
           </DataSourceStep>
         </div>
       );
@@ -81,7 +76,7 @@ export default function ResourceConfigWizard(props) {
         <div className="animated fadeIn">
           <DataSourceStep
             initialActive={props.initialActive.toLowerCase()}
-            onComplete={(values) => {  console.log(values); props.configureStepEnd(props.stepId,values);}}
+            onComplete={(values) => {  props.configureStepEnd(props.stepId, values); }}
             childrenProps={{
               saveTemp: props.saveTemp,
               clearTemp: props.clearTemp,
@@ -93,7 +88,7 @@ export default function ResourceConfigWizard(props) {
               description=""
               initialValue={props.initialValues.metadata || metadata.initialValue}
               validate={metadata.validator}
-              //next={(value) => value.format !== 'RDF' ? 'triplegeo' : 'confirm'}
+            //next={(value) => value.format !== 'RDF' ? 'triplegeo' : 'confirm'}
             />
             <harvester.Component
               id="harvester"
@@ -114,6 +109,6 @@ export default function ResourceConfigWizard(props) {
         </div>
       );
   }
-  
+
 }
 

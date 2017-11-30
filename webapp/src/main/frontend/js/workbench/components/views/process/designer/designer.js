@@ -40,7 +40,6 @@ const designerTarget = {
     const item = monitor.getItem();
     switch (item.type) {
       case EnumDragSource.DataSource:
-      case EnumDragSource.Harvester:
         return true;
       case EnumDragSource.Operation:
         if (item.tool === EnumTool.CATALOG) {
@@ -75,12 +74,15 @@ class Designer extends React.Component {
   static propTypes = {
     // An array of existing steps
     steps: PropTypes.arrayOf(PropTypes.object.isRequired).isRequired,
+    // An array of selected resources
+    resources: PropTypes.arrayOf(PropTypes.object.isRequired).isRequired,
 
     // Action creators
     addStep: PropTypes.func.isRequired,
     removeStep: PropTypes.func.isRequired,
     moveStep: PropTypes.func.isRequired,
     configureStepBegin: PropTypes.func.isRequired,
+    setStepProperty: PropTypes.func.isRequired,
 
     addStepInput: PropTypes.func.isRequired,
     removeStepInput: PropTypes.func.isRequired,
@@ -112,9 +114,11 @@ class Designer extends React.Component {
         key={step.index}
         active={this.props.active}
         step={step}
+        resources={this.props.resources.filter((resource) => { return (step.resources.indexOf(resource.index) !== -1); })}
         removeStep={this.props.removeStep}
         moveStep={this.props.moveStep}
         configureStepBegin={this.props.configureStepBegin}
+        setStepProperty={this.props.setStepProperty}
         addStepInput={this.props.addStepInput}
         removeStepInput={this.props.removeStepInput}
         addStepDataSource={this.props.addStepDataSource}

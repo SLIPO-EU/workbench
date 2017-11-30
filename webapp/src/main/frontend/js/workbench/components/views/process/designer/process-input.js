@@ -1,8 +1,12 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import { DragSource } from 'react-dnd';
+import { Link } from 'react-router-dom';
 import classnames from 'classnames';
-
+import {
+  DynamicRoutes,
+  buildPath,
+} from '../../../../model/routes';
 import {
   EnumDragSource,
   EnumResourceType,
@@ -22,11 +26,6 @@ const resourceSource = {
   beginDrag(props) {
     return {
       ...props.resource,
-      dependencies: props.resource.dependencies.map((d) => {
-        return {
-          ...d,
-        };
-      })
     };
   }
 };
@@ -49,6 +48,12 @@ class ProcessInput extends React.Component {
 
   remove() {
     this.props.remove(this.props.resource);
+  }
+
+  select(e) {
+    e.nativeEvent.stopImmediatePropagation();
+
+    this.props.setActiveResource(this.props.resource);
   }
 
   static propTypes = {
@@ -80,6 +85,8 @@ class ProcessInput extends React.Component {
       },
     }).isRequired,
 
+    setActiveResource: PropTypes.func.isRequired,
+
     // Injected by React DnD
     connectDragSource: PropTypes.func.isRequired,
     isDragging: PropTypes.bool.isRequired
@@ -89,18 +96,24 @@ class ProcessInput extends React.Component {
     const { isDragging, connectDragSource, id } = this.props;
 
     return connectDragSource(
-      <div className={
-        classnames({
-          "slipo-pd-resource": true,
-          "slipo-pd-resource-is-dragging": isDragging
-        })
-      }>
+      <div
+        className={
+          classnames({
+            "slipo-pd-resource": true,
+            "slipo-pd-resource-active": this.props.active,
+            "slipo-pd-resource-is-dragging": isDragging
+          })
+        }
+        onClick={(e) => this.select(e)}
+      >
         <div className="slipo-pd-resource-actions">
           {this.props.resource.inputType != EnumProcessInput.OUTPUT &&
             <i className="slipo-pd-resource-delete fa fa-trash" onClick={() => { this.remove(); }}></i>
           }
           {this.props.resource.inputType != EnumProcessInput.OUTPUT &&
-            <i className="slipo-pd-resource-view fa fa-search"></i>
+            <Link to={buildPath(DynamicRoutes.ResourceViewer, [this.props.resource.id])}>
+              <i className="slipo-pd-resource-view fa fa-search"></i>
+            </Link>
           }
         </div>
         <div className="slipo-pd-resource-icon">

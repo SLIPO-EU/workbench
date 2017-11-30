@@ -12,8 +12,8 @@ public class OutputProcessResource extends ProcessResource {
         this.type = EnumProcessResource.OUTPUT;
     }
 
-    public OutputProcessResource(int index, int stepIndex) {
-        super(index, EnumProcessResource.OUTPUT);
+    public OutputProcessResource(int resourceIndex, int stepIndex) {
+        super(resourceIndex, EnumProcessResource.OUTPUT);
         this.stepIndex = stepIndex;
     }
 

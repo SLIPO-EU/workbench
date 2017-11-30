@@ -1,13 +1,17 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import {
-  Button, Card, CardBlock, Row, Col,
+  Button, Card, CardBody, Row, Col,
 } from 'reactstrap';
+import {
+  EnumTool
+} from './constants';
+import Form from '../../../helpers/forms/form';
 
 import * as metadata from '../../resource/register/metadata';
-import * as triplegeo from '../../resource/register/triple';
+import * as triplegeo from '../../resource/register/triplegeo';
 
-import { SingleStep } from '../../../helpers/forms/';
+import Placeholder from '../../../helpers/placeholder';
 
 /**
  * Presentational component that wraps the step configuration options
@@ -19,63 +23,86 @@ class StepConfig extends React.Component {
 
   constructor(props) {
     super(props);
+
+    this.cancel = this.cancel.bind(this);
+    this.save = this.save.bind(this);
+    this.setError = this.setError.bind(this);
+    this.setValue = this.setValue.bind(this);
   }
 
   static propTypes = {
     step: PropTypes.object.isRequired,
     configuration: PropTypes.object,
+    errors: PropTypes.object,
+    configureStepValidate: PropTypes.func.isRequired,
+    configureStepUpdate: PropTypes.func.isRequired,
     configureStepEnd: PropTypes.func.isRequired,
   }
 
-  save(e) {
-    // TODO: Return a valid configuration
-    this.props.configureStepEnd(this.props.step, {});
+  setValue(configuration) {
+    this.props.configureStepUpdate(this.props.step, configuration);
   }
 
-  cancel(e) {
-    this.props.configureStepEnd(this.props.step, null);
+  setError(errors) {
+    if (errors) {
+      this.props.configureStepValidate(this.props.step, errors);
+    }
+  }
+
+  createForm(Component, validator) {
+    return (
+      <Form
+        title={this.props.step.title}
+        iconClass={this.props.step.iconClass}
+        validate={validator}
+        setError={this.setError}
+        setValue={this.setValue}
+        cancel={this.cancel}
+        save={this.save}
+        values={this.props.configuration}
+        errors={this.props.errors}
+      >
+        {
+          React.isValidElement(Component) ?
+            Component
+            :
+            <Component />
+        }
+      </Form>
+    );
+  }
+
+  save() {
+    this.props.configureStepEnd(this.props.step, this.props.configuration, this.props.errors);
+  }
+
+  cancel() {
+    this.props.configureStepEnd(this.props.step, null, this.props.errors);
   }
 
   render() {
     return (
       <Card>
-        <CardBlock className="card-body">
-          <Row className="mb-2">
-            <Col>
-              <i className={this.props.step.iconClass + ' mr-2'}></i><span>{this.props.step.title}</span>
-            </Col>
-          </Row>
-          { this.props.step.tool=== 'TripleGeo'?(
-            <SingleStep
-              onComplete={(values) => { this.props.configureStepEnd(this.props.step,values);}}
-            >
-              <triplegeo.Component
-                id="triplegeo"
-                title="TripleGeo"
-                initialValue={triplegeo.initialValue}
-                validate={triplegeo.validator}
-              />    
-            </SingleStep>)
-            :
-            (<SingleStep
-              onComplete={(values) => { this.props.configureStepEnd(this.props.step,values);}}
-            >
-              <metadata.Component
-                id="register"
-                title="Register Resource"
-                initialValue={metadata.initialValue}
-                validate={metadata.validator}
-              />    
-            </SingleStep>)}
-          <Button color="danger" onClick={(e) => { this.cancel(e); }} className="float-left">Cancel</Button>
-        </CardBlock>
+        <CardBody className="card-body">
+          {this.props.step.tool === EnumTool.TripleGeo &&
+            this.createForm(triplegeo.Component, triplegeo.validator)
+          }
+          {this.props.step.tool === EnumTool.LIMES &&
+            this.createForm(<Placeholder style={{ height: '100%' }} label="Context" iconClass="fa fa-magic" />, null)
+          }
+          {this.props.step.tool === EnumTool.FAGI &&
+            this.createForm(<Placeholder style={{ height: '100%' }} label="Context" iconClass="fa fa-magic" />, null)
+          }
+          {this.props.step.tool === EnumTool.DEER &&
+            this.createForm(<Placeholder style={{ height: '100%' }} label="Context" iconClass="fa fa-magic" />, null)
+          }
+          {this.props.step.tool === EnumTool.CATALOG &&
+            this.createForm(metadata.Component, metadata.validator)
+          }
+        </CardBody>
       </Card>
     );
   }
 }
 
 export default StepConfig;
-
-
-
-

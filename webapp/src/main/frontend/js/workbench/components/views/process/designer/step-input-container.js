@@ -3,11 +3,11 @@ import { DropTarget } from 'react-dnd';
 import classnames from 'classnames';
 
 import {
-  EnumToolboxItem,
   EnumDragSource,
   EnumTool,
   EnumProcessInput,
   EnumResourceType,
+  EnumSelection,
 } from './constants';
 import { ToolInput } from './config';
 import StepInput from './step-input';
@@ -18,10 +18,10 @@ import StepInput from './step-input';
  * @param {any} step
  * @returns a plain JavaScript object
  */
-function getRequiredResources(step) {
+function getRequiredResources(step, resources) {
   let { poi, linked, any } = ToolInput[step.tool];
 
-  let counters = step.resources.reduce((counters, resource) => {
+  let counters = resources.reduce((counters, resource) => {
     switch (resource.resourceType) {
       case EnumResourceType.POI:
         counters.poi++;
@@ -69,14 +69,18 @@ const containerTarget = {
    */
   canDrop(props, monitor) {
     const resource = monitor.getItem();
-    const counters = getRequiredResources(props.step);
+    const counters = getRequiredResources(props.step, props.resources);
 
     // Do not accept owner step output
-    if ((resource.inputType == EnumProcessInput.OUTPUT) && (resource.stepIndex == props.step.index)) {
+    if ((resource.inputType === EnumProcessInput.OUTPUT) && (resource.stepIndex == props.step.index)) {
+      return false;
+    }
+    // Catalog registration should accept only step output as input
+    if ((resource.inputType !== EnumProcessInput.OUTPUT) && (props.step.tool === EnumTool.CATALOG)) {
       return false;
     }
     // Do not accept existing input
-    if (props.step.resources.filter((r) => r.index == resource.index).length > 0) {
+    if (props.resources.filter((r) => r.index === resource.index).length > 0) {
       return false;
     }
 
@@ -122,7 +126,11 @@ class StepInputContainer extends React.Component {
     return (
       <StepInput
         key={resource.index}
-        active={this.props.active.step == this.props.step.index && this.props.active.stepInput == resource.index}
+        active={
+          (this.props.active.type === EnumSelection.Input) &&
+          (this.props.active.step === this.props.step.index) &&
+          (this.props.active.item === resource.index)
+        }
         step={this.props.step}
         resource={resource}
         remove={this.props.removeStepInput}
@@ -134,7 +142,7 @@ class StepInputContainer extends React.Component {
   render() {
     const { connectDropTarget, isOver } = this.props;
 
-    const counters = getRequiredResources(this.props.step);
+    const counters = getRequiredResources(this.props.step, this.props.resources);
     const message = (
       <div>
         {counters.poi > 0 && counters.any <= 0 &&
@@ -162,8 +170,8 @@ class StepInputContainer extends React.Component {
             'slipo-pd-step-input-container': true,
             'slipo-pd-step-input-container-full': (counters.poi <= 0 && counters.linked <= 0 && counters.any <= 0)
           })}
-          style={{ opacity: (this.props.step.resources.length != 0 || isOver ? 1 : 0.2) }}>
-          {this.props.step.resources.map((r) => this.renderResource(r))}
+          style={{ opacity: (this.props.resources.length != 0 || isOver ? 1 : 0.2) }}>
+          {this.props.resources.map((r) => this.renderResource(r))}
         </div>
         {message}
       </div>

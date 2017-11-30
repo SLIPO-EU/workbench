@@ -5,19 +5,24 @@ package eu.slipo.workbench.web.model.resource;
  */
 public class UploadDataSource extends DataSource {
 
-    private int fileIndex;
+    private String filename;
 
     public UploadDataSource() {
         super(EnumDataSource.UPLOAD);
     }
 
+    public UploadDataSource(String filename) {
+        super(EnumDataSource.UPLOAD);
+        this.filename = filename;
+    }
+
     /**
-     * Index of the uploaded file
+     * The uploaded filename
      *
-     * @return the index
+     * @return the filename
      */
-    public int getFileIndex() {
-        return fileIndex;
+    public String getFilename() {
+        return filename;
     }
 
 }

@@ -4,8 +4,7 @@ import { bindActionCreators } from 'redux';
 import { Link } from 'react-router-dom';
 import { FormattedTime, injectIntl } from 'react-intl';
 import {
-  Card as ReactCard, CardBlock, CardTitle, Row, Col,
-  ButtonToolbar, Button, ButtonGroup, Label, Input
+  Row, Col,
 } from 'reactstrap';
 
 import moment from 'moment';
@@ -23,17 +22,17 @@ import BarChart from '../helpers/chart';
 import { fetchDashboardData, changeDashboardFilter } from '../../ducks/ui/views/dashboard';
 
 class Dashboard extends React.Component {
-  componentWillMount(){
-    this.props.fetchDashboardData(); 
+  componentWillMount() {
+    this.props.fetchDashboardData();
   }
-  
+
   render() {
-    
+
     return (
       <div className="animated fadeIn">
         <div className="row">
           <div className="col-sm-12 col-md-6 col-lg-3">
-            <Card { ...CardConfig.ResourceCardConfig(this.props.stats.resources, this.props.intl)} />
+            <Card { ...CardConfig.ResourceCardConfig(this.props.stats.resources, this.props.intl) } />
           </div>
           <div className="col-sm-12 col-md-6 col-lg-3">
             <Card { ...CardConfig.JobCardConfig} />
@@ -42,30 +41,30 @@ class Dashboard extends React.Component {
             <Card { ...CardConfig.QuotaCardConfig} />
           </div>
           <div className="col-sm-12 col-md-6 col-lg-3">
-            <Card { ...CardConfig.EventCardConfig(this.props.stats.events, this.props.intl)} />
+            <Card { ...CardConfig.EventCardConfig(this.props.stats.events, this.props.intl) } />
           </div>
         </div>
         <Row>
           <Col sm="12" md="12" lg="6">
-            <DashboardCard 
-              name= 'Executed Processes'
-              changedOn= {new Date()}        
-            > 
+            <DashboardCard
+              name='Executed Processes'
+              changedOn={new Date()}
+            >
               <BarChart { ...ChartConfig.JobSeries} />
             </DashboardCard>
           </Col>
           <Col sm="12" md="12" lg="6">
-            <DashboardCard 
-              name= 'Quota Usage'
-              changedOn= {new Date()}      
-            > 
+            <DashboardCard
+              name='Quota Usage'
+              changedOn={new Date()}
+            >
               <BarChart { ...ChartConfig.QuotaSeries} />
             </DashboardCard>
           </Col>
         </Row>
         <Row>
           <Col className="col-sm-12 col-md-12 col-lg-6">
-            <DashboardCard { ...DashboardCardConfig.DashboardProcessExplorerConfig} filterChange={this.props.changeDashboardFilter} filterValue={this.props.filters.processExplorer} > 
+            <DashboardCard { ...DashboardCardConfig.DashboardProcessExplorerConfig} filterChange={this.props.changeDashboardFilter} filterValue={this.props.filters.processExplorer} >
               <Table
                 data={TableConfig.JobGridData}
                 columns={TableConfig.JobGridColumns}
@@ -73,18 +72,18 @@ class Dashboard extends React.Component {
             </DashboardCard>
           </Col>
           <Col className="col-sm-12 col-md-12 col-lg-6">
-            <DashboardCard { ...DashboardCardConfig.DashboardResourcesConfig } filterChange={this.props.changeDashboardFilter} filterValue={this.props.filters.resources} > 
+            <DashboardCard { ...DashboardCardConfig.DashboardResourcesConfig } filterChange={this.props.changeDashboardFilter} filterValue={this.props.filters.resources} >
               <Table
                 data={TableConfig.ResourceGridData(this.props.resources)}
                 columns={TableConfig.ResourceGridColumns}
               />
             </DashboardCard>
-           
+
           </Col>
         </Row >
         <Row>
           <Col className="col-12">
-            <DashboardCard { ...DashboardCardConfig.DashboardEventsConfig } filterChange={this.props.changeDashboardFilter} filterValue={this.props.filters.events} > 
+            <DashboardCard { ...DashboardCardConfig.DashboardEventsConfig } filterChange={this.props.changeDashboardFilter} filterValue={this.props.filters.events} >
               <Table
                 data={TableConfig.EventGridData(this.props.events)}
                 columns={TableConfig.EventGridColumns}
@@ -108,27 +107,27 @@ const mapStateToProps = (state) => ({
   //givenName: state.user.profile.givenName,
 });
 
-const mapDispatchToProps = (dispatch) => bindActionCreators({ fetchDashboardData, changeDashboardFilter}, dispatch);
+const mapDispatchToProps = (dispatch) => bindActionCreators({ fetchDashboardData, changeDashboardFilter }, dispatch);
 
 const mergeProps = (stateProps, dispatchProps, ownProps) => {
   let resVisible;
-  switch(stateProps.filters.resources){
+  switch (stateProps.filters.resources) {
     case 'all':
       resVisible = stateProps.resources;
       break;
     case 'new':
-      resVisible = stateProps.resources.filter(resource => moment(resource.createdOn).isAfter(moment().subtract(7,'d')));
+      resVisible = stateProps.resources.filter(resource => moment(resource.createdOn).isAfter(moment().subtract(7, 'd')));
       break;
     case 'updated':
-      resVisible = stateProps.resources.filter(resource => moment(resource.updatedOn).isAfter(moment().subtract(7,'d')) && (resource.updatedOn!==resource.createdOn) );
+      resVisible = stateProps.resources.filter(resource => moment(resource.updatedOn).isAfter(moment().subtract(7, 'd')) && (resource.updatedOn !== resource.createdOn));
   }
-   
+
   return {
     ...stateProps,
     ...dispatchProps,
     ...ownProps,
-    events: stateProps.filters.events  ===  "ALL" ?  stateProps.events : stateProps.events.filter(event => event.level === stateProps.filters.events),
-    resources: resVisible, 
+    events: stateProps.filters.events === "ALL" ? stateProps.events : stateProps.events.filter(event => event.level === stateProps.filters.events),
+    resources: resVisible,
   };
 };
 

@@ -4,7 +4,7 @@ import { bindActionCreators } from 'redux';
 
 import {
   Card,
-  CardBlock,
+  CardBody,
   Col,
   Row,
 } from 'reactstrap';
@@ -26,17 +26,17 @@ class ResourceRegistration extends React.Component {
       <Row>
         <Col sm="12" md="12" lg="6">
           <Card>
-            <CardBlock className="card-body">
-              <ResourceWizard 
+            <CardBody className="card-body">
+              <ResourceWizard
                 saveTemp={this.props.saveTempResource}
                 clearTemp={this.props.clearTempResource}
                 initialActive={this.props.step}
                 initialValues={this.props.values}
-                createResource={this.props.createResource} 
+                createResource={this.props.createResource}
                 goTo={this.props.history.push}
                 filesystem={this.props.filesystem}
               />
-            </CardBlock>
+            </CardBody>
           </Card>
         </Col>
       </Row>
@@ -51,10 +51,10 @@ const mapStateToProps = (state) => ({
   filesystem: state.config.filesystem,
 
 });
-const mapDispatchToProps = (dispatch) => bindActionCreators({ 
-  createResource, 
-  saveTempResource, 
-  clearTempResource, 
+const mapDispatchToProps = (dispatch) => bindActionCreators({
+  createResource,
+  saveTempResource,
+  clearTempResource,
 }, dispatch);
 
 const mergeProps = (stateProps, dispatchProps, ownProps) => {

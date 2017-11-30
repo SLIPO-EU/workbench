@@ -15,7 +15,7 @@ import {
   EnumDataSource,
   EnumHarvester,
   EnumTool,
-  EnumToolboxItem,
+  EnumToolboxItemGroup,
   EnumOperation,
 } from './constants';
 
@@ -30,7 +30,6 @@ import {
 } from './config';
 import DataSource from './data-source';
 import Operation from './operation';
-import Harvester from './harvester';
 
 /**
  * Helper methods
@@ -40,7 +39,7 @@ function getToolboxItems(type) {
   let index = 0;
   const items = [];
 
-  if ((!type) || (type === EnumToolboxItem.DataSource)) {
+  if ((type === EnumToolboxItemGroup.All) || (type === EnumToolboxItemGroup.DataSource)) {
     for (let key in EnumDataSource) {
       if (key === EnumDataSource.HARVESTER) {
         continue;
@@ -49,13 +48,13 @@ function getToolboxItems(type) {
     }
   }
 
-  if ((!type) || (type === EnumToolboxItem.Harvester)) {
+  if ((type === EnumToolboxItemGroup.All) || (type === EnumToolboxItemGroup.Harvester)) {
     for (let key in EnumHarvester) {
-      items.push(<Harvester key={++index} title={HarvesterTitles[key]} harvester={key} iconClass={HarvesterIcons[key]} />);
+      items.push(<DataSource key={++index} title={HarvesterTitles[key]} source={EnumDataSource.HARVESTER} iconClass={HarvesterIcons[key]} harvester={key} />);
     }
   }
 
-  if ((!type) || (type === EnumToolboxItem.Operation)) {
+  if ((type === EnumToolboxItemGroup.All) || (type === EnumToolboxItemGroup.Tools)) {
     for (let key in EnumTool) {
       if (key === EnumTool.CATALOG) {
         continue;
@@ -65,7 +64,7 @@ function getToolboxItems(type) {
   }
 
   // Catalog is handled as a special tool component
-  if ((!type) || (type === EnumTool.CATALOG)) {
+  if ((type === EnumToolboxItemGroup.All) || (type === EnumToolboxItemGroup.Misc)) {
     items.push(
       <Operation
         key={++index}
@@ -156,19 +155,19 @@ class Toolbox extends React.Component {
         </Nav>
         <TabContent activeTab={this.state.activeTab}>
           <TabPane tabId="1">
-            {getToolboxItems()}
+            {getToolboxItems(EnumToolboxItemGroup.All)}
           </TabPane>
           <TabPane tabId="2">
-            {getToolboxItems(EnumToolboxItem.Operation)}
+            {getToolboxItems(EnumToolboxItemGroup.Tools)}
           </TabPane>
           <TabPane tabId="3">
-            {getToolboxItems(EnumToolboxItem.DataSource)}
+            {getToolboxItems(EnumToolboxItemGroup.DataSource)}
           </TabPane>
           <TabPane tabId="4">
-            {getToolboxItems(EnumToolboxItem.Harvester)}
+            {getToolboxItems(EnumToolboxItemGroup.Harvester)}
           </TabPane>
           <TabPane tabId="5">
-            {getToolboxItems(EnumTool.CATALOG)}
+            {getToolboxItems(EnumToolboxItemGroup.Misc)}
           </TabPane>
         </TabContent>
       </div>

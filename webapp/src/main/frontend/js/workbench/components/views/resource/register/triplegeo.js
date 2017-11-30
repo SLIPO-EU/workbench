@@ -1,5 +1,5 @@
 import React from 'react';
-import { TextField, SelectField } from '../../../helpers/forms/wizard-fields/';
+import { TextField, SelectField } from '../../../helpers/forms/form-fields/';
 
 
 const serializations = [
@@ -23,7 +23,7 @@ const crs = [
 
 const languages = [
   { value: 'en', label: 'English' },
-  { value: 'en', label: 'Greek' },
+  { value: 'el', label: 'Greek' },
 ];
 
 export const initialValue = {
@@ -51,7 +51,7 @@ export const validator = function (values, cleared) {
   if (cleared && cleared.metadata && cleared.metadata.format === 'CSV') {
     if (!values['delimiter']) {
       errors['delimiter'] = 'Required for CSV';
-    } 
+    }
     if (!values['attrX']) {
       errors['attrX'] = 'Required for CSV';
     }
@@ -59,7 +59,7 @@ export const validator = function (values, cleared) {
       errors['attrY'] = 'Required for CSV';
     }
   }
-  
+
   if (Object.keys(errors).length) {
     throw errors;
   }
@@ -93,14 +93,14 @@ export const Component = (props) => {
         <h4>Data parameters</h4>
         <hr />
       </div>
-      
+
       <TextField
         {...props}
         id="attrKey"
         label="Attribute key"
         help="Field name containing unique identifier for each entity (i.e., each record in the shapefile)"
       />
-      
+
       <TextField
         {...props}
         id="attrName"
@@ -114,15 +114,15 @@ export const Component = (props) => {
         label="Attribute category"
         help="Field name from which classification literals (e.g., type of points, road classes etc.) will be extracted. Set value UNK if non applicable"
       />
-      
+
       <TextField
         {...props}
         id="valIgnore"
         label="Ignore value"
         help="Parameter that specifies particular values (e.g., UNK) in attributes that should not be exported as literals. By default, NULL values in attributes are suppressed and never exported"
       />
-      { 
-        props.values.metadata && props.values.metadata.format === 'CSV' ?
+      {
+        props.values && props.values['metadata'] && props.values['metadata'].format === 'CSV' ?
           <div>
             <TextField
               {...props}
@@ -130,7 +130,7 @@ export const Component = (props) => {
               label="Delimiter"
               help="Specify delimiter character"
             />
-            
+
             <TextField
               {...props}
               id="attrX"
@@ -147,7 +147,7 @@ export const Component = (props) => {
           </div>
           : null
       }
-      
+
       <div>
         <h4>Namespace parameters</h4>
         <hr />
@@ -209,12 +209,12 @@ export const Component = (props) => {
         help=""
         options={crs}
       />
-      
+
       <div>
         <h4>Other parameters</h4>
         <hr />
       </div>
-      
+
       <SelectField
         {...props}
         id="defaultLang"

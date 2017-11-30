@@ -1,62 +1,103 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import {
-  Button, Card, CardBlock, Row, Col,
+  Button, Card, CardBody, Row, Col,
 } from 'reactstrap';
+import {
+  EnumDataSource
+} from './constants';
+import Form from '../../../helpers/forms/form';
 
-import { ResourceConfigWizard } from './';
-import * as ReactRedux from 'react-redux';
-import { bindActionCreators } from 'redux';
+import * as externalUrl from '../../resource/register/url-select';
+import * as filesystem from '../../resource/register/filesystem';
 
-import { saveTempConfig, clearTempConfig } from '../../../../ducks/ui/views/process-config-step';
-import { configureStepEnd } from '../../../../ducks/ui/views/process-designer';
+import Placeholder from '../../../helpers/placeholder';
 
-
+/**
+ * Presentational component that wraps the data source configuration options
+ *
+ * @class StepConfig
+ * @extends {React.Component}
+ */
 class DataSourceConfig extends React.Component {
 
-  render() {
+  constructor(props) {
+    super(props);
+
+    this.cancel = this.cancel.bind(this);
+    this.save = this.save.bind(this);
+    this.setError = this.setError.bind(this);
+    this.setValue = this.setValue.bind(this);
+  }
+
+  static propTypes = {
+    step: PropTypes.object.isRequired,
+    dataSource: PropTypes.object.isRequired,
+    configuration: PropTypes.object,
+    errors: PropTypes.object,
+    configureStepDataSourceValidate: PropTypes.func.isRequired,
+    configureStepDataSourceUpdate: PropTypes.func.isRequired,
+    configureStepDataSourceEnd: PropTypes.func.isRequired,
+  }
+
+  setValue(configuration) {
+    this.props.configureStepDataSourceUpdate(this.props.step, this.props.dataSource, configuration);
+  }
+
+  setError(errors) {
+    if (errors) {
+      this.props.configureStepDataSourceValidate(this.props.step, this.props.dataSource, errors);
+    }
+  }
+
+  createForm(Component, validator, props) {
     return (
-      <Row>
-        <Col sm="12" md="12" lg="6">
-          <Card>
-            <CardBlock className="card-body">
-              <ResourceConfigWizard 
-                configureStepEnd={this.props.configureStepEnd}
-                stepId= {this.props.step}
-                saveTemp={this.props.saveTempConfig}
-                clearTemp={() => (this.props.configureStepEnd(this.props.step,null))}
-                initialActive={ this.props.dataSource.source==="FILESYSTEM" ? "FILESYSTEM" : this.props.dataSource.source==="EXTERNAL_URL" ? "external" : "metadata" }
-                initialValues={this.props.values}
-                filesystem={this.props.filesystem}
-              />
-            </CardBlock>
-          </Card>
-        </Col>
-      </Row>
+      <Form
+        title={this.props.step.title}
+        iconClass={this.props.step.iconClass}
+        validate={validator}
+        setError={this.setError}
+        setValue={this.setValue}
+        cancel={this.cancel}
+        save={this.save}
+        values={this.props.configuration}
+        errors={this.props.errors}
+      >
+        {
+          React.isValidElement(Component) ?
+            Component
+            :
+            <Component {...props} />
+        }
+      </Form>
     );
   }
 
+  save() {
+    this.props.configureStepDataSourceEnd(this.props.step, this.props.dataSource, this.props.configuration, this.props.errors);
+  }
+
+  cancel() {
+    this.props.configureStepDataSourceEnd(this.props.step, this.props.dataSource, null, this.props.errors);
+  }
+
+  render() {
+    return (
+      <Card>
+        <CardBody className="card-body">
+          {this.props.dataSource.source === EnumDataSource.EXTERNAL_URL &&
+            this.createForm(externalUrl.Component, externalUrl.validator)
+          }
+          {this.props.dataSource.source === EnumDataSource.FILESYSTEM &&
+            this.createForm(filesystem.Component, filesystem.validator, { filesystem: this.props.filesystem })
+          }
+          {this.props.dataSource.source === EnumDataSource.HARVESTER &&
+            this.createForm(<Placeholder style={{ height: '100%' }} label="Context" iconClass="fa fa-magic" />, null)
+          }
+        </CardBody>
+      </Card>
+    );
+  }
 }
 
-
-const mapStateToProps = (state) => ({
-  values: state.ui.views.process.configuration.values,
-  filesystem: state.config.filesystem,
-
-});
-const mapDispatchToProps = (dispatch) => bindActionCreators({  
-  saveTempConfig, 
-  clearTempConfig, 
-  configureStepEnd,
-}, dispatch);
-
-const mergeProps = (stateProps, dispatchProps, ownProps) => {
-  return {
-    ...stateProps,
-    ...dispatchProps,
-    ...ownProps,
-
-  };
-};
-
-export default ReactRedux.connect(mapStateToProps, mapDispatchToProps, mergeProps)(DataSourceConfig);
+export default DataSourceConfig;

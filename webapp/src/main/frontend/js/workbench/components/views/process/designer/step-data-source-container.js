@@ -8,6 +8,7 @@ import {
   EnumTool,
   EnumProcessInput,
   EnumResourceType,
+  EnumSelection,
 } from './constants';
 import { ToolInput } from './config';
 import StepDataSource from './step-data-source';
@@ -56,7 +57,7 @@ const containerTarget = {
     const dataSource = monitor.getItem();
     const counters = getRequiredDataSources(props.step);
 
-    if ((dataSource.type != EnumToolboxItem.DataSource) && (dataSource.type != EnumToolboxItem.Harvester)) {
+    if (dataSource.type != EnumToolboxItem.DataSource) {
       return false;
     }
     return (counters.source > 0);
@@ -70,7 +71,7 @@ const containerTarget = {
  * @class StepDataSourceContainer
  * @extends {React.Component}
  */
-@DropTarget([EnumDragSource.Harvester, EnumDragSource.DataSource], containerTarget, (connect, monitor) => ({
+@DropTarget([EnumDragSource.DataSource], containerTarget, (connect, monitor) => ({
   connectDropTarget: connect.dropTarget(),
   isOver: monitor.isOver(),
   canDrop: monitor.canDrop(),
@@ -88,7 +89,11 @@ class StepDataSourceContainer extends React.Component {
     return (
       <StepDataSource
         key={dataSource.index}
-        active={this.props.active.step == this.props.step.index && this.props.active.stepDataSource == dataSource.index}
+        active={
+          (this.props.active.type === EnumSelection.DataSource) &&
+          (this.props.active.step === this.props.step.index) &&
+          (this.props.active.item === dataSource.index)
+        }
         step={this.props.step}
         dataSource={dataSource}
         removeStepDataSource={this.props.removeStepDataSource}

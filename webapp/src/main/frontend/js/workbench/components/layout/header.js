@@ -6,7 +6,8 @@ import { FormattedMessage } from 'react-intl';
 import {
   Dropdown,
   DropdownMenu,
-  DropdownItem
+  DropdownItem,
+  DropdownToggle,
 } from 'reactstrap';
 
 import { userPropType } from '../../model/prop-types/user';
@@ -71,18 +72,17 @@ class Header extends React.Component {
           </li>
           <li className="nav-item">
             <Dropdown isOpen={this.state.dropdownOpen} toggle={this._toggleDropdown}>
-              <button onClick={this._toggleDropdown} className="nav-link dropdown-toggle no-outline" data-toggle="dropdown" type="button"
-                aria-haspopup="true" aria-expanded={this.state.dropdownOpen}>
+              <DropdownToggle caret size="sm" className="no-outline">
                 <span className="d-md-down-none">{this.props.user.username}</span>
-              </button>
-              <DropdownMenu className="dropdown-menu-right">
-                <DropdownItem className="btn" onClick={this._showProfile}>
+              </DropdownToggle>
+              <DropdownMenu>
+                <DropdownItem onClick={this._showProfile}>
                   <i className="fa fa-user"></i>&nbsp;{'Profile'}
                 </DropdownItem>
-                <DropdownItem className="btn" onClick={this._showSettings}>
+                <DropdownItem onClick={this._showSettings}>
                   <i className="fa fa-wrench"></i>&nbsp;{'Settings'}
                 </DropdownItem>
-                <DropdownItem className="btn" onClick={this.props.logout}>
+                <DropdownItem onClick={this.props.logout}>
                   <i className="fa fa-sign-out"></i>&nbsp;{'Logout'}
                 </DropdownItem>
               </DropdownMenu>
