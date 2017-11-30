@@ -10,9 +10,9 @@ import eu.slipo.workbench.web.model.EnumTool;
  */
 public abstract class ToolConfiguration {
 
-    protected List<Integer> resources = new ArrayList<Integer>();
-
     protected EnumTool tool;
+
+    protected List<Integer> resources = new ArrayList<Integer>();
 
     protected ToolConfiguration() {
 

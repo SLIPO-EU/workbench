@@ -11,12 +11,25 @@ export const EnumViews = {
  * Toolbox item types
  */
 export const EnumToolboxItem = {
+  // A catalog or computed resource
+  Resource: 'Resource',
   // A data source implementation
   DataSource: 'DataSource',
   // A harvester implementation used for loading a resource
   Harvester: 'Harvester',
   // A SLIPO Toolkit component operation
   Operation: 'Operation',
+};
+
+/**
+ * Toolbox item groups
+ */
+export const EnumToolboxItemGroup = {
+  All: 'All',
+  Tools: 'Tools',
+  DataSource: 'DataSource',
+  Harvester: 'Harvester',
+  Misc: 'Misc',
 };
 
 /*
@@ -49,8 +62,6 @@ export const EnumHarvester = {
 export const EnumProcessInput = {
   // A registered resource
   CATALOG: 'CATALOG',
-  // A dynamic resource loaded from an external data source or a harvester
-  TRANSIENT: 'TRANSIENT',
   // The output of a single process step/operation
   OUTPUT: 'OUTPUT',
 };
@@ -82,9 +93,9 @@ export const EnumOperation = {
  */
 export const EnumDragSource = {
   DataSource: 'DataSource',
-  Harvester: 'Harvester',
   Operation: 'Operation',
   Resource: 'Resource',
+  Step: 'Step',
 };
 
 /**
@@ -93,3 +104,21 @@ export const EnumDragSource = {
 export const EnumDropTarget = {
   Designer: 'Designer',
 };
+
+/**
+ * Step properties
+ */
+export const EnumStepProperty = {
+  Title: 'Title',
+};
+
+/**
+ * Selection type
+ */
+export const EnumSelection = {
+  Resource: 'Resource',
+  Step: 'Step',
+  Input: 'Input',
+  DataSource: 'DataSource',
+}
+;

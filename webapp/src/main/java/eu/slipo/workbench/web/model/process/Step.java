@@ -52,24 +52,48 @@ public class Step {
         this.output = output;
     }
 
+    /**
+     * The step unique index
+     *
+     * @return the step index
+     */
     public int getIndex() {
         return index;
     }
 
+    /**
+     * The step operation type
+     *
+     * @return the operation type
+     */
     public EnumOperation getOperation() {
         return operation;
     }
 
-
+    /**
+     * The tool that implements the operation
+     *
+     * @return the tool type
+     */
     public EnumTool getTool() {
         return tool;
     }
 
+    /**
+     * The custom tool configuration
+     *
+     * @return an instance of {@link ToolConfiguration}
+     */
     public ToolConfiguration getConfiguration() {
         return configuration;
     }
 
-
+    /**
+     * The unique resource index of an {@link OutputProcessResource} that is the output of
+     * this step
+     *
+     * @return the output resource index
+     */
     public Integer getOutput() {
         return output;
     }

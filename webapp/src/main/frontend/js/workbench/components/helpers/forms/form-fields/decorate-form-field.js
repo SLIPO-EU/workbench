@@ -1,7 +1,7 @@
 import React from 'react';
 
-export default function decorateWizardFormField(Field) {
-  return function(props) {
+export default function decorateFormField(Field) {
+  return function (props) {
     return (
       <Field
         {...props}

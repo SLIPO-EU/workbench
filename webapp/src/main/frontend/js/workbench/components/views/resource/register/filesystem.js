@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileSelectField } from '../../../helpers/forms/wizard-fields/';
+import { FileSelectField } from '../../../helpers/forms/form-fields/';
 
 export const initialValue = {
   resource: null,
@@ -23,6 +23,7 @@ export const Component = (props) => {
         id="resource"
         label="File system resource"
         help="Click on resource to select"
+        style={{ height: '40vh' }}
       />
     </div>
   );

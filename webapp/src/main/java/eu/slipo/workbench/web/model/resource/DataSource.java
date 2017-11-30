@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 /**
- * An abstract data source of a dataset
+ * An abstract data source
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "type")
 @JsonSubTypes({
@@ -24,10 +24,20 @@ public abstract class DataSource {
 
     }
 
+    /**
+     * Creates a new {@link DataSource} instance
+     *
+     * @param type the data source type
+     */
     protected DataSource(EnumDataSource type) {
         this.type = type;
     }
 
+    /**
+     * Data source type
+     *
+     * @return the type of the current data source instance
+     */
     public EnumDataSource getType() {
         return type;
     }

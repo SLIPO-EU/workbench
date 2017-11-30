@@ -8,18 +8,19 @@ import {
   EnumTool,
   EnumProcessInput,
   EnumResourceType,
+  EnumSelection,
 } from './constants';
-import { ToolConfiguration } from './tool-config';
+import { ToolInput } from './config';
 import StepDataSource from './step-data-source';
 
 /**
  * Returns plain JavaScript object with required input counters
  *
  * @param {any} step
- * @returns
+ * @returns a plain JavaScript object
  */
 function getRequiredDataSources(step) {
-  let { source } = ToolConfiguration[step.tool];
+  let { source } = ToolInput[step.tool];
 
   return {
     source: source - step.dataSources.length,
@@ -50,13 +51,13 @@ const containerTarget = {
    *
    * @param {any} props
    * @param {any} monitor
-   * @returns
+   * @returns true if the item is accepted
    */
   canDrop(props, monitor) {
     const dataSource = monitor.getItem();
     const counters = getRequiredDataSources(props.step);
 
-    if ((dataSource.type != EnumToolboxItem.DataSource) && (dataSource.type != EnumToolboxItem.Harvester)) {
+    if (dataSource.type != EnumToolboxItem.DataSource) {
       return false;
     }
     return (counters.source > 0);
@@ -70,7 +71,7 @@ const containerTarget = {
  * @class StepDataSourceContainer
  * @extends {React.Component}
  */
-@DropTarget([EnumDragSource.Harvester, EnumDragSource.DataSource], containerTarget, (connect, monitor) => ({
+@DropTarget([EnumDragSource.DataSource], containerTarget, (connect, monitor) => ({
   connectDropTarget: connect.dropTarget(),
   isOver: monitor.isOver(),
   canDrop: monitor.canDrop(),
@@ -81,14 +82,18 @@ class StepDataSourceContainer extends React.Component {
    * Renders a single {@link StepDataSource}
    *
    * @param {any} dataSource
-   * @returns
+   * @returns a {@link StepDataSourceContainer} component instance
    * @memberof StepDataSourceContainer
    */
   renderDataSource(dataSource) {
     return (
       <StepDataSource
         key={dataSource.index}
-        active={this.props.active.step == this.props.step.index && this.props.active.stepDataSource == dataSource.index}
+        active={
+          (this.props.active.type === EnumSelection.DataSource) &&
+          (this.props.active.step === this.props.step.index) &&
+          (this.props.active.item === dataSource.index)
+        }
         step={this.props.step}
         dataSource={dataSource}
         removeStepDataSource={this.props.removeStepDataSource}

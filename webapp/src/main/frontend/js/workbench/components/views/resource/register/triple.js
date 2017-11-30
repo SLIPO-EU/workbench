@@ -23,7 +23,7 @@ const crs = [
 
 const languages = [
   { value: 'en', label: 'English' },
-  { value: 'el', label: 'Greek' },
+  { value: 'en', label: 'Greek' },
 ];
 
 export const initialValue = {
@@ -121,32 +121,7 @@ export const Component = (props) => {
         label="Ignore value"
         help="Parameter that specifies particular values (e.g., UNK) in attributes that should not be exported as literals. By default, NULL values in attributes are suppressed and never exported"
       />
-      {
-        props.values && props.values['metadata'] && props.values['metadata'].format === 'CSV' ?
-          <div>
-            <TextField
-              {...props}
-              id="delimiter"
-              label="Delimiter"
-              help="Specify delimiter character"
-            />
 
-            <TextField
-              {...props}
-              id="attrX"
-              label="X-attribute"
-              help="Specify attribute holding X-coordinates of point locations"
-            />
-
-            <TextField
-              {...props}
-              id="attrY"
-              label="Y-attribute"
-              help="Specify attribute holding Y-coordinates of point locations"
-            />
-          </div>
-          : null
-      }
 
       <div>
         <h4>Namespace parameters</h4>

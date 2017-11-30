@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileDropField, TextField } from '../../../helpers/forms/wizard-fields/';
+import { FileDropField, TextField } from '../../../helpers/forms/form-fields/';
 
 export const initialValue = {
   file: null,

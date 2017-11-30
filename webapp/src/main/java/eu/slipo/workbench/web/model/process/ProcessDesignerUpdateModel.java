@@ -13,16 +13,13 @@ public class ProcessDesignerUpdateModel {
 
     private List<Step> steps = new ArrayList<Step>();
 
-    private List<Integer> execution = new ArrayList<Integer>();
-
     protected ProcessDesignerUpdateModel() {
 
     }
 
-    public ProcessDesignerUpdateModel(List<ProcessResource> resources, List<Step> steps, List<Integer> execution) {
+    public ProcessDesignerUpdateModel(List<ProcessResource> resources, List<Step> steps) {
         this.resources = resources;
         this.steps = steps;
-        this.execution = execution;
     }
 
     /**
@@ -41,15 +38,6 @@ public class ProcessDesignerUpdateModel {
      */
     public List<Step> getSteps() {
         return Collections.unmodifiableList(steps);
-    }
-
-    /**
-     * Order of step execution
-     *
-     * @return a list of step indexes
-     */
-    public List<Integer> getExecution() {
-        return Collections.unmodifiableList(execution);
     }
 
 }

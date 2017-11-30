@@ -11,12 +11,6 @@
 @import 'coreui/style';
 
 /*
- * Import styles for 3rd party components
- */
-
-@import '../../../../node_modules/react-toastify/src/scss/main';
-
-/*
  * Customize styles for 3rd party components
  */
 
@@ -35,6 +29,12 @@
 @import 'placeholder';
 @import 'table';
 @import 'process-designer';
+
+/*
+ * Import helpers
+ */
+
+@import 'helpers';
 
 /**
  * Apply custom styles

@@ -28,7 +28,7 @@ class ContentRoot extends React.Component {
   constructor(props) {
     super(props);
   }
-  
+
   componentWillMount() {
     if (this.props.user != null) {
       this._getFileSystem();
@@ -56,7 +56,7 @@ class ContentRoot extends React.Component {
 
   _setViewport() {
     this.props.resize(
-      document.documentElement.clientWidth, 
+      document.documentElement.clientWidth,
       document.documentElement.clientHeight
     );
   }
@@ -95,6 +95,7 @@ class ContentRoot extends React.Component {
     return (
       <div>
         <ToastContainer
+          className="slipo-toastify"
           position="top-right"
           type="default"
           autoClose={5000}

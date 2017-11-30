@@ -28,7 +28,7 @@ class ToastTemplate extends React.Component {
               {iconClass &&
                 <td style={{ padding: this.props.padding }}><i className={iconClass}></i></td>
               }
-              <td style={{ padding: this.props.padding }}><FormattedMessage id={this.props.text} defaultMessage={this.props.text} /></td>
+              <td style={{ padding: (this.props.padding + 4) }}><FormattedMessage id={this.props.text} defaultMessage={this.props.text} /></td>
             </tr>
           </tbody>
         </table>
