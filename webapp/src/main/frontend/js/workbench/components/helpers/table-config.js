@@ -77,7 +77,7 @@ export const JobGridColumns = [{
 /**
  * Event grid data maper
  */
-export const EventGridData = (events) => events.map(event => ({  
+export const EventGridData = (events) => events.map(event => ({
   level: event.level,
   category: event.category,
   code: event.code,

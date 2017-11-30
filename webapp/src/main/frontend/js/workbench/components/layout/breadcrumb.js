@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Link } from 'react-router-dom';
 import { FormattedMessage } from 'react-intl';
 import { Breadcrumb, BreadcrumbItem } from 'reactstrap';
-import { getRoute } from '../../model/routes';
+import { getRoute, matchRoute } from '../../model/routes';
 
 const MAX_LENGTH = 3; // maximum number of parts for a breadcrumb
 
@@ -21,7 +21,7 @@ export default ({ location }) => {
     <Breadcrumb>
       {paths.map((path) => {
         let active = location.pathname == path;
-        let r = getRoute(path);
+        let r = getRoute(matchRoute(path));
         if (!r) {
           return null;
         }

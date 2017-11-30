@@ -19,8 +19,6 @@ public class ProcessDesignerUpdateModelBuilder {
 
     private List<Step> steps = new ArrayList<Step>();
 
-    private List<Integer> execution = new ArrayList<Integer>();
-
     private ProcessDesignerUpdateModelBuilder() {
 
     }
@@ -34,27 +32,17 @@ public class ProcessDesignerUpdateModelBuilder {
         return this;
     }
 
-    public ProcessDesignerUpdateModelBuilder fileResource(int index, String filename, TripleGeoConfiguration configuration) {
-        this.resources.add(new FileProcessResource(index, filename, configuration));
-
-        return this;
-    }
-
-    public ProcessDesignerUpdateModelBuilder transientResource(int index, DataSource dataSource, TripleGeoConfiguration configuration) {
-        this.resources.add(new TransientProcessResource(index, dataSource, configuration));
-
-        return this;
-    }
-
     private ProcessDesignerUpdateModelBuilder step(Step step) {
         this.steps.add(step);
-        this.execution.add(step.getIndex());
 
         return this;
     }
 
-    public ProcessDesignerUpdateModelBuilder step(EnumTool tool, EnumOperation operation,
-            ToolConfiguration configuration, List<Integer> resources) {
+    public ProcessDesignerUpdateModelBuilder step(
+            EnumTool tool,
+            EnumOperation operation,
+            ToolConfiguration configuration,
+            List<Integer> resources) {
 
         this.stepIndex++;
 
@@ -89,6 +77,25 @@ public class ProcessDesignerUpdateModelBuilder {
         return this.step(step);
     }
 
+    public ProcessDesignerUpdateModelBuilder transform(
+            DataSource dataSource,
+            TripleGeoSettings settings,
+            int output) {
+
+        this.stepIndex++;
+
+        // Step
+        Step step = new Step(this.stepIndex,
+                             EnumTool.TRIPLE_GEO,
+                             EnumOperation.TRANSFORM,
+                             new TripleGeoConfiguration(dataSource, settings),
+                             output);
+        // Output
+        this.resources.add(new OutputProcessResource(output, this.stepIndex));
+
+        return this.step(step);
+    }
+
     public ProcessDesignerUpdateModelBuilder register(ResourceMetadataCreate metadata, Integer resource) {
         this.stepIndex++;
 
@@ -104,11 +111,10 @@ public class ProcessDesignerUpdateModelBuilder {
         this.stepIndex = 0;
         this.resources.clear();
         this.steps.clear();
-        this.execution.clear();
         return this;
     }
 
     public ProcessDesignerUpdateModel build() {
-        return new ProcessDesignerUpdateModel(this.resources, this.steps, this.execution);
+        return new ProcessDesignerUpdateModel(this.resources, this.steps);
     }
 }

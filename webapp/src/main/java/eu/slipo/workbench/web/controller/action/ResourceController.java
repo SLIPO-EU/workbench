@@ -29,12 +29,14 @@ import eu.slipo.workbench.web.model.QueryResult;
 import eu.slipo.workbench.web.model.process.ProcessDesignerUpdateModel;
 import eu.slipo.workbench.web.model.process.ProcessDesignerUpdateModelBuilder;
 import eu.slipo.workbench.web.model.resource.EnumDataSource;
-import eu.slipo.workbench.web.model.resource.ResourceRecord;
+import eu.slipo.workbench.web.model.resource.RegistrationRequest;
 import eu.slipo.workbench.web.model.resource.ResourceErrorCode;
 import eu.slipo.workbench.web.model.resource.ResourceMetadataUpdate;
 import eu.slipo.workbench.web.model.resource.ResourceMetadataView;
 import eu.slipo.workbench.web.model.resource.ResourceQuery;
+import eu.slipo.workbench.web.model.resource.ResourceRecord;
 import eu.slipo.workbench.web.model.resource.ResourceRegistrationRequest;
+import eu.slipo.workbench.web.model.resource.UploadDataSource;
 
 /**
  * Actions for managing resources
@@ -108,7 +110,7 @@ public class ResourceController {
         // Convert registration data to a process configuration instance
         ProcessDesignerUpdateModel process =  ProcessDesignerUpdateModelBuilder
             .create()
-            .transientResource(1, request.getDataSource(), request.getConfiguration())
+            .transform(request.getDataSource(), request.getSettings(), 1)
             .register(request.getMetadata(), 1)
             .build();
 
@@ -129,20 +131,15 @@ public class ResourceController {
     public RestResponse<?> uploadResource(
             Authentication authentication,
             @RequestPart("file") MultipartFile file,
-            @RequestPart("data") ResourceRegistrationRequest request) {
+            @RequestPart("data") RegistrationRequest request) {
         try {
-            // Action supports only file uploading
-            if (request.getDataSource().getType() != EnumDataSource.UPLOAD) {
-                return RestResponse.error(ResourceErrorCode.DATASOURCE_NOT_SUPPORTED, "Only data source of type 'UPLOAD' is supported.");
-            }
-
             // Create a temporary file
             final String inputFile = createTemporaryFilename(file.getBytes(), FilenameUtils.getExtension(file.getOriginalFilename()));
 
             // Convert registration data to a process configuration instance
             ProcessDesignerUpdateModel process =  ProcessDesignerUpdateModelBuilder
                 .create()
-                .fileResource(1, inputFile, request.getConfiguration())
+                .transform(new UploadDataSource(inputFile), request.getSettings(), 1)
                 .register(request.getMetadata(), 1)
                 .build();
 

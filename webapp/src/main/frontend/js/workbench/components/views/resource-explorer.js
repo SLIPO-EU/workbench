@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as ReactRedux from 'react-redux';
 import { bindActionCreators } from 'redux';
 import {
-  Card, CardBlock, CardTitle, Row, Col,
+  Card, CardBody, CardTitle, Row, Col,
   ButtonToolbar, Button, ButtonGroup, Label, Input
 } from 'reactstrap';
 import moment from 'moment';
@@ -48,7 +48,7 @@ class ResourceExplorer extends React.Component {
         <Row>
           <Col className="col-12">
             <Card>
-              <CardBlock className="card-body">
+              <CardBody className="card-body">
                 <Row className="mb-2">
                   <Col >
                     <div className="small text-muted">
@@ -76,6 +76,7 @@ class ResourceExplorer extends React.Component {
                       fetchResources={this.props.fetchResources}
                       setSelectedResource={this.props.setSelectedResource}
                       selectedResource={this.props.selectedResource}
+                      selectedResourceVersion={this.props.selectedResourceVersion}
                       addResourceToBag={this.props.addResourceToBag}
                     />
                   </Col>
@@ -89,10 +90,11 @@ class ResourceExplorer extends React.Component {
                     <ResourceDetails
                       resources={this.props.resources.items}
                       detailed={this.props.selectedResource}
+                      selectedResourceVersion={this.props.selectedResourceVersion}
                     />
                   </Col>
                 </Row>
-              </CardBlock>
+              </CardBody>
             </Card>
           </Col>
         </Row >
@@ -107,6 +109,7 @@ const mapStateToProps = (state) => ({
   pager: state.ui.views.resources.explorer.pager,
   filters: state.ui.views.resources.explorer.filters,
   selectedResource: state.ui.views.resources.explorer.selected,
+  selectedResourceVersion: state.ui.views.resources.explorer.version,
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({

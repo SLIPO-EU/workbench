@@ -8,7 +8,9 @@ $slipo-pd-operation-color: #1A237E !default;
 $slipo-pd-harvester-color: #b71c1c !default;
 $slipo-pd-resource-color: #616161 !default;
 $slipo-pd-step-input-color: #616161 !default;
+$slipo-pd-step-input-color-active: #EEEEEE !default;
 $slipo-pd-step-color: #616161 !default;
+$slipo-invalid-color:#E74856 !default;
 
 /*
  * Misc
@@ -132,9 +134,14 @@ $slipo-pd-step-color: #616161 !default;
   padding: 10px;
   display: flex;
   flex-direction: column;
-  height: 50vh;
+  max-height: 40vh;
   overflow-y: scroll;
   margin-right: -18px;
+  border-bottom: 1px solid #cfd8dc;
+}
+
+.slipo-pd-sidebar-resource-list-empty {
+  border: none;
 }
 
 
@@ -144,13 +151,18 @@ $slipo-pd-step-color: #616161 !default;
 
 .slipo-pd-resource {
   width: 100%;
-  height: 5rem;
-  border: 1px solid $slipo-pd-resource-color;
+  padding: 5px 0px;
+  border: 1px dotted $slipo-pd-resource-color;
   border-radius: 0.25rem;
   margin: 0.25rem 0rem;
   display: inline-block;
   opacity: 1;
   cursor: move;
+}
+
+.slipo-pd-resource-active {
+  background: #EEEEEE;
+  border: 1px solid #EEEEEE;
 }
 
 .slipo-pd-resource-is-dragging {
@@ -186,11 +198,29 @@ $slipo-pd-step-color: #616161 !default;
   right: 4px;
   position: absolute;
   top: 25px;
+  color: black;
   cursor: pointer;
 }
 
-.slipo-pd-resource:hover .slipo-pd-resource-actions {
+.slipo-pd-resource:hover .slipo-pd-resource-actions,
+.slipo-pd-resource-active .slipo-pd-resource-actions {
   display: block;
+}
+
+.slipo-pd-resource-details {
+  padding: 10px;
+  max-height: 40vh;
+  overflow-y: scroll;
+  margin-right: -18px;
+}
+
+.slipo-pd-resource-details-label {
+  font-weight: bold;
+  font-size: 0.7rem;
+}
+
+.slipo-pd-resource-details-value {
+  text-align: justify;
 }
 
 
@@ -199,7 +229,7 @@ $slipo-pd-step-color: #616161 !default;
  */
 
 .slipo-pd-step {
-  min-width: 240px;
+  width: 250px;
   min-height: 100px;
   margin: 5px;
   border: 1px solid $slipo-pd-step-color;
@@ -209,16 +239,55 @@ $slipo-pd-step-color: #616161 !default;
 }
 
 .slipo-pd-step-active {
-  border-width: 2px;
+  border-width: 1px;
 }
 
 .slipo-pd-step-header {
   border-bottom: 1px solid $slipo-pd-step-color;
   padding: 5px 11px;
+  display: flex;
+  flex-direction: row;
 }
 
 .slipo-pd-step-invalid {
-  border-color: #b71c1c;
+  border-color: $slipo-invalid-color;
+}
+
+.slipo-pd-step-active .slipo-pd-step-header {
+  background: $slipo-pd-step-color;
+  color: white;
+}
+
+.slipo-pd-step-active .slipo-pd-step-header.slipo-pd-step-invalid {
+  background: $slipo-invalid-color;
+  color: white;
+}
+
+.slipo-pd-step-title-input {
+  border: none;
+  text-overflow: ellipsis;
+  flex: 1;
+  z-index: 1;
+}
+
+.slipo-pd-step-title-input:focus {
+  outline: none;
+  background: none;
+  border-radius: 0px;
+}
+
+.slipo-pd-step-active .slipo-pd-step-title-input {
+  background: $slipo-pd-step-color;
+  color: white;
+}
+
+.slipo-pd-step-active.slipo-pd-step-invalid .slipo-pd-step-title-input {
+  background: $slipo-invalid-color;
+  color: white;
+}
+
+.slipo-pd-step-icon {
+  margin-top: 5px;
 }
 
 .slipo-pd-step-actions {
@@ -269,18 +338,24 @@ $slipo-pd-step-color: #616161 !default;
 .slipo-pd-step-input {
   width: 100%;
   height: 5rem;
-  border: 1px solid $slipo-pd-step-input-color;
+  border: 1px dotted $slipo-pd-step-input-color;
   border-radius: 0.25rem;
   margin-bottom: 1rem;
   display: inline-block;
 }
 
 .slipo-pd-step-input-active {
-  border-width: 2px;
+  background: $slipo-pd-step-input-color-active;
+  border: 1px solid $slipo-pd-step-input-color-active;
 }
 
 .slipo-pd-step-input-invalid {
-  border-color: #b71c1c;
+  border-color: $slipo-invalid-color;
+}
+
+.slipo-pd-step-input-active.slipo-pd-step-input-invalid {
+  background: $slipo-invalid-color;
+  color: white;
 }
 
 .slipo-pd-step-input:last-child {
@@ -319,6 +394,7 @@ $slipo-pd-step-color: #616161 !default;
 .slipo-pd-step-resource-view {
   right: 4px;
   top: 25px;
+  color: black;
 }
 
 .slipo-pd-step-input:hover .slipo-pd-step-resource-actions,

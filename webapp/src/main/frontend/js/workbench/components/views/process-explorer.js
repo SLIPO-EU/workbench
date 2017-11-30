@@ -3,7 +3,7 @@ import * as ReactRedux from 'react-redux';
 import { FormattedTime } from 'react-intl';
 import { bindActionCreators } from 'redux';
 import {
-  Card, CardBlock, CardTitle, Row, Col,
+  Card, CardBody, CardTitle, Row, Col,
   ButtonToolbar, Button, ButtonGroup, Label, Input
 } from 'reactstrap';
 
@@ -27,7 +27,7 @@ import { fetchProcessData, setPager, setSelectedProcess, setSelectedExecution } 
  */
 class ProcessExplorer extends React.Component {
   componentWillMount(){
-    this.props.fetchProcessData(); 
+    this.props.fetchProcessData();
   }
   render() {
     const { resources } = this.props;
@@ -36,7 +36,7 @@ class ProcessExplorer extends React.Component {
         <Row>
           <Col className="col-12">
             <Card>
-              <CardBlock className="card-body">
+              <CardBody className="card-body">
                 <Row className="mb-2">
                   <Col >
                     <div className="small text-muted">Last Update: <FormattedTime value={moment().toDate()} day='numeric' month='numeric' year='numeric' /></div>
@@ -44,7 +44,7 @@ class ProcessExplorer extends React.Component {
                 </Row>
                 <Row style={{ height: 100 }} className="mb-2">
                   <Col>
-                    <Filters 
+                    <Filters
                       filters=''//{this.props.filters}
                       setFilter=''//{this.props.setFilter}
                       resetFilters=''//{this.props.resetFilters}
@@ -77,11 +77,11 @@ class ProcessExplorer extends React.Component {
                   </Col>
                   <Col xs="3">
                     <h3>Details</h3>
-                    <ExecutionDetails 
+                    <ExecutionDetails
                       steps= {this.props.processes.executionStatus.steps} />
                   </Col>
                 </Row>
-              </CardBlock>
+              </CardBody>
             </Card>
           </Col>
         </Row >
@@ -92,8 +92,8 @@ class ProcessExplorer extends React.Component {
 }
 
 const mapStateToProps = (state) => ({
-  processes: state.ui.views.processes,
-  selectedFields: state.ui.views.processes.selectedFields,
+  processes: state.ui.views.process.explorer,
+  selectedFields: state.ui.views.process.explorer.selectedFields,
   //pager: state.ui.views.processes.pagingOptions,
   //resources: state.ui.views.dashboard.resources,
   //events: state.ui.views.dashboard.events,

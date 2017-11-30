@@ -1,5 +1,5 @@
 import React from 'react';
-import { SelectField, TextField } from '../../../helpers/forms/wizard-fields/';
+import { SelectField, TextField } from '../../../helpers/forms/form-fields/';
 import validateUrl from '../../../../util/validate-url';
 
 const harvesters = [

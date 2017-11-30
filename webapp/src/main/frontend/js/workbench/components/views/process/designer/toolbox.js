@@ -15,11 +15,68 @@ import {
   EnumDataSource,
   EnumHarvester,
   EnumTool,
+  EnumToolboxItemGroup,
   EnumOperation,
 } from './constants';
+
+import {
+  DataSourceIcons,
+  DataSourceTitles,
+  HarvesterIcons,
+  HarvesterTitles,
+  ToolDefaultOperation,
+  ToolIcons,
+  ToolTitles,
+} from './config';
 import DataSource from './data-source';
 import Operation from './operation';
-import Harvester from './harvester';
+
+/**
+ * Helper methods
+ */
+
+function getToolboxItems(type) {
+  let index = 0;
+  const items = [];
+
+  if ((type === EnumToolboxItemGroup.All) || (type === EnumToolboxItemGroup.DataSource)) {
+    for (let key in EnumDataSource) {
+      if (key === EnumDataSource.HARVESTER) {
+        continue;
+      }
+      items.push(<DataSource key={++index} title={DataSourceTitles[key]} source={key} iconClass={DataSourceIcons[key]} />);
+    }
+  }
+
+  if ((type === EnumToolboxItemGroup.All) || (type === EnumToolboxItemGroup.Harvester)) {
+    for (let key in EnumHarvester) {
+      items.push(<DataSource key={++index} title={HarvesterTitles[key]} source={EnumDataSource.HARVESTER} iconClass={HarvesterIcons[key]} harvester={key} />);
+    }
+  }
+
+  if ((type === EnumToolboxItemGroup.All) || (type === EnumToolboxItemGroup.Tools)) {
+    for (let key in EnumTool) {
+      if (key === EnumTool.CATALOG) {
+        continue;
+      }
+      items.push(<Operation key={++index} title={ToolTitles[key]} tool={key} operation={ToolDefaultOperation[key]} iconClass={ToolIcons[key]} />);
+    }
+  }
+
+  // Catalog is handled as a special tool component
+  if ((type === EnumToolboxItemGroup.All) || (type === EnumToolboxItemGroup.Misc)) {
+    items.push(
+      <Operation
+        key={++index}
+        title={ToolTitles[EnumTool.CATALOG]}
+        tool={EnumTool.CATALOG}
+        operation={ToolDefaultOperation[EnumTool.CATALOG]}
+        iconClass={ToolIcons[EnumTool.CATALOG]}
+      />);
+  }
+
+  return items;
+}
 
 /**
  * A connected component for organizing the building blocks of the process
@@ -98,30 +155,19 @@ class Toolbox extends React.Component {
         </Nav>
         <TabContent activeTab={this.state.activeTab}>
           <TabPane tabId="1">
-            <DataSource title={'File System'} source={EnumDataSource.FILESYSTEM} iconClass={'fa fa-file-code-o'} />
-            <DataSource title={'External URL'} source={EnumDataSource.EXTERNAL_URL} iconClass={'fa fa-link'} />
-            <Harvester title={'OSM'} harvester={EnumHarvester.OSM} iconClass={'fa fa-map-o'} />
-            <Operation title={'TripleGeo'} tool={EnumTool.TripleGeo} operation={EnumOperation.Transform} iconClass={'fa fa-cogs'} />
-            <Operation title={'LIMES'} tool={EnumTool.LIMES} operation={EnumOperation.Interlink} iconClass={'fa fa-random '} />
-            <Operation title={'FAGI'} tool={EnumTool.FAGI} operation={EnumOperation.Fusion} iconClass={'fa fa-object-ungroup'} />
-            <Operation title={'DEER'} tool={EnumTool.DEER} operation={EnumOperation.Enrichment} iconClass={'fa fa-tags'} />
-            <Operation title={'Register Resource'} tool={EnumTool.CATALOG} operation={EnumOperation.Registration} iconClass={'fa fa-book'} />
+            {getToolboxItems(EnumToolboxItemGroup.All)}
           </TabPane>
           <TabPane tabId="2">
-            <Operation title={'TripleGeo'} tool={EnumTool.TripleGeo} operation={EnumOperation.Transform} iconClass={'fa fa-cogs'} />
-            <Operation title={'LIMES'} tool={EnumTool.LIMES} operation={EnumOperation.Interlink} iconClass={'fa fa-random '} />
-            <Operation title={'FAGI'} tool={EnumTool.FAGI} operation={EnumOperation.Fusion} iconClass={'fa fa-object-ungroup'} />
-            <Operation title={'DEER'} tool={EnumTool.DEER} operation={EnumOperation.Enrichment} iconClass={'fa fa-tags'} />
+            {getToolboxItems(EnumToolboxItemGroup.Tools)}
           </TabPane>
           <TabPane tabId="3">
-            <DataSource title={'File System'} source={EnumDataSource.FILESYSTEM} iconClass={'fa fa-file-code-o'} />
-            <DataSource title={'External URL'} source={EnumDataSource.EXTERNAL_URL} iconClass={'fa fa-link'} />
+            {getToolboxItems(EnumToolboxItemGroup.DataSource)}
           </TabPane>
           <TabPane tabId="4">
-            <Harvester title={'OSM'} harvester={EnumHarvester.OSM} iconClass={'fa fa-map-o'} />
+            {getToolboxItems(EnumToolboxItemGroup.Harvester)}
           </TabPane>
           <TabPane tabId="5">
-            <Operation title={'Register Resource'} tool={EnumTool.CATALOG} operation={EnumOperation.Registration} iconClass={'fa fa-book'} />
+            {getToolboxItems(EnumToolboxItemGroup.Misc)}
           </TabPane>
         </TabContent>
       </div>

@@ -62,8 +62,9 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-              
+
         <!-- If packaging to WAR, mark dependency on embedded server as provided -->
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-tomcat</artifactId>
@@ -107,24 +108,19 @@
     <build>
         <plugins>
 
-            <!-- Use Spring-Boot to package as standalone executable JAR -->
-            <!--
             <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
                     <execution>
-                        <goals>
-                            <goal>repackage</goal>
-                        </goals>
+                        <goals><goal>copy</goal></goals>
                         <configuration>
-                            <classifier>exec</classifier>
+                            <artifact>org.postgresql:postgresql:${postgresql.version}</artifact>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
-            -->
-
+            
             <!-- Define helper Ant tasks -->
             <plugin>
                 <artifactId>maven-antrun-plugin</artifactId>

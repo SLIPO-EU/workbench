@@ -16,14 +16,15 @@ class Table extends React.Component {
   }
 
   render() {
+    let { showPagination, defaultPageSize, minRows, ...rest } = this.props;
+
     return (
       <div className="slipo-table-container">
         <ReactTable
-          data={this.props.data}
-          columns={this.props.columns}
-          showPagination={this.props.showPagination || false}
-          defaultPageSize={10}
-          minRows={5}
+          {...rest}
+          showPagination={showPagination || false}
+          defaultPageSize={defaultPageSize || 10}
+          minRows={minRows || 5}
         />
       </div>
     );
@@ -31,7 +32,7 @@ class Table extends React.Component {
 }
 
 Table.propTypes = {
-  data: PropTypes.arrayOf(PropTypes.object).isRequired,
+  data: PropTypes.arrayOf(PropTypes.object),
   columns: PropTypes.arrayOf(PropTypes.object).isRequired,
 };
 

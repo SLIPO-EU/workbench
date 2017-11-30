@@ -4,7 +4,7 @@ import ReactTable from 'react-table';
 import { FormattedTime } from 'react-intl';
 import { Row, Button } from 'reactstrap';
 
-import formatFileSize from '../../../../util/file-size'; 
+import formatFileSize from '../../../../util/file-size';
 import decorateField from './formfield';
 
 const fileColumns = [
@@ -12,7 +12,7 @@ const fileColumns = [
     Header: '',
     accessor: 'type',
     maxWidth: 30,
-    Cell: props => props.value === 'folder' ? 
+    Cell: props => props.value === 'folder' ?
       <i className="fa fa-folder" />
       :
       <i className="fa fa-file" />
@@ -56,46 +56,48 @@ export class FileSelect extends React.Component {
   }
 
   render() {
+    const { style } = this.props;
     const { folder } = this.state;
     const data = [
-      ...folder.folders.map(f => ({ ...f, type: 'folder' })), 
+      ...folder.folders.map(f => ({ ...f, type: 'folder' })),
       ...folder.files.map(f => ({ ...f, type: 'file' })),
     ];
     const path = folder.path.split('/').slice(0, -1).map((name, level) => level === 0 ? ({ name: '..', folder: this.props.filesystem }) : ({ name, folder: this._getParentDir(level) }));
 
     return (
       <div>
-        { 
+        {
           path.map((item, i, arr) => (
             <span key={i}>
-              <Button 
+              <Button
                 color="link"
-                onClick={(e) => { 
-                  if (item && item.folder) { 
-                    this.setState({ folder: item.folder }); 
-                  } 
+                onClick={(e) => {
+                  if (item && item.folder) {
+                    this.setState({ folder: item.folder });
+                  }
                 }}
               >
                 {item.name}
               </Button>
-              { i !== arr.length -1 ? <span>/</span> : null }
+              {i !== arr.length - 1 ? <span>/</span> : null}
             </span>
           ))
         }
         <ReactTable
-          name={this.props.id} 
-          id={this.props.id} 
+          style={style}
+          name={this.props.id}
+          id={this.props.id}
           getTrProps={(state, rowInfo) => ({
-            onClick: (e) => { 
+            onClick: (e) => {
               if (rowInfo.row.type === 'file') {
-                this.props.onChange(rowInfo.row); 
+                this.props.onChange(rowInfo.row);
               } else if (rowInfo.row.type === 'folder') {
                 this.setState({ folder: folder.folders[rowInfo.index] });
               }
             },
             style: {
               background: this.props.value && rowInfo && rowInfo.row.type === 'file' && rowInfo.row.path === this.props.value.path ? '#20a8d8' : null,
-            }    
+            }
           })}
           defaultPageSize={data.length}
           showPagination={false}

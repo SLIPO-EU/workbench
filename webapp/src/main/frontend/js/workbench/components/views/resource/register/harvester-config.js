@@ -1,5 +1,5 @@
 import React from 'react';
-import { TextField } from '../../../helpers/forms/wizard-fields/';
+import { TextField } from '../../../helpers/forms/form-fields/';
 
 export const initialValue = {};
 

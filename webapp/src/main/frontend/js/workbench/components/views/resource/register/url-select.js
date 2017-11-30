@@ -1,5 +1,5 @@
 import React from 'react';
-import { TextField } from '../../../helpers/forms/wizard-fields/';
+import { TextField } from '../../../helpers/forms/form-fields/';
 import validateUrl from '../../../../util/validate-url';
 
 export const initialValue = {

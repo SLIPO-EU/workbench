@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as ReactRedux from 'react-redux';
 import {
-  Card as ReactCard, CardBlock, CardTitle, Row, Col,
+  Card as ReactCard, CardBody, CardTitle, Row, Col,
   ButtonToolbar, Button, ButtonGroup, Label, Input
 } from 'reactstrap';
 import { FormattedTime } from 'react-intl';
@@ -13,7 +13,7 @@ import PropTypes from 'prop-types';
 
 const DashboardCard = (props) => (
   <ReactCard>
-    <CardBlock className="card-body" >
+    <CardBody className="card-body" >
       <Row>
         <Col sm="5">
           <CardTitle className="mb-0">{props.name}</CardTitle>
@@ -34,12 +34,12 @@ const DashboardCard = (props) => (
       <div>
         {props.children}
       </div>
-    </CardBlock>
+    </CardBody>
   </ReactCard>
 );
 
-DashboardCard.PropTypes = {
-  filterChange: PropTypes.func.isRequired,
+DashboardCard.propTypes = {
+  filterChange: PropTypes.func,
   cardFilters: PropTypes.array.isRequired,
   filterValue: PropTypes.string.isRequired,
   id: PropTypes.string,

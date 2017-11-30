@@ -1,6 +1,14 @@
 import * as React from 'react';
+import { Link } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import classnames from 'classnames';
+import {
+  DynamicRoutes,
+  buildPath,
+} from '../../../../model/routes';
+import {
+  EnumProcessInput
+} from './constants';
 
 /**
  * A presentational component for rendering a process resource input.
@@ -30,6 +38,7 @@ class StepInput extends React.Component {
    * @memberof StepInput
    */
   select(e) {
+    // Prevent parent step from being selected
     e.stopPropagation();
 
     this.props.setActiveStepInput(this.props.step, this.props.resource);
@@ -48,7 +57,11 @@ class StepInput extends React.Component {
       >
         <div className="slipo-pd-step-resource-actions">
           <i className="slipo-pd-step-resource-action slipo-pd-step-resource-delete fa fa-trash" onClick={() => { this.remove(); }}></i>
-          <i className="slipo-pd-step-resource-action slipo-pd-step-resource-view fa fa-search"></i>
+          {this.props.resource.inputType === EnumProcessInput.CATALOG &&
+            <Link to={buildPath(DynamicRoutes.ResourceViewer, [this.props.resource.id])}>
+              <i className="slipo-pd-step-resource-action slipo-pd-step-resource-view fa fa-search"></i>
+            </Link>
+          }
         </div>
         <div className="slipo-pd-step-input-icon">
           <i className={this.props.resource.iconClass}></i>

@@ -40,6 +40,7 @@ class StepDataSource extends React.Component {
    * @memberof StepDataSource
    */
   select(e) {
+    // Prevent parent step from being selected
     e.stopPropagation();
 
     this.props.setActiveStepDataSource(this.props.step, this.props.dataSource);
@@ -52,6 +53,7 @@ class StepDataSource extends React.Component {
    * @memberof StepDataSource
    */
   configure(e) {
+    // Prevent parent step from being selected
     e.stopPropagation();
 
     this.props.configureStepDataSourceBegin(this.props.step, this.props.dataSource, this.props.dataSource.configuration);

@@ -4,6 +4,7 @@ import { DropTarget } from 'react-dnd';
 import classnames from 'classnames';
 
 import {
+  EnumTool,
   EnumToolboxItem,
   EnumDragSource,
 } from './constants';
@@ -33,13 +34,18 @@ const designerTarget = {
    *
    * @param {any} props
    * @param {any} monitor
-   * @returns
+   * @returns true if the item can be accepted
    */
   canDrop(props, monitor) {
-    switch (monitor.getItem().type) {
+    const item = monitor.getItem();
+    switch (item.type) {
       case EnumDragSource.DataSource:
-      case EnumDragSource.Harvester:
+        return true;
       case EnumDragSource.Operation:
+        if (item.tool === EnumTool.CATALOG) {
+          // Only a single registration is allowed
+          return (props.steps.filter((s) => (s.tool === EnumTool.CATALOG)).length === 0);
+        }
         return true;
       default:
         return false;
@@ -61,14 +67,22 @@ const designerTarget = {
 }))
 class Designer extends React.Component {
 
+  constructor(props) {
+    super();
+  }
+
   static propTypes = {
     // An array of existing steps
     steps: PropTypes.arrayOf(PropTypes.object.isRequired).isRequired,
+    // An array of selected resources
+    resources: PropTypes.arrayOf(PropTypes.object.isRequired).isRequired,
 
     // Action creators
     addStep: PropTypes.func.isRequired,
     removeStep: PropTypes.func.isRequired,
+    moveStep: PropTypes.func.isRequired,
     configureStepBegin: PropTypes.func.isRequired,
+    setStepProperty: PropTypes.func.isRequired,
 
     addStepInput: PropTypes.func.isRequired,
     removeStepInput: PropTypes.func.isRequired,
@@ -91,7 +105,7 @@ class Designer extends React.Component {
    * Renders a single {@link Step}
    *
    * @param {any} step
-   * @returns
+   * @returns a {@link Step} component instance
    * @memberof Designer
    */
   renderStep(step) {
@@ -100,8 +114,11 @@ class Designer extends React.Component {
         key={step.index}
         active={this.props.active}
         step={step}
+        resources={this.props.resources.filter((resource) => { return (step.resources.indexOf(resource.index) !== -1); })}
         removeStep={this.props.removeStep}
+        moveStep={this.props.moveStep}
         configureStepBegin={this.props.configureStepBegin}
+        setStepProperty={this.props.setStepProperty}
         addStepInput={this.props.addStepInput}
         removeStepInput={this.props.removeStepInput}
         addStepDataSource={this.props.addStepDataSource}

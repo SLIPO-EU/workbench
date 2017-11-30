@@ -10,9 +10,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "type")
 @JsonSubTypes({
-    @Type(value = FileProcessResource.class, name = "FILE"),
     @Type(value = CatalogProcessResource.class, name = "CATALOG"),
-    @Type(value = TransientProcessResource.class, name = "TRANSIENT"),
     @Type(value = OutputProcessResource.class, name = "OUTPUT"),
 })
 public abstract class ProcessResource {
@@ -35,10 +33,20 @@ public abstract class ProcessResource {
         this.type = type;
     }
 
+    /**
+     * Resource type
+     *
+     * @return the type of the resource
+     */
     public EnumProcessResource getType() {
         return type;
     }
 
+    /**
+     * The unique index of the resource
+     *
+     * @return the resource index
+     */
     public int getIndex() {
         return index;
     }

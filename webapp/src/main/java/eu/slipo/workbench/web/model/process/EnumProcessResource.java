@@ -16,22 +16,13 @@ public enum EnumProcessResource {
      */
     UNDEFINED(0),
     /**
-     * Resource uploaded as a file
-     */
-    FILE(1),
-    /**
      * An existing resource already registered in the catalog
      */
-    CATALOG(2),
-    /**
-     * A resource created using the resource registration infrastructure and used only by
-     * the specific process
-     */
-    TRANSIENT(3),
+    CATALOG(1),
     /**
      * The output of an intermediate step
      */
-    OUTPUT(4),
+    OUTPUT(2),
     ;
 
     private final int value;

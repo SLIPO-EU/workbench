@@ -152,24 +152,6 @@
     <build>
         <plugins>
 
-            <!-- Use Spring-Boot to package as standalone executable JAR -->
-            <!--
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>repackage</goal>
-                        </goals>
-                        <configuration>
-                            <classifier>exec</classifier>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            -->
-
             <!-- Copy additional resources under target directory -->  
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -237,6 +219,20 @@
                             <environmentVariables>
                                 <NODE_ENV>${node.env}</NODE_ENV>
                             </environmentVariables>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            
+            <!-- Copy specific dependencies -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals><goal>copy</goal></goals>
+                        <configuration>
+                            <artifact>org.postgresql:postgresql:${postgresql.version}</artifact>
                         </configuration>
                     </execution>
                 </executions>

@@ -7,7 +7,8 @@ import {
   resourceExplorer,
   dashboardReducer,
   processReducer,
-  processDesigner
+  processDesigner,
+  processConfigStep,
 } from './ducks/ui/views';
 
 import { resources } from './ducks/data';
@@ -32,6 +33,7 @@ module.exports = Redux.combineReducers({
       process: Redux.combineReducers({
         explorer: processReducer,
         designer: processDesigner,
+        configuration: processConfigStep,
       }),
     }),
   }),

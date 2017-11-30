@@ -1,5 +1,5 @@
 import React from 'react';
-import { SelectField } from '../../../helpers/forms/wizard-fields/';
+import { SelectField } from '../../../helpers/forms/form-fields/';
 
 const options = [
   { value: 'UPLOAD', label: 'Upload' },
@@ -8,8 +8,8 @@ const options = [
   { value: 'HARVESTER', label: 'Harvester' },
 ];
 
-export const initialValue = { 
-  path: options[0].value, 
+export const initialValue = {
+  path: options[0].value,
 };
 
 export const validator = (value) => {

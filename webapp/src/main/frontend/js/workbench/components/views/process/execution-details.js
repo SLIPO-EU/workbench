@@ -20,10 +20,9 @@ export const JobCardConfig = (r) =>({
 });
 
 export default function ExecutionDetails(props) {
-  console.log(props.steps);
   if (props.steps!= null) {
     return props.steps.map(step => (
-      <div className= { step.id}>
+      <div key={step.id}>
         <Row style={{ backgroundColor: '#4682b4', borderColor: '#ffffff' ,}}>
           <ReactCard inverse style={{ marginLeft: 15, marginTop: 5, backgroundColor: '#4682b4', borderColor: '#4682b4'}}>
             <CardTitle>{step.component}</CardTitle>
@@ -34,9 +33,9 @@ export default function ExecutionDetails(props) {
         <hr/>
       </div>
     ));
-}
-else {
-  return (<div>-</div>);
+  }
+  else {
+    return (<div>-</div>);
   }
   
 }
