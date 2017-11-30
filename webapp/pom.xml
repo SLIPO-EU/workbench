@@ -98,6 +98,20 @@
         </dependency> 
         --> 
         
+        <!-- JDBC drivers -->    
+
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- log4j2 lifecycle hooks in web context  -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>

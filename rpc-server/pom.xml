@@ -62,7 +62,7 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-        
+
         <!-- If packaging to WAR, mark dependency on embedded server as provided -->
         <!--
         <dependency>
@@ -71,6 +71,20 @@
             <scope>provided</scope>
         </dependency> 
         -->
+
+        <!-- JDBC drivers -->    
+
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>provided</scope>
+        </dependency>
 
         <!-- log4j2 lifecycle hooks in web context  -->
         <dependency>
