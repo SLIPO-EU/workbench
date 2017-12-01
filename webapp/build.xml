@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- ====================================================================== -->
+<!-- Ant build file (http://ant.apache.org/) for Ant 1.6.2 or above.        -->
+<!-- ====================================================================== -->
+
+<project name="workbench-webapp" default="package" basedir=".">
+
+  <import file="maven-build.xml"/>
+
+  <property name="build_dir" value="${project.build.directory}" />
+
+  <target name="help">
+    <echo message="Please run: $ant -projecthelp"/>
+  </target>
+
+  <target name="prepare-docker-build">
+    <mkdir dir="${build_dir}/docker-build"/>
+    <copy file="Dockerfile" tofile="${build_dir}/docker-build/Dockerfile" />
+    <copy file="docker-entrypoint.sh" tofile="${build_dir}/docker-build/docker-entrypoint.sh" />
+    <copy file="${build_dir}/${maven.build.finalName}-exec.jar" tofile="${build_dir}/docker-build/workbench-webapp.jar"/>
+  </target>
+
+</project>

@@ -1,0 +1,28 @@
+
+version: "3"
+
+services:
+
+  "slipo-workbench-webapp":
+    image: slipo-workbench-webapp:0.0.1-SNAPSHOT
+    build:
+      context: ./target/docker-build/
+    
+    hostname: slipo-workbench-webapp-1
+    
+    external_links:
+    - postgres-1:postgres-1
+    - slipo-workbench-rpc-server-1:rpc-server
+
+    environment:
+      PROFILE: "development"
+      DB_HOST: "postgres-1"
+      DB_NAME: "slipo-workbench" 
+      DB_USERNAME: "slipo" 
+      DB_PASSWORD_FILE: "/etc/secrets/db-password"
+      RPC_SERVER: "http://rpc-server:8080/"  
+
+    volumes:
+    - .secrets/db-password:/etc/secrets/db-password:ro
+
+volumes: {}
