@@ -1,5 +1,9 @@
 /logs
 /target
+/.secrets
+/secrets
+
+docker-compose.yml
 
 .settings
 .project

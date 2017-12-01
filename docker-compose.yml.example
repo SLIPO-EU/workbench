@@ -1,0 +1,48 @@
+# vim: set syntax=yaml:
+
+version: "3"
+
+services:
+
+  "rpc_server":
+    image: local/slipo-workbench-rpc-server:0.0.1
+    build:
+      context: ./rpc-server/target/docker-build/
+
+    environment:
+      PROFILE: "development"
+      DB_HOST: "db-server"
+      DB_NAME: "slipo-workbench" 
+      DB_USERNAME: "slipo" 
+      DB_PASSWORD_FILE: "/etc/secrets/db-password"
+    
+    external_links:
+    - 'postgres-1:db-server'
+
+    volumes:
+    - /mnt/nfs-1/app-data/slipo-workbench/:/mnt/nfs-1/app-data/slipo-workbench/:rw
+    - .secrets/db-password:/etc/secrets/db-password:ro
+
+  "webapp":
+    image: local/slipo-workbench-webapp:0.0.1
+    build:
+      context: ./webapp/target/docker-build/
+    
+    external_links:
+    - 'postgres-1:db-server'
+    
+    links:
+    - 'rpc_server:rpc-server'
+
+    environment:
+      PROFILE: "development"
+      DB_HOST: "db-server"
+      DB_NAME: "slipo-workbench" 
+      DB_USERNAME: "slipo" 
+      DB_PASSWORD_FILE: "/etc/secrets/db-password"
+      RPC_SERVER: "http://rpc-server:8080/"  
+
+    volumes:
+    - .secrets/db-password:/etc/secrets/db-password:ro
+   
+volumes: {}
