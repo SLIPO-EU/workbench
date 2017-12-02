@@ -2,6 +2,7 @@
 /target/
 /data/
 /secrets/
+/.secrets/
 
 **/*.min.js
 !apidoc/template/**/*.min.js
@@ -13,6 +14,12 @@
 node
 node_modules
 npm-debug.log
+
+# Generated from mvn ant:ant
+maven-build.properties
+maven-build.xml
+
+docker-compose.yml
 
 ScratchController.java
 

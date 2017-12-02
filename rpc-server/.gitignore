@@ -1,5 +1,12 @@
 /target/
 /logs/
+/.secrets/
+
+# Generated from mvn ant:ant
+maven-build.properties
+maven-build.xml
+
+docker-compose.yml
 
 /src/main/resources/config/*.properties
 /src/main/resources/config/*.xml
