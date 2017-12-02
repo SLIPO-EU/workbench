@@ -10,5 +10,8 @@ docker-compose.yml
 
 /src/main/resources/config/*.properties
 /src/main/resources/config/*.xml
+/config/*.properties
+/config/*.xml
+/config/*.yml
 
 ScratchController.java

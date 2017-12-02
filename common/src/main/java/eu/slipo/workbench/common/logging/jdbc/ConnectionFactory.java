@@ -1,6 +1,9 @@
 package eu.slipo.workbench.common.logging.jdbc;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 
 import org.apache.tomcat.jdbc.pool.DataSource;
@@ -68,11 +71,22 @@ public class ConnectionFactory
         Properties props = new Properties();
         Class<?> cls = ConnectionFactory.class;
         
-        props.load(cls.getResourceAsStream("/config/application.properties"));
-        String profile = props.getProperty("spring.profiles.active", "development");
+        // Load properties from classpath
         
-        props.load(cls.getResourceAsStream(
-            String.format("/config/application-%s.properties", profile)));
+        try (InputStream in = cls.getResourceAsStream("/config/application.properties")) {
+            props.load(in);
+        }
+        
+        String profile = props.getProperty("spring.profiles.active", "development");
+        try (InputStream in = cls.getResourceAsStream("/config/application-" + profile + ".properties")) {
+            props.load(in);
+        }
+        
+        // Load properties from working directory
+        
+        try (InputStream in = new FileInputStream("config/application-" + profile + ".properties")) {
+            props.load(in);
+        } catch (FileNotFoundException ex) { /* no-op */ }
         
         // Read properties for connecting to our JDBC backend.
         // Use Spring's datasource properties as defaults for connection-related properties.
