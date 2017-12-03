@@ -1,27 +1,37 @@
-#!/bin/bash -x 
+#!/bin/bash
 
 JAVA_OPTS="-Djava.security.egd=file:///dev/urandom"
+CATALINA_OPTS="-Xms512M -Xmx2048M -server -XX:+UseParallelGC"
 
-if [ ! -f "${DB_PASSWORD_FILE}" ]; then
-    echo "A password file (for the database user) must be specified as DB_PASSWORD_FILE" 2>&1
-    exit 1;
+#
+# Edit conf/catalina.properties according to given environment 
+#
+
+if [ -n "${DB_HOST}" ]; then
+    sed -i -e "s~^db[.]host[ ]*=[ ]*.*$~db.host=${DB_HOST}~" conf/catalina.properties 
 fi
 
-# Generate properties file, overriding specific properties defined inside JAR
+if [ -n "${DB_PORT}" ]; then
+    sed -i -e "s~^db[.]port[ ]*=[ ]*.*$~db.port=${DB_PORT}~" conf/catalina.properties 
+fi
 
-config_file="config/application-${PROFILE}.properties"
+if [ -n "${DB_NAME}" ]; then
+    sed -i -e "s~^db[.]name[ ]*=[ ]*.*$~db.name=${DB_NAME}~" conf/catalina.properties 
+fi
 
-cat >${config_file} <<EOD
-server.address=0.0.0.0
-server.port=8080
+if [ -n "${DB_USERNAME}" ]; then
+    sed -i -e "s~^db[.]username[ ]*=[ ]*.*$~db.username=${DB_USERNAME}~" conf/catalina.properties 
+fi
 
-spring.datasource.url=jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
-spring.datasource.username=${DB_USERNAME}
-spring.datasource.password=$(cat ${DB_PASSWORD_FILE})
+if [ -f "${DB_PASSWORD_FILE}" ]; then
+    sed -i -e "s~^db[.]password[ ]*=[ ]*.*$~db.password=$(cat ${DB_PASSWORD_FILE})~" conf/catalina.properties 
+fi
 
-slipo.rpc-server.url=${RPC_SERVER}
-EOD
+#
+# Run
+#
 
-# Execute
+export JAVA_OPTS
+export CATALINA_OPTS
 
-exec java "${JAVA_OPTS}" "-Dspring.profiles.active=${PROFILE}" -jar workbench-webapp.jar 
+exec ./bin/catalina.sh run

@@ -1,18 +1,20 @@
-FROM openjdk:8-slim
+FROM tomcat:8.5-jre8
 
-RUN mkdir -p /usr/local/slipo-workbench/rpc-server
-WORKDIR /usr/local/slipo-workbench/rpc-server
+EXPOSE 8080 8009
 
-EXPOSE 8080
-
-ENV PROFILE "development"
 ENV DB_HOST="localhost" DB_PORT="5432" DB_NAME="slipo-workbench" DB_USERNAME="slipo" DB_PASSWORD_FILE="/etc/secrets/db-password"
 
-VOLUME ["/usr/local/slipo-workbench/rpc-server/logs"]
+VOLUME ["/usr/local/tomcat/logs"]
 
-RUN mkdir config && touch config/application.properties
+COPY dependency/*.jar lib/
+COPY conf/*.xml conf/db.properties conf/ 
 
-COPY workbench-rpc-server.jar docker-entrypoint.sh ./
+RUN mv webapps/ROOT webapps/welcome
+COPY workbench-rpc-server.war webapps/ROOT.war
+
+RUN cat conf/db.properties >> conf/catalina.properties
+
+COPY docker-entrypoint.sh .
 RUN chmod +x docker-entrypoint.sh
 
 CMD ["./docker-entrypoint.sh"]
