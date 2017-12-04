@@ -126,16 +126,18 @@ public class CreateContainerTasklet implements Tasklet
         ExecutionContext executionContext = stepExecution.getExecutionContext();
         
         String containerId = executionContext.getString(Keys.CONTAINER_ID, null);
-        Assert.state(containerId == null, 
-            "Did not expect to find a containerId in execution context!");
-        
-        ContainerCreation creation = docker.createContainer(containerConfig, containerName); 
-        containerId = creation.id();
-        logger.info("Created container from image {}: {}", containerConfig.image(), containerId);
-        
-        executionContext.putString(Keys.CONTAINER_ID, containerId);   
-        if (containerName != null)
-            executionContext.putString(Keys.CONTAINER_NAME, containerName);
+        if (containerId != null) {
+            // This is not an error since a stopped step (e.g. on shutdown) will re-execute
+            logger.info("The container is already created as {}; Skipping", containerId);
+        } else {
+            // Create the container from given configuration
+            ContainerCreation creation = docker.createContainer(containerConfig, containerName);
+            containerId = creation.id();
+            logger.info("Created container from image {}: {}", containerConfig.image(), containerId);
+            executionContext.putString(Keys.CONTAINER_ID, containerId);
+            if (containerName != null)
+                executionContext.putString(Keys.CONTAINER_NAME, containerName);
+        }
         
         return RepeatStatus.FINISHED;
     }
