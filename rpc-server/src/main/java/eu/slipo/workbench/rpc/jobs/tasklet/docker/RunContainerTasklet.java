@@ -369,15 +369,14 @@ public class RunContainerTasklet implements Tasklet, StepExecutionListener
         
         long started = executionContext.getLong(Keys.STARTED, -1L);
         long finished = executionContext.getLong(Keys.FINISHED, -1L);
-        Assert.state(finished < 0, "Expected a non-started or running container!");
-                   
+        
         if (started < 0) {
             // P1: The container is created but not started: start it now
             docker.startContainer(containerId);
             logger.info("Started container {}", containerId);
             started = (new Date()).getTime();
             executionContext.putLong(Keys.STARTED, started);
-        } else {
+        } else if (finished < 0) {
             // P2: The container is started: poll status, check if timed out
             ContainerInfo containerInfo = docker.inspectContainer(containerId);
             ContainerState containerState = containerInfo.state();
@@ -411,6 +410,10 @@ public class RunContainerTasklet implements Tasklet, StepExecutionListener
                 stepExecution.setStatus((failOnNonZeroExitCode && exitCode != 0)? 
                     BatchStatus.FAILED : BatchStatus.COMPLETED);
             }
+        } else {
+            // A finished step is restarted: note that this is not an error since a 
+            // stopped step (e.g. on server's shutdown) will re-execute.
+            logger.info("The container {} is finished: no action is needed", containerId);
         }
         
         return RepeatStatus.continueIf(finished < 0);
@@ -430,12 +433,12 @@ public class RunContainerTasklet implements Tasklet, StepExecutionListener
         long finished = executionContext.getLong(Keys.FINISHED, -1L);
         
         if (finished > 0) {
-            // The previous execution has failed (a timeout or a failed command inside container)
             long timedOut = executionContext.getLong(Keys.TIMED_OUT, -1L);
             long exitCode = executionContext.getLong(Keys.COMMAND_EXIT_CODE, NOT_AN_EXIT_CODE);
-            Assert.state(timedOut > 0 || (exitCode != NOT_AN_EXIT_CODE && exitCode != 0), 
-                "This step was not expected to restart");
-            resetExecutionContext(stepExecution);
+            if (timedOut > 0 || (exitCode != NOT_AN_EXIT_CODE && exitCode != 0)) {
+                // The previous execution has failed (a timeout or a failed container's command):
+                resetExecutionContext(stepExecution);
+            }
         }
     }
 
