@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.task.TaskExecutor;
 
 @Configuration
@@ -23,9 +24,6 @@ import org.springframework.core.task.TaskExecutor;
 public class BatchConfig 
 {
     @Autowired
-    TaskExecutor taskExecutor;
-    
-    @Autowired
     JobExplorer explorer;
     
     @Autowired
@@ -34,21 +32,32 @@ public class BatchConfig
     @Autowired
     JobRegistry registry;
     
-    @Bean
-    JobLauncher jobLauncher()
+    @Bean({ "jobLauncher", "defaultJobLauncher", "asyncJobLauncher"})
+    @Primary
+    JobLauncher jobLauncher(TaskExecutor taskExecutor)
     {
         // Setup with our task executor (default is SyncTaskExecutor)
         SimpleJobLauncher launcher = new SimpleJobLauncher();
         launcher.setJobRepository(repository);
         launcher.setTaskExecutor(taskExecutor);
-        
         return launcher;
     }
+    
+    @Bean({"syncJobLauncher"})
+    JobLauncher syncJobLauncher()
+    {
+        // Setup with SyncTaskExecutor
+        SimpleJobLauncher launcher = new SimpleJobLauncher();
+        launcher.setJobRepository(repository);
+        launcher.setTaskExecutor(null);
+        return launcher;
+    }
+    
     
     @Bean 
     JobOperator jobOperator(JobLauncher launcher)
     {
-        // Setup operator to use our launcher
+        // Setup operator to use our asynchronous launcher
         SimpleJobOperator operator = new SimpleJobOperator();
         operator.setJobExplorer(explorer);
         operator.setJobLauncher(launcher);

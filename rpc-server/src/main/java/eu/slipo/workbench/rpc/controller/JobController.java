@@ -157,7 +157,7 @@ public class JobController
     @PostMapping(value = "/api/jobs/{jobName}/stop/{jobId}")
     public RestResponse<JobExecutionInfo> stop(@PathVariable String jobName, @PathVariable Long jobId)
     {
-        JobExecution execution = jobService.findRunningExecution(jobName, jobId);
+        JobExecution execution = jobService.findRunningExecution(jobId);
         if (execution != null) {
             // Stop using execution id
             jobService.stop(execution.getId());
@@ -181,7 +181,7 @@ public class JobController
     public RestResponse<List<JobExecutionInfo>> getExecutions(@PathVariable String jobName, @PathVariable Long jobId)
     {
         List<JobExecutionInfo> r = 
-            jobService.findExecutions(jobName, jobId).stream()
+            jobService.findExecutions(jobId).stream()
                 .map(x -> createExecutionInfo(x))
                 .collect(Collectors.toList());
         
@@ -244,7 +244,7 @@ public class JobController
     @PostMapping(value = "/api/jobs/{jobName}/clear-running-execution/{jobId}")
     public RestResponse<JobExecutionInfo> clearRunningExecution(@PathVariable String jobName, @PathVariable Long jobId)
     {
-        JobExecution execution = jobService.clearRunningExecution(jobName, jobId);
+        JobExecution execution = jobService.clearRunningExecution(jobId);
         return execution == null? 
             null : RestResponse.result(createExecutionInfo(execution));
     }
