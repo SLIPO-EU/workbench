@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Dropzone from 'react-dropzone';
 
-import decorateField from './formfield';
+import decorateField from './form-field';
 import formatFileSize from '../../../../util/file-size';
 
 export class FileDrop extends React.Component {
@@ -18,7 +18,7 @@ export class FileDrop extends React.Component {
       this.setState({ file: this.props.value });
     }
   }
-	
+
   render() {
     const { onChange, style } = this.props;
     return (
@@ -30,7 +30,7 @@ export class FileDrop extends React.Component {
             }
             const file = accepted && accepted.length && accepted[0];
             this.setState({ file });
-            
+
             if (typeof onChange === 'function') {
               onChange(file);
             }
@@ -41,7 +41,7 @@ export class FileDrop extends React.Component {
         >
           <i className="fa fa-cloud-upload fa-4x"></i>
         </Dropzone>
-        { this.state.file && this.state.file.name } 
+        { this.state.file && this.state.file.name }
         { this.state.file && ` (${formatFileSize(this.state.file.size)})`}
       </div>
     );
@@ -66,4 +66,4 @@ FileDrop.propTypes = {
 };
 
 
-      
+

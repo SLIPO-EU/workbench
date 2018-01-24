@@ -7,8 +7,8 @@ export function FormField(props) {
   return (
     <FormGroup color={props.error ? 'danger' : null}>
       <Label for={props.id}>{props.label}</Label>
-      { props.children } 
-      { 
+      { props.children }
+      {
         props.error ?
           <FormFeedback>{props.error}</FormFeedback>
           : null

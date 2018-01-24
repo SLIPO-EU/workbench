@@ -11,20 +11,27 @@ export default class Form extends React.Component {
   }
 
   static propTypes = {
-    title: PropTypes.string.isRequired,
+    header: PropTypes.bool,
+    title: PropTypes.string,
     iconClass: PropTypes.string,
     discardButtonText: PropTypes.string,
     acceptButtonText: PropTypes.string,
     validate: PropTypes.func,
     setError: PropTypes.func,
     setValue: PropTypes.func.isRequired,
-    cancel: PropTypes.func.isRequired,
-    save: PropTypes.func.isRequired,
+    cancel: PropTypes.func,
+    save: PropTypes.func,
     values: PropTypes.object,
     errors: PropTypes.object,
+    readOnly: PropTypes.bool,
   }
 
-  componentWillMount() {
+  static defaultProps = {
+    header: true,
+    readOnly: true,
+  }
+
+  componentDidMount() {
     this._validate(this.props.values);
   }
 
@@ -40,34 +47,47 @@ export default class Form extends React.Component {
   }
 
   _setValue(value) {
-    this.props.setValue(value, null);
+    this.props.setValue(value);
     this._validate(value);
   }
 
   render() {
     const children = this.props.children;
-
     return (
       <div>
-        <Row className="mb-4">
-          <Col>
-            <i className={this.props.iconClass + ' mr-2'}></i><span>{this.props.title}</span>
-            <div
-              style={{ position: 'absolute', right: 15, top: -5 }}
-            >
-              <div className="mr-2" style={{ float: 'left' }}>
-                <Button color="danger" onClick={this.props.cancel} className="float-left">{this.props.discardButtonText || 'Cancel'}</Button>
+        {this.props.header &&
+          <Row className="mb-4">
+            <Col>
+              <span>
+                <i className={this.props.iconClass + ' mr-2'}></i>
+                <span>{this.props.title}</span>
+              </span>
+              <div
+                style={{ position: 'absolute', right: 15, top: -5 }}
+              >
+                {!this.props.readOnly &&
+                  <div className="mr-2" style={{ float: 'left' }}>
+                    <Button color="danger" onClick={this.props.cancel} className="float-left">{this.props.discardButtonText || 'Cancel'}</Button>
+                  </div>
+                }
+                {!this.props.readOnly &&
+                  <div style={{ float: 'left' }}>
+                    <Button color="primary" onClick={this.props.save} className="float-left">{this.props.acceptButtonText || 'Save'}</Button>
+                  </div>
+                }
+                {this.props.readOnly &&
+                  <div style={{ float: 'left' }}>
+                    <Button color="primary" onClick={this.props.cancel} className="float-left">Return</Button>
+                  </div>
+                }
               </div>
-              <div style={{ float: 'left' }}>
-                <Button color="primary" onClick={this.props.save} className="float-left">{this.props.acceptButtonText || 'Save'}</Button>
-              </div>
-            </div>
-          </Col>
-        </Row>
+            </Col>
+          </Row>
+        }
         <Row>
           <Col>
             <div
-              style={{ maxHeight: '70vh', overflowY: 'auto', paddingRight: 10, paddingBottom: 50 }}
+              style={{ maxHeight: '70vh', overflowY: 'auto', paddingRight: 28, paddingBottom: 50 }}
             >
               {
                 React.Children.map(children, (child, index) => {
@@ -75,6 +95,7 @@ export default class Form extends React.Component {
                     setValue: this._setValue,
                     value: this.props.values,
                     errors: this.props.errors,
+                    readOnly: this.props.readOnly,
                   });
                 })
               }
