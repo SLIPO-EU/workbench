@@ -19,7 +19,6 @@ class ContextSidebar extends React.Component {
 
   _getComponent() {
     let route = getRoute(matchRoute(this.props.location.pathname));
-
     if ((route) && (route.contextComponent)) {
       return route.contextComponent;
     }

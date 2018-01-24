@@ -16,8 +16,7 @@ class Table extends React.Component {
   }
 
   render() {
-    let { showPagination, defaultPageSize, minRows, ...rest } = this.props;
-
+    let { showPagination, defaultPageSize, minRows, sortable, ...rest } = this.props;
     return (
       <div className="slipo-table-container">
         <ReactTable
@@ -25,6 +24,7 @@ class Table extends React.Component {
           showPagination={showPagination || false}
           defaultPageSize={defaultPageSize || 10}
           minRows={minRows || 5}
+          sortable={sortable || false}
         />
       </div>
     );

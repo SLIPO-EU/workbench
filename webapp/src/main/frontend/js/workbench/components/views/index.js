@@ -6,6 +6,7 @@ import EventViewer from './event-viewer';
 import ProcessDesigner from './process-designer';
 import ProcessExecutionViewer from './process-execution-viewer';
 import ProcessExplorer from './process-explorer';
+import ProcessExecutionExplorer from './process-execution-explorer';
 import RecipeExplorer from './recipe-explorer';
 import ResourceExplorer from './resource-explorer';
 import ResourceRegistration from './resource-registration';
@@ -22,6 +23,7 @@ export {
   ResourceExplorer,
   ResourceRegistration,
   ProcessExplorer,
+  ProcessExecutionExplorer,
   RecipeExplorer,
   SchemaExplorer,
   UserManager,

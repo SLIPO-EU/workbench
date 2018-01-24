@@ -4,7 +4,7 @@ import { FormattedMessage } from 'react-intl';
 import { Breadcrumb, BreadcrumbItem } from 'reactstrap';
 import { getRoute, matchRoute } from '../../model/routes';
 
-const MAX_LENGTH = 3; // maximum number of parts for a breadcrumb
+const MAX_LENGTH = 10; // maximum number of parts for a breadcrumb
 
 export default ({ location }) => {
   let paths = location.pathname.split('/')

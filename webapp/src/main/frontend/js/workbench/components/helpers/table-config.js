@@ -12,14 +12,20 @@ import JobStatus from './job-status';
  * Job grid sample data
  */
 export const JobGridData = [{
-  processId: 1,
+  process: {
+    id: 1,
+    version: 2,
+  },
   executionId: 1,
   name: 'Import POI from OSM',
   startedOn: moment().add(-2, 'days').toDate(),
   completedOn: moment().add(-1, 'hours').toDate(),
   status: 'Completed',
 }, {
-  processId: 2,
+  process: {
+    id: 2,
+    version: 3,
+  },
   executionId: 1,
   name: 'Register resource \'Restaurants\'',
   startedOn: moment().add(-21, 'days').add(-13, 'hours').toDate(),
@@ -44,7 +50,7 @@ export const JobGridColumns = [{
   minWidth: 250,
   Cell: props => {
     return (
-      <Link to={buildPath(DynamicRoutes.ProcessExecutionViewer, [props.row.processId, props.row.executionId])}>{props.value}</Link>
+      <Link to={buildPath(DynamicRoutes.ProcessExecutionViewer, [props.original.process.id, props.original.process.version, props.original.executionId])}>{props.value}</Link>
     );
   }
 }, {
@@ -135,7 +141,7 @@ export const ResourceGridData = (resources) => resources.map(resource => ({
   version: resource.version,
   createdOn: moment(resource.createdOn).toDate(),
   count: resource.metadata.size,
-  process:  resource.jobExecutionId,
+  process: resource.jobExecutionId,
 }));
 
 /**

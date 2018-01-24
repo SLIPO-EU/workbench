@@ -12,7 +12,11 @@
     },
     "process": {
       "explorer": "Process Explorer",
-      "designer": "Process Designer",
+      "execution": "Executions",
+      "designer": {
+        "default": "Process Designer",
+        "edit": "Edit"
+      },
       "execution": "Process Execution Viewer"
     },
     "recipe": {

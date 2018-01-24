@@ -4,26 +4,32 @@
     "el": "Ελληνικά"
   },
   "links": {
-    "home": "Αρχική Σελίδα",
     "dashboard": "Πίνακας Ελέγχου",
     "resource": {
       "explorer": "Δεδομένα",
-      "registration": "Εισαγωγή Δεδομένων"
+      "registration": "Εισαγωγή Δεδομένων",
+      "viewer": "Προβολή Δεδομένων"
     },
     "process": {
-      "scheduler": "Διεργασίες",
-      "design": "Σχεδίαση Διεργασίας"
+      "explorer": "Διεργασίες",
+      "execution": "Εκτέλεση διεργασιών",
+      "designer": {
+        "default": "Σχεδίαση Διεργασίας",
+        "edit": "Ενημέρωση Διεργασίας"
+      },
+      "execution": "Προβολή Εκτέλεσης Διεργασίας"
     },
     "recipe": {
-      "explorer": "Recipe Explorer",
-      "design": "Recipe Designer"
+      "explorer": "Πρότυπα Διεργασιών"
     },
     "admin": {
       "user-manager": "Χρήστες",
       "event-viewer": "Καταγραφή Συμβάντων"
     },
-    "map": {
-      "viewer": "Προβολή Χάρτη"
+    "tools": {
+      "schema-explorer": "Οντολογίες",
+      "schema-designer": "Σχεδίαση Οντολογίας",
+      "data-viewer": "Προβολή Δεδομένων"
     }
   },
   "login": {
@@ -36,5 +42,13 @@
   "register": {
     "title": "Εγγραφή!",
     "register": "Εγγραφή"
+  },
+  "dashboard": {
+    "card": {
+      "jobs": "Διεργασίες",
+      "resources": "Δεδομένα",
+      "quota": "Διαθέσιμοι Πόροι",
+      "events": "Συμβάντα"
+    }
   }
 }
