@@ -3,10 +3,10 @@ package eu.slipo.workbench.web.model.process;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import eu.slipo.workbench.web.model.EnumDataFormat;
+import eu.slipo.workbench.web.model.EnumOntology;
 
 /**
  * TripleGEO configuration
- *
  */
 public class TripleGeoSettings {
 
@@ -17,9 +17,30 @@ public class TripleGeoSettings {
     private EnumDataFormat inputFormat;
 
     /**
+     * Execution mode
+     */
+    private EnumMode mode;
+
+    /**
+     * The encoding (character set) for strings in the input data. If not specified, UTF-8 encoding is assumed.
+     */
+    private String encoding;
+
+    /**
+     * File containing RML or XSLT mappings from input schema to RDF
+     */
+    private String mappingSpec;
+
+    /**
+     * File (in YML or CSV format) containing classification hierarchy of categories
+     */
+    private String classificationSpec;
+
+    /**
      * Target ontology
      */
-    private String ontology;
+    @JsonDeserialize(using = EnumOntology.Deserializer.class)
+    private EnumOntology targetOntology;
 
     /**
      * Required field name containing unique identifier for each entity (i.e. each record
@@ -48,6 +69,12 @@ public class TripleGeoSettings {
      * Required for CSV input only (case-insensitive): specify delimiter character
      */
     private String delimiter;
+
+    /**
+     * Required for CSV input only (case-insensitive): specify quote character for string
+     * values; Remove for any other types of input data
+     */
+    private String quote;
 
     /**
      * Required for CSV input only (case-insensitive): specify attribute holding X-
@@ -105,12 +132,33 @@ public class TripleGeoSettings {
      */
     private String defaultLang = "en";
 
+    /**
+     * Specify export serialization for the output file
+     */
+    private EnumDataFormat serialization = EnumDataFormat.N_TRIPLES;
+
     public EnumDataFormat getInputFormat() {
         return inputFormat;
     }
 
-    public String getOntology() {
-        return ontology;
+    public EnumMode getMode() {
+        return mode;
+    }
+
+    public String getEncoding() {
+        return encoding;
+    }
+
+    public String getMappingSpec() {
+        return mappingSpec;
+    }
+
+    public String getClassificationSpec() {
+        return classificationSpec;
+    }
+
+    public EnumOntology getTargetOntology() {
+        return targetOntology;
     }
 
     public String getAttrKey() {
@@ -131,6 +179,10 @@ public class TripleGeoSettings {
 
     public String getDelimiter() {
         return delimiter;
+    }
+
+    public String getQuote() {
+        return quote;
     }
 
     public String getAttrX() {
@@ -171,6 +223,29 @@ public class TripleGeoSettings {
 
     public String getDefaultLang() {
         return defaultLang;
+    }
+
+    public EnumDataFormat getSerialization() {
+        return serialization;
+    }
+
+    public enum EnumMode {
+        GRAPH(1),
+        STREAM(2),
+        RML(3),
+        XSLT(4),
+        ;
+
+        private final int value;
+
+        private EnumMode(int value) {
+            this.value = value;
+        }
+
+        public int getValue() {
+            return value;
+        }
+
     }
 
 }

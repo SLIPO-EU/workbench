@@ -10,7 +10,7 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 /**
  * Supported process input types
  */
-public enum EnumProcessResource {
+public enum EnumInputType {
     /**
      * Invalid resource type
      */
@@ -27,7 +27,7 @@ public enum EnumProcessResource {
 
     private final int value;
 
-    private EnumProcessResource(int value) {
+    private EnumInputType(int value) {
         this.value = value;
     }
 
@@ -35,20 +35,20 @@ public enum EnumProcessResource {
         return value;
     }
 
-    public static EnumProcessResource fromString(String value) {
-        for (EnumProcessResource item : EnumProcessResource.values()) {
+    public static EnumInputType fromString(String value) {
+        for (EnumInputType item : EnumInputType.values()) {
             if (item.name().equalsIgnoreCase(value)) {
                 return item;
             }
         }
-        return EnumProcessResource.UNDEFINED;
+        return EnumInputType.UNDEFINED;
     }
 
-    public static class Deserializer extends JsonDeserializer<EnumProcessResource> {
+    public static class Deserializer extends JsonDeserializer<EnumInputType> {
 
         @Override
-        public EnumProcessResource deserialize(JsonParser parser, DeserializationContext context) throws IOException, JsonProcessingException {
-            return EnumProcessResource.fromString(parser.getValueAsString());
+        public EnumInputType deserialize(JsonParser parser, DeserializationContext context) throws IOException, JsonProcessingException {
+            return EnumInputType.fromString(parser.getValueAsString());
         }
     }
 }

@@ -8,12 +8,13 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import eu.slipo.workbench.web.model.EnumOperation;
 import eu.slipo.workbench.web.model.EnumTool;
 
-/**
- * A process step
- */
 public class Step {
 
-    private int index;
+    private int key;
+
+    private int group;
+
+    private String name;
 
     @JsonDeserialize(using = EnumOperation.Deserializer.class)
     private EnumOperation operation;
@@ -31,34 +32,55 @@ public class Step {
     })
     private ToolConfiguration configuration;
 
-    private Integer output;
+    private Integer outputKey;
 
     protected Step() {
 
     }
 
-    public Step(int index, EnumTool tool, EnumOperation operation, ToolConfiguration configuration) {
-        this.index = index;
+    public Step(String name, int key, int group, EnumTool tool, EnumOperation operation, ToolConfiguration configuration) {
+        this.key = key;
+        this.group = group;
         this.tool = tool;
         this.operation = operation;
         this.configuration = configuration;
     }
 
-    public Step(int index, EnumTool tool, EnumOperation operation, ToolConfiguration configuration, Integer output) {
-        this.index = index;
+    public Step(String name, int key, int group, EnumTool tool, EnumOperation operation, ToolConfiguration configuration, Integer outputKey) {
+        this.key = key;
+        this.group = group;
         this.tool = tool;
         this.operation = operation;
         this.configuration = configuration;
-        this.output = output;
+        this.outputKey = outputKey;
     }
 
     /**
-     * The step unique index
+     * Step unique name
      *
-     * @return the step index
+     * @return the step name
      */
-    public int getIndex() {
-        return index;
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * The step unique key
+     *
+     * @return the step key
+     */
+    public int getKey() {
+        return key;
+    }
+
+
+    /**
+     * The step group index
+     *
+     * @return the group index
+     */
+    public int getGroup() {
+        return group;
     }
 
     /**
@@ -89,13 +111,14 @@ public class Step {
     }
 
     /**
-     * The unique resource index of an {@link OutputProcessResource} that is the output of
+     * The unique resource key of an {@link ProcessOutput} that is the output of
      * this step
      *
      * @return the output resource index
      */
-    public Integer getOutput() {
-        return output;
+    public Integer getOutputKey() {
+        return outputKey;
     }
+
 
 }

@@ -1,14 +1,14 @@
-package eu.slipo.workbench.web.model.resource;
+package eu.slipo.workbench.web.model.process;
 
 import eu.slipo.workbench.common.model.ErrorCode;
 
 /**
- * Error codes for resource operations
+ * Error codes for process operations
  */
-public enum ResourceErrorCode implements ErrorCode {
+public enum ProcessErrorCode implements ErrorCode {
     UNKNOWN,
     QUERY_IS_EMPTY,
-    DATASOURCE_NOT_SUPPORTED,
+    NOT_FOUND,
     ;
 
     @Override

@@ -23,7 +23,7 @@ public class ResourceMetadataView {
     public ResourceMetadataView(
             String name,
             String description,
-            int size) {
+            Integer size) {
 
         this.name = name;
         this.description = description;
@@ -33,7 +33,7 @@ public class ResourceMetadataView {
     public ResourceMetadataView(
             String name,
             String description,
-            int size,
+            Integer size,
             Geometry boundingBox) {
 
         this.name = name;

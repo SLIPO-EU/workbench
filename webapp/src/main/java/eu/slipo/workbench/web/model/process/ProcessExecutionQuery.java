@@ -3,24 +3,24 @@ package eu.slipo.workbench.web.model.process;
 import eu.slipo.workbench.web.model.Query;
 
 /**
- * Query for searching processes
+ * Query for searching process executions
  */
-public class ProcessQuery extends Query {
+public class ProcessExecutionQuery extends Query {
 
     /**
-     * Search processes by name using LIKE SQL operator
+     * Search executions by process name using LIKE SQL operator
      */
     private String name;
 
     /**
-     * Search process by task
+     * Search execution by task
      */
     private EnumProcessTask task;
 
     /**
-     * Search for templates
+     * Search execution by status
      */
-    private Boolean template;
+    private EnumProcessExecutionStatus status;
 
     public String getName() {
         return name;
@@ -30,20 +30,20 @@ public class ProcessQuery extends Query {
         this.name = name;
     }
 
-    public Boolean getTemplate() {
-        return template;
-    }
-
-    public void setTemplate(Boolean template) {
-        this.template = template;
-    }
-
     public EnumProcessTask getTask() {
         return task;
     }
 
     public void setTask(EnumProcessTask task) {
         this.task = task;
+    }
+
+    public EnumProcessExecutionStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(EnumProcessExecutionStatus status) {
+        this.status = status;
     }
 
 }

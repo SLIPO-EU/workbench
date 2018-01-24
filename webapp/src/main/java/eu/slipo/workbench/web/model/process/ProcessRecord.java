@@ -7,9 +7,6 @@ import java.util.List;
 
 import eu.slipo.workbench.web.model.UserInfo;
 
-/**
- * A process
- */
 public class ProcessRecord {
 
     private long id;
@@ -30,7 +27,15 @@ public class ProcessRecord {
 
     private String description;
 
-    private List<ProcessHistoryRecord> versions = new ArrayList<ProcessHistoryRecord>();
+    private ProcessDefinitionUpdate configuration;
+
+    private boolean template;
+
+    private EnumProcessTask task;
+
+    private List<ProcessRecord> versions = new ArrayList<ProcessRecord>();
+
+    private List<ProcessExecutionRecord> executions = new ArrayList<ProcessExecutionRecord>();
 
     public ProcessRecord(long id, long version) {
         this.id = id;
@@ -49,6 +54,10 @@ public class ProcessRecord {
         return createdBy;
     }
 
+    public void setCreatedBy(int id, String name) {
+        this.createdBy = new UserInfo(id, name);
+    }
+
     public void setCreatedBy(UserInfo createdBy) {
         this.createdBy = createdBy;
     }
@@ -59,6 +68,10 @@ public class ProcessRecord {
 
     public void setUpdatedBy(UserInfo updatedBy) {
         this.updatedBy = updatedBy;
+    }
+
+    public void setUpdatedBy(int id, String name) {
+        this.updatedBy = new UserInfo(id, name);
     }
 
     public ZonedDateTime getCreatedOn() {
@@ -101,12 +114,44 @@ public class ProcessRecord {
         this.description = description;
     }
 
-    public List<ProcessHistoryRecord> getVersions() {
+    public ProcessDefinitionUpdate getConfiguration() {
+        return configuration;
+    }
+
+    public void setConfiguration(ProcessDefinitionUpdate configuration) {
+        this.configuration = configuration;
+    }
+
+    public boolean isTemplate() {
+        return template;
+    }
+
+    public void setTemplate(boolean template) {
+        this.template = template;
+    }
+
+    public EnumProcessTask getTask() {
+        return task;
+    }
+
+    public void setTask(EnumProcessTask task) {
+        this.task = task;
+    }
+
+    public List<ProcessRecord> getVersions() {
         return Collections.unmodifiableList(this.versions);
     }
 
-    public void addVersion(ProcessHistoryRecord p) {
+    public void addVersion(ProcessRecord p) {
         this.versions.add(p);
+    }
+
+    public List<ProcessExecutionRecord> getExecutions() {
+        return Collections.unmodifiableList(this.executions);
+    }
+
+    public void addExecution(ProcessExecutionRecord e) {
+        this.executions.add(e);
     }
 
 }
