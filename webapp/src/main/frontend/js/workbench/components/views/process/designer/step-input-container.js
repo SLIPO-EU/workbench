@@ -5,7 +5,7 @@ import classnames from 'classnames';
 import {
   EnumDragSource,
   EnumTool,
-  EnumProcessInput,
+  EnumInputType,
   EnumResourceType,
   EnumSelection,
 } from './constants';
@@ -72,15 +72,15 @@ const containerTarget = {
     const counters = getRequiredResources(props.step, props.resources);
 
     // Do not accept owner step output
-    if ((resource.inputType === EnumProcessInput.OUTPUT) && (resource.stepIndex == props.step.index)) {
+    if ((resource.inputType === EnumInputType.OUTPUT) && (resource.stepKey == props.step.key)) {
       return false;
     }
     // Catalog registration should accept only step output as input
-    if ((resource.inputType !== EnumProcessInput.OUTPUT) && (props.step.tool === EnumTool.CATALOG)) {
+    if ((resource.inputType !== EnumInputType.OUTPUT) && (props.step.tool === EnumTool.CATALOG)) {
       return false;
     }
     // Do not accept existing input
-    if (props.resources.filter((r) => r.index === resource.index).length > 0) {
+    if (props.resources.filter((r) => r.key === resource.key).length > 0) {
       return false;
     }
 
@@ -125,16 +125,17 @@ class StepInputContainer extends React.Component {
   renderResource(resource) {
     return (
       <StepInput
-        key={resource.index}
+        key={resource.key}
         active={
           (this.props.active.type === EnumSelection.Input) &&
-          (this.props.active.step === this.props.step.index) &&
-          (this.props.active.item === resource.index)
+          (this.props.active.step === this.props.step.key) &&
+          (this.props.active.item === resource.key)
         }
         step={this.props.step}
         resource={resource}
         remove={this.props.removeStepInput}
         setActiveStepInput={this.props.setActiveStepInput}
+        readOnly={this.props.readOnly}
       />
     );
   }
@@ -147,17 +148,35 @@ class StepInputContainer extends React.Component {
       <div>
         {counters.poi > 0 && counters.any <= 0 &&
           <div className="slipo-pd-step-footer pl-2">
-            <i className="fa fa-exclamation mr-2"></i> <span>Drop {counters.poi} POI dataset(s) ...</span>
+            <i className="fa fa-exclamation mr-2"></i>
+            {counters.poi === 1 &&
+              <span>Drop {counters.poi} POI dataset ...</span>
+            }
+            {counters.poi > 1 &&
+              <span>Drop {counters.poi} POI datasets ...</span>
+            }
           </div>
         }
         {counters.linked > 0 && counters.any <= 0 &&
           <div className="slipo-pd-step-footer pl-2">
-            <i className="fa fa-exclamation mr-2"></i> <span>Drop {counters.linked} POI Linked dataset(s) ...</span>
+            <i className="fa fa-exclamation mr-2"></i>
+            {counters.linked === 1 &&
+              <span>Drop {counters.linked} POI Linked dataset ...</span>
+            }
+            {counters.linked > 1 &&
+              <span>Drop {counters.linked} POI Linked datasets ...</span>
+            }
           </div>
         }
         {counters.any > 0 &&
           <div className="slipo-pd-step-footer pl-2">
-            <i className="fa fa-exclamation mr-2"></i> <span>Drop {counters.any} POI or POI Linked dataset(s) ...</span>
+            <i className="fa fa-exclamation mr-2"></i>
+            {counters.any === 1 &&
+              <span>Drop {counters.any} POI or POI Linked dataset ...</span>
+            }
+            {counters.any > 1 &&
+              <span>Drop {counters.any} POI or POI Linked datasets ...</span>
+            }
           </div>
         }
       </div>

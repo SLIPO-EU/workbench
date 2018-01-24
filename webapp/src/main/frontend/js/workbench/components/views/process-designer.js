@@ -1,28 +1,57 @@
 import * as React from 'react';
 import * as ReactRedux from 'react-redux';
-import { FormattedTime } from 'react-intl';
-import {
-  Card, CardBody, Row, Col, Button, ButtonGroup, DropdownMenu, DropdownItem, DropdownToggle, ButtonDropdown
-} from 'reactstrap';
-import { bindActionCreators } from 'redux';
-import { toast } from 'react-toastify';
 
 import {
-  StaticRoutes
-} from '../../model/routes';
+  bindActionCreators
+} from 'redux';
+
 import {
+  FormattedTime
+} from 'react-intl';
+
+import {
+  toast
+} from 'react-toastify';
+
+import {
+  Button,
+  ButtonDropdown,
+  ButtonGroup,
+  Card,
+  CardBody,
+  Col,
+  DropdownItem,
+  DropdownMenu,
+  DropdownToggle,
+  Row,
+} from 'reactstrap';
+
+import {
+  EnumProcessSaveAction,
+  StaticRoutes,
+} from '../../model';
+
+import {
+  Dialog,
+  ToastTemplate,
+} from '../helpers';
+
+import {
+  DataSourceConfig,
+  Designer,
   EnumHarvester,
-  EnumTool,
   EnumOperation,
+  EnumTool,
   EnumViews,
   Operation,
-  Designer,
-  Toolbox,
   StepConfig,
-  DataSourceConfig,
+  Toolbox,
 } from './process/designer';
+
 import {
   reset,
+  load,
+  save,
   addStep,
   removeStep,
   moveStep,
@@ -40,6 +69,7 @@ import {
   configureStepDataSourceUpdate,
   configureStepDataSourceEnd,
   resetActive,
+  setActiveProcess,
   setActiveStep,
   setActiveStepInput,
   setActiveStepDataSource,
@@ -48,10 +78,10 @@ import {
   redo,
 } from '../../ducks/ui/views/process-designer';
 
-import Dialog from '../helpers/dialog';
-import ToastTemplate from '../helpers/toast-template';
-
-const EnumAction = {
+/**
+ * Component actions
+ */
+const EnumComponentAction = {
   'Save': 'Save',
   'SaveAndExecute': 'SaveAndExecute',
   'SaveAsTemplate': 'SaveAsTemplate',
@@ -71,26 +101,88 @@ class ProcessDesigner extends React.Component {
     super(props);
 
     this.state = {
-      dropdownOpen: false,
-      showCancelDialog: false,
+      saveDropdownOpen: false,
+      cancelDialogOpen: false,
     };
 
-    this.toggleButtonMenu = this.toggleButtonMenu.bind(this);
+    this.goToProcessExplorer = this.goToProcessExplorer.bind(this);
+    this.toggleSaveButtonDropdown = this.toggleSaveButtonDropdown.bind(this);
     this.toggleCancelDialog = this.toggleCancelDialog.bind(this);
+    this.reset = this.reset.bind(this);
     this.cancelDialogHandler = this.cancelDialogHandler.bind(this);
+    this.select = this.select.bind(this);
   }
 
-  toggleButtonMenu() {
-    this.setState({ dropdownOpen: !this.state.dropdownOpen });
+  componentWillMount() {
+    const { id, version, ...rest } = this.props.match.params;
+    if (!id) {
+      this.reset();
+    }
+  }
+
+  componentDidMount() {
+    const { id, version, ...rest } = this.props.match.params;
+    if (id) {
+      this.props.load(Number.parseInt(id), Number.parseInt(version))
+        .then(() => {
+          this.select();
+        })
+        .catch((err) => {
+          toast.dismiss();
+
+          toast.error(
+            <ToastTemplate iconClass='fa-warning' text={err.message} />
+          );
+
+          this.props.history.goBack();
+        });
+    } else {
+      this.select();
+    }
+  }
+
+  mapToSaveAction(action) {
+    switch (action) {
+      case EnumComponentAction.Save:
+        return EnumProcessSaveAction.Save;
+      case EnumComponentAction.SaveAndExecute:
+        return EnumProcessSaveAction.SaveAndExecute;
+      case EnumComponentAction.SaveAsTemplate:
+        return EnumProcessSaveAction.SaveAsTemplate;
+    }
+    return null;
+  }
+
+  toggleSaveButtonDropdown() {
+    this.setState({ saveDropdownOpen: !this.state.saveDropdownOpen });
   }
 
   toggleCancelDialog() {
-    this.setState({ showCancelDialog: !this.state.showCancelDialog });
+    this.setState({ cancelDialogOpen: !this.state.cancelDialogOpen });
+  }
+
+  goToProcessExplorer() {
+    if (this.props.readOnly) {
+      this.props.history.push(StaticRoutes.ProcessExplorer);
+    }
+  }
+
+  reset(e) {
+    if (e) {
+      e.stopPropagation();
+    }
+
+    this.props.reset();
+  }
+
+  select() {
+    this.props.setActiveProcess(this.props.process);
   }
 
   cancelDialogHandler(action) {
     switch (action.key) {
-      case EnumAction.Discard:
+      case EnumComponentAction.Discard:
+        this.props.reset();
         this.props.history.push(StaticRoutes.ProcessExplorer);
         break;
       default:
@@ -99,88 +191,98 @@ class ProcessDesigner extends React.Component {
     }
   }
 
-  save(action, e) {
+  save(action) {
     toast.dismiss();
 
-    switch (action) {
-      case EnumAction.Save:
+    this.props.save(this.mapToSaveAction(action), this.props.designer)
+      .then((result) => {
         toast.success(
           <ToastTemplate iconClass='fa-save' text='Process has been saved successfully!' />
         );
-        break;
-      case EnumAction.SaveAndExecute:
+        this.props.reset();
+        this.props.history.push(StaticRoutes.ProcessExplorer);
+      })
+      .catch((err) => {
         toast.error(
-          <ToastTemplate iconClass='fa-warning' text='Process execution failed to start!' />
+          <ToastTemplate iconClass='fa-warning' text={err.message} />
         );
-        return;
-      case EnumAction.SaveAsTemplate:
-        toast.warning(
-          <ToastTemplate iconClass='fa-warning' text='Failed to save template' />
-        );
-        return;
-    }
-    this.props.reset();
-    this.props.history.push(StaticRoutes.ProcessExplorer);
+      });
   }
 
   renderDesigner() {
     return (
-      <Card onClick={(e) => { this.props.resetActive(); }}>
-        <CardBody className="card-body">
-          <Row className="mb-2">
-            <Col>
-              <Toolbox />
-              <p className='text-muted slipo-pd-tip float-left'>Drag SLIPO Toolkit components to the designer surface for building a workflow.</p>
-            </Col>
-          </Row>
-          <Row>
-            <Col>
-              <Button color="danger" onClick={this.toggleCancelDialog} className="float-left">Discard</Button>
-              <Button color="warning" onClick={this.props.reset} className="float-left ml-3">Clear</Button>
-              <Button color="default" onClick={this.props.undoAction} className="float-left ml-3" disabled={this.props.undo.length === 1}>Undo</Button>
-              <Button color="default" onClick={this.props.redoAction} className="float-left ml-3" disabled={this.props.redo.length === 0}>Redo</Button>
-              <ButtonGroup className="float-right">
-                <Button color="primary" onClick={this.save.bind(this, EnumAction.Save)}>Save</Button>
-                <ButtonDropdown isOpen={this.state.dropdownOpen} toggle={this.toggleButtonMenu}>
-                  <DropdownToggle caret>
-                    More ...
-                  </DropdownToggle>
-                  <DropdownMenu>
-                    <DropdownItem onClick={this.save.bind(this, EnumAction.SaveAndExecute)}>Save & Execute</DropdownItem>
-                    <DropdownItem onClick={this.save.bind(this, EnumAction.SaveAsTemplate)}>Save Template </DropdownItem>
-                  </DropdownMenu>
-                </ButtonDropdown>
-              </ButtonGroup>
-
-            </Col>
-          </Row>
-        </CardBody>
-        <CardBody className="card-body">
-          <Row className="mb-2">
-            <Col style={{ padding: '9px' }}>
-              <Designer
-                active={this.props.active}
-                steps={this.props.steps}
-                resources={this.props.resources}
-                addStep={this.props.addStep}
-                configureStepBegin={this.props.configureStepBegin}
-                removeStep={this.props.removeStep}
-                moveStep={this.props.moveStep}
-                setStepProperty={this.props.setStepProperty}
-                addStepInput={this.props.addStepInput}
-                removeStepInput={this.props.removeStepInput}
-                addStepDataSource={this.props.addStepDataSource}
-                removeStepDataSource={this.props.removeStepDataSource}
-                configureStepDataSourceBegin={this.props.configureStepDataSourceBegin}
-                setActiveStep={this.props.setActiveStep}
-                setActiveStepInput={this.props.setActiveStepInput}
-                setActiveStepDataSource={this.props.setActiveStepDataSource}
-                setActiveResource={this.props.setActiveResource}
-              />
-            </Col>
-          </Row>
-        </CardBody>
-      </Card>
+      <div onClick={this.select}>
+        {!this.props.readOnly &&
+          <Card className="mb-2">
+            <CardBody className="card-body">
+              <Row>
+                <Col>
+                  <Toolbox />
+                  <p className='text-muted slipo-pd-tip float-left'>Drag SLIPO Toolkit components to the designer surface for building a workflow.</p>
+                </Col>
+              </Row>
+            </CardBody>
+          </Card>
+        }
+        <Card>
+          <CardBody className="card-body">
+            <Row>
+              {this.props.readOnly &&
+                <Col>
+                  <Button color="primary" onClick={this.goToProcessExplorer} className="float-right mr-3">Return</Button>
+                </Col>
+              }
+              {!this.props.readOnly &&
+                <Col>
+                  <Button color="danger" onClick={this.toggleCancelDialog} className="float-left">Discard</Button>
+                  <Button color="warning" onClick={this.reset} className="float-left ml-3">Clear</Button>
+                  <Button color="default" onClick={this.props.undoAction} className="float-left ml-3" disabled={this.props.undo.length === 1}>Undo</Button>
+                  <Button color="default" onClick={this.props.redoAction} className="float-left ml-3" disabled={this.props.redo.length === 0}>Redo</Button>
+                  <ButtonGroup className="float-right">
+                    <Button color="primary" onClick={this.save.bind(this, EnumComponentAction.Save)}>Save</Button>
+                    <ButtonDropdown isOpen={this.state.saveDropdownOpen} toggle={this.toggleSaveButtonDropdown}>
+                      <DropdownToggle caret>
+                        More ...
+                      </DropdownToggle>
+                      <DropdownMenu>
+                        <DropdownItem onClick={this.save.bind(this, EnumComponentAction.SaveAndExecute)}>Save & Execute</DropdownItem>
+                        <DropdownItem onClick={this.save.bind(this, EnumComponentAction.SaveAsTemplate)}>Save Template </DropdownItem>
+                      </DropdownMenu>
+                    </ButtonDropdown>
+                  </ButtonGroup>
+                </Col>
+              }
+            </Row>
+          </CardBody>
+          <CardBody className="card-body">
+            <Row className="mb-2">
+              <Col style={{ padding: '9px' }}>
+                <Designer
+                  active={this.props.active}
+                  groups={this.props.groups}
+                  steps={this.props.steps}
+                  resources={this.props.resources}
+                  addStep={this.props.addStep}
+                  configureStepBegin={this.props.configureStepBegin}
+                  removeStep={this.props.removeStep}
+                  moveStep={this.props.moveStep}
+                  setStepProperty={this.props.setStepProperty}
+                  addStepInput={this.props.addStepInput}
+                  removeStepInput={this.props.removeStepInput}
+                  addStepDataSource={this.props.addStepDataSource}
+                  removeStepDataSource={this.props.removeStepDataSource}
+                  configureStepDataSourceBegin={this.props.configureStepDataSourceBegin}
+                  setActiveStep={this.props.setActiveStep}
+                  setActiveStepInput={this.props.setActiveStepInput}
+                  setActiveStepDataSource={this.props.setActiveStepDataSource}
+                  setActiveResource={this.props.setActiveResource}
+                  readOnly={this.props.readOnly}
+                />
+              </Col>
+            </Row>
+          </CardBody>
+        </Card>
+      </div>
     );
   }
 
@@ -193,6 +295,7 @@ class ProcessDesigner extends React.Component {
         configureStepValidate={this.props.configureStepValidate}
         configureStepUpdate={this.props.configureStepUpdate}
         configureStepEnd={this.props.configureStepEnd}
+        readOnly={this.props.readOnly}
       />
     );
   }
@@ -208,6 +311,7 @@ class ProcessDesigner extends React.Component {
         configureStepDataSourceUpdate={this.props.configureStepDataSourceUpdate}
         configureStepDataSourceEnd={this.props.configureStepDataSourceEnd}
         filesystem={this.props.filesystem}
+        readOnly={this.props.readOnly}
       />
     );
   }
@@ -220,16 +324,16 @@ class ProcessDesigner extends React.Component {
             <i className={'fa fa-question mr-2'}></i>System Message
           </span>
         }
-        modal={this.state.showCancelDialog}
+        modal={this.state.cancelDialogOpen}
         handler={this.cancelDialogHandler}
         actions={[
           {
-            key: EnumAction.Discard,
+            key: EnumComponentAction.Discard,
             label: 'Yes',
             iconClass: 'fa fa-trash',
             color: 'danger',
           }, {
-            key: EnumAction.CloseCancelDialog,
+            key: EnumComponentAction.CloseCancelDialog,
             label: 'No',
             iconClass: 'fa fa-undo',
           }
@@ -250,7 +354,7 @@ class ProcessDesigner extends React.Component {
             {this.props.view.type === EnumViews.DataSourceConfiguration && this.renderDataSourceConfiguration()}
           </Col>
         </Row>
-        {this.state.showCancelDialog &&
+        {this.state.cancelDialogOpen &&
           this.renderCancelDialog()
         }
       </div>
@@ -258,19 +362,24 @@ class ProcessDesigner extends React.Component {
   }
 }
 
-
 const mapStateToProps = (state) => ({
-  view: state.ui.views.process.designer.view,
   active: state.ui.views.process.designer.active,
-  steps: state.ui.views.process.designer.steps,
-  resources: state.ui.views.process.designer.resources,
-  undo: state.ui.views.process.designer.undo,
-  redo: state.ui.views.process.designer.redo,
+  designer: state.ui.views.process.designer,
   filesystem: state.config.filesystem,
+  groups: state.ui.views.process.designer.groups,
+  process: state.ui.views.process.designer.process,
+  readOnly: state.ui.views.process.designer.readOnly,
+  redo: state.ui.views.process.designer.redo,
+  resources: state.ui.views.process.designer.resources,
+  steps: state.ui.views.process.designer.steps,
+  undo: state.ui.views.process.designer.undo,
+  view: state.ui.views.process.designer.view,
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
   reset,
+  load,
+  save,
   addStep,
   removeStep,
   moveStep,
@@ -288,6 +397,7 @@ const mapDispatchToProps = (dispatch) => bindActionCreators({
   configureStepDataSourceUpdate,
   configureStepDataSourceEnd,
   resetActive,
+  setActiveProcess,
   setActiveStep,
   setActiveStepInput,
   setActiveStepDataSource,
