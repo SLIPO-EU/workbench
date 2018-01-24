@@ -1,6 +1,8 @@
 import React from 'react';
 import { toast } from 'react-toastify';
 
+import ToastTemplate from '../../../helpers/toast-template';
+
 import { MultiStep } from '../../../helpers/forms/';
 import { StaticRoutes } from '../../../../model/routes';
 
@@ -22,20 +24,11 @@ export default function ResourceWizard(props) {
         initialActive={props.initialActive}
         onComplete={(values) => {
           if (values.type.path === 'UPLOAD' || values.type.path === 'FILESYSTEM') {
-            toast.dismiss();
-            toast.success(<span>Resource registration succeeded!</span>);
-
             const data = {
-              configuration: values.triplegeo || null,
+              settings: values.triplegeo || null,
               metadata: values.metadata,
             };
-            switch(values.type.path) {
-              case 'UPLOAD':
-                data.dataSource = {
-                  type: values.type.path,
-                  fileIndex: 0,
-                };
-                break;
+            switch (values.type.path) {
               case 'FILESYSTEM':
                 data.dataSource = {
                   type: values.type.path,
@@ -45,8 +38,19 @@ export default function ResourceWizard(props) {
             }
             const file = values.upload && values.upload.file || null;
 
+            toast.dismiss();
             props.createResource(data, file)
-              .then(() => props.goTo(StaticRoutes.ResourceExplorer));
+              .then((result) => {
+                toast.success(
+                  <ToastTemplate iconClass='fa-book' text='Resource registration has been initialized successfully!' />
+                );
+                props.goTo(StaticRoutes.ResourceExplorer);
+              })
+              .catch((err) => {
+                toast.error(
+                  <ToastTemplate iconClass='fa-warning' text={err.message} />
+                );
+              });
           }
         }}
         childrenProps={{
@@ -124,6 +128,6 @@ export default function ResourceWizard(props) {
           initialValue={{}}
         />
       </MultiStep>
-    </div>
+    </div >
   );
 }

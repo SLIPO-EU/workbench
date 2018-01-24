@@ -1,18 +1,36 @@
 import React from 'react';
-import { TextField, SelectField } from '../../../helpers/forms/form-fields/';
 
+import {
+  FileDropField,
+  SelectField,
+  TextField,
+} from '../../../helpers/forms/form-fields/';
 
-const serializations = [
-  { value: 'RDF/XML', label: 'RDF/XML' },
-  { value: 'RDF/XML-ABBREV', label: 'RDF/XML-ABBREV' },
-  { value: 'N-TRIPLES', label: 'N-TRIPLES' },
-  { value: 'TURTLE', label: 'TURTLE' },
-  { value: 'N3', label: 'N3' },
+const inputFormats = [
+  { value: 'CSV', label: 'CSV' },
+  { value: 'GPX', label: 'GPX' },
+  { value: 'GEOJSON', label: 'GEOJSON' },
+  { value: 'OSM', label: 'OSM' },
+  { value: 'SHAPEFILE', label: 'SHAPEFILE' },
+  { value: 'XML', label: 'XML' },
+];
+
+const modes = [
+  { value: 'GRAPH', label: 'GRAPH' },
+  { value: 'STREAM', label: 'STREAM' },
+  { value: 'RML', label: 'RML' },
+  { value: 'XSLT', label: 'XSLT' },
+];
+
+const encodings = [
+  { value: 'ISO-8859-1', label: 'ISO-8859-1' },
+  { value: 'ISO-8859-7', label: 'ISO-8859-7' },
+  { value: 'UTF-8', label: 'UTF-8' },
 ];
 
 const ontologies = [
-  { value: 'GeoSPARQL', label: 'GeoSPARQL' },
-  { value: 'Virtuoso', label: 'Virtuoso' },
+  { value: 'GEOSPARQL', label: 'GeoSPARQL' },
+  { value: 'VIRTUOSO', label: 'Virtuoso' },
   { value: 'WGS84', label: 'WGS84' },
 ];
 
@@ -26,12 +44,23 @@ const languages = [
   { value: 'el', label: 'Greek' },
 ];
 
+const serializations = [
+  { value: 'RDF_XML', label: 'RDF/XML' },
+  { value: 'RDF_XML_ABBREV', label: 'RDF/XML-ABBREV' },
+  { value: 'N_TRIPLES', label: 'N-TRIPLES' },
+  { value: 'TURTLE', label: 'TURTLE' },
+  { value: 'N3', label: 'N3' },
+];
+
 export const initialValue = {
+  'mode': modes[2].value,
+  'encoding': encodings[2].value,
   'serialization': serializations[2].value,
-  'targetOntology': ontologies[1].value,
   'sourceCRS': crs[0].value,
   'targetCRS': crs[1].value,
   'defaultLang': languages[0].value,
+  'delimiter': '|',
+  'quote': '"',
 };
 
 export const validator = function (values, cleared) {
@@ -68,6 +97,49 @@ export const validator = function (values, cleared) {
 export const Component = (props) => {
   return (
     <div>
+      <div>
+        <h4>Input parameters</h4>
+        <hr />
+      </div>
+
+      <SelectField
+        {...props}
+        id="inputFormat"
+        label="Input format"
+        help="Specify format for the input geographical file(s): "
+        options={inputFormats}
+      />
+
+      <SelectField
+        {...props}
+        id="mode"
+        label="Mode"
+        help="Conversion mode"
+        options={modes}
+      />
+
+      <SelectField
+        {...props}
+        id="encoding"
+        label="Encoding"
+        help="The encoding (character set) for strings in the input data. If not specified, UTF-8 encoding is assumed."
+        options={encodings}
+      />
+
+      {/* <FileDropField
+        {...props}
+        id="mappingSpec"
+        label="Mapping specification file"
+        help="File containing RML or XSLT mappings from input schema to RDF"
+      />
+
+      <FileDropField
+        {...props}
+        id="classificationSpec"
+        label="Classification specification file"
+        help="File (in YML or CSV format) containing classification hierarchy of categories"
+      /> */}
+
       <div>
         <h4>Output parameters</h4>
         <hr />
@@ -129,6 +201,13 @@ export const Component = (props) => {
               id="delimiter"
               label="Delimiter"
               help="Specify delimiter character"
+            />
+
+            <TextField
+              {...props}
+              id="quote"
+              label="Quote"
+              help="Specify quote character for string values; Remove for any other types of input data"
             />
 
             <TextField

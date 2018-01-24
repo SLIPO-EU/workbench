@@ -6,8 +6,8 @@ const supportedFiles = [
   { value: 'CSV' },
   { value: 'GPX' },
   { value: 'GEOJSON' },
+  { value: 'XML' },
   { value: 'OSM' },
-  { value: 'RDF' },
 ];
 
 export const initialValue = {
