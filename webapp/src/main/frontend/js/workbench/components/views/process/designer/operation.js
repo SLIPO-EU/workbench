@@ -25,7 +25,7 @@ const operationSource = {
       type: EnumToolboxItem.Operation,
       tool: props.tool,
       operation: props.operation,
-      title: props.title,
+      name: props.name,
       iconClass: props.iconClass,
     };
   }
@@ -50,7 +50,7 @@ class Operation extends React.Component {
 
   static propTypes = {
     // Operation description
-    title: PropTypes.string.isRequired,
+    name: PropTypes.string.isRequired,
 
     // Operation icon
     iconClass: PropTypes.string.isRequired,
@@ -95,7 +95,7 @@ class Operation extends React.Component {
           <i className={this.props.iconClass}></i>
         </div>
         <div className="slipo-pd-item-label">
-          {this.props.title}
+          {this.props.name}
         </div>
       </div>
     );

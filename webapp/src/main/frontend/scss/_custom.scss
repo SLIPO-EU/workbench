@@ -6,6 +6,10 @@
   background-color: #e4e5e6;
 }
 
+h3 {
+  font-size: 1.4rem;
+}
+
 .app-header.navbar {
   .nav-item {
     padding: 0px 10px;
@@ -95,4 +99,9 @@ section:after {
 
 .modal-title {
   font-size: 1rem;
+}
+
+.form-control:disabled,
+.form-control[readonly] {
+  background-color: #fff;
 }

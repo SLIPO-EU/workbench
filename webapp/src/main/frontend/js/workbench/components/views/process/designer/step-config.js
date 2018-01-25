@@ -37,6 +37,7 @@ class StepConfig extends React.Component {
     configureStepValidate: PropTypes.func.isRequired,
     configureStepUpdate: PropTypes.func.isRequired,
     configureStepEnd: PropTypes.func.isRequired,
+    readOnly: PropTypes.bool.isRequired,
   }
 
   setValue(configuration) {
@@ -52,7 +53,7 @@ class StepConfig extends React.Component {
   createForm(Component, validator) {
     return (
       <Form
-        title={this.props.step.title}
+        title={this.props.step.name}
         iconClass={this.props.step.iconClass}
         validate={validator}
         setError={this.setError}
@@ -61,6 +62,7 @@ class StepConfig extends React.Component {
         save={this.save}
         values={this.props.configuration}
         errors={this.props.errors}
+        readOnly={this.props.readOnly}
       >
         {
           React.isValidElement(Component) ?
@@ -73,7 +75,7 @@ class StepConfig extends React.Component {
   }
 
   save() {
-    this.props.configureStepEnd(this.props.step, this.props.configuration, this.props.errors);
+    this.props.configureStepEnd(this.props.step, this.props.configuration || {}, this.props.errors);
   }
 
   cancel() {

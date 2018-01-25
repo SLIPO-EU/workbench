@@ -4,7 +4,7 @@ import {
   EnumOperation,
   EnumResourceType,
   EnumTool,
-  EnumProcessInput,
+  EnumInputType,
 } from './constants';
 
 /**
@@ -82,8 +82,8 @@ export const ToolDefaultOperation = {
  * Default process input type icons
  */
 export const ProcessInputIcons = {
-  [EnumProcessInput.CATALOG]: 'fa fa-book',
-  [EnumProcessInput.OUTPUT]: 'fa fa-cog',
+  [EnumInputType.CATALOG]: 'fa fa-book',
+  [EnumInputType.OUTPUT]: 'fa fa-cog',
 };
 
 /**

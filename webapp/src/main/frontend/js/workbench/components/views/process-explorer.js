@@ -1,88 +1,212 @@
 import * as React from 'react';
 import * as ReactRedux from 'react-redux';
-import { FormattedTime } from 'react-intl';
-import { bindActionCreators } from 'redux';
+
 import {
-  Card, CardBody, CardTitle, Row, Col,
-  ButtonToolbar, Button, ButtonGroup, Label, Input
+  bindActionCreators
+} from 'redux';
+
+import {
+  toast
+} from 'react-toastify';
+
+import {
+  Card,
+  CardBody,
+  Col,
+  Row,
 } from 'reactstrap';
 
-import Placeholder from './placeholder';
-import { Filters } from './resource/explorer/'; // STC
+import {
+  FormattedTime
+} from 'react-intl';
+
+import {
+  DynamicRoutes,
+  buildPath
+} from '../../model/routes';
+
+import {
+  ToastTemplate,
+} from '../helpers';
+
+import {
+  ExecutionDetails,
+  Filters,
+  Processes,
+  ProcessExecutions,
+} from "./process/explorer";
 
 
-// Import React Table
-import ReactTable from "react-table";
-import { Processes , ProcessExecutions , ExecutionDetails } from "./process";
-
-
-import moment from 'moment';
-import { fetchProcessData, setPager, setSelectedProcess, setSelectedExecution } from '../../ducks/ui/views/process-explorer';
+import {
+  fetchProcessExecutions,
+  fetchProcesses,
+  resetFilters,
+  setFilter,
+  setPager,
+} from '../../ducks/ui/views/process-explorer';
 
 /**
- * Component for managing job scheduling
+ * Browse and manage processes
  *
  * @class ProcessExplorer
  * @extends {React.Component}
  */
 class ProcessExplorer extends React.Component {
-  componentWillMount(){
-    this.props.fetchProcessData();
+
+  constructor(props) {
+    super(props);
+
+    this.editProcess = this.editProcess.bind(this);
+    this.viewProcess = this.viewProcess.bind(this);
+    this.viewExecution = this.viewExecution.bind(this);
+    this.startExecution = this.startExecution.bind(this);
+    this.stopExecution = this.stopExecution.bind(this);
   }
+
+  /**
+   * Initializes a request for fetching process data, optionally using any
+   * existing search criteria
+   *
+   * @memberof ProcessExplorer
+   */
+  componentWillMount() {
+    this.props.fetchProcesses({
+      ...this.props.filters,
+    });
+  }
+
+  /**
+   * Navigates to the {@link ProcessDesigner} component for editing the current
+   * version of the selected process
+   *
+   * @param {*} id
+   */
+  editProcess(id) {
+    const path = buildPath(DynamicRoutes.ProcessDesignerEdit, [id]);
+
+    this.props.history.push(path);
+  }
+
+  /**
+   * Navigates to the {@link ProcessDesigner} component for viewing the specific
+   * version of the selected process in read-only mode
+   *
+   * @param {any} id
+   * @param {any} version
+   * @memberof ProcessExplorer
+   */
+  viewProcess(id, version) {
+    const path = buildPath(DynamicRoutes.ProcessDesignerView, [id, version]);
+
+    this.props.history.push(path);
+  }
+
+  /**
+   * Displays details about the selected execution
+   *
+   * @param {any} id
+   * @param {any} version
+   * @param {any} execution
+   * @memberof ProcessExplorer
+   */
+  viewExecution(id, version, execution) {
+    const path = buildPath(DynamicRoutes.ProcessExecutionViewer, [id, version, execution]);
+
+    this.props.history.push(path);
+  }
+
+  /**
+   * Starts the execution of the current version of the selected process
+   *
+   * @param {any} id
+   * @memberof ProcessExplorer
+   */
+  startExecution(id) {
+    toast.dismiss();
+
+    toast.error(
+      <ToastTemplate iconClass='fa-warning' text='Not implemented!' />
+    );
+  }
+
+  /**
+   * Attempts to stop the selected execution
+   *
+   * @param {any} id
+   * @memberof ProcessExplorer
+   */
+  stopExecution(id) {
+    toast.dismiss();
+
+    toast.error(
+      <ToastTemplate iconClass='fa-warning' text='Not implemented!' />
+    );
+  }
+
   render() {
-    const { resources } = this.props;
     return (
       <div className="animated fadeIn">
         <Row>
           <Col className="col-12">
             <Card>
               <CardBody className="card-body">
-                <Row className="mb-2">
-                  <Col >
-                    <div className="small text-muted">Last Update: <FormattedTime value={moment().toDate()} day='numeric' month='numeric' year='numeric' /></div>
-                  </Col>
-                </Row>
-                <Row style={{ height: 100 }} className="mb-2">
+                {this.props.lastUpdate &&
+                  <Row className="mb-2">
+                    <Col >
+                      <div className="small text-muted">
+                        Last Update: <FormattedTime value={this.props.lastUpdate} day='numeric' month='numeric' year='numeric' />
+                      </div>
+                    </Col>
+                  </Row>
+                }
+                <Row>
                   <Col>
                     <Filters
-                      filters=''//{this.props.filters}
-                      setFilter=''//{this.props.setFilter}
-                      resetFilters=''//{this.props.resetFilters}
-                      fetchResources=''//{this.props.fetchResources}
+                      filters={this.props.filters}
+                      setFilter={this.props.setFilter}
+                      resetFilters={this.props.resetFilters}
+                      fetchProcesses={this.props.fetchProcesses}
                     />
-                  </Col>
-                </Row>
-                <Row style={{ height: 400, marginBottom: 20}} className="mb-2">
-                  <Col>
-                    <Processes
-                      processes={this.props.processes}
-                      fetchProcessData={this.props.fetchProcessData}
-                      setPager={this.props.setPager}
-                      setSelectedProcess={this.props.setSelectedProcess}
-                      selectedProcess={this.props.processes.selected}
-                    />
-                  </Col>
-                </Row>
-                <Row style={{ minHeight: 450, marginTop: 40 }} className="mb-2">
-                  <Col>
-                    <h3>Executions</h3>
-                    <ProcessExecutions
-                      processes={this.props.processes.items}
-                      detailed={this.props.processes.selected}
-                      selectedFields={this.props.selectedFields}
-                      setSelectedExecution= {this.props.setSelectedExecution}
-                      selectedExecution={this.props.processes.selectedExecution}
-                      selectedProcess={this.props.processes.selected}
-                    />
-                  </Col>
-                  <Col xs="3">
-                    <h3>Details</h3>
-                    <ExecutionDetails
-                      steps= {this.props.processes.executionStatus.steps} />
                   </Col>
                 </Row>
               </CardBody>
             </Card>
+            <Card>
+              <CardBody className="card-body">
+                <Row className="mb-2">
+                  <Col>
+                    <Processes
+                      editProcess={this.editProcess}
+                      viewProcess={this.viewProcess}
+                      fetchProcessExecutions={this.props.fetchProcessExecutions}
+                      fetchProcesses={this.props.fetchProcesses}
+                      filters={this.props.filters}
+                      items={this.props.items}
+                      pager={this.props.pager}
+                      selected={this.props.selected}
+                      setPager={this.props.setPager}
+                      startExecution={this.startExecution}
+                    />
+                  </Col>
+                </Row>
+              </CardBody>
+            </Card>
+            {this.props.selected &&
+              <Card>
+                <CardBody className="card-body">
+                  <Row>
+                    <Col>
+                      <ProcessExecutions
+                        executions={this.props.executions}
+                        selected={this.props.selected}
+                        stopExecution={this.stopExecution}
+                        viewExecution={this.viewExecution}
+                      />
+                    </Col>
+                  </Row>
+                </CardBody>
+              </Card>
+            }
           </Col>
         </Row >
       </div>
@@ -92,15 +216,21 @@ class ProcessExplorer extends React.Component {
 }
 
 const mapStateToProps = (state) => ({
-  processes: state.ui.views.process.explorer,
-  selectedFields: state.ui.views.process.explorer.selectedFields,
-  //pager: state.ui.views.processes.pagingOptions,
-  //resources: state.ui.views.dashboard.resources,
-  //events: state.ui.views.dashboard.events,
-  //filters: state.ui.views.dashboard.filters,
-  //givenName: state.user.profile.givenName,
+  executions: state.ui.views.process.explorer.executions,
+  filters: state.ui.views.process.explorer.filters,
+  items: state.ui.views.process.explorer.items,
+  lastUpdate: state.ui.views.process.explorer.lastUpdate,
+  pager: state.ui.views.process.explorer.pager,
+  selected: state.ui.views.process.explorer.selected,
+  selectedExecution: state.ui.views.process.explorer.selectedExecution,
 });
 
-const mapDispatchToProps = (dispatch) => bindActionCreators({ fetchProcessData, setPager, setSelectedProcess, setSelectedExecution }, dispatch);
+const mapDispatchToProps = (dispatch) => bindActionCreators({
+  fetchProcesses,
+  setFilter,
+  resetFilters,
+  setPager,
+  fetchProcessExecutions,
+}, dispatch);
 
 export default ReactRedux.connect(mapStateToProps, mapDispatchToProps)(ProcessExplorer);

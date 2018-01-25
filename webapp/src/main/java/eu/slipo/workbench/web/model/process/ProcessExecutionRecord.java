@@ -5,9 +5,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import eu.slipo.workbench.web.model.UserInfo;
+
 public class ProcessExecutionRecord {
 
     private long id;
+
+    private String name;
+
+    private UserInfo submittedBy;
+
+    private ZonedDateTime submittedOn;
 
     private ProcessIdentifier process;
 
@@ -15,7 +23,9 @@ public class ProcessExecutionRecord {
 
     private ZonedDateTime completedOn;
 
-    private String status;
+    private EnumProcessExecutionStatus status;
+
+    private EnumProcessTask task;
 
     private String errorMessage;
 
@@ -29,6 +39,34 @@ public class ProcessExecutionRecord {
     public ProcessExecutionRecord(long id, ProcessIdentifier process) {
         this.id = id;
         this.process = process.clone();
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public UserInfo getSubmittedBy() {
+        return submittedBy;
+    }
+
+    public void setSubmittedBy(int id, String name) {
+        this.submittedBy = new UserInfo(id, name);
+    }
+
+    public void setSubmittedBy(UserInfo submittedBy) {
+        this.submittedBy = submittedBy;
+    }
+
+    public ZonedDateTime getSubmittedOn() {
+        return submittedOn;
+    }
+
+    public void setSubmittedOn(ZonedDateTime submittedOn) {
+        this.submittedOn = submittedOn;
     }
 
     public ZonedDateTime getStartedOn() {
@@ -47,12 +85,20 @@ public class ProcessExecutionRecord {
         this.completedOn = completedOn;
     }
 
-    public String getStatus() {
+    public EnumProcessExecutionStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(EnumProcessExecutionStatus status) {
         this.status = status;
+    }
+
+    public EnumProcessTask getTask() {
+        return task;
+    }
+
+    public void setTask(EnumProcessTask task) {
+        this.task = task;
     }
 
     public String getErrorMessage() {

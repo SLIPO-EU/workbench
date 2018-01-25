@@ -34,6 +34,7 @@ import {
   ResourceExplorer,
   ResourceRegistration,
   ProcessExplorer,
+  ProcessExecutionExplorer,
   RecipeExplorer,
   SchemaExplorer,
   UserManager,
@@ -147,12 +148,12 @@ class Home extends React.Component {
             <Container fluid className="slipo-container">
               <Switch>
                 <Redirect from="/" to={StaticRoutes.Dashboard} exact />
-                {/* TODO: Remove */}
                 {/* Dynamic */}
                 <Route path={DynamicRoutes.ResourceViewer} component={ResourceViewer} />
-                <Route path={DynamicRoutes.ProcessDesignerCreate} component={ProcessDesigner} />
-                <Route path={DynamicRoutes.ProcessDesignerEdit} component={ProcessDesigner} />
-                <Route path={DynamicRoutes.ProcessExecutionViewer} component={ProcessExecutionViewer} />
+                <Route path={DynamicRoutes.ProcessDesignerView} component={ProcessDesigner} exact />
+                <Route path={DynamicRoutes.ProcessDesignerEdit} component={ProcessDesigner} exact />
+                <Route path={DynamicRoutes.ProcessDesignerCreate} component={ProcessDesigner} exact />
+                <Route path={DynamicRoutes.ProcessExecutionViewer} component={ProcessExecutionViewer} exact />
                 <Route path={DynamicRoutes.SchemaDesigner} component={SchemaDesigner} />
                 <Route path={DynamicRoutes.DataViewer} component={DataViewer} />
                 {/* Static */}
@@ -162,6 +163,7 @@ class Home extends React.Component {
                 <Route path={StaticRoutes.ResourceExplorer} component={ResourceExplorer} />
                 <Route path={StaticRoutes.ResourceRegistration} component={ResourceRegistration} />
                 <Route path={StaticRoutes.ProcessExplorer} component={ProcessExplorer} />
+                <Route path={StaticRoutes.ProcessExecutionExplorer} component={ProcessExecutionExplorer} />
                 <Route path={StaticRoutes.RecipeExplorer} component={RecipeExplorer} />
                 <Route path={StaticRoutes.SchemaExplorer} component={SchemaExplorer} />
                 <SecureRoute path={StaticRoutes.UserManager} component={UserManager} role={Roles.ADMIN} />

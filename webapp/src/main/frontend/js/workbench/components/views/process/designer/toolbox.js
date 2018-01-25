@@ -44,22 +44,24 @@ function getToolboxItems(type) {
       if (key === EnumDataSource.HARVESTER) {
         continue;
       }
-      items.push(<DataSource key={++index} title={DataSourceTitles[key]} source={key} iconClass={DataSourceIcons[key]} />);
+      items.push(<DataSource key={++index} name={DataSourceTitles[key]} source={key} iconClass={DataSourceIcons[key]} />);
     }
   }
 
   if ((type === EnumToolboxItemGroup.All) || (type === EnumToolboxItemGroup.Harvester)) {
     for (let key in EnumHarvester) {
-      items.push(<DataSource key={++index} title={HarvesterTitles[key]} source={EnumDataSource.HARVESTER} iconClass={HarvesterIcons[key]} harvester={key} />);
+      items.push(<DataSource key={++index} name={HarvesterTitles[key]} source={EnumDataSource.HARVESTER} iconClass={HarvesterIcons[key]} harvester={key} />);
     }
   }
 
   if ((type === EnumToolboxItemGroup.All) || (type === EnumToolboxItemGroup.Tools)) {
     for (let key in EnumTool) {
-      if (key === EnumTool.CATALOG) {
+      const value = EnumTool[key];
+
+      if (value === EnumTool.CATALOG) {
         continue;
       }
-      items.push(<Operation key={++index} title={ToolTitles[key]} tool={key} operation={ToolDefaultOperation[key]} iconClass={ToolIcons[key]} />);
+      items.push(<Operation key={++index} name={ToolTitles[value]} tool={value} operation={ToolDefaultOperation[value]} iconClass={ToolIcons[value]} />);
     }
   }
 
@@ -68,7 +70,7 @@ function getToolboxItems(type) {
     items.push(
       <Operation
         key={++index}
-        title={ToolTitles[EnumTool.CATALOG]}
+        name={ToolTitles[EnumTool.CATALOG]}
         tool={EnumTool.CATALOG}
         operation={ToolDefaultOperation[EnumTool.CATALOG]}
         iconClass={ToolIcons[EnumTool.CATALOG]}

@@ -22,6 +22,7 @@ class StepDataSource extends React.Component {
     removeStepDataSource: PropTypes.func.isRequired,
     configureStepDataSourceBegin: PropTypes.func.isRequired,
     setActiveStepDataSource: PropTypes.func.isRequired,
+    readOnly: PropTypes.bool.isRequired,
   }
 
   /**
@@ -50,6 +51,7 @@ class StepDataSource extends React.Component {
    * Initialize the configuration of the data source
    *
    * @param {any} e
+   * @param {boolean} readOnly
    * @memberof StepDataSource
    */
   configure(e) {
@@ -71,15 +73,22 @@ class StepDataSource extends React.Component {
         }
         onClick={(e) => this.select(e)}
       >
-        <div className="slipo-pd-step-data-source-actions">
-          <i className="slipo-pd-step-data-source-action slipo-pd-step-data-source-delete fa fa-trash" onClick={() => { this.remove(); }}></i>
-          <i className="slipo-pd-step-data-source-action slipo-pd-step-data-source-config fa fa-wrench" onClick={(e) => { this.configure(e); }}></i>
-        </div>
+        {this.props.readOnly &&
+          <div className="slipo-pd-step-data-source-actions">
+            <i className="slipo-pd-step-data-source-action slipo-pd-step-data-source-config fa fa-search" onClick={(e) => { this.configure(e); }}></i>
+          </div>
+        }
+        {!this.props.readOnly &&
+          <div className="slipo-pd-step-data-source-actions">
+            <i className="slipo-pd-step-data-source-action slipo-pd-step-data-source-config fa fa-wrench" onClick={(e) => { this.configure(e); }}></i>
+            <i className="slipo-pd-step-data-source-action slipo-pd-step-data-source-delete fa fa-trash" onClick={() => { this.remove(); }}></i>
+          </div>
+        }
         <div className="slipo-pd-step-input-icon">
           <i className={this.props.dataSource.iconClass}></i>
         </div>
         <div className="slipo-pd-step-input-label">
-          {this.props.dataSource.title}
+          {this.props.dataSource.name}
         </div>
       </div>
     );

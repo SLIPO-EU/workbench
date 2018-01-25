@@ -67,7 +67,12 @@ class Sidebar extends React.Component {
               <ul className="nav-dropdown-items">
                 <li className="nav-item">
                   <NavLink to={StaticRoutes.ProcessExplorer} className="nav-link" activeClassName="active">
-                    <i className="fa fa-clock-o"></i>{'ProcessExplorer'}
+                    <i className="fa fa-clock-o"></i>{'Process Explorer'}
+                  </NavLink>
+                </li>
+                <li className="nav-item">
+                  <NavLink to={StaticRoutes.ProcessExecutionExplorer} className="nav-link" activeClassName="active">
+                    <i className="fa fa-cog"></i>{'Executions'}
                   </NavLink>
                 </li>
                 <li className="nav-item">

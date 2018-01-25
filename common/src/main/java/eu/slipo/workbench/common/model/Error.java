@@ -3,11 +3,9 @@ package eu.slipo.workbench.common.model;
 public class Error {
 
     private ErrorCode code;
-    
+
     private String description;
-    
-    private Error() {}
-    
+
     public Error(ErrorCode code, String description) {
         this.code = code;
         this.description = description;
@@ -28,7 +26,7 @@ public class Error {
     public void setDescription(String description) {
         this.description = description;
     }
-    
+
     @Override
     public String toString()
     {

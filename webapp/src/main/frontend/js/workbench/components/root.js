@@ -35,7 +35,7 @@ class Root extends React.Component {
 }
 
 Root.defaultProps = {
-  locale: 'en',
+  locale: 'en-GB',
   messages: {},
 };
 

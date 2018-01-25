@@ -2,14 +2,14 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import ReactSelect from 'react-select';
 
-import decorateField from './formfield';
+import decorateField from './form-field';
 
 export function MultiSelect(props) {
   const options = props.options.map(option => ({ value: option.value, label: option.label || option.value }));
   return (
     <ReactSelect
-      name={props.id} 
-      id={props.id} 
+      name={props.id}
+      id={props.id}
       multi
       value={props.value.map(val => options.find(opt => opt.value === val))}
       onChange={(val) => {
@@ -22,6 +22,7 @@ export function MultiSelect(props) {
         }
       }}
       options={options}
+      disabled={props.readOnly}
     />
   );
 }

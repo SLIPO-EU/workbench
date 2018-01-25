@@ -4,13 +4,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import eu.slipo.workbench.common.domain.AccountEntity;
 import eu.slipo.workbench.common.model.Account;
@@ -20,14 +20,14 @@ import eu.slipo.workbench.common.repository.AccountRepository;
 @Service
 public class DefaultUserDetailsService implements UserDetailsService
 {
-    private static class Details implements UserDetails
+    public static class Details implements UserDetails
     {
         private static final long serialVersionUID = 1L;
 
         private final Account account;
-        
+
         private final String password;
-        
+
         public Details(Account account, String password)
         {
             this.account = account;
@@ -38,9 +38,14 @@ public class DefaultUserDetailsService implements UserDetailsService
         public Collection<? extends GrantedAuthority> getAuthorities()
         {
             List<GrantedAuthority> authorities = new ArrayList<>();
-            for (EnumRole role: account.getRoles())
+            for (EnumRole role: account.getRoles()) {
                 authorities.add(new SimpleGrantedAuthority("ROLE_" + role.name()));
-            return authorities;    
+            }
+            return authorities;
+        }
+
+        public Integer getId() {
+            return account.getId();
         }
 
         @Override
@@ -78,17 +83,22 @@ public class DefaultUserDetailsService implements UserDetailsService
         {
             return account.isActive();
         }
+
+        public String getLang() {
+            return account.getLang();
+        }
     }
-    
+
     @Autowired
     private AccountRepository accountRepository;
-    
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException
     {
         AccountEntity accountEntity = accountRepository.findOneByUsername(username);
-        if (accountEntity == null)
+        if (accountEntity == null) {
             throw new UsernameNotFoundException(username);
+        }
         return new Details(accountEntity.toDto(), accountEntity.getPassword());
     }
 }

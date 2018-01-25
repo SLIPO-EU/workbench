@@ -6,7 +6,7 @@ import {
   EnumToolboxItem,
   EnumDragSource,
   EnumTool,
-  EnumProcessInput,
+  EnumInputType,
   EnumResourceType,
   EnumSelection,
 } from './constants';
@@ -88,17 +88,18 @@ class StepDataSourceContainer extends React.Component {
   renderDataSource(dataSource) {
     return (
       <StepDataSource
-        key={dataSource.index}
+        key={dataSource.key}
         active={
           (this.props.active.type === EnumSelection.DataSource) &&
-          (this.props.active.step === this.props.step.index) &&
-          (this.props.active.item === dataSource.index)
+          (this.props.active.step === this.props.step.key) &&
+          (this.props.active.item === dataSource.key)
         }
         step={this.props.step}
         dataSource={dataSource}
         removeStepDataSource={this.props.removeStepDataSource}
         configureStepDataSourceBegin={this.props.configureStepDataSourceBegin}
         setActiveStepDataSource={this.props.setActiveStepDataSource}
+        readOnly={this.props.readOnly}
       />
     );
   }
@@ -111,7 +112,13 @@ class StepDataSourceContainer extends React.Component {
       <div>
         {counters.source > 0 &&
           <div className="slipo-pd-step-footer pl-2">
-            <i className="fa fa-exclamation mr-2"></i> <span>Drop {counters.source} data source(s) or harvester(s) ...</span>
+            <i className="fa fa-exclamation mr-2"></i>
+            {counters.source === 1 &&
+              <span>Drop {counters.source} data source or harvester ...</span>
+            }
+            {counters.source > 1 &&
+              <span>Drop {counters.source} data sources or harvesters ...</span>
+            }
           </div>
         }
       </div>

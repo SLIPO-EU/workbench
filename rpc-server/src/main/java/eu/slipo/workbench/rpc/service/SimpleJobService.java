@@ -3,6 +3,7 @@ package eu.slipo.workbench.rpc.service;
 import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,12 +32,14 @@ import org.springframework.batch.core.launch.JobInstanceAlreadyExistsException;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.batch.core.launch.NoSuchJobException;
+import org.springframework.batch.core.launch.support.SimpleJobOperator;
 import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
 import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.batch.core.step.tasklet.StoppableTasklet;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -62,37 +65,53 @@ public class SimpleJobService implements JobService
     private JobRegistry registry;
     
     @Autowired
-    private JobLauncher launcher;
+    private JobLauncher asyncLauncher;
     
     @Autowired
-    private JobParameterRepository parametersRepository;
+    private JobLauncher syncLauncher;
     
-    @Value("${slipo.rpc-server.job-service.stop-on-shutdown}")
+    @Value("${slipo.rpc-server.job-service.stop-on-shutdown:false}")
     private boolean stopOnShutdown = false;
     
-    @Value("${slipo.rpc-server.job-service.recover-on-init}")
+    @Value("${slipo.rpc-server.job-service.recover-on-init:false}")
     private boolean recoverOnInit = false;
     
     @Value("${slipo.rpc-server.job-service.ignore-unknown-parameters:false}")
     private boolean ignoreUnknownParameters = false;
+    
+    private SpelExpressionParser expressionParser = new SpelExpressionParser();
+    
+    @Lookup
+    private JobParameterRepository getParametersRepository()
+    {
+        return null;
+    }
     
     /**
      * Initialize before this service bean is available.
      */
     @PostConstruct
     private void initialize()
-    {        
+    {
         if (recoverOnInit) {
-            int countRunning = 0;
+            // Fetch job names found in repository
+            List<String> names;
+            try {
+                names = explorer.getJobNames();
+            } catch (Exception ex) {
+                logger.warn("Cannot fetch job names: {}", ex.getMessage());
+                names = Collections.emptyList();
+            }
             // Reset status for abnormally terminated (interrupted) jobs.
             // This kind of recovery is justified because (assuming a single job service is running!),
             // no job execution should have a running status at this point of time (initialization).
-            for (String jobName: explorer.getJobNames()) {
+            int countRunning = 0;
+            for (String jobName: names) {
                 for (JobExecution execution: findRunningExecutions(jobName)) {
                     // Clear executions that (falsely) appear as running
                     countRunning++;
-                    clearRunningExecution(execution, BatchStatus.ABANDONED);
-                    logger.debug("Clearing execution {}#{} left as {}", 
+                    clearRunningExecution(execution, BatchStatus.STOPPED);
+                    logger.info("Clearing execution {}#{} left as {}", 
                         jobName, execution.getId(), execution.getStatus());
                 }
             }
@@ -128,7 +147,7 @@ public class SimpleJobService implements JobService
                     BatchStatus currentStatus = execution.getStatus();
                     if (currentStatus != BatchStatus.STOPPING) {
                         stop(execution);
-                        logger.debug("Requested from running ({}) execution {}#{} to stop", 
+                        logger.info("Requested from running ({}) execution {}#{} to stop", 
                             currentStatus, jobName, execution.getId());
                         countStopped++;
                     }
@@ -146,27 +165,33 @@ public class SimpleJobService implements JobService
     {
         return registry.getJobNames();
     }
+
+    @Override
+    public JobExecution start(Job job, JobParameters parameters) 
+        throws JobExecutionException
+    {
+        return asyncLauncher.run(job, parameters);
+    }
     
     @Override
-    public JobExecution start(String jobName, JobParameters parameters) throws JobExecutionException
-    {   
-        Job job = null; 
-        try {
-            job = registry.getJob(jobName);
-        } catch (NoSuchJobException ex) {
-            logger.error("No such job: {}", jobName);
-            throw ex;
-        }
-        
-        JobExecution x = null;
-        try {
-            x = launcher.run(job, parameters);
-        } catch (JobExecutionException ex) {
-            logger.error("Failed to start job: {}", ex.getMessage());
-            throw ex;
-        }
-        
-        return x;
+    public JobExecution run(Job job, JobParameters parameters)
+        throws JobExecutionException
+    {
+        return syncLauncher.run(job, parameters);
+    }
+ 
+    @Override
+    public JobExecution start(String jobName, JobParameters parameters) 
+        throws JobExecutionException
+    {
+        return start(registry.getJob(jobName), parameters);
+    }
+
+    @Override
+    public JobExecution run(String jobName, JobParameters parameters) 
+        throws JobExecutionException
+    {
+        return run(registry.getJob(jobName), parameters);
     }
     
     @Override
@@ -177,6 +202,23 @@ public class SimpleJobService implements JobService
             stop(execution);
     }
 
+    @Override
+    public void stop(String jobName, JobParameters params)
+    {
+      JobInstance y = findInstance(jobName, params);
+      if (y != null) {
+          long yid = y.getInstanceId();
+          JobExecution x = findRunningExecution(yid);
+          if (x != null) {
+              stop(x.getId());
+          } else {
+              logger.info("No running execution for job instance #{}", yid);
+          }
+      } else {
+          logger.warn("No job instance for name={} parameters={}", jobName, params);
+      }
+    }
+    
     /**
      * This method is implemented in a similar (but more simplified) way to 
      * {@link SimpleJobOperator#stop(long)}. A step defined as tasklet extending 
@@ -202,26 +244,11 @@ public class SimpleJobService implements JobService
     }
     
     @Override
-    public void stop(String jobName, JobParameters params)
+    public List<JobExecution> findExecutions(long instanceId)
     {
-      JobInstance y = findInstance(jobName, params);
-      if (y != null) {
-          long yid = y.getInstanceId();
-          JobExecution x = findRunningExecution(jobName, yid);
-          if (x != null) {
-              stop(x.getId());
-          } else {
-              logger.info("No running execution for job instance #{}", yid);
-          }
-      } else {
-          logger.warn("No job instance for name={} parameters={}", jobName, params);
-      }
-    }
-    
-    @Override
-    public List<JobExecution> findExecutions(String jobName, long instanceId)
-    {
-        return explorer.getJobExecutions(new JobInstance(instanceId, jobName));
+        JobInstance instance = explorer.getJobInstance(instanceId);
+        return instance != null? 
+            explorer.getJobExecutions(instance) : Collections.emptyList(); 
     }
 
     @Override
@@ -243,17 +270,33 @@ public class SimpleJobService implements JobService
     }
 
     @Override
-    public JobExecution findRunningExecution(String jobName, long instanceId)
+    public JobExecution findRunningExecution(long instanceId)
     {
-        List<JobExecution> executions = 
-            explorer.getJobExecutions(new JobInstance(instanceId, jobName));
-            
-        for (JobExecution x: executions)
-            if (x.isRunning())
-                return x;
+        JobInstance instance = explorer.getJobInstance(instanceId);
+        if (instance != null) {
+            for (JobExecution x: explorer.getJobExecutions(instance))
+                if (x.isRunning())
+                    return x;    
+        }
         return null;
     }
 
+    @Override
+    public JobExecution findRunningExecution(String jobName, JobParameters params)
+    {
+        // The only candidate for "running" is the last seen execution in repository.
+        // That is because Batch will refuse to (re)start an instance having an 
+        // already running or successful execution.
+        JobExecution execution = repository.getLastJobExecution(jobName, params);
+        return execution.isRunning()? execution : null;
+    }
+    
+    @Override
+    public JobExecution findLastExecution(String jobName, JobParameters params)
+    {
+        return repository.getLastJobExecution(jobName, params);
+    }
+    
     @Override
     public List<JobInstance> findInstances(String jobName, int start, int count)
     {
@@ -285,9 +328,9 @@ public class SimpleJobService implements JobService
     }
     
     @Override
-    public JobExecution clearRunningExecution(String jobName, long instanceId, BatchStatus newStatus)
+    public JobExecution clearRunningExecution(long instanceId, BatchStatus newStatus)
     {
-        JobExecution execution = findRunningExecution(jobName, instanceId);
+        JobExecution execution = findRunningExecution(instanceId);
         if (execution != null)
             return clearRunningExecution(execution, newStatus);
         return null;
@@ -315,12 +358,12 @@ public class SimpleJobService implements JobService
         return execution;
     }
 
-    private SpelExpressionParser expressionParser = new SpelExpressionParser();
-    
     @Override
     public JobParameters prepareParameters(String jobName, Map<String, Object> providedParameters) 
         throws MissingJobParameterException
     {
+        JobParameterRepository parametersRepository = getParametersRepository();
+        
         JobParametersBuilder parametersBuilder = new JobParametersBuilder();
         
         // Fetch base parameters (descriptor for expected parameter along with defaults)
@@ -415,8 +458,7 @@ public class SimpleJobService implements JobService
             }
         }
         
-        // Build
-        
+        // Build  
         return parametersBuilder.toJobParameters();
     }
 }

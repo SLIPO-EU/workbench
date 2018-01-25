@@ -15,7 +15,7 @@ function WizardItem(props) {
             onClick={() => onGoToId(s.id)}
             size={s.active ? 'lg' : 'sm'}
           >
-            Step {s.index+1}: {s.title}
+            Step {s.index+1}: {s.name}
           </Button>
         ))
       }
@@ -24,10 +24,10 @@ function WizardItem(props) {
         { children }
       </div>
       <div>
-        { 
-          hasPrevious ? 
-            <Button 
-              className="prev" 
+        {
+          hasPrevious ?
+            <Button
+              className="prev"
               onClick={onPreviousClicked}
               style={{float: 'left'}}
             >
@@ -50,46 +50,46 @@ function WizardItem(props) {
         </Button>
         {
           hasNext ?
-            <Button 
-              className="next" 
-              onClick={() => { 
-                const newValues = { ...values};
-                newValues[id] = value; 
-
-                onNextClicked()
-                  .then(() => {
-                    saveTemp(next(value), newValues); 
-                  })
-                  .catch(() => {
-                    saveTemp(id, newValues); 
-                  });
-              }} 
-              style={{float: 'right'}}
-            >
-              Next
-            </Button>
-            :
-            <Button 
-              color="primary" 
-              className="complete" 
+            <Button
+              className="next"
               onClick={() => {
                 const newValues = { ...values};
-                newValues[id] = value; 
+                newValues[id] = value;
+
                 onNextClicked()
                   .then(() => {
                     saveTemp(next(value), newValues);
                   })
                   .catch(() => {
-                    saveTemp(id, newValues); 
+                    saveTemp(id, newValues);
+                  });
+              }}
+              style={{float: 'right'}}
+            >
+              Next
+            </Button>
+            :
+            <Button
+              color="primary"
+              className="complete"
+              onClick={() => {
+                const newValues = { ...values};
+                newValues[id] = value;
+                onNextClicked()
+                  .then(() => {
+                    saveTemp(next(value), newValues);
+                  })
+                  .catch(() => {
+                    saveTemp(id, newValues);
                   });
                 //clearTemp();
                 setTimeout(onComplete, 200);
-              }} 
+              }}
               style={{float: 'right'}}
             >
               Submit
             </Button>
-        }        
+        }
         <br />
       </div>
     </div>

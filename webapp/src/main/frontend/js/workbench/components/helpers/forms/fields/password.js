@@ -2,18 +2,18 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { Input } from 'reactstrap';
 
-import decorateField from './formfield';
+import decorateField from './form-field';
 
 
 export function Password(props) {
   return (
-    <Input 
-      type="password" 
-      name={props.id} 
-      id={props.id} 
-      state={props.state} 
+    <Input
+      type="password"
+      name={props.id}
+      id={props.id}
+      state={props.state}
       value={props.value || ''}
-      onChange={e => typeof props.onChange === 'function' ? props.onChange(e.target.value) : null} 
+      onChange={e => typeof props.onChange === 'function' ? props.onChange(e.target.value) : null}
     />
   );
 }

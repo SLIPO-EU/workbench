@@ -1,6 +1,5 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
-import { DropTarget } from 'react-dnd';
 import classnames from 'classnames';
 
 import {
@@ -8,63 +7,14 @@ import {
   EnumToolboxItem,
   EnumDragSource,
 } from './constants';
-import Step from './step';
+import StepGroup from './step-group';
 
 /**
- * Drop target specification
- */
-const designerTarget = {
-  /**
-   * Called when a compatible item is dropped on the target
-   *
-   * @param {any} props
-   * @param {any} monitor
-   * @param {any} component
-   */
-  drop(props, monitor, component) {
-    if (!monitor.didDrop()) {
-      props.addStep({
-        ...monitor.getItem(),
-      });
-    }
-  },
-
-  /**
-   * Specify whether the drop target is able to accept the item
-   *
-   * @param {any} props
-   * @param {any} monitor
-   * @returns true if the item can be accepted
-   */
-  canDrop(props, monitor) {
-    const item = monitor.getItem();
-    switch (item.type) {
-      case EnumDragSource.DataSource:
-        return true;
-      case EnumDragSource.Operation:
-        if (item.tool === EnumTool.CATALOG) {
-          // Only a single registration is allowed
-          return (props.steps.filter((s) => (s.tool === EnumTool.CATALOG)).length === 0);
-        }
-        return true;
-      default:
-        return false;
-    }
-  }
-};
-
-/**
- * A presentational component which acts as a drop target for {@link EnumToolboxItem}
- * items. The component is used for designing a POI data integration process.
+ * A presentational component for rendering multiple step groups
  *
  * @class Designer
  * @extends {React.Component}
  */
-@DropTarget([EnumDragSource.Operation], designerTarget, (connect, monitor) => ({
-  connectDropTarget: connect.dropTarget(),
-  isOver: monitor.isOver(),
-  canDrop: monitor.canDrop(),
-}))
 class Designer extends React.Component {
 
   constructor(props) {
@@ -72,9 +22,11 @@ class Designer extends React.Component {
   }
 
   static propTypes = {
-    // An array of existing steps
+    // An array of all groups
+    groups: PropTypes.arrayOf(PropTypes.object.isRequired).isRequired,
+    // An array of all steps
     steps: PropTypes.arrayOf(PropTypes.object.isRequired).isRequired,
-    // An array of selected resources
+    // An array of all resources
     resources: PropTypes.arrayOf(PropTypes.object.isRequired).isRequired,
 
     // Action creators
@@ -95,26 +47,25 @@ class Designer extends React.Component {
     setActiveStepInput: PropTypes.func.isRequired,
     setActiveStepDataSource: PropTypes.func.isRequired,
 
-    // Injected by React DnD
-    connectDropTarget: PropTypes.func.isRequired,
-    isOver: PropTypes.bool.isRequired,
-    canDrop: PropTypes.bool.isRequired,
+    readOnly: PropTypes.bool.isRequired,
   };
 
   /**
-   * Renders a single {@link Step}
+   * Renders a single {@link StepGroup}
    *
-   * @param {any} step
-   * @returns a {@link Step} component instance
+   * @param {any} group
+   * @returns a {@link StepGroup} component instance
    * @memberof Designer
    */
-  renderStep(step) {
+  renderStepGroup(group) {
     return (
-      <Step
-        key={step.index}
+      <StepGroup
+        key={group.key}
+        group={group}
+        steps={this.props.steps.filter((step) => { return (group.steps.indexOf(step.key) !== -1); })}
+        resources={this.props.resources}
         active={this.props.active}
-        step={step}
-        resources={this.props.resources.filter((resource) => { return (step.resources.indexOf(resource.index) !== -1); })}
+        addStep={this.props.addStep}
         removeStep={this.props.removeStep}
         moveStep={this.props.moveStep}
         configureStepBegin={this.props.configureStepBegin}
@@ -127,26 +78,22 @@ class Designer extends React.Component {
         setActiveStep={this.props.setActiveStep}
         setActiveStepInput={this.props.setActiveStepInput}
         setActiveStepDataSource={this.props.setActiveStepDataSource}
+        readOnly={this.props.readOnly}
       />
     );
   }
 
   render() {
-    const { connectDropTarget, isOver, canDrop } = this.props;
+    const groups = this.props.groups.map((g, index, array) => {
+      if ((this.props.readOnly) && ((array.length - 1) === index)) {
+        return null;
+      }
+      return this.renderStepGroup(g);
+    });
 
-    return connectDropTarget(
-      <div className={
-        classnames({
-          'slipo-pd-process': true,
-          'slipo-pd-process-can-drop': canDrop,
-        })
-      }>
-        {this.props.steps.length == 0 &&
-          <div className="slipo-pd-process-label">
-            <i className="fa fa-paint-brush mr-2"></i> Drop a SLIPO Toolkit component ...
-          </div>
-        }
-        {this.props.steps.map((s) => this.renderStep(s))}
+    return (
+      <div className="slipo-pd-process">
+        {groups}
       </div>
     );
   }

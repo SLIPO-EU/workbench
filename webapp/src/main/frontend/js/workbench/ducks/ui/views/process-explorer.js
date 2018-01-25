@@ -1,163 +1,212 @@
-import processService from '../../../service/processExplorer';
-// Actions
-const REQUEST_PROCESS_DATA = 'ui/processExplorer/REQUEST_PROCESS_DATA';
-const RECEIVE_PROCESS_DATA = 'ui/processExplorer/RECEIVE_PROCESS_DATA';
-const SET_PAGER = 'ui/processExplorer/SET_PAGER';
-const SET_SELECTED = 'ui/processExplorer/SET_SELECTED';
-const RESET_SELECTED = 'ui/processExplorer/RESET_SELECTED';
-const RECEIVE_EXECUTIONS_DATA = 'ui/processExplorer/RECEIVE_EXECUTIONS_DATA';
-const SET_SELECTED_EXECUTION = 'ui/processExplorer/SET_SELECTED_EXECUTION';
-const RECEIVE_EXECUTIONS_DETAILS = 'ui/processExplorer/RECEIVE_EXECUTIONS_DETAILS';
+import * as processService from '../../../service/process';
 
-// Reducer
+// Actions
+const SET_PAGER = 'ui/process/explorer/SET_PAGER';
+const RESET_PAGER = 'ui/process/explorer/RESET_PAGER';
+const SET_FILTER = 'ui/process/explorer/SET_FILTER';
+const RESET_FILTERS = 'ui/process/explorer/RESET_FILTERS';
+
+const REQUEST_PROCESS_DATA = 'ui/process/explorer/REQUEST_PROCESS_DATA';
+const RECEIVE_PROCESS_DATA = 'ui/process/explorer/RECEIVE_PROCESS_DATA';
+const SET_SELECTED_PROCESS = 'ui/process/explorer/SET_SELECTED_PROCESS';
+const RESET_SELECTED_PROCESS = 'ui/process/explorer/RESET_SELECTED_PROCESS';
+
+const REQUEST_EXECUTION_DATA = 'ui/process/explorer/REQUEST_EXECUTION_DATA';
+const RECEIVE_EXECUTION_DATA = 'ui/process/explorer/RECEIVE_EXECUTION_DATA';
+const SET_SELECTED_EXECUTION = 'ui/process/explorer/SET_SELECTED_EXECUTION';
+
+// Initial state
 const initialState = {
-  items:[],
-  pagingOptions: {
-    count: 0,
-    pageIndex: 0,
-    pageSize: 10,
+  filters: {
+    name: null,
   },
+  pager: {
+    index: 0,
+    size: 10,
+    count: 0,
+  },
+  items: [],
   selected: null,
-  selectedExecution:null,
-  selectedFields: [],
-  executionStatus: [],
+  executions: [],
+  lastUpdate: null,
 };
 
+// Reducer
 export default (state = initialState, action) => {
   switch (action.type) {
+    case SET_PAGER:
+      return {
+        ...state,
+        pager: {
+          ...state.pager,
+          ...action.pager,
+        },
+        selected: null,
+      };
+
+    case RESET_PAGER:
+      return {
+        ...state,
+        pager: {
+          ...initialState.pager
+        },
+        selected: null,
+        executions: [],
+      };
+
+    case SET_FILTER: {
+      const filters = { ...state.filters };
+      filters[action.filter] = action.value;
+      return {
+        ...state,
+        filters,
+      };
+    }
+
+    case RESET_FILTERS:
+      return {
+        ...state,
+        filters: {
+          ...initialState.filters
+        },
+        selected: null,
+        executions: [],
+      };
+
+    case REQUEST_PROCESS_DATA:
+      return {
+        ...state,
+        selected: null,
+        executions: [],
+      };
+
     case RECEIVE_PROCESS_DATA:
       return {
         ...state,
-        ...action.data,
-      }; 
-    case RECEIVE_EXECUTIONS_DATA:
-      return {
-        ...state,
-        selectedFields: action.data,
-      }; 
-    case SET_PAGER:
-      return {
-        ...state, 
-        pagingOptions: {
-          ...state.pagingOptions,
-          ...action.pager,
+        items: action.result.items.map((p) => {
+          return {
+            ...p,
+            versions: p.versions.sort((v1, v2) => v2.version - v1.version),
+          };
+        }),
+        pager: {
+          index: action.result.pagingOptions.pageIndex,
+          size: action.result.pagingOptions.pageSize,
+          count: action.result.pagingOptions.count,
         },
-      };  
-    case SET_SELECTED:
+        lastUpdate: new Date(),
+      };
+
+    case SET_SELECTED_PROCESS:
       return {
         ...state,
-        selected: action.selected,
-        selectedExecution: initialState.selectedExecution,
-        executionStatus: initialState.executionStatus,
+        selected: {
+          id: action.id,
+          version: action.version,
+          execution: null,
+        },
       };
+
+    case RESET_SELECTED_PROCESS:
+      return {
+        ...state,
+        selected: null,
+        executions: [],
+      };
+
+    case RECEIVE_EXECUTION_DATA:
+      return {
+        ...state,
+        executions: action.result,
+      };
+
     case SET_SELECTED_EXECUTION:
       return {
         ...state,
-        selectedExecution: action.selected,
+        selected: {
+          id: action.id,
+          version: action.version,
+          execution: action.execution,
+        },
       };
-    case RECEIVE_EXECUTIONS_DETAILS:
-      return {
-        ...state,
-        executionStatus: action.data,
-      }; 
-    case RESET_SELECTED:
-      return {
-        ...state,
-        selected: initialState.selected,
-        selectedExecution: initialState.selectedExecution,
-        executionStatus: initialState.executionStatus,
-      };      
+
     default:
       return state;
   }
 };
 
 // Action creators
-const requestProcessData = () => ({
-  type: REQUEST_PROCESS_DATA,
-});
-  
-const receiveProcessData = (data) => ({
-  type: RECEIVE_PROCESS_DATA,
-  data,
-});
-
-const receiveExecutionsData = (data) => ({
-  type: RECEIVE_EXECUTIONS_DATA,
-  data,
-});
-
-
 export const setPager = (pager) => ({
   type: SET_PAGER,
   pager,
 });
 
-export const setSelectedEx = (selected) => ({
-  type: SET_SELECTED_EXECUTION,
-  selected,
+export const resetPager = () => ({
+  type: RESET_PAGER,
 });
 
-const receiveExecutionsDetails = (data) => ({
-  type: RECEIVE_EXECUTIONS_DETAILS,
-  data,
+export const setFilter = (filter, value) => ({
+  type: SET_FILTER,
+  filter,
+  value,
 });
 
+export const resetFilters = () => ({
+  type: RESET_FILTERS,
+});
 
 export const resetSelectedProcess = () => ({
-  type: RESET_SELECTED,
-});
-
-export const setSelected = (selected) => ({
-  type: SET_SELECTED,
-  selected,
+  type: RESET_SELECTED_PROCESS,
 });
 
 // Thunk actions
-export const fetchProcessData = (options) => (dispatch, getState) => {
+const requestProcessData = () => ({
+  type: REQUEST_PROCESS_DATA,
+});
+
+const receiveProcessData = (result) => ({
+  type: RECEIVE_PROCESS_DATA,
+  result,
+});
+
+export const fetchProcesses = (query) => (dispatch, getState) => {
   const { meta: { csrfToken: token } } = getState();
   dispatch(requestProcessData());
-  const tt= { 
-    name: "Link",
-    pagingOptions: {
-      pageIndex: 0,
-      pageSize: 10,
-      ...options
-    },
-  };
-    
-  return processService.fetch(tt)
-    .then((data) => {
-      dispatch(receiveProcessData(data));
+
+  return processService.fetchProcesses(query, token)
+    .then((result) => {
+      dispatch(receiveProcessData(result));
     })
     .catch((err) => {
       console.error('Failed loading processes:', err);
     });
 };
 
-export const setSelectedProcess = (selected) => (dispatch, getState) => {
+const setSelectedProcess = (id, version) => ({
+  type: SET_SELECTED_PROCESS,
+  id,
+  version,
+});
+
+const requestExecutionData = () => ({
+  type: REQUEST_EXECUTION_DATA,
+});
+
+const receiveExecutionData = (result) => ({
+  type: RECEIVE_EXECUTION_DATA,
+  result,
+});
+
+export const fetchProcessExecutions = (id, version) => (dispatch, getState) => {
   const { meta: { csrfToken: token } } = getState();
-  dispatch( setSelected(selected));
- 
-  return processService.fetchExecutions(selected)
+  dispatch(setSelectedProcess(id, version));
+  dispatch(requestExecutionData());
+
+  return processService.fetchProcessExecutions(id, version, token)
     .then((data) => {
-      dispatch(receiveExecutionsData(data));
+      dispatch(receiveExecutionData(data));
     })
     .catch((err) => {
       console.error('Failed loading executions:', err);
     });
 };
-
-export const setSelectedExecution = (selected) => (dispatch, getState) => {
-  const { meta: { csrfToken: token } } = getState();
-  dispatch( setSelectedEx(selected.execution));
- 
-  return processService.fetchExecutionDetails(selected)
-    .then((data) => {
-      dispatch(receiveExecutionsDetails(data));
-    })
-    .catch((err) => {
-      console.error('Failed loading execution Details:', err);
-    });
-};
-

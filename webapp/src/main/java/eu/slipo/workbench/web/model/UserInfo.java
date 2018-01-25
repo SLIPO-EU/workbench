@@ -2,16 +2,16 @@ package eu.slipo.workbench.web.model;
 
 public class UserInfo {
 
-    private long id;
+    private int id;
 
     private String name;
 
-    public UserInfo(long id, String name) {
+    public UserInfo(int id, String name) {
         this.id = id;
         this.name = name;
     }
 
-    public long getId() {
+    public int getId() {
 
         return id;
     }

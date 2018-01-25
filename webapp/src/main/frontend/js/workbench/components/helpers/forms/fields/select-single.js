@@ -2,14 +2,14 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import ReactSelect from 'react-select';
 
-import decorateField from './formfield';
+import decorateField from './form-field';
 
 export function Select(props) {
   const options = props.options.map(option => ({ value: option.value, label: option.label || option.value }));
   return (
     <ReactSelect
-      name={props.id} 
-      id={props.id} 
+      name={props.id}
+      id={props.id}
       value={options.find(opt => opt.value === props.value)}
       clearable={false}
       onChange={(val) => {
@@ -20,8 +20,9 @@ export function Select(props) {
             props.onChange(null);
           }
         }
-      }} 
+      }}
       options={options}
+      disabled={props.readOnly}
     />
   );
 }

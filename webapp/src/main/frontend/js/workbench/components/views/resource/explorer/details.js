@@ -1,77 +1,164 @@
 import * as React from 'react';
-import ReactTable from 'react-table';
-import { FormattedTime } from 'react-intl';
+import * as PropTypes from 'prop-types';
 
-const resourceDetailsColumns = [
-  {
-    Header: 'Field',
-    accessor: 'field',
-    maxWidth: 180,
-  },
-  {
-    Header: 'Value',
-    accessor: 'value',
-    Cell: props => props.value && typeof props.value === 'object' ?
-      <ReactTable
-        name="Resource explore"
-        id="resource-explore"
-        columns={resourceDetailsColumns}
-        data={Object.keys(props.value).map((key) => ({
-          field: key,
-          value: props.value[key],
-        }))}
-        defaultPageSize={Object.keys(props.value).length}
-        showPagination={false}
-        className="-striped -highlight"
-      />
-      : <b>
-        {
-          (props.original.field === 'createdOn' || props.original.field === 'updatedOn') ?
-            <FormattedTime value={props.value} day='numeric' month='numeric' year='numeric' />
-            :
-            props.value
-        }
-      </b>
-  },
-];
+import {
+  Col,
+  Row,
+} from 'reactstrap';
 
-export default function ResourceDetails(props) {
-  const selectedResource = props.resources && props.resources.find(r => r.id === props.detailed);
-  if (!selectedResource) return <div>-</div>;
+import {
+  FormattedTime,
+  injectIntl,
+  intlShape,
+} from 'react-intl';
 
-  if (selectedResource.version !== props.selectedResourceVersion){
-    const selectedResource2 = selectedResource.versions.find(r => r.version === props.selectedResourceVersion);
-    const selectedResourceFields = Object.keys(selectedResource2).map((key) => ({
-      field: key,
-      value: selectedResource2[key],
-    }));
-    return (
-      <ReactTable
-        name="Resource explore"
-        id="resource-explore"
-        columns={resourceDetailsColumns}
-        data={selectedResourceFields}
-        defaultPageSize={selectedResourceFields.length}
-        showPagination={false}
-        className="-striped -highlight"
-      />
-    );
+import {
+  formatFileSize
+} from '../../../../util';
+
+import {
+  TextArea,
+  TextField,
+} from '../../../helpers/forms/fields';
+
+class ResourceDetails extends React.Component {
+
+  constructor(props) {
+    super(props);
   }
 
-  const selectedResourceFields = Object.keys(selectedResource).map((key) => ({
-    field: key,
-    value: selectedResource[key],
-  }));
-  return (
-    <ReactTable
-      name="Resource explore"
-      id="resource-explore"
-      columns={resourceDetailsColumns}
-      data={selectedResourceFields}
-      defaultPageSize={selectedResourceFields.length}
-      showPagination={false}
-      className="-striped -highlight"
-    />
-  );
+  static propTypes = {
+    resource: PropTypes.object.isRequired,
+    version: PropTypes.number,
+    intl: intlShape.isRequired,
+  }
 
+  render() {
+    const { resource, version, intl } = this.props;
+    const r = (resource.version === version) ? resource : resource.versions.find((v) => v.version === version);
+
+    return (
+      <div>
+        <Row>
+          <Col>
+            <TextField
+              id="name"
+              label="Name"
+              value={r.metadata.name}
+              readOnly={true}
+            />
+          </Col>
+          <Col>
+            <TextField
+              id="version"
+              label="Version"
+              value={version.toString()}
+              readOnly={true}
+            />
+          </Col>
+          <Col>
+            <TextField
+              id="versionCount"
+              label="# of Versions"
+              value={(resource.versions.length || 1).toString()}
+              readOnly={true}
+            />
+          </Col>
+        </Row>
+        <Row>
+          <Col>
+            <TextArea
+              id="description"
+              label="Description"
+              value={r.metadata.description}
+              rows={5}
+              readOnly={true}
+            />
+          </Col>
+        </Row>
+        <Row>
+          <Col>
+            <TextField
+              id="createdOn"
+              label="Created On"
+              value={intl.formatDate(r.createdOn)}
+              readOnly={true}
+            />
+          </Col>
+          <Col>
+            <TextField
+              id="createdBy"
+              label="Created By"
+              value={r.createdBy.name}
+              readOnly={true}
+            />
+          </Col>
+        </Row>
+        <Row>
+          <Col>
+            <TextField
+              id="updatedOn"
+              label="Updated On"
+              value={intl.formatDate(r.updatedOn)}
+              readOnly={true}
+            />
+          </Col>
+          <Col>
+            <TextField
+              id="updatedBy"
+              label="Updated By"
+              value={r.updatedBy.name}
+              readOnly={true}
+            />
+          </Col>
+        </Row>
+        <Row>
+          <Col>
+            <TextField
+              id="fileName"
+              label="Filename"
+              value={r.fileName}
+              readOnly={true}
+            />
+          </Col>
+        </Row>
+        <Row>
+          <Col>
+            <TextField
+              id="initialFormat"
+              label="Initial Format"
+              value={r.inputFormat || '-'}
+              readOnly={true}
+            />
+          </Col>
+          <Col>
+            <TextField
+              id="format"
+              label="Format"
+              value={r.outputFormat}
+              readOnly={true}
+            />
+          </Col>
+          <Col>
+            <TextField
+              id="fileSize"
+              label="File Size"
+              value={formatFileSize(r.fileSize)}
+              readOnly={true}
+            />
+          </Col>
+          <Col>
+            <TextField
+              id="entities"
+              label="# of Elements"
+              value={r.metadata.size.toString()}
+              readOnly={true}
+            />
+          </Col>
+        </Row>
+      </div>
+    );
+  }
 }
+
+export default injectIntl(ResourceDetails);

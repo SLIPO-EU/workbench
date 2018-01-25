@@ -50,15 +50,16 @@ const requestMessages = (locale) => ({
 });
 
 // Thunk actions
-export const fetchMessages = (locale) => (dispatch) => {
+const fetchMessages = (locale) => (dispatch) => {
   dispatch(requestMessages(locale));
   return getMessages(locale)
     .then(r => dispatch(loadMessages(locale, r)));
 };
 
 export const changeLocale = (locale) => (dispatch) => {
+  dispatch(setLocale(locale));
+
   dispatch(fetchMessages(locale))
-    .then(
-      () => dispatch(setLocale(locale)),
-      () => console.warn("No messages for locale " + locale));
+    .catch(
+    () => console.warn("No messages for locale " + locale));
 };

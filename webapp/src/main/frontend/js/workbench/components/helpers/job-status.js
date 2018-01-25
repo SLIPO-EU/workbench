@@ -15,14 +15,14 @@ class JobStatus extends React.Component {
   }
 
   mapStatusToClassName() {
-    switch (this.props.status) {
-      case 'Completed':
+    switch (this.props.status.toLowerCase()) {
+      case 'completed':
         return 'slipo-job-status-completed';
-      case 'Failed':
+      case 'failed':
         return 'slipo-job-status-failed';
-      case 'Stopped':
+      case 'stopped':
         return 'slipo-job-status-stopped';
-      case 'Running':
+      case 'running': case 'started':
         return 'slipo-job-status-running';
     }
   }
@@ -35,7 +35,7 @@ class JobStatus extends React.Component {
 
 JobStatus.propTypes = {
   status: function (props, propName, componentName) {
-    if (!/Completed|Failed|Stopped|Running/.test(props[propName])) {
+    if (!/Completed|Failed|Stopped|Started|Running/i.test(props[propName])) {
       return new Error('Validation failed!');
     }
   },
