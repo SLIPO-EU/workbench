@@ -15,6 +15,7 @@
     </parent>
 
     <properties>
+        <integration-tests.skip>false</integration-tests.skip>
     </properties>
 
     <dependencies>
@@ -148,6 +149,27 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+
+            <!-- Configure unit tests -->
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>eu.slipo.workbench.rpc.integration.**</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+
+            <!-- Configure integration tests -->
+            <plugin>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <configuration>
+                    <skipITs>${integration-tests.skip}</skipITs>
+                    <includes>
+                        <include>eu.slipo.workbench.rpc.integration.workflow.mergesort.*</include>
+                    </includes>
+                </configuration>
             </plugin>
 
         </plugins>

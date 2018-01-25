@@ -9,9 +9,7 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <groupId>eu.slipo</groupId>
     <artifactId>workbench-common</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
     <name>slipo-workbench-common</name>
     
     <dependencies>
@@ -95,7 +93,6 @@
         <dependency>
             <groupId>commons-beanutils</groupId>
             <artifactId>commons-beanutils</artifactId>
-            <version>1.9.3</version>
         </dependency> 
 
     </dependencies>
