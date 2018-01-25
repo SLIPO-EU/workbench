@@ -15,8 +15,17 @@
     </parent>
 
     <properties>
-        <integration-tests.skip>false</integration-tests.skip>
+        <integration-tests.skip>true</integration-tests.skip>
     </properties>
+
+    <profiles>
+        <profile>
+            <id>integration-tests</id>
+            <properties>
+                <integration-tests.skip>false</integration-tests.skip>
+            </properties>
+        </profile>
+    </profiles>
 
     <dependencies>
         
