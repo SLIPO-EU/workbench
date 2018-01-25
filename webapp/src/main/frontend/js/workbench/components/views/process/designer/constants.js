@@ -5,6 +5,7 @@ export const EnumViews = {
   Designer: 'Designer',
   StepConfiguration: 'StepConfiguration',
   DataSourceConfiguration: 'DataSourceConfiguration',
+  ProcessProperties: 'ProcessProperties',
 };
 
 /**
@@ -59,7 +60,7 @@ export const EnumHarvester = {
 /*
  * Process input resources
  */
-export const EnumProcessInput = {
+export const EnumInputType = {
   // A registered resource
   CATALOG: 'CATALOG',
   // The output of a single process step/operation
@@ -70,7 +71,7 @@ export const EnumProcessInput = {
  * SLIPO Toolkit components
  */
 export const EnumTool = {
-  TripleGeo: 'TripleGeo',
+  TripleGeo: 'TRIPLE_GEO',
   LIMES: 'LIMES',
   FAGI: 'FAGI',
   DEER: 'DEER',
@@ -89,6 +90,18 @@ export const EnumOperation = {
 };
 
 /**
+ * Execution step file types
+ */
+export const EnumStepFileType = {
+  CONFIGURATION: 'CONFIGURATION',
+  INPUT: 'INPUT',
+  OUTPUT: 'OUTPUT',
+  SAMPLE: 'SAMPLE',
+  KPI: 'KPI',
+  QA: 'QA',
+};
+
+/**
  * Drag sources
  */
 export const EnumDragSource = {
@@ -96,13 +109,6 @@ export const EnumDragSource = {
   Operation: 'Operation',
   Resource: 'Resource',
   Step: 'Step',
-};
-
-/**
- * Drop sources
- */
-export const EnumDropTarget = {
-  Designer: 'Designer',
 };
 
 /**
@@ -116,9 +122,9 @@ export const EnumStepProperty = {
  * Selection type
  */
 export const EnumSelection = {
+  Process: 'Process',
   Resource: 'Resource',
   Step: 'Step',
   Input: 'Input',
   DataSource: 'DataSource',
-}
-;
+};

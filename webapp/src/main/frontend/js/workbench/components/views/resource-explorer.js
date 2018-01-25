@@ -1,33 +1,41 @@
 import * as React from 'react';
 import * as ReactRedux from 'react-redux';
-import { bindActionCreators } from 'redux';
-import {
-  Card, CardBody, CardTitle, Row, Col,
-  ButtonToolbar, Button, ButtonGroup, Label, Input
-} from 'reactstrap';
-import moment from 'moment';
-import { FormattedTime } from 'react-intl';
 
-import Placeholder from './placeholder';
+import {
+  bindActionCreators
+} from 'redux';
+
+import {
+  Card,
+  CardBody,
+  Col,
+  Row,
+} from 'reactstrap';
+
+import {
+  FormattedTime
+} from 'react-intl';
+
+import OpenLayers from '../helpers/map';
+
 import {
   Filters,
+  Resources,
   ResourceDetails,
-  Resources
 } from './resource/explorer/';
 
-import { fetchResources } from '../../ducks/data/resources';
 import {
-  setPager,
-  resetPager,
-  setFilter,
+  fetchResources,
   resetFilters,
-  setSelectedResource
+  setFilter,
+  setPager,
+  setSelectedResource,
 } from '../../ducks/ui/views/resource-explorer';
+
 import {
   addResourceToBag,
-  removeResourceFromBag
+  removeResourceFromBag,
 } from '../../ducks/ui/views/process-designer';
-
 
 /**
  * Browse and manage resources
@@ -37,26 +45,54 @@ import {
  */
 class ResourceExplorer extends React.Component {
 
+  constructor(props) {
+    super(props);
+
+    this.onFeatureSelect = this.onFeatureSelect.bind(this);
+  }
+
+  /**
+   * Initializes a request for fetching resource data, optionally using any
+   * existing search criteria
+   *
+   * @memberof ResourceExplorer
+   */
   componentWillMount() {
-    this.props.fetchResources({});
+    this.props.fetchResources({
+      ...this.props.filters,
+    });
+  }
+
+  /**
+   * Syncs map component to table selected row
+   *
+   * @param {any} e
+   * @memberof ResourceExplorer
+   */
+  onFeatureSelect(e) {
+    if (e.selected.length === 1) {
+      const feature = e.selected[0];
+      this.props.setSelectedResource(feature.get('id'), feature.get('version'));
+    }
   }
 
   render() {
-    const { resources } = this.props;
     return (
       <div className="animated fadeIn">
         <Row>
           <Col className="col-12">
             <Card>
               <CardBody className="card-body">
-                <Row className="mb-2">
-                  <Col >
-                    <div className="small text-muted">
-                      Last Update: <FormattedTime value={moment().toDate()} day='numeric' month='numeric' year='numeric' />
-                    </div>
-                  </Col>
-                </Row>
-                <Row style={{ height: 100 }} className="mb-2">
+                {this.props.lastUpdate &&
+                  <Row className="mb-2">
+                    <Col >
+                      <div className="small text-muted">
+                        Last Update: <FormattedTime value={this.props.lastUpdate} day='numeric' month='numeric' year='numeric' />
+                      </div>
+                    </Col>
+                  </Row>
+                }
+                <Row>
                   <Col>
                     <Filters
                       filters={this.props.filters}
@@ -66,60 +102,86 @@ class ResourceExplorer extends React.Component {
                     />
                   </Col>
                 </Row>
-                <Row style={{ minHeight: 450 }} className="mb-2">
-                  <Col>
+              </CardBody>
+            </Card>
+            <Card>
+              <CardBody className="card-body">
+                <Row className="mb-2">
+                  <Col xs="6">
                     <Resources
-                      resources={this.props.resources}
-                      pager={this.props.pager}
-                      setPager={this.props.setPager}
-                      resetPager={this.props.resetPager}
-                      fetchResources={this.props.fetchResources}
-                      setSelectedResource={this.props.setSelectedResource}
-                      selectedResource={this.props.selectedResource}
-                      selectedResourceVersion={this.props.selectedResourceVersion}
                       addResourceToBag={this.props.addResourceToBag}
+                      fetchResources={this.props.fetchResources}
+                      filters={this.props.filters}
+                      items={this.props.items}
+                      pager={this.props.pager}
+                      removeResourceFromBag={this.props.removeResourceFromBag}
+                      selected={this.props.selected}
+                      selectedResources={this.props.selectedResources}
+                      setPager={this.props.setPager}
+                      setSelectedResource={this.props.setSelectedResource}
                     />
                   </Col>
-                  <Col>
-                    <Placeholder label="Map" iconClass="fa fa-map-o" />
-                  </Col>
-                </Row>
-                <Row style={{ minHeight: 450, marginTop: 30 }} className="mb-2">
-                  <Col>
-                    <h3>Details</h3>
-                    <ResourceDetails
-                      resources={this.props.resources.items}
-                      detailed={this.props.selectedResource}
-                      selectedResourceVersion={this.props.selectedResourceVersion}
-                    />
+                  <Col xs="6">
+                    <OpenLayers.Map minZoom={5} maxZoom={15} zoom={9}>
+                      <OpenLayers.Layers>
+                        <OpenLayers.Layer.OSM
+                          url="http://tile.stamen.com/terrain/{z}/{x}/{y}.jpg"
+                        />
+                        <OpenLayers.Layer.GeoJSON
+                          features={this.props.features}
+                        />
+                      </OpenLayers.Layers>
+                      <OpenLayers.Interactions>
+                        <OpenLayers.Interaction.Select
+                          onFeatureSelect={this.onFeatureSelect}
+                          selected={this.props.selectedFeatures}
+                        />
+                      </OpenLayers.Interactions>
+                    </OpenLayers.Map>
                   </Col>
                 </Row>
               </CardBody>
             </Card>
+            {this.props.selected &&
+              <Card>
+                <CardBody className="card-body">
+                  <Row>
+                    <Col>
+                      <ResourceDetails
+                        resource={this.props.items.find((r) => this.props.selected && r.id === this.props.selected.id)}
+                        version={this.props.selected ? this.props.selected.version : null}
+                      />
+                    </Col>
+                  </Row>
+                </CardBody>
+              </Card>
+            }
           </Col>
         </Row >
-      </div>
+      </div >
     );
   }
-
 }
 
 const mapStateToProps = (state) => ({
-  resources: state.data.resources,
-  pager: state.ui.views.resources.explorer.pager,
+  features: state.ui.views.resources.explorer.features,
   filters: state.ui.views.resources.explorer.filters,
-  selectedResource: state.ui.views.resources.explorer.selected,
-  selectedResourceVersion: state.ui.views.resources.explorer.version,
+  items: state.ui.views.resources.explorer.items,
+  lastUpdate: state.ui.views.resources.explorer.lastUpdate,
+  pager: state.ui.views.resources.explorer.pager,
+  selected: state.ui.views.resources.explorer.selected,
+  selectedFeatures: state.ui.views.resources.explorer.selectedFeatures,
+  selectedResources: state.ui.views.process.designer.resources,
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
+  addResourceToBag,
   fetchResources,
-  setFilter,
+  removeResourceFromBag,
   resetFilters,
+  setFilter,
   setPager,
-  resetPager,
   setSelectedResource,
-  addResourceToBag
 }, dispatch);
 
 const mergeProps = (stateProps, dispatchProps, ownProps) => {

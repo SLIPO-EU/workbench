@@ -15,7 +15,7 @@ class SelectLanguage extends React.Component {
     super(props);
 
     this._supportedLanguages = {
-      'en': { value: 'en', titleId: 'locales.en', title: 'English' },
+      'en-GB': { value: 'en-GB', titleId: 'locales.en', title: 'English' },
       'el': { value: 'el', titleId: 'locales.el', title: 'Greek' },
     };
 
@@ -52,7 +52,7 @@ class SelectLanguage extends React.Component {
 }
 
 SelectLanguage.defaultProps = {
-  language: 'en',
+  language: 'en-GB',
 };
 
 SelectLanguage.propTypes = {

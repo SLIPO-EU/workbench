@@ -22,8 +22,8 @@ const crs = [
 ];
 
 const languages = [
-  { value: 'en', label: 'English' },
-  { value: 'en', label: 'Greek' },
+  { value: 'en-GB', label: 'English' },
+  { value: 'el', label: 'Greek' },
 ];
 
 export const initialValue = {

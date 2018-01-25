@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", function () {
   var rootEl = document.querySelector(rootSelector);
 
   // Todo read from non-httponly "language" cookie
-  var language = "en";
+  var language = "en-GB";
 
   var token = document.querySelector("meta[name=_csrf]")
     .getAttribute('content');

@@ -10,7 +10,7 @@ import {
 } from 'reactstrap';
 
 import { ResourceWizard } from './resource/register/';
-import { createResource } from '../../ducks/data/resources';
+import { createResource } from '../../ducks/ui/views/resource-explorer';
 import { saveTempResource, clearTempResource } from '../../ducks/ui/views/resource-registration';
 
 /**

@@ -2,16 +2,17 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { Input } from 'reactstrap';
 
-import decorateField from './formfield';
+import decorateField from './form-field';
 
 export function Select(props) {
   return (
-    <Input 
-      type="select" 
-      name={props.id} 
-      id={props.id} 
+    <Input
+      type="select"
+      name={props.id}
+      id={props.id}
       value={props.value}
-      onChange={e => typeof props.onChange === 'function' ? props.onChange(e.target.value) : null} 
+      onChange={e => typeof props.onChange === 'function' ? props.onChange(e.target.value) : null}
+      readOnly={props.readOnly}
     >
       {
         props.options.map(option => (

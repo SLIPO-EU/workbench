@@ -7,13 +7,12 @@ import java.util.List;
 import java.util.UUID;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.vividsolutions.jts.geom.Geometry;
 
 import eu.slipo.workbench.web.model.EnumDataFormat;
 import eu.slipo.workbench.web.model.EnumResourceType;
+import eu.slipo.workbench.web.model.UserInfo;
 
-/**
- * A resource
- */
 public class ResourceRecord {
 
     private long id;
@@ -38,7 +37,11 @@ public class ResourceRecord {
 
     private ZonedDateTime createdOn;
 
+    private UserInfo createdBy;
+
     private ZonedDateTime updatedOn;
+
+    private UserInfo updatedBy;
 
     private String fileName;
 
@@ -48,7 +51,7 @@ public class ResourceRecord {
 
     private List<ResourceRecord> versions = new ArrayList<ResourceRecord>();
 
-    public ResourceRecord(long id, int version) {
+    public ResourceRecord(long id, long version) {
         this.id = id;
         this.version = version;
     }
@@ -109,6 +112,10 @@ public class ResourceRecord {
         this.metadata = metadata;
     }
 
+    public void setMetadata(String name, String description, Integer size, Geometry boundingBox) {
+        this.metadata = new ResourceMetadataView(name, description, size, boundingBox);
+    }
+
     public ZonedDateTime getCreatedOn() {
         return createdOn;
     }
@@ -117,12 +124,36 @@ public class ResourceRecord {
         this.createdOn = createdOn;
     }
 
+    public UserInfo getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(UserInfo createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public void setCreatedBy(int id, String name) {
+        this.createdBy = new UserInfo(id, name);
+    }
+
     public ZonedDateTime getUpdatedOn() {
         return updatedOn;
     }
 
     public void setUpdatedOn(ZonedDateTime updatedOn) {
         this.updatedOn = updatedOn;
+    }
+
+    public UserInfo getUpdatedBy() {
+        return updatedBy;
+    }
+
+    public void setUpdatedBy(UserInfo updatedBy) {
+        this.updatedBy = updatedBy;
+    }
+
+    public void setUpdatedBy(int id, String name) {
+        this.updatedBy = new UserInfo(id, name);
     }
 
     public String getFileName() {

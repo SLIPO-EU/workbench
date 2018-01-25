@@ -12,6 +12,8 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
         eu.slipo.workbench.common.config._Marker.class,
         eu.slipo.workbench.common.service._Marker.class,
         eu.slipo.workbench.web.config._Marker.class,
+        eu.slipo.workbench.web.domain._Marker.class,
+        eu.slipo.workbench.web.repository._Marker.class,
         eu.slipo.workbench.web.service._Marker.class,
         eu.slipo.workbench.web.controller._Marker.class,
     }

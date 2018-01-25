@@ -9,18 +9,15 @@ import {
   processReducer,
   processDesigner,
   processConfigStep,
+  processExecutionReducer,
+  processExecutionViewReducer,
 } from './ducks/ui/views';
-
-import { resources } from './ducks/data';
 
 module.exports = Redux.combineReducers({
   config,
   i18n,
   meta,
   user,
-  data: Redux.combineReducers({
-    resources,
-  }),
   ui: Redux.combineReducers({
     viewport,
     menu,
@@ -34,6 +31,10 @@ module.exports = Redux.combineReducers({
         explorer: processReducer,
         designer: processDesigner,
         configuration: processConfigStep,
+      }),
+      execution: Redux.combineReducers({
+        explorer: processExecutionReducer,
+        viewer: processExecutionViewReducer,
       }),
     }),
   }),

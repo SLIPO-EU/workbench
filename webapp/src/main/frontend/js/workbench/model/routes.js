@@ -6,6 +6,7 @@ import pathToRegexp from 'path-to-regexp';
 /**
  * Components
  */
+import ResourceExplorerSidebar from '../components/views/resource/explorer/sidebar';
 import ProcessDesignerSidebar from '../components/views/process/designer/sidebar';
 
 /**
@@ -38,6 +39,7 @@ const ResourceExplorer = '/resource/explore';
 const ResourceRegistration = '/resource/register';
 
 const ProcessExplorer = '/process/explore';
+const ProcessExecutionExplorer = '/process/execution/explore';
 
 const RecipeExplorer = '/recipe/explore';
 
@@ -53,6 +55,7 @@ export const StaticRoutes = {
   ResourceExplorer,
   ResourceRegistration,
   ProcessExplorer,
+  ProcessExecutionExplorer,
   RecipeExplorer,
   SchemaExplorer,
   UserManager,
@@ -67,8 +70,9 @@ const ResourceViewer = '/resource/view/:id';
 
 const ProcessDesignerCreate = '/process/design';
 const ProcessDesignerEdit = '/process/design/:id';
+const ProcessDesignerView = '/process/design/:id/:version';
 
-const ProcessExecutionViewer = '/process/view/:process/execution/:execution';
+const ProcessExecutionViewer = '/process/:id/:version/execution/:execution';
 
 const SchemaDesigner = '/tools/schema/view/:id';
 const DataViewer = '/tools/data/view/:id';
@@ -77,6 +81,7 @@ export const DynamicRoutes = {
   ResourceViewer,
   ProcessDesignerCreate,
   ProcessDesignerEdit,
+  ProcessDesignerView,
   ProcessExecutionViewer,
   SchemaDesigner,
   DataViewer,
@@ -134,7 +139,7 @@ const routes = {
     title: 'links.resource.explorer',
     defaultTitle: 'Resource Explorer',
     links: [Dashboard, ProcessExplorer, ResourceRegistration, ProcessDesignerCreate],
-    contextComponent: ProcessDesignerSidebar,
+    contextComponent: ResourceExplorerSidebar,
   },
   [ResourceRegistration]: {
     description: 'Register a new resource',
@@ -147,6 +152,12 @@ const routes = {
     title: 'links.process.explorer',
     defaultTitle: 'Process Explorer',
     links: [Dashboard, ProcessDesignerCreate]
+  },
+  [ProcessExecutionExplorer]: {
+    description: 'Browser process executions',
+    title: 'links.process.execution',
+    defaultTitle: 'Execution',
+    links: [Dashboard, ProcessExplorer, ProcessDesignerCreate]
   },
   [RecipeExplorer]: {
     description: 'Browser recipes',
@@ -182,24 +193,31 @@ const routes = {
     links: defaultLinks
   },
   [ProcessDesignerCreate]: {
-    description: 'Create a data integration processes',
-    title: 'links.process.designer',
+    description: 'Create a data integration process',
+    title: 'links.process.designer.default',
     defaultTitle: 'Process Designer',
     links: defaultLinks,
-    contextComponent: ProcessDesignerSidebar
+    contextComponent: ProcessDesignerSidebar,
   },
   [ProcessDesignerEdit]: {
     description: 'Update a data integration processes',
-    title: 'links.process.designer',
+    title: 'links.process.designer.edit',
     defaultTitle: 'Process Designer',
     links: defaultLinks,
-    contextComponent: ProcessDesignerSidebar
+    contextComponent: ProcessDesignerSidebar,
+  },
+  [ProcessDesignerView]: {
+    description: 'View a data integration processes',
+    title: 'links.process.designer.view',
+    defaultTitle: 'Process Designer',
+    links: defaultLinks,
+    contextComponent: ProcessDesignerSidebar,
   },
   [ProcessExecutionViewer]: {
     description: 'View information about a process execution instance',
     title: 'links.process.execution',
     defaultTitle: 'Process Viewer',
-    links: defaultLinks
+    links: defaultLinks,
   },
   [SchemaDesigner]: {
     description: 'View/Update schema mappings',

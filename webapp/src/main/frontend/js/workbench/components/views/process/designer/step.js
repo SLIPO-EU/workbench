@@ -27,10 +27,7 @@ const stepSource = {
    * @param {any} monitor
    */
   canDrag(props, monitor) {
-    if (props.step.tool === EnumTool.CATALOG) {
-      return false;
-    }
-    return true;
+    return !props.readOnly;
   },
 
   /**
@@ -41,7 +38,7 @@ const stepSource = {
    */
   beginDrag(props) {
     return {
-      index: props.step.index,
+      key: props.step.key,
       order: props.step.order,
       step: props.step,
     };
@@ -144,14 +141,14 @@ class Step extends React.Component {
   static propTypes = {
     active: PropTypes.object.isRequired,
     step: PropTypes.shape({
+      key: PropTypes.number.isRequired,
       order: PropTypes.number.isRequired,
-      index: PropTypes.number.isRequired,
     }),
     resources: PropTypes.arrayOf(PropTypes.shape({
-      index: PropTypes.number.isRequired,
+      key: PropTypes.number.isRequired,
       inputType: PropTypes.string.isRequired,
       resourceType: PropTypes.string.isRequired,
-      title: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired,
       iconClass: PropTypes.string.isRequired,
     })).isRequired,
 
@@ -171,6 +168,9 @@ class Step extends React.Component {
     setActiveStep: PropTypes.func.isRequired,
     setActiveStepInput: PropTypes.func.isRequired,
     setActiveStepDataSource: PropTypes.func.isRequired,
+
+    // Top-level designer properties
+    readOnly: PropTypes.bool.isRequired,
 
     // Injected by React DnD
     connectDragSource: PropTypes.func.isRequired,
@@ -211,7 +211,7 @@ class Step extends React.Component {
 
 
   setTitle(e) {
-    this.props.setStepProperty(this.props.step.index, EnumStepProperty.Title, e.target.value);
+    this.props.setStepProperty(this.props.step.key, EnumStepProperty.Title, e.target.value);
   }
 
   /**
@@ -222,9 +222,9 @@ class Step extends React.Component {
    */
   getIconClassName() {
     if (this.props.step.iconClass) {
-      return this.props.step.iconClass + ' mr-2 slipo-pd-step-icon';
+      return this.props.step.iconClass + ' slipo-pd-step-icon';
     }
-    return 'fa fa-cogs mr-2 slipo-pd-step-icon';
+    return 'fa fa-cogs slipo-pd-step-icon';
   }
 
   /**
@@ -271,7 +271,7 @@ class Step extends React.Component {
   isActive() {
     return (
       (this.props.active.type === EnumSelection.Step) &&
-      (this.props.active.step === this.props.step.index)
+      (this.props.active.step === this.props.step.key)
     );
   }
 
@@ -283,7 +283,7 @@ class Step extends React.Component {
    */
   isValid() {
     return (
-      (this.props.step.title) &&
+      (this.props.step.name) &&
       (this.props.step.configuration) &&
       (!this.props.step.errors || Object.keys(this.props.step.errors).length === 0) &&
       (!this.isInputMissing())
@@ -316,32 +316,44 @@ class Step extends React.Component {
             })
           }>
             <i className={this.getIconClassName()}></i>
-            <input
-              id={`step-${this.props.step.index}-title`}
-              className={
-                classnames({
-                  "slipo-pd-step-title-input": true,
-                  "slipo-pd-step-title-input-invalid": (!this.props.step.title)
-                })
-              }
-              value={this.props.step.title}
-              ref={(el) => { this._titleElement = el; }}
-              onClick={(e) => { this._titleElement.focus; this._titleElement.select(e); }}
-              onChange={this.setTitle}
-            />
-            <div className="slipo-pd-step-actions">
-              <i className="slipo-pd-step-action slipo-pd-step-config fa fa-wrench" onClick={(e) => { this.configure(e); }}></i>
-              <i className="slipo-pd-step-action slipo-pd-step-delete fa fa-trash" onClick={(e) => { this.remove(e); }}></i>
-            </div>
+            {!this.props.readOnly &&
+              <input
+                id={`step-${this.props.step.key}-name`}
+                className={
+                  classnames({
+                    "slipo-pd-step-name-input": true,
+                    "slipo-pd-step-name-input-invalid": (!this.props.step.name)
+                  })
+                }
+                value={this.props.step.name}
+                ref={(el) => { this._titleElement = el; }}
+                onClick={(e) => { this._titleElement.focus; this._titleElement.select(e); }}
+                onChange={this.setTitle}
+              />
+            }
+            {this.props.readOnly &&
+              <span className="slipo-pd-step-name-input">{this.props.step.name}</span>
+            }
+            {this.props.readOnly ?
+              <div className="slipo-pd-step-actions float-right">
+                <i className="slipo-pd-step-action slipo-pd-step-config fa fa-search" onClick={(e) => { this.configure(e); }}></i>
+              </div>
+              :
+              <div className="slipo-pd-step-actions">
+                <i className="slipo-pd-step-action slipo-pd-step-config fa fa-wrench" onClick={(e) => { this.configure(e); }}></i>
+                <i className="slipo-pd-step-action slipo-pd-step-delete fa fa-trash" onClick={(e) => { this.remove(e); }}></i>
+              </div>
+            }
           </div>
           {this.props.step.tool != EnumTool.TripleGeo &&
-            < StepInputContainer
+            <StepInputContainer
               active={this.props.active}
               step={this.props.step}
               resources={this.props.resources}
               addStepInput={this.props.addStepInput}
               removeStepInput={this.props.removeStepInput}
               setActiveStepInput={this.props.setActiveStepInput}
+              readOnly={this.props.readOnly}
             />
           }
           {this.props.step.tool == EnumTool.TripleGeo &&
@@ -352,6 +364,7 @@ class Step extends React.Component {
               removeStepDataSource={this.props.removeStepDataSource}
               configureStepDataSourceBegin={this.props.configureStepDataSourceBegin}
               setActiveStepDataSource={this.props.setActiveStepDataSource}
+              readOnly={this.props.readOnly}
             />
           }
         </div >

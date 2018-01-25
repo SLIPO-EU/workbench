@@ -2,18 +2,20 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { Input } from 'reactstrap';
 
-import decorateField from './formfield';
+import decorateField from './form-field';
 
 
 export function Text(props) {
   return (
-    <Input 
-      type="text" 
-      name={props.id} 
-      id={props.id} 
+    <Input
+      type="text"
+      name={props.id}
+      id={props.id}
       state={props.state}
       value={props.value || ''}
-      onChange={e => typeof props.onChange === 'function' ? props.onChange(e.target.value) : null} 
+      autoComplete="off"
+      onChange={e => typeof props.onChange === 'function' ? props.onChange(e.target.value) : null}
+      readOnly={props.readOnly}
     />
   );
 }
@@ -27,5 +29,5 @@ Text.propTypes = {
   help: PropTypes.string,
   value: PropTypes.string,
   state: PropTypes.oneOf(['success', 'warning', 'danger']),
-  onChange: PropTypes.func.isRequired,
+  onChange: PropTypes.func,
 };

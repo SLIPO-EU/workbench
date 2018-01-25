@@ -24,10 +24,10 @@ function WizardItem(props) {
         { children }
       </div>
       <div>
-        { 
-          hasPrevious ? 
-            <Button 
-              className="prev" 
+        {
+          hasPrevious ?
+            <Button
+              className="prev"
               onClick={onPreviousClicked}
               style={{float: 'left'}}
             >
@@ -49,37 +49,37 @@ function WizardItem(props) {
         </Button>
         {
           hasNext ?
-            <Button 
-              className="next" 
-              onClick={() => { 
-                const newValues = { ...values }; 
-                newValues[id] = value; 
+            <Button
+              className="next"
+              onClick={() => {
+                const newValues = { ...values };
+                newValues[id] = value;
 
                 onNextClicked()
                   .then(() => {
-                    saveTemp(next(value), newValues); 
+                    saveTemp(next(value), newValues);
                   })
                   .catch(() => {
-                    saveTemp(id, newValues); 
+                    saveTemp(id, newValues);
                   });
-              }} 
+              }}
               style={{float: 'right'}}
             >
               Next
             </Button>
             :
-            <Button 
-              color="primary" 
-              className="complete" 
+            <Button
+              color="primary"
+              className="complete"
               onClick={() => {
                 clearTemp();
                 onComplete();
-              }} 
+              }}
               style={{float: 'right'}}
             >
               Submit
             </Button>
-        }        
+        }
         <br />
       </div>
     </div>

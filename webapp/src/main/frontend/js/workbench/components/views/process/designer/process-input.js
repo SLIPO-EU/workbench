@@ -10,13 +10,23 @@ import {
 import {
   EnumDragSource,
   EnumResourceType,
-  EnumProcessInput,
+  EnumInputType,
 } from './constants';
 
 /**
  * Drag source specification
  */
 const resourceSource = {
+  /**
+   * Specify whether the dragging is currently allowed
+   *
+   * @param {any} props
+   * @param {any} monitor
+   */
+  canDrag(props, monitor) {
+    return true;
+  },
+
   /**
    * Returns a plain JavaScript object describing the data being dragged
    *
@@ -59,16 +69,16 @@ class ProcessInput extends React.Component {
   static propTypes = {
     // Resource metadata
     resource: PropTypes.shape({
-      // Unique index
-      index: PropTypes.number.isRequired,
+      // Unique key
+      key: PropTypes.number.isRequired,
       // Title
-      title: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired,
       // Icon
       iconClass: PropTypes.string.isRequired,
       // Process input resource type
       inputType: function (props, propName, componentName) {
-        for (let prop in EnumProcessInput) {
-          if (EnumProcessInput[prop] === props[propName]) {
+        for (let prop in EnumInputType) {
+          if (EnumInputType[prop] === props[propName]) {
             return null;
           }
         }
@@ -107,10 +117,10 @@ class ProcessInput extends React.Component {
         onClick={(e) => this.select(e)}
       >
         <div className="slipo-pd-resource-actions">
-          {this.props.resource.inputType != EnumProcessInput.OUTPUT &&
+          {this.props.resource.inputType != EnumInputType.OUTPUT &&
             <i className="slipo-pd-resource-delete fa fa-trash" onClick={() => { this.remove(); }}></i>
           }
-          {this.props.resource.inputType != EnumProcessInput.OUTPUT &&
+          {this.props.resource.inputType != EnumInputType.OUTPUT &&
             <Link to={buildPath(DynamicRoutes.ResourceViewer, [this.props.resource.id])}>
               <i className="slipo-pd-resource-view fa fa-search"></i>
             </Link>
@@ -120,7 +130,7 @@ class ProcessInput extends React.Component {
           <i className={this.props.resource.iconClass}></i>
         </div>
         <div className="slipo-pd-resource-label">
-          {this.props.resource.title}
+          {this.props.resource.name}
         </div>
       </div>
     );

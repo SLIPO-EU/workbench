@@ -5,7 +5,7 @@ import { FormattedTime } from 'react-intl';
 import { Row, Button } from 'reactstrap';
 
 import formatFileSize from '../../../../util/file-size';
-import decorateField from './formfield';
+import decorateField from './form-field';
 
 const fileColumns = [
   {

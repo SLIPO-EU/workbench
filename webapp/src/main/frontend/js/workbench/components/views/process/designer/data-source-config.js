@@ -38,6 +38,7 @@ class DataSourceConfig extends React.Component {
     configureStepDataSourceValidate: PropTypes.func.isRequired,
     configureStepDataSourceUpdate: PropTypes.func.isRequired,
     configureStepDataSourceEnd: PropTypes.func.isRequired,
+    readOnly: PropTypes.bool.isRequired,
   }
 
   setValue(configuration) {
@@ -53,7 +54,7 @@ class DataSourceConfig extends React.Component {
   createForm(Component, validator, props) {
     return (
       <Form
-        title={this.props.step.title}
+        title={this.props.step.name}
         iconClass={this.props.step.iconClass}
         validate={validator}
         setError={this.setError}
@@ -62,6 +63,7 @@ class DataSourceConfig extends React.Component {
         save={this.save}
         values={this.props.configuration}
         errors={this.props.errors}
+        readOnly={this.props.readOnly}
       >
         {
           React.isValidElement(Component) ?

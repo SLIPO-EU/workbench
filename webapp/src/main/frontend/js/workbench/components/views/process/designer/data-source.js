@@ -25,7 +25,7 @@ const dataSource = {
       type: EnumToolboxItem.DataSource,
       source: props.source,
       harvester: props.harvester,
-      title: props.title,
+      name: props.name,
       iconClass: props.iconClass,
     };
   }
@@ -50,7 +50,7 @@ class DataSource extends React.Component {
 
   static propTypes = {
     // Data source description
-    title: PropTypes.string.isRequired,
+    name: PropTypes.string.isRequired,
 
     // Data source icon class
     iconClass: PropTypes.string.isRequired,
@@ -104,7 +104,7 @@ class DataSource extends React.Component {
           <i className={this.props.iconClass}></i>
         </div>
         <div className="slipo-pd-item-label">
-          {this.props.title}
+          {this.props.name}
         </div>
       </div>
     );

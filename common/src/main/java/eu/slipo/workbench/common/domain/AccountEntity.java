@@ -2,10 +2,8 @@ package eu.slipo.workbench.common.domain;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
@@ -43,62 +41,62 @@ public class AccountEntity
         sequenceName = "account_id_seq", name = "account_id_seq", allocationSize = 1)
     @GeneratedValue(generator = "account_id_seq", strategy = GenerationType.SEQUENCE)
     Integer id;
-    
+
     @NotNull
     @Column(name = "`username`", nullable = false)
     String username;
-    
+
     @NotNull
     @Email
     @Column(name = "`email`", nullable = false)
     String email;
-    
+
     @Column(name = "`given_name`")
     String givenName;
- 
+
     @Column(name = "`family_name`")
     String familyName;
-    
+
     @Pattern(regexp = "[a-z][a-z]")
     @Column(name = "`lang`")
     String lang;
-    
+
     @Column(name = "`password`")
     String password;
-    
+
     @Column(name = "`active`")
     Boolean active = true;
-    
+
     @Column(name = "`blocked`")
     Boolean blocked = false;
-    
+
     @Column(name = "`registered_at`")
     ZonedDateTime registeredAt;
-    
+
     @OneToMany(
         mappedBy = "account",
-        fetch = FetchType.EAGER, 
+        fetch = FetchType.EAGER,
         cascade = CascadeType.ALL, orphanRemoval = true)
     List<AccountRoleEntity> roles = new ArrayList<>();
-    
+
     public AccountEntity() {}
-    
-    public AccountEntity(int uid) 
+
+    public AccountEntity(int uid)
     {
         this.id = uid;
     }
-    
+
     public AccountEntity(String username, String email)
     {
         this.username = username;
         this.email = email;
     }
-    
+
     public void setId(int id)
     {
         this.id = id;
     }
-    
+
     public void setName(String givenName, String familyName)
     {
         this.givenName = givenName;
@@ -129,7 +127,7 @@ public class AccountEntity
     {
         this.registeredAt = registeredAt;
     }
-    
+
     public int getId()
     {
         return id;
@@ -144,7 +142,7 @@ public class AccountEntity
     {
         return password;
     }
-    
+
     public String getEmail()
     {
         return email;
@@ -158,6 +156,10 @@ public class AccountEntity
     public String getFamilyName()
     {
         return familyName;
+    }
+
+    public String getFullName() {
+        return String.format("%s %s", this.givenName, this.familyName).trim();
     }
 
     public String getLang()
@@ -179,60 +181,66 @@ public class AccountEntity
     {
         return registeredAt;
     }
- 
+
     public Set<EnumRole> getRoles()
     {
         EnumSet<EnumRole> r = EnumSet.noneOf(EnumRole.class);
-        for (AccountRoleEntity ar: roles)
+        for (AccountRoleEntity ar: roles) {
             r.add(ar.role);
+        }
         return r;
     }
-    
+
     public boolean hasRole(EnumRole role)
     {
-        for (AccountRoleEntity ar: roles)
-            if (role == ar.role)
+        for (AccountRoleEntity ar: roles) {
+            if (role == ar.role) {
                 return true;
+            }
+        }
         return false;
     }
-    
+
     public void grant(EnumRole role, AccountEntity grantedBy)
     {
-        if (!hasRole(role))
+        if (!hasRole(role)) {
             roles.add(new AccountRoleEntity(this, role, null, grantedBy));
+        }
     }
-    
+
     public void revoke(EnumRole role)
     {
         AccountRoleEntity target = null;
-        for (AccountRoleEntity ar: roles)
+        for (AccountRoleEntity ar: roles) {
             if (role == ar.role) {
                 target = ar;
                 break;
             }
-        if (target != null)
+        }
+        if (target != null) {
             roles.remove(target);
+        }
     }
-    
+
     /**
      * Convert to a DTO object
-     * 
+     *
      * @return a new {@link Account} instance
      */
     public Account toDto()
     {
         Account a = new Account(id, username, email);
-        
+
         a.setActive(active);
         a.setBlocked(blocked);
-        
+
         a.setFamilyName(familyName);
         a.setGivenName(givenName);
-        
+
         a.setLang(lang);
         a.setRegisteredAt(registeredAt);
         a.setRoles(getRoles());
-        
+
         return a;
     }
 }

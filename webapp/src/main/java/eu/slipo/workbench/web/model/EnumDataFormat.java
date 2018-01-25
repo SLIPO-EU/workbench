@@ -38,27 +38,31 @@ public enum EnumDataFormat {
      */
     SHAPEFILE(5),
     /**
+     * XML/GML/KML/INSPIRE-aligned inputs
+     */
+    XML(6),
+    /**
      * W3C standard RDF serialization format
      */
-    RDF_XML(6),
+    RDF_XML(7),
     /**
      * A format using the RDF/XML abbreviations to provide a more compact readable format
      */
-    RDF_XML_ABBREV(7),
+    RDF_XML_ABBREV(8),
     /**
      * Turtle, a compact, human-friendly format
      */
-    TURTLE(8),
+    TURTLE(9),
     /**
      * N-Triples, a very simple, easy-to-parse, line-based format that is not as compact
      * as Turtle
      */
-    N_TRIPLES(9),
+    N_TRIPLES(10),
     /**
      * N3 or Notation3, a non-standard serialization that is very similar to Turtle, but
      * has some additional features, such as the ability to define inference rules
      */
-    N3(10),
+    N3(11),
     ;
 
     private final int value;
