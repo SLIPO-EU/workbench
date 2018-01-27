@@ -1,0 +1,16 @@
+/logs
+/target
+/.secrets
+/secrets
+
+docker-compose.yml
+
+.settings
+.project
+.classpath
+
+**/*.*~
+**/*.~
+*.tar.gz
+*.zip
+*.rar

@@ -119,6 +119,12 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        
+        <dependency>
+            <groupId>eu.slipo</groupId>
+            <artifactId>workflows</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
 
     </dependencies>
 
@@ -176,7 +182,7 @@
                 <configuration>
                     <skipITs>${integration-tests.skip}</skipITs>
                     <includes>
-                        <include>eu.slipo.workbench.rpc.integration.workflow.mergesort.*</include>
+                        <include>eu.slipo.workbench.rpc.integration.*</include>
                     </includes>
                 </configuration>
             </plugin>

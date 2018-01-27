@@ -36,10 +36,11 @@
     </distributionManagement>
  
     <modules>
+        <module>workflows</module> <!-- model and execute workflows atop of Spring Batch -->
         <module>common</module> <!-- common for Spring-based applications -->
-        <module>command</module>
-        <module>webapp</module>
+        <module>command</module> <!-- command-line interface for RPC server -->
         <module>rpc-server</module>
+        <module>webapp</module>
     </modules>
     
     <properties>
