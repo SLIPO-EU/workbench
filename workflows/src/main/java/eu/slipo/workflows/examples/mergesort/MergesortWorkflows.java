@@ -5,7 +5,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -13,28 +12,32 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.job.flow.Flow;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
 import eu.slipo.workflows.Workflow;
+import eu.slipo.workflows.WorkflowBuilderFactory;
 import eu.slipo.workflows.WorkflowExecutionEventListener;
 
-@Component("mergesort.workflowBuilderFactory")
-public class WorkflowBuilderFactory
-{    
+@Configuration("mergesort.workflows")
+public class MergesortWorkflows
+{
     @Autowired
-    private eu.slipo.workflows.WorkflowBuilderFactory workflowBuilderFactory;
+    private WorkflowBuilderFactory workflowBuilderFactory;
     
     @Autowired
-    @Qualifier("splitFile.flow")
+    @Qualifier("mergesort.splitFile.flow")
     private Flow splitFileFlow;
+    
+    @Autowired
+    @Qualifier("mergesort.statFiles.step")
+    private Step statFilesStep;
     
     @Autowired
     @Qualifier("mergesort.mergeFiles.flow")
@@ -44,13 +47,11 @@ public class WorkflowBuilderFactory
     @Qualifier("mergesort.sortFile.flow")
     private Flow sortFileFlow;
     
-    @Autowired
-    @Qualifier("mergesort.statFiles.step")
-    private Step statFilesStep;
+    public static final String RESULT_FILENAME = "r.txt";
     
     private static final long DEFAULT_PART_SIZE = 10 * 1024 * 1024;
     
-    public Builder get(UUID workflowId, Path inputPath)
+    public Builder getBuilder(UUID workflowId, Path inputPath)
     {
         return this.new Builder(workflowId, inputPath);
     }
@@ -214,7 +215,7 @@ public class WorkflowBuilderFactory
                 }
             }
             
-            workflowBuilder.output(String.format(mergerName, 1, h), "r.txt");
+            workflowBuilder.output(String.format(mergerName, 1, h), "r.txt", RESULT_FILENAME);
          
             if (listener != null)
                 workflowBuilder.listener(listener);
@@ -222,4 +223,98 @@ public class WorkflowBuilderFactory
             return workflowBuilder.build();
         }
     }
+    
+    public Workflow demoWorkflow(UUID workflowId, Path inputPath)
+    {
+        Workflow workflow = workflowBuilderFactory.get(workflowId)
+            .output("merger-1-2-3-4-5-6", "r.txt")
+            .job(b -> b
+                .name("splitter")
+                .flow(splitFileFlow)
+                .input(inputPath)
+                .parameters(p -> p
+                    .addString("outputPrefix", "p")
+                    .addString("outputSuffix", ".txt")
+                    .addLong("numParts", 6L))
+                .output("p1.txt", "p2.txt", "p3.txt", "p4.txt", "p5.txt", "p6.txt"))
+            .job(b -> b
+                .name("sorter-1")
+                .flow(sortFileFlow)
+                .input("splitter", "p1.txt")
+                .parameters(p -> p.addString("outputName", "r.txt"))
+                .output("r.txt"))
+            .job(b -> b
+                .name("sorter-2")
+                .flow(sortFileFlow)
+                .input("splitter", "p2.txt")
+                .parameters(p -> p.addString("outputName", "r.txt"))
+                .output("r.txt"))
+            .job(c -> c
+                .name("sorter-3")
+                .flow(sortFileFlow)
+                .input("splitter", "p3.txt")
+                .parameters(p -> p.addString("outputName", "r.txt"))
+                .output("r.txt"))
+            .job(b -> b
+                .name("sorter-4")
+                .flow(sortFileFlow)
+                .input("splitter", "p4.txt")
+                .parameters(p -> p.addString("outputName", "r.txt"))
+                .output("r.txt"))
+            .job(b -> b
+                .name("sorter-5")
+                .flow(sortFileFlow)
+                .input("splitter", "p5.txt")
+                .parameters(p -> p.addString("outputName", "r.txt"))
+                .output("r.txt"))
+            .job(b -> b
+                .name("sorter-6")
+                .flow(sortFileFlow)
+                .input("splitter", "p6.txt")
+                .parameters(p -> p.addString("outputName", "r.txt"))
+                .output("r.txt"))
+            .job(b -> b
+                .name("merger-1-2")
+                .flow(mergeFilesFlow)
+                .input("sorter-1", "r.txt")
+                .input("sorter-2", "r.txt")
+                .parameters(p -> p.addString("outputName", "r.txt"))
+                .output("r.txt"))
+            .job(b -> b
+                .name("merger-3-4")
+                .flow(mergeFilesFlow)
+                .input("sorter-3", "r.txt")
+                .input("sorter-4", "r.txt")
+                .parameters(p -> p.addString("outputName", "r.txt"))
+                .output("r.txt"))
+            .job(b -> b
+                .name("merger-5-6")
+                .flow(mergeFilesFlow)
+                .input("sorter-5", "r.txt")
+                .input("sorter-6", "r.txt")
+                .parameters(p -> p.addString("outputName", "r.txt"))
+                .output("r.txt"))
+            .job(b -> b
+                .name("merger-1-2-3-4")
+                .flow(mergeFilesFlow)
+                .input("merger-1-2", "r.txt")
+                .input("merger-3-4", "r.txt")
+                .parameters(p -> p.addString("outputName", "r.txt"))
+                .output("r.txt"))
+            .job(b -> b
+                .name("merger-1-2-3-4-5-6")
+                .flow(mergeFilesFlow)
+                .input("merger-1-2-3-4", "r.txt")
+                .input("merger-5-6", "r.txt")
+                .parameters(p -> p.addString("outputName", "r.txt"))
+                .output("r.txt"))
+            .job(b -> b
+                .name("stat-parts")
+                .flow(statFilesStep)
+                .input("splitter", "p*.txt"))
+            .build();
+        
+        return workflow;
+    }
+    
 }
