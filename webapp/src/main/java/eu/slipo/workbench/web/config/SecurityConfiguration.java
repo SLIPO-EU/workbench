@@ -20,7 +20,7 @@ import eu.slipo.workbench.web.logging.filter.MappedDiagnosticContextFilter;
 
 @Configuration
 @EnableWebSecurity
-public class SecurityConfig extends WebSecurityConfigurerAdapter
+public class SecurityConfiguration extends WebSecurityConfigurerAdapter
 {
     @Autowired
     @Qualifier("defaultUserDetailsService")

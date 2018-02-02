@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
 
 @Configuration
-public class RestClientConfig
+public class RestClientConfiguration
 {
     private static final int TIMEOUT_MILLIS = 3000;
     

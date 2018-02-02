@@ -16,7 +16,8 @@ import eu.slipo.workflows.exception.WorkflowExecutionStopException;
 public interface WorkflowScheduler
 {
     /**
-     * A scheduler-level workflow execution status
+     * A scheduler-level workflow execution status. Represents the overall status as 
+     * aggregated from nodes that comprise the workflow.
      */
     enum ExecutionStatus
     {

@@ -22,8 +22,8 @@ public class ResourceRecord {
     @JsonDeserialize(using = EnumResourceType.Deserializer.class)
     private EnumResourceType type;
 
-    @JsonDeserialize(using = EnumDataSource.Deserializer.class)
-    private EnumDataSource dataSource;
+    @JsonDeserialize(using = EnumDataSourceType.Deserializer.class)
+    private EnumDataSourceType dataSource;
 
     @JsonDeserialize(using = EnumDataFormat.Deserializer.class)
     private EnumDataFormat inputFormat;
@@ -45,7 +45,7 @@ public class ResourceRecord {
 
     private String fileName;
 
-    private int fileSize;
+    private Long fileSize;
 
     private UUID tableName;
 
@@ -72,11 +72,11 @@ public class ResourceRecord {
         this.type = type;
     }
 
-    public EnumDataSource getDataSource() {
+    public EnumDataSourceType getDataSource() {
         return dataSource;
     }
 
-    public void setDataSource(EnumDataSource dataSource) {
+    public void setDataSource(EnumDataSourceType dataSource) {
         this.dataSource = dataSource;
     }
 
@@ -160,15 +160,15 @@ public class ResourceRecord {
         return fileName;
     }
 
-    public void setFileName(String fileName) {
+    public void setFilePath(String fileName) {
         this.fileName = fileName;
     }
 
-    public int getFileSize() {
+    public Long getFileSize() {
         return fileSize;
     }
 
-    public void setFileSize(int fileSize) {
+    public void setFileSize(long fileSize) {
         this.fileSize = fileSize;
     }
 

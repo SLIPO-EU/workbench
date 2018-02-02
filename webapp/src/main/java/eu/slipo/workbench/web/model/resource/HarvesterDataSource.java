@@ -6,7 +6,7 @@ package eu.slipo.workbench.web.model.resource;
 public class HarvesterDataSource extends DataSource {
 
     public HarvesterDataSource() {
-        super(EnumDataSource.HARVESTER);
+        super(EnumDataSourceType.HARVESTER);
     }
 
 }

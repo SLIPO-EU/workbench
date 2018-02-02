@@ -8,9 +8,9 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 
 /**
- * Supported data sources
+ * Enumerate supported types of data sources
  */
-public enum EnumDataSource {
+public enum EnumDataSourceType {
     /**
      * Invalid data source
      */
@@ -35,7 +35,7 @@ public enum EnumDataSource {
 
     private final int value;
 
-    private EnumDataSource(int value) {
+    private EnumDataSourceType(int value) {
         this.value = value;
     }
 
@@ -47,20 +47,20 @@ public enum EnumDataSource {
         return (this.getClass().getSimpleName() + '.' + name());
     }
 
-    public static EnumDataSource fromString(String value) {
-        for (EnumDataSource item : EnumDataSource.values()) {
+    public static EnumDataSourceType fromString(String value) {
+        for (EnumDataSourceType item : EnumDataSourceType.values()) {
             if (item.name().equalsIgnoreCase(value)) {
                 return item;
             }
         }
-        return EnumDataSource.UNDEFINED;
+        return EnumDataSourceType.UNDEFINED;
     }
 
-    public static class Deserializer extends JsonDeserializer<EnumDataSource> {
+    public static class Deserializer extends JsonDeserializer<EnumDataSourceType> {
 
         @Override
-        public EnumDataSource deserialize(JsonParser parser, DeserializationContext context) throws IOException, JsonProcessingException {
-            return EnumDataSource.fromString(parser.getValueAsString());
+        public EnumDataSourceType deserialize(JsonParser parser, DeserializationContext context) throws IOException, JsonProcessingException {
+            return EnumDataSourceType.fromString(parser.getValueAsString());
         }
     }
 }

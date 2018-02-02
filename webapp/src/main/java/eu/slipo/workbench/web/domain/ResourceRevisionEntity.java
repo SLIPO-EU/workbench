@@ -7,6 +7,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -22,26 +23,28 @@ import com.vividsolutions.jts.geom.Geometry;
 import eu.slipo.workbench.common.domain.AccountEntity;
 import eu.slipo.workbench.web.model.EnumDataFormat;
 import eu.slipo.workbench.web.model.EnumResourceType;
-import eu.slipo.workbench.web.model.resource.EnumDataSource;
+import eu.slipo.workbench.web.model.resource.EnumDataSourceType;
 import eu.slipo.workbench.web.model.resource.ResourceRecord;
 
 @Entity(name = "ResourceRevision")
 @Table(
     schema = "public",
-    name = "resource_history",
-    uniqueConstraints = { @UniqueConstraint(name = "uq_resource_parent_id_version", columnNames = { "parent_id", "`version`" }), }
+    name = "resource_revision",
+    uniqueConstraints = { 
+        @UniqueConstraint(name = "uq_resource_parent_id_version", columnNames = { "parent", "`version`" }), }
 )
 public class ResourceRevisionEntity {
 
     @Id
     @Column(name = "id")
-    @SequenceGenerator(sequenceName = "resource_history_id_seq", name = "resource_history_id_seq", initialValue = 1, allocationSize = 1)
-    @GeneratedValue(generator = "resource_history_id_seq", strategy = GenerationType.SEQUENCE)
+    @SequenceGenerator(
+        sequenceName = "resource_revision_id_seq", name = "resource_revision_id_seq", initialValue = 1, allocationSize = 1)
+    @GeneratedValue(generator = "resource_revision_id_seq", strategy = GenerationType.SEQUENCE)
     long id;
 
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "parent_id", nullable = false)
+    @JoinColumn(name = "parent", nullable = false)
     ResourceEntity parent;
 
     @Column(name = "`version`")
@@ -50,25 +53,26 @@ public class ResourceRevisionEntity {
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "`type`")
-    private EnumResourceType type;
+    EnumResourceType type;
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "data_source")
-    private EnumDataSource dataSource;
+    @Column(name = "source_type")
+    EnumDataSourceType sourceType;
 
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "input_format")
-    private EnumDataFormat inputFormat;
+    EnumDataFormat inputFormat;
 
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "output_format")
-    private EnumDataFormat outputFormat;
+    EnumDataFormat outputFormat;
 
-    @Column(name = "process_execution_id")
-    long processExecutionId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "process_execution")
+    ProcessExecutionEntity processExecution;
 
     @NotNull
     @Column(name = "`name`")
@@ -88,16 +92,16 @@ public class ResourceRevisionEntity {
     AccountEntity updatedBy;
 
     @Column(name = "bbox")
-    private Geometry boundingBox;
+    Geometry boundingBox;
 
     @Column(name = "number_of_entities")
     Integer numberOfEntities;
 
-    @Column(name = "file_name")
-    String fileName;
+    @Column(name = "file_path")
+    String path;
 
     @Column(name = "file_size")
-    int fileSize;
+    Long size;
 
     @Column(name = "table_name")
     UUID tableName;
@@ -126,12 +130,12 @@ public class ResourceRevisionEntity {
         this.type = type;
     }
 
-    public EnumDataSource getDataSource() {
-        return dataSource;
+    public EnumDataSourceType getSourceType() {
+        return sourceType;
     }
 
-    public void setDataSource(EnumDataSource dataSource) {
-        this.dataSource = dataSource;
+    public void setSourceType(EnumDataSourceType sourceType) {
+        this.sourceType = sourceType;
     }
 
     public EnumDataFormat getInputFormat() {
@@ -148,14 +152,6 @@ public class ResourceRevisionEntity {
 
     public void setOutputFormat(EnumDataFormat outputFormat) {
         this.outputFormat = outputFormat;
-    }
-
-    public long getProcessExecutionId() {
-        return processExecutionId;
-    }
-
-    public void setProcessExecutionId(long processExecutionId) {
-        this.processExecutionId = processExecutionId;
     }
 
     public String getName() {
@@ -207,19 +203,19 @@ public class ResourceRevisionEntity {
     }
 
     public String getFileName() {
-        return fileName;
+        return path;
     }
 
     public void setFileName(String fileName) {
-        this.fileName = fileName;
+        this.path = fileName;
     }
 
-    public int getFileSize() {
-        return fileSize;
+    public Long getSize() {
+        return size;
     }
 
-    public void setFileSize(int fileSize) {
-        this.fileSize = fileSize;
+    public void setSize(long fileSize) {
+        this.size = fileSize;
     }
 
     public UUID getTableName() {
@@ -241,13 +237,13 @@ public class ResourceRevisionEntity {
         r.setCreatedBy(this.parent.createdBy.getId(), this.parent.createdBy.getFullName());
         r.setUpdatedOn(this.updatedOn);
         r.setUpdatedBy(this.updatedBy.getId(), this.updatedBy.getFullName());
-        r.setDataSource(this.dataSource);
+        r.setDataSource(this.sourceType);
         r.setInputFormat(this.inputFormat);
         r.setOutputFormat(this.outputFormat);
-        r.setFileName(this.fileName);
-        r.setFileSize(this.fileSize);
+        r.setFilePath(this.path);
+        r.setFileSize(this.size);
         r.setMetadata(this.name, this.description, this.numberOfEntities, this.boundingBox);
-        r.setProcessExecutionId(this.processExecutionId);
+        r.setProcessExecutionId(this.processExecution.getId());
         r.setTable(this.tableName);
         r.setType(this.type);
 

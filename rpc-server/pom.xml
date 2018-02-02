@@ -107,7 +107,9 @@
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-web</artifactId>
         </dependency>
-        
+
+        <!-- Docker client -->
+
         <dependency>
             <groupId>com.spotify</groupId>
             <artifactId>docker-client</artifactId>
@@ -119,7 +121,9 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        
+
+        <!-- Model and schedule workflows -->
+
         <dependency>
             <groupId>eu.slipo</groupId>
             <artifactId>workflows</artifactId>

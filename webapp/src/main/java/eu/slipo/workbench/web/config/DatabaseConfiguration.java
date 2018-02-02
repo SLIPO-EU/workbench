@@ -13,6 +13,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
     }
 )
 @EnableTransactionManagement(mode = AdviceMode.PROXY)
-public class DatabaseConfig 
+public class DatabaseConfiguration 
 {
 }

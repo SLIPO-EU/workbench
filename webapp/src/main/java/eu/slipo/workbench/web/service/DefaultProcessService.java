@@ -52,15 +52,14 @@ public class DefaultProcessService implements IProcessService {
             } else {
                 processRepository.update(process);
             }
-        } catch (ApplicationException appEx) {
-            validationErrors.add(appEx.toError(this.messageSource, authenticationFacade.getCurrentUserLocale()));
+        } catch (ApplicationException ex) {
+            validationErrors.add(
+                ex.toError(this.messageSource, authenticationFacade.getCurrentUserLocale()));
         } catch (Exception ex) {
             String message = "Failed to create process";
-
             logger.error(message, ex);
             validationErrors.add(new Error(ProcessErrorCode.UNKNOWN, message));
         }
-
         return validationErrors;
     }
 

@@ -8,7 +8,7 @@ public class FileSystemDataSource extends DataSource {
     private String path;
 
     public FileSystemDataSource() {
-        super(EnumDataSource.FILESYSTEM);
+        super(EnumDataSourceType.FILESYSTEM);
     }
 
     /**

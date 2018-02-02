@@ -1,8 +1,9 @@
 package eu.slipo.workbench.web.model.process;
 
 /**
- * Process execution status. Values are the same to
- * {@link org.springframework.batch.core.BatchStatus}
+ * Process execution status. Values are the same to {@link org.springframework.batch.core.BatchStatus}.
+ * 
+ * Todo: Replace with {@link WorkflowScheduler#ExecutionStatus}
  */
 public enum EnumProcessExecutionStatus {
     ABANDONED,

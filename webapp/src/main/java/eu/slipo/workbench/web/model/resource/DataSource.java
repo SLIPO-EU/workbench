@@ -17,8 +17,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 })
 public abstract class DataSource {
 
-    @JsonDeserialize(using = EnumDataSource.Deserializer.class)
-    protected EnumDataSource type;
+    @JsonDeserialize(using = EnumDataSourceType.Deserializer.class)
+    protected EnumDataSourceType type;
 
     protected DataSource() {
 
@@ -29,7 +29,7 @@ public abstract class DataSource {
      *
      * @param type the data source type
      */
-    protected DataSource(EnumDataSource type) {
+    protected DataSource(EnumDataSourceType type) {
         this.type = type;
     }
 
@@ -38,7 +38,7 @@ public abstract class DataSource {
      *
      * @return the type of the current data source instance
      */
-    public EnumDataSource getType() {
+    public EnumDataSourceType getType() {
         return type;
     }
 

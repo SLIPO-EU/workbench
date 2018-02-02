@@ -37,7 +37,7 @@ public class ProcessExecutionStepEntity {
 
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "process_execution_id", nullable = false)
+    @JoinColumn(name = "process_execution", nullable = false)
     ProcessExecutionEntity execution;
 
     @NotNull()
@@ -45,12 +45,12 @@ public class ProcessExecutionStepEntity {
     int key;
 
     @NotNull
-    @Column(name = "`name`")
+    @Column(name = "step_name")
     String name;
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "toolkit_component")
+    @Column(name = "tool_name")
     EnumTool component;
 
     @NotNull
