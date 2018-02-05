@@ -18,7 +18,6 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.core.task.TaskExecutor;
 
 @Configuration
-@PropertySource("classpath:config/batch.properties")
 @EnableBatchProcessing
 @DependsOn("dataSource")
 public class BatchConfiguration 
