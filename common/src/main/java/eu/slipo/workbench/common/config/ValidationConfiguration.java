@@ -9,7 +9,7 @@ import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 @Configuration
 public class ValidationConfiguration
 {
-    @Bean(name = "defaultBeanValidator")
+    @Bean(name = { "beanValidator", "defaultBeanValidator" })
     Validator validator()
     {
         LocalValidatorFactoryBean b = new LocalValidatorFactoryBean();

@@ -1,4 +1,4 @@
-package eu.slipo.workbench.rpc;
+package eu.slipo.workbench.rpc.tests;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

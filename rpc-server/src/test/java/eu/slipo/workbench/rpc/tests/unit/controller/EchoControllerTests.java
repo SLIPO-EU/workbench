@@ -1,4 +1,4 @@
-package eu.slipo.workbench.rpc.unit.controller;
+package eu.slipo.workbench.rpc.tests.unit.controller;
 
 import org.junit.Before;
 import org.junit.Test;

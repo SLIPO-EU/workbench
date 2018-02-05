@@ -175,7 +175,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <excludes>
-                        <exclude>eu.slipo.workbench.rpc.integration.**</exclude>
+                        <exclude>eu.slipo.workbench.rpc.tests.integration.**</exclude>
                     </excludes>
                 </configuration>
             </plugin>
@@ -186,7 +186,7 @@
                 <configuration>
                     <skipITs>${integration-tests.skip}</skipITs>
                     <includes>
-                        <include>eu.slipo.workbench.rpc.integration.*</include>
+                        <include>eu.slipo.workbench.rpc.tests.integration.jobs.*</include>
                     </includes>
                 </configuration>
             </plugin>

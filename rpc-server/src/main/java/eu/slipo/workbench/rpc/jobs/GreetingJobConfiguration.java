@@ -1,6 +1,12 @@
 package eu.slipo.workbench.rpc.jobs;
 
 import java.util.Map;
+
+import javax.annotation.PostConstruct;
+
+import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -56,6 +62,20 @@ public class GreetingJobConfiguration
     @Autowired
     private StepBuilderFactory stepBuilderFactory;
     
+    @Autowired
+    private Path jobDataDirectory;
+    
+    private Path dataDir;
+    
+    @PostConstruct
+    private void setupDataDirectory() throws IOException
+    {
+        this.dataDir = jobDataDirectory.resolve("greeting");
+        try {
+            Files.createDirectory(dataDir); 
+        } catch (FileAlreadyExistsException e) {}
+    }
+    
     private static class Step1Tasklet implements Tasklet
     {
         private static Logger logger = LoggerFactory.getLogger(Step1Tasklet.class);
@@ -110,7 +130,6 @@ public class GreetingJobConfiguration
     @JobScope
     public CreateContainerTasklet createEchoContainerTasklet(
         DockerClient dockerClient,
-        @Value("${slipo.rpc-server.docker.volumes.data-dir}") String dataDir,
         @Value("#{jobExecution.id}") Long executionId,
         @Value("#{jobExecution.jobInstance.id}") Long jobId)
     {
@@ -121,8 +140,8 @@ public class GreetingJobConfiguration
             .name(containerName)
             .container(configurer -> configurer
                 .image("debian:8.9")
-                .volume(Paths.get(dataDir, "echo/output"), Paths.get("/var/local/hello-spring/output"))
-                .volume(Paths.get(dataDir, "echo/input"), Paths.get("/var/local/hello-spring/input"), true)
+                .volume(dataDir.resolve("echo/output"), Paths.get("/var/local/hello-spring/output"))
+                .volume(dataDir.resolve("echo/input"), Paths.get("/var/local/hello-spring/input"), true)
                 .env("Foo", "Baz")
                 .command("bash", "-c",
                     "echo Started with Foo=${Foo} at $(date);" +

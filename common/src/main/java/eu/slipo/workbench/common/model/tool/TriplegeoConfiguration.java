@@ -19,6 +19,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -295,7 +296,7 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
         return super.getInput();
     }
     
-    @JsonProperty("inputFiles")
+    @JsonAlias({ "inputFiles", "input" })
     public void setInputFiles(String inputFiles)
     {
         Assert.isTrue(!StringUtils.isEmpty(inputFiles), 

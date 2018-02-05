@@ -1,0 +1,11 @@
+{
+    "inputFormat": "CSV",
+    "serialization":"N-TRIPLES",
+    "featureName": "osm-points",
+    "delimiter": "|",
+    "attrKey": "osm_id",
+    "attrName": "name",
+    "attrCategory": "type",
+    "attrX": "lon",
+    "attrY": "lat"
+}
