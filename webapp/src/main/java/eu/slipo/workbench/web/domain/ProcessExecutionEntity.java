@@ -39,7 +39,7 @@ public class ProcessExecutionEntity {
 
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "process_id", nullable = false)
+    @JoinColumn(name = "process", nullable = false)
     ProcessRevisionEntity process;
 
     @NotNull
@@ -129,7 +129,7 @@ public class ProcessExecutionEntity {
     }
 
     public ProcessExecutionRecord toProcessExecutionRecord(boolean includeSteps) {
-        ProcessExecutionRecord e = new ProcessExecutionRecord(this.id, this.process.process.id, this.process.version);
+        ProcessExecutionRecord e = new ProcessExecutionRecord(this.id, this.process.parent.id, this.process.version);
 
         if (this.submittedBy != null) {
             e.setSubmittedBy(this.submittedBy.getId(), this.submittedBy.getFullName());
@@ -139,7 +139,7 @@ public class ProcessExecutionEntity {
         e.setCompletedOn(this.completedOn);
         e.setStatus(this.status);
         // TODO: Rename properties
-        e.setTask(this.getProcess().getProcess().getTask());
+        e.setTask(this.getProcess().getParent().getTask());
         e.setName(this.getProcess().getName());
         e.setErrorMessage(this.errorMessage);
 

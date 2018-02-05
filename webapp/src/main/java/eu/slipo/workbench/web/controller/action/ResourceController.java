@@ -25,7 +25,7 @@ import eu.slipo.workbench.common.model.RestResponse;
 import eu.slipo.workbench.web.model.QueryResult;
 import eu.slipo.workbench.web.model.process.ProcessDefinitionUpdate;
 import eu.slipo.workbench.web.model.process.ProcessDefinitionUpdateBuilder;
-import eu.slipo.workbench.web.model.resource.EnumDataSource;
+import eu.slipo.workbench.web.model.resource.EnumDataSourceType;
 import eu.slipo.workbench.web.model.resource.RegistrationRequest;
 import eu.slipo.workbench.web.model.resource.ResourceErrorCode;
 import eu.slipo.workbench.web.model.resource.ResourceMetadataUpdate;
@@ -82,7 +82,7 @@ public class ResourceController {
     @RequestMapping(value = "/action/resource/register", method = RequestMethod.PUT, produces = "application/json")
     public RestResponse<?> registerResource(Authentication authentication, @RequestBody ResourceRegistrationRequest request) {
         // Action does not support file uploading
-        if (request.getDataSource().getType() == EnumDataSource.UPLOAD) {
+        if (request.getDataSource().getType() == EnumDataSourceType.UPLOAD) {
             return RestResponse.error(ResourceErrorCode.DATASOURCE_NOT_SUPPORTED,
                     "Data source of type 'UPLOAD' is not supported.");
         }

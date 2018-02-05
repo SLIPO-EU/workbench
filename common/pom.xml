@@ -41,6 +41,23 @@
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
+        <!-- Libraries for geometry objects  -->
+        
+        <dependency>
+            <groupId>com.vividsolutions</groupId>
+            <artifactId>jts</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.geotools</groupId>
+            <artifactId>gt-geometry</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.geotools</groupId>
+            <artifactId>gt-epsg-wkt</artifactId>
+        </dependency>
+
         <!-- Hibernate -->
 
         <!-- needed to support java-8 date types -->
@@ -54,6 +71,11 @@
             <artifactId>hibernate-validator</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-spatial</artifactId>
+        </dependency>
+
         <!-- Jackson serializers -->
 
         <dependency>
@@ -61,6 +83,11 @@
             <artifactId>jackson-datatype-jsr310</artifactId>
         </dependency>
         
+        <dependency>
+            <groupId>com.bedatadriven</groupId>
+            <artifactId>jackson-datatype-jts</artifactId>
+        </dependency>
+       
         <!-- ICU4J text utilities -->
         
         <dependency>

@@ -8,11 +8,11 @@ public class UploadDataSource extends DataSource {
     private String filename;
 
     public UploadDataSource() {
-        super(EnumDataSource.UPLOAD);
+        super(EnumDataSourceType.UPLOAD);
     }
 
     public UploadDataSource(String filename) {
-        super(EnumDataSource.UPLOAD);
+        super(EnumDataSourceType.UPLOAD);
         this.filename = filename;
     }
 

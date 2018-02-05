@@ -12,7 +12,7 @@ public class ProcessExecutionStepFileRecord {
 
     private String fileName;
 
-    private int fileSize;
+    private Long fileSize;
 
     private UUID tableName;
 
@@ -38,15 +38,15 @@ public class ProcessExecutionStepFileRecord {
         return fileName;
     }
 
-    public void setFileName(String fileName) {
+    public void setFilePath(String fileName) {
         this.fileName = fileName;
     }
 
-    public int getFileSize() {
+    public Long getFileSize() {
         return fileSize;
     }
 
-    public void setFileSize(int fileSize) {
+    public void setFileSize(long fileSize) {
         this.fileSize = fileSize;
     }
 

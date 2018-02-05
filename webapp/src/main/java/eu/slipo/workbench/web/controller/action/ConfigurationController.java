@@ -17,7 +17,7 @@ import eu.slipo.workbench.web.model.EnumOperation;
 import eu.slipo.workbench.web.model.EnumResourceType;
 import eu.slipo.workbench.web.model.EnumTool;
 import eu.slipo.workbench.web.model.ValueListItem;
-import eu.slipo.workbench.web.model.resource.EnumDataSource;
+import eu.slipo.workbench.web.model.resource.EnumDataSourceType;
 
 @RestController
 public class ConfigurationController {
@@ -54,9 +54,9 @@ public class ConfigurationController {
             );
         });
 
-        Arrays.stream(EnumDataSource.values()).forEach(value -> {
+        Arrays.stream(EnumDataSourceType.values()).forEach(value -> {
             config.getValues().addDataSource(
-                new ValueListItem<EnumDataSource>(value, messageSource.getMessage(value.getKey(), null, locale))
+                new ValueListItem<EnumDataSourceType>(value, messageSource.getMessage(value.getKey(), null, locale))
             );
         });
 

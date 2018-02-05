@@ -11,6 +11,7 @@
     <url>http://slipo.eu/</url>
     
     <repositories>
+        
         <repository>
             <id>spring-libs-release</id>
             <name>Spring Releases</name>
@@ -18,7 +19,14 @@
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>
-        </repository>        
+        </repository> 
+
+        <repository>
+            <id>osgeo</id>
+            <name>Open Source Geospatial Foundation Repository</name>
+            <url>http://download.osgeo.org/webdav/geotools/</url>
+        </repository> 
+
     </repositories> 
    
     <parent>
@@ -36,10 +44,11 @@
     </distributionManagement>
  
     <modules>
+        <module>workflows</module> <!-- model and execute workflows atop of Spring Batch -->
         <module>common</module> <!-- common for Spring-based applications -->
-        <module>command</module>
-        <module>webapp</module>
+        <module>command</module> <!-- command-line interface for RPC server -->
         <module>rpc-server</module>
+        <module>webapp</module>
     </modules>
     
     <properties>
@@ -48,6 +57,9 @@
         <dependency.locations.enabled>false</dependency.locations.enabled>
         <java.version>1.8</java.version>
         <postgresql.version>9.4.1212.jre7</postgresql.version>
+        <geotools.version>18.0</geotools.version>
+        <hibernate-spatial.version>5.2.11.Final</hibernate-spatial.version>
+        <jackson-version>2.9.4</jackson-version>
     </properties>
 
     <developers>
@@ -97,9 +109,63 @@
             </dependency>
             
             <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
+                <version>${jackson-version}</version>
+            </dependency>
+          
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson-version}</version>
+            </dependency>
+            
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-annotations</artifactId>
+                <version>${jackson-version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.fasterxml.jackson.datatype</groupId>
+                <artifactId>jackson-datatype-jsr310</artifactId>
+                <version>${jackson-version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>org.postgresql</groupId>
                 <artifactId>postgresql</artifactId>
                 <version>${postgresql.version}</version>
+            </dependency>
+        
+            <dependency>
+                <groupId>com.vividsolutions</groupId>
+                <artifactId>jts</artifactId>
+                <version>1.13</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.bedatadriven</groupId>
+                <artifactId>jackson-datatype-jts</artifactId>
+                <version>2.4</version>
+            </dependency>
+              
+            <dependency>
+                <groupId>org.geotools</groupId>
+                <artifactId>gt-geometry</artifactId>
+                <version>${geotools.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.geotools</groupId>
+                <artifactId>gt-epsg-wkt</artifactId>
+                <version>${geotools.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.hibernate</groupId>
+                <artifactId>hibernate-spatial</artifactId>
+                <version>${hibernate-spatial.version}</version>
             </dependency>
 
         </dependencies>

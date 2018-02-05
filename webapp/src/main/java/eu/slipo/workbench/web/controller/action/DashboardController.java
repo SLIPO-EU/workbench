@@ -13,7 +13,7 @@ import eu.slipo.workbench.web.model.Dashboard;
 import eu.slipo.workbench.web.model.EnumDataFormat;
 import eu.slipo.workbench.web.model.EnumResourceType;
 import eu.slipo.workbench.web.model.Event;
-import eu.slipo.workbench.web.model.resource.EnumDataSource;
+import eu.slipo.workbench.web.model.resource.EnumDataSourceType;
 import eu.slipo.workbench.web.model.resource.ResourceMetadataView;
 import eu.slipo.workbench.web.model.resource.ResourceRecord;
 
@@ -75,14 +75,14 @@ public class DashboardController {
         ResourceRecord resource = new ResourceRecord(id, version);
 
         resource.setType(EnumResourceType.POI_DATA);
-        resource.setDataSource(EnumDataSource.UPLOAD);
+        resource.setDataSource(EnumDataSourceType.UPLOAD);
         resource.setInputFormat(EnumDataFormat.GPX);
         resource.setOutputFormat(EnumDataFormat.N_TRIPLES);
         resource.setProcessExecutionId(1L);
         resource.setCreatedOn(ZonedDateTime.now());
         resource.setUpdatedOn(resource.getCreatedOn());
         resource.setTable(UUID.randomUUID());
-        resource.setFileName("file.xml");
+        resource.setFilePath("file.xml");
         resource.setFileSize((int) (Math.random() * 1024 * 1024) + 100);
 
 

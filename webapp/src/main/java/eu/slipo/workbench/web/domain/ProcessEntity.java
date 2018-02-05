@@ -4,7 +4,6 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Convert;
@@ -20,27 +19,25 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
 import javax.persistence.Version;
 import javax.validation.constraints.NotNull;
 
 import eu.slipo.workbench.common.domain.AccountEntity;
+import eu.slipo.workbench.web.domain.attributeconverter.ProcessConfigurationConverter;
 import eu.slipo.workbench.web.model.process.EnumProcessTask;
 import eu.slipo.workbench.web.model.process.ProcessDefinitionUpdate;
 import eu.slipo.workbench.web.model.process.ProcessRecord;
 
 @Entity(name = "Process")
-@Table(
-    schema = "public",
-    name = "process",
-    uniqueConstraints = { @UniqueConstraint(name = "uq_process_id_version", columnNames = { "id", "`version`" }), }
-)
+@Table(schema = "public", name = "process")
 public class ProcessEntity {
 
     @Id
     @Column(name = "id")
-    @SequenceGenerator(sequenceName = "process_id_seq", name = "process_id_seq", initialValue = 1, allocationSize = 1)
-    @GeneratedValue(generator = "process_id_seq", strategy = GenerationType.SEQUENCE)
+    @SequenceGenerator(
+        sequenceName = "process_id_seq", name = "process_id_seq", initialValue = 1, allocationSize = 1)
+    @GeneratedValue(
+        generator = "process_id_seq", strategy = GenerationType.SEQUENCE)
     long id;
 
     @Column(name = "`version`")
@@ -80,20 +77,20 @@ public class ProcessEntity {
     ZonedDateTime executedOn;
 
     @NotNull
-    @Basic()
+    @Column(name = "definition")
     @Convert(converter = ProcessConfigurationConverter.class)
-    ProcessDefinitionUpdate configuration;
+    ProcessDefinitionUpdate definition;
 
     @NotNull
-    @Basic()
-    boolean template;
+    @Column(name = "is_template")
+    boolean isTemplate;
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "task")
+    @Column(name = "task_type")
     private EnumProcessTask task;
 
-    @OneToMany(mappedBy = "process", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     List<ProcessRevisionEntity> versions = new ArrayList<>();
 
     public long getVersion() {
@@ -152,20 +149,20 @@ public class ProcessEntity {
         this.executedOn = executedOn;
     }
 
-    public ProcessDefinitionUpdate getConfiguration() {
-        return configuration;
+    public ProcessDefinitionUpdate getDefinition() {
+        return definition;
     }
 
-    public void setConfiguration(ProcessDefinitionUpdate configuration) {
-        this.configuration = configuration;
+    public void setDefinition(ProcessDefinitionUpdate definition) {
+        this.definition = definition;
     }
 
     public boolean isTemplate() {
-        return template;
+        return isTemplate;
     }
 
     public void setTemplate(boolean template) {
-        this.template = template;
+        this.isTemplate = template;
     }
 
     public EnumProcessTask getTask() {
@@ -207,8 +204,8 @@ public class ProcessEntity {
         p.setName(this.name);
         p.setExecutedOn(this.executedOn);
         p.setTask(this.task);
-        p.setConfiguration(this.configuration);
-        p.setTemplate(this.template);
+        p.setConfiguration(this.definition);
+        p.setTemplate(this.isTemplate);
 
         for (ProcessRevisionEntity h : this.getVersions()) {
             p.addVersion(h.toProcessRecord(includeExecutions, includeSteps));

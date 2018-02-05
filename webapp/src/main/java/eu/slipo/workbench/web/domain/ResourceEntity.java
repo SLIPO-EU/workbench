@@ -28,20 +28,17 @@ import com.vividsolutions.jts.geom.Geometry;
 import eu.slipo.workbench.common.domain.AccountEntity;
 import eu.slipo.workbench.web.model.EnumDataFormat;
 import eu.slipo.workbench.web.model.EnumResourceType;
-import eu.slipo.workbench.web.model.resource.EnumDataSource;
+import eu.slipo.workbench.web.model.resource.EnumDataSourceType;
 import eu.slipo.workbench.web.model.resource.ResourceRecord;
 
 @Entity(name = "Resource")
-@Table(
-    schema = "public",
-    name = "resource",
-    uniqueConstraints = { @UniqueConstraint(name = "uq_resource_id_version", columnNames = { "id", "`version`" }), }
-)
+@Table(schema = "public", name = "resource")
 public class ResourceEntity {
 
     @Id
     @Column(name = "id")
-    @SequenceGenerator(sequenceName = "resource_id_seq", name = "resource_id_seq", initialValue = 1, allocationSize = 1)
+    @SequenceGenerator(
+        sequenceName = "resource_id_seq", name = "resource_id_seq", initialValue = 1, allocationSize = 1)
     @GeneratedValue(generator = "resource_id_seq", strategy = GenerationType.SEQUENCE)
     long id;
 
@@ -55,25 +52,26 @@ public class ResourceEntity {
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "`type`")
-    private EnumResourceType type;
+    EnumResourceType type;
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "data_source")
-    private EnumDataSource dataSource;
+    @Column(name = "source_type")
+    EnumDataSourceType sourceType;
 
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "input_format")
-    private EnumDataFormat inputFormat;
+    EnumDataFormat inputFormat;
 
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "output_format")
-    private EnumDataFormat outputFormat;
+    EnumDataFormat outputFormat;
 
-    @Column(name = "process_execution_id")
-    long processExecutionId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "process_execution")
+    ProcessExecutionEntity processExecution;
 
     @NotNull
     @Column(name = "`name`")
@@ -102,16 +100,16 @@ public class ResourceEntity {
     AccountEntity updatedBy;
 
     @Column(name = "bbox")
-    private Geometry boundingBox;
+    Geometry boundingBox;
 
     @Column(name = "number_of_entities")
     Integer numberOfEntities;
 
-    @Column(name = "file_name")
-    String fileName;
+    @Column(name = "file_path")
+    String path;
 
     @Column(name = "file_size")
-    int fileSize;
+    Long size;
 
     @Column(name = "table_name")
     UUID tableName;
@@ -138,12 +136,12 @@ public class ResourceEntity {
         this.type = type;
     }
 
-    public EnumDataSource getDataSource() {
-        return dataSource;
+    public EnumDataSourceType getSourceType() {
+        return sourceType;
     }
 
-    public void setDataSource(EnumDataSource dataSource) {
-        this.dataSource = dataSource;
+    public void setSourceType(EnumDataSourceType sourceType) {
+        this.sourceType = sourceType;
     }
 
     public EnumDataFormat getInputFormat() {
@@ -160,14 +158,6 @@ public class ResourceEntity {
 
     public void setOutputFormat(EnumDataFormat outputFormat) {
         this.outputFormat = outputFormat;
-    }
-
-    public long getProcessExecutionId() {
-        return processExecutionId;
-    }
-
-    public void setProcessExecutionId(long processExecutionId) {
-        this.processExecutionId = processExecutionId;
     }
 
     public String getName() {
@@ -223,19 +213,19 @@ public class ResourceEntity {
     }
 
     public String getFileName() {
-        return fileName;
+        return path;
     }
 
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
+    public void setFileName(String path) {
+        this.path = path;
     }
 
-    public int getFileSize() {
-        return fileSize;
+    public Long getSize() {
+        return size;
     }
 
-    public void setFileSize(int fileSize) {
-        this.fileSize = fileSize;
+    public void setSize(long fileSize) {
+        this.size = fileSize;
     }
 
     public UUID getTableName() {
@@ -269,13 +259,13 @@ public class ResourceEntity {
         r.setCreatedBy(this.createdBy.getId(), this.createdBy.getFullName());
         r.setUpdatedOn(this.updatedOn);
         r.setUpdatedBy(this.updatedBy.getId(), this.updatedBy.getFullName());
-        r.setDataSource(this.dataSource);
+        r.setDataSource(this.sourceType);
         r.setInputFormat(this.inputFormat);
         r.setOutputFormat(this.outputFormat);
-        r.setFileName(this.fileName);
-        r.setFileSize(this.fileSize);
+        r.setFilePath(this.path);
+        r.setFileSize(this.size);
         r.setMetadata(this.name, this.description, this.numberOfEntities, this.boundingBox);
-        r.setProcessExecutionId(this.processExecutionId);
+        r.setProcessExecutionId(this.processExecution.getId());
         r.setTable(this.tableName);
         r.setType(this.type);
 

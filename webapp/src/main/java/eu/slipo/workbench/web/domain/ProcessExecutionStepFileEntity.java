@@ -24,17 +24,18 @@ public class ProcessExecutionStepFileEntity {
 
     @Id
     @Column(name = "id")
-    @SequenceGenerator(sequenceName = "process_execution_step_file_id_seq", name = "process_execution_step_file_id_seq", initialValue = 1, allocationSize = 1)
+    @SequenceGenerator(
+        sequenceName = "process_execution_step_file_id_seq", name = "process_execution_step_file_id_seq", initialValue = 1, allocationSize = 1)
     @GeneratedValue(generator = "process_execution_step_file_id_seq", strategy = GenerationType.SEQUENCE)
     long id;
 
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "process_execution_step_id", nullable = false)
+    @JoinColumn(name = "process_execution_step", nullable = false)
     ProcessExecutionStepEntity step;
 
     @ManyToOne()
-    @JoinColumn(name = "resource_id", nullable = true)
+    @JoinColumn(name = "resource", nullable = true)
     ResourceRevisionEntity resource;
 
     @NotNull
@@ -42,11 +43,11 @@ public class ProcessExecutionStepFileEntity {
     @Column(name = "`type`")
     EnumStepFile type;
 
-    @Column(name = "file_name")
-    String fileName;
+    @Column(name = "file_path")
+    String path;
 
     @Column(name = "file_size")
-    int fileSize;
+    Long size;
 
     @Column(name = "table_name")
     UUID tableName;
@@ -76,19 +77,19 @@ public class ProcessExecutionStepFileEntity {
     }
 
     public String getFileName() {
-        return fileName;
+        return path;
     }
 
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
+    public void setFileName(String path) {
+        this.path = path;
     }
 
-    public int getFileSize() {
-        return fileSize;
+    public Long getFileSize() {
+        return size;
     }
 
-    public void setFileSize(int fileSize) {
-        this.fileSize = fileSize;
+    public void setSize(long fileSize) {
+        this.size = fileSize;
     }
 
     public UUID getTableName() {
@@ -108,8 +109,8 @@ public class ProcessExecutionStepFileEntity {
 
         f.setId(this.id);
         f.setType(this.type);
-        f.setFileName(this.fileName);
-        f.setFileSize(this.fileSize);
+        f.setFilePath(this.path);
+        f.setFileSize(this.size);
         if (this.resource != null) {
             f.setResource(this.resource.parent.id, this.resource.version);
         }

@@ -1,0 +1,72 @@
+<http://slipo.eu/geodata#osm-points_N1000> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/geodata#osm-points> .
+<http://slipo.eu/geodata#osm-points_N1000> <http://www.w3.org/2000/01/rdf-schema#label> "N1000"@en .
+<http://slipo.eu/geodata#osm-points_N1000> <http://www.opengis.net/ont/geosparql#hasGeometry> <http://slipo.eu/geodata#Geom_osm-points_N1000> .
+<http://slipo.eu/geodata#Geom_osm-points_N1000> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/sf#POINT> .
+<http://slipo.eu/geodata#Geom_osm-points_N1000> <http://www.opengis.net/ont/geosparql#asWKT> "<http://www.opengis.net/def/crs/EPSG/0/4326> POINT (37.2074648 55.9950817)"^^<http://www.opengis.net/ont/geosparql#wktLiteral> .
+<http://slipo.eu/geodata#osm-points_N1000> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/geosparql#Feature> .
+<http://slipo.eu/geodata#osm-points_N1000> <http://slipo.eu/geodata#name> "Десяточка"@en .
+<http://slipo.eu/geodata#osm-points_N1000> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/geodata#SUPERMARKET> .
+<http://slipo.eu/geodata#osm-points_N79248> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/geodata#osm-points> .
+<http://slipo.eu/geodata#osm-points_N79248> <http://www.w3.org/2000/01/rdf-schema#label> "N79248"@en .
+<http://slipo.eu/geodata#osm-points_N79248> <http://www.opengis.net/ont/geosparql#hasGeometry> <http://slipo.eu/geodata#Geom_osm-points_N79248> .
+<http://slipo.eu/geodata#Geom_osm-points_N79248> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/sf#POINT> .
+<http://slipo.eu/geodata#Geom_osm-points_N79248> <http://www.opengis.net/ont/geosparql#asWKT> "<http://www.opengis.net/def/crs/EPSG/0/4326> POINT (10.7641113 59.9478741)"^^<http://www.opengis.net/ont/geosparql#wktLiteral> .
+<http://slipo.eu/geodata#osm-points_N79248> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/geosparql#Feature> .
+<http://slipo.eu/geodata#osm-points_N79248> <http://slipo.eu/geodata#name> "Nydalsveien"@en .
+<http://slipo.eu/geodata#osm-points_N79248> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/geodata#BUSSTOP> .
+<http://slipo.eu/geodata#osm-points_N79349> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/geodata#osm-points> .
+<http://slipo.eu/geodata#osm-points_N79349> <http://www.w3.org/2000/01/rdf-schema#label> "N79349"@en .
+<http://slipo.eu/geodata#osm-points_N79349> <http://www.opengis.net/ont/geosparql#hasGeometry> <http://slipo.eu/geodata#Geom_osm-points_N79349> .
+<http://slipo.eu/geodata#Geom_osm-points_N79349> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/sf#POINT> .
+<http://slipo.eu/geodata#Geom_osm-points_N79349> <http://www.opengis.net/ont/geosparql#asWKT> "<http://www.opengis.net/def/crs/EPSG/0/4326> POINT (10.675326 59.9278853)"^^<http://www.opengis.net/ont/geosparql#wktLiteral> .
+<http://slipo.eu/geodata#osm-points_N79349> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/geosparql#Feature> .
+<http://slipo.eu/geodata#osm-points_N79349> <http://slipo.eu/geodata#name> "Hoff terrasse"@en .
+<http://slipo.eu/geodata#osm-points_N79349> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/geodata#BUSSTOP> .
+<http://slipo.eu/geodata#osm-points_N79400> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/geodata#osm-points> .
+<http://slipo.eu/geodata#osm-points_N79400> <http://www.w3.org/2000/01/rdf-schema#label> "N79400"@en .
+<http://slipo.eu/geodata#osm-points_N79400> <http://www.opengis.net/ont/geosparql#hasGeometry> <http://slipo.eu/geodata#Geom_osm-points_N79400> .
+<http://slipo.eu/geodata#Geom_osm-points_N79400> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/sf#POINT> .
+<http://slipo.eu/geodata#Geom_osm-points_N79400> <http://www.opengis.net/ont/geosparql#asWKT> "<http://www.opengis.net/def/crs/EPSG/0/4326> POINT (10.6402566 59.9144675)"^^<http://www.opengis.net/ont/geosparql#wktLiteral> .
+<http://slipo.eu/geodata#osm-points_N79400> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/geosparql#Feature> .
+<http://slipo.eu/geodata#osm-points_N79400> <http://slipo.eu/geodata#name> "Lysaker bru"@en .
+<http://slipo.eu/geodata#osm-points_N79400> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/geodata#BUSSTOP> .
+<http://slipo.eu/geodata#osm-points_N79463> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/geodata#osm-points> .
+<http://slipo.eu/geodata#osm-points_N79463> <http://www.w3.org/2000/01/rdf-schema#label> "N79463"@en .
+<http://slipo.eu/geodata#osm-points_N79463> <http://www.opengis.net/ont/geosparql#hasGeometry> <http://slipo.eu/geodata#Geom_osm-points_N79463> .
+<http://slipo.eu/geodata#Geom_osm-points_N79463> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/sf#POINT> .
+<http://slipo.eu/geodata#Geom_osm-points_N79463> <http://www.opengis.net/ont/geosparql#asWKT> "<http://www.opengis.net/def/crs/EPSG/0/4326> POINT (10.7613053 59.9307562)"^^<http://www.opengis.net/ont/geosparql#wktLiteral> .
+<http://slipo.eu/geodata#osm-points_N79463> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/geosparql#Feature> .
+<http://slipo.eu/geodata#osm-points_N79463> <http://slipo.eu/geodata#name> "Biermanns gate"@en .
+<http://slipo.eu/geodata#osm-points_N79463> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/geodata#BUSSTOP> .
+<http://slipo.eu/geodata#osm-points_N81048> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/geodata#osm-points> .
+<http://slipo.eu/geodata#osm-points_N81048> <http://www.w3.org/2000/01/rdf-schema#label> "N81048"@en .
+<http://slipo.eu/geodata#osm-points_N81048> <http://www.opengis.net/ont/geosparql#hasGeometry> <http://slipo.eu/geodata#Geom_osm-points_N81048> .
+<http://slipo.eu/geodata#Geom_osm-points_N81048> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/sf#POINT> .
+<http://slipo.eu/geodata#Geom_osm-points_N81048> <http://www.opengis.net/ont/geosparql#asWKT> "<http://www.opengis.net/def/crs/EPSG/0/4326> POINT (15.6377601 58.415078)"^^<http://www.opengis.net/ont/geosparql#wktLiteral> .
+<http://slipo.eu/geodata#osm-points_N81048> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/geosparql#Feature> .
+<http://slipo.eu/geodata#osm-points_N81048> <http://slipo.eu/geodata#name> "Anders Ljungstedts gymnasium"@en .
+<http://slipo.eu/geodata#osm-points_N81048> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/geodata#BUSSTOP> .
+<http://slipo.eu/geodata#osm-points_N81062> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/geodata#osm-points> .
+<http://slipo.eu/geodata#osm-points_N81062> <http://www.w3.org/2000/01/rdf-schema#label> "N81062"@en .
+<http://slipo.eu/geodata#osm-points_N81062> <http://www.opengis.net/ont/geosparql#hasGeometry> <http://slipo.eu/geodata#Geom_osm-points_N81062> .
+<http://slipo.eu/geodata#Geom_osm-points_N81062> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/sf#POINT> .
+<http://slipo.eu/geodata#Geom_osm-points_N81062> <http://www.opengis.net/ont/geosparql#asWKT> "<http://www.opengis.net/def/crs/EPSG/0/4326> POINT (15.6541936 58.4179992)"^^<http://www.opengis.net/ont/geosparql#wktLiteral> .
+<http://slipo.eu/geodata#osm-points_N81062> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/geosparql#Feature> .
+<http://slipo.eu/geodata#osm-points_N81062> <http://slipo.eu/geodata#name> "Hagalundsvägen"@en .
+<http://slipo.eu/geodata#osm-points_N81062> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/geodata#BUSSTOP> .
+<http://slipo.eu/geodata#osm-points_N81186> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/geodata#osm-points> .
+<http://slipo.eu/geodata#osm-points_N81186> <http://www.w3.org/2000/01/rdf-schema#label> "N81186"@en .
+<http://slipo.eu/geodata#osm-points_N81186> <http://www.opengis.net/ont/geosparql#hasGeometry> <http://slipo.eu/geodata#Geom_osm-points_N81186> .
+<http://slipo.eu/geodata#Geom_osm-points_N81186> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/sf#POINT> .
+<http://slipo.eu/geodata#Geom_osm-points_N81186> <http://www.opengis.net/ont/geosparql#asWKT> "<http://www.opengis.net/def/crs/EPSG/0/4326> POINT (15.6133128 58.4028714)"^^<http://www.opengis.net/ont/geosparql#wktLiteral> .
+<http://slipo.eu/geodata#osm-points_N81186> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/geosparql#Feature> .
+<http://slipo.eu/geodata#osm-points_N81186> <http://slipo.eu/geodata#name> "Kaserngatan"@en .
+<http://slipo.eu/geodata#osm-points_N81186> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/geodata#BUSSTOP> .
+<http://slipo.eu/geodata#osm-points_N81267> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/geodata#osm-points> .
+<http://slipo.eu/geodata#osm-points_N81267> <http://www.w3.org/2000/01/rdf-schema#label> "N81267"@en .
+<http://slipo.eu/geodata#osm-points_N81267> <http://www.opengis.net/ont/geosparql#hasGeometry> <http://slipo.eu/geodata#Geom_osm-points_N81267> .
+<http://slipo.eu/geodata#Geom_osm-points_N81267> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/sf#POINT> .
+<http://slipo.eu/geodata#Geom_osm-points_N81267> <http://www.opengis.net/ont/geosparql#asWKT> "<http://www.opengis.net/def/crs/EPSG/0/4326> POINT (15.5663324 58.3898178)"^^<http://www.opengis.net/ont/geosparql#wktLiteral> .
+<http://slipo.eu/geodata#osm-points_N81267> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/geosparql#Feature> .
+<http://slipo.eu/geodata#osm-points_N81267> <http://slipo.eu/geodata#name> "Isberget"@en .
+<http://slipo.eu/geodata#osm-points_N81267> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/geodata#BUSSTOP> .

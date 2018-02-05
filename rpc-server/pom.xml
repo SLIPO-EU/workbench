@@ -106,7 +106,9 @@
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-web</artifactId>
         </dependency>
-        
+
+        <!-- Docker client -->
+
         <dependency>
             <groupId>com.spotify</groupId>
             <artifactId>docker-client</artifactId>
@@ -117,6 +119,14 @@
                     <artifactId>logback-classic</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+
+        <!-- Model and schedule workflows -->
+
+        <dependency>
+            <groupId>eu.slipo</groupId>
+            <artifactId>workflows</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
         </dependency>
 
     </dependencies>
@@ -162,7 +172,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <excludes>
-                        <exclude>eu.slipo.workbench.rpc.integration.**</exclude>
+                        <exclude>eu.slipo.workbench.rpc.tests.integration.**</exclude>
                     </excludes>
                 </configuration>
             </plugin>
@@ -173,7 +183,7 @@
                 <configuration>
                     <skipITs>${integration-tests.skip}</skipITs>
                     <includes>
-                        <include>eu.slipo.workbench.rpc.integration.workflow.mergesort.*</include>
+                        <include>eu.slipo.workbench.rpc.tests.integration.jobs.*</include>
                     </includes>
                 </configuration>
             </plugin>

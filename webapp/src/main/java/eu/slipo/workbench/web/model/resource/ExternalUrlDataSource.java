@@ -8,7 +8,7 @@ public class ExternalUrlDataSource extends DataSource {
     private String url;
 
     public ExternalUrlDataSource() {
-        super(EnumDataSource.EXTERNAL_URL);
+        super(EnumDataSourceType.EXTERNAL_URL);
     }
 
     /**

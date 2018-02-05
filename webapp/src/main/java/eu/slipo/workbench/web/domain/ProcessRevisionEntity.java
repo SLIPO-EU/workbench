@@ -22,27 +22,30 @@ import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 
 import eu.slipo.workbench.common.domain.AccountEntity;
+import eu.slipo.workbench.web.domain.attributeconverter.ProcessConfigurationConverter;
 import eu.slipo.workbench.web.model.process.ProcessDefinitionUpdate;
 import eu.slipo.workbench.web.model.process.ProcessRecord;
 
 @Entity(name = "ProcessRevision")
 @Table(
     schema = "public",
-    name = "process_history",
-    uniqueConstraints = { @UniqueConstraint(name = "uq_process_parent_id_version", columnNames = { "parent_id", "`version`" }), }
+    name = "process_revision",
+    uniqueConstraints = { 
+        @UniqueConstraint(name = "uq_process_parent_id_version", columnNames = { "parent", "`version`" }), }
 )
 public class ProcessRevisionEntity {
 
     @Id
     @Column(name = "id")
-    @SequenceGenerator(sequenceName = "process_history_id_seq", name = "process_history_id_seq", initialValue = 1, allocationSize = 1)
-    @GeneratedValue(generator = "process_history_id_seq", strategy = GenerationType.SEQUENCE)
+    @SequenceGenerator(
+        sequenceName = "process_revision_id_seq", name = "process_revision_id_seq", initialValue = 1, allocationSize = 1)
+    @GeneratedValue(generator = "process_revision_id_seq", strategy = GenerationType.SEQUENCE)
     long id;
 
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "parent_id", nullable = false)
-    ProcessEntity process;
+    @JoinColumn(name = "parent", nullable = false)
+    ProcessEntity parent;
 
     @Column(name = "`version`")
     long version;
@@ -68,19 +71,19 @@ public class ProcessRevisionEntity {
     ZonedDateTime executedOn;
 
     @NotNull
-    @Basic()
+    @Column(name = "definition")
     @Convert(converter = ProcessConfigurationConverter.class)
-    ProcessDefinitionUpdate configuration;
+    ProcessDefinitionUpdate definition;
 
     @OneToMany(mappedBy = "process", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     List<ProcessExecutionEntity> executions = new ArrayList<>();
 
-    public ProcessEntity getProcess() {
-        return process;
+    public ProcessEntity getParent() {
+        return parent;
     }
 
-    public void setProcess(ProcessEntity process) {
-        this.process = process;
+    public void setParent(ProcessEntity parent) {
+        this.parent = parent;
     }
 
     public long getVersion() {
@@ -131,12 +134,12 @@ public class ProcessRevisionEntity {
         this.executedOn = executedOn;
     }
 
-    public ProcessDefinitionUpdate getConfiguration() {
-        return configuration;
+    public ProcessDefinitionUpdate getDefinition() {
+        return definition;
     }
 
-    public void setConfiguration(ProcessDefinitionUpdate configuration) {
-        this.configuration = configuration;
+    public void setDefinition(ProcessDefinitionUpdate definition) {
+        this.definition = definition;
     }
 
     public long getId() {
@@ -148,18 +151,18 @@ public class ProcessRevisionEntity {
     }
 
     public ProcessRecord toProcessRecord(boolean includeExecutions, boolean includeSteps) {
-        ProcessRecord p = new ProcessRecord(this.process.id, this.version);
+        ProcessRecord p = new ProcessRecord(this.parent.id, this.version);
 
-        p.setCreatedOn(this.process.createdOn);
-        p.setCreatedBy(this.process.createdBy.getId(), this.process.createdBy.getFullName());
+        p.setCreatedOn(this.parent.createdOn);
+        p.setCreatedBy(this.parent.createdBy.getId(), this.parent.createdBy.getFullName());
         p.setUpdatedOn(this.updatedOn);
         p.setUpdatedBy(this.updatedBy.getId(), this.updatedBy.getFullName());
         p.setDescription(this.description);
         p.setName(this.name);
         p.setExecutedOn(this.executedOn);
-        p.setTask(this.process.getTask());
-        p.setConfiguration(this.configuration);
-        p.setTemplate(this.process.template);
+        p.setTask(this.parent.getTask());
+        p.setConfiguration(this.definition);
+        p.setTemplate(this.parent.isTemplate);
 
         if (includeExecutions) {
             for (ProcessExecutionEntity e : this.getExecutions()) {

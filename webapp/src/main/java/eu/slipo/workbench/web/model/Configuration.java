@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import eu.slipo.workbench.web.model.resource.EnumDataSource;
+import eu.slipo.workbench.web.model.resource.EnumDataSourceType;
 
 /**
  * Application configuration settings
@@ -25,7 +25,7 @@ public class Configuration {
 
         private List<ValueListItem<EnumDataFormat>> dataFormats = new ArrayList<ValueListItem<EnumDataFormat>>();
 
-        private List<ValueListItem<EnumDataSource>> dataSources = new ArrayList<ValueListItem<EnumDataSource>>();
+        private List<ValueListItem<EnumDataSourceType>> dataSources = new ArrayList<ValueListItem<EnumDataSourceType>>();
 
         private List<ValueListItem<EnumResourceType>> resourceTypes = new ArrayList<ValueListItem<EnumResourceType>>();
 
@@ -41,7 +41,7 @@ public class Configuration {
             return Collections.unmodifiableList(dataFormats);
         }
 
-        public List<ValueListItem<EnumDataSource>> getDataSources() {
+        public List<ValueListItem<EnumDataSourceType>> getDataSources() {
             return Collections.unmodifiableList(dataSources);
         }
 
@@ -61,7 +61,7 @@ public class Configuration {
             this.dataFormats.add(f);
         }
 
-        public void addDataSource(ValueListItem<EnumDataSource> s) {
+        public void addDataSource(ValueListItem<EnumDataSourceType> s) {
             this.dataSources.add(s);
         }
 
