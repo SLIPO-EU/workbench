@@ -8,10 +8,12 @@ import java.io.OutputStream;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
@@ -367,9 +369,11 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
         // Create working directory hierarchy
         //
         
-        Files.createDirectory(workDir, directoryAttribute);
-        Files.createDirectory(inputDir, directoryAttribute);
-        Files.createDirectory(outputDir, directoryAttribute);
+        for (Path p: Arrays.asList(workDir, inputDir, outputDir)) {
+            try {
+                Files.createDirectory(p, directoryAttribute);
+            } catch (FileAlreadyExistsException ex) {}
+        }
         
         //
         // Put (extract or link) each input into our input directory
@@ -391,10 +395,10 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
                     }
                 }
             } else {
-                // Link to each input from inside input directory
+                // Copy each input to input directory
                 for (Path inputPath: input) {
                     String name = inputPath.getFileName().toString();
-                    createLinkFromInputDirectory(inputPath, name);
+                    copyToInputDirectory(inputPath, name);
                     inputFiles.add(name);
                 }
             }
@@ -410,7 +414,7 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
             Files.write(
                 workDir.resolve(u.path()),
                 configData.getBytes(StandardCharsets.UTF_8),
-                StandardOpenOption.CREATE_NEW);
+                StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         }
         
         //
@@ -450,32 +454,36 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
     }
     
     /**
-     * Link to the given input file from inside our input directory.
+     * Copy given input file to our input directory.
      * 
      * <p>
-     * A shallow link will be created, i.e. there is no attempt to create a nested structure 
+     * A shallow hard link will be created, i.e. there is no attempt to create a nested structure 
      * inside input directory. If a hard link cannot be created (because of file-system limitations),
-     * we reside to a symbolic link. 
-     * Note that in the later case (symbolic link), we assume that no input will be moved/deleted 
-     * throughout the whole job execution! 
+     * we fallback to a plain copying. 
      * 
-     * @param inputPath The input path to link to
-     * @param name The link name (relative to input directory)
+     * @param source The input path to link to
+     * @param filename The link name (relative to input directory)
      * @throws IOException 
      */
-    private void createLinkFromInputDirectory(Path inputPath, String name) 
+    private void copyToInputDirectory(Path source, String filename) 
         throws IOException
     {
-        Path dst = inputDir.resolve(name);
+        Path destination = inputDir.resolve(filename);
+        Files.deleteIfExists(destination);
+        
+        // Try to link
+        
         Path link = null;
         try {
-            link = Files.createLink(dst, inputPath);
+            link = Files.createLink(destination, source);
         } catch (FileSystemException e) {
             link = null;
         }
         
+        // If no link was created, fallback to copying
+        
         if (link == null) {
-            link = Files.createSymbolicLink(dst, inputPath);
+            Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
         }
     }
 }
