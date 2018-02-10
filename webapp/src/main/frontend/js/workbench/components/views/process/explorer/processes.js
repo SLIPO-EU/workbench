@@ -169,14 +169,14 @@ export default class Processes extends React.Component {
         onPageChange={(index) => {
           this.props.setPager({ ...this.props.pager, index });
           this.props.fetchProcesses({
-            ...this.props.filters,
+            query: {...this.props.filters},
             pagingOptions: { pageIndex: index, pageSize: this.props.pager.size }
           });
         }}
         onPageSizeChange={(size) => {
           this.props.setPager({ ...this.props.pager, size });
           this.props.fetchProcesses({
-            ...this.props.filters,
+            query: {...this.props.filters},
             pagingOptions: { pageIndex: this.props.pager.index, pageSize: size }
           });
         }}

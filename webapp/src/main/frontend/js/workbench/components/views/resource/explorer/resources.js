@@ -223,14 +223,14 @@ export default class Resources extends React.Component {
         onPageChange={(index) => {
           this.props.setPager({ ...this.props.pager, index });
           this.props.fetchResources({
-            ...this.props.filters,
+            query: {...this.props.filters},
             pagingOptions: { pageIndex: index, pageSize: this.props.pager.size }
           });
         }}
         onPageSizeChange={(size) => {
           this.props.setPager({ ...this.props.pager, size });
           this.props.fetchResources({
-            ...this.props.filters,
+            query: {...this.props.filters},
             pagingOptions: { pageIndex: this.props.pager.index, pageSize: size }
           });
         }}

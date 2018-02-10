@@ -59,7 +59,7 @@ class ProcessExecutionExplorer extends React.Component {
    */
   componentWillMount() {
     this.props.fetchExecutions({
-      ...this.props.filters,
+      query: {...this.props.filters},
     });
   }
 

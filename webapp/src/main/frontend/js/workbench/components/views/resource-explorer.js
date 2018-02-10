@@ -59,7 +59,7 @@ class ResourceExplorer extends React.Component {
    */
   componentWillMount() {
     this.props.fetchResources({
-      ...this.props.filters,
+      query: {...this.props.filters},
     });
   }
 

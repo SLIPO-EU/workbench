@@ -39,7 +39,7 @@ export default class Filters extends React.Component {
 
   clear() {
     this.props.resetFilters();
-    this.props.fetchExecutions({});
+    this.props.fetchExecutions({query: {}});
   }
 
   search(e) {
@@ -48,7 +48,7 @@ export default class Filters extends React.Component {
     e.preventDefault();
 
     this.props.fetchExecutions({
-      ...this.props.filters,
+      query: {...this.props.filters},
     });
   }
 
