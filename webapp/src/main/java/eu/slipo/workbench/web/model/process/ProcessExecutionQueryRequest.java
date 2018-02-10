@@ -18,7 +18,8 @@ public class ProcessExecutionQueryRequest
 
     public PageRequest getPageRequest()
     {
-        return new PageRequest(pagingOptions.pageIndex, pagingOptions.pageSize);
+        return pagingOptions == null? 
+            null : new PageRequest(pagingOptions.pageIndex, pagingOptions.pageSize);
     }
     
     public void setPagingOptions(QueryPagingOptions pagingOptions)

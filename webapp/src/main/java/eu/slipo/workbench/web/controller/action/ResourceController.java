@@ -3,6 +3,7 @@ package eu.slipo.workbench.web.controller.action;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -137,12 +138,11 @@ public class ResourceController
      * @param authentication the authenticated principal
      * @param file uploaded resource file
      * @param data registration data
-     * @return
      */
     @RequestMapping(value = "/action/resource/upload", method = RequestMethod.PUT)
     public RestResponse<?> uploadResource(
         Authentication authentication, 
-        @RequestPart("file") MultipartFile file, @RequestPart("data") RegistrationRequest request) 
+        @RequestPart("file") MultipartFile file, @RequestPart("data") RegistrationRequest request) throws IOException 
     {
         try {
             // Create a temporary file

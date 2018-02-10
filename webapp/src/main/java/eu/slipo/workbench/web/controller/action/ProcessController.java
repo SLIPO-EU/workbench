@@ -66,7 +66,8 @@ public class ProcessController {
         query.setTemplate(false);
         query.setCreatedBy(authenticationFacade.getCurrentUserId());
         
-        QueryResultPage<ProcessRecord> r = processRepository.find(query, request.getPageRequest());
+        PageRequest pageReq = request.getPageRequest();
+        QueryResultPage<ProcessRecord> r = processRepository.find(query, pageReq);
 
         return RestResponse.result(QueryResult.create(r));
     }
@@ -90,7 +91,6 @@ public class ProcessController {
         query.setCreatedBy(authenticationFacade.getCurrentUserId());
         
         PageRequest pageReq = request.getPageRequest();
-        
         QueryResultPage<ProcessExecutionRecord> r = processRepository.find(query, pageReq);
 
         return RestResponse.result(QueryResult.create(r));
