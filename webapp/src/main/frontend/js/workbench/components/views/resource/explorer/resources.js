@@ -65,7 +65,7 @@ const resourceColumns = [{
   Header: 'Version',
   width: 60,
   Expander: ({ isExpanded, ...rest }) => {
-    if (rest.original.versions.length > 0) {
+    if (rest.original.revisions.length > 0) {
       return (
         <div>
           {!isExpanded ? rest.original.version : <i className="fa fa-code-fork" ></i>}
@@ -206,7 +206,7 @@ export default class Resources extends React.Component {
     // TODO: Move to reducer
     this.props.items.forEach((item) => {
       item.selected = (this.props.selectedResources.some((r) => r.id === item.id && r.version === item.version));
-      item.versions.forEach((item) => {
+      item.revisions.forEach((item) => {
         item.selected = (this.props.selectedResources.some((r) => r.id === item.id && r.version === item.version));
       });
     });
@@ -249,7 +249,7 @@ export default class Resources extends React.Component {
         showPagination
         SubComponent={
           row => {
-            if (row.original.versions.length > 0) {
+            if (row.original.revisions.length > 0) {
               return (
                 <div style={{ margin: "0px -1px" }}>
                   <Table
@@ -257,9 +257,9 @@ export default class Resources extends React.Component {
                     id="resource-explore"
                     minRows={1}
                     columns={resourceHistoryColumns}
-                    data={row.original.versions}
+                    data={row.original.revisions}
                     noDataText="No other versions"
-                    defaultPageSize={row.original.versions.length}
+                    defaultPageSize={row.original.revisions.length}
                     showPagination={false}
                     getTrProps={(state, rowInfo) => ({
                       onClick: (e) => {

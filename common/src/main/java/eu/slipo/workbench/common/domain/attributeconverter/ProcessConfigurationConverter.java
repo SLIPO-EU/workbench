@@ -8,7 +8,7 @@ import javax.persistence.AttributeConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import com.bedatadriven.jackson.datatype.jts.JtsModule;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,12 +21,11 @@ public class ProcessConfigurationConverter implements AttributeConverter<Process
     private static final Logger logger = LoggerFactory.getLogger(ProcessConfigurationConverter.class);
 
     private static ObjectMapper objectMapper;
-
-    @Autowired
-    public void setObjectMapper(ObjectMapper objectMapper) {
-        ProcessConfigurationConverter.objectMapper = objectMapper;
+    static {
+        objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JtsModule());
     }
-
+    
     @Override
     public String convertToDatabaseColumn(ProcessDefinition attribute) {
         try {

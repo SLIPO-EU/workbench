@@ -34,7 +34,7 @@ public class ProcessExecutionStepEntity {
     @Column(name = "id")
     @SequenceGenerator(sequenceName = "process_execution_step_id_seq", name = "process_execution_step_id_seq", initialValue = 1, allocationSize = 1)
     @GeneratedValue(generator = "process_execution_step_id_seq", strategy = GenerationType.SEQUENCE)
-    long id;
+    long id = -1L;
 
     @NotNull
     @ManyToOne

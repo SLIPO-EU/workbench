@@ -35,7 +35,7 @@ class ResourceDetails extends React.Component {
 
   render() {
     const { resource, version, intl } = this.props;
-    const r = (resource.version === version) ? resource : resource.versions.find((v) => v.version === version);
+    const r = (resource.version === version) ? resource : resource.revisions.find((v) => v.version === version);
 
     return (
       <div>
@@ -60,7 +60,7 @@ class ResourceDetails extends React.Component {
             <TextField
               id="versionCount"
               label="# of Versions"
-              value={(resource.versions.length || 1).toString()}
+              value={(resource.revisions.length || 1).toString()}
               readOnly={true}
             />
           </Col>

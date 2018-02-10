@@ -40,7 +40,7 @@ public class ResourceEntity {
     @SequenceGenerator(
         sequenceName = "resource_id_seq", name = "resource_id_seq", initialValue = 1, allocationSize = 1)
     @GeneratedValue(generator = "resource_id_seq", strategy = GenerationType.SEQUENCE)
-    long id;
+    long id = -1L;
 
     @Column(name = "`version`")
     long version;
@@ -115,7 +115,7 @@ public class ResourceEntity {
     UUID tableName;
 
     @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    List<ResourceRevisionEntity> versions = new ArrayList<>();
+    List<ResourceRevisionEntity> revisions = new ArrayList<>();
 
     public ResourceEntity() {
     }
@@ -248,32 +248,36 @@ public class ResourceEntity {
         return createdBy;
     }
 
-    public List<ResourceRevisionEntity> getVersions() {
-        return versions;
+    public List<ResourceRevisionEntity> getRevisions() {
+        return revisions;
     }
 
+    public void addRevision(ResourceRevisionEntity revisionEntity)
+    {
+        revisions.add(revisionEntity);
+    }
+    
     public ResourceRecord toResourceRecord() 
     {
-        ResourceRecord r = new ResourceRecord(this.id, this.version);
+        ResourceRecord r = new ResourceRecord(id, version);
 
-        r.setCreatedOn(this.createdOn);
-        r.setCreatedBy(this.createdBy.getId(), this.createdBy.getFullName());
-        r.setUpdatedOn(this.updatedOn);
-        r.setUpdatedBy(this.updatedBy.getId(), this.updatedBy.getFullName());
-        r.setDataSource(this.sourceType);
-        r.setInputFormat(this.inputFormat);
-        r.setOutputFormat(this.outputFormat);
-        r.setFilePath(this.path);
-        r.setFileSize(this.size);
-        r.setMetadata(this.name, this.description, this.numberOfEntities, this.boundingBox);
-        r.setProcessExecutionId(this.processExecution.getId());
-        r.setTable(this.tableName);
-        r.setType(this.type);
+        r.setCreatedOn(createdOn);
+        r.setCreatedBy(createdBy.getId(), createdBy.getFullName());
+        r.setUpdatedOn(updatedOn);
+        r.setUpdatedBy(updatedBy.getId(), updatedBy.getFullName());
+        r.setDataSource(sourceType);
+        r.setInputFormat(inputFormat);
+        r.setOutputFormat(outputFormat);
+        r.setFilePath(path);
+        r.setFileSize(size);
+        r.setMetadata(name, description, numberOfEntities, boundingBox);
+        r.setProcessExecutionId(processExecution.getId());
+        r.setTable(tableName);
+        r.setType(type);
 
-        this.getVersions()
-            .stream()
+        revisions.stream()
             .sorted((h1, h2) -> Long.compare(h2.getVersion(), h1.getVersion()))
-            .forEach((h) -> r.addVersion(h.toResourceRecord()));
+            .forEach((h) -> r.addRevision(h.toResourceRecord()));
 
         return r;
     }

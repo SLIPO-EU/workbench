@@ -39,7 +39,7 @@ public class ResourceRevisionEntity {
     @SequenceGenerator(
         sequenceName = "resource_revision_id_seq", name = "resource_revision_id_seq", initialValue = 1, allocationSize = 1)
     @GeneratedValue(generator = "resource_revision_id_seq", strategy = GenerationType.SEQUENCE)
-    long id;
+    long id = -1L;
 
     @NotNull
     @ManyToOne
@@ -231,21 +231,21 @@ public class ResourceRevisionEntity {
 
     public ResourceRecord toResourceRecord() 
     {
-        ResourceRecord r = new ResourceRecord(this.parent.id, this.version);
+        ResourceRecord r = new ResourceRecord(parent.id, version);
 
-        r.setCreatedOn(this.parent.createdOn);
-        r.setCreatedBy(this.parent.createdBy.getId(), this.parent.createdBy.getFullName());
-        r.setUpdatedOn(this.updatedOn);
-        r.setUpdatedBy(this.updatedBy.getId(), this.updatedBy.getFullName());
-        r.setDataSource(this.sourceType);
-        r.setInputFormat(this.inputFormat);
-        r.setOutputFormat(this.outputFormat);
-        r.setFilePath(this.path);
-        r.setFileSize(this.size);
-        r.setMetadata(this.name, this.description, this.numberOfEntities, this.boundingBox);
-        r.setProcessExecutionId(this.processExecution.getId());
-        r.setTable(this.tableName);
-        r.setType(this.type);
+        r.setCreatedOn(parent.createdOn);
+        r.setCreatedBy(parent.createdBy.getId(), parent.createdBy.getFullName());
+        r.setUpdatedOn(updatedOn);
+        r.setUpdatedBy(updatedBy.getId(), updatedBy.getFullName());
+        r.setDataSource(sourceType);
+        r.setInputFormat(inputFormat);
+        r.setOutputFormat(outputFormat);
+        r.setFilePath(path);
+        r.setFileSize(size);
+        r.setMetadata(name, description, numberOfEntities, boundingBox);
+        r.setProcessExecutionId(processExecution.getId());
+        r.setTable(tableName);
+        r.setType(type);
 
         return r;
     }

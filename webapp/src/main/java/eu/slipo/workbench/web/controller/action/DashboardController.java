@@ -42,9 +42,9 @@ public class DashboardController {
             long id = i + 1;
             ResourceRecord resource = this.createResource(id, 1);
 
-            resource.addVersion(this.createResource(id, 2));
-            resource.addVersion(this.createResource(id, 3));
-            resource.addVersion(this.createResource(id, 4));
+            resource.addRevision(this.createResource(id, 2));
+            resource.addRevision(this.createResource(id, 3));
+            resource.addRevision(this.createResource(id, 4));
 
             dashboard.addResouce(resource);
         }

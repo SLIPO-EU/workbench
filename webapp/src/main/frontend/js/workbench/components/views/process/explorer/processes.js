@@ -13,7 +13,7 @@ const processColumns = [{
   Header: 'Version',
   width: 60,
   Expander: ({ isExpanded, ...rest }) => {
-    if (rest.original.versions.length > 0) {
+    if (rest.original.revisions.length > 0) {
       return (
         <div>
           {!isExpanded ? rest.original.version : <i className="fa fa-code-fork" ></i>}
@@ -195,7 +195,7 @@ export default class Processes extends React.Component {
         showPagination
         SubComponent={
           row => {
-            if (row.original.versions.length > 0) {
+            if (row.original.revisions.length > 0) {
               return (
                 <div style={{ margin: "0px -1px" }}>
                   <Table
@@ -203,9 +203,9 @@ export default class Processes extends React.Component {
                     id="process-history-explorer"
                     minRows={1}
                     columns={getProcessHistoryColumns(row)}
-                    data={row.original.versions}
+                    data={row.original.revisions}
                     noDataText="No other versions"
-                    defaultPageSize={row.original.versions.length}
+                    defaultPageSize={row.original.revisions.length}
                     showPagination={false}
                     getTrProps={(state, rowInfo) => ({
                       onClick: (e) => {

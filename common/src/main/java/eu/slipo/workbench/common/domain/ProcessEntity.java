@@ -37,7 +37,7 @@ public class ProcessEntity {
         sequenceName = "process_id_seq", name = "process_id_seq", initialValue = 1, allocationSize = 1)
     @GeneratedValue(
         generator = "process_id_seq", strategy = GenerationType.SEQUENCE)
-    long id;
+    long id = -1L;
 
     @Column(name = "`version`")
     long version;
@@ -50,7 +50,6 @@ public class ProcessEntity {
     @Column(name = "`name`")
     String name;
 
-    @NotNull
     @Column(name = "description")
     String description;
 
@@ -82,7 +81,7 @@ public class ProcessEntity {
 
     @NotNull
     @Column(name = "is_template")
-    boolean isTemplate;
+    boolean isTemplate = false;
 
     @NotNull
     @Enumerated(EnumType.STRING)
@@ -90,8 +89,18 @@ public class ProcessEntity {
     private EnumProcessTaskType taskType;
 
     @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    List<ProcessRevisionEntity> versions = new ArrayList<>();
+    List<ProcessRevisionEntity> revisions = new ArrayList<>();
 
+    protected ProcessEntity() {}
+    
+    public ProcessEntity(ProcessDefinition definition) 
+    {
+        this.version = 1;
+        this.definition = definition;
+        this.name = definition.getName();
+        this.description = definition.getDescription();
+    }
+    
     public long getVersion() {
         return version;
     }
@@ -188,31 +197,40 @@ public class ProcessEntity {
         return createdBy;
     }
 
-    public List<ProcessRevisionEntity> getVersions() {
-        return versions;
+    public List<ProcessRevisionEntity> getRevisions() {
+        return revisions;
+    }
+    
+    public void addRevision(ProcessRevisionEntity revisionEntity)
+    {
+        revisions.add(revisionEntity);
     }
 
     public ProcessRecord toProcessRecord()
     {
-        return toProcessRecord(false, false);
+        return toProcessRecord(true, false, false);
     }
     
-    public ProcessRecord toProcessRecord(boolean includeExecutions, boolean includeSteps) {
-        ProcessRecord p = new ProcessRecord(this.id, this.version);
+    public ProcessRecord toProcessRecord(
+        boolean includeRevisions, boolean includeExecutions, boolean includeSteps) 
+    {
+        ProcessRecord p = new ProcessRecord(id, version);
 
-        p.setCreatedOn(this.createdOn);
-        p.setCreatedBy(this.createdBy.getId(), this.createdBy.getFullName());
-        p.setUpdatedOn(this.updatedOn);
-        p.setUpdatedBy(this.updatedBy.getId(), this.updatedBy.getFullName());
-        p.setDescription(this.description);
-        p.setName(this.name);
-        p.setExecutedOn(this.executedOn);
-        p.setTaskType(this.taskType);
-        p.setConfiguration(this.definition);
-        p.setTemplate(this.isTemplate);
+        p.setCreatedOn(createdOn);
+        p.setCreatedBy(createdBy.getId(), createdBy.getFullName());
+        p.setUpdatedOn(updatedOn);
+        p.setUpdatedBy(updatedBy.getId(), updatedBy.getFullName());
+        p.setDescription(description);
+        p.setName(name);
+        p.setExecutedOn(executedOn);
+        p.setTaskType(taskType);
+        p.setDefinition(definition);
+        p.setTemplate(isTemplate);
 
-        for (ProcessRevisionEntity h : this.getVersions()) {
-            p.addVersion(h.toProcessRecord(includeExecutions, includeSteps));
+        if (includeRevisions) {
+            for (ProcessRevisionEntity h : revisions) {
+                p.addRevision(h.toProcessRecord(includeExecutions, includeSteps));
+            }
         }
 
         return p;

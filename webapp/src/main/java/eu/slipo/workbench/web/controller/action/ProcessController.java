@@ -11,23 +11,25 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import eu.slipo.workbench.common.model.ApplicationException;
+import eu.slipo.workbench.common.model.BasicErrorCode;
 import eu.slipo.workbench.common.model.Error;
 import eu.slipo.workbench.common.model.QueryResultPage;
 import eu.slipo.workbench.common.model.RestResponse;
 import eu.slipo.workbench.common.model.process.EnumProcessTaskType;
-import eu.slipo.workbench.common.model.process.ProcessDefinitionView;
+import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.ProcessErrorCode;
 import eu.slipo.workbench.common.model.process.ProcessExecutionQuery;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.process.ProcessQuery;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
-import eu.slipo.workbench.common.model.process.ProcessViewResult;
 import eu.slipo.workbench.common.repository.ProcessRepository;
 import eu.slipo.workbench.web.model.QueryResult;
 import eu.slipo.workbench.web.model.process.ProcessCreateRequest;
 import eu.slipo.workbench.web.model.process.ProcessExecutionQueryRequest;
 import eu.slipo.workbench.web.model.process.ProcessQueryRequest;
-import eu.slipo.workbench.web.service.AuthenticationFacade;
+import eu.slipo.workbench.web.model.process.ProcessRecordView;
+import eu.slipo.workbench.web.service.IAuthenticationFacade;
 import eu.slipo.workbench.web.service.ProcessService;
 
 /**
@@ -44,7 +46,7 @@ public class ProcessController {
     private ProcessService processService;
 
     @Autowired
-    private AuthenticationFacade authenticationFacade;
+    private IAuthenticationFacade authenticationFacade;
     
     /**
      * Search for processes
@@ -117,18 +119,18 @@ public class ProcessController {
      * includes the execution steps
      *
      * @param authentication the authenticated principal
-     * @param processId the process id
-     * @param processVersion the process version
+     * @param id the process id
+     * @param version the process version
      * @param executionId the execution id
      * @return a list of {@link ProcessExecutionRecord}
      */
     @RequestMapping(
-        value = "/action/process/{processId}/{processVersion}/execution/{executionId}", method = RequestMethod.GET)
+        value = "/action/process/{id}/{version}/execution/{executionId}", method = RequestMethod.GET)
     public RestResponse<ProcessExecutionRecord> getProcessExecution(
         Authentication authentication, 
-        @PathVariable long processId, @PathVariable long processVersion, @PathVariable long executionId) 
+        @PathVariable long id, @PathVariable long version, @PathVariable long executionId) 
     {
-        ProcessExecutionRecord record = processRepository.findOne(processId, processVersion, executionId);
+        ProcessExecutionRecord record = processRepository.findOne(id, version, executionId);
         if (record == null) {
             return RestResponse.error(new Error(ProcessErrorCode.NOT_FOUND, "Execution was not found"));
         }
@@ -139,17 +141,17 @@ public class ProcessController {
      * Loads the most recent version of an existing process
      *
      * @param authentication the authenticated principal
-     * @param data the process model
+     * @param id the process id
      * @return the updated process model
      */
     @RequestMapping(value = "/action/process/{id}", method = RequestMethod.GET)
-    public RestResponse<ProcessViewResult> findOne(Authentication authentication, @PathVariable long id) {
-
-        ProcessDefinitionView process = this.processService.findOne(id);
-        if(process == null) {
+    public RestResponse<ProcessRecordView> findOne(Authentication authentication, @PathVariable long id) 
+    {
+        ProcessRecord record = processService.findOne(id);
+        if(record == null) {
             return RestResponse.error(new Error(ProcessErrorCode.NOT_FOUND, "Process was not found"));
         }
-        return RestResponse.result(new ProcessViewResult(process));
+        return RestResponse.result(new ProcessRecordView(record));
     }
 
     /**
@@ -160,28 +162,66 @@ public class ProcessController {
      * @return the updated process model
      */
     @RequestMapping(value = "/action/process/{id}/{version}", method = RequestMethod.GET)
-    public RestResponse<ProcessViewResult> findOne(
+    public RestResponse<ProcessRecordView> findOne(
         Authentication authentication, @PathVariable long id, @PathVariable long version) 
     {
-        ProcessDefinitionView process = this.processService.findOne(id, version);
-        if(process == null) {
+        ProcessRecord record = processService.findOne(id, version);
+        if(record == null) {
             return RestResponse.error(new Error(ProcessErrorCode.NOT_FOUND, "Process was not found"));
         }
-        return RestResponse.result(new ProcessViewResult(process));
+        return RestResponse.result(new ProcessRecordView(record));
     }
 
     /**
-     * Creates/Updates a new/existing process
+     * Create a new process by providing a process definition
      *
      * @param authentication the authenticated principal
-     * @param data the process model
-     * @return the updated process model
+     * @param request
+     * 
+     * @return the created process model
      */
     @RequestMapping(value = "/action/process", method = RequestMethod.POST)
-    public RestResponse<ProcessViewResult> update(
+    public RestResponse<ProcessRecordView> create(
         Authentication authentication, @RequestBody ProcessCreateRequest request) 
     {
-        List<Error> errors = this.processService.update(request.getProcess());
-        return RestResponse.error(errors);
+        ProcessDefinition definition = request.getDefinition();
+        if (definition == null)
+            return RestResponse.error(BasicErrorCode.INPUT_INVALID, "No process definition");
+            
+        ProcessRecord record = null; 
+        try {
+            record = processService.create(definition);
+        } catch (ApplicationException ex) {
+            return RestResponse.error(ex.toError());
+        }
+        
+        return RestResponse.result(new ProcessRecordView(record));
+    }
+    
+    /**
+     * Update an existing process by providing a newer process definition
+     *
+     * @param authentication the authenticated principal
+     * @param id The ID of the process to be updated
+     * @param request
+     * @return the created process model
+     */
+    @RequestMapping(value = "/action/process/{id}", method = RequestMethod.PUT)
+    public RestResponse<ProcessRecordView> update(
+        Authentication authentication,
+        @PathVariable("id") Integer id, @RequestBody ProcessCreateRequest request) 
+    {
+        ProcessDefinition definition = request.getDefinition();
+        if (definition == null)
+            return RestResponse.error(BasicErrorCode.INPUT_INVALID, "No process definition");
+          
+        ProcessRecord record = null; 
+        try {
+            record = processService.update(id, definition);
+        } catch (ApplicationException ex) {
+            return RestResponse.error(ex.toError());
+        }
+        
+        return RestResponse.result(new ProcessRecordView(record));
     }
 }

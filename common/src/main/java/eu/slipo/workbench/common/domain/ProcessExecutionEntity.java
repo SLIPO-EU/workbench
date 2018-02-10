@@ -26,7 +26,7 @@ public class ProcessExecutionEntity {
 
     @Id
     @Column(name = "id")
-    long id;
+    long id = -1L;
 
     @ManyToOne
     @JoinColumn(name = "submitted_by", nullable = true)

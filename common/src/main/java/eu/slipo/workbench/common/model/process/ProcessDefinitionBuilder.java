@@ -13,24 +13,31 @@ import eu.slipo.workbench.common.model.tool.MetadataRegistrationConfiguration;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 
-
 /**
- * Helper builder for composing a {@link ProcessDefinition} instance
+ * A builder for a {@link ProcessDefinition}
  */
 public class ProcessDefinitionBuilder {
 
+    private String name;
+    
     private int stepKey = 0;
 
     private List<ProcessInput> resources = new ArrayList<ProcessInput>();
 
     private List<Step> steps = new ArrayList<Step>();
 
-    private ProcessDefinitionBuilder() {}
+    public ProcessDefinitionBuilder() {}
 
     public static ProcessDefinitionBuilder create() {
         return new ProcessDefinitionBuilder();
     }
 
+    public ProcessDefinitionBuilder name(String name) 
+    {
+        this.name = name;
+        return this;
+    }
+    
     public ProcessDefinitionBuilder resource(ProcessInput resource) {
         this.resources.add(resource);
         return this;
@@ -141,18 +148,17 @@ public class ProcessDefinitionBuilder {
         return this.step(step);
     }
 
-    public ProcessDefinitionBuilder setProperties(String name, String descritpion) {
-        return this;
-    }
-
-    public ProcessDefinitionBuilder reset() {
+    public ProcessDefinitionBuilder reset() 
+    {
+        this.name = null;
         this.stepKey = 0;
         this.resources.clear();
         this.steps.clear();
         return this;
     }
 
-    public ProcessDefinition build() {
-        return new ProcessDefinition(this.resources, this.steps);
+    public ProcessDefinition build() 
+    {
+        return new ProcessDefinition(name, resources, steps);
     }
 }

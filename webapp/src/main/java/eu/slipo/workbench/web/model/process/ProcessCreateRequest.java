@@ -6,7 +6,7 @@ public class ProcessCreateRequest {
 
     private EnumProcessSaveActionType action;
 
-    private ProcessDefinition process;
+    private ProcessDefinition definition;
 
     public EnumProcessSaveActionType getAction() {
         return action;
@@ -16,12 +16,12 @@ public class ProcessCreateRequest {
         this.action = action;
     }
 
-    public ProcessDefinition getProcess() {
-        return process;
+    public ProcessDefinition getDefinition() {
+        return definition;
     }
 
-    public void setProcess(ProcessDefinition process) {
-        this.process = process;
+    public void setDefinition(ProcessDefinition process) {
+        this.definition = process;
     }
 
 }

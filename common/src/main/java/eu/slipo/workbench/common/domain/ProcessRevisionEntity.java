@@ -31,7 +31,8 @@ import eu.slipo.workbench.common.model.process.ProcessRecord;
     schema = "public",
     name = "process_revision",
     uniqueConstraints = { 
-        @UniqueConstraint(name = "uq_process_parent_id_version", columnNames = { "parent", "`version`" }), }
+        @UniqueConstraint(name = "uq_process_parent_id_version", columnNames = { "parent", "`version`" })
+    }
 )
 public class ProcessRevisionEntity {
 
@@ -40,7 +41,7 @@ public class ProcessRevisionEntity {
     @SequenceGenerator(
         sequenceName = "process_revision_id_seq", name = "process_revision_id_seq", initialValue = 1, allocationSize = 1)
     @GeneratedValue(generator = "process_revision_id_seq", strategy = GenerationType.SEQUENCE)
-    long id;
+    long id = -1L;
 
     @NotNull
     @ManyToOne
@@ -54,7 +55,6 @@ public class ProcessRevisionEntity {
     @Column(name = "`name`")
     String name;
 
-    @NotNull
     @Column(name = "description")
     String description;
 
@@ -78,6 +78,27 @@ public class ProcessRevisionEntity {
     @OneToMany(mappedBy = "process", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     List<ProcessExecutionEntity> executions = new ArrayList<>();
 
+    protected ProcessRevisionEntity() {}
+    
+    public ProcessRevisionEntity(ProcessDefinition definition)
+    {
+        this.version = 1;
+        this.definition = definition;
+        this.name = definition.getName();
+        this.description = definition.getDescription();
+    }
+    
+    public ProcessRevisionEntity(ProcessEntity e)
+    {
+        this.parent = e;
+        this.version = e.getVersion();
+        this.name = e.getName();
+        this.description = e.getDescription();
+        this.definition = e.getDefinition();
+        this.updatedBy = e.getUpdatedBy();
+        this.updatedOn = e.getUpdatedOn();
+    }
+    
     public ProcessEntity getParent() {
         return parent;
     }
@@ -157,21 +178,23 @@ public class ProcessRevisionEntity {
     
     public ProcessRecord toProcessRecord(boolean includeExecutions, boolean includeSteps) 
     {
-        ProcessRecord p = new ProcessRecord(this.parent.id, this.version);
+        ProcessRecord p = new ProcessRecord(parent.id, version);
 
-        p.setCreatedOn(this.parent.createdOn);
-        p.setCreatedBy(this.parent.createdBy.getId(), this.parent.createdBy.getFullName());
-        p.setUpdatedOn(this.updatedOn);
-        p.setUpdatedBy(this.updatedBy.getId(), this.updatedBy.getFullName());
-        p.setDescription(this.description);
-        p.setName(this.name);
-        p.setExecutedOn(this.executedOn);
-        p.setTaskType(this.parent.getTaskType());
-        p.setConfiguration(this.definition);
-        p.setTemplate(this.parent.isTemplate);
+        AccountEntity createdBy = parent.createdBy;
+        
+        p.setCreatedOn(parent.createdOn);
+        p.setCreatedBy(createdBy.getId(), createdBy.getFullName());
+        p.setUpdatedOn(updatedOn);
+        p.setUpdatedBy(updatedBy.getId(), updatedBy.getFullName());
+        p.setDescription(description);
+        p.setName(name);
+        p.setExecutedOn(executedOn);
+        p.setTaskType(parent.getTaskType());
+        p.setDefinition(definition);
+        p.setTemplate(parent.isTemplate);
 
         if (includeExecutions) {
-            for (ProcessExecutionEntity e : this.getExecutions()) {
+            for (ProcessExecutionEntity e : executions) {
                 p.addExecution(e.toProcessExecutionRecord(includeSteps));
             }
         }

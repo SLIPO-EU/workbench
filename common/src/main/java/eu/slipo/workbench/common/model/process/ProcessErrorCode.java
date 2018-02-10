@@ -8,6 +8,9 @@ import eu.slipo.workbench.common.model.ErrorCode;
 public enum ProcessErrorCode implements ErrorCode 
 {
     UNKNOWN,
+    
+    INVALID,
+    
     QUERY_IS_EMPTY,
     NOT_FOUND,
     ;

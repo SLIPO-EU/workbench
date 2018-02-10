@@ -29,4 +29,9 @@ public class ResourceIdentifier {
     public long getVersion() {
         return version;
     }
+    
+    public static ResourceIdentifier of(long id, long version)
+    {
+        return new ResourceIdentifier(id, version);
+    }
 }

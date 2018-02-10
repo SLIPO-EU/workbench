@@ -29,6 +29,7 @@ import eu.slipo.workbench.common.model.process.ProcessExecutionQuery;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.process.ProcessQuery;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
+import eu.slipo.workbench.common.model.user.Account;
 
 @Repository
 @Transactional
@@ -49,7 +50,7 @@ public class DefaultProcessRepository implements ProcessRepository {
             query.setParameter("name", "%" + processQuery.getName() + "%");
         }
         if (processQuery.getTaskType() != null) {
-            query.setParameter("task", processQuery.getTaskType());
+            query.setParameter("taskType", processQuery.getTaskType());
         }
         if (processQuery.getTemplate() != null) {
             query.setParameter("template", processQuery.getTemplate());
@@ -65,7 +66,7 @@ public class DefaultProcessRepository implements ProcessRepository {
             query.setParameter("name", "%" + executionQuery.getName() + "%");
         }
         if (executionQuery.getTaskType() != null) {
-            query.setParameter("task", executionQuery.getTaskType());
+            query.setParameter("taskType", executionQuery.getTaskType());
         }
         if (executionQuery.getStatus() != null) {
             query.setParameter("status", executionQuery.getStatus());
@@ -91,7 +92,7 @@ public class DefaultProcessRepository implements ProcessRepository {
             filters.add("(p.name like :name)");
         }
         if (query.getTaskType() != null) {
-            filters.add("(p.taskType = :task)");
+            filters.add("(p.taskType = :taskType)");
         }
         if (query.getTemplate() != null) {
             filters.add("(p.isTemplate = :template)");
@@ -146,7 +147,7 @@ public class DefaultProcessRepository implements ProcessRepository {
             filters.add("(e.process.name like :name)");
         }
         if (query.getTaskType() != null) {
-            filters.add("(e.process.parent.taskType = :task)");
+            filters.add("(e.process.parent.taskType = :taskType)");
         }
         if (query.getStatus() != null) {
             filters.add("(e.status = :status)");
@@ -186,120 +187,115 @@ public class DefaultProcessRepository implements ProcessRepository {
     @Override
     public ProcessRecord findOne(long id) 
     {
-        ProcessRevisionEntity entity = this.findById(id);
+        ProcessRevisionEntity entity = this.findLatestRevision(id);
         return (entity == null ? null : entity.toProcessRecord(true, false));
     }
 
     @Override
-    public ProcessRecord findOne(long id, long version) {
-        String queryString = "select p from ProcessRevision p where p.process.id = :id and p.version = :version";
+    public ProcessRecord findOne(long id, long version) 
+    {
+        String queryString = 
+            "select p from ProcessRevision p where p.parent.id = :id and p.version = :version";
 
         List<ProcessRevisionEntity> result = entityManager
-                .createQuery(queryString, ProcessRevisionEntity.class)
-                .setParameter("id", id)
-                .setParameter("version", version)
-                .getResultList();
+            .createQuery(queryString, ProcessRevisionEntity.class)
+            .setParameter("id", id)
+            .setParameter("version", version)
+            .getResultList();
 
         return (result.isEmpty() ? null : result.get(0).toProcessRecord(true, false));
     }
 
     @Override
-    public ProcessExecutionRecord findOne(long id, long version, long execution) {
-        String queryString = "select e from ProcessExecution e where e.process.parent.id = :id and e.process.parent.version = :version and e.id = :execution";
+    public ProcessExecutionRecord findOne(long id, long version, long execution) 
+    {
+        String queryString = 
+            "select e from ProcessExecution e " +
+            "where e.process.parent.id = :id and e.process.parent.version = :version and e.id = :execution";
 
         List<ProcessExecutionEntity> result = entityManager
-                .createQuery(queryString, ProcessExecutionEntity.class)
-                .setParameter("id", id)
-                .setParameter("version", version)
-                .setParameter("execution", execution)
-                .setMaxResults(1)
-                .getResultList();
+            .createQuery(queryString, ProcessExecutionEntity.class)
+            .setParameter("id", id)
+            .setParameter("version", version)
+            .setParameter("execution", execution)
+            .setMaxResults(1)
+            .getResultList();
 
         return (result.isEmpty() ? null : result.get(0).toProcessExecutionRecord(true));
     }
 
     @Override
-    @Transactional()
-    public void create(ProcessDefinition definition, int userId) 
+    public ProcessRecord create(ProcessDefinition definition, int userId) 
     {
-        ProcessEntity process = new ProcessEntity();
+        AccountEntity createdBy = entityManager.getReference(AccountEntity.class, userId);
+        ZonedDateTime now = ZonedDateTime.now();
 
-        // Process
-        process.setVersion(1);
-        process.setName(definition.getName());
-        process.setDescription(definition.getDescription());
-        process.setTaskType(EnumProcessTaskType.DATA_INTEGRATION);
-        process.setTemplate(false);
+        // Create new process entity
+        
+        ProcessEntity entity = new ProcessEntity(definition);
+        entity.setTaskType(EnumProcessTaskType.DATA_INTEGRATION);
+        entity.setTemplate(false);
+        entity.setCreatedBy(createdBy);
+        entity.setUpdatedBy(createdBy);
+        entity.setCreatedOn(now);
+        entity.setUpdatedOn(now);
 
-        process.setCreatedBy(this.entityManager.getReference(AccountEntity.class, userId));
-        process.setUpdatedBy(process.getCreatedBy());
-        process.setCreatedOn(ZonedDateTime.now());
-        process.setUpdatedOn(process.getCreatedOn());
+        // Create an associated process revision
+        
+        ProcessRevisionEntity revisionEntity = new ProcessRevisionEntity(entity);
 
-        process.setDefinition(definition);
+        // Set references
+        // Fixme processRevision.setParent(entity);
+        entity.addRevision(revisionEntity);
 
-        // Process revision
-        ProcessRevisionEntity processRevision = new ProcessRevisionEntity();
-
-        processRevision.setVersion(1);
-        processRevision.setName(definition.getName());
-        processRevision.setDescription(definition.getDescription());
-
-        processRevision.setUpdatedBy(process.getCreatedBy());
-        processRevision.setUpdatedOn(process.getCreatedOn());
-
-        processRevision.setDefinition(definition);
-
-        // References
-        processRevision.setParent(process);
-        process.getVersions().add(processRevision);
-
-        this.entityManager.persist(process);
-        this.entityManager.flush();
+        entityManager.persist(entity);
+        entityManager.flush();
+        
+        return entity.toProcessRecord();
     }
 
     @Override
-    @Transactional()
-    public void update(ProcessDefinition definition, int userId) 
+    public ProcessRecord update(long id, ProcessDefinition definition, int userId) 
     {
-        ProcessRevisionEntity revision = this.findById(definition.getId());
-
-        if(revision == null) {
+        AccountEntity updatedBy = entityManager.getReference(AccountEntity.class, userId);
+        
+        ProcessRevisionEntity revision = findLatestRevision(id);
+        if(revision == null)
             throw ApplicationException.fromPattern(ProcessErrorCode.NOT_FOUND);
-        }
 
-        // Process
-        ProcessEntity process = revision.getParent();
-        process.setVersion(process.getVersion() + 1);
-        process.setName(definition.getName());
-        process.setDescription(definition.getDescription());
+        // Update process entity
+         
+        ProcessEntity entity = revision.getParent();
+        entity.setVersion(entity.getVersion() + 1);
+        entity.setName(definition.getName());
+        entity.setDescription(definition.getDescription());
+        entity.setUpdatedBy(updatedBy);
+        entity.setUpdatedOn(ZonedDateTime.now());
+        entity.setDefinition(definition);
 
-        process.setUpdatedBy(this.entityManager.getReference(AccountEntity.class, userId));
-        process.setUpdatedOn(ZonedDateTime.now());
+        // Create new process revision
+        
+        ProcessRevisionEntity revisionEntity = new ProcessRevisionEntity(entity);
 
-        process.setDefinition(definition);
+        // Set references
+        // Fixme processRevision.setParent(entity);
+        entity.addRevision(revisionEntity);
 
-        // Process revision
-        ProcessRevisionEntity processRevision = new ProcessRevisionEntity();
-
-        processRevision.setVersion(process.getVersion());
-        processRevision.setName(process.getName());
-        processRevision.setDescription(process.getDescription());
-
-        processRevision.setUpdatedBy(process.getUpdatedBy());
-        processRevision.setUpdatedOn(process.getUpdatedOn());
-
-        processRevision.setDefinition(definition);
-
-        // References
-        processRevision.setParent(process);
-        process.getVersions().add(processRevision);
-
-        this.entityManager.flush();
+        entityManager.flush();
+        return entity.toProcessRecord();
     }
 
-    private ProcessRevisionEntity findById(long id) {
-        String queryString = "select p from ProcessRevision p where p.process.id = :id order by p.version desc";
+    /**
+     * Find the latest {@link ProcessRevisionEntity} associated with a given process id.
+     * 
+     * @param id The process id 
+     * @return
+     */
+    private ProcessRevisionEntity findLatestRevision(long id) 
+    {
+        String queryString = 
+            "select p from ProcessRevision p where p.parent.id = :id " +
+            "order by p.version desc";
 
         List<ProcessRevisionEntity> result = entityManager
                 .createQuery(queryString, ProcessRevisionEntity.class)

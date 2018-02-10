@@ -9,8 +9,6 @@ public class ProcessDefinition implements Serializable
 {
     private static final long serialVersionUID = 1L;
 
-    private Long id;
-
     private String name;
 
     private String description;
@@ -21,21 +19,11 @@ public class ProcessDefinition implements Serializable
 
     protected ProcessDefinition() {}
 
-    public ProcessDefinition(Long id, List<ProcessInput> resources, List<Step> steps) 
+    public ProcessDefinition(String name, List<ProcessInput> resources, List<Step> steps) 
     {
-        this.id = id;
+        this.name = name;
         this.resources = resources;
         this.steps = steps;
-    }
-
-    public ProcessDefinition(List<ProcessInput> resources, List<Step> steps) 
-    {
-        this.resources = resources;
-        this.steps = steps;
-    }
-
-    public Long getId() {
-        return id;
     }
 
     public String getName() {

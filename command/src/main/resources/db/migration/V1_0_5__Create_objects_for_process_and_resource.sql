@@ -11,7 +11,7 @@ CREATE TABLE process
   version bigint NOT NULL DEFAULT 1, -- initialized to 1, incremented every time a new version is created
   row_version bigint DEFAULT 1, -- used by hibernate for optimistic locking
   name character varying(80) NOT NULL,
-  description character varying(200) NOT NULL,
+  description character varying(200),
   created_by integer NOT NULL,
   updated_by integer NOT NULL,
   created_on timestamp with time zone,
@@ -52,7 +52,7 @@ CREATE TABLE process_revision
   parent bigint NOT NULL, -- refer to parent process
   version bigint NOT NULL,
   name character varying(80) NOT NULL,
-  description character varying(200) NOT NULL,
+  description character varying(200),
   updated_by integer NOT NULL,
   updated_on timestamp with time zone,
   executed_on timestamp with time zone,
@@ -179,7 +179,7 @@ CREATE TABLE resource_revision
   output_format character varying(20) NOT NULL,
   process_execution bigint,
   name character varying(50) NOT NULL,
-  description character varying(200) NOT NULL,
+  description character varying(200),
   updated_on timestamp with time zone,
   updated_by integer NOT NULL,
   bbox geometry,

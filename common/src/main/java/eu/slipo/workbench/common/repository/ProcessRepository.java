@@ -58,17 +58,22 @@ public interface ProcessRepository
     /**
      * Create a new process
      *
-     * @param data the process definition
+     * @param definition the process definition
      * @param userId The id of the user creating this entity
+     * 
+     * @return a view of the newly created entity
      */
-    void create(ProcessDefinition data, int userId);
+    ProcessRecord create(ProcessDefinition definition, int userId);
 
     /**
      * Update an existing process
      *
-     * @param data the process definition
+     * @param id The id of the process under update
+     * @param definition the process definition
      * @param userId The id of the user updating this entity
+     * 
+     * @return a view of the updated entity
      */
-    void update(ProcessDefinition data, int userId);
+    ProcessRecord update(long id, ProcessDefinition definition, int userId);
 
 }

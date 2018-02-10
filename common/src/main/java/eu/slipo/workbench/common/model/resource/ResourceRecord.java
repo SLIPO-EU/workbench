@@ -47,7 +47,7 @@ public class ResourceRecord {
 
     private UUID tableName;
 
-    private List<ResourceRecord> versions = new ArrayList<ResourceRecord>();
+    private List<ResourceRecord> revisions = new ArrayList<ResourceRecord>();
 
     public ResourceRecord(long id, long version) {
         this.id = id;
@@ -178,11 +178,11 @@ public class ResourceRecord {
         this.tableName = tableName;
     }
 
-    public List<ResourceRecord> getVersions() {
-        return Collections.unmodifiableList(this.versions);
+    public List<ResourceRecord> getRevisions() {
+        return Collections.unmodifiableList(this.revisions);
     }
 
-    public void addVersion(ResourceRecord r) {
-        this.versions.add(r);
+    public void addRevision(ResourceRecord r) {
+        this.revisions.add(r);
     }
 }

@@ -27,13 +27,13 @@ public class ProcessRecord {
 
     private String description;
 
-    private ProcessDefinition configuration;
+    private ProcessDefinition definition;
 
     private boolean template;
 
     private EnumProcessTaskType taskType;
 
-    private List<ProcessRecord> versions = new ArrayList<ProcessRecord>();
+    private List<ProcessRecord> revisions = new ArrayList<ProcessRecord>();
 
     private List<ProcessExecutionRecord> executions = new ArrayList<ProcessExecutionRecord>();
 
@@ -114,12 +114,14 @@ public class ProcessRecord {
         this.description = description;
     }
 
-    public ProcessDefinition getConfiguration() {
-        return configuration;
+    public ProcessDefinition getDefinition()
+    {
+        return definition;
     }
 
-    public void setConfiguration(ProcessDefinition configuration) {
-        this.configuration = configuration;
+    public void setDefinition(ProcessDefinition definition)
+    {
+        this.definition = definition;
     }
 
     public boolean isTemplate() {
@@ -138,12 +140,12 @@ public class ProcessRecord {
         this.taskType = t;
     }
 
-    public List<ProcessRecord> getVersions() {
-        return Collections.unmodifiableList(this.versions);
+    public List<ProcessRecord> getRevisions() {
+        return Collections.unmodifiableList(this.revisions);
     }
 
-    public void addVersion(ProcessRecord p) {
-        this.versions.add(p);
+    public void addRevision(ProcessRecord p) {
+        this.revisions.add(p);
     }
 
     public List<ProcessExecutionRecord> getExecutions() {
