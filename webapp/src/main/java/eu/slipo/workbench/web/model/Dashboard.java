@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import eu.slipo.workbench.web.model.resource.ResourceRecord;
+import eu.slipo.workbench.common.model.resource.ResourceRecord;
 
 /**
  * Dashboard data

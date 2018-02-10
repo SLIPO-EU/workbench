@@ -1,13 +1,14 @@
 package eu.slipo.workbench.web.model.resource;
 
-import eu.slipo.workbench.web.model.process.TripleGeoSettings;
+import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
+import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 
 /**
  * Resource registration request
  */
 public class RegistrationRequest {
 
-    private TripleGeoSettings settings;
+    private TriplegeoConfiguration configuration;
 
     private ResourceMetadataCreate metadata;
 
@@ -16,8 +17,8 @@ public class RegistrationRequest {
      *
      * @return the configuration
      */
-    public TripleGeoSettings getSettings() {
-        return settings;
+    public TriplegeoConfiguration getConfiguration() {
+        return configuration;
     }
 
     /**

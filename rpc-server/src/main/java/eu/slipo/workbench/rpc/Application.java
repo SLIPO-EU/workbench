@@ -9,6 +9,7 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 @SpringBootApplication(
     scanBasePackageClasses = {
         eu.slipo.workbench.common.config._Marker.class,
+        eu.slipo.workbench.common.repository._Marker.class,
         eu.slipo.workbench.common.service._Marker.class,
         eu.slipo.workbench.rpc.config._Marker.class,
         eu.slipo.workbench.rpc.service._Marker.class,

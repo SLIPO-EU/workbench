@@ -1,5 +1,7 @@
 package eu.slipo.workbench.web.model.resource;
 
+import eu.slipo.workbench.common.model.resource.DataSource;
+
 /**
  * Resource registration request
  */

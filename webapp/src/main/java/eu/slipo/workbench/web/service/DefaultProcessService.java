@@ -11,15 +11,15 @@ import org.springframework.stereotype.Service;
 
 import eu.slipo.workbench.common.model.ApplicationException;
 import eu.slipo.workbench.common.model.Error;
-import eu.slipo.workbench.web.model.process.ProcessDefinitionUpdate;
-import eu.slipo.workbench.web.model.process.ProcessDefinitionView;
-import eu.slipo.workbench.web.model.process.ProcessErrorCode;
-import eu.slipo.workbench.web.model.process.ProcessExecutionRecord;
-import eu.slipo.workbench.web.model.process.ProcessRecord;
-import eu.slipo.workbench.web.repository.IProcessRepository;
+import eu.slipo.workbench.common.model.process.ProcessDefinition;
+import eu.slipo.workbench.common.model.process.ProcessDefinitionView;
+import eu.slipo.workbench.common.model.process.ProcessErrorCode;
+import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
+import eu.slipo.workbench.common.model.process.ProcessRecord;
+import eu.slipo.workbench.common.repository.ProcessRepository;
 
 @Service
-public class DefaultProcessService implements IProcessService {
+public class DefaultProcessService implements ProcessService {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultProcessService.class);
 
@@ -30,15 +30,16 @@ public class DefaultProcessService implements IProcessService {
     IAuthenticationFacade authenticationFacade;
 
     @Autowired
-    private IProcessRepository processRepository;
+    private ProcessRepository processRepository;
 
     @Override
-    public List<Error> validate(ProcessDefinitionUpdate process) {
+    public List<Error> validate(ProcessDefinition process) {
         return Collections.<Error>emptyList();
     }
 
     @Override
-    public List<Error> update(ProcessDefinitionUpdate process) {
+    public List<Error> update(ProcessDefinition process) 
+    {
         List<Error> validationErrors = Collections.<Error>emptyList();
 
         try {
@@ -47,10 +48,12 @@ public class DefaultProcessService implements IProcessService {
                 return validationErrors;
             }
 
+            int userId = authenticationFacade.getCurrentUserId();
+            
             if (process.getId() == null) {
-                processRepository.create(process);
+                processRepository.create(process, userId);
             } else {
-                processRepository.update(process);
+                processRepository.update(process, userId);
             }
         } catch (ApplicationException ex) {
             validationErrors.add(
@@ -64,27 +67,26 @@ public class DefaultProcessService implements IProcessService {
     }
 
     @Override
-    public ProcessDefinitionView findOne(long id) {
+    public ProcessDefinitionView findOne(long id)
+    {
         ProcessRecord process = processRepository.findOne(id);
-
         return (process == null ? null : new ProcessDefinitionView(process));
     }
 
     @Override
-    public ProcessDefinitionView findOne(long id, long version) {
+    public ProcessDefinitionView findOne(long id, long version)
+    {
         ProcessRecord process = processRepository.findOne(id, version);
-
         return (process == null ? null : new ProcessDefinitionView(process));
     }
 
     @Override
-    public List<ProcessExecutionRecord> findExecutions(long id, long version) {
+    public List<ProcessExecutionRecord> findExecutions(long id, long version)
+    {
         ProcessRecord process = processRepository.findOne(id, version);
-
         if ((process == null) || (process.getExecutions().isEmpty())) {
-            Collections.<Error>emptyList();
+            return Collections.emptyList();
         }
-
         return process.getExecutions();
     }
 

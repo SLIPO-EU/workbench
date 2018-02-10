@@ -1,12 +1,12 @@
 package eu.slipo.workbench.common.model.poi;
 
-import java.util.List;
-
 /**
  * Enumeration for supported data formats.
  */
 public enum EnumDataFormat
 {
+    UNDEFINED(null),
+    
     /**
      * Comma-Separated Values
      */
@@ -72,6 +72,11 @@ public enum EnumDataFormat
     public String getFilenameExtension()
     {
         return filenameExtension;
+    }
+    
+    public String getKey() 
+    {
+        return (this.getClass().getSimpleName() + '.' + name());
     }
     
     public static EnumDataFormat fromString(String name)

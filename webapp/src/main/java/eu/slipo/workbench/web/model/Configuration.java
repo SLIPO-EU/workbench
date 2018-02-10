@@ -4,7 +4,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import eu.slipo.workbench.web.model.resource.EnumDataSourceType;
+import eu.slipo.workbench.common.model.poi.EnumDataFormat;
+import eu.slipo.workbench.common.model.poi.EnumOperation;
+import eu.slipo.workbench.common.model.poi.EnumResourceType;
+import eu.slipo.workbench.common.model.poi.EnumTool;
+import eu.slipo.workbench.common.model.resource.EnumDataSourceType;
 
 /**
  * Application configuration settings

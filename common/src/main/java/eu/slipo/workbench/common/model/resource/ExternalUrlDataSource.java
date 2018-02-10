@@ -1,0 +1,23 @@
+package eu.slipo.workbench.common.model.resource;
+
+/**
+ * External URL data source
+ */
+public class ExternalUrlDataSource extends DataSource {
+
+    private String url;
+
+    public ExternalUrlDataSource() {
+        super(EnumDataSourceType.EXTERNAL_URL);
+    }
+
+    /**
+     * URL for downloading the resource
+     *
+     * @return the URL
+     */
+    public String getUrl() {
+        return url;
+    }
+
+}

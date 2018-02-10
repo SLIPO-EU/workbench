@@ -1,8 +1,8 @@
 package eu.slipo.workbench.common.service;
 
 import eu.slipo.workbench.common.domain.AccountEntity;
-import eu.slipo.workbench.common.model.Account;
 import eu.slipo.workbench.common.model.EnumRole;
+import eu.slipo.workbench.common.model.user.Account;
 
 public interface UserService
 {

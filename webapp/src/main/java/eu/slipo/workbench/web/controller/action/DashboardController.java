@@ -9,13 +9,13 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import eu.slipo.workbench.common.model.RestResponse;
+import eu.slipo.workbench.common.model.poi.EnumDataFormat;
+import eu.slipo.workbench.common.model.poi.EnumResourceType;
+import eu.slipo.workbench.common.model.resource.EnumDataSourceType;
+import eu.slipo.workbench.common.model.resource.ResourceMetadataView;
+import eu.slipo.workbench.common.model.resource.ResourceRecord;
 import eu.slipo.workbench.web.model.Dashboard;
-import eu.slipo.workbench.web.model.EnumDataFormat;
-import eu.slipo.workbench.web.model.EnumResourceType;
 import eu.slipo.workbench.web.model.Event;
-import eu.slipo.workbench.web.model.resource.EnumDataSourceType;
-import eu.slipo.workbench.web.model.resource.ResourceMetadataView;
-import eu.slipo.workbench.web.model.resource.ResourceRecord;
 
 /**
  * Actions for querying generic application data

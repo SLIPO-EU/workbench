@@ -22,8 +22,8 @@ import javax.validation.constraints.Pattern;
 
 import org.hibernate.validator.constraints.Email;
 
-import eu.slipo.workbench.common.model.Account;
 import eu.slipo.workbench.common.model.EnumRole;
+import eu.slipo.workbench.common.model.user.Account;
 
 
 @Entity(name = "Account")

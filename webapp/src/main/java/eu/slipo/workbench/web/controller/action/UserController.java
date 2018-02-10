@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import eu.slipo.workbench.common.model.Account;
 import eu.slipo.workbench.common.model.RestResponse;
+import eu.slipo.workbench.common.model.user.Account;
 import eu.slipo.workbench.common.service.UserService;
 
 /**
