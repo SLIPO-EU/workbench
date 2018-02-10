@@ -91,7 +91,7 @@ public class DefaultProcessRepository implements ProcessRepository {
             filters.add("(p.name like :name)");
         }
         if (query.getTaskType() != null) {
-            filters.add("(p.task_type = :task)");
+            filters.add("(p.taskType = :task)");
         }
         if (query.getTemplate() != null) {
             filters.add("(p.isTemplate = :template)");
@@ -146,7 +146,7 @@ public class DefaultProcessRepository implements ProcessRepository {
             filters.add("(e.process.name like :name)");
         }
         if (query.getTaskType() != null) {
-            filters.add("(e.process.parent.task_type = :task)");
+            filters.add("(e.process.parent.taskType = :task)");
         }
         if (query.getStatus() != null) {
             filters.add("(e.status = :status)");
