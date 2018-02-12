@@ -213,7 +213,7 @@ public class JpaProcessRepository implements IProcessRepository {
 
     @Override
     public ProcessRecord findOne(long id, long version) {
-        String queryString = "select p from ProcessRevision p where p.process.id = :id and p.version = :version";
+        String queryString = "select p from ProcessRevision p where p.parent.id = :id and p.version = :version";
 
         List<ProcessRevisionEntity> result = entityManager
                 .createQuery(queryString, ProcessRevisionEntity.class)
@@ -318,7 +318,7 @@ public class JpaProcessRepository implements IProcessRepository {
     }
 
     private ProcessRevisionEntity findById(long id) {
-        String queryString = "select p from ProcessRevision p where p.process.id = :id order by p.version desc";
+        String queryString = "select p from ProcessRevision p where p.parent.id = :id order by p.version desc";
 
         List<ProcessRevisionEntity> result = entityManager
                 .createQuery(queryString, ProcessRevisionEntity.class)

@@ -2,13 +2,14 @@ package eu.slipo.workbench.web.domain.attributeconverter;
 
 import java.io.IOException;
 
-import javax.persistence.Converter;
 import javax.persistence.AttributeConverter;
+import javax.persistence.Converter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,6 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.slipo.workbench.web.model.process.ProcessDefinitionUpdate;
 
 @Converter
+@Component
 public class ProcessConfigurationConverter implements AttributeConverter<ProcessDefinitionUpdate, String>
 {
     private static final Logger logger = LoggerFactory.getLogger(ProcessConfigurationConverter.class);
