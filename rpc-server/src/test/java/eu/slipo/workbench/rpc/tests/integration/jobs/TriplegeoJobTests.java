@@ -177,8 +177,7 @@ public class TriplegeoJobTests
     {
     }
 
-    // Fixme @Test(timeout = 10 * 1000L)
-    @Test
+    @Test(timeout = 10 * 1000L)
     public void test1() throws Exception
     {
         testFixture(fixtures.get(0));

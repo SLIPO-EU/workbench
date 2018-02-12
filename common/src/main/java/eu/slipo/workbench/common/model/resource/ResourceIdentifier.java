@@ -1,9 +1,14 @@
 package eu.slipo.workbench.common.model.resource;
 
+import java.io.Serializable;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * Unique resource identifier
  */
-public class ResourceIdentifier {
+public class ResourceIdentifier implements Serializable {
 
     private long id;
 
@@ -11,7 +16,10 @@ public class ResourceIdentifier {
 
     protected ResourceIdentifier() {}
 
-    public ResourceIdentifier(long id, long version) {
+    @JsonCreator
+    public ResourceIdentifier(
+        @JsonProperty("id") long id, @JsonProperty("version") long version) 
+    {
         this.id = id;
         this.version = version;
     }
@@ -22,10 +30,12 @@ public class ResourceIdentifier {
         this.version = other.version;
     }
 
+    @JsonProperty("id")
     public long getId() {
         return id;
     }
 
+    @JsonProperty("version")
     public long getVersion() {
         return version;
     }
@@ -33,5 +43,11 @@ public class ResourceIdentifier {
     public static ResourceIdentifier of(long id, long version)
     {
         return new ResourceIdentifier(id, version);
+    }
+
+    @Override
+    public String toString()
+    {
+        return String.format("ResourceIdentifier [id=%s, version=%s]", id, version);
     }
 }

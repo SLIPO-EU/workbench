@@ -19,5 +19,4 @@ public class FileSystemDataSource extends DataSource {
     public String getPath() {
         return path;
     }
-
 }

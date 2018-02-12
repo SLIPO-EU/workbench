@@ -1,11 +1,7 @@
 package eu.slipo.workbench.web.model;
 
-import org.springframework.data.domain.PageRequest;
-
 /**
  * Generic query with data pagination support
- * 
- * Fixme: replace with {@link PageRequest}
  */
 public class Query {
 

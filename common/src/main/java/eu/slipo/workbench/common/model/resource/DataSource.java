@@ -39,5 +39,4 @@ public abstract class DataSource {
     public EnumDataSourceType getType() {
         return type;
     }
-
 }

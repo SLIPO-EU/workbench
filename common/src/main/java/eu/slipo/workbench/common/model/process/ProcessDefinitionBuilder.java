@@ -95,7 +95,7 @@ public class ProcessDefinitionBuilder {
         // Output
         EnumResourceType resourceType = tool == EnumTool.LIMES? 
             EnumResourceType.POI_LINKED_DATA : EnumResourceType.POI_DATA;
-        this.resources.add(new ProcessOutput(output, resourceType, name, this.stepKey, tool));
+        this.resources.add(new ProcessOutput(output, resourceType, name, key, tool));
 
         return this.step(step);
     }
@@ -103,7 +103,7 @@ public class ProcessDefinitionBuilder {
     public ProcessDefinitionBuilder transform(
         int group, 
         String name, 
-        DataSource dataSource,
+        DataSource dataSource, // Fixme dataSource
         TriplegeoConfiguration configuration,
         int output)
     {
@@ -121,7 +121,7 @@ public class ProcessDefinitionBuilder {
         
         // Output
         this.resources.add(
-            new ProcessOutput(output, EnumResourceType.POI_DATA, name, this.stepKey, EnumTool.TRIPLEGEO));
+            new ProcessOutput(output, EnumResourceType.POI_DATA, name, key, EnumTool.TRIPLEGEO));
         
         return this.step(step);
     }

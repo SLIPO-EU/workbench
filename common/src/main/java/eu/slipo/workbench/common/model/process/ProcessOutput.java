@@ -1,5 +1,6 @@
 package eu.slipo.workbench.common.model.process;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import eu.slipo.workbench.common.model.poi.EnumResourceType;
@@ -15,9 +16,9 @@ public class ProcessOutput extends ProcessInput
 
     private int stepKey;
 
-    public ProcessOutput() {
-        super();
-        this.inputType = EnumInputType.OUTPUT;
+    public ProcessOutput() 
+    {
+        super(-1, EnumInputType.OUTPUT, EnumResourceType.UNDEFINED, null);
     }
 
     protected ProcessOutput(
@@ -33,6 +34,7 @@ public class ProcessOutput extends ProcessInput
      *
      * @return a value of {@link EnumTool}
      */
+    @JsonProperty
     public EnumTool getTool() {
         return tool;
     }
@@ -42,6 +44,7 @@ public class ProcessOutput extends ProcessInput
      *
      * @return the step key
      */
+    @JsonProperty
     public int getStepKey() {
         return stepKey;
     }

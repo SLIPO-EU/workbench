@@ -1,6 +1,9 @@
 package eu.slipo.workbench.common.model.process;
 
+import java.io.Serializable;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import eu.slipo.workbench.common.model.poi.EnumResourceType;
 import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
@@ -8,7 +11,9 @@ import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
 /**
  * A process input resource that already exists in the catalog
  */
-public class CatalogResource extends ProcessInput {
+public class CatalogResource extends ProcessInput implements Serializable
+{
+    private static final long serialVersionUID = 1L;
 
     private ResourceIdentifier resource;
 
@@ -41,33 +46,41 @@ public class CatalogResource extends ProcessInput {
     }
 
     public CatalogResource(
-        int key, EnumResourceType resourceType, String title, ResourceIdentifier resource, String description)
+        int key, EnumResourceType resourceType, String title, ResourceIdentifier resourceIdentifier, String description)
     {
         super(key, EnumInputType.CATALOG, resourceType, title);
-        this.resource = new ResourceIdentifier(resource);
+        this.resource = new ResourceIdentifier(resourceIdentifier);
         this.description = description;
     }
 
-    @JsonIgnore()
+    @JsonIgnore
     public long getId() {
         return this.resource.getId();
     }
 
-    @JsonIgnore()
+    @JsonIgnore
     public long getVersion() {
         return this.resource.getVersion();
     }
 
+    @JsonProperty
     public ResourceIdentifier getResource() {
         return resource;
     }
 
-    public void setResource(ResourceIdentifier resource) {
-        this.resource = resource;
+    @JsonProperty
+    public void setResource(ResourceIdentifier resourceIdentifier) {
+        this.resource = resourceIdentifier;
     }
 
+    @JsonProperty
     public String getDescription() {
         return description;
     }
-
+    
+    @JsonProperty
+    public void setDescription(String description)
+    {
+        this.description = description;
+    }
 }

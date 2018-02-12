@@ -1,24 +1,15 @@
 package eu.slipo.workbench.web.controller.action;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.security.Principal;
-import java.util.UUID;
 
-import javax.annotation.PostConstruct;
-
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -62,24 +53,13 @@ public class ResourceController
     @Autowired
     private AuthenticationFacade authenticationFacade;
    
-    /**
-     * The folder where temporary files are saved. It must be accessible from SLIPO RPC service.
-     */
-    private Path workingDir;
+    @Autowired
+    @Qualifier("tempDataDirectory")
+    private Path tempDir;
 
     @Autowired
-    private void setWorkingDir(@Value("${slipo.working-dir}") String dir)
-    {
-        this.workingDir = Paths.get(dir);
-    }
-    
-    @PostConstruct
-    private void initialize() throws IOException
-    {
-        try {
-            Files.createDirectories(workingDir);
-        } catch (FileAlreadyExistsException ex) {}
-    }
+    @Qualifier("catalogDataDirectory")
+    private Path catalogDataDir;
     
     /**
      * Search for resources
@@ -230,7 +210,7 @@ public class ResourceController
         throws IOException 
     {        
         Path path = Files.createTempFile(
-            workingDir, null, "." + (extension == null? "dat" : extension));
+            tempDir, null, "." + (extension == null? "dat" : extension));
         
         Files.copy(new ByteArrayInputStream(data), path);
         return path.toString();

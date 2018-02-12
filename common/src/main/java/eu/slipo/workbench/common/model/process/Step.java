@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import eu.slipo.workbench.common.model.poi.EnumOperation;
 import eu.slipo.workbench.common.model.poi.EnumTool;
+import eu.slipo.workbench.common.model.tool.MetadataRegistrationConfiguration;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 
@@ -34,7 +35,7 @@ public class Step {
     @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "tool")
     @JsonSubTypes({
         @Type(value = TriplegeoConfiguration.class, name = "triplegeo"),
-        // Fixme @Type(value = MetadataRegistrationConfiguration.class, name = "catalog")
+        @Type(value = MetadataRegistrationConfiguration.class, name = "catalog")
     })
     private ToolConfiguration configuration;
     
