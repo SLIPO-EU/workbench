@@ -2,8 +2,10 @@ package eu.slipo.workbench.web.controller.action;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
@@ -25,6 +27,7 @@ import eu.slipo.workbench.common.model.QueryResultPage;
 import eu.slipo.workbench.common.model.RestResponse;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.ProcessDefinitionBuilder;
+import eu.slipo.workbench.common.model.resource.DataSource;
 import eu.slipo.workbench.common.model.resource.EnumDataSourceType;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataUpdate;
 import eu.slipo.workbench.common.model.resource.ResourceQuery;
@@ -101,15 +104,19 @@ public class ResourceController
                 ResourceErrorCode.DATASOURCE_NOT_SUPPORTED, "Data source of type 'UPLOAD' is not supported.");
         }
 
-        // Convert registration data to a process configuration instance
-        ProcessDefinition process = ProcessDefinitionBuilder.create()
-            .transform(0, "Transform", request.getDataSource(), request.getConfiguration(), 1)
-            .register(1, "Register", request.getMetadata(), 1)
+        final int resourceKey = 1; 
+        
+        ProcessDefinition definition = ProcessDefinitionBuilder.create()
+            .name("register")
+            .transform(0, "Transform", request.getDataSource(), request.getConfiguration(), resourceKey)
+            .register(1, "Register", request.getMetadata(), resourceKey)
             .build();
 
-        // TODO: Submit request to service
+        // Todo Save definition into a ProcessEntity
+        
+        // Todo: Submit request to service
 
-        return RestResponse.result(process);
+        return RestResponse.result(definition);
     }
 
     /**
@@ -122,22 +129,27 @@ public class ResourceController
     @RequestMapping(value = "/action/resource/upload", method = RequestMethod.PUT)
     public RestResponse<?> uploadResource(
         Authentication authentication, 
-        @RequestPart("file") MultipartFile file, @RequestPart("data") RegistrationRequest request) throws IOException 
+        @RequestPart("file") MultipartFile file, @RequestPart("data") RegistrationRequest request)
     {
         try {
             // Create a temporary file
-            final String inputFile = createTemporaryFile(
+            final Path inputPath = createTemporaryFile(
                 file.getBytes(), FilenameUtils.getExtension(file.getOriginalFilename()));
 
-            // Convert registration data to a process configuration instance
-            ProcessDefinition process = ProcessDefinitionBuilder.create()
-                .transform(0, "Transform", new UploadDataSource(inputFile), request.getConfiguration(), 1)
-                .register(1, "Register", request.getMetadata(), 1)
+            final int resourceKey = 1; 
+            final DataSource source = new UploadDataSource(inputPath);
+            
+            ProcessDefinition definition = ProcessDefinitionBuilder.create()
+                .name("register")
+                .transform(0, "Transform", source, request.getConfiguration(), resourceKey)
+                .register(1, "Register", request.getMetadata(), resourceKey)
                 .build();
+            
+            // Todo Save definition into a ProcessEntity
+            
+            // Todo: Submit request to service
 
-            // TODO: Submit request to service
-
-            return RestResponse.result(process);
+            return RestResponse.result(definition);
         } catch (IOException ex) {
             logger.error(ex.getMessage(), ex);
             return RestResponse.error(BasicErrorCode.IO_ERROR, "IO exception has occured: " + ex.getMessage());
@@ -154,7 +166,7 @@ public class ResourceController
     @RequestMapping(value = "/action/resource/{id}", method = RequestMethod.GET)
     public RestResponse<ResourceRecord> getResource(Authentication authentication, @PathVariable long id) 
     {
-        return RestResponse.<ResourceRecord>result(resourceRepository.findOne(id));
+        return RestResponse.result(resourceRepository.findOne(id));
     }
 
     /**
@@ -168,7 +180,7 @@ public class ResourceController
     public RestResponse<?> updateResource(
         Authentication authentication, @PathVariable long id, @RequestBody ResourceMetadataUpdate data) 
     {
-        return RestResponse.<ResourceRecord>result(resourceRepository.findOne(id));
+        return RestResponse.result(resourceRepository.findOne(id));
     }
 
     /**
@@ -200,20 +212,23 @@ public class ResourceController
     }
 
     /**
-     * Creates a new unique filename and stores the given array of bytes.
+     * Creates a new temporary file and stores the given array of bytes.
      *
      * @param data the content to write to the file
-     * @return a unique filename.
      * @throws IOException in case of an I/O error
+     * 
+     * @return the file path under which data is written 
      */
-    private String createTemporaryFile(byte[] data, String extension) 
+    private Path createTemporaryFile(byte[] data, String extension) 
         throws IOException 
     {        
-        Path path = Files.createTempFile(
+        final Path path = Files.createTempFile(
             tempDir, null, "." + (extension == null? "dat" : extension));
         
-        Files.copy(new ByteArrayInputStream(data), path);
-        return path.toString();
+        InputStream in = new ByteArrayInputStream(data);
+        Files.copy(in, path, StandardCopyOption.REPLACE_EXISTING);
+        
+        return path;
     }
 
 }

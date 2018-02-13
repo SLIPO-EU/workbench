@@ -27,6 +27,13 @@ import eu.slipo.workbench.common.model.process.EnumProcessTaskType;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
 
+/**
+ * An entity that represents a process
+ * 
+ * <p>
+ * Todo Consider adding resources referenced by this definition as an OneToMany
+ * relationship to this entity (so we can answer dependency queries).
+ */
 @Entity(name = "Process")
 @Table(schema = "public", name = "process")
 public class ProcessEntity {
@@ -75,7 +82,7 @@ public class ProcessEntity {
     ZonedDateTime executedOn;
 
     @NotNull
-    @Column(name = "definition")
+    @Column(name = "definition", nullable = false)
     @Convert(converter = ProcessConfigurationConverter.class)
     ProcessDefinition definition;
 

@@ -1,5 +1,7 @@
 package eu.slipo.workbench.common.model.process;
 
+import java.io.Serializable;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
@@ -11,12 +13,15 @@ import eu.slipo.workbench.common.model.poi.EnumResourceType;
 /**
  * Process input
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "inputType")
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "inputType")
 @JsonSubTypes({
-    @Type(value = CatalogResource.class, name = "CATALOG"),
-    @Type(value = ProcessOutput.class, name = "OUTPUT"),
+    @Type(name = "CATALOG", value = CatalogResource.class),
+    @Type(name = "OUTPUT", value = ProcessOutput.class),
 })
-public abstract class ProcessInput {
+public abstract class ProcessInput implements Serializable 
+{
+    private static final long serialVersionUID = 1L;
 
     protected int key;
 

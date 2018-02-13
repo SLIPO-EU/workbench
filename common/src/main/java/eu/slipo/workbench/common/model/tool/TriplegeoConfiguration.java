@@ -201,7 +201,7 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
     public TriplegeoConfiguration()
     {
         this.outputFormat = EnumDataFormat.N_TRIPLES;
-        this.tmpDir = Paths.get("/tmp");
+        this.tmpDir = "/tmp";
     }
     
     @Override
@@ -283,32 +283,40 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
         setInputFormat(f.dataFormat());
     }
     
-    @Override
+    @JsonIgnore
     public void setInput(List<Path> input)
     {
-        super.setInput(input);
+        this.input = Collections.unmodifiableList(
+            input.stream()
+                .map(Path::toString)
+                .collect(Collectors.toList()));
     }
     
     @NotEmpty
-    @Override
+    @JsonIgnore
     public List<Path> getInput()
     {
-        return super.getInput();
+        return this.input.stream()
+            .map(Paths::get)
+            .collect(Collectors.toList());
     }
     
     @JsonAlias({ "inputFiles", "input" })
-    public void setInputFiles(String inputFiles)
+    public void setInputFromString(String inputFiles)
     {
-        Assert.isTrue(!StringUtils.isEmpty(inputFiles), 
-            "Expected a non empty colon-separated list of files");
-        super.setInput(inputFiles.split(File.pathSeparator));
+        if (!StringUtils.isEmpty(inputFiles)) {
+            this.input = Collections.unmodifiableList(
+                Arrays.asList(inputFiles.split(File.pathSeparator)));
+        }
     }
     
     @JsonProperty("inputFiles")
-    public String getInputFiles()
+    public String getInputAsString()
     {
-        return super.getInput().stream()
-            .map(Path::toString)
+        if (input.isEmpty())
+            return null;
+        
+        return input.stream()
             .collect(Collectors.joining(File.pathSeparator));
     }
     
@@ -345,49 +353,49 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
     @JsonIgnore
     public void setOutputDir(Path outputDir)
     {
-        this.outputDir = outputDir;
+        this.outputDir = outputDir == null? null : outputDir.toString();
     }
     
     @JsonIgnore
     public Path getOutputDir()
     {
-        return outputDir;
+        return outputDir == null? null : Paths.get(outputDir);
     }
     
     @JsonProperty("outputDir")
     public void setOutputDir(String outputDir)
     {
-        this.outputDir = Paths.get(outputDir);
+        this.outputDir = outputDir;
     }
     
     @JsonProperty("outputDir")
     public String getOutputDirAsString()
     {
-        return outputDir == null? null : outputDir.toString();
+        return outputDir;
     }
     
     @JsonIgnore
     public void setTmpDir(Path tmpDir)
     {
-        this.tmpDir = tmpDir;
+        this.tmpDir = tmpDir == null? null : tmpDir.toString();
     }
     
     @JsonIgnore
     public Path getTmpDir()
     {
-        return tmpDir;
+        return tmpDir == null? null : Paths.get(tmpDir);
     }
     
     @JsonProperty("tmpDir")
     public void setTmpDir(String tmpDir)
     {
-        this.tmpDir = Paths.get(tmpDir);
+        this.tmpDir = tmpDir;
     }
     
     @JsonProperty("tmpDir")
     public String getTmpDirAsString()
     {
-        return tmpDir == null? null : tmpDir.toString();
+        return tmpDir;
     }
     
     @JsonProperty("mode")

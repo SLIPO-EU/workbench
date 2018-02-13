@@ -1,19 +1,28 @@
 package eu.slipo.workbench.common.model.resource;
 
+import java.nio.file.Path;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * Uploaded file data source
  */
-public class UploadDataSource extends DataSource {
+public class UploadDataSource extends DataSource 
+{
+    private static final long serialVersionUID = 1L;
+    
+    @JsonProperty("path")
+    private String path;
 
-    private String filename;
-
-    public UploadDataSource() {
+    public UploadDataSource() 
+    {
         super(EnumDataSourceType.UPLOAD);
     }
 
-    public UploadDataSource(String filename) {
+    public UploadDataSource(Path path) 
+    {
         super(EnumDataSourceType.UPLOAD);
-        this.filename = filename;
+        this.path = path.toString();
     }
 
     /**
@@ -21,8 +30,15 @@ public class UploadDataSource extends DataSource {
      *
      * @return the filename
      */
-    public String getFilename() {
-        return filename;
+    @JsonProperty("path")
+    public String getPath() 
+    {
+        return path;
     }
 
+    @Override
+    public String toString()
+    {
+        return String.format("UploadDataSource [path=%s]", path);
+    }
 }

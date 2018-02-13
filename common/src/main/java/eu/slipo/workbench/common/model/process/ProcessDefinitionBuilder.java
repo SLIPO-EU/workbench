@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
+
 import eu.slipo.workbench.common.model.poi.EnumOperation;
 import eu.slipo.workbench.common.model.poi.EnumResourceType;
 import eu.slipo.workbench.common.model.poi.EnumTool;
@@ -28,7 +31,8 @@ public class ProcessDefinitionBuilder {
 
     public ProcessDefinitionBuilder() {}
 
-    public static ProcessDefinitionBuilder create() {
+    public static ProcessDefinitionBuilder create() 
+    {
         return new ProcessDefinitionBuilder();
     }
 
@@ -38,7 +42,12 @@ public class ProcessDefinitionBuilder {
         return this;
     }
     
-    public ProcessDefinitionBuilder resource(ProcessInput resource) {
+    /**
+     * Designate a catalog resource as an input of this process
+     * @param resource A catalog resource
+     */
+    public ProcessDefinitionBuilder resource(CatalogResource resource) 
+    {
         this.resources.add(resource);
         return this;
     }
@@ -48,102 +57,107 @@ public class ProcessDefinitionBuilder {
         return this;
     }
 
+    /**
+     * Add a step to this process. This step expects input from either catalog resources
+     * or from the output of other steps.
+     * 
+     * @param group
+     * @param name
+     * @param tool
+     * @param operation
+     * @param configuration A tool-specific configuration bean
+     * @param resourceKeys The resource keys for the input of this step 
+     * @param outputKey The resource key of the (single) output produced by this step
+     * @return
+     */
     public ProcessDefinitionBuilder step(
         int group, 
         String name, 
         EnumTool tool,
         EnumOperation operation, 
         ToolConfiguration configuration, 
-        List<Integer> resources)
+        List<Integer> resourceKeys,
+        int outputKey)
     {
         int key = ++this.stepKey;
         
-        Step step = new Step(
-            name, 
-            key, 
-            group, 
-            tool, 
-            operation, 
-            configuration, 
-            new ArrayList<>(resources), 
-            null);
+        Step step = Step.builder(key, group, name)
+            .tool(tool)
+            .configuration(configuration)
+            .operation(operation)
+            .input(resourceKeys)
+            .outputKey(outputKey)
+            .build();
 
-        return this.step(step);
-    }
-
-    public ProcessDefinitionBuilder step(
-        int group, 
-        String name, 
-        EnumTool tool,
-        EnumOperation operation, 
-        ToolConfiguration configuration, 
-        List<Integer> resources,
-        int output)
-    {
-        int key = ++this.stepKey;
-        
-        Step step = new Step(
-            name, 
-            key, 
-            group, 
-            tool, 
-            operation, 
-            configuration, 
-            new ArrayList<>(resources), 
-            output);
-        
-        // Output
         EnumResourceType resourceType = tool == EnumTool.LIMES? 
             EnumResourceType.POI_LINKED_DATA : EnumResourceType.POI_DATA;
-        this.resources.add(new ProcessOutput(output, resourceType, name, key, tool));
+        this.resources.add(new ProcessOutput(outputKey, resourceType, name, key, tool));
 
         return this.step(step);
     }
 
+    /**
+     * Add a special-purpose transformation step that imports an external (to the application)
+     * data source into this process. 
+     * 
+     * <p>This step is always performed by Triplegeo tool, and is usually needed to make an
+     * external resource available to a process (and to the resource catalog). 
+     * 
+     * @param group
+     * @param name
+     * @param source
+     * @param configuration
+     * @param outputKey
+     * @return
+     */
     public ProcessDefinitionBuilder transform(
         int group, 
         String name, 
-        DataSource dataSource, // Fixme dataSource
+        DataSource source,
         TriplegeoConfiguration configuration,
-        int output)
+        int outputKey)
     {
         int key = ++this.stepKey;
         
-        Step step = new Step(
-            name, 
-            key, 
-            group, 
-            EnumTool.TRIPLEGEO,
-            EnumOperation.TRANSFORM,
-            configuration,
-            Collections.emptyList(),
-            output);
-        
-        // Output
-        this.resources.add(
-            new ProcessOutput(output, EnumResourceType.POI_DATA, name, key, EnumTool.TRIPLEGEO));
+        Step step = Step.builder(key, group, name)
+            .tool(EnumTool.TRIPLEGEO)
+            .configuration(configuration)
+            .operation(EnumOperation.TRANSFORM)
+            .source(source)
+            .outputKey(outputKey)
+            .build();
+
+        EnumResourceType resourceType = EnumResourceType.POI_DATA;
+        this.resources.add(new ProcessOutput(outputKey, resourceType, name, key, EnumTool.TRIPLEGEO));
         
         return this.step(step);
     }
 
+    /**
+     * Register an intermediate result (expected to be produced by this process) to the catalog. 
+     * The actual registration will take place after successful completion of the enclosing
+     * process. 
+     * 
+     * @param group
+     * @param name A user-friendly name for this step
+     * @param metadata The metadata that should accompany the registered resource
+     * @param resourceKey The key that identifies the resource to register
+     * @return
+     */
     public ProcessDefinitionBuilder register(
         int group,
         String name,
         ResourceMetadataCreate metadata,
-        Integer resource)
+        Integer resourceKey)
     {
         int key = ++this.stepKey;
 
-        Step step = new Step(
-            name, 
-            key, 
-            group, 
-            EnumTool.CATALOG, 
-            EnumOperation.REGISTER,
-            new MetadataRegistrationConfiguration(metadata),
-            Collections.singletonList(resource),
-            null
-        );
+        Step step = Step.builder(key, group, name)
+            .tool(EnumTool.CATALOG)
+            .configuration(new MetadataRegistrationConfiguration(metadata))
+            .operation(EnumOperation.REGISTER)
+            .input(resourceKey)
+            .build();
 
         return this.step(step);
     }
@@ -159,6 +173,11 @@ public class ProcessDefinitionBuilder {
 
     public ProcessDefinition build() 
     {
+        Assert.state(!StringUtils.isEmpty(name), "The name cannot be empty");
+        
+        // Todo validate that keys are unique across resources
+        // Todo validate that input keys (for ecery step) refer to actual resource keys
+        
         return new ProcessDefinition(name, resources, steps);
     }
 }
