@@ -155,4 +155,14 @@ public class ProcessRecord {
     public void addExecution(ProcessExecutionRecord e) {
         this.executions.add(e);
     }
+
+    @Override
+    public String toString()
+    {
+        return String.format(
+            "ProcessRecord [id=%s, version=%s, createdOn=%s, updatedOn=%s, name=%s]", 
+            id, version, createdOn, updatedOn, name);
+    }
+    
+    
 }

@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Locale;
 
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.Authentication;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,14 +27,18 @@ import org.springframework.web.multipart.MultipartFile;
 import eu.slipo.workbench.common.model.BasicErrorCode;
 import eu.slipo.workbench.common.model.QueryResultPage;
 import eu.slipo.workbench.common.model.RestResponse;
+import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.ProcessDefinitionBuilder;
+import eu.slipo.workbench.common.model.process.ProcessRecord;
 import eu.slipo.workbench.common.model.resource.DataSource;
 import eu.slipo.workbench.common.model.resource.EnumDataSourceType;
+import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataUpdate;
 import eu.slipo.workbench.common.model.resource.ResourceQuery;
 import eu.slipo.workbench.common.model.resource.ResourceRecord;
 import eu.slipo.workbench.common.model.resource.UploadDataSource;
+import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.repository.ResourceRepository;
 import eu.slipo.workbench.web.model.QueryResult;
 import eu.slipo.workbench.web.model.resource.RegistrationRequest;
@@ -40,6 +46,7 @@ import eu.slipo.workbench.web.model.resource.ResourceErrorCode;
 import eu.slipo.workbench.web.model.resource.ResourceQueryRequest;
 import eu.slipo.workbench.web.model.resource.ResourceRegistrationRequest;
 import eu.slipo.workbench.web.service.AuthenticationFacade;
+import eu.slipo.workbench.web.service.ProcessService;
 
 /**
  * Actions for managing resources
@@ -64,6 +71,51 @@ public class ResourceController
     @Qualifier("catalogDataDirectory")
     private Path catalogDataDir;
     
+    @Autowired
+    private ProcessService processService;
+    
+    private int currentUserId()
+    {
+        return authenticationFacade.getCurrentUserId();
+    }
+    
+    private Locale currentUserLocale()
+    {
+        return authenticationFacade.getCurrentUserLocale();
+    }
+    
+    /**
+     * Register a resource from a generic data source (i.e. {@link DataSource})
+     * 
+     * @param source The data source
+     * @param configuration The configuration needed by Triplegeo to transform into one
+     *   of the internally recognized data formats (see {@link EnumDataFormat}).
+     * @param metadata The metadata that should accompany the catalog resource
+     * @return
+     */
+    private ProcessRecord register(
+        DataSource source, TriplegeoConfiguration configuration, ResourceMetadataCreate metadata)
+    {
+        Assert.notNull(source, "A data source is required");
+        Assert.notNull(configuration, "Expected configuration for Triplegeo");
+        Assert.notNull(metadata, "Expected metadata for resource registration");
+        
+        final int resourceKey = 1;
+        
+        ProcessDefinition definition = ProcessDefinitionBuilder.create()
+            .name("register")
+            .transform(0, "transform", source, configuration, resourceKey)
+            .register(1, "register", metadata, resourceKey)
+            .build();
+
+        ProcessRecord record = processService.create(definition);
+        logger.info("Created process for registration: {}", record);
+        
+        // Todo: Submit processing request to RPC server
+        
+        return record;
+    }
+    
     /**
      * Search for resources
      *
@@ -81,7 +133,7 @@ public class ResourceController
         
         PageRequest pageReq = request.getPageRequest();
         ResourceQuery query = request.getQuery();
-        query.setCreatedBy(authenticationFacade.getCurrentUserId());
+        query.setCreatedBy(currentUserId());
 
         QueryResultPage<ResourceRecord> r = resourceRepository.find(query, pageReq);
         return RestResponse.result(QueryResult.create(r));
@@ -98,25 +150,15 @@ public class ResourceController
     public RestResponse<?> registerResource(
         Authentication authentication, @RequestBody ResourceRegistrationRequest request) 
     {
-        // Action does not support file uploading
         if (request.getDataSource().getType() == EnumDataSourceType.UPLOAD) {
             return RestResponse.error(
                 ResourceErrorCode.DATASOURCE_NOT_SUPPORTED, "Data source of type 'UPLOAD' is not supported.");
         }
 
-        final int resourceKey = 1; 
-        
-        ProcessDefinition definition = ProcessDefinitionBuilder.create()
-            .name("register")
-            .transform(0, "Transform", request.getDataSource(), request.getConfiguration(), resourceKey)
-            .register(1, "Register", request.getMetadata(), resourceKey)
-            .build();
+        ProcessRecord record = register(
+            request.getDataSource(), request.getConfiguration(), request.getMetadata());
 
-        // Todo Save definition into a ProcessEntity
-        
-        // Todo: Submit request to service
-
-        return RestResponse.result(definition);
+        return RestResponse.result(record);
     }
 
     /**
@@ -131,29 +173,22 @@ public class ResourceController
         Authentication authentication, 
         @RequestPart("file") MultipartFile file, @RequestPart("data") RegistrationRequest request)
     {
+        Path inputPath = null;
         try {
-            // Create a temporary file
-            final Path inputPath = createTemporaryFile(
-                file.getBytes(), FilenameUtils.getExtension(file.getOriginalFilename()));
-
-            final int resourceKey = 1; 
-            final DataSource source = new UploadDataSource(inputPath);
-            
-            ProcessDefinition definition = ProcessDefinitionBuilder.create()
-                .name("register")
-                .transform(0, "Transform", source, request.getConfiguration(), resourceKey)
-                .register(1, "Register", request.getMetadata(), resourceKey)
-                .build();
-            
-            // Todo Save definition into a ProcessEntity
-            
-            // Todo: Submit request to service
-
-            return RestResponse.result(definition);
+            // Create a temporary file to store uploaded data stream
+            inputPath = createTemporaryFile(
+                file.getBytes(), FilenameUtils.getExtension(file.getOriginalFilename())); 
         } catch (IOException ex) {
             logger.error(ex.getMessage(), ex);
-            return RestResponse.error(BasicErrorCode.IO_ERROR, "IO exception has occured: " + ex.getMessage());
+            return RestResponse.error(
+                BasicErrorCode.IO_ERROR, "An i/o exception has occured: " + ex.getMessage());
         }
+        
+        final DataSource source = new UploadDataSource(inputPath);
+        
+        ProcessRecord record = register(source, request.getConfiguration(), request.getMetadata());
+        
+        return RestResponse.result(record);
     }
 
     /**
