@@ -1,4 +1,4 @@
-package eu.slipo.workbench.web.config;
+package eu.slipo.workbench.common.config;
 
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;

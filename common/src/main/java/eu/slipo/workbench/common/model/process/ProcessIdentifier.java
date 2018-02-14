@@ -1,26 +1,51 @@
 package eu.slipo.workbench.common.model.process;
 
-public class ProcessIdentifier {
+import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public class ProcessIdentifier implements Serializable
+{
     private long id;
 
     private long version;
 
-    public ProcessIdentifier(long id, long version) {
+    protected ProcessIdentifier() {}
+    
+    @JsonCreator
+    public ProcessIdentifier(
+        @JsonProperty("id") long id, @JsonProperty("version") long version) 
+    {
         this.id = id;
         this.version = version;
     }
+    
+    public ProcessIdentifier(ProcessIdentifier other) {
+        this.id = other.id;
+        this.version = other.version;
+    }
 
-    public long getId() {
+    @JsonProperty("id")
+    public long getId() 
+    {
         return id;
     }
 
-    public long getVersion() {
+    @JsonProperty("version")
+    public long getVersion() 
+    {
         return version;
     }
 
+    public static ProcessIdentifier of(long id, long version)
+    {
+        return new ProcessIdentifier(id, version);
+    }
+    
     @Override
-    public ProcessIdentifier clone() {
-        return new ProcessIdentifier(this.id, this.version);
+    public String toString()
+    {
+        return String.format("ProcessIdentifier [id=%s, version=%s]", id, version);
     }
 }
