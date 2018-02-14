@@ -3,6 +3,8 @@ package eu.slipo.workbench.common.model.process;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -173,11 +175,25 @@ public class ProcessDefinitionBuilder {
 
     public ProcessDefinition build() 
     {
-        Assert.state(!StringUtils.isEmpty(name), "The name cannot be empty");
+        Assert.state(!StringUtils.isEmpty(this.name), "The name cannot be empty");
         
-        // Todo validate that keys are unique across resources
-        // Todo validate that input keys (for ecery step) refer to actual resource keys
+        // Validate definition
         
-        return new ProcessDefinition(name, resources, steps);
+        final List<Integer> resourceKeys = this.resources.stream()
+            .map(ProcessInput::getKey)
+            .distinct()
+            .collect(Collectors.toList());
+        
+        Assert.state(
+            resourceKeys.size() == this.resources.size(), 
+            "The list of given resources contains duplicate keys!");
+        
+        Assert.state(
+            this.steps.stream().allMatch(step -> resourceKeys.containsAll(step.input())),
+            "The input keys (for every step) must refer to existing resource keys");
+        
+        // The definition seems valid
+        
+        return new ProcessDefinition(this.name, this.resources, this.steps);
     }
 }
