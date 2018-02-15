@@ -1243,15 +1243,44 @@ export const redo = function () {
  * Thunks
  */
 
-export function load(id, version) {
+export function fetchProcess(id) {
   return (dispatch, getState) => {
     if (Number.isNaN(id)) {
-      return Promise.reject(new Error('Invalid id. Failed to load process instance'));
+      return Promise.reject(new Error('Invalid id. Failed to load workflow instance'));
     }
 
     const { meta: { csrfToken: token } } = getState();
-    return processService.fetchProcess(id, version, token).then((process) => {
-      dispatch(processLoaded(process, !Number.isNaN(version)));
+    return processService.fetchProcess(id, token).then((process) => {
+      dispatch(processLoaded(process, false));
+    });
+  };
+}
+
+export function fetchProcessRevision(id, version) {
+  return (dispatch, getState) => {
+    if (Number.isNaN(id)) {
+      return Promise.reject(new Error('Invalid id. Failed to load workflow instance'));
+    }
+    if (Number.isNaN(version)) {
+      return Promise.reject(new Error('Invalid version. Failed to load workflow instance'));
+    }
+
+    const { meta: { csrfToken: token } } = getState();
+    return processService.fetchProcessRevision(id, version, token).then((process) => {
+      dispatch(processLoaded(process, true));
+    });
+  };
+}
+
+export function edit(id) {
+  return (dispatch, getState) => {
+    if (Number.isNaN(id)) {
+      return Promise.reject(new Error('Invalid id. Failed to load workflow instance'));
+    }
+
+    const { meta: { csrfToken: token } } = getState();
+    return processService.fetchProcessRevision(id, token).then((process) => {
+      dispatch(processLoaded(process, false));
     });
   };
 }

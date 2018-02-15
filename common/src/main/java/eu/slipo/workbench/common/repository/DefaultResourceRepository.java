@@ -10,7 +10,6 @@ import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,7 +33,7 @@ public class DefaultResourceRepository implements ResourceRepository {
     @PersistenceContext(unitName = "default")
     EntityManager entityManager;
 
-    private void setFindParameters(ResourceQuery resourceQuery, Query query) 
+    private void setFindParameters(ResourceQuery resourceQuery, Query query)
     {
         Geometry geometry = resourceQuery.getBoundingBox();
         if ((geometry != null) && (geometry.getSRID() == 0)) {
@@ -59,17 +58,18 @@ public class DefaultResourceRepository implements ResourceRepository {
         if (geometry != null) {
             query.setParameter("geometry", geometry);
         }
-        
+
         Integer userId = resourceQuery.getCreatedBy();
         query.setParameter("ownerId", userId == null? -1 : userId.intValue());
     }
 
     @Override
-    public QueryResultPage<ResourceRecord> find(ResourceQuery query, PageRequest pageReq) 
+    public QueryResultPage<ResourceRecord> find(ResourceQuery query, PageRequest pageReq)
     {
         // Check query parameters
-        if (pageReq == null)
+        if (pageReq == null) {
             pageReq = new PageRequest(0, 10);
+        }
 
         // Load data
         String command = "";
@@ -128,13 +128,26 @@ public class DefaultResourceRepository implements ResourceRepository {
     }
 
     @Override
-    public ResourceRecord findOne(long id) 
+    public ResourceRecord findOne(long id)
     {
         String queryString = "select r from Resource r where r.id = :id";
 
-        TypedQuery<ResourceEntity> query = entityManager.createQuery(queryString, ResourceEntity.class);
-        query.setParameter("id", id);
-        List<ResourceEntity> resources = query.getResultList();
+        List<ResourceEntity> resources = entityManager
+            .createQuery(queryString, ResourceEntity.class)
+            .setParameter("id", id)
+            .getResultList();
+
+        return (resources.isEmpty() ? null : resources.get(0).toResourceRecord());
+    }
+
+    @Override
+    public ResourceRecord findOne(String name) {
+        String queryString = "select r from Resource r where r.name = :name";
+
+        List<ResourceEntity> resources = entityManager
+            .createQuery(queryString, ResourceEntity.class)
+            .setParameter("name", name)
+            .getResultList();
 
         return (resources.isEmpty() ? null : resources.get(0).toResourceRecord());
     }

@@ -37,7 +37,7 @@ export const JobGridData = [{
  * Job grid sample column configuration
  */
 export const JobGridColumns = [{
-  Header: 'Process Id',
+  Header: 'Workflow Id',
   accessor: 'processId',
   show: false
 }, {

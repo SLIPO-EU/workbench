@@ -87,7 +87,8 @@ class Operation extends React.Component {
       <div className={
         classnames({
           "slipo-pd-item": true,
-          "slipo-pd-operation": true,
+          "slipo-pd-operation": (this.props.tool !== EnumTool.CATALOG),
+          "slipo-pd-operation-catalog": (this.props.tool === EnumTool.CATALOG),
           "slipo-pd-item-is-dragging": isDragging
         })
       }>

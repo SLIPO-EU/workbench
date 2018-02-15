@@ -1,4 +1,5 @@
 export {
+  EnumMode,
   EnumDataSource,
   EnumDragSource,
   EnumHarvester,
@@ -15,6 +16,10 @@ export {
 } from './constants';
 
 export {
+  stepFileTypeToText
+} from './util';
+
+export {
   DataSourceIcons,
   DataSourceTitles,
   HarvesterIcons,
@@ -25,6 +30,7 @@ export {
   ToolInput,
   ToolTitles,
 } from './config';
+
 export { default as DataSource } from './data-source';
 export { default as DataSourceConfig } from './data-source-config';
 export { default as DataSourceConfigWizard } from './data-source-config-wizard';

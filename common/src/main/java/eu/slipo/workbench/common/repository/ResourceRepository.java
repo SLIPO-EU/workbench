@@ -23,4 +23,13 @@ public interface ResourceRepository {
      * @return an instance of {@link ResourceRecord} if resource exists or null
      */
     ResourceRecord findOne(long id);
+
+    /**
+     * Find a single record by name
+     *
+     * @param name the resource unique name
+     * @return an instance of {@link ResourceRecord} if the resource exists or null
+     */
+    ResourceRecord findOne(String name);
+
 }

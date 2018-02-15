@@ -19,6 +19,10 @@ import {
 } from 'react-toastify';
 
 import {
+  EnumKpiViewMode
+} from '../../model/constants';
+
+import {
   ToastTemplate,
 } from '../helpers';
 
@@ -26,13 +30,19 @@ import {
   Execution,
   ExecutionStep,
   ExecutionFiles,
+  FeaturePropertyViewer,
+  KpiChartView,
+  KpiGridView,
   MapViewer,
 } from './execution/viewer';
 
 import {
   addToMap,
   fetchExecutionDetails,
+  fetchExecutionKpiData,
   removeFromMap,
+  resetKpi,
+  selectFeatures,
   selectFile,
   selectStep,
   toggleMapView,
@@ -49,6 +59,7 @@ class ProcessExecutionViewer extends React.Component {
   constructor(props) {
     super(props);
 
+    this.selectKpi = this.selectKpi.bind(this);
     this.toggleMap = this.toggleMap.bind(this);
   }
 
@@ -78,15 +89,20 @@ class ProcessExecutionViewer extends React.Component {
   }
 
   toggleMap(e) {
-    console.log(e);
     this.props.toggleMapView();
+  }
+
+  selectKpi(file, mode) {
+    const { id, version, execution } = this.props.match.params;
+
+    this.props.fetchExecutionKpiData(Number.parseInt(id), Number.parseInt(version), Number.parseInt(execution), file, mode);
   }
 
   renderStep(step) {
     return (
       <ExecutionStep
         key={step.key}
-        selectedStep={this.props.selectedStep}
+        selected={this.props.selectedStep === step.id}
         selectStep={this.props.selectStep}
         step={step}
       />
@@ -94,14 +110,30 @@ class ProcessExecutionViewer extends React.Component {
   }
 
   renderMap() {
+    const features = this.props.selectedFeatures;
+
     return (
-      <MapViewer />
+      <div>
+        <Row>
+          <Col>
+            <MapViewer
+              selectFeatures={this.props.selectFeatures}
+            />
+          </Col>
+        </Row>
+        {features && features.length !== 0 &&
+          <FeaturePropertyViewer
+            features={features}
+          />
+        }
+      </div>
     );
   }
 
   renderData() {
     const step = this.props.execution.steps.find((s) => s.id === this.props.selectedStep);
     const files = (step ? step.files : []);
+
     return (
       <div>
         <Execution execution={this.props.execution} />
@@ -114,12 +146,23 @@ class ProcessExecutionViewer extends React.Component {
               <ExecutionFiles
                 addToMap={this.props.addToMap}
                 files={files}
-                mapFiles={this.props.mapFiles}
                 removeFromMap={this.props.removeFromMap}
                 selectedFile={this.props.selectedFile}
-                selectedStep={this.props.selectedStep}
                 selectFile={this.props.selectFile}
+                selectKpi={this.selectKpi}
                 step={step}
+              />
+            }
+            {this.props.selectedKpi && this.props.selectedKpi.mode === EnumKpiViewMode.GRID &&
+              <KpiGridView
+                data={this.props.selectedKpi.data}
+                hide={this.props.resetKpi}
+              />
+            }
+            {this.props.selectedKpi && this.props.selectedKpi.mode === EnumKpiViewMode.CHART &&
+              <KpiChartView
+                data={this.props.selectedKpi.data}
+                hide={this.props.resetKpi}
               />
             }
           </Col>
@@ -137,14 +180,14 @@ class ProcessExecutionViewer extends React.Component {
         <Row>
           <Col>
             <Label className="switch switch-text switch-pill switch-primary">
-              <Input type="checkbox" className="switch-input" checked={this.props.displayMapView} onChange={this.toggleMap} />
+              <Input type="checkbox" className="switch-input" checked={this.props.displayMap} onChange={this.toggleMap} disabled={this.props.layers.length === 0} />
               <span className="switch-label" data-on="Map" data-off="Data"></span>
               <span className="switch-handle"></span>
             </Label>
           </Col>
         </Row>
 
-        {this.props.displayMapView ?
+        {this.props.displayMap ?
           this.renderMap()
           :
           this.renderData()
@@ -157,17 +200,22 @@ class ProcessExecutionViewer extends React.Component {
 }
 
 const mapStateToProps = (state) => ({
-  displayMapView: state.ui.views.execution.viewer.displayMapView,
+  displayMap: state.ui.views.execution.viewer.displayMap,
   execution: state.ui.views.execution.viewer.execution,
-  mapFiles: state.ui.views.execution.viewer.mapFiles,
+  layers: state.ui.views.execution.viewer.layers,
+  selectedFeatures: state.ui.views.execution.viewer.selectedFeatures,
   selectedFile: state.ui.views.execution.viewer.selectedFile,
+  selectedKpi: state.ui.views.execution.viewer.selectedKpi,
   selectedStep: state.ui.views.execution.viewer.selectedStep,
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
   addToMap,
   fetchExecutionDetails,
+  fetchExecutionKpiData,
   removeFromMap,
+  resetKpi,
+  selectFeatures,
   selectFile,
   selectStep,
   toggleMapView,

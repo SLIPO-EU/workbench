@@ -26,7 +26,6 @@ function buildProcessRequest(action, designer) {
   const model = {
     action,
     process: {
-      id: (action === EnumProcessSaveAction.SaveAsTemplate ? null : designer.process.properties.id),
       name: designer.process.properties.name,
       description: designer.process.properties.description,
       resources: designer.resources
@@ -67,6 +66,7 @@ function buildProcessRequest(action, designer) {
           name: s.name,
           tool: s.tool,
           operation: s.operation,
+          input: [...s.resources],
           configuration: buildConfiguration(s),
           outputKey: s.outputKey,
         };
@@ -85,16 +85,12 @@ function buildConfiguration(step) {
   switch (step.tool) {
     case EnumTool.TripleGeo:
       return {
-        tool: step.tool,
-        resources: [...step.resources],
         settings: config,
         dataSource: buildDataSource(step),
       };
 
     case EnumTool.CATALOG:
       return {
-        tool: step.tool,
-        resources: [...step.resources],
         metadata: config,
       };
 
@@ -102,7 +98,6 @@ function buildConfiguration(step) {
     case EnumTool.FAGI:
     case EnumTool.DEER:
       return {
-        tool: step.tool,
         resources: [...step.resources],
       };
 
@@ -249,10 +244,17 @@ function readDataSource(step) {
   }
 }
 
-export function fetchProcess(id, version, token) {
-  const action = Number.isNaN(version) ? actions.get(`/action/process/${id}`, token) : actions.get(`/action/process/${id}/${version}`, token);
+export function fetchProcess(id, token) {
+  return actions
+    .get(`/action/process/${id}`, token)
+    .then((result) => {
+      return readProcessResponse(result.process);
+    });
+}
 
-  return action
+export function fetchProcessRevision(id, version, token) {
+  return actions
+    .get(`/action/process/${id}/${version}`, token)
     .then((result) => {
       return readProcessResponse(result.process);
     });
@@ -266,12 +268,32 @@ export function fetchExecutions(query, token) {
   return actions.post('/action/process/execution/query', token, query);
 }
 
-export function fetchProcessExecutions(id, version, token) {
-  return actions.get(`/action/process/${id}/${version}/execution`, token);
+export function fetchProcessExecutions(process, version, token) {
+  return actions.get(`/action/process/${process}/${version}/execution`, token);
 }
 
-export function fetchExecutionDetails(id, version, execution, token) {
-  return actions.get(`/action/process/${id}/${version}/execution/${execution}`, token);
+export function fetchExecutionDetails(process, version, execution, token) {
+  return actions.get(`/action/process/${process}/${version}/execution/${execution}`, token);
+}
+
+export function fetchExecutionKpiData(process, version, execution, file, token) {
+  //return actions.get(`/action/process/${process}/${version}/execution/${execution}/kpi/${file}`, token);
+  return Promise.resolve({
+    values: [{
+      key: 'Key 1',
+      value: 100,
+    }, {
+      key: 'Key 2',
+      value: 200,
+      description: 'Value 2 description',
+    }, {
+      key: 'Key 3',
+      value: 15,
+    }, {
+      key: 'Key 4',
+      value: 50,
+    }],
+  });
 }
 
 export function validate(action, designer) {
@@ -291,5 +313,12 @@ export function validate(action, designer) {
 }
 
 export function save(action, designer, token) {
-  return actions.post('/action/process', token, buildProcessRequest(action, designer));
+  const id = (action === EnumProcessSaveAction.SaveAsTemplate ? null : designer.process.properties.id);
+  const data = buildProcessRequest(action, designer);
+
+  if (id) {
+    return actions.post(`/action/process/${id}`, token, data);
+  } else {
+    return actions.post('/action/process', token, data);
+  }
 }

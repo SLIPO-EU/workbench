@@ -14,7 +14,7 @@ public interface ProcessService {
     /**
      * Validate a process definition
      *
-     * @param process
+     * @param process the process definition
      * @throws InvalidProcessDefinitionException if the given definition is invalid
      */
     void validate(ProcessDefinition definition) throws InvalidProcessDefinitionException;
@@ -42,19 +42,21 @@ public interface ProcessService {
      * Create a process by a definition
      *
      * @param definition
-     * @return a list of {@link Error} objects if {@code process} properties are not
-     * valid or operation has failed; Otherwise an empty array
+     * @return a list of {@link Error} objects if {@code process} properties are not valid
+     * or operation has failed; Otherwise an empty array
+     * @throws InvalidProcessDefinitionException if the given definition is invalid
      */
-    ProcessRecord create(ProcessDefinition definition);
+    ProcessRecord create(ProcessDefinition definition) throws InvalidProcessDefinitionException;
 
     /**
      * Update an existing process by providing a newer definition
-     * 
+     *
      * @param id The id of the process under update
      * @param definition The newer definition
+     * @throws InvalidProcessDefinitionException if the given definition is invalid
      */
-    ProcessRecord update(int id, ProcessDefinition definition);
-    
+    ProcessRecord update(long id, ProcessDefinition definition) throws InvalidProcessDefinitionException;
+
     /**
      * Finds all executions for a specific version of an existing process instance
      *

@@ -11,7 +11,6 @@ import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,7 +28,6 @@ import eu.slipo.workbench.common.model.process.ProcessExecutionQuery;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.process.ProcessQuery;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
-import eu.slipo.workbench.common.model.user.Account;
 
 @Repository
 @Transactional
@@ -41,7 +39,7 @@ public class DefaultProcessRepository implements ProcessRepository {
     @PersistenceContext(unitName = "default")
     EntityManager entityManager;
 
-    private void setFindParameters(ProcessQuery processQuery, Query query) 
+    private void setFindParameters(ProcessQuery processQuery, Query query)
     {
         Integer creatorId = processQuery.getCreatedBy();
         query.setParameter("ownerId", creatorId == null? -1 : creatorId.intValue());
@@ -57,7 +55,7 @@ public class DefaultProcessRepository implements ProcessRepository {
         }
     }
 
-    private void setFindParameters(ProcessExecutionQuery executionQuery, Query query) 
+    private void setFindParameters(ProcessExecutionQuery executionQuery, Query query)
     {
         Integer creatorId = executionQuery.getCreatedBy();
         query.setParameter("ownerId", creatorId == null? -1 : creatorId.intValue());
@@ -74,11 +72,12 @@ public class DefaultProcessRepository implements ProcessRepository {
     }
 
     @Override
-    public QueryResultPage<ProcessRecord> find(ProcessQuery query, PageRequest pageReq) 
+    public QueryResultPage<ProcessRecord> find(ProcessQuery query, PageRequest pageReq)
     {
         // Check query parameters
-        if (pageReq == null)
+        if (pageReq == null) {
             pageReq = new PageRequest(0, 10);
+        }
 
         // Load data
         String command = "";
@@ -129,11 +128,12 @@ public class DefaultProcessRepository implements ProcessRepository {
     }
 
     @Override
-    public QueryResultPage<ProcessExecutionRecord> find(ProcessExecutionQuery query, PageRequest pageReq) 
+    public QueryResultPage<ProcessExecutionRecord> find(ProcessExecutionQuery query, PageRequest pageReq)
     {
         // Check query parameters
-        if (pageReq == null)
+        if (pageReq == null) {
             pageReq = new PageRequest(0, 10);
+        }
 
         // Load data
         String command = "";
@@ -171,7 +171,7 @@ public class DefaultProcessRepository implements ProcessRepository {
         }
         command += " order by e.startedOn desc, e.process.parent.name ";
 
-        TypedQuery<ProcessExecutionEntity> selectQuery = 
+        TypedQuery<ProcessExecutionEntity> selectQuery =
             entityManager.createQuery(command, ProcessExecutionEntity.class);
         setFindParameters(query, selectQuery);
 
@@ -185,16 +185,16 @@ public class DefaultProcessRepository implements ProcessRepository {
     }
 
     @Override
-    public ProcessRecord findOne(long id) 
+    public ProcessRecord findOne(long id)
     {
         ProcessRevisionEntity entity = this.findLatestRevision(id);
         return (entity == null ? null : entity.toProcessRecord(true, false));
     }
 
     @Override
-    public ProcessRecord findOne(long id, long version) 
+    public ProcessRecord findOne(long id, long version)
     {
-        String queryString = 
+        String queryString =
             "select p from ProcessRevision p where p.parent.id = :id and p.version = :version";
 
         List<ProcessRevisionEntity> result = entityManager
@@ -207,9 +207,22 @@ public class DefaultProcessRepository implements ProcessRepository {
     }
 
     @Override
-    public ProcessExecutionRecord findOne(long id, long version, long execution) 
+    public ProcessRecord findOne(String name) {
+        String queryString = "select p from ProcessRevision p where p.parent.name = :name order by p.version desc";
+
+        List<ProcessRevisionEntity> result = entityManager
+            .createQuery(queryString, ProcessRevisionEntity.class)
+            .setParameter("name", name)
+            .setMaxResults(1)
+            .getResultList();
+
+        return (result.isEmpty() ? null : result.get(0).toProcessRecord(false, false));
+    }
+
+    @Override
+    public ProcessExecutionRecord findOne(long id, long version, long execution)
     {
-        String queryString = 
+        String queryString =
             "select e from ProcessExecution e " +
             "where e.process.parent.id = :id and e.process.parent.version = :version and e.id = :execution";
 
@@ -225,13 +238,13 @@ public class DefaultProcessRepository implements ProcessRepository {
     }
 
     @Override
-    public ProcessRecord create(ProcessDefinition definition, int userId) 
+    public ProcessRecord create(ProcessDefinition definition, int userId)
     {
         AccountEntity createdBy = entityManager.getReference(AccountEntity.class, userId);
         ZonedDateTime now = ZonedDateTime.now();
 
         // Create new process entity
-        
+
         ProcessEntity entity = new ProcessEntity(definition);
         entity.setTaskType(EnumProcessTaskType.DATA_INTEGRATION);
         entity.setTemplate(false);
@@ -241,7 +254,7 @@ public class DefaultProcessRepository implements ProcessRepository {
         entity.setUpdatedOn(now);
 
         // Create an associated process revision
-        
+
         ProcessRevisionEntity revisionEntity = new ProcessRevisionEntity(entity);
 
         // Set references
@@ -250,21 +263,22 @@ public class DefaultProcessRepository implements ProcessRepository {
 
         entityManager.persist(entity);
         entityManager.flush();
-        
+
         return entity.toProcessRecord();
     }
 
     @Override
-    public ProcessRecord update(long id, ProcessDefinition definition, int userId) 
+    public ProcessRecord update(long id, ProcessDefinition definition, int userId)
     {
         AccountEntity updatedBy = entityManager.getReference(AccountEntity.class, userId);
-        
+
         ProcessRevisionEntity revision = findLatestRevision(id);
-        if(revision == null)
+        if(revision == null) {
             throw ApplicationException.fromPattern(ProcessErrorCode.NOT_FOUND);
+        }
 
         // Update process entity
-         
+
         ProcessEntity entity = revision.getParent();
         entity.setVersion(entity.getVersion() + 1);
         entity.setName(definition.getName());
@@ -274,7 +288,7 @@ public class DefaultProcessRepository implements ProcessRepository {
         entity.setDefinition(definition);
 
         // Create new process revision
-        
+
         ProcessRevisionEntity revisionEntity = new ProcessRevisionEntity(entity);
 
         // Set references
@@ -287,13 +301,13 @@ public class DefaultProcessRepository implements ProcessRepository {
 
     /**
      * Find the latest {@link ProcessRevisionEntity} associated with a given process id.
-     * 
-     * @param id The process id 
+     *
+     * @param id The process id
      * @return
      */
-    private ProcessRevisionEntity findLatestRevision(long id) 
+    private ProcessRevisionEntity findLatestRevision(long id)
     {
-        String queryString = 
+        String queryString =
             "select p from ProcessRevision p where p.parent.id = :id " +
             "order by p.version desc";
 

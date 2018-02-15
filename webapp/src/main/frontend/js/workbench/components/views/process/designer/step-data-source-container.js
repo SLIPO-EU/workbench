@@ -128,6 +128,7 @@ class StepDataSourceContainer extends React.Component {
       <div className="slipo-pd-step-input-container-wrapper">
         <div
           className={classnames({
+            'm-1': true,
             'slipo-pd-step-input-container': true,
             'slipo-pd-step-input-container-full': (counters.source == 0)
           })}

@@ -1,7 +1,7 @@
 
 
 export const DashboardProcessExplorerConfig = {
-  name: 'Process Explorer',
+  name: 'Workflow Explorer',
   cardname: 'processExplorer',
   changedOn: new Date(),
   cardFilters: [
@@ -12,7 +12,7 @@ export const DashboardProcessExplorerConfig = {
     {
       id:"completed",
       name:"Completed",
-    }, 
+    },
     {
       id:"running",
       name:"Running",
@@ -24,7 +24,7 @@ export const DashboardProcessExplorerConfig = {
 };
 
 
-export const DashboardEventsConfig = {  
+export const DashboardEventsConfig = {
   name: 'Events',
   cardname: 'events',
   changedOn: new Date(),
@@ -36,14 +36,14 @@ export const DashboardEventsConfig = {
     {
       id:"ERROR",
       name:"Error",
-    }, 
+    },
     {
       id:"WARNING",
       name:"Warning",
     }],
 };
 
-export const DashboardResourcesConfig = {    
+export const DashboardResourcesConfig = {
   name: 'Resources',
   cardname: 'resources',
   changedOn: new Date(),
@@ -55,7 +55,7 @@ export const DashboardResourcesConfig = {
     {
       id:"new",
       name:"New",
-    }, 
+    },
     {
       id:"updated",
       name:"Updated",

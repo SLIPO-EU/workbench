@@ -13,7 +13,6 @@ import { getFilesystem } from '../ducks/config';
 
 import Home from './home';
 import LoginForm from './pages/login-form';
-import RegisterForm from './pages/register-form';
 
 import Page403 from './pages/page-403.js';
 import Page404 from './pages/page-404.js';
@@ -69,7 +68,6 @@ class ContentRoot extends React.Component {
       routes = (
         <Switch>
           <Route path={Pages.Login} name="login" component={LoginForm} />
-          <Route path={Pages.Register} name="register" component={RegisterForm} />
           <Route path={Pages.ResetPassword} name="reset-password" component={Placeholder} />
           <Redirect push={true} to={Pages.Login} />
         </Switch>

@@ -29,27 +29,27 @@ public class Step {
     private EnumTool tool;
 
     protected List<Integer> input = new ArrayList<Integer>();
-    
+
     private Integer outputKey;
 
     @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "tool")
     @JsonSubTypes({
-        @Type(value = TriplegeoConfiguration.class, name = "triplegeo"),
-        @Type(value = MetadataRegistrationConfiguration.class, name = "catalog")
+        @Type(value = TriplegeoConfiguration.class, name = "TRIPLEGEO"),
+        @Type(value = MetadataRegistrationConfiguration.class, name = "CATALOG")
     })
     private ToolConfiguration configuration;
-    
+
     protected Step() {}
 
     public Step(
-        String name, 
-        int key, 
-        int group, 
-        EnumTool tool, 
-        EnumOperation operation, 
+        String name,
+        int key,
+        int group,
+        EnumTool tool,
+        EnumOperation operation,
         ToolConfiguration configuration,
         List<Integer> input,
-        Integer output) 
+        Integer output)
     {
         this.key = key;
         this.group = group;

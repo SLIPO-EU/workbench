@@ -105,3 +105,11 @@ section:after {
 .form-control[readonly] {
   background-color: #fff;
 }
+
+.slipo-card-selected {
+  border: 1px dashed #b0bec5;
+}
+
+.slipo-action-icon {
+  cursor: pointer;
+}

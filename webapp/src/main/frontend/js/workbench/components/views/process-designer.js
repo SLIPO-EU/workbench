@@ -39,6 +39,7 @@ import {
 import {
   DataSourceConfig,
   Designer,
+  EnumMode,
   EnumHarvester,
   EnumOperation,
   EnumTool,
@@ -48,9 +49,21 @@ import {
   Toolbox,
 } from './process/designer';
 
+// TODO: Remove unused references
 import {
-  reset,
-  load,
+  Execution,
+  ExecutionStep,
+  ExecutionFiles,
+  FeaturePropertyViewer,
+  KpiChartView,
+  KpiGridView,
+  MapViewer,
+} from './execution/viewer';
+
+import {
+  reset as resetProcess,
+  fetchProcess,
+  fetchProcessRevision,
   save,
   addStep,
   removeStep,
@@ -78,6 +91,20 @@ import {
   redo,
 } from '../../ducks/ui/views/process-designer';
 
+// TODO: Remove unused references
+import {
+  addToMap,
+  fetchExecutionDetails,
+  fetchExecutionKpiData,
+  removeFromMap,
+  reset as resetExecution,
+  resetKpi,
+  selectFeatures,
+  selectFile,
+  selectStep,
+  toggleMapView,
+} from '../../ducks/ui/views/process-execution-viewer';
+
 /**
  * Component actions
  */
@@ -101,44 +128,99 @@ class ProcessDesigner extends React.Component {
     super(props);
 
     this.state = {
+      isLoading: true,
       saveDropdownOpen: false,
       cancelDialogOpen: false,
     };
 
-    this.goToProcessExplorer = this.goToProcessExplorer.bind(this);
-    this.toggleSaveButtonDropdown = this.toggleSaveButtonDropdown.bind(this);
-    this.toggleCancelDialog = this.toggleCancelDialog.bind(this);
-    this.reset = this.reset.bind(this);
     this.cancelDialogHandler = this.cancelDialogHandler.bind(this);
+    this.goToProcessExplorer = this.goToProcessExplorer.bind(this);
+    this.onFetchError = this.onFetchError.bind(this);
+    this.onFetchSuccess = this.onFetchSuccess.bind(this);
+    this.reset = this.reset.bind(this);
     this.select = this.select.bind(this);
+    this.toggleCancelDialog = this.toggleCancelDialog.bind(this);
+    this.toggleSaveButtonDropdown = this.toggleSaveButtonDropdown.bind(this);
   }
 
-  componentWillMount() {
-    const { id, version, ...rest } = this.props.match.params;
-    if (!id) {
-      this.reset();
+  resolveAction() {
+    const { id, version, execution, ...rest } = this.props.match.params;
+
+    if (id && version && execution) {
+      return EnumMode.EXECUTION;
     }
+    if (id && version) {
+      return EnumMode.VIEW;
+    }
+    if (id) {
+      return EnumMode.EDIT;
+    }
+
+    return EnumMode.CREATE;
   }
 
   componentDidMount() {
-    const { id, version, ...rest } = this.props.match.params;
-    if (id) {
-      this.props.load(Number.parseInt(id), Number.parseInt(version))
-        .then(() => {
-          this.select();
-        })
-        .catch((err) => {
-          toast.dismiss();
+    const { id, version, execution, ...rest } = this.props.match.params;
 
-          toast.error(
-            <ToastTemplate iconClass='fa-warning' text={err.message} />
-          );
+    const action = this.resolveAction();
 
-          this.props.history.goBack();
-        });
-    } else {
-      this.select();
+    this.reset();
+
+    switch (action) {
+      case EnumMode.CREATE:
+        this.select();
+        this.resume();
+        break;
+
+      case EnumMode.EDIT:
+        this.props.fetchProcess(Number.parseInt(id))
+          .then(this.onFetchSuccess)
+          .catch(this.onFetchError);
+        break;
+
+      case EnumMode.VIEW:
+        this.props.fetchProcessRevision(Number.parseInt(id), Number.parseInt(version))
+          .then(this.onFetchSuccess)
+          .catch(this.onFetchError);
+        break;
+
+      case EnumMode.EXECUTION:
+        this.props.fetchProcessRevision(Number.parseInt(id), Number.parseInt(version))
+          .then(() => {
+            return this.props.fetchExecutionDetails(Number.parseInt(id), Number.parseInt(version), Number.parseInt(execution));
+          })
+          .then(this.onFetchSuccess)
+          .catch(this.onFetchError);
+        break;
+
+      default:
+        this.error('Action is not supported');
     }
+  }
+
+  error(message, goBack) {
+    toast.dismiss();
+
+    toast.error(
+      <ToastTemplate iconClass='fa-warning' text={message} />
+    );
+
+    if ((typeof goBack === 'undefined') || (goBack)) {
+      setTimeout(() => this.props.history.goBack(), 500);
+    }
+  }
+
+  resume() {
+    this.setState({ isLoading: false });
+  }
+
+  onFetchSuccess() {
+    this.select();
+    this.resume();
+  }
+
+  onFetchError(err) {
+    this.error(err.message);
   }
 
   mapToSaveAction(action) {
@@ -172,7 +254,8 @@ class ProcessDesigner extends React.Component {
       e.stopPropagation();
     }
 
-    this.props.reset();
+    this.props.resetProcess();
+    this.props.resetExecution();
   }
 
   select() {
@@ -224,6 +307,9 @@ class ProcessDesigner extends React.Component {
             </CardBody>
           </Card>
         }
+        {this.props.readOnly && this.props.execution &&
+          <Execution execution={this.props.execution} />
+        }
         <Card>
           <CardBody className="card-body">
             <Row>
@@ -246,7 +332,7 @@ class ProcessDesigner extends React.Component {
                       </DropdownToggle>
                       <DropdownMenu>
                         <DropdownItem onClick={this.save.bind(this, EnumComponentAction.SaveAndExecute)}>Save & Execute</DropdownItem>
-                        <DropdownItem onClick={this.save.bind(this, EnumComponentAction.SaveAsTemplate)}>Save Template </DropdownItem>
+                        <DropdownItem onClick={this.save.bind(this, EnumComponentAction.SaveAsTemplate)}>Save Recipe </DropdownItem>
                       </DropdownMenu>
                     </ButtonDropdown>
                   </ButtonGroup>
@@ -259,6 +345,7 @@ class ProcessDesigner extends React.Component {
               <Col style={{ padding: '9px' }}>
                 <Designer
                   active={this.props.active}
+                  execution={this.props.execution}
                   groups={this.props.groups}
                   steps={this.props.steps}
                   resources={this.props.resources}
@@ -345,6 +432,10 @@ class ProcessDesigner extends React.Component {
   }
 
   render() {
+    if (this.state.isLoading) {
+      return null;
+    }
+
     return (
       <div className="animated fadeIn">
         <Row>
@@ -363,6 +454,7 @@ class ProcessDesigner extends React.Component {
 }
 
 const mapStateToProps = (state) => ({
+  // Workflow designer
   active: state.ui.views.process.designer.active,
   designer: state.ui.views.process.designer,
   filesystem: state.config.filesystem,
@@ -374,11 +466,21 @@ const mapStateToProps = (state) => ({
   steps: state.ui.views.process.designer.steps,
   undo: state.ui.views.process.designer.undo,
   view: state.ui.views.process.designer.view,
+  // Execution viewer
+  // TODO: Remove unused references
+  execution: state.ui.views.execution.viewer.execution,
+  layers: state.ui.views.execution.viewer.layers,
+  selectedFeatures: state.ui.views.execution.viewer.selectedFeatures,
+  selectedFile: state.ui.views.execution.viewer.selectedFile,
+  selectedKpi: state.ui.views.execution.viewer.selectedKpi,
+  selectedStep: state.ui.views.execution.viewer.selectedStep,
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
-  reset,
-  load,
+  // Workflow designer
+  resetProcess,
+  fetchProcess,
+  fetchProcessRevision,
   save,
   addStep,
   removeStep,
@@ -404,6 +506,18 @@ const mapDispatchToProps = (dispatch) => bindActionCreators({
   setActiveResource,
   undoAction: undo,
   redoAction: redo,
+  // Execution viewer
+  // TODO: Remove unused references
+  addToMap,
+  fetchExecutionDetails,
+  fetchExecutionKpiData,
+  removeFromMap,
+  resetExecution,
+  resetKpi,
+  selectFeatures,
+  selectFile,
+  selectStep,
+  toggleMapView,
 }, dispatch);
 
 const mergeProps = (stateProps, dispatchProps, ownProps) => {

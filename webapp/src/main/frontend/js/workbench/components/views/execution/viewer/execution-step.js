@@ -30,7 +30,7 @@ class ExecutionStep extends React.Component {
 
   static propTypes = {
     step: PropTypes.object.isRequired,
-    selectedStep: PropTypes.number,
+    selected: PropTypes.bool.isRequired,
 
     // Action creators
     selectStep: PropTypes.func.isRequired,
@@ -53,46 +53,36 @@ class ExecutionStep extends React.Component {
    */
   select(e) {
     e.stopPropagation();
-    this.props.selectStep(this.props.step.id);
-  }
-
-  /**
-   * Resolve if the current step is active
-   *
-   * @returns true if the step is selected
-   * @memberof Step
-   */
-  isActive() {
-    return (this.props.selectedStep === this.props.step.id);
+    if (!this.props.selected) {
+      this.props.selectStep(this.props.step.id);
+    }
   }
 
   render() {
     const s = this.props.step;
 
     return (
-      <Card>
-        <CardBody
-          className={
-            classnames({
-              "card-placeholder": this.isActive()
-            })
+      <Card
+        className={
+          classnames({
+            "slipo-card-selected": this.props.selected
+          })
 
-          }
-          onClick={(e) => this.select(e)}
-        >
+        }
+        onClick={(e) => this.select(e)}
+      >
+        <CardBody>
           <Row className="mb-4">
-            <Col>
+            <Col xs="8">
               <i className={this.getIconClassName()}></i>
               <span className="font-2xl">{s.name}</span>
             </Col>
-            <Col>
-            </Col>
-            <Col>
+            <Col xs="4">
               <div className="font-weight-bold mb-1">Status</div>
               <JobStatus status={s.status} />
             </Col>
           </Row>
-          {this.isActive() &&
+          {this.props.selected &&
             <Row className="mb-4">
               <Col>
                 <div className="font-weight-bold mb-1">Started On</div>
@@ -126,7 +116,7 @@ class ExecutionStep extends React.Component {
               </Col>
             </Row>
           }
-          {this.isActive() && s.errorMessage &&
+          {this.props.selected && s.errorMessage &&
             <Row className="mb-4">
               <Col>
                 <div className="font-weight-bold mb-1">Error message</div>

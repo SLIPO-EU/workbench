@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 /**
- * Browse POI data and POI data integration process results
+ * Browse POI data and POI data integration workflow results
  *
  * @class DataViewer
  * @extends {React.Component}

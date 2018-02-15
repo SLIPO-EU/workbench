@@ -1,4 +1,4 @@
-# Process Designer objects
+# Workflow Designer objects
 
 This document describes the structure of the simple JavaScript objects stored
 in the application state and exchanged in action creators. 

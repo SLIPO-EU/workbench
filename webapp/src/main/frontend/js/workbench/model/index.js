@@ -1,2 +1,6 @@
 export { StaticRoutes } from './routes';
-export { EnumProcessSaveAction } from './constants';
+
+export {
+  EnumKpiViewMode,
+  EnumProcessSaveAction
+} from './constants';

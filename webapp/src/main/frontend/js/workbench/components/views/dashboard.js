@@ -14,10 +14,12 @@ import * as TableConfig from '../helpers/table-config';
 import * as ChartConfig from '../helpers/chart-config';
 import * as DashboardCardConfig from '../helpers/dashboardCard-config';
 
-import DashboardCard from '../helpers/dashboard-card';
-import Card from '../helpers/card';
-import Table from '../helpers/table';
-import BarChart from '../helpers/chart';
+import {
+  BarChart,
+  Card,
+  DashboardCard,
+  Table,
+} from '../helpers';
 
 import { fetchDashboardData, changeDashboardFilter } from '../../ducks/ui/views/dashboard';
 
@@ -47,7 +49,7 @@ class Dashboard extends React.Component {
         <Row>
           <Col sm="12" md="12" lg="6">
             <DashboardCard
-              name='Executed Processes'
+              name='Executed Workflows'
               changedOn={new Date()}
             >
               <BarChart { ...ChartConfig.JobSeries} />

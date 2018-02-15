@@ -141,8 +141,8 @@ export default class ProcessExecutions extends React.Component {
 
     return (
       <Table
-        name="Process execution explorer"
-        id="process-execution-explorer"
+        name="Workflow execution explorer"
+        id="workflow-execution-explorer"
         columns={executionsColumns}
         data={this.props.items}
         defaultPageSize={10}

@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,6 +17,7 @@ import eu.slipo.workbench.common.model.Error;
 import eu.slipo.workbench.common.model.QueryResultPage;
 import eu.slipo.workbench.common.model.RestResponse;
 import eu.slipo.workbench.common.model.process.EnumProcessTaskType;
+import eu.slipo.workbench.common.model.process.InvalidProcessDefinitionException;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.ProcessErrorCode;
 import eu.slipo.workbench.common.model.process.ProcessExecutionQuery;
@@ -36,6 +37,7 @@ import eu.slipo.workbench.web.service.ProcessService;
  * Actions for managing processes
  */
 @RestController
+@Secured({ "ROLE_USER", "ROLE_ADMIN" })
 @RequestMapping(produces = "application/json")
 public class ProcessController {
 
@@ -47,7 +49,7 @@ public class ProcessController {
 
     @Autowired
     private IAuthenticationFacade authenticationFacade;
-    
+
     /**
      * Search for processes
      *
@@ -56,9 +58,8 @@ public class ProcessController {
      * @return a list of processes
      */
     @RequestMapping(value = "/action/process/query", method = RequestMethod.POST)
-    public RestResponse<QueryResult<ProcessRecord>> find(
-        Authentication authentication, @RequestBody ProcessQueryRequest request) 
-    {
+    public RestResponse<QueryResult<ProcessRecord>> find(@RequestBody ProcessQueryRequest request) {
+
         if (request == null || request.getQuery() == null) {
             return RestResponse.error(ProcessErrorCode.QUERY_IS_EMPTY, "The query is empty");
         }
@@ -67,9 +68,9 @@ public class ProcessController {
         query.setTaskType(EnumProcessTaskType.DATA_INTEGRATION);
         query.setTemplate(false);
         query.setCreatedBy(authenticationFacade.getCurrentUserId());
-        
-        PageRequest pageReq = request.getPageRequest();
-        QueryResultPage<ProcessRecord> r = processRepository.find(query, pageReq);
+
+        PageRequest pageRequest = request.getPageRequest();
+        QueryResultPage<ProcessRecord> r = processRepository.find(query, pageRequest);
 
         return RestResponse.result(QueryResult.create(r));
     }
@@ -82,18 +83,17 @@ public class ProcessController {
      * @return a list of processes
      */
     @RequestMapping(value = "/action/process/execution/query", method = RequestMethod.POST)
-    public RestResponse<QueryResult<ProcessExecutionRecord>> find(
-        Authentication authentication, @RequestBody ProcessExecutionQueryRequest request) 
-    {
+    public RestResponse<QueryResult<ProcessExecutionRecord>> find(@RequestBody ProcessExecutionQueryRequest request) {
+
         if (request == null || request.getQuery() == null) {
             return RestResponse.error(ProcessErrorCode.QUERY_IS_EMPTY, "The query is empty");
         }
-        
+
         ProcessExecutionQuery query = request.getQuery();
         query.setCreatedBy(authenticationFacade.getCurrentUserId());
-        
-        PageRequest pageReq = request.getPageRequest();
-        QueryResultPage<ProcessExecutionRecord> r = processRepository.find(query, pageReq);
+
+        PageRequest pageRequest = request.getPageRequest();
+        QueryResultPage<ProcessExecutionRecord> r = processRepository.find(query, pageRequest);
 
         return RestResponse.result(QueryResult.create(r));
     }
@@ -108,9 +108,8 @@ public class ProcessController {
      * @return a list of {@link ProcessExecutionRecord}
      */
     @RequestMapping(value = "/action/process/{id}/{version}/execution", method = RequestMethod.GET)
-    public RestResponse<List<ProcessExecutionRecord>> getAllProcessExecutions(
-        Authentication authentication, @PathVariable long id, @PathVariable long version) 
-    {
+    public RestResponse<List<ProcessExecutionRecord>> getAllProcessExecutions(@PathVariable long id, @PathVariable long version) {
+
         return RestResponse.result(processService.findExecutions(id, version));
     }
 
@@ -124,12 +123,12 @@ public class ProcessController {
      * @param executionId the execution id
      * @return a list of {@link ProcessExecutionRecord}
      */
-    @RequestMapping(
-        value = "/action/process/{id}/{version}/execution/{executionId}", method = RequestMethod.GET)
+    @RequestMapping(value = "/action/process/{id}/{version}/execution/{executionId}", method = RequestMethod.GET)
     public RestResponse<ProcessExecutionRecord> getProcessExecution(
-        Authentication authentication, 
-        @PathVariable long id, @PathVariable long version, @PathVariable long executionId) 
-    {
+        @PathVariable long id,
+        @PathVariable long version,
+        @PathVariable long executionId) {
+
         ProcessExecutionRecord record = processRepository.findOne(id, version, executionId);
         if (record == null) {
             return RestResponse.error(new Error(ProcessErrorCode.NOT_FOUND, "Execution was not found"));
@@ -145,10 +144,10 @@ public class ProcessController {
      * @return the updated process model
      */
     @RequestMapping(value = "/action/process/{id}", method = RequestMethod.GET)
-    public RestResponse<ProcessRecordView> findOne(Authentication authentication, @PathVariable long id) 
-    {
+    public RestResponse<ProcessRecordView> findOne(@PathVariable long id) {
+
         ProcessRecord record = processService.findOne(id);
-        if(record == null) {
+        if (record == null) {
             return RestResponse.error(new Error(ProcessErrorCode.NOT_FOUND, "Process was not found"));
         }
         return RestResponse.result(new ProcessRecordView(record));
@@ -162,11 +161,10 @@ public class ProcessController {
      * @return the updated process model
      */
     @RequestMapping(value = "/action/process/{id}/{version}", method = RequestMethod.GET)
-    public RestResponse<ProcessRecordView> findOne(
-        Authentication authentication, @PathVariable long id, @PathVariable long version) 
-    {
+    public RestResponse<ProcessRecordView> findOne(@PathVariable long id, @PathVariable long version) {
+
         ProcessRecord record = processService.findOne(id, version);
-        if(record == null) {
+        if (record == null) {
             return RestResponse.error(new Error(ProcessErrorCode.NOT_FOUND, "Process was not found"));
         }
         return RestResponse.result(new ProcessRecordView(record));
@@ -177,27 +175,29 @@ public class ProcessController {
      *
      * @param authentication the authenticated principal
      * @param request
-     * 
+     *
      * @return the created process model
      */
     @RequestMapping(value = "/action/process", method = RequestMethod.POST)
-    public RestResponse<ProcessRecordView> create(
-        Authentication authentication, @RequestBody ProcessCreateRequest request) 
-    {
+    public RestResponse<ProcessRecordView> create(@RequestBody ProcessCreateRequest request) {
+
         ProcessDefinition definition = request.getDefinition();
-        if (definition == null)
+        if (definition == null) {
             return RestResponse.error(BasicErrorCode.INPUT_INVALID, "No process definition");
-            
-        ProcessRecord record = null; 
+        }
+
+        ProcessRecord record = null;
         try {
             record = processService.create(definition);
+        } catch (InvalidProcessDefinitionException ex) {
+            return RestResponse.error(ex.getErrors());
         } catch (ApplicationException ex) {
             return RestResponse.error(ex.toError());
         }
-        
+
         return RestResponse.result(new ProcessRecordView(record));
     }
-    
+
     /**
      * Update an existing process by providing a newer process definition
      *
@@ -207,21 +207,22 @@ public class ProcessController {
      * @return the created process model
      */
     @RequestMapping(value = "/action/process/{id}", method = RequestMethod.PUT)
-    public RestResponse<ProcessRecordView> update(
-        Authentication authentication,
-        @PathVariable("id") Integer id, @RequestBody ProcessCreateRequest request) 
-    {
+    public RestResponse<ProcessRecordView> update(@PathVariable long id, @RequestBody ProcessCreateRequest request) {
+
         ProcessDefinition definition = request.getDefinition();
-        if (definition == null)
+        if (definition == null) {
             return RestResponse.error(BasicErrorCode.INPUT_INVALID, "No process definition");
-          
-        ProcessRecord record = null; 
+        }
+
+        ProcessRecord record = null;
         try {
             record = processService.update(id, definition);
+        } catch (InvalidProcessDefinitionException ex) {
+            return RestResponse.error(ex.getErrors());
         } catch (ApplicationException ex) {
             return RestResponse.error(ex.toError());
         }
-        
+
         return RestResponse.result(new ProcessRecordView(record));
     }
 }

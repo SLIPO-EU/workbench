@@ -9,12 +9,14 @@ import {
   EnumResourceType,
   EnumSelection,
   EnumTool,
-} from './constants';
+  StepDataSourceContainer,
+  StepInputContainer,
+  ToolInput,
+} from './';
+
 import {
-  ToolInput
-} from './config';
-import StepInputContainer from './step-input-container';
-import StepDataSourceContainer from './step-data-source-container';
+  JobStatus,
+} from '../../../helpers';
 
 /**
  * Drag source specification
@@ -151,6 +153,7 @@ class Step extends React.Component {
       name: PropTypes.string.isRequired,
       iconClass: PropTypes.string.isRequired,
     })).isRequired,
+    execution: PropTypes.object,
 
     // Action creators
     removeStep: PropTypes.func.isRequired,
@@ -315,27 +318,42 @@ class Step extends React.Component {
               "slipo-pd-step-invalid": !this.isValid(),
             })
           }>
-            <i className={this.getIconClassName()}></i>
+            <div>
+              <i className={this.getIconClassName()}></i>
+            </div>
             {!this.props.readOnly &&
-              <input
-                id={`step-${this.props.step.key}-name`}
-                className={
-                  classnames({
-                    "slipo-pd-step-name-input": true,
-                    "slipo-pd-step-name-input-invalid": (!this.props.step.name)
-                  })
-                }
-                value={this.props.step.name}
-                ref={(el) => { this._titleElement = el; }}
-                onClick={(e) => { this._titleElement.focus; this._titleElement.select(e); }}
-                onChange={this.setTitle}
-              />
+              <div className="slipo-pd-step-name-input-wrapper">
+                <input
+                  id={`step-${this.props.step.key}-name`}
+                  className={
+                    classnames({
+                      "slipo-pd-step-name-input": true,
+                      "slipo-pd-step-name-input-invalid": (!this.props.step.name)
+                    })
+                  }
+                  value={this.props.step.name}
+                  ref={(el) => { this._titleElement = el; }}
+                  onClick={(e) => { this._titleElement.focus; this._titleElement.select(e); }}
+                  onChange={this.setTitle}
+                />
+              </div>
             }
             {this.props.readOnly &&
-              <span className="slipo-pd-step-name-input">{this.props.step.name}</span>
+              <div className="slipo-pd-step-name-input-wrapper">
+                <input
+                  id={`step-${this.props.step.key}-name`}
+                  className={
+                    classnames({
+                      "slipo-pd-step-name-input": true,
+                    })
+                  }
+                  value={this.props.step.name}
+                  readOnly
+                />
+              </div>
             }
             {this.props.readOnly ?
-              <div className="slipo-pd-step-actions float-right">
+              <div className="slipo-pd-step-actions">
                 <i className="slipo-pd-step-action slipo-pd-step-config fa fa-search" onClick={(e) => { this.configure(e); }}></i>
               </div>
               :
@@ -366,6 +384,11 @@ class Step extends React.Component {
               setActiveStepDataSource={this.props.setActiveStepDataSource}
               readOnly={this.props.readOnly}
             />
+          }
+          {this.props.execution &&
+            <div className='m-1'>
+              <JobStatus status={this.props.execution.status} />
+            </div>
           }
         </div >
       )

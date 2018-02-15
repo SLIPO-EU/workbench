@@ -26,7 +26,6 @@ import {
   ProcessExecutions,
 } from "./execution/explorer";
 
-
 import {
   fetchExecutions,
   resetFilters,

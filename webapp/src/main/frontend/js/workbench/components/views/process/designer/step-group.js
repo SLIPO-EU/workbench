@@ -61,7 +61,7 @@ const groupTarget = {
 
 /**
  * A presentational component which acts as a drop target for {@link EnumToolboxItem}
- * items. The component is used for designing a POI data integration process.
+ * items. The component is used for designing a POI data integration workflow.
  *
  * @class StepGroup
  * @extends {React.Component}
@@ -108,6 +108,9 @@ class StepGroup extends React.Component {
     setActiveStepInput: PropTypes.func.isRequired,
     setActiveStepDataSource: PropTypes.func.isRequired,
 
+    // Step execution data
+    stepExecutions: PropTypes.arrayOf(PropTypes.object.isRequired),
+
     // Top-level designer properties
     readOnly: PropTypes.bool.isRequired,
 
@@ -126,12 +129,15 @@ class StepGroup extends React.Component {
    * @memberof Designer
    */
   renderStep(step) {
+    const resources = this.props.resources.filter((resource) => { return (step.resources.indexOf(resource.key) !== -1); });
+    const execution = this.props.stepExecutions.find((e) => e.key === step.key) || null;
+
     return (
       <Step
         key={step.key}
         active={this.props.active}
         step={step}
-        resources={this.props.resources.filter((resource) => { return (step.resources.indexOf(resource.key) !== -1); })}
+        resources={resources}
         removeStep={this.props.removeStep}
         moveStep={this.props.moveStep}
         configureStepBegin={this.props.configureStepBegin}
@@ -145,6 +151,7 @@ class StepGroup extends React.Component {
         setActiveStepInput={this.props.setActiveStepInput}
         setActiveStepDataSource={this.props.setActiveStepDataSource}
         readOnly={this.props.readOnly}
+        execution={execution}
       />
     );
   }

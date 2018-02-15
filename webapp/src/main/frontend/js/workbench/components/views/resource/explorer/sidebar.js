@@ -39,8 +39,8 @@ const filters = [{
 }, {
   id: EnumResourceType.LINKED,
   iconClass: ResourceTypeIcons[EnumResourceType.LINKED],
-  title: 'POI Linked Data',
-  description: 'Displaying POI Linked data',
+  title: 'Links',
+  description: 'Displaying Links',
 }];
 
 /**

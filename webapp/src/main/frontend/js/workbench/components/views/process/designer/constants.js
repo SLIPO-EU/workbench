@@ -1,3 +1,13 @@
+/**
+ * Process designer actions
+ */
+export const EnumMode = {
+  CREATE: 'new',
+  EDIT: 'edit',
+  VIEW: 'view',
+  EXECUTION: 'execution',
+};
+
 /*
  * Process designer views
  */
@@ -5,7 +15,6 @@ export const EnumViews = {
   Designer: 'Designer',
   StepConfiguration: 'StepConfiguration',
   DataSourceConfiguration: 'DataSourceConfiguration',
-  ProcessProperties: 'ProcessProperties',
 };
 
 /**
@@ -71,7 +80,7 @@ export const EnumInputType = {
  * SLIPO Toolkit components
  */
 export const EnumTool = {
-  TripleGeo: 'TRIPLE_GEO',
+  TripleGeo: 'TRIPLEGEO',
   LIMES: 'LIMES',
   FAGI: 'FAGI',
   DEER: 'DEER',
@@ -122,7 +131,7 @@ export const EnumStepProperty = {
  * Selection type
  */
 export const EnumSelection = {
-  Process: 'Process',
+  Process: 'Workflow',
   Resource: 'Resource',
   Step: 'Step',
   Input: 'Input',

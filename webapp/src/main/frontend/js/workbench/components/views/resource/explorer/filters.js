@@ -23,7 +23,7 @@ const supportedFiles = [
 
 const supportedTypes = [
   { value: 'POI_DATA', label: 'POI Data' },
-  { value: 'POI_LINKED_DATA', label: 'Linked Data' },
+  { value: 'POI_LINKED_DATA', label: 'Links' },
 ];
 
 export default class Filters extends React.Component {

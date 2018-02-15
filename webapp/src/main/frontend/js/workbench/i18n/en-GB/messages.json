@@ -11,13 +11,17 @@
       "viewer": "Resource Viewer"
     },
     "process": {
-      "explorer": "Process Explorer",
-      "execution": "Executions",
-      "designer": {
-        "default": "Process Designer",
-        "edit": "Edit"
+      "explorer": "Workflow Explorer",
+      "execution": {
+        "default": "Executions",
+        "view": "Execution"
       },
-      "execution": "Process Execution Viewer"
+      "designer": {
+        "default": "Workflow Designer",
+        "edit": "Edit",
+        "view": "View"
+      },
+      "viewer": "Workflow Execution Viewer"
     },
     "recipe": {
       "explorer": "Recipe Explorer"

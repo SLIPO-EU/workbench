@@ -51,7 +51,7 @@ class SelectInteraction extends React.Component {
 
       this.interaction.on('select', (e) => {
         if (typeof this.props.onFeatureSelect === 'function') {
-          this.props.onFeatureSelect(e);
+          this.props.onFeatureSelect([...this.interaction.getFeatures().getArray()]);
         }
       }, this);
 

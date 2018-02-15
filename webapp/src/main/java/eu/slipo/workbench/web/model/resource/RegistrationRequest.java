@@ -4,7 +4,8 @@ import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 
 /**
- * Resource registration request
+ * A simple resource registration request that executes a TripleGeo transformation on an
+ * existing file.
  */
 public class RegistrationRequest {
 

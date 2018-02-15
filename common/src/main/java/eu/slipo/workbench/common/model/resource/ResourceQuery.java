@@ -9,8 +9,8 @@ import eu.slipo.workbench.common.model.poi.EnumResourceType;
 /**
  * Query for searching resources
  */
-public class ResourceQuery 
-{    
+public class ResourceQuery
+{
     /**
      * Search resources by name using LIKE SQL operator
      */
@@ -46,7 +46,7 @@ public class ResourceQuery
      * Search by the ID of the user that created this resource
      */
     private Integer createdBy;
-    
+
     public String getName() {
         return name;
     }
@@ -64,6 +64,9 @@ public class ResourceQuery
     }
 
     public EnumDataFormat getFormat() {
+        if (format == null) {
+            return EnumDataFormat.UNDEFINED;
+        }
         return format;
     }
 

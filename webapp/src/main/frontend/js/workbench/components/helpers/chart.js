@@ -1,8 +1,6 @@
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
 
-import _ from 'lodash';
-
 import { VictoryChart, VictoryBar, VictoryAxis, VictoryTheme, VictoryTooltip } from 'victory';
 
 /**
@@ -11,11 +9,43 @@ import { VictoryChart, VictoryBar, VictoryAxis, VictoryTheme, VictoryTooltip } f
  * @class BarChart
  * @extends {React.Component}
  */
-class BarChart extends React.Component {
+export class BarChart extends React.Component {
 
   constructor(props) {
     super(props);
 
+  }
+
+  static propTypes = {
+    // Array of data point collections (series)
+    series: PropTypes.arrayOf(
+      PropTypes.shape({
+        // Data point collection unique name
+        name: PropTypes.string.isRequired,
+        // Legend name
+        legend: PropTypes.string,
+        // Data points
+        points: PropTypes.arrayOf(
+          PropTypes.shape({
+            x: PropTypes.any.isRequired,
+            y: PropTypes.any.isRequired,
+            // Optional data point label
+            label: PropTypes.string,
+          }).isRequired
+        ),
+      }).isRequired
+    ).isRequired,
+    // Configuration options
+    options: PropTypes.shape({
+      // True if labels should rendered
+      showLabels: PropTypes.bool
+    }),
+  }
+
+  static defaultProps = {
+    options: {
+      showLabels: false
+    }
   }
 
   componentDidMount() {
@@ -72,37 +102,3 @@ class BarChart extends React.Component {
     );
   }
 }
-
-BarChart.propTypes = {
-  // Array of data point collections (series)
-  series: PropTypes.arrayOf(
-    PropTypes.shape({
-      // Data point collection unique name
-      name: PropTypes.string.isRequired,
-      // Legend name
-      legend: PropTypes.string,
-      // Data points
-      points: PropTypes.arrayOf(
-        PropTypes.shape({
-          x: PropTypes.any.isRequired,
-          y: PropTypes.any.isRequired,
-          // Optional data point label
-          label: PropTypes.string,
-        }).isRequired
-      ),
-    }).isRequired
-  ).isRequired,
-  // Configuration options
-  options: PropTypes.shape({
-    // True if labels should rendered
-    showLabels: PropTypes.bool
-  }),
-};
-
-BarChart.defaultProps = {
-  options: {
-    showLabels: false
-  }
-};
-
-export default BarChart;

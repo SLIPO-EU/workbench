@@ -1,0 +1,50 @@
+/*
+ * Variables
+ */
+
+ $slipo-ev-layer-color: #616161 !default;
+
+/*
+ * Layer
+ */
+
+.slipo-ev-layer {
+  width: 100%;
+  padding: 5px 0px;
+  border: 1px dotted $slipo-ev-layer-color;
+  border-radius: 0.25rem;
+  margin: 0.25rem 0rem;
+  display: inline-block;
+  opacity: 1;
+}
+
+.slipo-ev-layer-active {
+  background: #EEEEEE;
+  border: 1px solid #EEEEEE;
+}
+
+.slipo-ev-layer-actions {
+  display: none;
+  position: relative;
+}
+
+.slipo-ev-layer-delete {
+  right: 5px;
+  position: absolute;
+  top: 5px;
+  cursor: pointer;
+}
+
+.slipo-ev-layer-icon {
+  text-align: center;
+  font-size: 2rem;
+}
+
+.slipo-ev-layer-label {
+  text-align: center;
+}
+
+.slipo-ev-layer:hover .slipo-ev-layer-actions,
+.slipo-ev-layer-active .slipo-ev-layer-actions {
+  display: block;
+}

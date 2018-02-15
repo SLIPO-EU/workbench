@@ -23,7 +23,7 @@ import {
   Footer,
   Header,
   Sidebar,
-} from './layout/';
+} from './layout';
 
 import SecureRoute from './helpers/secure-route';
 
@@ -153,7 +153,7 @@ class Home extends React.Component {
                 <Route path={DynamicRoutes.ProcessDesignerView} component={ProcessDesigner} exact />
                 <Route path={DynamicRoutes.ProcessDesignerEdit} component={ProcessDesigner} exact />
                 <Route path={DynamicRoutes.ProcessDesignerCreate} component={ProcessDesigner} exact />
-                <Route path={DynamicRoutes.ProcessExecutionViewer} component={ProcessExecutionViewer} exact />
+                <Route path={DynamicRoutes.ProcessExecutionViewer} component={ProcessDesigner} exact />
                 <Route path={DynamicRoutes.SchemaDesigner} component={SchemaDesigner} />
                 <Route path={DynamicRoutes.DataViewer} component={DataViewer} />
                 {/* Static */}

@@ -17,7 +17,7 @@ import {
 } from '../../../../util';
 
 import {
-  TextArea,
+  TextAreaField,
   TextField,
 } from '../../../helpers/forms/fields';
 
@@ -67,7 +67,7 @@ class ResourceDetails extends React.Component {
         </Row>
         <Row>
           <Col>
-            <TextArea
+            <TextAreaField
               id="description"
               label="Description"
               value={r.metadata.description}

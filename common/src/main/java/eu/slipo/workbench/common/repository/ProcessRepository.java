@@ -37,6 +37,14 @@ public interface ProcessRepository
     ProcessRecord findOne(long id, long version);
 
     /**
+     * Find a single record by name
+     *
+     * @param name the process unique name
+     * @return an instance of {@link ProcessRecord} if the process exists or null
+     */
+    ProcessRecord findOne(String name);
+
+    /**
      * Find process executions
      *
      * @param query the query to execute

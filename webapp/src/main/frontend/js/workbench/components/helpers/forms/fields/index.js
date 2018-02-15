@@ -1,5 +1,5 @@
 export { default as TextField } from './text';
-export { default as TextArea } from './textarea';
+export { default as TextAreaField } from './textarea';
 export { default as PasswordField } from './password';
 export { default as SelectField } from './select-single';
 export { default as MultiSelectField } from './select-multi';

@@ -22,12 +22,14 @@ class Designer extends React.Component {
   }
 
   static propTypes = {
-    // An array of all groups
+    // Workflow properties
     groups: PropTypes.arrayOf(PropTypes.object.isRequired).isRequired,
-    // An array of all steps
     steps: PropTypes.arrayOf(PropTypes.object.isRequired).isRequired,
-    // An array of all resources
     resources: PropTypes.arrayOf(PropTypes.object.isRequired).isRequired,
+
+    // Execution properties
+    execution: PropTypes.object,
+
 
     // Action creators
     addStep: PropTypes.func.isRequired,
@@ -47,6 +49,7 @@ class Designer extends React.Component {
     setActiveStepInput: PropTypes.func.isRequired,
     setActiveStepDataSource: PropTypes.func.isRequired,
 
+    // Designer state
     readOnly: PropTypes.bool.isRequired,
   };
 
@@ -58,11 +61,14 @@ class Designer extends React.Component {
    * @memberof Designer
    */
   renderStepGroup(group) {
+    const steps = this.props.steps.filter((step) => group.steps.indexOf(step.key) !== -1);
+    const stepExecutions = (this.props.execution ? this.props.execution.steps.filter((e) => !!(steps.find((s) => s.key === e.key))) : []);
+
     return (
       <StepGroup
         key={group.key}
         group={group}
-        steps={this.props.steps.filter((step) => { return (group.steps.indexOf(step.key) !== -1); })}
+        steps={steps}
         resources={this.props.resources}
         active={this.props.active}
         addStep={this.props.addStep}
@@ -79,6 +85,7 @@ class Designer extends React.Component {
         setActiveStepInput={this.props.setActiveStepInput}
         setActiveStepDataSource={this.props.setActiveStepDataSource}
         readOnly={this.props.readOnly}
+        stepExecutions={stepExecutions}
       />
     );
   }
