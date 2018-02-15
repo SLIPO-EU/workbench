@@ -43,7 +43,7 @@ public class Step implements Serializable
     @JsonDeserialize(using = EnumTool.Deserializer.class)
     private EnumTool tool;
 
-    @JsonProperty("input")
+    @JsonProperty("inputKeys")
     private List<Integer> inputKeys = new ArrayList<Integer>();
 
     @JsonProperty("sources")
