@@ -1,4 +1,4 @@
-package eu.slipo.workbench.rpc.tests.unit.controller;
+package eu.slipo.workbench.rpc.tests.unit.service;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -14,15 +14,16 @@ import java.util.Locale;
 
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.MessageSource;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import eu.slipo.workbench.common.model.RestResponse;
 import eu.slipo.workbench.common.model.TextMessage;
-import eu.slipo.workbench.rpc.controller.EchoController;
+import eu.slipo.workbench.rpc.service.SimpleEchoService;
+
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(properties = {"spring.profiles.active=testing"})
-public class EchoControllerTests
+@ActiveProfiles({ "testing" })
+public class SimpleEchoServiceTests
 {
     /**
      * Mock dependency of unit-tested controller 
@@ -31,7 +32,7 @@ public class EchoControllerTests
     private MessageSource messageSource;
     
     @InjectMocks 
-    private EchoController controller;
+    private SimpleEchoService echoService;
 
     private static String ECHOED_BY = "echoed by me";
     
@@ -53,15 +54,10 @@ public class EchoControllerTests
     public void testEcho() throws Exception 
     {
         TextMessage message = new TextMessage("hello world!");
+        TextMessage replyMessage = echoService.echo(message, "en");
         
-        RestResponse<TextMessage> response = controller.echo(message, "en");
-        
-        assertNotNull(response);
-        
-        TextMessage result = response.getResult();
-        
-        assertNotNull(result);
-        assertTrue("message echoed", result.text().equals(message.text()));
-        assertTrue("comment exists", result.comment().equals(ECHOED_BY));
+        assertNotNull(replyMessage);
+        assertTrue("message echoed", replyMessage.text().equals(message.text()));
+        assertTrue("comment exists", replyMessage.comment().equals(ECHOED_BY));
     }
 }
