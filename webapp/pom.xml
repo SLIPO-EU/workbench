@@ -20,6 +20,15 @@
         <npm.version>3.10.10</npm.version>
         <node.env>development</node.env>
     </properties>
+    
+    <profiles>
+        <profile>
+            <id>develop</id>
+            <properties>
+                <frontend.skip>true</frontend.skip>
+            </properties>
+        </profile>
+    </profiles>
 
     <repositories>
     </repositories>
@@ -170,7 +179,7 @@
                             <goal>install-node-and-npm</goal>
                         </goals>
                         <configuration>
-                            <skip>false</skip>
+                            <!--<skip>false</skip>-->
                             <nodeVersion>${node.version}</nodeVersion>
                             <npmVersion>${npm.version}</npmVersion>
                         </configuration>
@@ -182,7 +191,7 @@
                             <goal>npm</goal>
                         </goals>
                         <configuration>
-                            <skip>false</skip>
+                            <!--<skip>false</skip>-->
                             <arguments>install</arguments>
                         </configuration>
                     </execution>
