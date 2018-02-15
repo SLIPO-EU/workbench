@@ -1,11 +1,10 @@
 package eu.slipo.workbench.web.service;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
@@ -21,9 +20,7 @@ import eu.slipo.workbench.common.model.process.ProcessRecord;
 import eu.slipo.workbench.common.repository.ProcessRepository;
 
 @Service
-public class DefaultProcessService implements ProcessService 
-{
-    private static final Logger logger = LoggerFactory.getLogger(DefaultProcessService.class);
+public class DefaultProcessService implements ProcessService {
 
     @Autowired
     private MessageSource messageSource;
@@ -34,31 +31,22 @@ public class DefaultProcessService implements ProcessService
     @Autowired
     private ProcessRepository processRepository;
 
-    private int currentUserId()
-    {
+    private int currentUserId() {
         return authenticationFacade.getCurrentUserId();
     }
-    
-    private Locale currentUserLocale()
-    {
+
+    private Locale currentUserLocale() {
         return authenticationFacade.getCurrentUserLocale();
     }
-    
-    private ApplicationException wrapAndFormatException(Exception ex, ErrorCode errorCode, String message)
-    {
-        return ApplicationException.fromMessage(ex, errorCode, message)
-            .withFormattedMessage(messageSource, currentUserLocale());
+
+    private ApplicationException wrapAndFormatException(Exception ex, ErrorCode errorCode, String message) {
+        return ApplicationException.fromMessage(ex, errorCode, message).withFormattedMessage(messageSource, currentUserLocale());
     }
-    
+
     @Override
-    public ProcessRecord create(ProcessDefinition definition)
-    {
-        try {
-            validate(definition);
-        } catch (InvalidProcessDefinitionException ex) {
-            throw wrapAndFormatException(ex, ProcessErrorCode.INVALID, "The process definition is invalid");
-        }
-        
+    public ProcessRecord create(ProcessDefinition definition) throws InvalidProcessDefinitionException {
+        validate(definition);
+
         ProcessRecord record = null;
         try {
             record = processRepository.create(definition, currentUserId());
@@ -71,14 +59,9 @@ public class DefaultProcessService implements ProcessService
     }
 
     @Override
-    public ProcessRecord update(int id, ProcessDefinition definition)
-    {
-        try {
-            validate(definition);
-        } catch (InvalidProcessDefinitionException ex) {
-            throw wrapAndFormatException(ex, ProcessErrorCode.INVALID, "The process definition is invalid");
-        }
-        
+    public ProcessRecord update(long id, ProcessDefinition definition) throws InvalidProcessDefinitionException {
+        validate(definition);
+
         ProcessRecord record = null;
         try {
             record = processRepository.update(id, definition, currentUserId());
@@ -89,30 +72,34 @@ public class DefaultProcessService implements ProcessService
         }
         return record;
     }
-    
+
     @Override
-    public ProcessRecord findOne(long id)
-    {
+    public ProcessRecord findOne(long id) {
         return processRepository.findOne(id);
     }
 
     @Override
-    public ProcessRecord findOne(long id, long version)
-    {
+    public ProcessRecord findOne(long id, long version) {
         return processRepository.findOne(id, version);
     }
 
     @Override
-    public List<ProcessExecutionRecord> findExecutions(long id, long version)
-    {
+    public List<ProcessExecutionRecord> findExecutions(long id, long version) {
         ProcessRecord record = processRepository.findOne(id, version);
-        return record == null? Collections.emptyList() : record.getExecutions();
+        return record == null ? Collections.emptyList() : record.getExecutions();
     }
 
     @Override
-    public void validate(ProcessDefinition definition) 
-        throws InvalidProcessDefinitionException
-    {
-        // Todo validate(ProcessDefinition)
+    public void validate(ProcessDefinition definition) throws InvalidProcessDefinitionException {
+        List<Error> errors = new ArrayList<Error>();
+
+        // Process name must be unique
+        if (processRepository.findOne(definition.getName()) != null) {
+            errors.add(new Error(ProcessErrorCode.NAME_DUPLICATE, "Workflow name already exists."));
+        }
+
+        if (!errors.isEmpty()) {
+            throw new InvalidProcessDefinitionException(errors);
+        }
     }
 }

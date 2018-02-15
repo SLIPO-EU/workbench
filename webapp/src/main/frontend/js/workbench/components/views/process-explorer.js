@@ -70,9 +70,11 @@ class ProcessExplorer extends React.Component {
    * @memberof ProcessExplorer
    */
   componentWillMount() {
-    this.props.fetchProcesses({
-      query: {...this.props.filters},
-    });
+    if (!this.props.items.length) {
+      this.props.fetchProcesses({
+        query: {...this.props.filters},
+      });
+    }
   }
 
   /**

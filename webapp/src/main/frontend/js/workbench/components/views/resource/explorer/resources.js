@@ -65,7 +65,7 @@ const resourceColumns = [{
   Header: 'Version',
   width: 60,
   Expander: ({ isExpanded, ...rest }) => {
-    if (rest.original.revisions.length > 0) {
+    if (rest.original.revisions.length > 1) {
       return (
         <div>
           {!isExpanded ? rest.original.version : <i className="fa fa-code-fork" ></i>}
@@ -108,6 +108,11 @@ const resourceColumns = [{
   id: 'description',
   accessor: r => r.metadata.description,
   headerStyle: { 'textAlign': 'left' },
+}, {
+  Header: 'Last Update',
+  id: 'updatedOn',
+  accessor: r => <FormattedTime value={r.updatedOn} day='numeric' month='numeric' year='numeric' />,
+  style: { 'textAlign': 'center' },
 }];
 
 const resourceHistoryColumns = [{
@@ -184,6 +189,9 @@ export default class Resources extends React.Component {
       case 'remove-from-bag':
         this.props.removeResourceFromBag(createResource(rowInfo));
         break;
+      case 'delete':
+        this.props.deleteResource(rowInfo.original.id, rowInfo.original.version);
+        break;
       default:
         if (handleOriginal) {
           handleOriginal();
@@ -196,7 +204,6 @@ export default class Resources extends React.Component {
     if (!this.props.selected || !rowInfo) {
       return false;
     }
-
     return this.props.selected.id === rowInfo.row.id && this.props.selected.version === rowInfo.row._original.version;
   }
 
@@ -249,23 +256,23 @@ export default class Resources extends React.Component {
         showPagination
         SubComponent={
           row => {
-            if (row.original.revisions.length > 0) {
+            if (row.original.revisions.length > 1) {
               return (
-                <div style={{ margin: "0px -1px" }}>
+                <div>
                   <Table
                     name="Resource explore"
                     id="resource-explore"
                     minRows={1}
                     columns={resourceHistoryColumns}
-                    data={row.original.revisions}
-                    noDataText="No other versions"
+                    data={row.original.revisions.filter((v) => v.version !== row.original.version)}
+                    noDataText="No other revisions"
                     defaultPageSize={row.original.revisions.length}
                     showPagination={false}
                     getTrProps={(state, rowInfo) => ({
                       onClick: (e) => {
                         this.props.setSelectedResource(rowInfo.row.id, rowInfo.row.version);
                       },
-                      className: (this.isSelected(rowInfo) ? 'slipo-react-table-selected' : null),
+                      className: (this.isSelected(rowInfo) ? 'slipo-react-table-selected' : 'slipo-react-table-child-row'),
                       style: {
                         lineHeight: 0.8,
                       },

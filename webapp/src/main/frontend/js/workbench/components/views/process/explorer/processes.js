@@ -13,7 +13,7 @@ const processColumns = [{
   Header: 'Version',
   width: 60,
   Expander: ({ isExpanded, ...rest }) => {
-    if (rest.original.revisions.length > 0) {
+    if (rest.original.revisions.length > 1) {
       return (
         <div>
           {!isExpanded ? rest.original.version : <i className="fa fa-code-fork" ></i>}
@@ -53,27 +53,18 @@ const processColumns = [{
   accessor: 'description',
   headerStyle: { 'textAlign': 'left' },
 }, {
-  Header: 'Owner',
-  id: 'createdBy',
-  accessor: r => r.createdBy.name,
-  headerStyle: { 'textAlign': 'center' },
-  style: { 'textAlign': 'center' },
-}, {
-  Header: 'Created',
-  id: 'createdOn',
-  accessor: r => <FormattedTime value={r.createdOn} day='numeric' month='numeric' year='numeric' />,
-  style: { 'textAlign': 'center' },
-}, {
   Header: 'Modified By',
   id: 'createdBy',
   accessor: r => r.updatedBy.name,
   headerStyle: { 'textAlign': 'center' },
   style: { 'textAlign': 'center' },
+  maxWidth: 160,
 }, {
   Header: 'Updated',
   id: 'updatedOn',
   accessor: r => <FormattedTime value={r.updatedOn} day='numeric' month='numeric' year='numeric' />,
   style: { 'textAlign': 'center' },
+  maxWidth: 160,
 }];
 
 function getProcessHistoryColumns(parent) {
@@ -100,16 +91,21 @@ function getProcessHistoryColumns(parent) {
     style: { 'textAlign': 'center' },
     maxWidth: 60,
   }, {
-    Header: 'Name',
-    id: 'name',
-    accessor: r => r.name,
-  }, {
     Header: 'Description',
     accessor: 'description',
   }, {
-    Header: 'Last Update',
+    Header: 'Modified By',
+    id: 'createdBy',
+    accessor: r => r.updatedBy.name,
+    headerStyle: { 'textAlign': 'center' },
+    style: { 'textAlign': 'center' },
+    maxWidth: 160,
+  }, {
+    Header: 'Updated',
     id: 'updatedOn',
-    accessor: r => <div> By {r.updatedBy.name} at <FormattedTime value={r.updatedOn} day='numeric' month='numeric' year='numeric' /> </div>,
+    accessor: r => <FormattedTime value={r.updatedOn} day='numeric' month='numeric' year='numeric' />,
+    style: { 'textAlign': 'center' },
+    maxWidth: 160,
   }];
 }
 
@@ -150,7 +146,6 @@ export default class Processes extends React.Component {
     if (!rowInfo || !this.props.selected) {
       return false;
     }
-
     return this.props.selected.id === rowInfo.row.id && this.props.selected.version === rowInfo.row.version;
   }
 
@@ -195,23 +190,23 @@ export default class Processes extends React.Component {
         showPagination
         SubComponent={
           row => {
-            if (row.original.revisions.length > 0) {
+            if (row.original.revisions.length > 1) {
               return (
-                <div style={{ margin: "0px -1px" }}>
+                <div>
                   <Table
                     name="Process-history-explorer"
                     id="process-history-explorer"
                     minRows={1}
                     columns={getProcessHistoryColumns(row)}
-                    data={row.original.revisions}
-                    noDataText="No other versions"
+                    data={row.original.revisions.filter((v) => v.version !== row.original.version)}
+                    noDataText="No other revisions"
                     defaultPageSize={row.original.revisions.length}
                     showPagination={false}
                     getTrProps={(state, rowInfo) => ({
                       onClick: (e) => {
                         this.props.fetchProcessExecutions(rowInfo.row.id, rowInfo.row.version);
                       },
-                      className: (this.isSelected(rowInfo) ? 'slipo-react-table-selected' : null),
+                      className: (this.isSelected(rowInfo) ? 'slipo-react-table-selected' : 'slipo-react-table-child-row'),
                       style: {
                         lineHeight: 0.8,
                       },

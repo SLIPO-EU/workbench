@@ -16,7 +16,15 @@ import {
   FormattedTime
 } from 'react-intl';
 
-import OpenLayers from '../helpers/map';
+import {
+  toast
+} from 'react-toastify';
+
+
+import {
+  OpenLayers,
+  ToastTemplate,
+} from '../helpers';
 
 import {
   Filters,
@@ -48,6 +56,7 @@ class ResourceExplorer extends React.Component {
   constructor(props) {
     super(props);
 
+    this.deleteResource = this.deleteResource.bind(this);
     this.onFeatureSelect = this.onFeatureSelect.bind(this);
   }
 
@@ -58,22 +67,39 @@ class ResourceExplorer extends React.Component {
    * @memberof ResourceExplorer
    */
   componentWillMount() {
-    this.props.fetchResources({
-      query: {...this.props.filters},
-    });
+    if (!this.props.items.length) {
+      this.props.fetchResources({
+        query: {...this.props.filters},
+      });
+    }
   }
 
   /**
    * Syncs map component to table selected row
    *
-   * @param {any} e
+   * @param {any} features
    * @memberof ResourceExplorer
    */
-  onFeatureSelect(e) {
-    if (e.selected.length === 1) {
-      const feature = e.selected[0];
+  onFeatureSelect(features) {
+    if (features.length === 1) {
+      const feature = features[0];
       this.props.setSelectedResource(feature.get('id'), feature.get('version'));
     }
+  }
+
+  /**
+   * Deletes an existing resource
+   *
+   * @param {any} id
+   * @param {any} version
+   * @memberof ResourceExplorer
+   */
+  deleteResource(id, version) {
+    toast.dismiss();
+
+    toast.error(
+      <ToastTemplate iconClass='fa-warning' text='Not implemented!' />
+    );
   }
 
   render() {
@@ -107,9 +133,10 @@ class ResourceExplorer extends React.Component {
             <Card>
               <CardBody className="card-body">
                 <Row className="mb-2">
-                  <Col xs="6">
+                  <Col>
                     <Resources
                       addResourceToBag={this.props.addResourceToBag}
+                      deleteResource={this.deleteResource}
                       fetchResources={this.props.fetchResources}
                       filters={this.props.filters}
                       items={this.props.items}
@@ -121,6 +148,12 @@ class ResourceExplorer extends React.Component {
                       setSelectedResource={this.props.setSelectedResource}
                     />
                   </Col>
+                </Row>
+              </CardBody>
+            </Card>
+            <Card>
+              <CardBody className="card-body">
+                <Row>
                   <Col xs="6">
                     <OpenLayers.Map minZoom={5} maxZoom={15} zoom={9}>
                       <OpenLayers.Layers>
@@ -139,23 +172,20 @@ class ResourceExplorer extends React.Component {
                       </OpenLayers.Interactions>
                     </OpenLayers.Map>
                   </Col>
-                </Row>
-              </CardBody>
-            </Card>
-            {this.props.selected &&
-              <Card>
-                <CardBody className="card-body">
-                  <Row>
-                    <Col>
+                  {!this.props.selected &&
+                    <span className="text-muted">Select a resource to view details ...</span>
+                  }
+                  {this.props.selected &&
+                    <Col xs={6}>
                       <ResourceDetails
                         resource={this.props.items.find((r) => this.props.selected && r.id === this.props.selected.id)}
                         version={this.props.selected ? this.props.selected.version : null}
                       />
                     </Col>
-                  </Row>
-                </CardBody>
-              </Card>
-            }
+                  }
+                </Row>
+              </CardBody>
+            </Card>
           </Col>
         </Row >
       </div >
