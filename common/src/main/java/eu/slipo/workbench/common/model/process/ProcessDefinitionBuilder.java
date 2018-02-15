@@ -37,9 +37,15 @@ public class ProcessDefinitionBuilder {
     {
         return new ProcessDefinitionBuilder();
     }
+    
+    public static ProcessDefinitionBuilder create(String name) 
+    {
+        return (new ProcessDefinitionBuilder()).name(name);
+    }
 
     public ProcessDefinitionBuilder name(String name) 
     {
+        Assert.isTrue(!StringUtils.isEmpty(name), "A non-empty name is required");
         this.name = name;
         return this;
     }

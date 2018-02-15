@@ -207,8 +207,10 @@ public class DefaultProcessRepository implements ProcessRepository {
     }
 
     @Override
-    public ProcessRecord findOne(String name) {
-        String queryString = "select p from ProcessRevision p where p.parent.name = :name order by p.version desc";
+    public ProcessRecord findOne(String name) 
+    {
+        String queryString = 
+            "select p from ProcessRevision p where p.parent.name = :name order by p.version desc";
 
         List<ProcessRevisionEntity> result = entityManager
             .createQuery(queryString, ProcessRevisionEntity.class)

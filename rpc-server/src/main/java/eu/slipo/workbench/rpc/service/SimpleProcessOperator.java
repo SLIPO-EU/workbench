@@ -1,6 +1,7 @@
 package eu.slipo.workbench.rpc.service;
 
-import org.apache.commons.lang.NotImplementedException;
+
+import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -36,21 +37,21 @@ public class SimpleProcessOperator implements ProcessOperator
         // Todo Create a process-execution entity and associate with captured events
         // Todo return a DTO for process execution (ProcessExecutionRecord)
         
-        throw new NotImplementedException();
+        throw new NotImplementedException("Todo");
     }
     
     private void stopExecution(ProcessRecord process)
     {
         // Todo Find and stop workflow associated with process of given (id,version)
         
-        throw new NotImplementedException();
+        throw new NotImplementedException("Todo");
     }
     
     private ProcessExecutionRecord pollStatus(ProcessRecord process)
     {
         // Todo Poll the status of workflow associated with process of given (id,version)
         
-        throw new NotImplementedException();
+        throw new NotImplementedException("Todo");
     }
     
     @Override
