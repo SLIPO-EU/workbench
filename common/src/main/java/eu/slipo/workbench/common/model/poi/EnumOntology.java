@@ -42,10 +42,9 @@ public enum EnumOntology
     {
         if (!StringUtils.isEmpty(key))
             for (EnumOntology e: EnumOntology.values())
-                if (e.keys.indexOf(key) >= 0)
+                if (e.name().equals(key) || e.keys.indexOf(key) >= 0)
                     return e;
         
-        throw new IllegalArgumentException(
-            "No enum constant associated with key: " + key);
+        throw new IllegalArgumentException("No enum constant associated with key: " + key);
     }
 }

@@ -1,10 +1,11 @@
 package eu.slipo.workbench.web.controller.action;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
@@ -15,6 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.core.Authentication;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,12 +30,18 @@ import eu.slipo.workbench.common.model.BasicErrorCode;
 import eu.slipo.workbench.common.model.Error;
 import eu.slipo.workbench.common.model.QueryResultPage;
 import eu.slipo.workbench.common.model.RestResponse;
+import eu.slipo.workbench.common.model.poi.EnumDataFormat;
+import eu.slipo.workbench.common.model.process.InvalidProcessDefinitionException;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.ProcessDefinitionBuilder;
+import eu.slipo.workbench.common.model.process.ProcessRecord;
+import eu.slipo.workbench.common.model.resource.DataSource;
+import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataUpdate;
 import eu.slipo.workbench.common.model.resource.ResourceQuery;
 import eu.slipo.workbench.common.model.resource.ResourceRecord;
 import eu.slipo.workbench.common.model.resource.UploadDataSource;
+import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.repository.ResourceRepository;
 import eu.slipo.workbench.web.model.QueryResult;
 import eu.slipo.workbench.web.model.resource.RegistrationRequest;
@@ -41,6 +50,7 @@ import eu.slipo.workbench.web.model.resource.ResourceQueryRequest;
 import eu.slipo.workbench.web.model.resource.ResourceRegistrationRequest;
 import eu.slipo.workbench.web.service.AuthenticationFacade;
 import eu.slipo.workbench.web.service.IResourceValidationService;
+import eu.slipo.workbench.web.service.ProcessService;
 
 /**
  * Actions for managing resources
@@ -69,6 +79,43 @@ public class ResourceController {
     @Qualifier("catalogDataDirectory")
     private Path catalogDataDir;
 
+    @Autowired
+    private ProcessService processService;
+
+    private int currentUserId()
+    {
+        return authenticationFacade.getCurrentUserId();
+    }
+
+    /**
+     * Register a resource from a generic data source (i.e. {@link DataSource})
+     *
+     * @param source The data source
+     * @param configuration The configuration needed by Triplegeo to transform into one of
+     * the internally recognized data formats (see {@link EnumDataFormat}).
+     * @param metadata The metadata that should accompany the catalog resource
+     * @return
+     * @throws InvalidProcessDefinitionException
+     */
+    private ProcessRecord register(DataSource source, TriplegeoConfiguration configuration, ResourceMetadataCreate metadata) throws InvalidProcessDefinitionException {
+
+        Assert.notNull(source, "A data source is required");
+        Assert.notNull(configuration, "Expected configuration for Triplegeo");
+        Assert.notNull(metadata, "Expected metadata for resource registration");
+
+        final int resourceKey = 1;
+
+        ProcessDefinition definition = ProcessDefinitionBuilder.create().name("register")
+            .transform(0, "transform", source, configuration, resourceKey)
+            .register(1, "register", metadata, resourceKey).build();
+
+        ProcessRecord record = processService.create(definition);
+
+        // Todo: Submit processing request to RPC server
+
+        return record;
+    }
+
     /**
      * Search for resources
      *
@@ -84,7 +131,7 @@ public class ResourceController {
 
         PageRequest pageRequest = request.getPageRequest();
         ResourceQuery query = request.getQuery();
-        query.setCreatedBy(authenticationFacade.getCurrentUserId());
+        query.setCreatedBy(currentUserId());
 
         QueryResultPage<ResourceRecord> r = resourceRepository.find(query, pageRequest);
         return RestResponse.result(QueryResult.create(r));
@@ -95,9 +142,10 @@ public class ResourceController {
      *
      * @param data registration data
      * @return the process configuration
+     * @throws InvalidProcessDefinitionException
      */
     @RequestMapping(value = "/action/resource/register", method = RequestMethod.PUT)
-    public RestResponse<?> registerResource(@RequestBody ResourceRegistrationRequest request) {
+    public RestResponse<?> registerResource(@RequestBody ResourceRegistrationRequest request) throws InvalidProcessDefinitionException {
 
         // Validate
         List<Error> errors = resourceValidationService.validate(request);
@@ -106,13 +154,10 @@ public class ResourceController {
         }
 
         // Convert registration data to a process configuration instance
-        ProcessDefinition process = ProcessDefinitionBuilder.create()
-            .transform(0, "Transform", request.getDataSource(), request.getConfiguration(), 1)
-            .register(1, "Register", request.getMetadata(), 1).build();
+        ProcessRecord record = register(request.getDataSource(), request.getConfiguration(), request.getMetadata());
 
         // TODO: Submit request to service
-
-        return RestResponse.result(process);
+        return RestResponse.result(record);
     }
 
     /**
@@ -120,32 +165,30 @@ public class ResourceController {
      *
      * @param file uploaded resource file
      * @param data registration data
+     * @throws InvalidProcessDefinitionException
      */
-    public RestResponse<?> uploadResource(@RequestPart("file") MultipartFile file, @RequestPart("data") RegistrationRequest request) {
+    public RestResponse<?> uploadResource(@RequestPart("file") MultipartFile file, @RequestPart("data") RegistrationRequest request) throws InvalidProcessDefinitionException {
 
+        Path inputPath = null;
         try {
-            // Create a temporary file
-            final String inputFileName = createTemporaryFilename(file.getBytes(), FilenameUtils.getExtension(file.getOriginalFilename()));
-
-            // Validate
-            List<Error> errors = resourceValidationService.validate(request, inputFileName);
-            if (!errors.isEmpty()) {
-                FileUtils.deleteQuietly(new File(inputFileName));
-                return RestResponse.error(errors);
-            }
-
-            // Convert registration data to a process configuration instance
-            ProcessDefinition process = ProcessDefinitionBuilder.create()
-                .transform(0, "Transform", new UploadDataSource(inputFileName), request.getConfiguration(), 1)
-                .register(1, "Register", request.getMetadata(), 1).build();
-
-            // TODO: Submit request to service
-
-            return RestResponse.result(process);
+            inputPath = createTemporaryFile(file.getBytes(), FilenameUtils.getExtension(file.getOriginalFilename()));
         } catch (IOException ex) {
             logger.error(ex.getMessage(), ex);
-            return RestResponse.error(BasicErrorCode.IO_ERROR, "IO exception has occured: " + ex.getMessage());
+            return RestResponse.error(BasicErrorCode.IO_ERROR, "An i/o exception has occured: " + ex.getMessage());
         }
+
+        // Validate
+        List<Error> errors = resourceValidationService.validate(request, inputPath.toString());
+        if (!errors.isEmpty()) {
+            FileUtils.deleteQuietly(inputPath.toFile());
+            return RestResponse.error(errors);
+        }
+
+        final DataSource source = new UploadDataSource(inputPath);
+
+        ProcessRecord record = register(source, request.getConfiguration(), request.getMetadata());
+
+        return RestResponse.result(record);
     }
 
     /**
@@ -155,9 +198,8 @@ public class ResourceController {
      * @return the resource metadata
      */
     @RequestMapping(value = "/action/resource/{id}", method = RequestMethod.GET)
-    public RestResponse<ResourceRecord> getResource(@PathVariable long id) {
-
-        return RestResponse.<ResourceRecord>result(resourceRepository.findOne(id));
+    public RestResponse<ResourceRecord> getResource(Authentication authentication, @PathVariable long id) {
+        return RestResponse.result(resourceRepository.findOne(id));
     }
 
     /**
@@ -167,9 +209,9 @@ public class ResourceController {
      * @return the updated resource metadata
      */
     @RequestMapping(value = "/action/resource/{id}", method = RequestMethod.POST)
-    public RestResponse<?> updateResource(@PathVariable long id, @RequestBody ResourceMetadataUpdate data) {
-
-        return RestResponse.<ResourceRecord>result(resourceRepository.findOne(id));
+    public RestResponse<?> updateResource(Authentication authentication, @PathVariable long id,
+            @RequestBody ResourceMetadataUpdate data) {
+        return RestResponse.result(resourceRepository.findOne(id));
     }
 
     /**
@@ -198,17 +240,20 @@ public class ResourceController {
     }
 
     /**
-     * Creates a new unique filename and stores the given array of bytes.
+     * Creates a new temporary file and stores the given array of bytes.
      *
      * @param data the content to write to the file
-     * @return a unique filename.
      * @throws IOException in case of an I/O error
+     *
+     * @return the file path under which data is written
      */
-    private String createTemporaryFilename(byte[] data, String extension) throws IOException {
-        Path path = Files.createTempFile(tempDir, null, "." + (extension == null ? "dat" : extension));
+    private Path createTemporaryFile(byte[] data, String extension) throws IOException {
+        final Path path = Files.createTempFile(tempDir, null, "." + (extension == null ? "dat" : extension));
 
-        Files.copy(new ByteArrayInputStream(data), path);
-        return path.toString();
+        InputStream in = new ByteArrayInputStream(data);
+        Files.copy(in, path, StandardCopyOption.REPLACE_EXISTING);
+
+        return path;
     }
 
 }

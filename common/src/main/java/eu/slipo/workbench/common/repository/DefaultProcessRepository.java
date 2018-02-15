@@ -253,17 +253,16 @@ public class DefaultProcessRepository implements ProcessRepository {
         entity.setCreatedOn(now);
         entity.setUpdatedOn(now);
 
-        // Create an associated process revision
+
+        // Create an associated process revision, update reference
 
         ProcessRevisionEntity revisionEntity = new ProcessRevisionEntity(entity);
-
-        // Set references
-        // Fixme processRevision.setParent(entity);
         entity.addRevision(revisionEntity);
+
+        // Save
 
         entityManager.persist(entity);
         entityManager.flush();
-
         return entity.toProcessRecord();
     }
 
@@ -287,13 +286,12 @@ public class DefaultProcessRepository implements ProcessRepository {
         entity.setUpdatedOn(ZonedDateTime.now());
         entity.setDefinition(definition);
 
-        // Create new process revision
+        // Create new process revision, update references
 
         ProcessRevisionEntity revisionEntity = new ProcessRevisionEntity(entity);
-
-        // Set references
-        // Fixme processRevision.setParent(entity);
         entity.addRevision(revisionEntity);
+
+        // Save
 
         entityManager.flush();
         return entity.toProcessRecord();

@@ -36,9 +36,9 @@ public class ProcessExecutionRecord {
         this.process = new ProcessIdentifier(processId, processVersion);
     }
 
-    public ProcessExecutionRecord(long id, ProcessIdentifier process) {
+    public ProcessExecutionRecord(long id, ProcessIdentifier processIdentifier) {
         this.id = id;
-        this.process = process.clone();
+        this.process = new ProcessIdentifier(processIdentifier);
     }
 
     public String getName() {

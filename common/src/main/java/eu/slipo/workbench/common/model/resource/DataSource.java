@@ -1,5 +1,7 @@
 package eu.slipo.workbench.common.model.resource;
 
+import java.io.Serializable;
+
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -15,8 +17,10 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
     @Type(value = ExternalUrlDataSource.class, name = "EXTERNAL_URL"),
     @Type(value = HarvesterDataSource.class, name = "HARVESTER"),
 })
-public abstract class DataSource {
-
+public abstract class DataSource implements Serializable 
+{
+    private static final long serialVersionUID = 1L;
+    
     @JsonDeserialize(using = EnumDataSourceType.Deserializer.class)
     protected EnumDataSourceType type;
 

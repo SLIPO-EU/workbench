@@ -1,7 +1,5 @@
 package eu.slipo.workbench.common.model.process;
 
-import java.io.Serializable;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -11,7 +9,7 @@ import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
 /**
  * A process input resource that already exists in the catalog
  */
-public class CatalogResource extends ProcessInput implements Serializable
+public class CatalogResource extends ProcessInput
 {
     private static final long serialVersionUID = 1L;
 
@@ -82,5 +80,13 @@ public class CatalogResource extends ProcessInput implements Serializable
     public void setDescription(String description)
     {
         this.description = description;
+    }
+
+    @Override
+    public String toString()
+    {
+        return String.format(
+            "CatalogResource [resource=%s, description=%s, key=%s, inputType=%s, resourceType=%s]",
+            resource, description, key, inputType, resourceType);
     }
 }
