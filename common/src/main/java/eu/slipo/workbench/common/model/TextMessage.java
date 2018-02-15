@@ -1,10 +1,14 @@
 package eu.slipo.workbench.common.model;
 
+import java.io.Serializable;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class TextMessage
+public class TextMessage implements Serializable
 {
+    private static final long serialVersionUID = 1L;
+
     private final String text;
     
     private final String comment;
@@ -43,5 +47,12 @@ public class TextMessage
     public Integer id()
     {
         return id;
+    }
+
+    @Override
+    public String toString()
+    {
+        return String.format(
+            "TextMessage [text=%s, comment=%s, id=%s]", text, comment, id);
     }
 }
