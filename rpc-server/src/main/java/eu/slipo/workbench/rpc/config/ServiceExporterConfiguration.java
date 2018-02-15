@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.remoting.httpinvoker.HttpInvokerServiceExporter;
 
 import eu.slipo.workbench.common.service.EchoService;
+import eu.slipo.workbench.common.service.ProcessOperator;
 
 @Configuration
 public class ServiceExporterConfiguration
@@ -17,6 +18,16 @@ public class ServiceExporterConfiguration
         HttpInvokerServiceExporter exporter = new HttpInvokerServiceExporter();
         exporter.setServiceInterface(EchoService.class);
         exporter.setService(echoService);
+        return exporter;
+    }
+    
+    @Bean(name = "/processOperator")
+    HttpInvokerServiceExporter processOperatorExporter(
+        @Qualifier("simpleProcessOperator") ProcessOperator processOperator)
+    {
+        HttpInvokerServiceExporter exporter = new HttpInvokerServiceExporter();
+        exporter.setServiceInterface(ProcessOperator.class);
+        exporter.setService(processOperator);
         return exporter;
     }
 }

@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.remoting.httpinvoker.HttpInvokerProxyFactoryBean;
 
 import eu.slipo.workbench.common.service.EchoService;
+import eu.slipo.workbench.common.service.ProcessOperator;
 
 @Configuration
 public class RpcClientConfiguration
@@ -29,6 +30,17 @@ public class RpcClientConfiguration
         
         HttpInvokerProxyFactoryBean factory = new HttpInvokerProxyFactoryBean();
         factory.setServiceInterface(EchoService.class);
+        factory.setServiceUrl(serviceUrl);
+        return factory;
+    }
+    
+    @Bean
+    public HttpInvokerProxyFactoryBean processOperatorFactory()
+    {
+        final String serviceUrl = rootUrl.resolve("/processOperator").toString();
+        
+        HttpInvokerProxyFactoryBean factory = new HttpInvokerProxyFactoryBean();
+        factory.setServiceInterface(ProcessOperator.class);
         factory.setServiceUrl(serviceUrl);
         return factory;
     }
