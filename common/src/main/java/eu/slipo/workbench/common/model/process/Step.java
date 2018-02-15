@@ -44,7 +44,7 @@ public class Step implements Serializable
     private EnumTool tool;
 
     @JsonProperty("input")
-    private List<Integer> input = new ArrayList<Integer>();
+    private List<Integer> inputKeys = new ArrayList<Integer>();
 
     @JsonProperty("sources")
     private List<DataSource> sources = new ArrayList<>();
@@ -75,7 +75,7 @@ public class Step implements Serializable
 
         private EnumTool tool;
 
-        private List<Integer> input = new ArrayList<>();
+        private List<Integer> inputKeys = new ArrayList<>();
 
         private List<DataSource> sources = new ArrayList<>();
 
@@ -150,7 +150,7 @@ public class Step implements Serializable
          */
         public Builder input(List<Integer> inputKeys)
         {
-            this.input.addAll(inputKeys);
+            this.inputKeys.addAll(inputKeys);
             return this;
         }
 
@@ -160,7 +160,7 @@ public class Step implements Serializable
          */
         public Builder input(int inputKey)
         {
-            this.input.add(inputKey);
+            this.inputKeys.add(inputKey);
             return this;
         }
 
@@ -195,7 +195,7 @@ public class Step implements Serializable
             Assert.state(this.configuration != null, "The tool configuration must be provided");
             Assert.state(this.outputKey != null || operation == EnumOperation.REGISTER,
                 "An output key is required for a non-registration step");
-            Assert.state(!this.input.isEmpty() || !this.sources.isEmpty(),
+            Assert.state(!this.inputKeys.isEmpty() || !this.sources.isEmpty(),
                 "The list of data sources and list of input keys cannot be both empty!");
 
             Step step = new Step();
@@ -206,7 +206,7 @@ public class Step implements Serializable
             step.operation = this.operation;
             step.tool = this.tool;
             step.sources = new ArrayList<>(this.sources);
-            step.input = new ArrayList<>(this.input);
+            step.inputKeys = new ArrayList<>(this.inputKeys);
             step.outputKey = this.outputKey;
 
             try {
@@ -298,10 +298,10 @@ public class Step implements Serializable
     /**
      * The keys of input resources that should be provided to this step.
      */
-    @JsonProperty("input")
-    public List<Integer> input()
+    @JsonProperty("inputKeys")
+    public List<Integer> inputKeys()
     {
-        return Collections.unmodifiableList(input);
+        return Collections.unmodifiableList(inputKeys);
     }
 
     /**

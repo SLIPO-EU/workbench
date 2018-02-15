@@ -189,7 +189,7 @@ public class ProcessDefinitionBuilder {
             "The list of given resources contains duplicate keys!");
         
         Assert.state(
-            this.steps.stream().allMatch(step -> resourceKeys.containsAll(step.input())),
+            this.steps.stream().allMatch(step -> resourceKeys.containsAll(step.inputKeys())),
             "The input keys (for every step) must refer to existing resource keys");
         
         // The definition seems valid

@@ -132,7 +132,7 @@ public class ProcessRecord {
         this.template = template;
     }
 
-    public EnumProcessTaskType getTask() {
+    public EnumProcessTaskType getTaskType() {
         return taskType;
     }
 
