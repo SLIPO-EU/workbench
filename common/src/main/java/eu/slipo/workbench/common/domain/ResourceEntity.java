@@ -19,7 +19,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
 import javax.persistence.Version;
 import javax.validation.constraints.NotNull;
 
@@ -256,8 +255,8 @@ public class ResourceEntity {
     {
         revisions.add(revisionEntity);
     }
-    
-    public ResourceRecord toResourceRecord() 
+
+    public ResourceRecord toResourceRecord()
     {
         ResourceRecord r = new ResourceRecord(id, version);
 
@@ -271,7 +270,7 @@ public class ResourceEntity {
         r.setFilePath(path);
         r.setFileSize(size);
         r.setMetadata(name, description, numberOfEntities, boundingBox);
-        r.setProcessExecutionId(processExecution.getId());
+        r.setProcessExecutionId(processExecution != null ? processExecution.getId() : null);
         r.setTable(tableName);
         r.setType(type);
 

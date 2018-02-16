@@ -644,7 +644,7 @@ function loadReducer(state, action) {
   // Create process
   const process = {
     properties: {
-      id: data.id,
+      id: action.id,
       version: data.version,
       name: data.name,
       description: data.description,
@@ -1001,9 +1001,10 @@ export default (state = initialState, action) => {
  * Action creators
  */
 
-const processLoaded = function (process, readOnly) {
+const processLoaded = function (id, process, readOnly) {
   return {
     type: LOAD_RECEIVE_RESPONSE,
+    id,
     process,
     readOnly,
   };
@@ -1251,7 +1252,7 @@ export function fetchProcess(id) {
 
     const { meta: { csrfToken: token } } = getState();
     return processService.fetchProcess(id, token).then((process) => {
-      dispatch(processLoaded(process, false));
+      dispatch(processLoaded(id, process, false));
     });
   };
 }
@@ -1267,7 +1268,7 @@ export function fetchProcessRevision(id, version) {
 
     const { meta: { csrfToken: token } } = getState();
     return processService.fetchProcessRevision(id, version, token).then((process) => {
-      dispatch(processLoaded(process, true));
+      dispatch(processLoaded(id, process, true));
     });
   };
 }

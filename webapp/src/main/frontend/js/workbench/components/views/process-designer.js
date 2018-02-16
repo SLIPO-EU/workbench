@@ -265,7 +265,7 @@ class ProcessDesigner extends React.Component {
   cancelDialogHandler(action) {
     switch (action.key) {
       case EnumComponentAction.Discard:
-        this.props.reset();
+        this.reset();
         this.props.history.push(StaticRoutes.ProcessExplorer);
         break;
       default:
@@ -282,7 +282,7 @@ class ProcessDesigner extends React.Component {
         toast.success(
           <ToastTemplate iconClass='fa-save' text='Process has been saved successfully!' />
         );
-        this.props.reset();
+        this.reset();
         this.props.history.push(StaticRoutes.ProcessExplorer);
       })
       .catch((err) => {

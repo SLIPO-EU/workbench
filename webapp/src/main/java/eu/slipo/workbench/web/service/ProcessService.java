@@ -14,10 +14,11 @@ public interface ProcessService {
     /**
      * Validate a process definition
      *
+     * @id id the process unique id if an instance already exists
      * @param process the process definition
      * @throws InvalidProcessDefinitionException if the given definition is invalid
      */
-    void validate(ProcessDefinition definition) throws InvalidProcessDefinitionException;
+    void validate(Long id, ProcessDefinition definition) throws InvalidProcessDefinitionException;
 
     /**
      * Finds the most recent version of an existing process instance

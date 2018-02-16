@@ -45,7 +45,7 @@ public class DefaultProcessService implements ProcessService {
 
     @Override
     public ProcessRecord create(ProcessDefinition definition) throws InvalidProcessDefinitionException {
-        validate(definition);
+        validate(null, definition);
 
         ProcessRecord record = null;
         try {
@@ -60,7 +60,7 @@ public class DefaultProcessService implements ProcessService {
 
     @Override
     public ProcessRecord update(long id, ProcessDefinition definition) throws InvalidProcessDefinitionException {
-        validate(definition);
+        validate(id, definition);
 
         ProcessRecord record = null;
         try {
@@ -90,11 +90,11 @@ public class DefaultProcessService implements ProcessService {
     }
 
     @Override
-    public void validate(ProcessDefinition definition) throws InvalidProcessDefinitionException {
+    public void validate(Long id, ProcessDefinition definition) throws InvalidProcessDefinitionException {
         List<Error> errors = new ArrayList<Error>();
 
         // Process name must be unique
-        if (processRepository.findOne(definition.getName()) != null) {
+        if ((id == null) && (processRepository.findOne(definition.getName()) != null)) {
             errors.add(new Error(ProcessErrorCode.NAME_DUPLICATE, "Workflow name already exists."));
         }
 

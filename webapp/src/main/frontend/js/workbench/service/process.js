@@ -25,7 +25,7 @@ function buildProcessRequest(action, designer) {
 
   const model = {
     action,
-    process: {
+    definition: {
       name: designer.process.properties.name,
       description: designer.process.properties.description,
       resources: designer.resources
@@ -66,7 +66,8 @@ function buildProcessRequest(action, designer) {
           name: s.name,
           tool: s.tool,
           operation: s.operation,
-          input: [...s.resources],
+          inputKeys: [...s.resources],
+          sources: buildDataSource(s),
           configuration: buildConfiguration(s),
           outputKey: s.outputKey,
         };
@@ -80,14 +81,11 @@ function buildProcessRequest(action, designer) {
 }
 
 function buildConfiguration(step) {
-  const config = step.configuration;
+  const config = step.configuration || null;
 
   switch (step.tool) {
     case EnumTool.TripleGeo:
-      return {
-        settings: config,
-        dataSource: buildDataSource(step),
-      };
+      return config;
 
     case EnumTool.CATALOG:
       return {
@@ -97,9 +95,7 @@ function buildConfiguration(step) {
     case EnumTool.LIMES:
     case EnumTool.FAGI:
     case EnumTool.DEER:
-      return {
-        resources: [...step.resources],
-      };
+      return config;
 
     default:
       return null;
@@ -108,25 +104,25 @@ function buildConfiguration(step) {
 
 function buildDataSource(step) {
   if (step.dataSources.length !== 1) {
-    return null;
+    return [];
   }
 
   const dataSource = step.dataSources[0];
   switch (dataSource.source) {
     case EnumDataSource.FILESYSTEM:
       if (dataSource.configuration && dataSource.configuration.resource) {
-        return {
+        return [{
           type: dataSource.source,
           path: dataSource.configuration.resource.path,
-        };
+        }];
       }
       break;
     case EnumDataSource.EXTERNAL_URL:
       if (dataSource.configuration && dataSource.configuration.url) {
-        return {
+        return [{
           type: dataSource.source,
           url: dataSource.configuration.url,
-        };
+        }];
       }
   }
 
@@ -176,7 +172,7 @@ function readProcessResponse(process) {
         order: index,
         name: s.name,
         iconClass: ToolIcons[s.tool],
-        resources: s.configuration.resources,
+        resources: [...s.inputKeys],
         dataSources: readDataSource(s),
         configuration: readConfiguration(s),
         errors: {},
@@ -188,12 +184,13 @@ function readProcessResponse(process) {
 
 function readConfiguration(step) {
   const config = step.configuration;
+
   if (!config) {
     return null;
   }
-  switch (config.tool) {
+  switch (step.tool) {
     case EnumTool.TripleGeo:
-      return config.settings;
+      return config;
     case EnumTool.CATALOG:
       return config.metadata;
     default:
@@ -202,43 +199,45 @@ function readConfiguration(step) {
 }
 
 function readDataSource(step) {
-  if (step.tool != EnumTool.TripleGeo) {
+  if (step.tool !== EnumTool.TripleGeo) {
     return [];
   }
 
-  const config = step.configuration;
-  if ((!config) || (!config.dataSource)) {
+  const sources = step.sources;
+  if ((!sources) || (sources.length !== 1)) {
     return [];
   }
 
-  const dataSource = config.dataSource;
-  switch (dataSource.type) {
+  const source = sources[0];
+  switch (source.type) {
     case EnumDataSource.FILESYSTEM:
       return [{
         key: 0,
         type: EnumToolboxItem.DataSource,
-        source: dataSource.type,
-        iconClass: DataSourceIcons[dataSource.type],
-        name: DataSourceTitles[dataSource.type],
+        source: source.type,
+        iconClass: DataSourceIcons[source.type],
+        name: DataSourceTitles[source.type],
         configuration: {
           resource: {
-            path: dataSource.path,
+            path: source.path,
           }
         },
         errors: {},
       }];
+
     case EnumDataSource.EXTERNAL_URL:
       return [{
         key: 0,
         type: EnumToolboxItem.DataSource,
-        source: dataSource.type,
-        iconClass: DataSourceIcons[dataSource.type],
-        name: DataSourceTitles[dataSource.type],
+        source: source.type,
+        iconClass: DataSourceIcons[source.type],
+        name: DataSourceTitles[source.type],
         configuration: {
-          url: dataSource.url,
+          url: source.url,
         },
         errors: {},
       }];
+
     default:
       return [];
   }
@@ -248,7 +247,7 @@ export function fetchProcess(id, token) {
   return actions
     .get(`/action/process/${id}`, token)
     .then((result) => {
-      return readProcessResponse(result.process);
+      return readProcessResponse(result.definition);
     });
 }
 
@@ -256,7 +255,7 @@ export function fetchProcessRevision(id, version, token) {
   return actions
     .get(`/action/process/${id}/${version}`, token)
     .then((result) => {
-      return readProcessResponse(result.process);
+      return readProcessResponse(result.definition);
     });
 }
 
@@ -297,16 +296,17 @@ export function fetchExecutionKpiData(process, version, execution, file, token) 
 }
 
 export function validate(action, designer) {
-  const request = buildProcessRequest(action, designer);
-
-  // Validate process properties
-  if ((!request.process.name) || (!request.process.description)) {
+  if ((!designer.process.properties.name) || (!designer.process.properties.description)) {
     return false;
   }
-  if (request.process.steps.length === 0) {
+  if (designer.steps.length === 0) {
     return false;
+  } else {
+    if (designer.steps.find((s) => s.configuration === null)) {
+      return false;
+    }
   }
-  if (request.process.resources.length === 0) {
+  if (designer.resources.length === 0) {
     return false;
   }
   return true;

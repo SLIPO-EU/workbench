@@ -21,7 +21,7 @@ const initialState = {
   },
   filters: {
     name: null,
-    task: null,
+    taskType: null,
     status: null,
   },
   pager: {
