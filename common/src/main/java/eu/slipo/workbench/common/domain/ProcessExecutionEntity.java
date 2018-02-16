@@ -10,10 +10,13 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
@@ -22,10 +25,13 @@ import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 
 @Entity(name = "ProcessExecution")
 @Table(schema = "public", name = "process_execution")
-public class ProcessExecutionEntity {
-
+public class ProcessExecutionEntity 
+{
     @Id
     @Column(name = "id")
+    @SequenceGenerator(
+        sequenceName = "process_execution_id_seq", name = "process_execution_id_seq", initialValue = 1, allocationSize = 1)
+    @GeneratedValue(generator = "process_execution_id_seq", strategy = GenerationType.SEQUENCE)
     long id = -1L;
 
     @ManyToOne
@@ -41,7 +47,6 @@ public class ProcessExecutionEntity {
     @JoinColumn(name = "process", nullable = false)
     ProcessRevisionEntity process;
 
-    @NotNull
     @Column(name = "started_on")
     ZonedDateTime startedOn;
 
@@ -56,9 +61,18 @@ public class ProcessExecutionEntity {
     @Column(name = "error_message")
     private String errorMessage;
 
-    @OneToMany(mappedBy = "execution", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(
+        mappedBy = "execution", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     List<ProcessExecutionStepEntity> steps = new ArrayList<>();
 
+    private ProcessExecutionEntity() {}
+    
+    public ProcessExecutionEntity(ProcessRevisionEntity processRevisionEntity)
+    {
+        this.process = processRevisionEntity;
+        this.status = EnumProcessExecutionStatus.UNKNOWN;
+    }
+    
     public long getId() {
         return id;
     }
@@ -123,8 +137,15 @@ public class ProcessExecutionEntity {
         this.errorMessage = errorMessage;
     }
 
-    public List<ProcessExecutionStepEntity> getSteps() {
+    public List<ProcessExecutionStepEntity> getSteps()
+    {
         return steps;
+    }
+
+    public void addStep(ProcessExecutionStepEntity processExecutionStepEntity) 
+    {    
+        processExecutionStepEntity.setExecution(this);
+        steps.add(processExecutionStepEntity);
     }
 
     public ProcessExecutionRecord toProcessExecutionRecord()
@@ -144,7 +165,6 @@ public class ProcessExecutionEntity {
         e.setStartedOn(this.startedOn);
         e.setCompletedOn(this.completedOn);
         e.setStatus(this.status);
-        e.setTaskType(this.getProcess().getParent().getTaskType());
         e.setName(this.getProcess().getName());
         e.setErrorMessage(this.errorMessage);
 

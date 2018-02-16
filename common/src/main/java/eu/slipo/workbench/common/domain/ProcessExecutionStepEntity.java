@@ -28,11 +28,12 @@ import eu.slipo.workbench.common.model.process.ProcessExecutionStepRecord;
 
 @Entity(name = "ProcessExecutionStep")
 @Table(schema = "public", name = "process_execution_step")
-public class ProcessExecutionStepEntity {
-
+public class ProcessExecutionStepEntity 
+{
     @Id
     @Column(name = "id")
-    @SequenceGenerator(sequenceName = "process_execution_step_id_seq", name = "process_execution_step_id_seq", initialValue = 1, allocationSize = 1)
+    @SequenceGenerator(
+        sequenceName = "process_execution_step_id_seq", name = "process_execution_step_id_seq", initialValue = 1, allocationSize = 1)
     @GeneratedValue(generator = "process_execution_step_id_seq", strategy = GenerationType.SEQUENCE)
     long id = -1L;
 
@@ -52,7 +53,7 @@ public class ProcessExecutionStepEntity {
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "tool_name")
-    EnumTool component;
+    EnumTool tool;
 
     @NotNull
     @Enumerated(EnumType.STRING)
@@ -105,12 +106,12 @@ public class ProcessExecutionStepEntity {
         this.key = key;
     }
 
-    public EnumTool getComponent() {
-        return component;
+    public EnumTool getTool() {
+        return tool;
     }
 
-    public void setComponent(EnumTool component) {
-        this.component = component;
+    public void setTool(EnumTool tool) {
+        this.tool = tool;
     }
 
     public EnumOperation getOperation() {
@@ -160,7 +161,7 @@ public class ProcessExecutionStepEntity {
     public ProcessExecutionStepRecord toProcessExecutionStepRecord() {
         ProcessExecutionStepRecord s = new ProcessExecutionStepRecord(this.id, this.key, this.name);
 
-        s.setComponent(this.component);
+        s.setTool(this.tool);
         s.setOperation(this.operation);
         s.setStartedOn(this.startedOn);
         s.setCompletedOn(this.completedOn);

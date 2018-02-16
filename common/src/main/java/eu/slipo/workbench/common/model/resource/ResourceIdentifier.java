@@ -48,6 +48,6 @@ public class ResourceIdentifier implements Serializable {
     @Override
     public String toString()
     {
-        return String.format("ResourceIdentifier [id=%s, version=%s]", id, version);
+        return String.format("%d@%d", id, version);
     }
 }

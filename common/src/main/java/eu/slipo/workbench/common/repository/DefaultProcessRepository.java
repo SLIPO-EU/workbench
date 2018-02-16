@@ -6,10 +6,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
@@ -26,16 +28,17 @@ import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.ProcessErrorCode;
 import eu.slipo.workbench.common.model.process.ProcessExecutionQuery;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
+import eu.slipo.workbench.common.model.process.ProcessExecutionStepRecord;
 import eu.slipo.workbench.common.model.process.ProcessQuery;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
 
+// Todo Examine (per-method) transaction propagation. 
+// Focus on updateExecution which is subject to several race conditions.   
+
 @Repository
 @Transactional
-public class DefaultProcessRepository implements ProcessRepository {
-
-    /**
-     * Entity manager for persisting data.
-     */
+public class DefaultProcessRepository implements ProcessRepository 
+{
     @PersistenceContext(unitName = "default")
     EntityManager entityManager;
 
@@ -187,30 +190,23 @@ public class DefaultProcessRepository implements ProcessRepository {
     @Override
     public ProcessRecord findOne(long id)
     {
-        ProcessRevisionEntity entity = this.findLatestRevision(id);
-        return (entity == null ? null : entity.toProcessRecord(true, false));
+        ProcessRevisionEntity entity = findLatestRevision(id);
+        return entity == null? null : entity.toProcessRecord(true, false);
     }
 
     @Override
     public ProcessRecord findOne(long id, long version)
     {
-        String queryString =
-            "select p from ProcessRevision p where p.parent.id = :id and p.version = :version";
-
-        List<ProcessRevisionEntity> result = entityManager
-            .createQuery(queryString, ProcessRevisionEntity.class)
-            .setParameter("id", id)
-            .setParameter("version", version)
-            .getResultList();
-
-        return (result.isEmpty() ? null : result.get(0).toProcessRecord(true, false));
+        ProcessRevisionEntity r = findRevision(id, version);
+        return r == null? null : r.toProcessRecord(true, false);
     }
 
     @Override
     public ProcessRecord findOne(String name) 
     {
         String queryString = 
-            "select p from ProcessRevision p where p.parent.name = :name order by p.version desc";
+            "select p from ProcessRevision p where p.parent.name = :name " +
+            "order by p.version desc";
 
         List<ProcessRevisionEntity> result = entityManager
             .createQuery(queryString, ProcessRevisionEntity.class)
@@ -299,6 +295,46 @@ public class DefaultProcessRepository implements ProcessRepository {
         return entity.toProcessRecord();
     }
 
+    @Override
+    public ProcessExecutionRecord createExecution(long id, long version, int uid)
+    {
+        final ZonedDateTime now = ZonedDateTime.now();
+        
+        ProcessRevisionEntity revisionEntity = findRevision(id, version);
+        AccountEntity submittedBy = uid < 0? null : entityManager.find(AccountEntity.class, uid);
+        
+        ProcessExecutionEntity executionEntity = new ProcessExecutionEntity(revisionEntity);
+        executionEntity.setSubmittedBy(submittedBy);
+        executionEntity.setSubmittedOn(now);
+        
+        entityManager.persist(executionEntity);
+        entityManager.flush();
+        return executionEntity.toProcessExecutionRecord();
+    }
+    
+    @Override
+    public ProcessExecutionRecord updateExecution(long executionId, ProcessExecutionRecord record)
+    {
+        // Todo ProcessRepository.updateExecution
+        throw new NotImplementedException("Todo");
+    }
+
+    @Override
+    public ProcessExecutionRecord createExecutionStep(long executionId,
+        ProcessExecutionStepRecord record)
+    {
+        // Todo ProcessRepository.createExecutionStep
+        throw new NotImplementedException("Todo");
+    }
+
+    @Override
+    public ProcessExecutionRecord updateExecutionStep(long executionId, int stepKey,
+        ProcessExecutionStepRecord record)
+    {
+        // Todo ProcessRepository.updateExecutionStep
+        throw new NotImplementedException("Todo");
+    }
+    
     /**
      * Find the latest {@link ProcessRevisionEntity} associated with a given process id.
      *
@@ -312,11 +348,39 @@ public class DefaultProcessRepository implements ProcessRepository {
             "order by p.version desc";
 
         List<ProcessRevisionEntity> result = entityManager
-                .createQuery(queryString, ProcessRevisionEntity.class)
-                .setParameter("id", id)
-                .setMaxResults(1)
-                .getResultList();
+            .createQuery(queryString, ProcessRevisionEntity.class)
+            .setParameter("id", id)
+            .setMaxResults(1)
+            .getResultList();
 
-        return (result.isEmpty() ? null : result.get(0));
+        return result.isEmpty()? null : result.get(0);
+    }
+
+    /**
+     * Find the single {@link ProcessRevisionEntity} associated with a given pair of 
+     * id and version.
+     * 
+     * @param id The process id
+     * @param version The version
+     * @return a revision entity or <tt>null</tt> if no matching entity exists
+     */
+    private ProcessRevisionEntity findRevision(long id, long version)
+    {
+        String queryString =
+            "FROM ProcessRevision p WHERE p.parent.id = :id AND p.version = :version";
+
+        TypedQuery<ProcessRevisionEntity> query = entityManager
+            .createQuery(queryString, ProcessRevisionEntity.class)
+            .setParameter("id", id)
+            .setParameter("version", version);
+
+        ProcessRevisionEntity r = null;
+        try {
+            r = query.getSingleResult();
+        } catch (NoResultException ex) {
+            r = null;
+        }
+        
+        return r;
     }
 }

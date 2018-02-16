@@ -167,8 +167,9 @@ public class ResourceController {
      * @param data registration data
      * @throws InvalidProcessDefinitionException
      */
-    public RestResponse<?> uploadResource(@RequestPart("file") MultipartFile file, @RequestPart("data") RegistrationRequest request) throws InvalidProcessDefinitionException {
-
+    public RestResponse<?> uploadResource(@RequestPart("file") MultipartFile file, @RequestPart("data") RegistrationRequest request) 
+        throws InvalidProcessDefinitionException 
+    {     
         Path inputPath = null;
         try {
             inputPath = createTemporaryFile(file.getBytes(), FilenameUtils.getExtension(file.getOriginalFilename()));

@@ -92,7 +92,6 @@ public class DashboardController {
         ProcessExecutionRecord process = new ProcessExecutionRecord(id, id, 1);
 
         process.setName(String.format("Process %d", id));
-        process.setTaskType(EnumProcessTaskType.DATA_INTEGRATION);
         process.setStartedOn(ZonedDateTime.now().minusHours(id + 1));
         switch(id % 4) {
             case 0:

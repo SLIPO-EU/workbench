@@ -1,8 +1,13 @@
 package eu.slipo.workbench.common.model.process;
 
 /**
- * Process execution status.
- * These values (apart from UNKNOWN) are the same to {@link WorkflowScheduler#ExecutionStatus}.
+ * A process execution status for reporting purposes.
+ * 
+ * <p>If this status accompanies a {@link ProcessExecutionRecord}, it represents 
+ * the aggregate status of the entire process execution (i.e of the underlying workflow).
+ * 
+ * <p>Else, if this status accompanies a {@link ProcessExecutionStepRecord}, it represents
+ * a simplified status derived from the underlying Spring-Batch job execution status.
  */
 public enum EnumProcessExecutionStatus
 {

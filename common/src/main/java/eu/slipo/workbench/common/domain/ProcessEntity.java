@@ -235,8 +235,8 @@ public class ProcessEntity {
         p.setTemplate(isTemplate);
 
         if (includeRevisions) {
-            for (ProcessRevisionEntity h : revisions) {
-                p.addRevision(h.toProcessRecord(includeExecutions, includeSteps));
+            for (ProcessRevisionEntity r: revisions) {
+                p.addRevision(r.toProcessRecord(includeExecutions, includeSteps));
             }
         }
 

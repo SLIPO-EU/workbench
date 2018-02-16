@@ -12,8 +12,7 @@ import eu.slipo.workbench.common.service.ProcessOperator;
 public class ServiceExporterConfiguration
 {
     @Bean(name = "/echoService")
-    HttpInvokerServiceExporter echoServiceExporter(
-        @Qualifier("simpleEchoService") EchoService echoService)
+    HttpInvokerServiceExporter echoServiceExporter(@Qualifier("simpleEchoService") EchoService echoService)
     {
         HttpInvokerServiceExporter exporter = new HttpInvokerServiceExporter();
         exporter.setServiceInterface(EchoService.class);
@@ -22,8 +21,7 @@ public class ServiceExporterConfiguration
     }
     
     @Bean(name = "/processOperator")
-    HttpInvokerServiceExporter processOperatorExporter(
-        @Qualifier("simpleProcessOperator") ProcessOperator processOperator)
+    HttpInvokerServiceExporter processOperatorExporter(ProcessOperator processOperator)
     {
         HttpInvokerServiceExporter exporter = new HttpInvokerServiceExporter();
         exporter.setServiceInterface(ProcessOperator.class);

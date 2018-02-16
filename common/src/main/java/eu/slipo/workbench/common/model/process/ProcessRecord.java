@@ -33,9 +33,9 @@ public class ProcessRecord {
 
     private EnumProcessTaskType taskType;
 
-    private List<ProcessRecord> revisions = new ArrayList<ProcessRecord>();
+    private List<ProcessRecord> revisions;
 
-    private List<ProcessExecutionRecord> executions = new ArrayList<ProcessExecutionRecord>();
+    private List<ProcessExecutionRecord> executions;
 
     public ProcessRecord(long id, long version) {
         this.id = id;
@@ -140,19 +140,29 @@ public class ProcessRecord {
         this.taskType = t;
     }
 
-    public List<ProcessRecord> getRevisions() {
-        return Collections.unmodifiableList(this.revisions);
+    public List<ProcessRecord> getRevisions() 
+    {
+        return this.revisions == null? 
+            Collections.emptyList() : Collections.unmodifiableList(this.revisions);
     }
 
-    public void addRevision(ProcessRecord p) {
+    public void addRevision(ProcessRecord p) 
+    {
+        if (this.revisions == null)
+            this.revisions = new ArrayList<>();
         this.revisions.add(p);
     }
 
-    public List<ProcessExecutionRecord> getExecutions() {
-        return Collections.unmodifiableList(this.executions);
+    public List<ProcessExecutionRecord> getExecutions() 
+    {
+        return this.executions == null? 
+            Collections.emptyList() : Collections.unmodifiableList(this.executions);
     }
 
-    public void addExecution(ProcessExecutionRecord e) {
+    public void addExecution(ProcessExecutionRecord e) 
+    {
+        if (this.executions == null)
+            this.executions = new ArrayList<>();
         this.executions.add(e);
     }
 

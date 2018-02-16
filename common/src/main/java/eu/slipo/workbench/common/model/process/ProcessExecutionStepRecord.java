@@ -10,15 +10,17 @@ import eu.slipo.workbench.common.model.poi.EnumTool;
 
 public class ProcessExecutionStepRecord {
 
-    private long id;
+    private long id = -1L;
 
     private int key;
 
     private String name;
 
+    private long jobExecutionId;
+    
     private EnumProcessExecutionStatus status;
 
-    private EnumTool component;
+    private EnumTool tool;
 
     private EnumOperation operation;
 
@@ -28,9 +30,12 @@ public class ProcessExecutionStepRecord {
 
     private String errorMessage;
 
-    private List<ProcessExecutionStepFileRecord> files = new ArrayList<ProcessExecutionStepFileRecord>();
+    private List<ProcessExecutionStepFileRecord> files = new ArrayList<>(2);
 
-    public ProcessExecutionStepRecord(long id, int key, String name) {
+    public ProcessExecutionStepRecord() {}
+    
+    public ProcessExecutionStepRecord(long id, int key, String name) 
+    {
         this.id = id;
         this.key = key;
         this.name = name;
@@ -48,6 +53,16 @@ public class ProcessExecutionStepRecord {
         return name;
     }
 
+    public long getJobExecutionId()
+    {
+        return jobExecutionId;
+    }
+
+    public void setJobExecutionId(long jobExecutionId)
+    {
+        this.jobExecutionId = jobExecutionId;
+    }
+    
     public EnumProcessExecutionStatus getStatus() {
         return status;
     }
@@ -56,12 +71,12 @@ public class ProcessExecutionStepRecord {
         this.status = status;
     }
 
-    public EnumTool getComponent() {
-        return component;
+    public EnumTool getTool() {
+        return tool;
     }
 
-    public void setComponent(EnumTool component) {
-        this.component = component;
+    public void setTool(EnumTool tool) {
+        this.tool = tool;
     }
 
     public EnumOperation getOperation() {
@@ -103,5 +118,4 @@ public class ProcessExecutionStepRecord {
     public void addFile(ProcessExecutionStepFileRecord f) {
         this.files.add(f);
     }
-
 }

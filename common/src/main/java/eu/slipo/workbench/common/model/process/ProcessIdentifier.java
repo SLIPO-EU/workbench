@@ -46,6 +46,6 @@ public class ProcessIdentifier implements Serializable
     @Override
     public String toString()
     {
-        return String.format("ProcessIdentifier [id=%s, version=%s]", id, version);
+        return String.format("%d@%d", id, version);
     }
 }

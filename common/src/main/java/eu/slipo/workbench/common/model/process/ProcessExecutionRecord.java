@@ -25,19 +25,21 @@ public class ProcessExecutionRecord {
 
     private EnumProcessExecutionStatus status;
 
-    private EnumProcessTaskType task;
-
     private String errorMessage;
 
-    private List<ProcessExecutionStepRecord> steps = new ArrayList<ProcessExecutionStepRecord>();
+    private List<ProcessExecutionStepRecord> steps;
 
-    public ProcessExecutionRecord(long executionId, long processId, long processVersion) {
+    public ProcessExecutionRecord() {}
+    
+    public ProcessExecutionRecord(long executionId, long processId, long processVersion) 
+    {
         this.id = executionId;
         this.process = new ProcessIdentifier(processId, processVersion);
     }
 
-    public ProcessExecutionRecord(long id, ProcessIdentifier processIdentifier) {
-        this.id = id;
+    public ProcessExecutionRecord(long executionId, ProcessIdentifier processIdentifier) 
+    {
+        this.id = executionId;
         this.process = new ProcessIdentifier(processIdentifier);
     }
 
@@ -93,14 +95,6 @@ public class ProcessExecutionRecord {
         this.status = status;
     }
 
-    public EnumProcessTaskType getTask() {
-        return task;
-    }
-
-    public void setTaskType(EnumProcessTaskType t) {
-        this.task = t;
-    }
-
     public String getErrorMessage() {
         return errorMessage;
     }
@@ -117,11 +111,16 @@ public class ProcessExecutionRecord {
         return process;
     }
 
-    public List<ProcessExecutionStepRecord> getSteps() {
-        return Collections.unmodifiableList(steps);
+    public List<ProcessExecutionStepRecord> getSteps() 
+    {
+        return steps == null? 
+            Collections.emptyList() : Collections.unmodifiableList(steps);
     }
 
-    public void addStep(ProcessExecutionStepRecord s) {
+    public void addStep(ProcessExecutionStepRecord s) 
+    {
+        if (this.steps == null)
+            this.steps = new ArrayList<>();
         this.steps.add(s);
     }
 
