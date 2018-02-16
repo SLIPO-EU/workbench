@@ -188,7 +188,7 @@ public class DefaultProcessRepository implements ProcessRepository {
     public ProcessRecord findOne(long id)
     {
         ProcessRevisionEntity entity = this.findLatestRevision(id);
-        return (entity == null ? null : entity.toProcessRecord(true, false));
+        return (entity == null ? null : entity.toProcessRecord(false, false));
     }
 
     @Override
@@ -207,9 +207,9 @@ public class DefaultProcessRepository implements ProcessRepository {
     }
 
     @Override
-    public ProcessRecord findOne(String name) 
+    public ProcessRecord findOne(String name)
     {
-        String queryString = 
+        String queryString =
             "select p from ProcessRevision p where p.parent.name = :name order by p.version desc";
 
         List<ProcessRevisionEntity> result = entityManager
@@ -281,8 +281,10 @@ public class DefaultProcessRepository implements ProcessRepository {
         // Update process entity
 
         ProcessEntity entity = revision.getParent();
+
+        definition.setName(entity.getName());
+
         entity.setVersion(entity.getVersion() + 1);
-        entity.setName(definition.getName());
         entity.setDescription(definition.getDescription());
         entity.setUpdatedBy(updatedBy);
         entity.setUpdatedOn(ZonedDateTime.now());

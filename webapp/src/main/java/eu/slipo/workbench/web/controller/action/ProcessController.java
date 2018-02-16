@@ -206,7 +206,7 @@ public class ProcessController {
      * @param request
      * @return the created process model
      */
-    @RequestMapping(value = "/action/process/{id}", method = RequestMethod.PUT)
+    @RequestMapping(value = "/action/process/{id}", method = RequestMethod.POST)
     public RestResponse<ProcessRecordView> update(@PathVariable long id, @RequestBody ProcessCreateRequest request) {
 
         ProcessDefinition definition = request.getDefinition();

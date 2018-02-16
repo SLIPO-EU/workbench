@@ -18,7 +18,7 @@ public enum EnumTool {
     /**
      * Catalog management component
      */
-    CATALOG(1),
+    REGISTER_METADATA(1),
     /**
      * Data transformation component
      */

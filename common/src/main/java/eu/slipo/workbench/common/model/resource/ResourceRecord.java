@@ -29,7 +29,7 @@ public class ResourceRecord {
 
     private EnumDataFormat outputFormat;
 
-    private long processExecutionId;
+    private Long processExecutionId;
 
     private ResourceMetadataView metadata;
 

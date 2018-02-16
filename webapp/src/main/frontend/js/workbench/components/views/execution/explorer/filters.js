@@ -77,10 +77,10 @@ export default class Filters extends React.Component {
           </Col>
           <Col>
             <SelectField
-              id="task"
+              id="taskType"
               label="Task"
-              value={props.filters.task || ''}
-              onChange={(val) => props.setFilter('task', val)}
+              value={props.filters.taskType || ''}
+              onChange={(val) => props.setFilter('taskType', val)}
               options={supportedTask}
             />
           </Col>

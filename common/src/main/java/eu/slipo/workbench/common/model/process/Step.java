@@ -18,6 +18,9 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import eu.slipo.workbench.common.model.poi.EnumOperation;
 import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.resource.DataSource;
+import eu.slipo.workbench.common.model.tool.DeerConfiguration;
+import eu.slipo.workbench.common.model.tool.FagiConfiguration;
+import eu.slipo.workbench.common.model.tool.LimesConfiguration;
 import eu.slipo.workbench.common.model.tool.MetadataRegistrationConfiguration;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
@@ -54,10 +57,13 @@ public class Step implements Serializable
 
     @JsonProperty("configuration")
     @JsonTypeInfo(
-        use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "_type")
+        use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXTERNAL_PROPERTY, property = "tool")
     @JsonSubTypes({
         @Type(name = "TRIPLEGEO", value = TriplegeoConfiguration.class),
-        @Type(name = "REGISTER-METADATA", value = MetadataRegistrationConfiguration.class)
+        @Type(name = "LIMES", value = LimesConfiguration.class),
+        @Type(name = "FAGI", value = FagiConfiguration.class),
+        @Type(name = "DEER", value = DeerConfiguration.class),
+        @Type(name = "REGISTER_METADATA", value = MetadataRegistrationConfiguration.class)
     })
     private ToolConfiguration configuration;
 

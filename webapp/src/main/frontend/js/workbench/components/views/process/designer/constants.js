@@ -84,7 +84,7 @@ export const EnumTool = {
   LIMES: 'LIMES',
   FAGI: 'FAGI',
   DEER: 'DEER',
-  CATALOG: 'CATALOG',
+  CATALOG: 'REGISTER_METADATA',
 };
 
 /**

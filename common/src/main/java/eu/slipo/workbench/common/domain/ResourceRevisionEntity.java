@@ -29,7 +29,7 @@ import eu.slipo.workbench.common.model.resource.ResourceRecord;
 @Table(
     schema = "public",
     name = "resource_revision",
-    uniqueConstraints = { 
+    uniqueConstraints = {
         @UniqueConstraint(name = "uq_resource_parent_id_version", columnNames = { "parent", "`version`" }), }
 )
 public class ResourceRevisionEntity {
@@ -229,7 +229,7 @@ public class ResourceRevisionEntity {
         return id;
     }
 
-    public ResourceRecord toResourceRecord() 
+    public ResourceRecord toResourceRecord()
     {
         ResourceRecord r = new ResourceRecord(parent.id, version);
 
@@ -243,7 +243,7 @@ public class ResourceRevisionEntity {
         r.setFilePath(path);
         r.setFileSize(size);
         r.setMetadata(name, description, numberOfEntities, boundingBox);
-        r.setProcessExecutionId(processExecution.getId());
+        r.setProcessExecutionId(processExecution != null ? processExecution.getId() : null);
         r.setTable(tableName);
         r.setType(type);
 
