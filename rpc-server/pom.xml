@@ -186,6 +186,7 @@
                 <configuration>
                     <skipITs>${integration-tests.skip}</skipITs>
                     <includes>
+                        <include>eu.slipo.workbench.rpc.tests.integration.repository.*</include>
                         <include>eu.slipo.workbench.rpc.tests.integration.jobs.*</include>
                     </includes>
                 </configuration>

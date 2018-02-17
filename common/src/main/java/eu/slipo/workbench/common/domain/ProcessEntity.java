@@ -22,7 +22,7 @@ import javax.persistence.Table;
 import javax.persistence.Version;
 import javax.validation.constraints.NotNull;
 
-import eu.slipo.workbench.common.domain.attributeconverter.ProcessConfigurationConverter;
+import eu.slipo.workbench.common.domain.attributeconverter.ProcessDefinitionConverter;
 import eu.slipo.workbench.common.model.process.EnumProcessTaskType;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
@@ -39,17 +39,17 @@ import eu.slipo.workbench.common.model.process.ProcessRecord;
 public class ProcessEntity {
 
     @Id
-    @Column(name = "id")
+    @Column(name = "id", updatable = false)
     @SequenceGenerator(
         sequenceName = "process_id_seq", name = "process_id_seq", initialValue = 1, allocationSize = 1)
-    @GeneratedValue(
-        generator = "process_id_seq", strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(generator = "process_id_seq", strategy = GenerationType.SEQUENCE)
     long id = -1L;
 
-    @Column(name = "`version`")
+    @NotNull
+    @Column(name = "`version`", nullable = false)
     long version;
 
-    @Version()
+    @Version
     @Column(name = "row_version")
     long rowVersion;
 
@@ -61,12 +61,12 @@ public class ProcessEntity {
     String description;
 
     @NotNull
-    @Column(name = "created_on")
-    ZonedDateTime createdOn = ZonedDateTime.now();
+    @Column(name = "created_on", updatable = false)
+    ZonedDateTime createdOn;
 
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "created_by", nullable = false)
+    @JoinColumn(name = "created_by", nullable = false, updatable = false)
     AccountEntity createdBy;
 
     @NotNull
@@ -82,8 +82,8 @@ public class ProcessEntity {
     ZonedDateTime executedOn;
 
     @NotNull
-    @Column(name = "definition", nullable = false)
-    @Convert(converter = ProcessConfigurationConverter.class)
+    @Column(name = "definition", nullable = false, length = 4096)
+    @Convert(converter = ProcessDefinitionConverter.class)
     ProcessDefinition definition;
 
     @NotNull
@@ -92,7 +92,7 @@ public class ProcessEntity {
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "task_type")
+    @Column(name = "task_type", nullable = false, updatable = false)
     private EnumProcessTaskType taskType;
 
     @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)

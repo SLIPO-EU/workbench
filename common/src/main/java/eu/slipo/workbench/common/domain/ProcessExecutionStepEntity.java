@@ -18,7 +18,10 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
+
+import org.hibernate.annotations.NaturalId;
 
 import eu.slipo.workbench.common.model.poi.EnumOperation;
 import eu.slipo.workbench.common.model.poi.EnumTool;
@@ -27,41 +30,50 @@ import eu.slipo.workbench.common.model.process.ProcessExecutionStepRecord;
 
 
 @Entity(name = "ProcessExecutionStep")
-@Table(schema = "public", name = "process_execution_step")
+@Table(
+    schema = "public", name = "process_execution_step",
+    uniqueConstraints = {
+        @UniqueConstraint(
+            name = "uq_process_execution_step_execution_and_key", 
+            columnNames = { "process_execution", "step_key" }),
+    }
+)
 public class ProcessExecutionStepEntity 
 {
     @Id
-    @Column(name = "id")
+    @Column(name = "id", updatable = false)
     @SequenceGenerator(
         sequenceName = "process_execution_step_id_seq", name = "process_execution_step_id_seq", initialValue = 1, allocationSize = 1)
     @GeneratedValue(generator = "process_execution_step_id_seq", strategy = GenerationType.SEQUENCE)
     long id = -1L;
 
     @NotNull
+    @NaturalId
     @ManyToOne
-    @JoinColumn(name = "process_execution", nullable = false)
+    @JoinColumn(name = "process_execution", nullable = false, updatable = false)
     ProcessExecutionEntity execution;
 
-    @NotNull()
-    @Column(name = "step_key")
+    @NotNull
+    @NaturalId
+    @Column(name = "step_key", nullable = false, updatable = false)
     int key;
 
     @NotNull
-    @Column(name = "step_name")
+    @Column(name = "step_name", nullable = false, updatable = false)
     String name;
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "tool_name")
+    @Column(name = "tool_name", nullable = false, updatable = false)
     EnumTool tool;
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "operation")
+    @Column(name = "operation", nullable = false, updatable = false)
     EnumOperation operation;
 
     @NotNull
-    @Column(name = "started_on")
+    @Column(name = "started_on", nullable = false)
     ZonedDateTime startedOn;
 
     @Column(name = "completed_on")
@@ -78,6 +90,15 @@ public class ProcessExecutionStepEntity
     @OneToMany(mappedBy = "step", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     List<ProcessExecutionStepFileEntity> files = new ArrayList<>();
 
+    protected ProcessExecutionStepEntity() {}
+    
+    public ProcessExecutionStepEntity(ProcessExecutionEntity executionEntity, int key, String name) 
+    {
+        this.execution = executionEntity;
+        this.key = key;
+        this.name = name;
+    }
+    
     public long getId() {
         return id;
     }

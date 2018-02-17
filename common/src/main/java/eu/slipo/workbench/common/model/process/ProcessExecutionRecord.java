@@ -9,7 +9,7 @@ import eu.slipo.workbench.common.model.user.Account;
 
 public class ProcessExecutionRecord {
 
-    private long id;
+    private long id = -1L;
 
     private String name;
 

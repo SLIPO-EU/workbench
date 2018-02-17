@@ -93,7 +93,7 @@ public class ProcessController {
         query.setCreatedBy(authenticationFacade.getCurrentUserId());
 
         PageRequest pageRequest = request.getPageRequest();
-        QueryResultPage<ProcessExecutionRecord> r = processRepository.find(query, pageRequest);
+        QueryResultPage<ProcessExecutionRecord> r = processRepository.findExecutions(query, pageRequest);
 
         return RestResponse.result(QueryResult.create(r));
     }
@@ -129,7 +129,7 @@ public class ProcessController {
         @PathVariable long version,
         @PathVariable long executionId) {
 
-        ProcessExecutionRecord record = processRepository.findOne(id, version, executionId);
+        ProcessExecutionRecord record = processRepository.findExecution(id, version, executionId);
         if (record == null) {
             return RestResponse.error(new Error(ProcessErrorCode.NOT_FOUND, "Execution was not found"));
         }

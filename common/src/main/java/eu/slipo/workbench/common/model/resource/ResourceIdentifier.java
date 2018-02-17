@@ -8,7 +8,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * Unique resource identifier
  */
-public class ResourceIdentifier implements Serializable {
+public class ResourceIdentifier implements Serializable 
+{
+    private static final long serialVersionUID = 1L;
 
     private long id;
 

@@ -18,6 +18,8 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 
+import org.hibernate.annotations.NaturalId;
+
 import com.vividsolutions.jts.geom.Geometry;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
@@ -35,76 +37,86 @@ import eu.slipo.workbench.common.model.resource.ResourceRecord;
 public class ResourceRevisionEntity {
 
     @Id
-    @Column(name = "id")
+    @Column(name = "id", updatable = false)
     @SequenceGenerator(
         sequenceName = "resource_revision_id_seq", name = "resource_revision_id_seq", initialValue = 1, allocationSize = 1)
     @GeneratedValue(generator = "resource_revision_id_seq", strategy = GenerationType.SEQUENCE)
     long id = -1L;
 
     @NotNull
+    @NaturalId
     @ManyToOne
-    @JoinColumn(name = "parent", nullable = false)
+    @JoinColumn(name = "parent", nullable = false, updatable = false)
     ResourceEntity parent;
 
-    @Column(name = "`version`")
+    @NotNull
+    @NaturalId
+    @Column(name = "`version`", nullable = false, updatable = false)
     long version;
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "`type`")
+    @Column(name = "`type`", nullable = false, updatable = false)
     EnumResourceType type;
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "source_type")
+    @Column(name = "source_type", nullable = false, updatable = false)
     EnumDataSourceType sourceType;
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "input_format")
+    @Column(name = "input_format", nullable = false, updatable = false)
     EnumDataFormat inputFormat;
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "output_format")
+    @Column(name = "output_format", nullable = false, updatable = false)
     EnumDataFormat outputFormat;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "process_execution")
+    @JoinColumn(name = "process_execution", updatable = false)
     ProcessExecutionEntity processExecution;
 
     @NotNull
-    @Column(name = "`name`")
+    @Column(name = "`name`", nullable = false, updatable = false)
     String name;
 
     @NotNull
-    @Column(name = "description")
+    @Column(name = "description", updatable = false)
     String description;
 
     @NotNull
-    @Column(name = "updated_on")
+    @Column(name = "updated_on", nullable = false, updatable = false)
     ZonedDateTime updatedOn;
 
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "updated_by", nullable = false)
+    @JoinColumn(name = "updated_by", nullable = false, updatable = false)
     AccountEntity updatedBy;
 
-    @Column(name = "bbox")
+    @Column(name = "bbox", updatable = false)
     Geometry boundingBox;
 
-    @Column(name = "number_of_entities")
+    @Column(name = "number_of_entities", updatable = false)
     Integer numberOfEntities;
 
-    @Column(name = "file_path")
+    @Column(name = "file_path", updatable = false)
     String path;
 
-    @Column(name = "file_size")
+    @Column(name = "file_size", updatable = false)
     Long size;
 
-    @Column(name = "table_name")
+    @Column(name = "table_name", updatable = false)
     UUID tableName;
 
+    protected ResourceRevisionEntity() {}
+    
+    public ResourceRevisionEntity(ResourceEntity parent)
+    {
+        this.parent = parent;
+    }
+    
     public ResourceEntity getParent() {
         return parent;
     }

@@ -32,16 +32,17 @@ import eu.slipo.workbench.common.model.resource.ResourceRecord;
 
 @Entity(name = "Resource")
 @Table(schema = "public", name = "resource")
-public class ResourceEntity {
-
+public class ResourceEntity 
+{
     @Id
-    @Column(name = "id")
+    @Column(name = "id", updatable = false)
     @SequenceGenerator(
         sequenceName = "resource_id_seq", name = "resource_id_seq", initialValue = 1, allocationSize = 1)
     @GeneratedValue(generator = "resource_id_seq", strategy = GenerationType.SEQUENCE)
     long id = -1L;
 
-    @Column(name = "`version`")
+    @NotNull
+    @Column(name = "`version`", nullable = false)
     long version;
 
     @Version()
@@ -50,22 +51,22 @@ public class ResourceEntity {
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "`type`")
+    @Column(name = "`type`", nullable = false, updatable = false)
     EnumResourceType type;
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "source_type")
+    @Column(name = "source_type", nullable = false)
     EnumDataSourceType sourceType;
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "input_format")
+    @Column(name = "input_format", nullable = false)
     EnumDataFormat inputFormat;
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "output_format")
+    @Column(name = "output_format", nullable = false)
     EnumDataFormat outputFormat;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -73,24 +74,23 @@ public class ResourceEntity {
     ProcessExecutionEntity processExecution;
 
     @NotNull
-    @Column(name = "`name`")
+    @Column(name = "`name`", nullable = false)
     String name;
 
-    @NotNull
     @Column(name = "description")
     String description;
 
     @NotNull
-    @Column(name = "created_on")
-    ZonedDateTime createdOn = ZonedDateTime.now();
+    @Column(name = "created_on", nullable = false, updatable = false)
+    ZonedDateTime createdOn;
 
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "created_by", nullable = false)
+    @JoinColumn(name = "created_by", nullable = false, updatable = false)
     AccountEntity createdBy;
 
     @NotNull
-    @Column(name = "updated_on")
+    @Column(name = "updated_on", nullable = false)
     ZonedDateTime updatedOn;
 
     @NotNull
@@ -116,8 +116,7 @@ public class ResourceEntity {
     @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     List<ResourceRevisionEntity> revisions = new ArrayList<>();
 
-    public ResourceEntity() {
-    }
+    public ResourceEntity() {}
 
     public long getVersion() {
         return version;

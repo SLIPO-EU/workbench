@@ -4,7 +4,6 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Convert;
@@ -21,7 +20,7 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 
-import eu.slipo.workbench.common.domain.attributeconverter.ProcessConfigurationConverter;
+import eu.slipo.workbench.common.domain.attributeconverter.ProcessDefinitionConverter;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
 
@@ -37,7 +36,7 @@ import eu.slipo.workbench.common.model.process.ProcessRecord;
 public class ProcessRevisionEntity {
 
     @Id
-    @Column(name = "id")
+    @Column(name = "id", updatable = false)
     @SequenceGenerator(
         sequenceName = "process_revision_id_seq", name = "process_revision_id_seq", initialValue = 1, allocationSize = 1)
     @GeneratedValue(generator = "process_revision_id_seq", strategy = GenerationType.SEQUENCE)
@@ -45,58 +44,52 @@ public class ProcessRevisionEntity {
 
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "parent", nullable = false)
+    @JoinColumn(name = "parent", nullable = false, updatable = false)
     ProcessEntity parent;
 
-    @Column(name = "`version`")
+    @NotNull
+    @Column(name = "`version`", nullable = false, updatable = false)
     long version;
 
     @NotNull
-    @Column(name = "`name`")
+    @Column(name = "`name`", nullable = false)
     String name;
 
-    @Column(name = "description")
+    @Column(name = "description", updatable = false)
     String description;
 
     @NotNull
-    @Column(name = "updated_on")
+    @Column(name = "updated_on", nullable = false, updatable = false)
     ZonedDateTime updatedOn;
 
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "updated_by", nullable = false)
+    @JoinColumn(name = "updated_by", nullable = false, updatable = false)
     AccountEntity updatedBy;
 
     @Column(name = "executed_on")
     ZonedDateTime executedOn;
 
     @NotNull
-    @Column(name = "definition")
-    @Convert(converter = ProcessConfigurationConverter.class)
+    @Column(name = "definition", nullable = false, updatable = false, length = 4096)
+    @Convert(converter = ProcessDefinitionConverter.class)
     ProcessDefinition definition;
 
-    @OneToMany(mappedBy = "process", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(
+        mappedBy = "process", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     List<ProcessExecutionEntity> executions = new ArrayList<>();
 
     protected ProcessRevisionEntity() {}
     
-    public ProcessRevisionEntity(ProcessDefinition definition)
+    public ProcessRevisionEntity(ProcessEntity parent)
     {
-        this.version = 1;
-        this.definition = definition;
-        this.name = definition.getName();
-        this.description = definition.getDescription();
-    }
-    
-    public ProcessRevisionEntity(ProcessEntity e)
-    {
-        this.parent = e;
-        this.version = e.getVersion();
-        this.name = e.getName();
-        this.description = e.getDescription();
-        this.definition = e.getDefinition();
-        this.updatedBy = e.getUpdatedBy();
-        this.updatedOn = e.getUpdatedOn();
+        this.parent = parent;
+        this.version = parent.getVersion();
+        this.name = parent.getName();
+        this.description = parent.getDescription();
+        this.definition = parent.getDefinition();
+        this.updatedBy = parent.getUpdatedBy();
+        this.updatedOn = parent.getUpdatedOn();
     }
     
     public ProcessEntity getParent() {
@@ -194,7 +187,7 @@ public class ProcessRevisionEntity {
         p.setTemplate(parent.isTemplate);
 
         if (includeExecutions) {
-            for (ProcessExecutionEntity e : executions) {
+            for (ProcessExecutionEntity e: executions) {
                 p.addExecution(e.toProcessExecutionRecord(includeSteps));
             }
         }

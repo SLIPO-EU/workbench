@@ -13,47 +13,65 @@ import eu.slipo.workbench.common.model.process.ProcessRecord;
 public interface ProcessRepository 
 {
     /**
-     * Find processes using an instance of {@link ProcessQuery}
+     * Find processes filtered by a {@link ProcessQuery}
      * 
-     * @param query the query to execute
-     * @param pageReq
+     * @param query A query to filter records, or <tt>null</tt> to fetch everything
+     * @param pageReq A page request
+     * @param includeExecutions A flag to indicate if executions should also be returned
      */
-    QueryResultPage<ProcessRecord> find(ProcessQuery query, PageRequest pageReq);
+    QueryResultPage<ProcessRecord> find(ProcessQuery query, PageRequest pageReq, boolean includeExecutions);
 
+    default QueryResultPage<ProcessRecord> find(ProcessQuery query, PageRequest pageReq)
+    {
+        return find(query, pageReq, false);
+    }
+    
     /**
-     * Find the most recent version of a single record
+     * Find the most recent version of a process with a given id.
      *
      * @param id the process id
      * @return an instance of {@link ProcessRecord} if a process exists or {@code null}
+     * @param includeExecutions A flag to indicate if executions should also be returned
      */
-    ProcessRecord findOne(long id);
+    ProcessRecord findOne(long id, boolean includeExecutions);
 
+    default ProcessRecord findOne(long id) 
+    {
+        return findOne(id, false);
+    }
+    
     /**
-     * Find a single record
+     * Find the single process with a given id and version. 
      *
-     * @param id the process id
-     * @param version the process version
-     * @return an instance of {@link ProcessRecord} if a process exists or {@code null}
+     * @param id The process id
+     * @param version The process version
+     * @param includeExecutions A flag to indicate if executions should also be returned
+     * @return an instance of {@link ProcessRecord} if a process exists, or else <tt>null</tt>.
      */
-    ProcessRecord findOne(long id, long version);
+    ProcessRecord findOne(long id, long version, boolean includeExecutions);
 
+    default ProcessRecord findOne(long id, long version)
+    {
+        return findOne(id, version, false);
+    }
+    
     /**
-     * Find a single record by name
+     * Find a single process by name
      *
      * Todo: Lookup by pair of (name,userId) 
      * 
-     * @param name the process unique name
+     * @param name The process unique name
      * @return an instance of {@link ProcessRecord} if the process exists or null
      */
     ProcessRecord findOne(String name);
 
     /**
-     * Find process executions
+     * Find process executions filtered by a {@link ProcessExecutionQuery}.
      *
-     * @param query the query to execute
+     * @param query A query to filter records, or <tt>null</tt> to fetch everything
      * @return an instance of {@link QueryResult} with {@link ProcessExecutionRecord} items
      */
-    QueryResultPage<ProcessExecutionRecord> find(ProcessExecutionQuery query, PageRequest pageReq);
+    QueryResultPage<ProcessExecutionRecord> findExecutions(ProcessExecutionQuery query, PageRequest pageReq);
 
     /**
      * Find a single process execution record
@@ -64,7 +82,7 @@ public interface ProcessRepository
      * @return an instance of {@link ProcessExecutionRecord} or {@code null} if no
      * execution exists
      */
-    ProcessExecutionRecord findOne(long id, long version, long executionId);
+    ProcessExecutionRecord findExecution(long id, long version, long executionId);
 
     /**
      * Create a new process

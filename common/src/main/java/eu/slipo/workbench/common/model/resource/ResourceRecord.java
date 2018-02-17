@@ -15,7 +15,7 @@ import eu.slipo.workbench.common.model.user.Account;
 
 public class ResourceRecord {
 
-    private long id;
+    private long id = -1L;
 
     private long version;
 

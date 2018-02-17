@@ -16,9 +16,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
 
 @Converter
-public class ProcessConfigurationConverter implements AttributeConverter<ProcessDefinition, String>
+public class ProcessDefinitionConverter implements AttributeConverter<ProcessDefinition, String>
 {
-    private static final Logger logger = LoggerFactory.getLogger(ProcessConfigurationConverter.class);
+    private static final Logger logger = LoggerFactory.getLogger(ProcessDefinitionConverter.class);
 
     private static ObjectMapper objectMapper;
     static {

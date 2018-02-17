@@ -6,17 +6,27 @@ package eu.slipo.workbench.common.model.process;
 public class ProcessExecutionQuery {
 
     /**
-     * Search executions by process name using LIKE SQL operator
+     * Search by process ID
+     */
+    private Long id;
+    
+    /**
+     * Search by process version
+     */
+    private Long version;
+    
+    /**
+     * Search by process name using LIKE SQL operator
      */
     private String name;
 
     /**
-     * Search execution by task
+     * Search by task type
      */
     private EnumProcessTaskType taskType;
 
     /**
-     * Search execution by status
+     * Search by status
      */
     private EnumProcessExecutionStatus status;
 
@@ -25,6 +35,26 @@ public class ProcessExecutionQuery {
      */
     private Integer createdBy;
     
+    public Long getId()
+    {
+        return id;
+    }
+
+    public void setId(Long processId)
+    {
+        this.id = processId;
+    }
+
+    public Long getVersion()
+    {
+        return version;
+    }
+
+    public void setVersion(Long version)
+    {
+        this.version = version;
+    }
+
     public String getName() {
         return name;
     }

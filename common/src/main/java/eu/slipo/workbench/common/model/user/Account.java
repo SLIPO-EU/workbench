@@ -46,7 +46,7 @@ public class Account implements Serializable
         this.email = email;
     }
     
-    public Account(int id, String username, String email)
+    public Account(Integer id, String username, String email)
     {
         this.id = id;
         this.username = username;

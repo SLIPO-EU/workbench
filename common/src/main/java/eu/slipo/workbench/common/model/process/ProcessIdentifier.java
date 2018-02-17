@@ -7,6 +7,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ProcessIdentifier implements Serializable
 {
+    private static final long serialVersionUID = 1L;
+
     private long id;
 
     private long version;

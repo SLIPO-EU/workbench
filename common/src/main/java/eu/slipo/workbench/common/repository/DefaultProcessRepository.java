@@ -42,141 +42,116 @@ public class DefaultProcessRepository implements ProcessRepository
     @PersistenceContext(unitName = "default")
     EntityManager entityManager;
 
-    private void setFindParameters(ProcessQuery processQuery, Query query)
-    {
-        Integer creatorId = processQuery.getCreatedBy();
-        query.setParameter("ownerId", creatorId == null? -1 : creatorId.intValue());
-
-        if (!StringUtils.isBlank(processQuery.getName())) {
-            query.setParameter("name", "%" + processQuery.getName() + "%");
-        }
-        if (processQuery.getTaskType() != null) {
-            query.setParameter("taskType", processQuery.getTaskType());
-        }
-        if (processQuery.getTemplate() != null) {
-            query.setParameter("template", processQuery.getTemplate());
-        }
-    }
-
-    private void setFindParameters(ProcessExecutionQuery executionQuery, Query query)
-    {
-        Integer creatorId = executionQuery.getCreatedBy();
-        query.setParameter("ownerId", creatorId == null? -1 : creatorId.intValue());
-
-        if (!StringUtils.isBlank(executionQuery.getName())) {
-            query.setParameter("name", "%" + executionQuery.getName() + "%");
-        }
-        if (executionQuery.getTaskType() != null) {
-            query.setParameter("taskType", executionQuery.getTaskType());
-        }
-        if (executionQuery.getStatus() != null) {
-            query.setParameter("status", executionQuery.getStatus());
-        }
-    }
-
     @Override
-    public QueryResultPage<ProcessRecord> find(ProcessQuery query, PageRequest pageReq)
+    public QueryResultPage<ProcessRecord> find(
+        ProcessQuery query, PageRequest pageReq, final boolean includeExecutions)
     {
         // Check query parameters
         if (pageReq == null) {
             pageReq = new PageRequest(0, 10);
         }
 
-        // Load data
-        String command = "";
+        String qlString = "";
 
         // Resolve filters
+        
         List<String> filters = new ArrayList<>();
-
-        filters.add("(p.createdBy.id = :ownerId)");
-
-        if (!StringUtils.isBlank(query.getName())) {
-            filters.add("(p.name like :name)");
-        }
-        if (query.getTaskType() != null) {
-            filters.add("(p.taskType = :taskType)");
-        }
-        if (query.getTemplate() != null) {
-            filters.add("(p.isTemplate = :template)");
+        if (query != null) {
+            if (query.getCreatedBy() != null) 
+                filters.add("(p.createdBy.id = :ownerId)");
+            if (!StringUtils.isBlank(query.getName()))
+                filters.add("(p.name like :name)");
+            if (query.getTaskType() != null)
+                filters.add("(p.taskType = :taskType)");
+            if (query.getTemplate() != null)
+                filters.add("(p.isTemplate = :template)");
         }
 
         // Count records
-        command = "select count(p.id) from Process p ";
+        qlString = "select count(p.id) from Process p ";
         if (!filters.isEmpty()) {
-            command += " where " + StringUtils.join(filters, " and ");
+            qlString += " where " + StringUtils.join(filters, " and ");
         }
 
         Integer count;
-        TypedQuery<Number> countQuery = entityManager.createQuery(command, Number.class);
-        setFindParameters(query, countQuery);
+        TypedQuery<Number> countQuery = entityManager.createQuery(qlString, Number.class);
+        if (query != null) 
+            setFindParameters(query, countQuery);
         count = countQuery.getSingleResult().intValue();
 
         // Load records
-        command = "select p from Process p ";
+        qlString = "select p from Process p ";
         if (!filters.isEmpty()) {
-            command += " where " + StringUtils.join(filters, " and ");
+            qlString += " where " + StringUtils.join(filters, " and ");
         }
-        command += " order by p.name, p.updatedOn ";
+        qlString += " order by p.name, p.updatedOn ";
 
-        TypedQuery<ProcessEntity> selectQuery = entityManager.createQuery(command, ProcessEntity.class);
-        setFindParameters(query, selectQuery);
+        TypedQuery<ProcessEntity> selectQuery = entityManager.createQuery(qlString, ProcessEntity.class);
+        if (query != null) 
+            setFindParameters(query, selectQuery);
 
         selectQuery.setFirstResult(pageReq.getOffset());
         selectQuery.setMaxResults(pageReq.getPageSize());
-
+        
+        final boolean includeRevisions = true;
+        
         List<ProcessRecord> records = selectQuery.getResultList().stream()
-            .map(ProcessEntity::toProcessRecord)
+            .map(p -> p.toProcessRecord(includeRevisions, includeExecutions, false))
             .collect(Collectors.toList());
         return new QueryResultPage<ProcessRecord>(records, pageReq, count);
     }
 
     @Override
-    public QueryResultPage<ProcessExecutionRecord> find(ProcessExecutionQuery query, PageRequest pageReq)
+    public QueryResultPage<ProcessExecutionRecord> findExecutions(ProcessExecutionQuery query, PageRequest pageReq)
     {
         // Check query parameters
         if (pageReq == null) {
             pageReq = new PageRequest(0, 10);
         }
 
-        // Load data
-        String command = "";
+        String qlString = "";
 
         // Resolve filters
+        
         List<String> filters = new ArrayList<>();
-
-        filters.add("(e.process.parent.createdBy.id = :ownerId)");
-
-        if (!StringUtils.isBlank(query.getName())) {
-            filters.add("(e.process.name like :name)");
-        }
-        if (query.getTaskType() != null) {
-            filters.add("(e.process.parent.taskType = :taskType)");
-        }
-        if (query.getStatus() != null) {
-            filters.add("(e.status = :status)");
+        if (query != null) {
+            if (query.getId() != null)
+                filters.add("(e.process.parent.id = :id)");
+            if (query.getVersion() != null)
+                filters.add("(e.process.version = :version)");
+            if (query.getCreatedBy() != null)
+                filters.add("(e.process.parent.createdBy.id = :ownerId)");
+            if (!StringUtils.isBlank(query.getName()))
+                filters.add("(e.process.name like :name)");
+            if (query.getTaskType() != null)
+                filters.add("(e.process.parent.taskType = :taskType)");
+            if (query.getStatus() != null)
+                filters.add("(e.status = :status)");
         }
 
         // Count records
-        command = "select count(e.id) from ProcessExecution e ";
+        qlString = "select count(e.id) from ProcessExecution e ";
         if (!filters.isEmpty()) {
-            command += " where " + StringUtils.join(filters, " and ");
+            qlString += " where " + StringUtils.join(filters, " and ");
         }
 
         Integer count;
-        TypedQuery<Number> countQuery = entityManager.createQuery(command, Number.class);
-        setFindParameters(query, countQuery);
+        TypedQuery<Number> countQuery = entityManager.createQuery(qlString, Number.class);
+        if (query != null) 
+            setFindParameters(query, countQuery);
         count = countQuery.getSingleResult().intValue();
 
         // Load records
-        command = "select e from ProcessExecution e ";
+        qlString = "select e from ProcessExecution e ";
         if (!filters.isEmpty()) {
-            command += " where " + StringUtils.join(filters, " and ");
+            qlString += " where " + StringUtils.join(filters, " and ");
         }
-        command += " order by e.startedOn desc, e.process.parent.name ";
+        qlString += " order by e.startedOn desc, e.process.parent.name ";
 
         TypedQuery<ProcessExecutionEntity> selectQuery =
-            entityManager.createQuery(command, ProcessExecutionEntity.class);
-        setFindParameters(query, selectQuery);
+            entityManager.createQuery(qlString, ProcessExecutionEntity.class);
+        if (query != null)
+            setFindParameters(query, selectQuery);
 
         selectQuery.setFirstResult(pageReq.getOffset());
         selectQuery.setMaxResults(pageReq.getPageSize());
@@ -188,17 +163,17 @@ public class DefaultProcessRepository implements ProcessRepository
     }
 
     @Override
-    public ProcessRecord findOne(long id)
+    public ProcessRecord findOne(long id, final boolean includeExecutions)
     {
         ProcessRevisionEntity entity = findLatestRevision(id);
-        return entity == null? null : entity.toProcessRecord(false, false);
+        return entity == null? null : entity.toProcessRecord(includeExecutions, false);
     }
 
     @Override
-    public ProcessRecord findOne(long id, long version)
+    public ProcessRecord findOne(long id, long version, final boolean includeExecutions)
     {
         ProcessRevisionEntity r = findRevision(id, version);
-        return r == null? null : r.toProcessRecord(true, false);
+        return r == null? null : r.toProcessRecord(includeExecutions, false);
     }
 
     @Override
@@ -218,7 +193,7 @@ public class DefaultProcessRepository implements ProcessRepository
     }
 
     @Override
-    public ProcessExecutionRecord findOne(long id, long version, long execution)
+    public ProcessExecutionRecord findExecution(long id, long version, long execution)
     {
         String queryString =
             "select e from ProcessExecution e " +
@@ -336,6 +311,42 @@ public class DefaultProcessRepository implements ProcessRepository
     {
         // Todo ProcessRepository.updateExecutionStep
         throw new NotImplementedException("Todo");
+    }
+    
+    private void setFindParameters(ProcessQuery processQuery, Query query)
+    {
+        if (processQuery.getCreatedBy() != null)
+            query.setParameter("ownerId", processQuery.getCreatedBy());
+
+        if (!StringUtils.isBlank(processQuery.getName()))
+            query.setParameter("name", "%" + processQuery.getName() + "%");
+        
+        if (processQuery.getTaskType() != null)
+            query.setParameter("taskType", processQuery.getTaskType());
+        
+        if (processQuery.getTemplate() != null)
+            query.setParameter("template", processQuery.getTemplate());
+    }
+
+    private void setFindParameters(ProcessExecutionQuery executionQuery, Query query)
+    {
+        if (executionQuery.getCreatedBy() != null)
+            query.setParameter("ownerId", executionQuery.getCreatedBy());
+
+        if (executionQuery.getId() != null)
+            query.setParameter("id", executionQuery.getId());
+        
+        if (executionQuery.getVersion() != null)
+            query.setParameter("version", executionQuery.getVersion());
+        
+        if (!StringUtils.isBlank(executionQuery.getName()))
+            query.setParameter("name", "%" + executionQuery.getName() + "%");
+       
+        if (executionQuery.getTaskType() != null)
+            query.setParameter("taskType", executionQuery.getTaskType());
+        
+        if (executionQuery.getStatus() != null)
+            query.setParameter("status", executionQuery.getStatus());
     }
     
     /**

@@ -24,7 +24,7 @@ import eu.slipo.workbench.common.model.process.ProcessExecutionStepFileRecord;
 public class ProcessExecutionStepFileEntity {
 
     @Id
-    @Column(name = "id")
+    @Column(name = "id", updatable = false)
     @SequenceGenerator(
         sequenceName = "process_execution_step_file_id_seq", name = "process_execution_step_file_id_seq", initialValue = 1, allocationSize = 1)
     @GeneratedValue(generator = "process_execution_step_file_id_seq", strategy = GenerationType.SEQUENCE)
@@ -32,16 +32,16 @@ public class ProcessExecutionStepFileEntity {
 
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "process_execution_step", nullable = false)
+    @JoinColumn(name = "process_execution_step", nullable = false, updatable = false)
     ProcessExecutionStepEntity step;
 
-    @ManyToOne()
+    @ManyToOne
     @JoinColumn(name = "resource", nullable = true)
     ResourceRevisionEntity resource;
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "`type`")
+    @Column(name = "`type`", nullable = false, updatable = false)
     EnumStepFile type;
 
     @Column(name = "file_path")
@@ -53,6 +53,13 @@ public class ProcessExecutionStepFileEntity {
     @Column(name = "table_name")
     UUID tableName;
 
+    protected ProcessExecutionStepFileEntity() {}
+    
+    public ProcessExecutionStepFileEntity(ProcessExecutionStepEntity stepExecutionEntity)
+    {
+        this.step = stepExecutionEntity;
+    }
+    
     public ProcessExecutionStepEntity getStep() {
         return step;
     }

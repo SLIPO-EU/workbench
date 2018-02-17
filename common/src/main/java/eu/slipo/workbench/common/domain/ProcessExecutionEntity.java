@@ -28,23 +28,23 @@ import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 public class ProcessExecutionEntity 
 {
     @Id
-    @Column(name = "id")
+    @Column(name = "id", updatable = false)
     @SequenceGenerator(
         sequenceName = "process_execution_id_seq", name = "process_execution_id_seq", initialValue = 1, allocationSize = 1)
     @GeneratedValue(generator = "process_execution_id_seq", strategy = GenerationType.SEQUENCE)
     long id = -1L;
 
     @ManyToOne
-    @JoinColumn(name = "submitted_by", nullable = true)
+    @JoinColumn(name = "submitted_by", updatable = false)
     AccountEntity submittedBy;
 
     @NotNull
-    @Column(name = "submitted_on")
+    @Column(name = "submitted_on", nullable = false, updatable = false)
     ZonedDateTime submittedOn;
 
     @NotNull
     @ManyToOne
-    @JoinColumn(name = "process", nullable = false)
+    @JoinColumn(name = "process", nullable = false, updatable = false)
     ProcessRevisionEntity process;
 
     @Column(name = "started_on")
@@ -65,7 +65,7 @@ public class ProcessExecutionEntity
         mappedBy = "execution", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     List<ProcessExecutionStepEntity> steps = new ArrayList<>();
 
-    private ProcessExecutionEntity() {}
+    protected ProcessExecutionEntity() {}
     
     public ProcessExecutionEntity(ProcessRevisionEntity processRevisionEntity)
     {
