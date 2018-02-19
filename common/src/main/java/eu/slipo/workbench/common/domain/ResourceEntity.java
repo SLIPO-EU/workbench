@@ -2,6 +2,7 @@ package eu.slipo.workbench.common.domain;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -20,13 +21,17 @@ import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Version;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+
+import org.hibernate.validator.constraints.NotBlank;
 
 import com.vividsolutions.jts.geom.Geometry;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumResourceType;
 import eu.slipo.workbench.common.model.resource.EnumDataSourceType;
+import eu.slipo.workbench.common.model.resource.ResourceMetadataView;
 import eu.slipo.workbench.common.model.resource.ResourceRecord;
 
 
@@ -45,7 +50,7 @@ public class ResourceEntity
     @Column(name = "`version`", nullable = false)
     long version;
 
-    @Version()
+    @Version
     @Column(name = "row_version")
     long rowVersion;
 
@@ -66,14 +71,14 @@ public class ResourceEntity
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "output_format", nullable = false)
-    EnumDataFormat outputFormat;
+    @Column(name = "format", nullable = false)
+    EnumDataFormat format;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "process_execution")
     ProcessExecutionEntity processExecution;
 
-    @NotNull
+    @NotBlank
     @Column(name = "`name`", nullable = false)
     String name;
 
@@ -101,14 +106,17 @@ public class ResourceEntity
     @Column(name = "bbox")
     Geometry boundingBox;
 
+    @Min(0)
     @Column(name = "number_of_entities")
     Integer numberOfEntities;
 
-    @Column(name = "file_path")
-    String path;
+    @NotBlank
+    @Column(name = "file_path", nullable = false)
+    String filePath;
 
+    @Min(0)
     @Column(name = "file_size")
-    Long size;
+    Long fileSize;
 
     @Column(name = "table_name")
     UUID tableName;
@@ -116,146 +124,207 @@ public class ResourceEntity
     @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     List<ResourceRevisionEntity> revisions = new ArrayList<>();
 
-    public ResourceEntity() {}
-
-    public long getVersion() {
+    public ResourceEntity() {}    
+    
+    public long getVersion()
+    {
         return version;
     }
 
-    public void setVersion(long version) {
+    public void setVersion(long version)
+    {
         this.version = version;
     }
 
-    public EnumResourceType getType() {
+    public EnumResourceType getType()
+    {
         return type;
     }
 
-    public void setType(EnumResourceType type) {
+    public void setType(EnumResourceType type)
+    {
         this.type = type;
     }
 
-    public EnumDataSourceType getSourceType() {
+    public EnumDataSourceType getSourceType()
+    {
         return sourceType;
     }
 
-    public void setSourceType(EnumDataSourceType sourceType) {
+    public void setSourceType(EnumDataSourceType sourceType)
+    {
         this.sourceType = sourceType;
     }
 
-    public EnumDataFormat getInputFormat() {
+    public EnumDataFormat getInputFormat()
+    {
         return inputFormat;
     }
 
-    public void setInputFormat(EnumDataFormat inputFormat) {
+    public void setInputFormat(EnumDataFormat inputFormat)
+    {
         this.inputFormat = inputFormat;
     }
 
-    public EnumDataFormat getOutputFormat() {
-        return outputFormat;
+    public EnumDataFormat getFormat()
+    {
+        return format;
     }
 
-    public void setOutputFormat(EnumDataFormat outputFormat) {
-        this.outputFormat = outputFormat;
+    public void setFormat(EnumDataFormat format)
+    {
+        this.format = format;
     }
 
-    public String getName() {
+    public ProcessExecutionEntity getProcessExecution()
+    {
+        return processExecution;
+    }
+
+    public void setProcessExecution(ProcessExecutionEntity processExecution)
+    {
+        this.processExecution = processExecution;
+    }
+
+    public String getName()
+    {
         return name;
     }
 
-    public void setName(String name) {
+    public void setName(String name)
+    {
         this.name = name;
     }
 
-    public String getDescription() {
+    public String getDescription()
+    {
         return description;
     }
 
-    public void setDescription(String description) {
+    public void setDescription(String description)
+    {
         this.description = description;
     }
 
-    public ZonedDateTime getCreatedOn() {
+    public ZonedDateTime getCreatedOn()
+    {
         return createdOn;
     }
 
-    public ZonedDateTime getUpdatedOn() {
-        return updatedOn;
+    public void setCreatedOn(ZonedDateTime createdOn)
+    {
+        this.createdOn = createdOn;
     }
 
-    public void setUpdatedOn(ZonedDateTime updatedOn) {
-        this.updatedOn = updatedOn;
-    }
-
-    public AccountEntity getUpdatedBy() {
-        return updatedBy;
-    }
-
-    public void setUpdatedBy(AccountEntity updatedBy) {
-        this.updatedBy = updatedBy;
-    }
-
-    public Geometry getBoundingBox() {
-        return boundingBox;
-    }
-
-    public void setBoundingBox(Geometry boundingBox) {
-        this.boundingBox = boundingBox;
-    }
-
-    public Integer getNumberOfEntities() {
-        return numberOfEntities;
-    }
-
-    public void setNumberOfEntities(Integer numberOfEntities) {
-        this.numberOfEntities = numberOfEntities;
-    }
-
-    public String getFileName() {
-        return path;
-    }
-
-    public void setFileName(String path) {
-        this.path = path;
-    }
-
-    public Long getSize() {
-        return size;
-    }
-
-    public void setSize(long fileSize) {
-        this.size = fileSize;
-    }
-
-    public UUID getTableName() {
-        return tableName;
-    }
-
-    public void setTableName(UUID tableName) {
-        this.tableName = tableName;
-    }
-
-    public long getId() {
-        return id;
-    }
-
-    public long getRowVersion() {
-        return rowVersion;
-    }
-
-    public AccountEntity getCreatedBy() {
+    public AccountEntity getCreatedBy()
+    {
         return createdBy;
     }
 
-    public List<ResourceRevisionEntity> getRevisions() {
-        return revisions;
+    public void setCreatedBy(AccountEntity createdBy)
+    {
+        this.createdBy = createdBy;
+    }
+
+    public ZonedDateTime getUpdatedOn()
+    {
+        return updatedOn;
+    }
+
+    public void setUpdatedOn(ZonedDateTime updatedOn)
+    {
+        this.updatedOn = updatedOn;
+    }
+
+    public AccountEntity getUpdatedBy()
+    {
+        return updatedBy;
+    }
+
+    public void setUpdatedBy(AccountEntity updatedBy)
+    {
+        this.updatedBy = updatedBy;
+    }
+
+    public Geometry getBoundingBox()
+    {
+        return boundingBox;
+    }
+
+    public void setBoundingBox(Geometry boundingBox)
+    {
+        this.boundingBox = boundingBox;
+    }
+
+    public Integer getNumberOfEntities()
+    {
+        return numberOfEntities;
+    }
+
+    public void setNumberOfEntities(Integer numberOfEntities)
+    {
+        this.numberOfEntities = numberOfEntities;
+    }
+
+    public String getFilePath()
+    {
+        return filePath;
+    }
+
+    public void setFilePath(String filePath)
+    {
+        this.filePath = filePath;
+    }
+
+    public Long getFileSize()
+    {
+        return fileSize;
+    }
+
+    public void setFileSize(Long fileSize)
+    {
+        this.fileSize = fileSize;
+    }
+
+    public UUID getTableName()
+    {
+        return tableName;
+    }
+
+    public void setTableName(UUID tableName)
+    {
+        this.tableName = tableName;
+    }
+
+    public long getId()
+    {
+        return this.id;
+    }
+
+    public List<ResourceRevisionEntity> getRevisions() 
+    {
+        return this.revisions;
     }
 
     public void addRevision(ResourceRevisionEntity revisionEntity)
     {
-        revisions.add(revisionEntity);
+        revisionEntity.setParent(this);
+        this.revisions.add(revisionEntity);
     }
 
+    public void setMetadata(ResourceMetadataView metadata)
+    {
+        this.name = metadata.getName();
+        this.description = metadata.getDescription();
+        this.boundingBox = metadata.getBoundingBox();
+    }
+    
     public ResourceRecord toResourceRecord()
+    {
+        return toResourceRecord(true);
+    }
+    
+    public ResourceRecord toResourceRecord(boolean includeRevisions)
     {
         ResourceRecord r = new ResourceRecord(id, version);
 
@@ -263,20 +332,22 @@ public class ResourceEntity
         r.setCreatedBy(createdBy.getId(), createdBy.getFullName());
         r.setUpdatedOn(updatedOn);
         r.setUpdatedBy(updatedBy.getId(), updatedBy.getFullName());
-        r.setDataSource(sourceType);
+        r.setSourceType(sourceType);
         r.setInputFormat(inputFormat);
-        r.setOutputFormat(outputFormat);
-        r.setFilePath(path);
-        r.setFileSize(size);
+        r.setFormat(format);
+        r.setFilePath(filePath);
+        r.setFileSize(fileSize);
         r.setMetadata(name, description, numberOfEntities, boundingBox);
         r.setProcessExecutionId(processExecution != null ? processExecution.getId() : null);
-        r.setTable(tableName);
+        r.setTableName(tableName);
         r.setType(type);
 
-        revisions.stream()
-            .sorted((h1, h2) -> Long.compare(h2.getVersion(), h1.getVersion()))
-            .forEach((h) -> r.addRevision(h.toResourceRecord()));
-
+        if (includeRevisions) {
+            revisions.stream()
+                .sorted(Comparator.comparingLong(ResourceRevisionEntity::getVersion))
+                .forEach((h) -> r.addRevision(h.toResourceRecord()));
+        }
+        
         return r;
     }
 

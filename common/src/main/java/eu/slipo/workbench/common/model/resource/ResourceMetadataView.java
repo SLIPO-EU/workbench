@@ -15,27 +15,19 @@ public class ResourceMetadataView {
 
     private Integer size;
 
-    public ResourceMetadataView(String name, String description) {
-        this.name = name;
-        this.description = description;
+    public ResourceMetadataView(String name, String description) 
+    {
+        this(name, description, null, null);
+    }
+
+    public ResourceMetadataView(String name, String description, Integer size) 
+    {
+        this(name, description, size, null);
     }
 
     public ResourceMetadataView(
-            String name,
-            String description,
-            Integer size) {
-
-        this.name = name;
-        this.description = description;
-        this.size = size;
-    }
-
-    public ResourceMetadataView(
-            String name,
-            String description,
-            Integer size,
-            Geometry boundingBox) {
-
+        String name, String description, Integer size, Geometry boundingBox) 
+    {
         this.name = name;
         this.description = description;
         this.size = size;

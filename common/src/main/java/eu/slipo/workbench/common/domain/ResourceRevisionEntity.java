@@ -16,9 +16,11 @@ import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 import org.hibernate.annotations.NaturalId;
+import org.hibernate.validator.constraints.NotBlank;
 
 import com.vividsolutions.jts.geom.Geometry;
 
@@ -32,7 +34,9 @@ import eu.slipo.workbench.common.model.resource.ResourceRecord;
     schema = "public",
     name = "resource_revision",
     uniqueConstraints = {
-        @UniqueConstraint(name = "uq_resource_parent_id_version", columnNames = { "parent", "`version`" }), }
+        @UniqueConstraint(
+            name = "uq_resource_parent_id_version", columnNames = { "parent", "`version`" })
+    }
 )
 public class ResourceRevisionEntity {
 
@@ -71,14 +75,14 @@ public class ResourceRevisionEntity {
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "output_format", nullable = false, updatable = false)
-    EnumDataFormat outputFormat;
+    @Column(name = "format", nullable = false, updatable = false)
+    EnumDataFormat format;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "process_execution", updatable = false)
     ProcessExecutionEntity processExecution;
 
-    @NotNull
+    @NotBlank
     @Column(name = "`name`", nullable = false, updatable = false)
     String name;
 
@@ -98,14 +102,17 @@ public class ResourceRevisionEntity {
     @Column(name = "bbox", updatable = false)
     Geometry boundingBox;
 
+    @Min(0)
     @Column(name = "number_of_entities", updatable = false)
     Integer numberOfEntities;
 
-    @Column(name = "file_path", updatable = false)
-    String path;
+    @NotBlank
+    @Column(name = "file_path", nullable = false, updatable = false)
+    String filePath;
 
+    @Min(0)
     @Column(name = "file_size", updatable = false)
-    Long size;
+    Long fileSize;
 
     @Column(name = "table_name", updatable = false)
     UUID tableName;
@@ -115,130 +122,117 @@ public class ResourceRevisionEntity {
     public ResourceRevisionEntity(ResourceEntity parent)
     {
         this.parent = parent;
+        this.version = parent.version;
+        
+        this.updatedBy = parent.updatedBy;
+        this.updatedOn = parent.updatedOn;
+        this.filePath = parent.filePath;
+        this.fileSize = parent.fileSize;
+        this.name = parent.name;
+        this.description = parent.description;
+        this.inputFormat = parent.inputFormat;
+        this.format = parent.format;
+        this.type = parent.type;
+        this.sourceType = parent.sourceType;
+        this.processExecution = parent.processExecution;
+        this.tableName = parent.tableName;
+        this.numberOfEntities = parent.numberOfEntities;
+        this.boundingBox = parent.boundingBox;
+    }
+
+    public long getId() 
+    {
+        return id;
     }
     
-    public ResourceEntity getParent() {
+    public ResourceEntity getParent() 
+    {
         return parent;
     }
-
-    public void setParent(ResourceEntity parent) {
+    
+    public void setParent(ResourceEntity parent)
+    {
         this.parent = parent;
     }
-
-    public long getVersion() {
+    
+    public long getVersion()
+    {
         return version;
     }
-
-    public void setVersion(long version) {
+    
+    public void setVersion(long version)
+    {
         this.version = version;
     }
 
-    public EnumResourceType getType() {
+    public EnumResourceType getType()
+    {
         return type;
     }
 
-    public void setType(EnumResourceType type) {
-        this.type = type;
-    }
-
-    public EnumDataSourceType getSourceType() {
+    public EnumDataSourceType getSourceType()
+    {
         return sourceType;
     }
 
-    public void setSourceType(EnumDataSourceType sourceType) {
-        this.sourceType = sourceType;
-    }
-
-    public EnumDataFormat getInputFormat() {
+    public EnumDataFormat getInputFormat()
+    {
         return inputFormat;
     }
 
-    public void setInputFormat(EnumDataFormat inputFormat) {
-        this.inputFormat = inputFormat;
+    public EnumDataFormat getFormat()
+    {
+        return format;
     }
 
-    public EnumDataFormat getOutputFormat() {
-        return outputFormat;
+    public ProcessExecutionEntity getProcessExecution()
+    {
+        return processExecution;
     }
 
-    public void setOutputFormat(EnumDataFormat outputFormat) {
-        this.outputFormat = outputFormat;
-    }
-
-    public String getName() {
+    public String getName()
+    {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getDescription() {
+    public String getDescription()
+    {
         return description;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public ZonedDateTime getUpdatedOn() {
+    public ZonedDateTime getUpdatedOn()
+    {
         return updatedOn;
     }
 
-    public void setUpdatedOn(ZonedDateTime updatedOn) {
-        this.updatedOn = updatedOn;
-    }
-
-    public AccountEntity getUpdatedBy() {
+    public AccountEntity getUpdatedBy()
+    {
         return updatedBy;
     }
 
-    public void setUpdatedBy(AccountEntity updatedBy) {
-        this.updatedBy = updatedBy;
-    }
-
-    public Geometry getBoundingBox() {
+    public Geometry getBoundingBox()
+    {
         return boundingBox;
     }
 
-    public void setBoundingBox(Geometry boundingBox) {
-        this.boundingBox = boundingBox;
-    }
-
-    public Integer getNumberOfEntities() {
+    public Integer getNumberOfEntities()
+    {
         return numberOfEntities;
     }
 
-    public void setNumberOfEntities(Integer numberOfEntities) {
-        this.numberOfEntities = numberOfEntities;
+    public String getFilePath()
+    {
+        return filePath;
     }
 
-    public String getFileName() {
-        return path;
+    public Long getFileSize()
+    {
+        return fileSize;
     }
 
-    public void setFileName(String fileName) {
-        this.path = fileName;
-    }
-
-    public Long getSize() {
-        return size;
-    }
-
-    public void setSize(long fileSize) {
-        this.size = fileSize;
-    }
-
-    public UUID getTableName() {
+    public UUID getTableName()
+    {
         return tableName;
-    }
-
-    public void setTableName(UUID tableName) {
-        this.tableName = tableName;
-    }
-
-    public long getId() {
-        return id;
     }
 
     public ResourceRecord toResourceRecord()
@@ -249,16 +243,18 @@ public class ResourceRevisionEntity {
         r.setCreatedBy(parent.createdBy.getId(), parent.createdBy.getFullName());
         r.setUpdatedOn(updatedOn);
         r.setUpdatedBy(updatedBy.getId(), updatedBy.getFullName());
-        r.setDataSource(sourceType);
+        r.setSourceType(sourceType);
         r.setInputFormat(inputFormat);
-        r.setOutputFormat(outputFormat);
-        r.setFilePath(path);
-        r.setFileSize(size);
+        r.setFormat(format);
+        r.setFilePath(filePath);
+        r.setFileSize(fileSize);
         r.setMetadata(name, description, numberOfEntities, boundingBox);
-        r.setProcessExecutionId(processExecution != null ? processExecution.getId() : null);
-        r.setTable(tableName);
+        r.setTableName(tableName);
         r.setType(type);
 
+        if (processExecution != null)
+            r.setProcessExecutionId(processExecution.getId());
+        
         return r;
     }
 }

@@ -13,14 +13,19 @@ import javax.persistence.TypedQuery;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 
 import eu.slipo.workbench.common.domain.AccountEntity;
 import eu.slipo.workbench.common.domain.ProcessEntity;
 import eu.slipo.workbench.common.domain.ProcessExecutionEntity;
+import eu.slipo.workbench.common.domain.ProcessExecutionStepEntity;
+import eu.slipo.workbench.common.domain.ProcessExecutionStepFileEntity;
 import eu.slipo.workbench.common.domain.ProcessRevisionEntity;
+import eu.slipo.workbench.common.domain.ResourceRevisionEntity;
 import eu.slipo.workbench.common.model.ApplicationException;
 import eu.slipo.workbench.common.model.QueryResultPage;
 import eu.slipo.workbench.common.model.process.EnumProcessTaskType;
@@ -28,9 +33,12 @@ import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.ProcessErrorCode;
 import eu.slipo.workbench.common.model.process.ProcessExecutionQuery;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
+import eu.slipo.workbench.common.model.process.ProcessExecutionStepFileRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepRecord;
 import eu.slipo.workbench.common.model.process.ProcessQuery;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
+import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
+import eu.slipo.workbench.common.model.resource.ResourceRecord;
 
 // Todo Examine (per-method) transaction propagation. 
 // Focus on updateExecution which is subject to several race conditions.   
@@ -42,6 +50,10 @@ public class DefaultProcessRepository implements ProcessRepository
     @PersistenceContext(unitName = "default")
     EntityManager entityManager;
 
+    @Autowired
+    ResourceRepository resourceRepository;
+    
+    @Transactional(readOnly = true)
     @Override
     public QueryResultPage<ProcessRecord> find(
         ProcessQuery query, PageRequest pageReq, final boolean includeExecutions)
@@ -101,6 +113,7 @@ public class DefaultProcessRepository implements ProcessRepository
         return new QueryResultPage<ProcessRecord>(records, pageReq, count);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public QueryResultPage<ProcessExecutionRecord> findExecutions(ProcessExecutionQuery query, PageRequest pageReq)
     {
@@ -168,7 +181,7 @@ public class DefaultProcessRepository implements ProcessRepository
         ProcessRevisionEntity entity = findLatestRevision(id);
         return entity == null? null : entity.toProcessRecord(includeExecutions, false);
     }
-
+    
     @Override
     public ProcessRecord findOne(long id, long version, final boolean includeExecutions)
     {
@@ -193,21 +206,10 @@ public class DefaultProcessRepository implements ProcessRepository
     }
 
     @Override
-    public ProcessExecutionRecord findExecution(long id, long version, long execution)
+    public ProcessExecutionRecord findExecution(long executionId)
     {
-        String queryString =
-            "select e from ProcessExecution e " +
-            "where e.process.parent.id = :id and e.process.parent.version = :version and e.id = :execution";
-
-        List<ProcessExecutionEntity> result = entityManager
-            .createQuery(queryString, ProcessExecutionEntity.class)
-            .setParameter("id", id)
-            .setParameter("version", version)
-            .setParameter("execution", execution)
-            .setMaxResults(1)
-            .getResultList();
-
-        return (result.isEmpty() ? null : result.get(0).toProcessExecutionRecord(true));
+        ProcessExecutionEntity e = entityManager.find(ProcessExecutionEntity.class, executionId);
+        return e == null? null : e.toProcessExecutionRecord(true);
     }
 
     @Override
@@ -225,7 +227,6 @@ public class DefaultProcessRepository implements ProcessRepository
         entity.setUpdatedBy(createdBy);
         entity.setCreatedOn(now);
         entity.setUpdatedOn(now);
-
 
         // Create an associated process revision, update reference
 
@@ -252,7 +253,6 @@ public class DefaultProcessRepository implements ProcessRepository
         // Update process entity
 
         ProcessEntity entity = revision.getParent();
-
         // Fixme is it ok to modify definition here (is the source of our update)? 
         definition.setName(entity.getName());
 
@@ -293,23 +293,76 @@ public class DefaultProcessRepository implements ProcessRepository
     @Override
     public ProcessExecutionRecord updateExecution(long executionId, ProcessExecutionRecord record)
     {
-        // Todo ProcessRepository.updateExecution
-        throw new NotImplementedException("Todo");
+        ProcessExecutionEntity executionEntity = 
+            entityManager.find(ProcessExecutionEntity.class, executionId);
+        Assert.notNull(executionEntity, "The execution ID does not refer to an execution entity");
+        
+        if (record.getStartedOn() != null)
+            executionEntity.setStartedOn(record.getStartedOn());
+        
+        if (record.getCompletedOn() != null)
+            executionEntity.setCompletedOn(record.getCompletedOn());
+        
+        executionEntity.setStatus(record.getStatus());
+        executionEntity.setErrorMessage(record.getErrorMessage());
+        
+        // Save
+        
+        entityManager.flush();
+        return executionEntity.toProcessExecutionRecord(true);
     }
 
     @Override
-    public ProcessExecutionRecord createExecutionStep(long executionId,
-        ProcessExecutionStepRecord record)
+    public ProcessExecutionRecord createExecutionStep(long executionId, ProcessExecutionStepRecord record)
     {
-        // Todo ProcessRepository.createExecutionStep
-        throw new NotImplementedException("Todo");
+        ProcessExecutionEntity executionEntity = 
+            entityManager.find(ProcessExecutionEntity.class, executionId);
+        Assert.notNull(executionEntity, "The execution ID does not refer to an execution entity");
+        
+        // Set step metadata
+        
+        ProcessExecutionStepEntity executionStepEntity = new ProcessExecutionStepEntity(
+            executionEntity, record.getKey(), record.getName());
+        executionStepEntity.setJobExecutionId(record.getJobExecutionId());
+        executionStepEntity.setStatus(record.getStatus());
+        executionStepEntity.setOperation(record.getOperation());
+        executionStepEntity.setTool(record.getTool());
+        executionStepEntity.setStartedOn(record.getStartedOn());
+        
+        // Add file entities associated with this step
+        
+        for (ProcessExecutionStepFileRecord f: record.getFiles()) {
+            ProcessExecutionStepFileEntity fileEntity = new ProcessExecutionStepFileEntity(
+                executionStepEntity, f.getType(), f.getFilePath(), f.getFileSize());
+            ResourceIdentifier resourceIdentifier = f.getResource();
+            if (resourceIdentifier != null) {
+                ResourceRecord resourceRecord = resourceRepository.findOne(resourceIdentifier);
+                Assert.notNull(resourceRecord, 
+                    "The resource-identifier does not refer to a resource revision");
+                fileEntity.setResource(
+                    entityManager.find(ResourceRevisionEntity.class, resourceRecord.getId()));
+            }
+            executionStepEntity.addFile(fileEntity);
+        }
+        
+        executionEntity.addStep(executionStepEntity);
+        
+        // Save
+        
+        entityManager.flush();
+        return executionEntity.toProcessExecutionRecord(true);
     }
 
     @Override
-    public ProcessExecutionRecord updateExecutionStep(long executionId, int stepKey,
-        ProcessExecutionStepRecord record)
+    public ProcessExecutionRecord updateExecutionStep(
+        long executionId, int stepKey, ProcessExecutionStepRecord record)
     {
+        ProcessExecutionEntity executionEntity = 
+            entityManager.find(ProcessExecutionEntity.class, executionId);
+        Assert.notNull(executionEntity, "The execution ID does not refer to an execution entity");
+        
         // Todo ProcessRepository.updateExecutionStep
+        
         throw new NotImplementedException("Todo");
     }
     
@@ -358,8 +411,7 @@ public class DefaultProcessRepository implements ProcessRepository
     private ProcessRevisionEntity findLatestRevision(long id)
     {
         String queryString =
-            "select p from ProcessRevision p where p.parent.id = :id " +
-            "order by p.version desc";
+            "from ProcessRevision p where p.parent.id = :id order by p.version desc";
 
         List<ProcessRevisionEntity> result = entityManager
             .createQuery(queryString, ProcessRevisionEntity.class)

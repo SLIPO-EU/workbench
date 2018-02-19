@@ -150,26 +150,26 @@ public class ProcessExecutionEntity
 
     public ProcessExecutionRecord toProcessExecutionRecord()
     {
-        return toProcessExecutionRecord(false);
+        return toProcessExecutionRecord(true);
     }
     
     public ProcessExecutionRecord toProcessExecutionRecord(boolean includeSteps) 
     {
         ProcessExecutionRecord e = 
-            new ProcessExecutionRecord(this.id, this.process.parent.id, this.process.version);
+            new ProcessExecutionRecord(id, process.parent.id, process.version);
 
-        if (this.submittedBy != null) {
-            e.setSubmittedBy(this.submittedBy.getId(), this.submittedBy.getFullName());
+        if (submittedBy != null) {
+            e.setSubmittedBy(submittedBy.getId(), submittedBy.getFullName());
         }
-        e.setSubmittedOn(this.submittedOn);
-        e.setStartedOn(this.startedOn);
-        e.setCompletedOn(this.completedOn);
-        e.setStatus(this.status);
-        e.setName(this.getProcess().getName());
-        e.setErrorMessage(this.errorMessage);
+        e.setSubmittedOn(submittedOn);
+        e.setStartedOn(startedOn);
+        e.setCompletedOn(completedOn);
+        e.setStatus(status);
+        e.setName(process.getName());
+        e.setErrorMessage(errorMessage);
 
         if (includeSteps) {
-            for (ProcessExecutionStepEntity s : this.getSteps()) {
+            for (ProcessExecutionStepEntity s: this.getSteps()) {
                 e.addStep(s.toProcessExecutionStepRecord());
             }
         }

@@ -84,83 +84,67 @@ public class ProcessRevisionEntity {
     public ProcessRevisionEntity(ProcessEntity parent)
     {
         this.parent = parent;
-        this.version = parent.getVersion();
-        this.name = parent.getName();
-        this.description = parent.getDescription();
-        this.definition = parent.getDefinition();
-        this.updatedBy = parent.getUpdatedBy();
-        this.updatedOn = parent.getUpdatedOn();
+        this.version = parent.version;
+            
+        this.name = parent.name;
+        this.description = parent.description;
+        this.definition = parent.definition;
+        this.updatedBy = parent.updatedBy;
+        this.updatedOn = parent.updatedOn;
     }
     
-    public ProcessEntity getParent() {
-        return parent;
-    }
-
-    public void setParent(ProcessEntity parent) {
-        this.parent = parent;
-    }
-
-    public long getVersion() {
-        return version;
-    }
-
-    public void setVersion(long version) {
-        this.version = version;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public ZonedDateTime getUpdatedOn() {
-        return updatedOn;
-    }
-
-    public void setUpdatedOn(ZonedDateTime updatedOn) {
-        this.updatedOn = updatedOn;
-    }
-
-    public AccountEntity getUpdatedBy() {
-        return updatedBy;
-    }
-
-    public void setUpdatedBy(AccountEntity updatedBy) {
-        this.updatedBy = updatedBy;
-    }
-
-    public ZonedDateTime getExecutedOn() {
-        return executedOn;
-    }
-
-    public void setExecutedOn(ZonedDateTime executedOn) {
-        this.executedOn = executedOn;
-    }
-
-    public ProcessDefinition getDefinition() {
-        return definition;
-    }
-
-    public void setDefinition(ProcessDefinition definition) {
-        this.definition = definition;
-    }
-
-    public long getId() {
+    public long getId()
+    {
         return id;
     }
 
-    public List<ProcessExecutionEntity> getExecutions() {
+    public ProcessEntity getParent()
+    {
+        return parent;
+    }
+    
+    public void setParent(ProcessEntity parent)
+    {
+        this.parent = parent;
+    }
+
+    public long getVersion()
+    {
+        return version;
+    }
+
+    public String getName()
+    {
+        return name;
+    }
+
+    public String getDescription()
+    {
+        return description;
+    }
+
+    public ZonedDateTime getUpdatedOn()
+    {
+        return updatedOn;
+    }
+
+    public AccountEntity getUpdatedBy()
+    {
+        return updatedBy;
+    }
+
+    public ZonedDateTime getExecutedOn()
+    {
+        return executedOn;
+    }
+
+    public ProcessDefinition getDefinition()
+    {
+        return definition;
+    }
+
+    public List<ProcessExecutionEntity> getExecutions()
+    {
         return executions;
     }
 

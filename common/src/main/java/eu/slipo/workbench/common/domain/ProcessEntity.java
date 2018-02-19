@@ -204,12 +204,14 @@ public class ProcessEntity {
         return createdBy;
     }
 
-    public List<ProcessRevisionEntity> getRevisions() {
+    public List<ProcessRevisionEntity> getRevisions() 
+    {
         return revisions;
     }
     
     public void addRevision(ProcessRevisionEntity revisionEntity)
     {
+        revisionEntity.setParent(this);
         revisions.add(revisionEntity);
     }
 

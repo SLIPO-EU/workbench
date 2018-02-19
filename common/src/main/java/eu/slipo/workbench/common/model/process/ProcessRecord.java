@@ -7,11 +7,13 @@ import java.util.List;
 
 import eu.slipo.workbench.common.model.user.Account;
 
-public class ProcessRecord {
-
+public class ProcessRecord 
+{
+    // Todo: represent identity-related numbers as Long ??
+    
     private long id = -1L;
 
-    private long version;
+    private long version = -1L;
 
     private Account createdBy;
 
@@ -37,6 +39,8 @@ public class ProcessRecord {
 
     private List<ProcessExecutionRecord> executions;
 
+    public ProcessRecord() {}
+    
     public ProcessRecord(long id, long version) {
         this.id = id;
         this.version = version;

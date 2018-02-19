@@ -1,23 +1,33 @@
 package eu.slipo.workbench.common.model.process;
 
-import java.util.UUID;
-
 import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
 
-public class ProcessExecutionStepFileRecord {
-
-    private long id;
+public class ProcessExecutionStepFileRecord 
+{
+    private long id = -1L;
 
     private EnumStepFile type;
 
-    private String fileName;
+    private String filePath;
 
     private Long fileSize;
 
-    private UUID tableName;
-
     private ResourceIdentifier resource;
 
+    protected ProcessExecutionStepFileRecord() {}
+    
+    public ProcessExecutionStepFileRecord(EnumStepFile type, String path, Long size)
+    {
+        this.type = type;
+        this.filePath = path;
+        this.fileSize = size;
+    }
+    
+    public ProcessExecutionStepFileRecord(EnumStepFile type, String path)
+    {
+        this(type, path, null);
+    }
+    
     public long getId() {
         return id;
     }
@@ -34,12 +44,12 @@ public class ProcessExecutionStepFileRecord {
         this.type = type;
     }
 
-    public String getFileName() {
-        return fileName;
+    public String getFilePath() {
+        return filePath;
     }
 
-    public void setFilePath(String fileName) {
-        this.fileName = fileName;
+    public void setFilePath(String path) {
+        this.filePath = path;
     }
 
     public Long getFileSize() {
@@ -48,14 +58,6 @@ public class ProcessExecutionStepFileRecord {
 
     public void setFileSize(long fileSize) {
         this.fileSize = fileSize;
-    }
-
-    public UUID getTableName() {
-        return tableName;
-    }
-
-    public void setTableName(UUID tableName) {
-        this.tableName = tableName;
     }
 
     public ResourceIdentifier getResource() {

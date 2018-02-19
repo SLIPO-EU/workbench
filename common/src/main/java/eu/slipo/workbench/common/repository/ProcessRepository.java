@@ -1,5 +1,8 @@
 package eu.slipo.workbench.common.repository;
 
+import java.util.Collections;
+import java.util.List;
+
 import org.springframework.data.domain.PageRequest;
 
 import eu.slipo.workbench.common.model.QueryResultPage;
@@ -7,6 +10,7 @@ import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.ProcessExecutionQuery;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepRecord;
+import eu.slipo.workbench.common.model.process.ProcessIdentifier;
 import eu.slipo.workbench.common.model.process.ProcessQuery;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
 
@@ -55,34 +59,25 @@ public interface ProcessRepository
         return findOne(id, version, false);
     }
     
+    default ProcessRecord findOne(ProcessIdentifier processIdentifier, boolean includeExecutions)
+    {
+        return findOne(processIdentifier.getId(), processIdentifier.getVersion(), includeExecutions);
+    }
+    
+    default ProcessRecord findOne(ProcessIdentifier processIdentifier)
+    {
+        return findOne(processIdentifier.getId(), processIdentifier.getVersion());
+    }
+    
     /**
      * Find a single process by name
      *
-     * Todo: Lookup by pair of (name,userId) 
+     * Todo: Lookup by pair of (name, createdBy) 
      * 
      * @param name The process unique name
      * @return an instance of {@link ProcessRecord} if the process exists or null
      */
     ProcessRecord findOne(String name);
-
-    /**
-     * Find process executions filtered by a {@link ProcessExecutionQuery}.
-     *
-     * @param query A query to filter records, or <tt>null</tt> to fetch everything
-     * @return an instance of {@link QueryResult} with {@link ProcessExecutionRecord} items
-     */
-    QueryResultPage<ProcessExecutionRecord> findExecutions(ProcessExecutionQuery query, PageRequest pageReq);
-
-    /**
-     * Find a single process execution record
-     *
-     * @param id the process id
-     * @param version the process version
-     * @param executionId the execution id
-     * @return an instance of {@link ProcessExecutionRecord} or {@code null} if no
-     * execution exists
-     */
-    ProcessExecutionRecord findExecution(long id, long version, long executionId);
 
     /**
      * Create a new process
@@ -106,6 +101,36 @@ public interface ProcessRepository
     ProcessRecord update(long id, ProcessDefinition definition, int updatedBy);
     
     /**
+     * Find a single process execution record
+     *
+     * @param executionId the execution id (i.e the primary key of the execution)
+     * @return an instance of {@link ProcessExecutionRecord} or <tt>null</tt> if no
+     *   such execution exists
+     */
+    ProcessExecutionRecord findExecution(long executionId);
+    
+    /**
+     * Find executions for a process of given id and version
+     * 
+     * @param id The process id
+     * @param version The version of a specific revision of a process
+     * @return the list of associated (to the process) execution records
+     */
+    default List<ProcessExecutionRecord> findExecutions(long id, long version)
+    {
+        ProcessRecord r = findOne(id, version, true);
+        return r == null? Collections.emptyList() : r.getExecutions();
+    }
+    
+    /**
+     * Find process executions filtered by a {@link ProcessExecutionQuery}.
+     *
+     * @param query A query to filter records, or <tt>null</tt> to fetch everything
+     * @return an instance of {@link QueryResult} with {@link ProcessExecutionRecord} items
+     */
+    QueryResultPage<ProcessExecutionRecord> findExecutions(ProcessExecutionQuery query, PageRequest pageReq);
+    
+    /**
      * Create a (new) execution for a process revision with a given id and version. 
      * 
      * @param id The process id
@@ -120,7 +145,7 @@ public interface ProcessRepository
      * 
      * <p>This method performs a shallow update of execution metadata, i.e it does not
      * examine steps or files to also update referencing entities. If instead, some step-related 
-     * metadata are to be persisted one should use these methods:
+     * metadata are to be persisted you should use these methods:
      * {@link ProcessRepository#createExecutionStep(long, ProcessExecutionStepRecord)} or 
      * {@link ProcessRepository#updateExecutionStep(long, int, ProcessExecutionStepRecord)}
      * 

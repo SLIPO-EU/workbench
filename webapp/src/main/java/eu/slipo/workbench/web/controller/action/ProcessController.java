@@ -108,7 +108,8 @@ public class ProcessController {
      * @return a list of {@link ProcessExecutionRecord}
      */
     @RequestMapping(value = "/action/process/{id}/{version}/execution", method = RequestMethod.GET)
-    public RestResponse<List<ProcessExecutionRecord>> getAllProcessExecutions(@PathVariable long id, @PathVariable long version) {
+    public RestResponse<List<ProcessExecutionRecord>> getAllProcessExecutions(
+        @PathVariable long id, @PathVariable long version) {
 
         return RestResponse.result(processService.findExecutions(id, version));
     }
@@ -125,12 +126,13 @@ public class ProcessController {
      */
     @RequestMapping(value = "/action/process/{id}/{version}/execution/{executionId}", method = RequestMethod.GET)
     public RestResponse<ProcessExecutionRecord> getProcessExecution(
-        @PathVariable long id,
-        @PathVariable long version,
-        @PathVariable long executionId) {
-
-        ProcessExecutionRecord record = processRepository.findExecution(id, version, executionId);
-        if (record == null) {
+        @PathVariable long id, @PathVariable long version, @PathVariable long executionId) 
+    {
+        ProcessExecutionRecord record = processRepository.findExecution(executionId);
+        if (record == null || 
+                record.getProcess().getId() != id || 
+                record.getProcess().getVersion() != version) 
+        {
             return RestResponse.error(new Error(ProcessErrorCode.NOT_FOUND, "Execution was not found"));
         }
         return RestResponse.result(record);

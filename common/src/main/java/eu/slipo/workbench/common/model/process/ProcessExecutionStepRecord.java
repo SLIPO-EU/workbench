@@ -8,15 +8,15 @@ import java.util.List;
 import eu.slipo.workbench.common.model.poi.EnumOperation;
 import eu.slipo.workbench.common.model.poi.EnumTool;
 
-public class ProcessExecutionStepRecord {
-
+public class ProcessExecutionStepRecord 
+{
     private long id = -1L;
 
     private int key;
 
     private String name;
 
-    private long jobExecutionId;
+    private long jobExecutionId = -1L;
     
     private EnumProcessExecutionStatus status;
 
@@ -30,7 +30,7 @@ public class ProcessExecutionStepRecord {
 
     private String errorMessage;
 
-    private List<ProcessExecutionStepFileRecord> files = new ArrayList<>(2);
+    private List<ProcessExecutionStepFileRecord> files = new ArrayList<>(6);
 
     public ProcessExecutionStepRecord() {}
     
@@ -111,11 +111,18 @@ public class ProcessExecutionStepRecord {
         this.errorMessage = errorMessage;
     }
 
-    public List<ProcessExecutionStepFileRecord> getFiles() {
+    public List<ProcessExecutionStepFileRecord> getFiles() 
+    {
         return Collections.unmodifiableList(files);
     }
 
-    public void addFile(ProcessExecutionStepFileRecord f) {
+    public void addFile(ProcessExecutionStepFileRecord f) 
+    {
         this.files.add(f);
+    }
+    
+    public void addFiles(List<ProcessExecutionStepFileRecord> files) 
+    {
+        this.files.addAll(files);
     }
 }

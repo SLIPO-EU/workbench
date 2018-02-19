@@ -61,6 +61,9 @@ public class ProcessExecutionStepEntity
     @NotNull
     @Column(name = "step_name", nullable = false, updatable = false)
     String name;
+    
+    @Column(name = "job_execution")
+    long jobExecutionId = -1;
 
     @NotNull
     @Enumerated(EnumType.STRING)
@@ -99,101 +102,139 @@ public class ProcessExecutionStepEntity
         this.name = name;
     }
     
-    public long getId() {
+    public long getId() 
+    {
         return id;
     }
 
-    public ProcessExecutionEntity getExecution() {
+    public ProcessExecutionEntity getExecution() 
+    {
         return execution;
     }
 
-    public void setExecution(ProcessExecutionEntity execution) {
+    public void setExecution(ProcessExecutionEntity execution) 
+    {
         this.execution = execution;
     }
 
-    public int getKey() {
+    public int getKey() 
+    {
         return key;
     }
 
-    public String getName() {
+    public String getName() 
+    {
         return name;
     }
 
-    public void setName(String name) {
+    public void setName(String name) 
+    {
         this.name = name;
     }
 
-    public void setKey(int key) {
+    public void setKey(int key) 
+    {
         this.key = key;
     }
 
-    public EnumTool getTool() {
+    public long getJobExecutionId()
+    {
+        return jobExecutionId;
+    }
+
+    public void setJobExecutionId(long jobExecutionId)
+    {
+        this.jobExecutionId = jobExecutionId;
+    }
+
+    public EnumTool getTool() 
+    {
         return tool;
     }
 
-    public void setTool(EnumTool tool) {
+    public void setTool(EnumTool tool) 
+    {
         this.tool = tool;
     }
 
-    public EnumOperation getOperation() {
+    public EnumOperation getOperation() 
+    {
         return operation;
     }
 
-    public void setOperation(EnumOperation operation) {
+    public void setOperation(EnumOperation operation) 
+    {
         this.operation = operation;
     }
 
-    public ZonedDateTime getStartedOn() {
+    public ZonedDateTime getStartedOn() 
+    {
         return startedOn;
     }
 
-    public void setStartedOn(ZonedDateTime startedOn) {
+    public void setStartedOn(ZonedDateTime startedOn) 
+    {
         this.startedOn = startedOn;
     }
 
-    public ZonedDateTime getCompletedOn() {
+    public ZonedDateTime getCompletedOn() 
+    {
         return completedOn;
     }
 
-    public void setCompletedOn(ZonedDateTime completedOn) {
+    public void setCompletedOn(ZonedDateTime completedOn) 
+    {
         this.completedOn = completedOn;
     }
 
-    public EnumProcessExecutionStatus getStatus() {
+    public EnumProcessExecutionStatus getStatus() 
+    {
         return status;
     }
 
-    public void setStatus(EnumProcessExecutionStatus status) {
+    public void setStatus(EnumProcessExecutionStatus status) 
+    {
         this.status = status;
     }
 
-    public String getErrorMessage() {
+    public String getErrorMessage() 
+    {
         return errorMessage;
     }
 
-    public void setErrorMessage(String errorMessage) {
+    public void setErrorMessage(String errorMessage)
+    {
         this.errorMessage = errorMessage;
     }
 
-    public List<ProcessExecutionStepFileEntity> getFiles() {
+    public List<ProcessExecutionStepFileEntity> getFiles() 
+    {
         return files;
     }
 
-    public ProcessExecutionStepRecord toProcessExecutionStepRecord() {
-        ProcessExecutionStepRecord s = new ProcessExecutionStepRecord(this.id, this.key, this.name);
+    public void addFile(ProcessExecutionStepFileEntity f) 
+    {
+        f.setStep(this);
+        files.add(f);
+    }
+    
+    public ProcessExecutionStepRecord toProcessExecutionStepRecord() 
+    {
+        ProcessExecutionStepRecord stepRecord = new ProcessExecutionStepRecord(id, key, name);
 
-        s.setTool(this.tool);
-        s.setOperation(this.operation);
-        s.setStartedOn(this.startedOn);
-        s.setCompletedOn(this.completedOn);
-        s.setErrorMessage(this.errorMessage);
-        s.setStatus(this.status);
-
-        for (ProcessExecutionStepFileEntity f : this.getFiles()) {
-            s.addFile(f.toProcessExecutionStepFileRecord());
+        stepRecord.setTool(tool);
+        stepRecord.setOperation(operation);
+        stepRecord.setStartedOn(startedOn);
+        stepRecord.setJobExecutionId(jobExecutionId);
+        stepRecord.setCompletedOn(completedOn);
+        stepRecord.setErrorMessage(errorMessage);
+        stepRecord.setStatus(status);
+        
+        for (ProcessExecutionStepFileEntity f: files) {
+            stepRecord.addFile(f.toProcessExecutionStepFileRecord());
         }
 
-        return s;
+        return stepRecord;
     }
 
 }

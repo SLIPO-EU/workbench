@@ -132,15 +132,15 @@ public class DashboardController {
         ResourceRecord resource = new ResourceRecord(id, version);
 
         resource.setType(EnumResourceType.POI_DATA);
-        resource.setDataSource(EnumDataSourceType.UPLOAD);
+        resource.setSourceType(EnumDataSourceType.UPLOAD);
         resource.setInputFormat(EnumDataFormat.GPX);
-        resource.setOutputFormat(EnumDataFormat.N_TRIPLES);
+        resource.setFormat(EnumDataFormat.N_TRIPLES);
         resource.setProcessExecutionId(1L);
         resource.setCreatedOn(ZonedDateTime.now());
         resource.setUpdatedOn(resource.getCreatedOn());
-        resource.setTable(UUID.randomUUID());
+        resource.setTableName(UUID.randomUUID());
         resource.setFilePath("file.xml");
-        resource.setFileSize((int) (Math.random() * 1024 * 1024) + 100);
+        resource.setFileSize((long) (Math.random() * 1024 * 1024) + 100);
 
 
         resource.setMetadata(
