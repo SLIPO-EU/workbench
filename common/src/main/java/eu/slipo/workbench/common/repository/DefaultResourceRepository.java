@@ -26,6 +26,7 @@ import eu.slipo.workbench.common.domain.ResourceRevisionEntity;
 import eu.slipo.workbench.common.model.QueryResultPage;
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumResourceType;
+import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataView;
 import eu.slipo.workbench.common.model.resource.ResourceQuery;
 import eu.slipo.workbench.common.model.resource.ResourceRecord;
@@ -37,6 +38,7 @@ public class DefaultResourceRepository implements ResourceRepository
     @PersistenceContext(unitName = "default")
     EntityManager entityManager;
 
+    @Transactional(readOnly = true)
     @Override
     public QueryResultPage<ResourceRecord> find(ResourceQuery query, PageRequest pageReq)
     {
@@ -105,6 +107,7 @@ public class DefaultResourceRepository implements ResourceRepository
         return new QueryResultPage<>(records, pageReq, count);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public ResourceRecord findOne(long id)
     {
@@ -112,6 +115,7 @@ public class DefaultResourceRepository implements ResourceRepository
         return r == null? null : r.toResourceRecord(false);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public ResourceRecord findOne(long id, long version)
     {
@@ -119,6 +123,7 @@ public class DefaultResourceRepository implements ResourceRepository
         return r == null? null : r.toResourceRecord();
     }
 
+    @Transactional(readOnly = true)
     @Override
     public ResourceRecord findOne(String name) 
     {
@@ -130,6 +135,13 @@ public class DefaultResourceRepository implements ResourceRepository
             .getResultList();
 
         return (resources.isEmpty() ? null : resources.get(0).toResourceRecord());
+    }
+    
+    @Transactional(readOnly = true)
+    @Override
+    public ResourceRecord findOne(ResourceIdentifier resourceIdentifier)
+    {
+        return ResourceRepository.super.findOne(resourceIdentifier);
     }
     
     @Override

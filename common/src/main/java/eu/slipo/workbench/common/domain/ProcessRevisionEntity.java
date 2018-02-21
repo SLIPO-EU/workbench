@@ -63,7 +63,7 @@ public class ProcessRevisionEntity {
     ZonedDateTime updatedOn;
 
     @NotNull
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "updated_by", nullable = false, updatable = false)
     AccountEntity updatedBy;
 
@@ -156,9 +156,8 @@ public class ProcessRevisionEntity {
     public ProcessRecord toProcessRecord(boolean includeExecutions, boolean includeSteps) 
     {
         ProcessRecord p = new ProcessRecord(parent.id, version);
-
         AccountEntity createdBy = parent.createdBy;
-        
+
         p.setCreatedOn(parent.createdOn);
         p.setCreatedBy(createdBy.getId(), createdBy.getFullName());
         p.setUpdatedOn(updatedOn);

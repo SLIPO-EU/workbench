@@ -19,6 +19,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 import org.hibernate.annotations.NaturalId;
@@ -53,6 +54,7 @@ public class ProcessExecutionStepEntity
     @JoinColumn(name = "process_execution", nullable = false, updatable = false)
     ProcessExecutionEntity execution;
 
+    @Min(1)
     @NotNull
     @NaturalId
     @Column(name = "step_key", nullable = false, updatable = false)
@@ -62,8 +64,10 @@ public class ProcessExecutionStepEntity
     @Column(name = "step_name", nullable = false, updatable = false)
     String name;
     
-    @Column(name = "job_execution")
-    long jobExecutionId = -1;
+    @Min(1)
+    @NotNull
+    @Column(name = "job_execution", nullable = false, updatable = false)
+    long jobExecutionId = -1L;
 
     @NotNull
     @Enumerated(EnumType.STRING)
@@ -76,7 +80,7 @@ public class ProcessExecutionStepEntity
     EnumOperation operation;
 
     @NotNull
-    @Column(name = "started_on", nullable = false)
+    @Column(name = "started_on", nullable = false, updatable = false)
     ZonedDateTime startedOn;
 
     @Column(name = "completed_on")
@@ -100,6 +104,15 @@ public class ProcessExecutionStepEntity
         this.execution = executionEntity;
         this.key = key;
         this.name = name;
+    }
+    
+    public ProcessExecutionStepEntity(
+        ProcessExecutionEntity executionEntity, int key, String name, long jobExecutionId) 
+    {
+        this.execution = executionEntity;
+        this.key = key;
+        this.name = name;
+        this.jobExecutionId = jobExecutionId;
     }
     
     public long getId() 

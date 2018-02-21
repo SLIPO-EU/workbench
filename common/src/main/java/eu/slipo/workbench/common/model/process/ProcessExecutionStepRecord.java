@@ -4,6 +4,9 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.util.Assert;
 
 import eu.slipo.workbench.common.model.poi.EnumOperation;
 import eu.slipo.workbench.common.model.poi.EnumTool;
@@ -18,7 +21,7 @@ public class ProcessExecutionStepRecord
 
     private long jobExecutionId = -1L;
     
-    private EnumProcessExecutionStatus status;
+    private EnumProcessExecutionStatus status = EnumProcessExecutionStatus.UNKNOWN;
 
     private EnumTool tool;
 
@@ -30,7 +33,7 @@ public class ProcessExecutionStepRecord
 
     private String errorMessage;
 
-    private List<ProcessExecutionStepFileRecord> files = new ArrayList<>(6);
+    private List<ProcessExecutionStepFileRecord> files;
 
     public ProcessExecutionStepRecord() {}
     
@@ -39,8 +42,33 @@ public class ProcessExecutionStepRecord
         this.id = id;
         this.key = key;
         this.name = name;
+        this.files = new ArrayList<>();
     }
-
+    
+    public ProcessExecutionStepRecord(ProcessExecutionStepRecord record)
+    {
+        this(record, true);
+    }
+    
+    public ProcessExecutionStepRecord(ProcessExecutionStepRecord record, boolean copyFileRecords) 
+    {
+        this.id = record.id;
+        this.key = record.key;
+        this.name = record.name;
+        this.jobExecutionId = record.jobExecutionId;
+        this.status = record.status;
+        this.tool = record.tool;
+        this.operation = record.operation;
+        this.startedOn = record.startedOn;
+        this.completedOn = record.completedOn;
+        this.errorMessage = record.errorMessage;
+        this.files = copyFileRecords? 
+            (record.files.stream()
+                .map(ProcessExecutionStepFileRecord::new)
+                .collect(Collectors.toList())) :
+            (new ArrayList<>(record.files));
+    }
+    
     public long getId() {
         return id;
     }
@@ -111,6 +139,11 @@ public class ProcessExecutionStepRecord
         this.errorMessage = errorMessage;
     }
 
+    public int numberOfFiles()
+    {
+        return this.files.size();
+    }
+    
     public List<ProcessExecutionStepFileRecord> getFiles() 
     {
         return Collections.unmodifiableList(files);
@@ -124,5 +157,27 @@ public class ProcessExecutionStepRecord
     public void addFiles(List<ProcessExecutionStepFileRecord> files) 
     {
         this.files.addAll(files);
+    }
+    
+    public void clearFiles()
+    {
+        this.files.clear();
+    }
+
+    public void setFile(int index, ProcessExecutionStepFileRecord f)
+    {
+        Assert.isTrue(index < this.files.size(), 
+            "The given index does not correspond to a file record");
+        this.files.set(index, f);
+    }
+    
+    @Override
+    public String toString()
+    {
+        return String.format(
+            "ProcessExecutionStepRecord " +
+                "[id=%s, key=%s, name=%s, jobExecutionId=%s, status=%s, tool=%s, operation=%s, startedOn=%s, completedOn=%s, errorMessage=%s, files=%s]",
+            id, key, name, jobExecutionId, status, tool, operation, startedOn, completedOn,
+            errorMessage, files);
     }
 }

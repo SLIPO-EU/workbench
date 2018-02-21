@@ -65,7 +65,7 @@ public class ProcessEntity {
     ZonedDateTime createdOn;
 
     @NotNull
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false, updatable = false)
     AccountEntity createdBy;
 
@@ -74,7 +74,7 @@ public class ProcessEntity {
     ZonedDateTime updatedOn;
 
     @NotNull
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "updated_by", nullable = false)
     AccountEntity updatedBy;
 

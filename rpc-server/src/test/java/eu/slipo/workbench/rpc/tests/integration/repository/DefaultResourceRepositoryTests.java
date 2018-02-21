@@ -103,15 +103,11 @@ public class DefaultResourceRepositoryTests
             a.setRegistered(ZonedDateTime.now());
             accountRepository.save(a);
         }
-        
-        @PreDestroy
-        public void deleteData()
-        {
-            // accountRepository.deleteAllInBatch();
-        }
     }
     
-    /** The repository under testing */
+    /** 
+     * The repository under testing 
+     */
     @Autowired
     @Qualifier("defaultResourceRepository")
     private ResourceRepository resourceRepository;
@@ -130,10 +126,6 @@ public class DefaultResourceRepositoryTests
     
     @After
     public void teardown() throws Exception {}
-    
-    //
-    // Tests
-    //
     
     @Test
     public void test1_createAndUpdate() throws Exception

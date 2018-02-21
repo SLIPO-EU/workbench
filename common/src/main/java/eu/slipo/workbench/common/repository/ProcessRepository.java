@@ -9,6 +9,7 @@ import eu.slipo.workbench.common.model.QueryResultPage;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.ProcessExecutionQuery;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
+import eu.slipo.workbench.common.model.process.ProcessExecutionStepFileRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepRecord;
 import eu.slipo.workbench.common.model.process.ProcessIdentifier;
 import eu.slipo.workbench.common.model.process.ProcessQuery;
@@ -116,11 +117,7 @@ public interface ProcessRepository
      * @param version The version of a specific revision of a process
      * @return the list of associated (to the process) execution records
      */
-    default List<ProcessExecutionRecord> findExecutions(long id, long version)
-    {
-        ProcessRecord r = findOne(id, version, true);
-        return r == null? Collections.emptyList() : r.getExecutions();
-    }
+    List<ProcessExecutionRecord> findExecutions(long id, long version);
     
     /**
      * Find process executions filtered by a {@link ProcessExecutionQuery}.
@@ -174,4 +171,18 @@ public interface ProcessRepository
      * @return
      */
     ProcessExecutionRecord updateExecutionStep(long executionId, int stepKey, ProcessExecutionStepRecord record);
+    
+    /**
+     * Update the execution state of an existing processing step by adding a new file.
+     * 
+     * <p>This is a case of {@link ProcessRepository#updateExecutionStep(long, int, ProcessExecutionStepRecord)},
+     * and is provided only as a convenience method.
+     * 
+     * @param executionId The execution id of a process revision
+     * @param stepKey The step key
+     * @param record A record representing the file record to be added (i.e associated with this
+     *   processing step).
+     * @return
+     */
+    ProcessExecutionRecord updateExecutionStepAddingFile(long executionId, int stepKey, ProcessExecutionStepFileRecord record);
 }

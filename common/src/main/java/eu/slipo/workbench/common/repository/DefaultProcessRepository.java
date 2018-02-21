@@ -2,7 +2,11 @@ package eu.slipo.workbench.common.repository;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Set;
+import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -11,6 +15,8 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
+import org.apache.commons.collections4.IterableUtils;
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +31,7 @@ import eu.slipo.workbench.common.domain.ProcessExecutionEntity;
 import eu.slipo.workbench.common.domain.ProcessExecutionStepEntity;
 import eu.slipo.workbench.common.domain.ProcessExecutionStepFileEntity;
 import eu.slipo.workbench.common.domain.ProcessRevisionEntity;
+import eu.slipo.workbench.common.domain.ResourceEntity;
 import eu.slipo.workbench.common.domain.ResourceRevisionEntity;
 import eu.slipo.workbench.common.model.ApplicationException;
 import eu.slipo.workbench.common.model.QueryResultPage;
@@ -35,13 +42,11 @@ import eu.slipo.workbench.common.model.process.ProcessExecutionQuery;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepFileRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepRecord;
+import eu.slipo.workbench.common.model.process.ProcessIdentifier;
 import eu.slipo.workbench.common.model.process.ProcessQuery;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
 import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
 import eu.slipo.workbench.common.model.resource.ResourceRecord;
-
-// Todo Examine (per-method) transaction propagation. 
-// Focus on updateExecution which is subject to several race conditions.   
 
 @Repository
 @Transactional
@@ -52,6 +57,13 @@ public class DefaultProcessRepository implements ProcessRepository
 
     @Autowired
     ResourceRepository resourceRepository;
+    
+    @Transactional(readOnly = true)
+    @Override
+    public QueryResultPage<ProcessRecord> find(ProcessQuery query, PageRequest pageReq)
+    {
+        return ProcessRepository.super.find(query, pageReq);
+    }
     
     @Transactional(readOnly = true)
     @Override
@@ -112,7 +124,7 @@ public class DefaultProcessRepository implements ProcessRepository
             .collect(Collectors.toList());
         return new QueryResultPage<ProcessRecord>(records, pageReq, count);
     }
-
+    
     @Transactional(readOnly = true)
     @Override
     public QueryResultPage<ProcessExecutionRecord> findExecutions(ProcessExecutionQuery query, PageRequest pageReq)
@@ -175,6 +187,14 @@ public class DefaultProcessRepository implements ProcessRepository
         return new QueryResultPage<ProcessExecutionRecord>(records, pageReq, count);
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public ProcessRecord findOne(long id)
+    {
+        return ProcessRepository.super.findOne(id);
+    }
+    
+    @Transactional(readOnly = true)
     @Override
     public ProcessRecord findOne(long id, final boolean includeExecutions)
     {
@@ -182,13 +202,36 @@ public class DefaultProcessRepository implements ProcessRepository
         return entity == null? null : entity.toProcessRecord(includeExecutions, false);
     }
     
+    @Transactional(readOnly = true)
     @Override
     public ProcessRecord findOne(long id, long version, final boolean includeExecutions)
     {
         ProcessRevisionEntity r = findRevision(id, version);
         return r == null? null : r.toProcessRecord(includeExecutions, false);
     }
-
+    
+    @Transactional(readOnly = true)
+    @Override
+    public ProcessRecord findOne(long id, long version)
+    {
+        return ProcessRepository.super.findOne(id, version);
+    }
+    
+    @Transactional(readOnly = true)
+    @Override
+    public ProcessRecord findOne(ProcessIdentifier processIdentifier, boolean includeExecutions)
+    {
+        return ProcessRepository.super.findOne(processIdentifier, includeExecutions);
+    }
+    
+    @Transactional(readOnly = true)
+    @Override
+    public ProcessRecord findOne(ProcessIdentifier processIdentifier)
+    {
+        return ProcessRepository.super.findOne(processIdentifier);
+    }
+    
+    @Transactional(readOnly = true)
     @Override
     public ProcessRecord findOne(String name)
     {
@@ -205,11 +248,20 @@ public class DefaultProcessRepository implements ProcessRepository
         return (result.isEmpty() ? null : result.get(0).toProcessRecord(false, false));
     }
 
+    @Transactional(readOnly = true)
     @Override
     public ProcessExecutionRecord findExecution(long executionId)
     {
         ProcessExecutionEntity e = entityManager.find(ProcessExecutionEntity.class, executionId);
         return e == null? null : e.toProcessExecutionRecord(true);
+    }
+    
+    @Transactional(readOnly = true)
+    @Override
+    public List<ProcessExecutionRecord> findExecutions(long id, long version)
+    {
+        ProcessRecord r = findOne(id, version, true);
+        return r == null? Collections.emptyList() : r.getExecutions();
     }
 
     @Override
@@ -315,15 +367,16 @@ public class DefaultProcessRepository implements ProcessRepository
     @Override
     public ProcessExecutionRecord createExecutionStep(long executionId, ProcessExecutionStepRecord record)
     {
-        ProcessExecutionEntity executionEntity = 
+        Assert.notNull(record, "A non-empty record is required");
+        
+        final ProcessExecutionEntity executionEntity = 
             entityManager.find(ProcessExecutionEntity.class, executionId);
-        Assert.notNull(executionEntity, "The execution ID does not refer to an execution entity");
+        Assert.notNull(executionEntity, "The execution id does not match an execution entity");
         
         // Set step metadata
         
         ProcessExecutionStepEntity executionStepEntity = new ProcessExecutionStepEntity(
-            executionEntity, record.getKey(), record.getName());
-        executionStepEntity.setJobExecutionId(record.getJobExecutionId());
+            executionEntity, record.getKey(), record.getName(), record.getJobExecutionId());
         executionStepEntity.setStatus(record.getStatus());
         executionStepEntity.setOperation(record.getOperation());
         executionStepEntity.setTool(record.getTool());
@@ -331,17 +384,15 @@ public class DefaultProcessRepository implements ProcessRepository
         
         // Add file entities associated with this step
         
-        for (ProcessExecutionStepFileRecord f: record.getFiles()) {
+        for (ProcessExecutionStepFileRecord fileRecord: record.getFiles()) {
+            Assert.state(fileRecord.getId() < 0, 
+                "Did not expect an id for a record of a new file entity");
             ProcessExecutionStepFileEntity fileEntity = new ProcessExecutionStepFileEntity(
-                executionStepEntity, f.getType(), f.getFilePath(), f.getFileSize());
-            ResourceIdentifier resourceIdentifier = f.getResource();
-            if (resourceIdentifier != null) {
-                ResourceRecord resourceRecord = resourceRepository.findOne(resourceIdentifier);
-                Assert.notNull(resourceRecord, 
-                    "The resource-identifier does not refer to a resource revision");
-                fileEntity.setResource(
-                    entityManager.find(ResourceRevisionEntity.class, resourceRecord.getId()));
-            }
+                executionStepEntity, 
+                fileRecord.getType(), fileRecord.getFilePath(), fileRecord.getFileSize());
+            ResourceIdentifier resourceIdentifier = fileRecord.getResource();
+            if (resourceIdentifier != null)
+                fileEntity.setResource(findResourceEntity(resourceIdentifier, true));
             executionStepEntity.addFile(fileEntity);
         }
         
@@ -357,13 +408,99 @@ public class DefaultProcessRepository implements ProcessRepository
     public ProcessExecutionRecord updateExecutionStep(
         long executionId, int stepKey, ProcessExecutionStepRecord record)
     {
-        ProcessExecutionEntity executionEntity = 
+        Assert.notNull(record, "A non-empty record is required");
+        
+        final ProcessExecutionEntity executionEntity = 
             entityManager.find(ProcessExecutionEntity.class, executionId);
-        Assert.notNull(executionEntity, "The execution ID does not refer to an execution entity");
+        Assert.notNull(executionEntity, "The execution id does not match an execution entity");
         
-        // Todo ProcessRepository.updateExecutionStep
+        final ProcessExecutionStepEntity executionStepEntity = executionEntity.getStepByKey(stepKey);
+        Assert.notNull(executionStepEntity, 
+            "The step key does not correspond to a step inside the execution entity");
         
-        throw new NotImplementedException("Todo");
+        final List<ProcessExecutionStepFileRecord> fileRecords = record.getFiles();
+        final List<Long> fids = fileRecords.stream().map(r -> r.getId())
+            .collect(Collectors.toList());
+        
+        // Update top-level step metadata
+        
+        executionStepEntity.setStatus(record.getStatus());
+        executionStepEntity.setCompletedOn(record.getCompletedOn());
+        executionStepEntity.setErrorMessage(record.getErrorMessage());
+        
+        // Examine and add/update contained file records
+        // Due to the nature of a processing step, a file record can never be removed; it can
+        // only be added or updated (on specific updatable fields).
+        
+        // Update existing file records
+        
+        for (ProcessExecutionStepFileEntity fileEntity: executionStepEntity.getFiles()) {
+            // Every existing file entity must correspond to a given record
+            final long fid = fileEntity.getId();
+            final ProcessExecutionStepFileRecord fileRecord = 
+                IterableUtils.find(fileRecords, r -> r.getId() == fid);
+            Assert.state(fileRecord != null && IterableUtils.frequency(fids, fid) == 1, 
+                "Expected a single file record to match to a given id!");
+            // Update metadata from current file record
+            fileEntity.setSize(fileRecord.getFileSize());
+            ResourceIdentifier resourceIdentifier = fileRecord.getResource();
+            if (resourceIdentifier != null) 
+                fileEntity.setResource(findResourceEntity(resourceIdentifier, true));
+            else
+                fileEntity.setResource(null);
+        }
+        
+        // Add file records (if any)
+        // A file record is considered as a new one if carrying an invalid (negative) id
+        
+        for (ProcessExecutionStepFileRecord fileRecord: 
+                IterableUtils.filteredIterable(fileRecords, f -> f.getId() < 0)) 
+        {
+            ProcessExecutionStepFileEntity fileEntity = new ProcessExecutionStepFileEntity(
+                executionStepEntity, 
+                fileRecord.getType(), fileRecord.getFilePath(), fileRecord.getFileSize());
+            ResourceIdentifier resourceIdentifier = fileRecord.getResource();
+            if (resourceIdentifier != null)
+                fileEntity.setResource(findResourceEntity(resourceIdentifier, true));
+            executionStepEntity.addFile(fileEntity);
+        }
+        
+        // Save
+        
+        entityManager.flush();
+        return executionEntity.toProcessExecutionRecord(true);
+    }
+  
+    @Override
+    public ProcessExecutionRecord updateExecutionStepAddingFile(
+        long executionId, int stepKey, ProcessExecutionStepFileRecord fileRecord)
+    {
+        Assert.notNull(fileRecord, "A non-empty record is required");
+        Assert.state(fileRecord.getId() < 0, 
+            "Did not expect an id for a record of a new file entity");
+        
+        final ProcessExecutionEntity executionEntity = 
+            entityManager.find(ProcessExecutionEntity.class, executionId);
+        Assert.notNull(executionEntity, "The execution id does not match an execution entity");
+        
+        final ProcessExecutionStepEntity executionStepEntity = executionEntity.getStepByKey(stepKey);
+        Assert.notNull(executionStepEntity, 
+            "The step key does not correspond to a step inside the execution entity");
+        
+        // Add file record
+        
+        ProcessExecutionStepFileEntity fileEntity = new ProcessExecutionStepFileEntity(
+            executionStepEntity, 
+            fileRecord.getType(), fileRecord.getFilePath(), fileRecord.getFileSize());
+        ResourceIdentifier resourceIdentifier = fileRecord.getResource();
+        if (resourceIdentifier != null)
+            fileEntity.setResource(findResourceEntity(resourceIdentifier, true));
+        executionStepEntity.addFile(fileEntity);
+        
+        // Save
+        
+        entityManager.flush();
+        return executionEntity.toProcessExecutionRecord(true);
     }
     
     private void setFindParameters(ProcessQuery processQuery, Query query)
@@ -445,8 +582,26 @@ public class DefaultProcessRepository implements ProcessRepository
             r = query.getSingleResult();
         } catch (NoResultException ex) {
             r = null;
-        }
-        
+        }   
         return r;
+    }
+    
+    private ResourceRevisionEntity findResourceEntity(long resourceId, long resourceVersion)
+    {
+        ResourceRecord resourceRecord = resourceRepository.findOne(resourceId, resourceVersion);
+        return resourceRecord == null?
+            null : entityManager.find(ResourceRevisionEntity.class, resourceRecord.getId());
+    }
+    
+    private ResourceRevisionEntity findResourceEntity(
+        ResourceIdentifier resourceIdentifier, boolean failIfNotExists)
+    {
+        ResourceRevisionEntity e = 
+            findResourceEntity(resourceIdentifier.getId(), resourceIdentifier.getVersion());
+        if (e == null && failIfNotExists) {
+            throw new NoSuchElementException(
+                "The resource identifier does not correspond to a resource entity");
+        }
+        return e;
     }
 }

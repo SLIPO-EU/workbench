@@ -7,8 +7,9 @@ import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
 import eu.slipo.workbench.common.model.resource.ResourceQuery;
 import eu.slipo.workbench.common.model.resource.ResourceRecord;
 
-public interface ResourceRepository {
 
+public interface ResourceRepository 
+{
     /**
      * Find resources using an instance of {@link ResourceQuery}
      *

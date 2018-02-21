@@ -23,6 +23,15 @@ public class ProcessExecutionStepFileRecord
         this.fileSize = size;
     }
     
+    public ProcessExecutionStepFileRecord(ProcessExecutionStepFileRecord record)
+    {
+        this.id = record.id;
+        this.type = record.type;
+        this.filePath = record.filePath;
+        this.fileSize = record.fileSize;
+        this.resource = record.resource;
+    }
+    
     public ProcessExecutionStepFileRecord(EnumStepFile type, String path)
     {
         this(type, path, null);
@@ -63,7 +72,7 @@ public class ProcessExecutionStepFileRecord
     public ResourceIdentifier getResource() {
         return resource;
     }
-
+    
     public void setResource(ResourceIdentifier resource) {
         this.resource = resource;
     }
@@ -72,4 +81,12 @@ public class ProcessExecutionStepFileRecord
         this.resource = new ResourceIdentifier(id, version);
     }
 
+    @Override
+    public String toString()
+    {
+        return String.format(
+            "ProcessExecutionStepFileRecord " +
+                "[id=%s, type=%s, filePath=%s, fileSize=%s, resource=%s]",
+            id, type, filePath, fileSize, resource);
+    }
 }

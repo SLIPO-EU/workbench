@@ -34,7 +34,7 @@ public class ProcessExecutionEntity
     @GeneratedValue(generator = "process_execution_id_seq", strategy = GenerationType.SEQUENCE)
     long id = -1L;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "submitted_by", updatable = false)
     AccountEntity submittedBy;
 
@@ -61,8 +61,7 @@ public class ProcessExecutionEntity
     @Column(name = "error_message")
     private String errorMessage;
 
-    @OneToMany(
-        mappedBy = "execution", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "execution", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     List<ProcessExecutionStepEntity> steps = new ArrayList<>();
 
     protected ProcessExecutionEntity() {}
@@ -148,6 +147,15 @@ public class ProcessExecutionEntity
         steps.add(processExecutionStepEntity);
     }
 
+    public ProcessExecutionStepEntity getStepByKey(int stepKey)
+    {
+        for (ProcessExecutionStepEntity step: steps) {
+            if (step.key == stepKey)
+                return step;
+        }
+        return null;
+    }
+    
     public ProcessExecutionRecord toProcessExecutionRecord()
     {
         return toProcessExecutionRecord(true);

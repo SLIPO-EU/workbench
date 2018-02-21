@@ -59,7 +59,7 @@ public class ProcessExecutionStepFileEntity {
     @Column(name = "file_path", nullable = false, updatable = false)
     String path;
 
-    @Column(name = "file_size", updatable = false)
+    @Column(name = "file_size")
     Long size;
 
     protected ProcessExecutionStepFileEntity() {}
@@ -79,48 +79,64 @@ public class ProcessExecutionStepFileEntity {
         this(stepExecutionEntity, type, filePath, null);
     }
     
-    public ProcessExecutionStepEntity getStep() {
-        return step;
+    public long getId()
+    {
+        return id;
     }
 
-    public void setStep(ProcessExecutionStepEntity step) {
-        this.step = step;
+    public void setId(long id)
+    {
+        this.id = id;
     }
 
-    public ResourceRevisionEntity getResource() {
-        return resource;
-    }
-
-    public void setResource(ResourceRevisionEntity resource) {
-        this.resource = resource;
-    }
-
-    public EnumStepFile getType() {
-        return type;
-    }
-
-    public void setType(EnumStepFile type) {
-        this.type = type;
-    }
-
-    public String getFilePath() {
+    public String getPath()
+    {
         return path;
     }
 
-    public void setFilePath(String path) {
+    public void setPath(String path)
+    {
         this.path = path;
     }
 
-    public Long getFileSize() {
+    public Long getSize()
+    {
         return size;
     }
 
-    public void setFileSize(long fileSize) {
-        this.size = fileSize;
+    public void setSize(Long size)
+    {
+        this.size = size;
     }
 
-    public void setId(long id) {
-        this.id = id;
+    public ProcessExecutionStepEntity getStep() 
+    {
+        return step;
+    }
+
+    public void setStep(ProcessExecutionStepEntity step) 
+    {
+        this.step = step;
+    }
+
+    public ResourceRevisionEntity getResource() 
+    {
+        return resource;
+    }
+
+    public void setResource(ResourceRevisionEntity resource) 
+    {
+        this.resource = resource;
+    }
+
+    public EnumStepFile getType() 
+    {
+        return type;
+    }
+
+    public void setType(EnumStepFile type) 
+    {
+        this.type = type;
     }
 
     public ProcessExecutionStepFileRecord toProcessExecutionStepFileRecord() 
