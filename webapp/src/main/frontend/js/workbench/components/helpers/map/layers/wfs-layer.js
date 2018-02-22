@@ -4,7 +4,9 @@ import * as PropTypes from 'prop-types';
 import OpenLayersMap from 'ol/map';
 
 import Style from 'ol/style/style';
+import Circle from 'ol/style/circle';
 import Stroke from 'ol/style/stroke';
+import Fill from 'ol/style/fill';
 
 import VectorSource from 'ol/source/vector';
 import GeoJSON from 'ol/format/geojson';
@@ -68,9 +70,15 @@ class WfsLayer extends React.Component {
       });
 
       const style = new Style({
-        stroke: new Stroke({
-          color: 'rgba(0, 0, 255, 1.0)',
-          width: 2
+        image: new Circle({
+          radius: 5,
+          fill: new Fill({
+            color: 'rgba(0, 0, 255, 0.4)'
+          }),
+          stroke: new Stroke({
+            color: 'rgba(0, 0, 255, 1.0)',
+            width: 1
+          })
         })
       });
 

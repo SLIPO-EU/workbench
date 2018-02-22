@@ -13,18 +13,17 @@ import {
 
 // TODO : Load during configuration
 const supportedTask = [
+  { value: null, label: 'Select...' },
   { value: 'REGISTRATION', label: 'Registration' },
   { value: 'DATA_INTEGRATION', label: 'Data Integration' },
 ];
 
 const supportedStatus = [
-  { value: 'ABANDONED', label: 'ABANDONED' },
+  { value: null, label: 'Select...' },
   { value: 'COMPLETED', label: 'COMPLETED' },
   { value: 'FAILED', label: 'FAILED' },
-  { value: 'STARTED', label: 'STARTED' },
-  { value: 'STARTING', label: 'STARTING' },
+  { value: 'RUNNING', label: 'RUNNING' },
   { value: 'STOPPED', label: 'STOPPED' },
-  { value: 'STOPPING', label: 'STOPPING' },
   { value: 'UNKNOWN', label: 'UNKNOWN' },
 ];
 
@@ -39,7 +38,7 @@ export default class Filters extends React.Component {
 
   clear() {
     this.props.resetFilters();
-    this.props.fetchExecutions({query: {}});
+    this.props.fetchExecutions({ query: {} });
   }
 
   search(e) {
@@ -48,7 +47,7 @@ export default class Filters extends React.Component {
     e.preventDefault();
 
     this.props.fetchExecutions({
-      query: {...this.props.filters},
+      query: { ...this.props.filters },
     });
   }
 

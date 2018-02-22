@@ -4,7 +4,7 @@ import { bindActionCreators } from 'redux';
 
 import * as  PropTypes from 'prop-types';
 import { NavLink } from 'react-router-dom';
-import { toggle } from '../../ducks/ui/menu';
+import { toggleMenu } from '../../ducks/ui/menu';
 import * as Roles from '../../model/role';
 import { StaticRoutes, DynamicRoutes, buildPath } from '../../model/routes';
 
@@ -28,7 +28,7 @@ class Sidebar extends React.Component {
     );
 
     var toggle = (p) => {
-      this.props.toggle(p);
+      this.props.toggleMenu(p);
     };
 
     return (
@@ -146,6 +146,6 @@ const mapStateToProps = (state) => ({
   expanded: state.ui.menu.expanded,
 });
 
-const mapDispatchToProps = (dispatch) => bindActionCreators({ toggle }, dispatch);
+const mapDispatchToProps = (dispatch) => bindActionCreators({ toggleMenu }, dispatch);
 
 export default connect(mapStateToProps, mapDispatchToProps)(Sidebar);

@@ -13,15 +13,17 @@ import {
 
 // TODO : Load during configuration
 const supportedFiles = [
-  { value: 'SHAPEFILE' },
-  { value: 'CSV' },
-  { value: 'GPX' },
-  { value: 'GEOJSON' },
-  { value: 'OSM' },
-  { value: 'RDF' },
+  { value: null, label: 'Select...' },
+  { value: 'SHAPEFILE', label: 'SHAPEFILE' },
+  { value: 'CSV' , label: 'CSV'},
+  { value: 'GPX' , label: 'GPX'},
+  { value: 'GEOJSON', label: 'GEOJSON' },
+  { value: 'OSM', label: 'OSM' },
+  { value: 'RDF', label: 'RDF' },
 ];
 
 const supportedTypes = [
+  { value: null, label: 'Select...' },
   { value: 'POI_DATA', label: 'POI Data' },
   { value: 'POI_LINKED_DATA', label: 'Links' },
 ];
@@ -37,7 +39,7 @@ export default class Filters extends React.Component {
 
   clear() {
     this.props.resetFilters();
-    this.props.fetchResources({query: {}});
+    this.props.fetchResources({ query: {} });
   }
 
   search(e) {
@@ -46,7 +48,7 @@ export default class Filters extends React.Component {
     e.preventDefault();
 
     this.props.fetchResources({
-      query: {...this.props.filters},
+      query: { ...this.props.filters },
     });
   }
 

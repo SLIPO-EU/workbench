@@ -15,6 +15,7 @@ export const EnumViews = {
   Designer: 'Designer',
   StepConfiguration: 'StepConfiguration',
   DataSourceConfiguration: 'DataSourceConfiguration',
+  StepExecutionFileBrowser: 'FileBrowser',
 };
 
 /**

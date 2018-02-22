@@ -36,6 +36,7 @@ class Designer extends React.Component {
     removeStep: PropTypes.func.isRequired,
     moveStep: PropTypes.func.isRequired,
     configureStepBegin: PropTypes.func.isRequired,
+    openStepFileBrowser: PropTypes.func.isRequired,
     setStepProperty: PropTypes.func.isRequired,
 
     addStepInput: PropTypes.func.isRequired,
@@ -75,6 +76,7 @@ class Designer extends React.Component {
         removeStep={this.props.removeStep}
         moveStep={this.props.moveStep}
         configureStepBegin={this.props.configureStepBegin}
+        openStepFileBrowser={this.props.openStepFileBrowser}
         setStepProperty={this.props.setStepProperty}
         addStepInput={this.props.addStepInput}
         removeStepInput={this.props.removeStepInput}

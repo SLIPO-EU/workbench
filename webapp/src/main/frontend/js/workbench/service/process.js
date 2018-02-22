@@ -129,10 +129,14 @@ function buildDataSource(step) {
   return null;
 }
 
-function readProcessResponse(process) {
+function readProcessResponse(result) {
+  const { id, version, definition } = result;
+
   return {
-    ...process,
-    resources: process.resources
+    ...definition,
+    id,
+    version,
+    resources: definition.resources
       .map((r) => {
         switch (r.inputType) {
           case EnumInputType.CATALOG:
@@ -162,7 +166,7 @@ function readProcessResponse(process) {
       }).filter((r) => {
         return (r != null);
       }),
-    steps: process.steps.map((s, index) => {
+    steps: definition.steps.map((s, index) => {
       return {
         key: s.key,
         group: s.group,
@@ -247,7 +251,7 @@ export function fetchProcess(id, token) {
   return actions
     .get(`/action/process/${id}`, token)
     .then((result) => {
-      return readProcessResponse(result.definition);
+      return readProcessResponse(result);
     });
 }
 
@@ -255,7 +259,7 @@ export function fetchProcessRevision(id, version, token) {
   return actions
     .get(`/action/process/${id}/${version}`, token)
     .then((result) => {
-      return readProcessResponse(result.definition);
+      return readProcessResponse(result);
     });
 }
 
@@ -313,7 +317,7 @@ export function validate(action, designer) {
 }
 
 export function save(action, designer, token) {
-  const id = (action === EnumProcessSaveAction.SaveAsTemplate ? null : designer.process.properties.id);
+  const id = (action === EnumProcessSaveAction.SaveAsTemplate ? null : designer.process.id);
   const data = buildProcessRequest(action, designer);
 
   if (id) {

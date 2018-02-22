@@ -153,13 +153,14 @@ class Step extends React.Component {
       name: PropTypes.string.isRequired,
       iconClass: PropTypes.string.isRequired,
     })).isRequired,
-    execution: PropTypes.object,
+    stepExecution: PropTypes.object,
 
     // Action creators
     removeStep: PropTypes.func.isRequired,
     moveStep: PropTypes.func.isRequired,
     configureStepBegin: PropTypes.func.isRequired,
     setStepProperty: PropTypes.func.isRequired,
+    openStepFileBrowser: PropTypes.func.isRequired,
 
     addStepInput: PropTypes.func.isRequired,
     removeStepInput: PropTypes.func.isRequired,
@@ -262,7 +263,21 @@ class Step extends React.Component {
   configure(e) {
     e.stopPropagation();
 
+    this.props.setActiveStep(this.props.step);
     this.props.configureStepBegin(this.props.step, this.props.step.configuration);
+  }
+
+  /**
+   * Shows files for the current step
+   *
+   * @param {any} e
+   * @memberof Step
+   */
+  viewFiles(e) {
+    e.stopPropagation();
+
+    this.props.setActiveStep(this.props.step);
+    this.props.openStepFileBrowser();
   }
 
   /**
@@ -354,7 +369,10 @@ class Step extends React.Component {
             }
             {this.props.readOnly ?
               <div className="slipo-pd-step-actions">
-                <i className="slipo-pd-step-action slipo-pd-step-config fa fa-search" onClick={(e) => { this.configure(e); }}></i>
+                {this.props.stepExecution && this.props.stepExecution.files && this.props.stepExecution.files.length !== 0 &&
+                  <i className="slipo-pd-step-action slipo-pd-step-config fa fa-folder-open" onClick={(e) => { this.viewFiles(e); }}></i>
+                }
+                <i className="slipo-pd-step-action slipo-pd-step-config fa fa-wrench" onClick={(e) => { this.configure(e); }}></i>
               </div>
               :
               <div className="slipo-pd-step-actions">
@@ -385,9 +403,9 @@ class Step extends React.Component {
               readOnly={this.props.readOnly}
             />
           }
-          {this.props.execution &&
+          {this.props.stepExecution &&
             <div className='m-1'>
-              <JobStatus status={this.props.execution.status} />
+              <JobStatus status={this.props.stepExecution.status} />
             </div>
           }
         </div >

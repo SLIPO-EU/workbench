@@ -99,7 +99,7 @@ const resourceColumns = [{
   accessor: r => r.metadata.name,
   Cell: props => {
     return (
-      <Link to={buildPath(DynamicRoutes.ResourceViewer, [props.row.id])}><i className={ResourceTypeIcons[props.original.type] + ' mr-2'}></i>{props.value}</Link>
+      <Link to={buildPath(DynamicRoutes.ResourceViewer, [props.row.id, props.row.version])}><i className={ResourceTypeIcons[props.original.type] + ' mr-2'}></i>{props.value}</Link>
     );
   },
   headerStyle: { 'textAlign': 'left' },
@@ -230,14 +230,14 @@ export default class Resources extends React.Component {
         onPageChange={(index) => {
           this.props.setPager({ ...this.props.pager, index });
           this.props.fetchResources({
-            query: {...this.props.filters},
+            query: { ...this.props.filters },
             pagingOptions: { pageIndex: index, pageSize: this.props.pager.size }
           });
         }}
         onPageSizeChange={(size) => {
           this.props.setPager({ ...this.props.pager, size });
           this.props.fetchResources({
-            query: {...this.props.filters},
+            query: { ...this.props.filters },
             pagingOptions: { pageIndex: this.props.pager.index, pageSize: size }
           });
         }}

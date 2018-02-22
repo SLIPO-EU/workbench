@@ -60,7 +60,7 @@ class StepInput extends React.Component {
             <i className="slipo-pd-step-resource-action slipo-pd-step-resource-delete fa fa-trash" onClick={() => { this.remove(); }}></i>
           }
           {this.props.resource.inputType === EnumInputType.CATALOG &&
-            <Link to={buildPath(DynamicRoutes.ResourceViewer, [this.props.resource.id])}>
+            <Link to={buildPath(DynamicRoutes.ResourceViewer, [this.props.resource.id, this.props.resource.version])}>
               <i className="slipo-pd-step-resource-action slipo-pd-step-resource-view fa fa-search"></i>
             </Link>
           }

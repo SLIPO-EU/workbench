@@ -1,12 +1,31 @@
-const React = require('react');
-const ReactRedux = require('react-redux');
-const PropTypes = require('prop-types');
-const { NavLink } = require('react-router-dom');
-const { FormattedMessage } = require('react-intl');
+import * as React from 'react';
+import * as PropTypes from 'prop-types';
+import * as ReactRedux from 'react-redux';
 
-import { toast } from 'react-toastify';
+import {
+  NavLink,
+} from 'react-router-dom';
 
-import { Pages } from '../../model/routes';
+import {
+  FormattedMessage,
+} from 'react-intl';
+
+import {
+  toast,
+} from 'react-toastify';
+
+import {
+  Pages
+} from '../../model/routes';
+
+import {
+  getConfiguration,
+} from '../../ducks/config';
+
+import {
+  login,
+  refreshProfile,
+} from '../../ducks/user';
 
 //
 // Presentational component
@@ -104,14 +123,13 @@ LoginForm.propTypes = {
 // Container component
 //
 
-const { login, refreshProfile } = require('../../ducks/user');
-
 const mapStateToProps = null;
 
 const mapDispatchToProps = (dispatch) => ({
   submit: (username, password) => (
     dispatch(login(username, password))
       .then(() => dispatch(refreshProfile()))
+      .then(() => dispatch(getConfiguration()))
       .then(() => toast.dismiss(),
         () => {
           toast.dismiss();

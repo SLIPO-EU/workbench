@@ -85,7 +85,7 @@ public class DefaultProcessService implements ProcessService {
 
     @Override
     public List<ProcessExecutionRecord> findExecutions(long id, long version) {
-        ProcessRecord record = processRepository.findOne(id, version);
+        ProcessRecord record = processRepository.findOne(id, version, true);
         return record == null ? Collections.emptyList() : record.getExecutions();
     }
 

@@ -115,9 +115,9 @@ class ResourceDetails extends React.Component {
         <Row>
           <Col>
             <TextField
-              id="fileName"
+              id="filePath"
               label="Filename"
-              value={r.fileName}
+              value={r.filePath}
               readOnly={true}
             />
           </Col>
@@ -135,10 +135,12 @@ class ResourceDetails extends React.Component {
             <TextField
               id="format"
               label="Format"
-              value={r.outputFormat}
+              value={r.format}
               readOnly={true}
             />
           </Col>
+        </Row>
+        <Row>
           <Col>
             <TextField
               id="fileSize"

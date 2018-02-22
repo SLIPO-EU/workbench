@@ -41,9 +41,9 @@ import {
   EventViewer,
   ResourceViewer,
   ProcessDesigner,
+  ProcessExecutionMapViewer,
   ProcessExecutionViewer,
   SchemaDesigner,
-  DataViewer,
 } from './views/';
 
 /////////////////////////////////////////////////////////////////
@@ -81,7 +81,6 @@ class Home extends React.Component {
     this._styleAsideMenu = this._styleAsideMenu.bind(this);
 
     this.state = {
-      sidebarOpen: true,
       sidebarStyle: 'fixed', // fixed, compact, minimized, off-canvas
       asideOpen: false,
       asideStyle: 'fixed', // fixed, off-canvas
@@ -89,7 +88,7 @@ class Home extends React.Component {
   }
 
   _toggleSidebar() {
-    this.setState({ sidebarOpen: !this.state.sidebarOpen });
+    this.props.toggleSidebar();
   }
 
   _styleSidebar(style) {
@@ -124,7 +123,7 @@ class Home extends React.Component {
       /* header-* */
       'header-fixed',
       /* sidebar-* */
-      this.state.sidebarOpen ? null : 'sidebar-hidden',
+      this.props.sidebarOpen ? null : 'sidebar-hidden',
       'sidebar-' + (this.state.sidebarStyle || 'fixed'),
       /* aside-menu-* */
       this.state.asideOpen ? null : 'aside-menu-hidden',
@@ -154,8 +153,8 @@ class Home extends React.Component {
                 <Route path={DynamicRoutes.ProcessDesignerEdit} component={ProcessDesigner} exact />
                 <Route path={DynamicRoutes.ProcessDesignerCreate} component={ProcessDesigner} exact />
                 <Route path={DynamicRoutes.ProcessExecutionViewer} component={ProcessDesigner} exact />
+                <Route path={DynamicRoutes.ProcessExecutionMapViewer} component={ProcessExecutionMapViewer} />
                 <Route path={DynamicRoutes.SchemaDesigner} component={SchemaDesigner} />
-                <Route path={DynamicRoutes.DataViewer} component={DataViewer} />
                 {/* Static */}
                 <Route path={StaticRoutes.Dashboard} component={Dashboard} />
                 <Route path={StaticRoutes.Profile} component={Profile} />

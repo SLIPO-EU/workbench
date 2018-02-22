@@ -2,8 +2,6 @@ import * as React from 'react';
 import PropTypes from 'prop-types';
 
 import {
-  Card,
-  CardBody,
   Col,
   Row,
 } from 'reactstrap';
@@ -19,12 +17,13 @@ class KpiChartView extends React.Component {
   }
 
   static propTypes = {
-    hide: PropTypes.func.isRequired,
+    hide: PropTypes.func,
     data: PropTypes.arrayOf(PropTypes.shape({
       key: PropTypes.string.isRequired,
       value: PropTypes.number.isRequired,
       description: PropTypes.string,
     })),
+    file: PropTypes.object.isRequired,
   }
 
   render() {
@@ -45,26 +44,26 @@ class KpiChartView extends React.Component {
     };
 
     return (
-      <Card>
-        <CardBody>
-          <Row className="mb-4">
-            <Col>
-              <i className="fa fa-bar-chart"></i>
-              <span> KPI</span>
-            </Col>
+      <div>
+        <Row className="mb-4">
+          <Col>
+            <i className="fa fa-bar-chart"></i>
+            <span>{` KPI Chart - ${this.props.file.filePath}`}</span>
+          </Col>
+          {this.props.hide &&
             <Col>
               <div className="float-right">
                 <i className="slipo-action-icon fa fa-times" onClick={() => { this.props.hide(); }}></i>
               </div>
             </Col>
-          </Row>
-          <Row>
-            <Col>
-              <BarChart { ...config} />
-            </Col>
-          </Row>
-        </CardBody>
-      </Card>
+          }
+        </Row>
+        <Row>
+          <Col>
+            <BarChart {...config} />
+          </Col>
+        </Row>
+      </div>
     );
   }
 

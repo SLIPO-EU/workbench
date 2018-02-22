@@ -52,6 +52,9 @@ const CONFIGURE_DATA_SOURCE_UPDATE = 'ui/process-designer/CONFIGURE_DATA_SOURCE_
 const CONFIGURE_DATA_SOURCE_END = 'ui/process-designer/CONFIGURE_DATA_SOURCE_END';
 const SELECT_STEP_DATA_SOURCE = 'ui/process-designer/SELECT_STEP_DATA_SOURCE';
 
+const SHOW_STEP_FILES = 'ui/process-designer/SHOW_STEP_FILES';
+const HIDE_STEP_FILES = 'ui/process-designer/HIDE_STEP_FILES';
+
 const ADD_RESOURCE_TO_BAG = 'ui/process-designer/ADD_RESOURCE_TO_BAG';
 const REMOVE_RESOURCE_FROM_BAG = 'ui/process-designer/REMOVE_RESOURCE_FROM_BAG';
 const SELECT_RESOURCE = 'ui/process-designer/SELECT_RESOURCE';
@@ -80,8 +83,9 @@ function initializeGroups() {
 
 function initializeProcess() {
   return {
+    id: null,
+    version: null,
     properties: {
-      id: null,
       name: '',
       description: '',
     },
@@ -643,9 +647,9 @@ function loadReducer(state, action) {
 
   // Create process
   const process = {
+    id: data.id,
+    version: data.version,
     properties: {
-      id: action.id,
-      version: data.version,
       name: data.name,
       description: data.description,
     },
@@ -758,6 +762,9 @@ export default (state = initialState, action) => {
           resources: [],
         }],
         redo: [],
+        view: {
+          type: EnumViews.Designer,
+        },
       };
 
     case ADD_STEP:
@@ -938,7 +945,10 @@ export default (state = initialState, action) => {
       return {
         ...state,
         process: {
-          properties: { ...action.properties },
+          ...state.process,
+          properties: {
+            ...action.properties
+          },
         },
       };
 
@@ -982,6 +992,22 @@ export default (state = initialState, action) => {
     case LOAD_RECEIVE_RESPONSE:
       return loadReducer(state, action);
 
+    case SHOW_STEP_FILES:
+      return {
+        ...state,
+        view: {
+          type: EnumViews.StepExecutionFileBrowser,
+        },
+      };
+
+    case HIDE_STEP_FILES:
+      return {
+        ...state,
+        view: {
+          type: EnumViews.Designer,
+        },
+      };
+
     default:
       return state;
   }
@@ -1001,10 +1027,9 @@ export default (state = initialState, action) => {
  * Action creators
  */
 
-const processLoaded = function (id, process, readOnly) {
+const processLoaded = function (process, readOnly) {
   return {
     type: LOAD_RECEIVE_RESPONSE,
-    id,
     process,
     readOnly,
   };
@@ -1240,6 +1265,18 @@ export const redo = function () {
   };
 };
 
+export const openStepFileBrowser = function () {
+  return {
+    type: SHOW_STEP_FILES,
+  };
+};
+
+export const closeStepFileBrowser = function () {
+  return {
+    type: HIDE_STEP_FILES,
+  };
+};
+
 /**
  * Thunks
  */
@@ -1252,7 +1289,7 @@ export function fetchProcess(id) {
 
     const { meta: { csrfToken: token } } = getState();
     return processService.fetchProcess(id, token).then((process) => {
-      dispatch(processLoaded(id, process, false));
+      dispatch(processLoaded(process, false));
     });
   };
 }
@@ -1268,20 +1305,7 @@ export function fetchProcessRevision(id, version) {
 
     const { meta: { csrfToken: token } } = getState();
     return processService.fetchProcessRevision(id, version, token).then((process) => {
-      dispatch(processLoaded(id, process, true));
-    });
-  };
-}
-
-export function edit(id) {
-  return (dispatch, getState) => {
-    if (Number.isNaN(id)) {
-      return Promise.reject(new Error('Invalid id. Failed to load workflow instance'));
-    }
-
-    const { meta: { csrfToken: token } } = getState();
-    return processService.fetchProcessRevision(id, token).then((process) => {
-      dispatch(processLoaded(process, false));
+      dispatch(processLoaded(process, true));
     });
   };
 }

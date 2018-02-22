@@ -59,6 +59,7 @@ class ProcessExplorer extends React.Component {
     this.editProcess = this.editProcess.bind(this);
     this.viewProcess = this.viewProcess.bind(this);
     this.viewExecution = this.viewExecution.bind(this);
+    this.viewMap = this.viewMap.bind(this);
     this.startExecution = this.startExecution.bind(this);
     this.stopExecution = this.stopExecution.bind(this);
   }
@@ -111,6 +112,20 @@ class ProcessExplorer extends React.Component {
    */
   viewExecution(id, version, execution) {
     const path = buildPath(DynamicRoutes.ProcessExecutionViewer, [id, version, execution]);
+
+    this.props.history.push(path);
+  }
+
+  /**
+   * Render a map with input/output data
+   *
+   * @param {any} id
+   * @param {any} version
+   * @param {any} execution
+   * @memberof ProcessExplorer
+   */
+  viewMap(id, version, execution) {
+    const path = buildPath(DynamicRoutes.ProcessExecutionMapViewer, [id, version, execution]);
 
     this.props.history.push(path);
   }
@@ -201,6 +216,7 @@ class ProcessExplorer extends React.Component {
                         selected={this.props.selected}
                         stopExecution={this.stopExecution}
                         viewExecution={this.viewExecution}
+                        viewMap={this.viewMap}
                       />
                     </Col>
                   </Row>

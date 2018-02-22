@@ -1,4 +1,8 @@
-export { StaticRoutes } from './routes';
+export {
+  buildPath,
+  DynamicRoutes,
+  StaticRoutes,
+} from './routes';
 
 export {
   EnumKpiViewMode,

@@ -67,25 +67,26 @@ export const StaticRoutes = {
  * Dynamic routes
  */
 
-const ResourceViewer = '/resource/view/:id';
+const ResourceViewer = '/resource/view/:id/:version';
 
 const ProcessDesignerCreate = '/workflow/designer';
 const ProcessDesignerEdit = '/workflow/designer/:id';
 const ProcessDesignerView = '/workflow/designer/:id/:version';
 
 const ProcessExecutionViewer = '/workflow/designer/:id/:version/execution/:execution';
+const ProcessExecutionMapViewer = '/workflow/designer/:id/:version/execution/:execution/map';
 
 const SchemaDesigner = '/tools/schema/view/:id';
-const DataViewer = '/tools/data/view/:id';
+
 
 export const DynamicRoutes = {
   ResourceViewer,
   ProcessDesignerCreate,
   ProcessDesignerEdit,
   ProcessDesignerView,
+  ProcessExecutionMapViewer,
   ProcessExecutionViewer,
   SchemaDesigner,
-  DataViewer,
 };
 
 /**
@@ -227,10 +228,10 @@ const routes = {
     defaultTitle: 'Schema Editor',
     links: defaultLinks
   },
-  [DataViewer]: {
+  [ProcessExecutionMapViewer]: {
     description: 'View a POI dataset',
-    title: 'links.tools.data-viewer',
-    defaultTitle: 'Data Viewer',
+    title: 'links.process.execution.map-viewer',
+    defaultTitle: 'Map Viewer',
     links: defaultLinks
   },
   // Error Pages
@@ -250,8 +251,10 @@ const routes = {
  * @returns the route properties
  */
 export function getRoute(path) {
-  if (routes.hasOwnProperty(path)) {
-    return routes[path];
+  const prop = matchRoute(path);
+
+  if (routes.hasOwnProperty(prop)) {
+    return routes[prop];
   }
   return null;
 }

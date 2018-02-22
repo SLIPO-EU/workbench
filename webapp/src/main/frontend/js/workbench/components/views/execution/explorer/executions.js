@@ -35,12 +35,13 @@ const executionsColumns = [{
   expander: true,
   Header: 'Actions',
   id: 'actions',
-  width: 90,
+  width: 110,
   Expander: (props) => {
     return (
       <span>
         <i data-action="edit" className='fa fa-pencil slipo-table-row-action p-1'></i>
         <i data-action="view" className='fa fa-search slipo-table-row-action p-1'></i>
+        <i data-action="map" className='fa fa-map-o slipo-table-row-action p-1'></i>
         {props.original.errorMessage &&
           <i data-action="error" className='fa fa-warning slipo-table-row-action p-1'></i>
         }
@@ -118,6 +119,9 @@ export default class ProcessExecutions extends React.Component {
       case 'view':
         this.props.viewExecution(rowInfo.original.process.id, rowInfo.original.process.version, rowInfo.original.id);
         break;
+      case 'map':
+        this.props.viewMap(rowInfo.original.process.id, rowInfo.original.process.version, rowInfo.original.id);
+        break;
       case 'error':
         this.props.setExpanded(rowInfo.index, 'error');
         break;
@@ -151,14 +155,14 @@ export default class ProcessExecutions extends React.Component {
         onPageChange={(index) => {
           this.props.setPager({ ...this.props.pager, index });
           this.props.fetchExecutions({
-            query: {...this.props.filters},
+            query: { ...this.props.filters },
             pagingOptions: { pageIndex: index, pageSize: this.props.pager.size }
           });
         }}
         onPageSizeChange={(size) => {
           this.props.setPager({ ...this.props.pager, size });
           this.props.fetchExecutions({
-            query: {...this.props.filters},
+            query: { ...this.props.filters },
             pagingOptions: { pageIndex: this.props.pager.index, pageSize: size }
           });
         }}

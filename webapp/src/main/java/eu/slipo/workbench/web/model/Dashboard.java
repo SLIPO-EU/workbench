@@ -128,9 +128,26 @@ public class Dashboard {
 
     public static class SystemStatistics extends Statistics {
 
-        public SystemStatistics() {
-
+        public SystemStatistics(int usedCores, int totalCores, int usedMemory, int totalMemory, int usedDisk, int totalDisk) {
+            this.usedCores = usedCores;
+            this.totalCores = totalCores;
+            this.usedMemory = usedMemory;
+            this.totalMemory = totalMemory;
+            this.usedDisk = usedDisk;
+            this.totalDisk = totalDisk;
         }
+
+        public int usedCores;
+
+        public int totalCores;
+
+        public int usedMemory;
+
+        public int totalMemory;
+
+        public int usedDisk;
+
+        public int totalDisk;
     }
 
 }
