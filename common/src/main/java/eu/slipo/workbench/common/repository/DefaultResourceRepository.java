@@ -2,7 +2,9 @@ package eu.slipo.workbench.common.repository;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -11,7 +13,10 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
+import org.apache.commons.collections4.map.DefaultedMap;
 import org.apache.commons.lang3.StringUtils;
+import static org.apache.commons.collections4.map.DefaultedMap.defaultedMap;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,12 +26,21 @@ import com.vividsolutions.jts.geom.Geometry;
 
 import eu.slipo.workbench.common.domain.AccountEntity;
 import eu.slipo.workbench.common.domain.ProcessExecutionEntity;
+import eu.slipo.workbench.common.domain.ProcessExecutionStepEntity;
+import eu.slipo.workbench.common.domain.ProcessExecutionStepFileEntity;
 import eu.slipo.workbench.common.domain.ResourceEntity;
 import eu.slipo.workbench.common.domain.ResourceRevisionEntity;
 import eu.slipo.workbench.common.model.QueryResultPage;
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
+import eu.slipo.workbench.common.model.poi.EnumOperation;
 import eu.slipo.workbench.common.model.poi.EnumResourceType;
+import eu.slipo.workbench.common.model.process.EnumStepFile;
+import eu.slipo.workbench.common.model.process.ProcessDefinition;
+import eu.slipo.workbench.common.model.process.Step;
+import eu.slipo.workbench.common.model.resource.DataSource;
+import eu.slipo.workbench.common.model.resource.EnumDataSourceType;
 import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
+import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataView;
 import eu.slipo.workbench.common.model.resource.ResourceQuery;
 import eu.slipo.workbench.common.model.resource.ResourceRecord;
@@ -151,7 +165,7 @@ public class DefaultResourceRepository implements ResourceRepository
         Assert.isTrue(record.getId() < 0, "Did not expect an explicit id");
         Assert.isTrue(record.getVersion() < 0, "Did not expect an explicit version");
         
-        AccountEntity createdBy = entityManager.getReference(AccountEntity.class, userId);
+        AccountEntity createdBy = entityManager.find(AccountEntity.class, userId);
         
         ZonedDateTime now = ZonedDateTime.now();
         
@@ -172,6 +186,8 @@ public class DefaultResourceRepository implements ResourceRepository
         entity.setInputFormat(record.getInputFormat());
         entity.setFormat(record.getFormat());
         entity.setTableName(record.getTableName());
+        entity.setBoundingBox(record.getBoundingBox());
+        entity.setProcessExecution(null);
         
         if (record.getMetadata() != null)
             entity.setMetadata(record.getMetadata());
@@ -192,6 +208,82 @@ public class DefaultResourceRepository implements ResourceRepository
         return entity.toResourceRecord();
     }
 
+    @Override
+    public ResourceRecord createFromProcessExecution(
+        long executionId, int stepKey, ResourceMetadataCreate metadata)
+    {
+        Assert.notNull(metadata, "Expected non-null metadata");
+        Assert.isTrue(!StringUtils.isBlank(metadata.getName()), "A non-blank name is required");
+        
+        // Resolve process-related entities
+        
+        ProcessExecutionStepEntity stepEntity = findProcessExecutionStep(executionId, stepKey);
+        Assert.notNull(stepEntity, 
+            "The pair of (executionId, stepKey) does not refer to a processing step");
+        ProcessExecutionEntity executionEntity = stepEntity.getExecution();
+        
+        EnumOperation operation = stepEntity.getOperation();
+        Assert.state(operation != null && operation != EnumOperation.UNDEFINED, 
+            "Expected a valid operation type for this processing step");
+        
+        Map<EnumStepFile, List<ProcessExecutionStepFileEntity>> fileEntitiesByType = 
+            stepEntity.getFiles()
+                .stream()
+                .collect(Collectors.groupingBy(ProcessExecutionStepFileEntity::getType));
+        fileEntitiesByType = defaultedMap(fileEntitiesByType, Collections.emptyList());
+        Assert.state(fileEntitiesByType.get(EnumStepFile.INPUT).size() >= 1, 
+            "A processing step is expected to receive at least one input file");  
+        Assert.state(fileEntitiesByType.get(EnumStepFile.OUTPUT).size() == 1, 
+            "A processing step is expected to produce a single output file!");  
+
+        ProcessExecutionStepFileEntity fileEntity = 
+            fileEntitiesByType.get(EnumStepFile.OUTPUT).get(0);
+        
+        // Build the new resource entity
+        
+        ZonedDateTime now = ZonedDateTime.now();
+        AccountEntity createdBy = executionEntity.getSubmittedBy();
+        
+        ResourceEntity entity = new ResourceEntity();
+        
+        entity.setVersion(1L);
+        entity.setCreatedBy(createdBy);
+        entity.setCreatedOn(now);
+        entity.setUpdatedBy(createdBy);
+        entity.setUpdatedOn(now);
+        
+        entity.setType(operation == EnumOperation.INTERLINK? 
+            EnumResourceType.POI_LINKED_DATA : EnumResourceType.POI_DATA);
+        entity.setSourceType(determineSourceType(fileEntity));
+        entity.setFilePath(fileEntity.getPath());
+        entity.setFileSize(fileEntity.getSize());
+        entity.setFormat(fileEntity.getDataFormat());
+        entity.setInputFormat(fileEntitiesByType.get(EnumStepFile.INPUT).get(0).getDataFormat());
+        entity.setTableName(fileEntity.getTableName());
+        entity.setBoundingBox(fileEntity.getBoundingBox());
+        entity.setProcessExecution(executionEntity);
+        
+        entity.setName(metadata.getName());
+        entity.setDescription(metadata.getDescription());
+        
+        ResourceRevisionEntity revisionEntity = new ResourceRevisionEntity(entity);
+        entity.addRevision(revisionEntity);
+        
+        // Persist entity
+        
+        entityManager.persist(entity);
+        entityManager.flush();
+       
+        // Update resource link inside targeted file entity
+        
+        fileEntity.setResource(revisionEntity);
+        
+        // Save
+        
+        entityManager.flush();
+        return entity.toResourceRecord();
+    }
+    
     @Override
     public ResourceRecord update(long id, ResourceRecord record, int userId)
     {
@@ -221,6 +313,7 @@ public class DefaultResourceRepository implements ResourceRepository
         entity.setInputFormat(record.getInputFormat());
         entity.setFormat(record.getFormat());
         entity.setTableName(record.getTableName());
+        entity.setBoundingBox(record.getBoundingBox());
         
         if (record.getMetadata() != null)
             entity.setMetadata(record.getMetadata());
@@ -287,5 +380,76 @@ public class DefaultResourceRepository implements ResourceRepository
 
         Integer userId = resourceQuery.getCreatedBy();
         query.setParameter("ownerId", userId == null? -1 : userId.intValue());
+    }
+    
+    /**
+     * Find the entity representing a processing step inside an execution
+     * @param executionId
+     * @param stepKey
+     * @return
+     */
+    private ProcessExecutionStepEntity findProcessExecutionStep(long executionId, int stepKey)
+    {
+        TypedQuery<ProcessExecutionStepEntity> q = entityManager
+            .createQuery(
+                "FROM ProcessExecutionStep s WHERE s.execution.id = :xid AND s.key = :key", 
+                ProcessExecutionStepEntity.class)
+            .setParameter("xid", executionId)
+            .setParameter("key", stepKey);
+        
+        ProcessExecutionStepEntity r = null;
+        try {
+            r = q.getSingleResult();
+        } catch (NoResultException ex) {
+            r = null;
+        }
+        
+        return r;
+    }
+    
+    /**
+     * Determine the source-type (i.e {@link EnumDataSourceType}) of a given file entity
+     * produced as an output of a processing step.
+     * 
+     * <p>If the processing step carries a TRANSFORM operation (the only case where an external 
+     * data source can be imported), then the source-type is determined by "ascending" to the actual 
+     * definition of the process that fired the execution (producing our output). 
+     * 
+     * <p>If any other type of operation takes place, then the source-type is 
+     * {@link EnumDataSourceType#FILESYSTEM}.
+     * 
+     * @param fileEntity
+     * @return
+     */
+    private EnumDataSourceType determineSourceType(ProcessExecutionStepFileEntity fileEntity)
+    {
+        Assert.state(fileEntity != null && fileEntity.getType() == EnumStepFile.OUTPUT, 
+            "Expected a non-null file entity produced as output from a processing step");
+        
+        final ProcessExecutionStepEntity stepEntity = fileEntity.getStep();
+        final int stepKey = stepEntity.getKey();
+        final EnumOperation operation = stepEntity.getOperation();
+        Assert.state(operation != null 
+                && operation != EnumOperation.UNDEFINED && operation != EnumOperation.REGISTER, 
+            "Encountered an invalid operation type (for the kind of processing step)");
+        if (operation != EnumOperation.TRANSFORM)
+            return EnumDataSourceType.FILESYSTEM;
+        
+        // If here, the operation is EnumOperation.TRANSFORM and we must fetch the actual step
+        // definition in order to determine the source-type
+        
+        final ProcessExecutionEntity executionEntity = stepEntity.getExecution();
+        final ProcessDefinition definition = executionEntity.getProcess().getDefinition();
+        
+        List<DataSource> sources = definition.getSteps().stream()
+            .filter(s -> s.key() == stepKey)
+            .findFirst()
+            .map(s -> s.sources())
+            .get();
+        
+        if (sources.isEmpty())
+            return EnumDataSourceType.FILESYSTEM;
+        else
+            return sources.get(0).getType();
     }
 }

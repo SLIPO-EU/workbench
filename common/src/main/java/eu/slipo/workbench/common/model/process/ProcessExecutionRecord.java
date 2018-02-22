@@ -4,11 +4,12 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import eu.slipo.workbench.common.model.user.Account;
 
-public class ProcessExecutionRecord {
-
+public class ProcessExecutionRecord 
+{
     private long id = -1L;
 
     private String name;
@@ -43,6 +44,36 @@ public class ProcessExecutionRecord {
         this.process = new ProcessIdentifier(processIdentifier);
     }
 
+    public ProcessExecutionRecord(ProcessExecutionRecord record)
+    {
+        this(record, true);
+    }
+    
+    /**
+     * Create a new {@link ProcessExecutionRecord} by copying another record.
+     * 
+     * @param record The record to copy from
+     * @param copyDeep A flag to indicate if we should deep copy the step records
+     *   from source record.  
+     */
+    public ProcessExecutionRecord(ProcessExecutionRecord record, boolean copyDeep)
+    {
+        this.id = record.id;
+        this.name = record.name;
+        this.submittedBy = record.submittedBy;
+        this.submittedOn = record.startedOn;
+        this.process = record.process; 
+        this.startedOn = record.startedOn;
+        this.completedOn = record.completedOn;
+        this.status = record.status;
+        this.errorMessage = record.errorMessage;
+        this.steps = copyDeep?
+            (record.steps.stream()
+                .map(s -> new ProcessExecutionStepRecord(s, true))
+                .collect(Collectors.toList())):
+            (new ArrayList<>(record.steps));
+    }
+    
     public String getName() {
         return name;
     }

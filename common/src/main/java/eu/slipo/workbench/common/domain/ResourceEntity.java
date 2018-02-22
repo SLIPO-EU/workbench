@@ -24,6 +24,7 @@ import javax.persistence.Version;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
+import org.hibernate.annotations.Type;
 import org.hibernate.validator.constraints.NotBlank;
 
 import com.vividsolutions.jts.geom.Geometry;
@@ -118,7 +119,7 @@ public class ResourceEntity
     @Column(name = "file_size")
     Long fileSize;
 
-    @Column(name = "table_name")
+    @Column(name = "table_name", columnDefinition = "uuid")
     UUID tableName;
 
     @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
@@ -316,7 +317,6 @@ public class ResourceEntity
     {
         this.name = metadata.getName();
         this.description = metadata.getDescription();
-        this.boundingBox = metadata.getBoundingBox();
     }
     
     public ResourceRecord toResourceRecord()
@@ -326,29 +326,32 @@ public class ResourceEntity
     
     public ResourceRecord toResourceRecord(boolean includeRevisions)
     {
-        ResourceRecord r = new ResourceRecord(id, version);
+        ResourceRecord record = new ResourceRecord(id, version);
 
-        r.setCreatedOn(createdOn);
-        r.setCreatedBy(createdBy.getId(), createdBy.getFullName());
-        r.setUpdatedOn(updatedOn);
-        r.setUpdatedBy(updatedBy.getId(), updatedBy.getFullName());
-        r.setSourceType(sourceType);
-        r.setInputFormat(inputFormat);
-        r.setFormat(format);
-        r.setFilePath(filePath);
-        r.setFileSize(fileSize);
-        r.setMetadata(name, description, numberOfEntities, boundingBox);
-        r.setProcessExecutionId(processExecution != null ? processExecution.getId() : null);
-        r.setTableName(tableName);
-        r.setType(type);
+        record.setCreatedOn(createdOn);
+        record.setCreatedBy(createdBy.getId(), createdBy.getFullName());
+        record.setUpdatedOn(updatedOn);
+        record.setUpdatedBy(updatedBy.getId(), updatedBy.getFullName());
+        
+        record.setType(type);
+        record.setSourceType(sourceType);
+        record.setInputFormat(inputFormat);
+        record.setFormat(format);
+        record.setFilePath(filePath);
+        record.setFileSize(fileSize);
+        record.setMetadata(name, description);
+        record.setProcessExecutionId(processExecution != null ? processExecution.getId() : null);
+        record.setBoundingBox(boundingBox);
+        record.setNumberOfEntities(numberOfEntities);
+        record.setTableName(tableName);
 
         if (includeRevisions) {
             revisions.stream()
                 .sorted(Comparator.comparingLong(ResourceRevisionEntity::getVersion))
-                .forEach((h) -> r.addRevision(h.toResourceRecord()));
+                .forEach((h) -> record.addRevision(h.toResourceRecord()));
         }
         
-        return r;
+        return record;
     }
 
 }

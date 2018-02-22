@@ -347,7 +347,7 @@ public class DefaultProcessRepository implements ProcessRepository
     {
         ProcessExecutionEntity executionEntity = 
             entityManager.find(ProcessExecutionEntity.class, executionId);
-        Assert.notNull(executionEntity, "The execution ID does not refer to an execution entity");
+        Assert.notNull(executionEntity, "The execution id does not match an execution entity");
         
         if (record.getStartedOn() != null)
             executionEntity.setStartedOn(record.getStartedOn());
@@ -387,9 +387,8 @@ public class DefaultProcessRepository implements ProcessRepository
         for (ProcessExecutionStepFileRecord fileRecord: record.getFiles()) {
             Assert.state(fileRecord.getId() < 0, 
                 "Did not expect an id for a record of a new file entity");
-            ProcessExecutionStepFileEntity fileEntity = new ProcessExecutionStepFileEntity(
-                executionStepEntity, 
-                fileRecord.getType(), fileRecord.getFilePath(), fileRecord.getFileSize());
+            ProcessExecutionStepFileEntity fileEntity = 
+                new ProcessExecutionStepFileEntity(executionStepEntity, fileRecord);
             ResourceIdentifier resourceIdentifier = fileRecord.getResource();
             if (resourceIdentifier != null)
                 fileEntity.setResource(findResourceEntity(resourceIdentifier, true));
@@ -441,13 +440,13 @@ public class DefaultProcessRepository implements ProcessRepository
                 IterableUtils.find(fileRecords, r -> r.getId() == fid);
             Assert.state(fileRecord != null && IterableUtils.frequency(fids, fid) == 1, 
                 "Expected a single file record to match to a given id!");
-            // Update metadata from current file record
+            // Set updatable metadata from current file record
             fileEntity.setSize(fileRecord.getFileSize());
+            fileEntity.setBoundingBox(fileRecord.getBoundingBox());
+            fileEntity.setTableName(fileRecord.getTableName());
             ResourceIdentifier resourceIdentifier = fileRecord.getResource();
-            if (resourceIdentifier != null) 
-                fileEntity.setResource(findResourceEntity(resourceIdentifier, true));
-            else
-                fileEntity.setResource(null);
+            fileEntity.setResource(
+                resourceIdentifier == null? null : findResourceEntity(resourceIdentifier, true));
         }
         
         // Add file records (if any)
@@ -456,9 +455,8 @@ public class DefaultProcessRepository implements ProcessRepository
         for (ProcessExecutionStepFileRecord fileRecord: 
                 IterableUtils.filteredIterable(fileRecords, f -> f.getId() < 0)) 
         {
-            ProcessExecutionStepFileEntity fileEntity = new ProcessExecutionStepFileEntity(
-                executionStepEntity, 
-                fileRecord.getType(), fileRecord.getFilePath(), fileRecord.getFileSize());
+            ProcessExecutionStepFileEntity fileEntity = 
+                new ProcessExecutionStepFileEntity(executionStepEntity, fileRecord);
             ResourceIdentifier resourceIdentifier = fileRecord.getResource();
             if (resourceIdentifier != null)
                 fileEntity.setResource(findResourceEntity(resourceIdentifier, true));

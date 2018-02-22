@@ -145,11 +145,7 @@ public class DashboardController {
 
         resource.setMetadata(
             new ResourceMetadataView(
-                String.format("Resource %d", id),
-                "Uploaded sample POI data",
-                (int) (Math.random() * 1024*1204 + 100)
-            )
-        );
+                String.format("Resource %d", id), "Uploaded sample POI data"));
 
         return resource;
     }

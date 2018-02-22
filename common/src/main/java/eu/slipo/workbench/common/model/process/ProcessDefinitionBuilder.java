@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumOperation;
 import eu.slipo.workbench.common.model.poi.EnumResourceType;
 import eu.slipo.workbench.common.model.poi.EnumTool;
@@ -83,7 +84,8 @@ public class ProcessDefinitionBuilder {
         EnumOperation operation,
         ToolConfiguration configuration,
         List<Integer> resourceKeys,
-        int outputKey)
+        int outputKey,
+        EnumDataFormat outputFormat)
     {
         int key = ++this.stepKey;
 
@@ -93,6 +95,7 @@ public class ProcessDefinitionBuilder {
             .operation(operation)
             .input(resourceKeys)
             .outputKey(outputKey)
+            .outputFormat(outputFormat)
             .build();
 
         EnumResourceType resourceType = tool == EnumTool.LIMES?
@@ -131,6 +134,7 @@ public class ProcessDefinitionBuilder {
             .operation(EnumOperation.TRANSFORM)
             .source(source)
             .outputKey(outputKey)
+            .outputFormat(configuration.getOutputFormat())
             .build();
 
         EnumResourceType resourceType = EnumResourceType.POI_DATA;

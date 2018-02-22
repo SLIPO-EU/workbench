@@ -8,6 +8,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Random;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -24,6 +26,7 @@ import static org.junit.Assert.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -86,17 +89,29 @@ import eu.slipo.workbench.common.repository.ResourceRepository;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class DefaultProcessRepositoryTests
 {
+    private static final Random random = new Random();
+    
     private static final GeometryFactory geomFactory = new GeometryFactory();
     
-    private static final String SAMPLE_1_RESOURCE_NAME = "resource-1";
+    private static final String INPUT_1_RESOURCE_NAME = "in-1";
     
-    private static final String SAMPLE_1_RESOURCE_FILE_PATH = "/tmp/out-1.nt";
+    private static final String INPUT_1_RESOURCE_DESCRIPTION = "An input CSV file";
     
-    private static final String SAMPLE_1_RESOURCE_DESCRIPTION = "A sample N-TRIPLES file";
+    private static final Geometry INPUT_1_RESOURCE_BBOX = geomFactory.createPolygon(
+        new Coordinate[] {
+            new Coordinate(0.0, 0.0), new Coordinate(-1.0, 0.0),
+            new Coordinate(-1.0, -1.0), new Coordinate(0.0, -1.0), new Coordinate(0.0, 0.0)
+        });
     
-    private static final long SAMPLE_1_RESOURCE_FILE_SIZE = 3000L;
+    private static final String OUTPUT_1_RESOURCE_NAME = "out-1";
+   
+    private static final String OUTPUT_1_RESOURCE_DESCRIPTION = "An output N-TRIPLES file";
     
-    private static final Point SAMPLE_1_RESOURCE_GEOMETRY = geomFactory.createPoint(new Coordinate(0.5, -1.5));
+    private static final Geometry OUTPUT_1_RESOURCE_BBOX = geomFactory.createPolygon(
+        new Coordinate[] {
+            new Coordinate(0.0, 0.0), new Coordinate(1.0, 0.0),
+            new Coordinate(1.0, 1.0), new Coordinate(0.0, 1.0), new Coordinate(0.0, 0.0)
+        });
     
     @TestConfiguration
     public static class Configuration
@@ -106,23 +121,6 @@ public class DefaultProcessRepositoryTests
         
         @Autowired
         private ResourceRepository resourceRepository;
-        
-        private ResourceRecord sampleResourceRecord1()
-        {
-            ResourceRecord record = new ResourceRecord();
-            record.setType(EnumResourceType.POI_DATA);
-            record.setSourceType(EnumDataSourceType.FILESYSTEM);
-            record.setInputFormat(EnumDataFormat.GEOJSON);
-            record.setFormat(EnumDataFormat.N_TRIPLES);
-            record.setFilePath(SAMPLE_1_RESOURCE_FILE_PATH);
-            record.setFileSize(SAMPLE_1_RESOURCE_FILE_SIZE);
-            record.setMetadata(
-                SAMPLE_1_RESOURCE_NAME, 
-                SAMPLE_1_RESOURCE_DESCRIPTION, 
-                null, 
-                SAMPLE_1_RESOURCE_GEOMETRY);
-            return record;
-        }
         
         @Bean
         public ProcessDefinition sampleProcessDefinition1()
@@ -140,10 +138,8 @@ public class DefaultProcessRepositoryTests
             configuration.setTargetOntology(EnumOntology.GEOSPARQL);
             
             final ResourceMetadataCreate metadata = 
-                new ResourceMetadataCreate("sample-1", "A sample CSV file", EnumDataFormat.CSV);
-            
+                new ResourceMetadataCreate("sample-1", "A sample CSV file");
             final int resourceKey = 1;
-            
             final DataSource source = new FileSystemDataSource("/tmp/1.csv");
             
             ProcessDefinition definition = ProcessDefinitionBuilder.create("register-1")
@@ -167,10 +163,8 @@ public class DefaultProcessRepositoryTests
             configuration.setTargetOntology(EnumOntology.GEOSPARQL);
             
             final ResourceMetadataCreate metadata = 
-                new ResourceMetadataCreate("sample-2", "A sample SHP file", EnumDataFormat.SHAPEFILE);
-            
+                new ResourceMetadataCreate("sample-2", "A sample SHP file");
             final int resourceKey = 1;
-            
             final DataSource source = new FileSystemDataSource("/tmp/1.zip");
             
             ProcessDefinition definition = ProcessDefinitionBuilder.create("register-2")
@@ -194,8 +188,17 @@ public class DefaultProcessRepositoryTests
             
             // Load sample resources
             
-            ResourceRecord resourceRecord = this.sampleResourceRecord1();
-            resourceRecord = resourceRepository.create(resourceRecord, a.getId());
+            ResourceRecord inputResourceRecord1 = new ResourceRecord();
+            inputResourceRecord1.setType(EnumResourceType.POI_DATA);
+            inputResourceRecord1.setSourceType(EnumDataSourceType.FILESYSTEM);
+            inputResourceRecord1.setInputFormat(EnumDataFormat.CSV);
+            inputResourceRecord1.setFormat(EnumDataFormat.CSV);
+            inputResourceRecord1.setFilePath("/tmp/1.csv");
+            inputResourceRecord1.setFileSize(1024L);
+            inputResourceRecord1.setMetadata(INPUT_1_RESOURCE_NAME, INPUT_1_RESOURCE_DESCRIPTION);
+            inputResourceRecord1.setBoundingBox(INPUT_1_RESOURCE_BBOX);
+            inputResourceRecord1.setNumberOfEntities(150);
+            inputResourceRecord1 = resourceRepository.create(inputResourceRecord1, a.getId());
         }
     }
     
@@ -220,6 +223,8 @@ public class DefaultProcessRepositoryTests
     
     @Autowired
     private ObjectMapper objectMapper;
+    
+    
     
     @Before
     public void setup() throws Exception {}
@@ -290,10 +295,10 @@ public class DefaultProcessRepositoryTests
         assertNotNull(createdBy);
         AccountEntity submittedBy = createdBy;
         
-        ResourceRecord resourceRecord1 = resourceRepository.findOne(SAMPLE_1_RESOURCE_NAME);
-        assertNotNull(resourceRecord1);
-        ResourceIdentifier resourceIdentifier1 = 
-            new ResourceIdentifier(resourceRecord1.getId(), resourceRecord1.getVersion()); 
+        ResourceRecord inputResourceRecord1 = resourceRepository.findOne(INPUT_1_RESOURCE_NAME);
+        assertNotNull(inputResourceRecord1);
+        ResourceIdentifier inputResourceIdentifier1 = new ResourceIdentifier(
+            inputResourceRecord1.getId(), inputResourceRecord1.getVersion()); 
         
         ProcessRecord record1 = 
             processRepository.create(sampleProcessDefinition1, createdBy.getId());
@@ -352,15 +357,23 @@ public class DefaultProcessRepositoryTests
         // Update execution by adding one step as RUNNING
         //
         
-        final int step1Key = 9;
+        final int step1Key = sampleProcessDefinition1.getSteps().stream()
+            .filter(s -> s.operation() == EnumOperation.TRANSFORM)
+            .mapToInt(s -> s.key())
+            .findFirst()
+            .getAsInt();
+        
         final long step1JobExecutionId = 1999L;
         final long fileSize1p1 = 1000L, fileSize1p2 = 2000L;
         
+        ProcessExecutionRecord executionRecord = null;
         ProcessExecutionStepRecord stepRecord1 = null;
         ProcessExecutionStepFileRecord fileRecord1p1 = null, fileRecord1p2 = null, fileRecord1p3 = null;
         
-        fileRecord1p1 = new ProcessExecutionStepFileRecord(EnumStepFile.INPUT, "/tmp/1-1.csv", fileSize1p1);
-        fileRecord1p2 = new ProcessExecutionStepFileRecord(EnumStepFile.INPUT, "/tmp/1-2.csv", fileSize1p2);
+        fileRecord1p1 = new ProcessExecutionStepFileRecord(
+            EnumStepFile.INPUT, "/tmp/1-1.csv", fileSize1p1, EnumDataFormat.CSV);
+        fileRecord1p2 = new ProcessExecutionStepFileRecord(
+            EnumStepFile.INPUT, "/tmp/1-2.csv", fileSize1p2, EnumDataFormat.CSV);
         
         stepRecord1 = new ProcessExecutionStepRecord(-1, step1Key, "triplegeo-1");
         stepRecord1.setOperation(EnumOperation.TRANSFORM);
@@ -394,6 +407,8 @@ public class DefaultProcessRepositoryTests
         assertEquals(EnumStepFile.INPUT, fileRecords1d.get(1).getType());
         assertEquals(fileSize1p1, fileRecords1d.get(0).getFileSize().longValue());
         assertEquals(fileSize1p2, fileRecords1d.get(1).getFileSize().longValue());
+        assertEquals(EnumDataFormat.CSV, fileRecords1d.get(0).getDataFormat());
+        assertEquals(EnumDataFormat.CSV, fileRecords1d.get(1).getDataFormat());
         
         //
         // Update execution by updating 1st step: 
@@ -403,6 +418,7 @@ public class DefaultProcessRepositoryTests
         //
         
         final long fileSize1p3 = 3000L, fileSize1p2a = fileSize1p2 + 100L;
+        
         stepRecord1 = new ProcessExecutionStepRecord(stepRecord1d1);
         stepRecord1.setStartedOn(stepRecord1d1.getStartedOn().plusMinutes(5)); // this is not updatable!
         stepRecord1.setCompletedOn(stepRecord1d1.getStartedOn().plusMinutes(5));
@@ -410,8 +426,12 @@ public class DefaultProcessRepositoryTests
         
         fileRecord1p2 = stepRecord1.getFiles().get(1);
         fileRecord1p2.setFileSize(fileSize1p2a);
-        fileRecord1p2.setResource(resourceIdentifier1);
-        fileRecord1p3 = new ProcessExecutionStepFileRecord(EnumStepFile.OUTPUT, "/tmp/out-1.nt", fileSize1p3);
+        fileRecord1p2.setResource(inputResourceIdentifier1);
+        fileRecord1p3 = new ProcessExecutionStepFileRecord(
+            EnumStepFile.OUTPUT, "/tmp/out-1.nt", fileSize1p3, EnumDataFormat.N_TRIPLES);
+        fileRecord1p3.setBoundingBox(OUTPUT_1_RESOURCE_BBOX);
+        fileRecord1p3.setTableName(UUID.randomUUID());
+        
         stepRecord1.setFile(1, fileRecord1p2);
         stepRecord1.addFile(fileRecord1p3);
         
@@ -445,10 +465,63 @@ public class DefaultProcessRepositoryTests
         assertEquals(fileSize1p1, fileRecords1e.get(0).getFileSize().longValue());
         assertEquals(fileSize1p2a, fileRecords1e.get(1).getFileSize().longValue());
         assertEquals(fileSize1p3, fileRecords1e.get(2).getFileSize().longValue());
+        assertEquals(EnumDataFormat.CSV, fileRecords1e.get(0).getDataFormat());
+        assertEquals(EnumDataFormat.CSV, fileRecords1e.get(1).getDataFormat());
+        assertEquals(EnumDataFormat.N_TRIPLES, fileRecords1e.get(2).getDataFormat());
+        assertNull(fileRecords1e.get(0).getTableName());
+        assertNull(fileRecords1e.get(1).getTableName());
+        assertEquals(fileRecord1p3.getTableName(), fileRecords1e.get(2).getTableName());
+        assertNull(fileRecords1e.get(0).getBoundingBox());
+        assertNull(fileRecords1e.get(1).getBoundingBox());
+        assertEquals(OUTPUT_1_RESOURCE_BBOX, fileRecords1e.get(2).getBoundingBox());
         
+        //
         // Update execution as COMPLETED
+        //
         
-        // Todo
+        executionRecord = new ProcessExecutionRecord(executionRecord1e, false);
+        executionRecord.setStatus(EnumProcessExecutionStatus.COMPLETED);
+        executionRecord.setCompletedOn(executionRecord.getStartedOn().plusMinutes(10));
+        ProcessExecutionRecord executionRecord1f = 
+            processRepository.updateExecution(executionId, executionRecord);
+        assertNotNull(executionRecord1f);
+        executionRecord1f = processRepository.findExecution(executionId);
+        assertNotNull(executionRecord1f);
+        
+        assertEquals(started, executionRecord1f.getStartedOn());
+        assertEquals(executionRecord.getCompletedOn(), executionRecord1f.getCompletedOn());
+        assertEquals(EnumProcessExecutionStatus.COMPLETED, executionRecord1f.getStatus());
+        
+        //
+        // Register a new resource from the output of step #1
+        //
+        
+        ResourceRecord outputResourceRecord1 = resourceRepository.createFromProcessExecution(
+            executionId, 
+            step1Key, 
+            new ResourceMetadataCreate(OUTPUT_1_RESOURCE_NAME, OUTPUT_1_RESOURCE_DESCRIPTION));
+        assertNotNull(outputResourceRecord1);
+        assertTrue(outputResourceRecord1.getId() > 0);
+        assertEquals(1L, outputResourceRecord1.getVersion());
+        
+        final ResourceIdentifier outputResourceIdentifier1 = new ResourceIdentifier(
+            outputResourceRecord1.getId(), outputResourceRecord1.getVersion());
+        
+        outputResourceRecord1 = resourceRepository.findOne(outputResourceIdentifier1);
+        assertNotNull(outputResourceRecord1);
+        assertNotNull(outputResourceRecord1.getMetadata());
+        assertEquals(executionId, outputResourceRecord1.getProcessExecutionId().longValue());
+        assertEquals(EnumResourceType.POI_DATA, outputResourceRecord1.getType());
+        assertEquals(EnumDataSourceType.FILESYSTEM, outputResourceRecord1.getSourceType());
+        assertEquals(OUTPUT_1_RESOURCE_NAME, outputResourceRecord1.getName());
+        assertEquals(OUTPUT_1_RESOURCE_DESCRIPTION, outputResourceRecord1.getDescription());
+        assertEquals("/tmp/out-1.nt", outputResourceRecord1.getFilePath());
+        assertEquals(EnumDataFormat.N_TRIPLES, outputResourceRecord1.getFormat());
+        assertEquals(EnumDataFormat.CSV, outputResourceRecord1.getInputFormat());
+        assertEquals(fileRecord1p3.getFileSize().longValue(), outputResourceRecord1.getFileSize().longValue());
+        assertEquals(fileRecord1p3.getTableName(), outputResourceRecord1.getTableName());
+        assertEquals(OUTPUT_1_RESOURCE_BBOX, outputResourceRecord1.getBoundingBox());
+        assertNull(outputResourceRecord1.getNumberOfEntities());
     }
     
 }

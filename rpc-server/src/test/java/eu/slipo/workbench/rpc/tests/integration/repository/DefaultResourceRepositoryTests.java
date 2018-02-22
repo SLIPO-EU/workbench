@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -73,7 +74,9 @@ public class DefaultResourceRepositoryTests
             record.setFormat(EnumDataFormat.N_TRIPLES);
             record.setFilePath("/tmp/1.nt");
             record.setFileSize(1000L);
-            record.setMetadata("sample-1", "A sample N-TRIPLES file", null, point);
+            record.setTableName(UUID.randomUUID());
+            record.setBoundingBox(point);
+            record.setMetadata("sample-1", "A sample N-TRIPLES file");
             return record;
         }
         
@@ -82,14 +85,12 @@ public class DefaultResourceRepositoryTests
         public ResourceRecord sampleResourceRecord1v2(ResourceRecord sampleResourceRecord1) 
             throws Exception
         {            
-            ResourceRecord record = 
-                (ResourceRecord) BeanUtils.cloneBean(sampleResourceRecord1); 
-            ResourceMetadataView metadata1 = sampleResourceRecord1.getMetadata();
+            ResourceRecord record = (ResourceRecord) BeanUtils.cloneBean(sampleResourceRecord1); 
             
             record.setFilePath("/tmp/1-2.n3");
             record.setFileSize(2000L);
             record.setFormat(EnumDataFormat.N3);
-            record.setMetadata("sample-1-2", "A sample N3 file", null, metadata1.getBoundingBox());
+            record.setMetadata("sample-1-2", "A sample N3 file");
             
             return record;
         }
@@ -153,9 +154,10 @@ public class DefaultResourceRepositoryTests
         assertEquals(record1.getSourceType(), record1a.getSourceType());
         assertEquals(record1.getFilePath(), record1a.getFilePath());
         assertEquals(record1.getFileSize(), record1a.getFileSize());
-        assertEquals(metadata1.getName(), record1a.getMetadata().getName());
-        assertEquals(metadata1.getDescription(), record1a.getMetadata().getDescription());
-        assertEquals(metadata1.getBoundingBox(), record1a.getMetadata().getBoundingBox());
+        assertEquals(metadata1.getName(), record1a.getName());
+        assertEquals(metadata1.getDescription(), record1a.getDescription());
+        assertEquals(record1.getBoundingBox(), record1a.getBoundingBox());
+        assertEquals(record1.getTableName(), record1a.getTableName());
         
         List<ResourceRecord> revisions1a = record1a.getRevisions();
         assertNotNull(revisions1a);
@@ -187,9 +189,10 @@ public class DefaultResourceRepositoryTests
         assertEquals(record2.getSourceType(), record1b.getSourceType());
         assertEquals(record2.getFilePath(), record1b.getFilePath());
         assertEquals(record2.getFileSize(), record1b.getFileSize());
-        assertEquals(metadata2.getName(), record1b.getMetadata().getName());
-        assertEquals(metadata2.getDescription(), record1b.getMetadata().getDescription());
-        assertEquals(metadata2.getBoundingBox(), record1b.getMetadata().getBoundingBox());
+        assertEquals(metadata2.getName(), record1b.getName());
+        assertEquals(metadata2.getDescription(), record1b.getDescription());
+        assertEquals(record2.getBoundingBox(), record1b.getBoundingBox());
+        assertEquals(record2.getTableName(), record1b.getTableName());
         
         List<ResourceRecord> revisions1b = record1b.getRevisions();
         assertNotNull(revisions1a);

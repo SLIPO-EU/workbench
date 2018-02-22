@@ -11,6 +11,8 @@ import eu.slipo.workbench.common.model.poi.EnumTool;
  */
 public class ProcessOutput extends ProcessInput 
 {
+    private static final long serialVersionUID = 1L;
+
     @JsonDeserialize(using = EnumTool.Deserializer.class)
     protected EnumTool tool;
 

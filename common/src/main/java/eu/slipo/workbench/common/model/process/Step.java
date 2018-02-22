@@ -15,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
+import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumOperation;
 import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.resource.DataSource;
@@ -54,6 +55,9 @@ public class Step implements Serializable
 
     @JsonProperty("outputKey")
     private Integer outputKey;
+    
+    @JsonProperty("outputFormat")
+    private EnumDataFormat outputFormat;
 
     @JsonProperty("configuration")
     @JsonTypeInfo(
@@ -86,6 +90,8 @@ public class Step implements Serializable
         private List<DataSource> sources = new ArrayList<>();
 
         private Integer outputKey;
+        
+        private EnumDataFormat outputFormat;
 
         private ToolConfiguration configuration;
 
@@ -193,14 +199,21 @@ public class Step implements Serializable
             this.sources.add(s);
             return this;
         }
+        
+        public Builder outputFormat(EnumDataFormat outputFormat)
+        {
+            this.outputFormat = outputFormat;
+            return this;
+        }
 
         public Step build()
         {
             Assert.state(this.operation != null, "The operation must be specified");
             Assert.state(this.tool != null, "The tool must be specified");
             Assert.state(this.configuration != null, "The tool configuration must be provided");
-            Assert.state(this.outputKey != null || operation == EnumOperation.REGISTER,
-                "An output key is required for a non-registration step");
+            Assert.state(operation == EnumOperation.REGISTER || 
+                    (this.outputKey != null && this.outputFormat != null),
+                "An output key and format is required for a non-registration step");
             Assert.state(!this.inputKeys.isEmpty() || !this.sources.isEmpty(),
                 "The list of data sources and list of input keys cannot be both empty!");
 
@@ -214,6 +227,7 @@ public class Step implements Serializable
             step.sources = new ArrayList<>(this.sources);
             step.inputKeys = new ArrayList<>(this.inputKeys);
             step.outputKey = this.outputKey;
+            step.outputFormat = this.outputFormat;
 
             try {
                 // Make a defensive copy of the configuration bean
@@ -318,5 +332,11 @@ public class Step implements Serializable
     public List<DataSource> sources()
     {
         return sources;
+    }
+    
+    @JsonProperty("outputFormat")
+    public EnumDataFormat outputFormat()
+    {
+        return outputFormat;
     }
 }

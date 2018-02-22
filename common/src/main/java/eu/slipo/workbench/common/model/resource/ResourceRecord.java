@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.vividsolutions.jts.geom.Geometry;
 
@@ -46,6 +47,10 @@ public class ResourceRecord
     private Long fileSize;
 
     private UUID tableName;
+
+    private Geometry boundingBox;
+
+    private Integer numberOfEntities;
 
     private List<ResourceRecord> revisions;
 
@@ -136,11 +141,23 @@ public class ResourceRecord
         this.metadata = metadata;
     }
 
-    public void setMetadata(String name, String description, Integer size, Geometry boundingBox) 
+    public void setMetadata(String name, String description) 
     {
-        this.metadata = new ResourceMetadataView(name, description, size, boundingBox);
+        this.metadata = new ResourceMetadataView(name, description);
     }
 
+    @JsonIgnore
+    public String getName()
+    {
+        return metadata == null? null : metadata.getName();
+    }
+    
+    @JsonIgnore
+    public String getDescription()
+    {
+        return metadata == null? null : metadata.getDescription();
+    }
+    
     public ZonedDateTime getCreatedOn() 
     {
         return createdOn;
@@ -231,5 +248,25 @@ public class ResourceRecord
     public void setTableName(UUID tableName)
     {
         this.tableName = tableName;
-    }   
+    }
+    
+    public Geometry getBoundingBox()
+    {
+        return boundingBox;
+    }
+    
+    public void setBoundingBox(Geometry boundingBox)
+    {
+        this.boundingBox = boundingBox;
+    }
+    
+    public Integer getNumberOfEntities()
+    {
+        return numberOfEntities;
+    }
+    
+    public void setNumberOfEntities(Integer numberOfEntities)
+    {
+        this.numberOfEntities = numberOfEntities;
+    }
 }

@@ -4,6 +4,7 @@ import org.springframework.data.domain.PageRequest;
 
 import eu.slipo.workbench.common.model.QueryResultPage;
 import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
+import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
 import eu.slipo.workbench.common.model.resource.ResourceQuery;
 import eu.slipo.workbench.common.model.resource.ResourceRecord;
 
@@ -58,6 +59,20 @@ public interface ResourceRepository
      * @return
      */
     ResourceRecord create(ResourceRecord record, int createdBy);
+    
+    /**
+     * Create a new resource entity (i.e register a resource) from the output of a processing step.
+     * 
+     * <p>Apart from any transactional characteristics, this method is functionally equivalent to creating
+     * a resource (via {@link ResourceRepository#create(ResourceRecord, int)}) and then updating the resource
+     * link inside the processing step (via {@link ProcessRepository#updateExecutionStep(long, int, ProcessExecutionStepRecord)}).
+     * 
+     * @param executionId The id of the process execution
+     * @param stepKey The key of the step inside the execution 
+     * @param metadata The metadata that accompany this file resource
+     * @return
+     */
+    ResourceRecord createFromProcessExecution(long executionId, int stepKey, ResourceMetadataCreate metadata);
     
     /**
      * Update an existing resource entity creating a new revision.

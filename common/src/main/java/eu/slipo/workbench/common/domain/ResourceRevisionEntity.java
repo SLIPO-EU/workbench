@@ -20,6 +20,7 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 import org.hibernate.annotations.NaturalId;
+import org.hibernate.annotations.Type;
 import org.hibernate.validator.constraints.NotBlank;
 
 import com.vividsolutions.jts.geom.Geometry;
@@ -114,7 +115,7 @@ public class ResourceRevisionEntity {
     @Column(name = "file_size", updatable = false)
     Long fileSize;
 
-    @Column(name = "table_name", updatable = false)
+    @Column(name = "table_name", updatable = false, columnDefinition = "uuid")
     UUID tableName;
 
     protected ResourceRevisionEntity() {}
@@ -237,24 +238,27 @@ public class ResourceRevisionEntity {
 
     public ResourceRecord toResourceRecord()
     {
-        ResourceRecord r = new ResourceRecord(parent.id, version);
+        ResourceRecord record = new ResourceRecord(parent.id, version);
 
-        r.setCreatedOn(parent.createdOn);
-        r.setCreatedBy(parent.createdBy.getId(), parent.createdBy.getFullName());
-        r.setUpdatedOn(updatedOn);
-        r.setUpdatedBy(updatedBy.getId(), updatedBy.getFullName());
-        r.setSourceType(sourceType);
-        r.setInputFormat(inputFormat);
-        r.setFormat(format);
-        r.setFilePath(filePath);
-        r.setFileSize(fileSize);
-        r.setMetadata(name, description, numberOfEntities, boundingBox);
-        r.setTableName(tableName);
-        r.setType(type);
-
-        if (processExecution != null)
-            r.setProcessExecutionId(processExecution.getId());
+        record.setCreatedOn(parent.createdOn);
+        record.setCreatedBy(parent.createdBy.getId(), parent.createdBy.getFullName());
+        record.setUpdatedOn(updatedOn);
+        record.setUpdatedBy(updatedBy.getId(), updatedBy.getFullName());
         
-        return r;
+        record.setType(type);
+        record.setSourceType(sourceType);
+        record.setInputFormat(inputFormat);
+        record.setFormat(format);
+        record.setFilePath(filePath);
+        record.setFileSize(fileSize);
+        record.setMetadata(name, description);
+        record.setTableName(tableName);
+        record.setBoundingBox(boundingBox);
+        record.setNumberOfEntities(numberOfEntities);
+        
+        if (processExecution != null)
+            record.setProcessExecutionId(processExecution.getId());
+        
+        return record;
     }
 }

@@ -4,11 +4,7 @@ import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 
-/**
- * Model resource metadata
- */
 public class ResourceMetadataCreate implements Serializable 
 {
     private static final long serialVersionUID = 1L;
@@ -17,15 +13,12 @@ public class ResourceMetadataCreate implements Serializable
 
     private String description;
 
-    private EnumDataFormat format;
-
     protected ResourceMetadataCreate() {}
 
-    public ResourceMetadataCreate(String name, String description, EnumDataFormat format) 
+    public ResourceMetadataCreate(String name, String description) 
     {
         this.name = name;
         this.description = description;
-        this.format = format;
     }
 
     @JsonProperty
@@ -36,10 +29,5 @@ public class ResourceMetadataCreate implements Serializable
     @JsonProperty
     public String getDescription() {
         return description;
-    }
-
-    @JsonProperty
-    public EnumDataFormat getFormat() {
-        return format;
     }
 }

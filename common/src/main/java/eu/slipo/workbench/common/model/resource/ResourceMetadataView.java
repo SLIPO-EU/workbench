@@ -1,53 +1,37 @@
 package eu.slipo.workbench.common.model.resource;
 
-import com.vividsolutions.jts.geom.Geometry;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Resource metadata view model
  */
-public class ResourceMetadataView {
+public class ResourceMetadataView 
+{
+    /**
+     * A user-provided name for the resource
+     */
+    private final String name;
 
-    private String name;
+    /**
+     * A user-provided description for the resource
+     */
+    private final String description;
 
-    private String description;
-
-    private Geometry boundingBox;
-
-    private Integer size;
-
-    public ResourceMetadataView(String name, String description) 
-    {
-        this(name, description, null, null);
-    }
-
-    public ResourceMetadataView(String name, String description, Integer size) 
-    {
-        this(name, description, size, null);
-    }
-
-    public ResourceMetadataView(
-        String name, String description, Integer size, Geometry boundingBox) 
+    @JsonCreator
+    public ResourceMetadataView(@JsonProperty String name, @JsonProperty String description) 
     {
         this.name = name;
         this.description = description;
-        this.size = size;
-        this.boundingBox = boundingBox;
     }
 
+    @JsonProperty
     public String getName() {
         return name;
     }
 
+    @JsonProperty
     public String getDescription() {
         return description;
     }
-
-    public Integer getSize() {
-        return size;
-    }
-
-    public Geometry getBoundingBox() {
-        return boundingBox;
-    }
-
 }
