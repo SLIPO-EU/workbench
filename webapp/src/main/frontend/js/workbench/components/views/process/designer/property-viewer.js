@@ -54,34 +54,28 @@ class PropertyViewer extends React.Component {
 
   renderResource(resource) {
     if (resource.inputType === EnumInputType.CATALOG) {
-      const values = {
-        name: resource.name.toString(),
-        description: resource.description,
-      };
-
       return (
         <div style={{ marginRight: 28 }}>
-          <TextField
-            id="name"
-            label="Title"
-            value={values}
-            readonly
-          />
-          <TextAreaField
-            rows={5}
-            id="description"
-            label="Description"
-            value={values}
-            readonly
-          />
+          <Row className="mb-2">
+            <Col>
+              <div className="form-control-label mb-2">Started On</div>
+              <div className="font-weight-bold">
+                {resource.name}
+              </div>
+            </Col>
+          </Row>
+          <Row className="mb-2">
+            <Col>
+              <div className="form-control-label mb-2">Completed On</div>
+              <div className="font-weight-bold">
+                {resource.description}
+              </div>
+            </Col>
+          </Row>
         </div>
       );
     }
     return null;
-  }
-
-  getStepIconClassName(component) {
-    return (ToolIcons[component] || 'fa fa-cogs') + ' pr-2';
   }
 
   renderStep(step, execution) {
@@ -93,7 +87,6 @@ class PropertyViewer extends React.Component {
         <Row className="mb-2">
           <Col>
             <div className="form-control-label mb-2">Step</div>
-            <i className={this.getStepIconClassName(step.tool)}></i>
             <span className="font-weight-bold">{step.name}</span>
           </Col>
         </Row>

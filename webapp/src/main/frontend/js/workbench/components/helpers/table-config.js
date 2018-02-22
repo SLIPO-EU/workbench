@@ -156,7 +156,12 @@ export const ResourceGridColumns = [{
   accessor: 'process',
   Cell: props => {
     return (
-      props.value ? <Link style={{ color: '#00bcf2' }} to={buildPath(DynamicRoutes.DataViewer, { id: props.value })}><i className='fa fa-map'></i></Link> : <span className='fa fa-chain-broken'> </span>
+      props.value ?
+        <Link style={{ color: '#00bcf2' }} to={buildPath(DynamicRoutes.ProcessExecutionMapViewer, { id: props.value })}>
+          <i className='fa fa-map'></i>
+        </Link>
+        :
+        <span className='fa fa-chain-broken'> </span>
     );
   },
   style: { 'textAlign': 'center' },
@@ -166,7 +171,7 @@ export const ResourceGridColumns = [{
   minWidth: 100,
   Cell: props => {
     return (
-      <Link to={buildPath(DynamicRoutes.ResourceViewer, [props.row.id])}>{props.value}</Link>
+      <Link to={buildPath(DynamicRoutes.ResourceViewer, [props.row.id, props.row.version])}>{props.value}</Link>
     );
   },
 }, {

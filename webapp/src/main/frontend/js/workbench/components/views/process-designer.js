@@ -27,8 +27,10 @@ import {
 } from 'reactstrap';
 
 import {
+  DynamicRoutes,
   EnumProcessSaveAction,
   StaticRoutes,
+  buildPath,
 } from '../../model';
 
 import {
@@ -42,6 +44,7 @@ import {
   EnumMode,
   EnumHarvester,
   EnumOperation,
+  EnumSelection,
   EnumTool,
   EnumViews,
   Operation,
@@ -49,15 +52,9 @@ import {
   Toolbox,
 } from './process/designer';
 
-// TODO: Remove unused references
 import {
   Execution,
-  ExecutionStep,
-  ExecutionFiles,
-  FeaturePropertyViewer,
-  KpiChartView,
-  KpiGridView,
-  MapViewer,
+  StepExecutionFileBrowser,
 } from './execution/viewer';
 
 import {
@@ -89,20 +86,17 @@ import {
   setActiveResource,
   undo,
   redo,
+  openStepFileBrowser,
+  closeStepFileBrowser,
 } from '../../ducks/ui/views/process-designer';
 
-// TODO: Remove unused references
 import {
-  addToMap,
   fetchExecutionDetails,
   fetchExecutionKpiData,
-  removeFromMap,
   reset as resetExecution,
-  resetKpi,
-  selectFeatures,
+  resetSelectedFile,
+  resetSelectedKpi,
   selectFile,
-  selectStep,
-  toggleMapView,
 } from '../../ducks/ui/views/process-execution-viewer';
 
 /**
@@ -139,8 +133,10 @@ class ProcessDesigner extends React.Component {
     this.onFetchSuccess = this.onFetchSuccess.bind(this);
     this.reset = this.reset.bind(this);
     this.select = this.select.bind(this);
+    this.selectKpi = this.selectKpi.bind(this);
     this.toggleCancelDialog = this.toggleCancelDialog.bind(this);
     this.toggleSaveButtonDropdown = this.toggleSaveButtonDropdown.bind(this);
+    this.viewMap = this.viewMap.bind(this);
   }
 
   resolveAction() {
@@ -164,27 +160,31 @@ class ProcessDesigner extends React.Component {
 
     const action = this.resolveAction();
 
-    this.reset();
-
     switch (action) {
       case EnumMode.CREATE:
+        this.reset();
         this.select();
         this.resume();
         break;
 
       case EnumMode.EDIT:
-        this.props.fetchProcess(Number.parseInt(id))
-          .then(this.onFetchSuccess)
-          .catch(this.onFetchError);
+        if (this.shouldReload(id, version)) {
+          this.reset();
+          this.props.fetchProcess(Number.parseInt(id))
+            .then(this.onFetchSuccess)
+            .catch(this.onFetchError);
+        }
         break;
 
       case EnumMode.VIEW:
+        this.reset();
         this.props.fetchProcessRevision(Number.parseInt(id), Number.parseInt(version))
           .then(this.onFetchSuccess)
           .catch(this.onFetchError);
         break;
 
       case EnumMode.EXECUTION:
+        this.reset();
         this.props.fetchProcessRevision(Number.parseInt(id), Number.parseInt(version))
           .then(() => {
             return this.props.fetchExecutionDetails(Number.parseInt(id), Number.parseInt(version), Number.parseInt(execution));
@@ -196,6 +196,10 @@ class ProcessDesigner extends React.Component {
       default:
         this.error('Action is not supported');
     }
+  }
+
+  shouldReload(id, version) {
+    return ((this.props.process.id !== id) || (this.props.process.version !== version));
   }
 
   error(message, goBack) {
@@ -292,6 +296,19 @@ class ProcessDesigner extends React.Component {
       });
   }
 
+  selectKpi(file, mode) {
+    const { id, version, execution } = this.props.match.params;
+
+    this.props.fetchExecutionKpiData(Number.parseInt(id), Number.parseInt(version), Number.parseInt(execution), file, mode);
+  }
+
+  viewMap() {
+    const { id, version, execution } = this.props.match.params;
+    const path = buildPath(DynamicRoutes.ProcessExecutionMapViewer, [id, version, execution]);
+
+    this.props.history.push(path);
+  }
+
   renderDesigner() {
     return (
       <div onClick={this.select}>
@@ -308,17 +325,15 @@ class ProcessDesigner extends React.Component {
           </Card>
         }
         {this.props.readOnly && this.props.execution &&
-          <Execution execution={this.props.execution} />
+          <Execution
+            execution={this.props.execution}
+            viewMap={this.viewMap}
+          />
         }
         <Card>
-          <CardBody className="card-body">
-            <Row>
-              {this.props.readOnly &&
-                <Col>
-                  <Button color="primary" onClick={this.goToProcessExplorer} className="float-right mr-3">Return</Button>
-                </Col>
-              }
-              {!this.props.readOnly &&
+          {!this.props.readOnly &&
+            <CardBody className="card-body">
+              <Row>
                 <Col>
                   <Button color="danger" onClick={this.toggleCancelDialog} className="float-left">Discard</Button>
                   <Button color="warning" onClick={this.reset} className="float-left ml-3">Clear</Button>
@@ -337,9 +352,9 @@ class ProcessDesigner extends React.Component {
                     </ButtonDropdown>
                   </ButtonGroup>
                 </Col>
-              }
-            </Row>
-          </CardBody>
+              </Row>
+            </CardBody>
+          }
           <CardBody className="card-body">
             <Row className="mb-2">
               <Col style={{ padding: '9px' }}>
@@ -351,6 +366,7 @@ class ProcessDesigner extends React.Component {
                   resources={this.props.resources}
                   addStep={this.props.addStep}
                   configureStepBegin={this.props.configureStepBegin}
+                  openStepFileBrowser={this.props.openStepFileBrowser}
                   removeStep={this.props.removeStep}
                   moveStep={this.props.moveStep}
                   setStepProperty={this.props.setStepProperty}
@@ -403,6 +419,32 @@ class ProcessDesigner extends React.Component {
     );
   }
 
+  renderStepFileBrowser() {
+    const { active, steps, execution, ...rest } = this.props;
+
+    if ((!active) || (active.type !== EnumSelection.Step)) {
+      return null;
+    }
+
+    const step = execution.steps.find((s) => s.key === active.step);
+    const files = (step ? step.files : []);
+
+    return (
+      <StepExecutionFileBrowser
+        closeStepFileBrowser={this.props.closeStepFileBrowser}
+        files={files}
+        resetSelectedFile={this.props.resetSelectedFile}
+        resetSelectedKpi={this.props.resetSelectedKpi}
+        selectedFile={this.props.selectedExecutionFile}
+        selectedKpi={this.props.selectedKpi}
+        selectFile={this.props.selectFile}
+        selectKpi={this.selectKpi}
+        step={step}
+      />
+
+    );
+  }
+
   renderCancelDialog() {
     return (
       <Dialog
@@ -443,6 +485,7 @@ class ProcessDesigner extends React.Component {
             {this.props.view.type === EnumViews.Designer && this.renderDesigner()}
             {this.props.view.type === EnumViews.StepConfiguration && this.renderStepConfiguration()}
             {this.props.view.type === EnumViews.DataSourceConfiguration && this.renderDataSourceConfiguration()}
+            {this.props.view.type === EnumViews.StepExecutionFileBrowser && this.renderStepFileBrowser()}
           </Col>
         </Row>
         {this.state.cancelDialogOpen &&
@@ -467,13 +510,9 @@ const mapStateToProps = (state) => ({
   undo: state.ui.views.process.designer.undo,
   view: state.ui.views.process.designer.view,
   // Execution viewer
-  // TODO: Remove unused references
   execution: state.ui.views.execution.viewer.execution,
-  layers: state.ui.views.execution.viewer.layers,
-  selectedFeatures: state.ui.views.execution.viewer.selectedFeatures,
-  selectedFile: state.ui.views.execution.viewer.selectedFile,
+  selectedExecutionFile: state.ui.views.execution.viewer.selectedFile,
   selectedKpi: state.ui.views.execution.viewer.selectedKpi,
-  selectedStep: state.ui.views.execution.viewer.selectedStep,
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
@@ -506,18 +545,15 @@ const mapDispatchToProps = (dispatch) => bindActionCreators({
   setActiveResource,
   undoAction: undo,
   redoAction: redo,
+  openStepFileBrowser,
+  closeStepFileBrowser,
   // Execution viewer
-  // TODO: Remove unused references
-  addToMap,
   fetchExecutionDetails,
   fetchExecutionKpiData,
-  removeFromMap,
   resetExecution,
-  resetKpi,
-  selectFeatures,
+  resetSelectedFile,
+  resetSelectedKpi,
   selectFile,
-  selectStep,
-  toggleMapView,
 }, dispatch);
 
 const mergeProps = (stateProps, dispatchProps, ownProps) => {

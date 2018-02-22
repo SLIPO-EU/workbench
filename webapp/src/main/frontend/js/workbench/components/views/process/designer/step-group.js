@@ -92,6 +92,7 @@ class StepGroup extends React.Component {
     removeStep: PropTypes.func.isRequired,
     moveStep: PropTypes.func.isRequired,
     configureStepBegin: PropTypes.func.isRequired,
+    openStepFileBrowser: PropTypes.func.isRequired,
     setStepProperty: PropTypes.func.isRequired,
 
     // Step input actions
@@ -130,7 +131,7 @@ class StepGroup extends React.Component {
    */
   renderStep(step) {
     const resources = this.props.resources.filter((resource) => { return (step.resources.indexOf(resource.key) !== -1); });
-    const execution = this.props.stepExecutions.find((e) => e.key === step.key) || null;
+    const stepExecution = this.props.stepExecutions.find((e) => e.key === step.key) || null;
 
     return (
       <Step
@@ -141,6 +142,7 @@ class StepGroup extends React.Component {
         removeStep={this.props.removeStep}
         moveStep={this.props.moveStep}
         configureStepBegin={this.props.configureStepBegin}
+        openStepFileBrowser={this.props.openStepFileBrowser}
         setStepProperty={this.props.setStepProperty}
         addStepInput={this.props.addStepInput}
         removeStepInput={this.props.removeStepInput}
@@ -151,7 +153,7 @@ class StepGroup extends React.Component {
         setActiveStepInput={this.props.setActiveStepInput}
         setActiveStepDataSource={this.props.setActiveStepDataSource}
         readOnly={this.props.readOnly}
-        execution={execution}
+        stepExecution={stepExecution}
       />
     );
   }

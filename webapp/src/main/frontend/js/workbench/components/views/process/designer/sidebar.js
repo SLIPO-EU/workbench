@@ -187,7 +187,7 @@ class Sidebar extends React.Component {
               }
               {this.getSelectedItem() ?
                 <div className="slipo-pd-properties">
-                  {this.props.active.type === EnumSelection.Process &&
+                  {this.props.active.type === EnumSelection.Process && !this.props.readOnly &&
                     <ProcessDetails
                       values={this.props.process.properties}
                       errors={this.props.process.errors}
@@ -196,7 +196,7 @@ class Sidebar extends React.Component {
                       readOnly={this.props.readOnly}
                     />
                   }
-                  {this.props.active.type !== EnumSelection.Process &&
+                  {this.props.readOnly &&
                     <PropertyViewer
                       item={this.getSelectedItem()}
                       type={this.props.active.type}

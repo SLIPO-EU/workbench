@@ -40,30 +40,12 @@ class Dashboard extends React.Component {
             <Card { ...CardConfig.JobCardConfig} />
           </div>
           <div className="col-sm-12 col-md-6 col-lg-3">
-            <Card { ...CardConfig.QuotaCardConfig} />
+            <Card { ...CardConfig.SystemCardConfig} />
           </div>
           <div className="col-sm-12 col-md-6 col-lg-3">
             <Card { ...CardConfig.EventCardConfig(this.props.stats.events, this.props.intl) } />
           </div>
         </div>
-        <Row>
-          <Col sm="12" md="12" lg="6">
-            <DashboardCard
-              name='Executed Workflows'
-              changedOn={new Date()}
-            >
-              <BarChart { ...ChartConfig.JobSeries} />
-            </DashboardCard>
-          </Col>
-          <Col sm="12" md="12" lg="6">
-            <DashboardCard
-              name='Quota Usage'
-              changedOn={new Date()}
-            >
-              <BarChart { ...ChartConfig.QuotaSeries} />
-            </DashboardCard>
-          </Col>
-        </Row>
         <Row>
           <Col className="col-sm-12 col-md-12 col-lg-6">
             <DashboardCard { ...DashboardCardConfig.DashboardProcessExplorerConfig} filterChange={this.props.changeDashboardFilter} filterValue={this.props.filters.processExplorer} >

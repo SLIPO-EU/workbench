@@ -7,6 +7,7 @@ import {
 } from 'react-intl';
 
 import {
+  Button,
   Card,
   CardBody,
   Col,
@@ -25,6 +26,7 @@ class Execution extends React.Component {
 
   static propTypes = {
     execution: PropTypes.object.isRequired,
+    viewMap: PropTypes.func.isRequired,
   };
 
   render() {
@@ -33,7 +35,7 @@ class Execution extends React.Component {
     return (
       <Card>
         <CardBody>
-          <Row className="mb-4">
+          <Row className="mb-2">
             <Col>
               <div className="font-weight-bold mb-1">Name</div>
               <div className="font-weight-italic">{e.name}</div>
@@ -51,7 +53,7 @@ class Execution extends React.Component {
               <JobStatus status={e.status} />
             </Col>
           </Row>
-          <Row>
+          <Row className="mb-2">
             <Col>
               <div className="font-weight-bold mb-1">Started On</div>
               <div className="font-weight-italic">
@@ -89,6 +91,13 @@ class Execution extends React.Component {
                 :
                 '-'
               }
+            </Col>
+          </Row>
+          <Row>
+            <Col>
+              <div className="float-right">
+                <Button color="primary" onClick={this.props.viewMap} className="float-left"><i className="fa fa-map-o"></i> View Map</Button>
+              </div>
             </Col>
           </Row>
         </CardBody>

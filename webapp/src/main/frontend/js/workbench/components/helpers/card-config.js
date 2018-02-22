@@ -44,21 +44,20 @@ export const ResourceCardConfig = (props, intl) => ({
   iconClass: 'fa fa-book',
 });
 
-export const QuotaCardConfig = {
-  title: 'dashboard.card.quota',
+export const SystemCardConfig = {
+  title: 'dashboard.card.system',
   items: [{
-    value: 100,
-    label: 'Available',
+    value: 12,
+    label: ' / 100 Cores',
   }, {
-    value: 25,
-    label: 'Used',
+    value: 24,
+    label: ' / 128 Memory',
   }, {
     value: 75,
-    label: 'Remaining',
+    label: ' / 2048 Disk Space',
   }],
   color: '#ffffff',
   background: '#d9534f',
-  footer: 'Since last week',
   iconClass: 'fa fa-cubes',
 };
 

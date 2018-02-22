@@ -5,19 +5,19 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import eu.slipo.workbench.common.model.user.Account;
+import eu.slipo.workbench.common.model.user.AccountInfo;
 
-public class ProcessRecord 
+public class ProcessRecord
 {
     // Todo: represent identity-related numbers as Long ??
-    
+
     private long id = -1L;
 
     private long version = -1L;
 
-    private Account createdBy;
+    private AccountInfo createdBy;
 
-    private Account updatedBy;
+    private AccountInfo updatedBy;
 
     private ZonedDateTime createdOn;
 
@@ -40,7 +40,7 @@ public class ProcessRecord
     private List<ProcessExecutionRecord> executions;
 
     public ProcessRecord() {}
-    
+
     public ProcessRecord(long id, long version) {
         this.id = id;
         this.version = version;
@@ -54,28 +54,28 @@ public class ProcessRecord
         return version;
     }
 
-    public Account getCreatedBy() {
+    public AccountInfo getCreatedBy() {
         return createdBy;
     }
 
     public void setCreatedBy(int id, String name) {
-        this.createdBy = new Account(id, name, null);
+        this.createdBy = new AccountInfo(id, name);
     }
 
-    public void setCreatedBy(Account createdBy) {
+    public void setCreatedBy(AccountInfo createdBy) {
         this.createdBy = createdBy;
     }
 
-    public Account getUpdatedBy() {
+    public AccountInfo getUpdatedBy() {
         return updatedBy;
     }
 
-    public void setUpdatedBy(Account updatedBy) {
+    public void setUpdatedBy(AccountInfo updatedBy) {
         this.updatedBy = updatedBy;
     }
 
     public void setUpdatedBy(int id, String name) {
-        this.updatedBy = new Account(id, name, null);
+        this.updatedBy = new AccountInfo(id, name);
     }
 
     public ZonedDateTime getCreatedOn() {
@@ -144,29 +144,31 @@ public class ProcessRecord
         this.taskType = t;
     }
 
-    public List<ProcessRecord> getRevisions() 
+    public List<ProcessRecord> getRevisions()
     {
-        return this.revisions == null? 
+        return this.revisions == null?
             Collections.emptyList() : Collections.unmodifiableList(this.revisions);
     }
 
-    public void addRevision(ProcessRecord p) 
+    public void addRevision(ProcessRecord p)
     {
-        if (this.revisions == null)
+        if (this.revisions == null) {
             this.revisions = new ArrayList<>();
+        }
         this.revisions.add(p);
     }
 
-    public List<ProcessExecutionRecord> getExecutions() 
+    public List<ProcessExecutionRecord> getExecutions()
     {
-        return this.executions == null? 
+        return this.executions == null?
             Collections.emptyList() : Collections.unmodifiableList(this.executions);
     }
 
-    public void addExecution(ProcessExecutionRecord e) 
+    public void addExecution(ProcessExecutionRecord e)
     {
-        if (this.executions == null)
+        if (this.executions == null) {
             this.executions = new ArrayList<>();
+        }
         this.executions.add(e);
     }
 
@@ -174,9 +176,9 @@ public class ProcessRecord
     public String toString()
     {
         return String.format(
-            "ProcessRecord [id=%s, version=%s, createdOn=%s, updatedOn=%s, name=%s]", 
+            "ProcessRecord [id=%s, version=%s, createdOn=%s, updatedOn=%s, name=%s]",
             id, version, createdOn, updatedOn, name);
     }
-    
-    
+
+
 }

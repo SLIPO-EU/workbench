@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import eu.slipo.workbench.common.model.user.Account;
+import eu.slipo.workbench.common.model.user.AccountInfo;
 
 public class ProcessExecutionRecord {
 
@@ -13,7 +13,7 @@ public class ProcessExecutionRecord {
 
     private String name;
 
-    private Account submittedBy;
+    private AccountInfo submittedBy;
 
     private ZonedDateTime submittedOn;
 
@@ -30,14 +30,14 @@ public class ProcessExecutionRecord {
     private List<ProcessExecutionStepRecord> steps;
 
     public ProcessExecutionRecord() {}
-    
-    public ProcessExecutionRecord(long executionId, long processId, long processVersion) 
+
+    public ProcessExecutionRecord(long executionId, long processId, long processVersion)
     {
         this.id = executionId;
         this.process = new ProcessIdentifier(processId, processVersion);
     }
 
-    public ProcessExecutionRecord(long executionId, ProcessIdentifier processIdentifier) 
+    public ProcessExecutionRecord(long executionId, ProcessIdentifier processIdentifier)
     {
         this.id = executionId;
         this.process = new ProcessIdentifier(processIdentifier);
@@ -51,15 +51,15 @@ public class ProcessExecutionRecord {
         this.name = name;
     }
 
-    public Account getSubmittedBy() {
+    public AccountInfo getSubmittedBy() {
         return submittedBy;
     }
 
     public void setSubmittedBy(int id, String name) {
-        this.submittedBy = new Account(id, name, null);
+        this.submittedBy = new AccountInfo(id, name);
     }
 
-    public void setSubmittedBy(Account submittedBy) {
+    public void setSubmittedBy(AccountInfo submittedBy) {
         this.submittedBy = submittedBy;
     }
 
@@ -111,16 +111,17 @@ public class ProcessExecutionRecord {
         return process;
     }
 
-    public List<ProcessExecutionStepRecord> getSteps() 
+    public List<ProcessExecutionStepRecord> getSteps()
     {
-        return steps == null? 
+        return steps == null?
             Collections.emptyList() : Collections.unmodifiableList(steps);
     }
 
-    public void addStep(ProcessExecutionStepRecord s) 
+    public void addStep(ProcessExecutionStepRecord s)
     {
-        if (this.steps == null)
+        if (this.steps == null) {
             this.steps = new ArrayList<>();
+        }
         this.steps.add(s);
     }
 

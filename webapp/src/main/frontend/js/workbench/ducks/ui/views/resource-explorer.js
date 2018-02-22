@@ -136,7 +136,12 @@ export default (state = initialState, action) => {
     case RECEIVE_RESOURCES:
       return {
         ...state,
-        items: action.result.items,
+        items: action.result.items.map((r) => {
+          return {
+            ...r,
+            revisions: r.revisions.sort((v1, v2) => v2.version - v1.version),
+          };
+        }),
         features: toFeatureCollection(toFeatures(action.result.items)),
         pager: {
           index: action.result.pagingOptions.pageIndex,

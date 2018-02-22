@@ -11,9 +11,9 @@ import com.vividsolutions.jts.geom.Geometry;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumResourceType;
-import eu.slipo.workbench.common.model.user.Account;
+import eu.slipo.workbench.common.model.user.AccountInfo;
 
-public class ResourceRecord 
+public class ResourceRecord
 {
     private long id = -1L;
 
@@ -24,7 +24,7 @@ public class ResourceRecord
 
     @JsonDeserialize(using = EnumDataSourceType.Deserializer.class)
     private EnumDataSourceType sourceType;
-    
+
     private EnumDataFormat inputFormat;
 
     private EnumDataFormat format;
@@ -35,11 +35,11 @@ public class ResourceRecord
 
     private ZonedDateTime createdOn;
 
-    private Account createdBy;
+    private AccountInfo createdBy;
 
     private ZonedDateTime updatedOn;
 
-    private Account updatedBy;
+    private AccountInfo updatedBy;
 
     private String filePath;
 
@@ -50,14 +50,14 @@ public class ResourceRecord
     private List<ResourceRecord> revisions;
 
     public ResourceRecord() {}
-    
-    public ResourceRecord(long id, long version) 
+
+    public ResourceRecord(long id, long version)
     {
         this.id = id;
         this.version = version;
     }
 
-    public long getId() 
+    public long getId()
     {
         return id;
     }
@@ -66,12 +66,12 @@ public class ResourceRecord
     {
         this.id = id;
     }
-    
-    public long getVersion() 
+
+    public long getVersion()
     {
         return version;
     }
-    
+
     public void setVersion(long version)
     {
         this.version = version;
@@ -81,7 +81,7 @@ public class ResourceRecord
         return type;
     }
 
-    public void setType(EnumResourceType type) 
+    public void setType(EnumResourceType type)
     {
         this.type = type;
     }
@@ -96,110 +96,111 @@ public class ResourceRecord
         this.sourceType = sourceType;
     }
 
-    public EnumDataFormat getInputFormat() 
+    public EnumDataFormat getInputFormat()
     {
         return inputFormat;
     }
 
-    public void setInputFormat(EnumDataFormat inputFormat) 
+    public void setInputFormat(EnumDataFormat inputFormat)
     {
         this.inputFormat = inputFormat;
     }
 
-    public EnumDataFormat getFormat() 
+    public EnumDataFormat getFormat()
     {
         return format;
     }
 
-    public void setFormat(EnumDataFormat format) 
+    public void setFormat(EnumDataFormat format)
     {
         this.format = format;
     }
 
-    public Long getProcessExecutionId() 
+    public Long getProcessExecutionId()
     {
         return processExecutionId;
     }
 
-    public void setProcessExecutionId(Long processExecutionId) 
+    public void setProcessExecutionId(Long processExecutionId)
     {
         this.processExecutionId = processExecutionId;
     }
 
-    public ResourceMetadataView getMetadata() 
+    public ResourceMetadataView getMetadata()
     {
         return metadata;
     }
 
-    public void setMetadata(ResourceMetadataView metadata) 
+    public void setMetadata(ResourceMetadataView metadata)
     {
         this.metadata = metadata;
     }
 
-    public void setMetadata(String name, String description, Integer size, Geometry boundingBox) 
+    public void setMetadata(String name, String description, Integer size, Geometry boundingBox)
     {
         this.metadata = new ResourceMetadataView(name, description, size, boundingBox);
     }
 
-    public ZonedDateTime getCreatedOn() 
+    public ZonedDateTime getCreatedOn()
     {
         return createdOn;
     }
 
-    public void setCreatedOn(ZonedDateTime createdOn) 
+    public void setCreatedOn(ZonedDateTime createdOn)
     {
         this.createdOn = createdOn;
     }
 
-    public Account getCreatedBy() {
+    public AccountInfo getCreatedBy() {
         return createdBy;
     }
 
-    public void setCreatedBy(Account createdBy)
+    public void setCreatedBy(AccountInfo createdBy)
     {
         this.createdBy = createdBy;
     }
 
-    public void setCreatedBy(int id, String name) 
+    public void setCreatedBy(int id, String name)
     {
-        this.createdBy = new Account(id, name, null);
+        this.createdBy = new AccountInfo(id, name);
     }
 
-    public ZonedDateTime getUpdatedOn() 
+    public ZonedDateTime getUpdatedOn()
     {
         return updatedOn;
     }
 
-    public void setUpdatedOn(ZonedDateTime updatedOn) 
+    public void setUpdatedOn(ZonedDateTime updatedOn)
     {
         this.updatedOn = updatedOn;
     }
 
-    public Account getUpdatedBy() 
+    public AccountInfo getUpdatedBy()
     {
         return updatedBy;
     }
 
-    public void setUpdatedBy(Account updatedBy) 
+    public void setUpdatedBy(AccountInfo updatedBy)
     {
         this.updatedBy = updatedBy;
     }
 
-    public void setUpdatedBy(int id, String name) 
+    public void setUpdatedBy(int id, String name)
     {
-        this.updatedBy = new Account(id, name, null);
+        this.updatedBy = new AccountInfo(id, name);
     }
 
-    public List<ResourceRecord> getRevisions() 
+    public List<ResourceRecord> getRevisions()
     {
-        return revisions == null? 
+        return revisions == null?
             Collections.emptyList() : Collections.unmodifiableList(revisions);
     }
 
-    public void addRevision(ResourceRecord r) 
+    public void addRevision(ResourceRecord r)
     {
-        if (revisions == null)
+        if (revisions == null) {
             revisions = new ArrayList<>();
+        }
         revisions.add(r);
     }
 
@@ -231,5 +232,5 @@ public class ResourceRecord
     public void setTableName(UUID tableName)
     {
         this.tableName = tableName;
-    }   
+    }
 }

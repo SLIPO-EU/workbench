@@ -8,6 +8,7 @@ import { ToastContainer } from 'react-toastify';
 
 import { Pages, StaticRoutes, DynamicRoutes, ErrorPages } from '../model/routes';
 import { userPropType } from '../model/prop-types/user';
+import { toggleSidebar } from '../ducks/ui/menu';
 import { resize } from '../ducks/ui/viewport';
 import { getFilesystem } from '../ducks/config';
 
@@ -85,7 +86,17 @@ class ContentRoot extends React.Component {
           <Redirect from={Pages.Register} to={StaticRoutes.Dashboard} exact />
           <Redirect from={Pages.ResetPassword} to={StaticRoutes.Dashboard} exact />
           {/* Default component */}
-          <Route path="/" name="home" component={() => (<Home user={this.props.user} />)} />
+          <Route
+            path="/"
+            name="home"
+            component={() => (
+              <Home
+                user={this.props.user}
+                sidebarOpen={this.props.sidebarOpen}
+                toggleSidebar={this.props.toggleSidebar}
+              />
+            )}
+          />
         </Switch>
       );
     }
@@ -118,9 +129,14 @@ ContentRoot.propTypes = {
 
 const mapStateToProps = (state) => ({
   user: state.user.profile,
+  sidebarOpen: state.ui.menu.sidebarOpen,
 });
 
-const mapDispatchToProps = (dispatch) => bindActionCreators({ resize, getFilesystem }, dispatch);
+const mapDispatchToProps = (dispatch) => bindActionCreators({
+  getFilesystem,
+  resize,
+  toggleSidebar,
+}, dispatch);
 
 ContentRoot = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(ContentRoot);
 
