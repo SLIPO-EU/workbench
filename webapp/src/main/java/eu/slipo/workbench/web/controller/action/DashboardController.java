@@ -13,7 +13,6 @@ import eu.slipo.workbench.common.model.RestResponse;
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumResourceType;
 import eu.slipo.workbench.common.model.process.EnumProcessExecutionStatus;
-import eu.slipo.workbench.common.model.process.EnumProcessTaskType;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.resource.EnumDataSourceType;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataView;
@@ -160,6 +159,7 @@ public class DashboardController {
         result.resources = new Dashboard.ResourceStatistics(120, 10, 4);
         result.processes = new Dashboard.ProcessStatistics(20, 2, 3);
         result.events = new Dashboard.EventStatistics(0, 5, 75);
+        result.system = new Dashboard.SystemStatistics(12, 100, 24, 128, 75, 2048);
 
         return result;
     }
