@@ -27,7 +27,7 @@ class Card extends React.Component {
       items.push(
         <tr key={index} className="slipo-card-item">
           <td>
-            {item.value}
+            {Array.isArray(item.value) ? item.value.join(" / ") : item.value}
           </td>
           <td>
             <FormattedMessage id={item.label} defaultMessage={item.label} />
@@ -79,7 +79,10 @@ Card.propTypes = {
   // Counter values and labels
   items: PropTypes.arrayOf(
     PropTypes.shape({
-      value: PropTypes.number.isRequired,
+      value: PropTypes.oneOfType([
+        PropTypes.number,
+        PropTypes.arrayOf(PropTypes.number)
+      ]).isRequired,
       label: PropTypes.string.isRequired,
     })
   ),

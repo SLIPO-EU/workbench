@@ -14,6 +14,7 @@ const initialState = {
     processExplorer:"allProcess",
     
   },
+  processes:[],
   resources:[],
   events: [],
   statistics:{
@@ -28,6 +29,21 @@ const initialState = {
       information:0,
       warning:0,
       updatedOn: null,
+    },
+    processes:{
+      completed:0,
+      running:0,
+      failed:0,
+      updateOn:null,
+    },
+    system:{
+      usedCores:0,
+      totalCores:0,
+      usedMemory:0,
+      totalMemory:0,
+      usedDisk:0,
+      totalDisk:0,
+      updateOn:null,
     }
 
   }
