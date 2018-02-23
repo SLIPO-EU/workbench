@@ -51,6 +51,20 @@ public enum EnumTool {
         return (this.getClass().getSimpleName() + '.' + name());
     }
 
+    public EnumResourceType getResourceType()
+    {
+        switch (this) {
+        case TRIPLEGEO:
+        case DEER:
+        case FAGI:
+            return EnumResourceType.POI_DATA;
+        case LIMES:
+            return EnumResourceType.POI_LINKED_DATA;
+        default:
+            return EnumResourceType.UNDEFINED;
+        }
+    }
+    
     public static EnumTool fromString(String value) {
         for (EnumTool item : EnumTool.values()) {
             if (item.name().equalsIgnoreCase(value)) {
@@ -63,7 +77,9 @@ public enum EnumTool {
     public static class Deserializer extends JsonDeserializer<EnumTool> {
 
         @Override
-        public EnumTool deserialize(JsonParser parser, DeserializationContext context) throws IOException, JsonProcessingException {
+        public EnumTool deserialize(JsonParser parser, DeserializationContext context) 
+            throws IOException, JsonProcessingException 
+        {
             return EnumTool.fromString(parser.getValueAsString());
         }
     }

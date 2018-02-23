@@ -36,12 +36,20 @@ public abstract class ProcessInput implements Serializable
     protected ProcessInput() {}
 
     protected ProcessInput(
-        int key, EnumInputType inputType, EnumResourceType resourceType, String name) 
+        int key, EnumInputType inputType, String name, EnumResourceType resourceType) 
     {
         this.key = key;
         this.inputType = inputType;
-        this.resourceType = resourceType;
         this.name = name;
+        this.resourceType = resourceType;
+    }
+    
+    protected ProcessInput(int key, EnumInputType inputType, String name) 
+    {
+        this.key = key;
+        this.inputType = inputType;
+        this.name = name;
+        this.resourceType = EnumResourceType.POI_DATA;
     }
 
     @JsonProperty
@@ -59,6 +67,12 @@ public abstract class ProcessInput implements Serializable
         return resourceType;
     }
 
+    @JsonProperty
+    public void setResourceType(EnumResourceType resourceType)
+    {
+        this.resourceType = resourceType;
+    }
+    
     @JsonProperty
     public String getName() {
         return name;

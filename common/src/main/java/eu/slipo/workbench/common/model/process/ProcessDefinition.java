@@ -47,7 +47,8 @@ public class ProcessDefinition implements Serializable
      *
      * @return a list of the input resources
      */
-    public List<ProcessInput> getResources() {
+    public List<ProcessInput> getResources() 
+    {
         return Collections.unmodifiableList(resources);
     }
 
@@ -56,7 +57,8 @@ public class ProcessDefinition implements Serializable
      *
      * @return a list of all process steps
      */
-    public List<Step> getSteps() {
+    public List<Step> getSteps() 
+    {
         return Collections.unmodifiableList(steps);
     }
 

@@ -143,8 +143,12 @@ public class DefaultProcessRepositoryTests
             final DataSource source = new FileSystemDataSource("/tmp/1.csv");
             
             ProcessDefinition definition = ProcessDefinitionBuilder.create("register-1")
-                .transform(0, "triplegeo", source, configuration, resourceKey)
-                .register(99, "register", metadata, resourceKey)
+                .transform("triplegeo", b -> b
+                    .group(1)
+                    .outputKey(resourceKey)
+                    .source(source)
+                    .configuration(configuration))
+                .register("register", resourceKey, metadata)
                 .build();
             
             return definition;
@@ -168,8 +172,12 @@ public class DefaultProcessRepositoryTests
             final DataSource source = new FileSystemDataSource("/tmp/1.zip");
             
             ProcessDefinition definition = ProcessDefinitionBuilder.create("register-2")
-                .transform(0, "triplegeo", source, configuration, resourceKey)
-                .register(99, "register", metadata, resourceKey)
+                .transform("triplegeo", b -> b
+                    .group(1)
+                    .outputKey(resourceKey)
+                    .source(source)
+                    .configuration(configuration))
+                .register("register", resourceKey, metadata)
                 .build();
             
             return definition;

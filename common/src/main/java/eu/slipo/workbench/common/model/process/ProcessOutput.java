@@ -20,33 +20,34 @@ public class ProcessOutput extends ProcessInput
 
     public ProcessOutput() 
     {
-        super(-1, EnumInputType.OUTPUT, EnumResourceType.UNDEFINED, null);
+        super(-1, EnumInputType.OUTPUT, null);
     }
 
-    protected ProcessOutput(
-        int resourceKey, EnumResourceType resourceType, String name, int stepKey, EnumTool tool) 
+    protected ProcessOutput(Step step, EnumResourceType resourceType)
     {
-        super(resourceKey, EnumInputType.OUTPUT, resourceType, name);
-        this.stepKey = stepKey;
-        this.tool = tool;
+        super(step.outputKey, EnumInputType.OUTPUT, step.name, resourceType);
+        this.stepKey = step.key;
+        this.tool = step.tool;
     }
-
+    
+    protected static ProcessOutput fromStep(Step step)
+    {
+        final EnumResourceType resourceType = step.tool.getResourceType();
+        return new ProcessOutput(step, resourceType);
+    }
+    
     /**
      * The tool that generated the output
-     *
-     * @return a value of {@link EnumTool}
      */
-    @JsonProperty
+    @JsonProperty("tool")
     public EnumTool getTool() {
         return tool;
     }
 
     /**
-     * Key of the process step that created this resource
-     *
-     * @return the step key
+     * The Key of the processing step that created this resource
      */
-    @JsonProperty
+    @JsonProperty("stepKey")
     public int getStepKey() {
         return stepKey;
     }

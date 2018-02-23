@@ -105,9 +105,13 @@ public class ResourceController {
 
         final int resourceKey = 1;
 
-        ProcessDefinition definition = ProcessDefinitionBuilder.create().name("register")
-            .transform(0, "transform", source, configuration, resourceKey)
-            .register(1, "register", metadata, resourceKey).build();
+        ProcessDefinition definition = ProcessDefinitionBuilder.create("register")
+            .transform("transform", b -> b
+                .source(source)
+                .outputKey(resourceKey)
+                .configuration(configuration))
+            .register("register", resourceKey, metadata)
+            .build();
 
         ProcessRecord record = processService.create(definition);
 

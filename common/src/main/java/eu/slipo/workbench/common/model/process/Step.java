@@ -5,10 +5,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.commons.beanutils.BeanUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.util.Assert;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
@@ -31,33 +27,33 @@ public class Step implements Serializable
     private static final long serialVersionUID = 1L;
 
     @JsonProperty("key")
-    private int key;
+    protected int key;
 
     @JsonProperty("group")
-    private int group;
+    protected int group;
 
     @JsonProperty("name")
-    private String name;
+    protected String name;
 
     @JsonProperty("operation")
     @JsonDeserialize(using = EnumOperation.Deserializer.class)
-    private EnumOperation operation;
+    protected EnumOperation operation;
 
     @JsonProperty("tool")
     @JsonDeserialize(using = EnumTool.Deserializer.class)
-    private EnumTool tool;
+    protected EnumTool tool;
 
     @JsonProperty("inputKeys")
-    private List<Integer> inputKeys = new ArrayList<Integer>();
+    protected List<Integer> inputKeys = new ArrayList<Integer>();
 
     @JsonProperty("sources")
-    private List<DataSource> sources = new ArrayList<>();
+    protected List<DataSource> sources = new ArrayList<>();
 
     @JsonProperty("outputKey")
-    private Integer outputKey;
+    protected Integer outputKey;
     
     @JsonProperty("outputFormat")
-    private EnumDataFormat outputFormat;
+    protected EnumDataFormat outputFormat;
 
     @JsonProperty("configuration")
     @JsonTypeInfo(
@@ -69,181 +65,9 @@ public class Step implements Serializable
         @Type(name = "DEER", value = DeerConfiguration.class),
         @Type(name = "REGISTER_METADATA", value = MetadataRegistrationConfiguration.class)
     })
-    private ToolConfiguration configuration;
+    protected ToolConfiguration configuration;
 
     protected Step() {}
-
-    public static class Builder
-    {
-        private final int key;
-
-        private final int group;
-
-        private final String name;
-
-        private EnumOperation operation;
-
-        private EnumTool tool;
-
-        private List<Integer> inputKeys = new ArrayList<>();
-
-        private List<DataSource> sources = new ArrayList<>();
-
-        private Integer outputKey;
-        
-        private EnumDataFormat outputFormat;
-
-        private ToolConfiguration configuration;
-
-        /**
-         * Create a builder for a step ({@link Step}).
-         *
-         * @param key A unique (across its process) name for this step
-         * @param group A group index for this step. This group is only a logical grouping
-         *    of steps inside a process.
-         * @param name A name (preferably unique) for this step.
-         */
-        public Builder(int key, int group, String name)
-        {
-            Assert.isTrue(!StringUtils.isEmpty(name),
-                "Expected a non-empty name for this step");
-            this.key = key;
-            this.group = group;
-            this.name = name;
-        }
-
-        /**
-         * Set the operation type.
-         * @param operation
-         */
-        public Builder operation(EnumOperation operation)
-        {
-            Assert.notNull(operation, "Expected an non-null operation");
-            this.operation = operation;
-            return this;
-        }
-
-        /**
-         * Set the tool that implements the step operation
-         * @param tool
-         */
-        public Builder tool(EnumTool tool)
-        {
-            Assert.notNull(tool, "Expected a tool constant");
-            this.tool = tool;
-            return this;
-        }
-
-        /**
-         * Provide the tool-specific configuration
-         * @param configuration A tool-specific configuration bean
-         */
-        public Builder configuration(ToolConfiguration configuration)
-        {
-            Assert.notNull(configuration, "Expected a non-null configuration");
-            this.configuration = configuration;
-            return this;
-        }
-
-        /**
-         * Assign a unique key to the resource generated as output of this step inside
-         * a process.
-         * @param outputKey
-         */
-        public Builder outputKey(int outputKey)
-        {
-            this.outputKey = outputKey;
-            return this;
-        }
-
-        /**
-         * Set the keys of process-wide resources that should be input to this step
-         * @param inputKeys A list of resource keys
-         */
-        public Builder input(List<Integer> inputKeys)
-        {
-            this.inputKeys.addAll(inputKeys);
-            return this;
-        }
-
-        /**
-         * @see {@link Step.Builder#input(List)}
-         * @param inputKey
-         */
-        public Builder input(int inputKey)
-        {
-            this.inputKeys.add(inputKey);
-            return this;
-        }
-
-        /**
-         * Set a list of external data sources that should be input to this step.
-         *
-         * <p>A {@link DataSource} is an input that is external to the application, i.e it is
-         * neither a catalog resource nor a intermediate result of the (enclosing) process.
-         *
-         * @param s A list of data sources
-         */
-        public Builder source(List<DataSource> s)
-        {
-            this.sources.addAll(s);
-            return this;
-        }
-
-        /**
-         * @see {@link Step.Builder#source(List)}
-         * @param s
-         */
-        public Builder source(DataSource s)
-        {
-            this.sources.add(s);
-            return this;
-        }
-        
-        public Builder outputFormat(EnumDataFormat outputFormat)
-        {
-            this.outputFormat = outputFormat;
-            return this;
-        }
-
-        public Step build()
-        {
-            Assert.state(this.operation != null, "The operation must be specified");
-            Assert.state(this.tool != null, "The tool must be specified");
-            Assert.state(this.configuration != null, "The tool configuration must be provided");
-            Assert.state(operation == EnumOperation.REGISTER || 
-                    (this.outputKey != null && this.outputFormat != null),
-                "An output key and format is required for a non-registration step");
-            Assert.state(!this.inputKeys.isEmpty() || !this.sources.isEmpty(),
-                "The list of data sources and list of input keys cannot be both empty!");
-
-            Step step = new Step();
-
-            step.key = this.key;
-            step.group = this.group;
-            step.name = this.name;
-            step.operation = this.operation;
-            step.tool = this.tool;
-            step.sources = new ArrayList<>(this.sources);
-            step.inputKeys = new ArrayList<>(this.inputKeys);
-            step.outputKey = this.outputKey;
-            step.outputFormat = this.outputFormat;
-
-            try {
-                // Make a defensive copy of the configuration bean
-                step.configuration = (ToolConfiguration) BeanUtils.cloneBean(configuration);
-            } catch (ReflectiveOperationException ex) {
-                throw new IllegalStateException("Cannot clone configuration bean", ex);
-            }
-
-            return step;
-        }
-    }
-
-    public static Builder builder(int key, int group, String name)
-    {
-        return new Builder(key, group, name);
-    }
 
     /**
      * The unique key for this step
