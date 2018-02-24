@@ -1,6 +1,7 @@
 package eu.slipo.workbench.common.model.resource;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -51,5 +52,22 @@ public class ResourceIdentifier implements Serializable
     public String toString()
     {
         return String.format("%d@%d", id, version);
+    }
+    
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (obj == this)
+            return true;
+        if (obj == null || !(obj instanceof ResourceIdentifier))
+            return false;
+        ResourceIdentifier x = (ResourceIdentifier) obj;
+        return x.id == id && x.version == version;
+    }
+    
+    @Override
+    public int hashCode()
+    {
+        return toString().hashCode();
     }
 }

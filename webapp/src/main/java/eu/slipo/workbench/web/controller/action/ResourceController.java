@@ -158,9 +158,9 @@ public class ResourceController {
         }
 
         // Convert registration data to a process configuration instance
-        ProcessRecord record = register(request.getDataSource(), request.getConfiguration(), request.getMetadata());
+        ProcessRecord record = register(
+            request.getDataSource(), request.getConfiguration(), request.getMetadata());
 
-        // TODO: Submit request to service
         return RestResponse.result(record);
     }
 

@@ -2,6 +2,7 @@ package eu.slipo.workbench.common.model.process;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
@@ -52,6 +53,12 @@ public abstract class ProcessInput implements Serializable
         this.resourceType = EnumResourceType.POI_DATA;
     }
 
+    @JsonIgnore
+    public int key()
+    {
+        return key;
+    }
+    
     @JsonProperty
     public int getKey() {
         return key;

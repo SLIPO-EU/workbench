@@ -50,4 +50,21 @@ public class ProcessIdentifier implements Serializable
     {
         return String.format("%d@%d", id, version);
     }
+    
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (obj == this)
+            return true;
+        if (obj == null || !(obj instanceof ProcessIdentifier))
+            return false;
+        ProcessIdentifier x = (ProcessIdentifier) obj;
+        return x.id == id && x.version == version;
+    }
+    
+    @Override
+    public int hashCode()
+    {
+        return toString().hashCode();
+    }
 }

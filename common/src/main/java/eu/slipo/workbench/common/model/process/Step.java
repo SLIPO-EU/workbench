@@ -155,7 +155,7 @@ public class Step implements Serializable
     @JsonProperty("sources")
     public List<DataSource> sources()
     {
-        return sources;
+        return Collections.unmodifiableList(sources);
     }
     
     @JsonProperty("outputFormat")

@@ -12,14 +12,12 @@ import static org.mockito.Mockito.*;
 
 import java.util.Locale;
 
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.MessageSource;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import eu.slipo.workbench.common.model.TextMessage;
 import eu.slipo.workbench.rpc.service.SimpleEchoService;
-
 
 @RunWith(SpringRunner.class)
 @ActiveProfiles({ "testing" })

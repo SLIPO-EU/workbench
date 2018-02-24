@@ -22,29 +22,14 @@ public class CatalogResource extends ProcessInput
         super(-1, EnumInputType.CATALOG, null);
     }
 
-//    Fixme public CatalogResource(int key, EnumResourceType resourceType, String name, long id, long version) 
-//    {
-//        super(key, EnumInputType.CATALOG, name, resourceType);
-//        this.resource = new ResourceIdentifier(id, version);
-//    }
-//
-//    public CatalogResource(
-//        int key, EnumResourceType resourceType, String name, long id, long version, String description) 
-//    {
-//        super(key, EnumInputType.CATALOG, name, resourceType);
-//        this.resource = new ResourceIdentifier(id, version);
-//        this.description = description;
-//    }
-
-    public CatalogResource(
+    protected CatalogResource(
         int key, String name, EnumResourceType resourceType, ResourceIdentifier resourceIdentifier) 
     {
         super(key, EnumInputType.CATALOG, name, resourceType);
         this.resource = new ResourceIdentifier(resourceIdentifier);
     }
     
-    public CatalogResource(
-        int key, String name, ResourceIdentifier resourceIdentifier) 
+    protected CatalogResource(int key, String name, ResourceIdentifier resourceIdentifier) 
     {
         super(key, EnumInputType.CATALOG, name);
         this.resource = new ResourceIdentifier(resourceIdentifier);

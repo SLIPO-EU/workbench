@@ -18,7 +18,7 @@ public class ProcessOutput extends ProcessInput
 
     private int stepKey;
 
-    public ProcessOutput() 
+    protected ProcessOutput() 
     {
         super(-1, EnumInputType.OUTPUT, null);
     }

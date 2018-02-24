@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.apache.commons.beanutils.BeanUtils;
@@ -27,16 +28,18 @@ import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
  */
 public class ProcessDefinitionBuilder 
 {
-    public interface StepBuilder
+    public static abstract class StepBuilder
     {
-        Step build();
+        protected abstract Step build();
     }
     
     /**
      * A builder for a generic {@link Step} inside a process.
      */
-    public static class BasicStepBuilder implements StepBuilder
+    public static class BasicStepBuilder extends StepBuilder
     {
+        private final Supplier<Step> stepFactory;
+        
         protected final int key;
 
         protected final String name;
@@ -62,15 +65,22 @@ public class ProcessDefinitionBuilder
          *
          * @param key A unique (across its process) key for this step
          * @param name A name (preferably unique) for this step.
+         * @param stepFactory A factory to create instances of {@link Step}
          */
-        protected BasicStepBuilder(int key, String name)
+        protected BasicStepBuilder(int key, String name, Supplier<Step> stepFactory)
         {
-            Assert.isTrue(!StringUtils.isEmpty(name),
-                "Expected a non-empty name for this step");
+            Assert.isTrue(!StringUtils.isEmpty(name), "Expected a name for this step");
+            Assert.notNull(stepFactory, "A step factory is required");
             this.key = key;
             this.name = name;
+            this.stepFactory = stepFactory;
         }
 
+        protected BasicStepBuilder(int key, String name)
+        {
+            this(key, name, Step::new);
+        }
+        
         /**
          * Set the operation type.
          * @param operation
@@ -172,7 +182,7 @@ public class ProcessDefinitionBuilder
             return this;
         }
 
-        public Step build()
+        protected Step build()
         {
             Assert.state(this.operation != null, "The operation must be specified");
             Assert.state(this.tool != null, "The tool must be specified");
@@ -183,7 +193,7 @@ public class ProcessDefinitionBuilder
             Assert.state(!this.inputKeys.isEmpty() || !this.sources.isEmpty(),
                 "The list of data sources and list of input keys cannot be both empty!");
 
-            Step step = new Step();
+            Step step = this.stepFactory.get();
 
             step.key = this.key;
             step.group = this.group;
@@ -206,13 +216,13 @@ public class ProcessDefinitionBuilder
         }
     }
     
-    public static class TransformStepBuilder implements StepBuilder
+    public static class TransformStepBuilder extends StepBuilder
     {
         private final BasicStepBuilder stepBuilder;
         
         protected TransformStepBuilder(int key, String name) 
         {
-            this.stepBuilder = new BasicStepBuilder(key, name)
+            this.stepBuilder = new BasicStepBuilder(key, name, TransformStep::new)
                 .operation(EnumOperation.TRANSFORM)
                 .tool(EnumTool.TRIPLEGEO);
         }
@@ -234,6 +244,12 @@ public class ProcessDefinitionBuilder
         public TransformStepBuilder configuration(TriplegeoConfiguration configuration)
         {
             Assert.notNull(configuration, "Expected a non-null configuration");
+            
+            final EnumDataFormat format = this.stepBuilder.outputFormat; 
+            Assert.isTrue(format == null || configuration.getOutputFormat() == null || 
+                (format == configuration.getOutputFormat()), 
+                "The output format must agree with the one supplied at step configuration");
+            
             this.stepBuilder.configuration(configuration);
             this.stepBuilder.outputFormat(configuration.getOutputFormat());
             return this;
@@ -245,7 +261,17 @@ public class ProcessDefinitionBuilder
             return this;
         }
         
-        public Step build()
+        public TransformStepBuilder outputFormat(EnumDataFormat format)
+        {
+            final TriplegeoConfiguration configuration = 
+                (TriplegeoConfiguration) this.stepBuilder.configuration;
+            Assert.isTrue(configuration == null || format == configuration.getOutputFormat(), 
+                "The output format is different from the one supplied to triplegeo configuration");
+            this.stepBuilder.outputFormat(format);
+            return this;
+        }
+        
+        protected Step build()
         {
             Assert.state(this.stepBuilder.inputKeys.isEmpty(), 
                 "Did not expect any input keys (only external data sources)");
@@ -255,7 +281,7 @@ public class ProcessDefinitionBuilder
         }
     }
     
-    public static class RegisterStepBuilder implements StepBuilder
+    public static class RegisterStepBuilder extends StepBuilder
     {
         private final BasicStepBuilder stepBuilder;
         
@@ -263,7 +289,7 @@ public class ProcessDefinitionBuilder
         
         protected RegisterStepBuilder(int key, String name) 
         {
-            this.stepBuilder = new BasicStepBuilder(key, name)
+            this.stepBuilder = new BasicStepBuilder(key, name, RegisterStep::new)
                 .operation(EnumOperation.REGISTER)
                 .tool(EnumTool.REGISTER_METADATA);
         }
@@ -287,7 +313,7 @@ public class ProcessDefinitionBuilder
             return this;
         }
         
-        public Step build()
+        protected Step build()
         {
             Assert.state(metadata != null, 
                 "The required metadata for a resource are missing");
@@ -299,7 +325,7 @@ public class ProcessDefinitionBuilder
     
     private String name;
 
-    private int stepKey = 0;
+    private int stepKeySequence = 0;
 
     private List<ProcessInput> resources = new ArrayList<ProcessInput>();
 
@@ -437,7 +463,7 @@ public class ProcessDefinitionBuilder
     {
         Assert.state(builderFactory != null, "Expected a non-null factory for a StepBuilder");
         
-        int stepKey = ++this.stepKey;
+        int stepKey = ++this.stepKeySequence;
         
         B stepBuilder = builderFactory.apply(stepKey, name);
         configurer.accept(stepBuilder);
