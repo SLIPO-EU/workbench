@@ -1,29 +1,28 @@
 package eu.slipo.workbench.rpc.jobs;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
-import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermissions;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
-import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.job.builder.FlowBuilder;
@@ -41,19 +40,17 @@ import org.springframework.util.Assert;
 
 import eu.slipo.workbench.rpc.jobs.listener.ExecutionContextPromotionListeners;
 
+
 @Component
-public class ConcatenateFilesJobConfiguration
+public class DownloadFileJobConfiguration
 {
     private static final FileAttribute<?> DIRECTORY_ATTRIBUTE =
         PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x"));
 
-    private static Logger logger = LoggerFactory.getLogger(ConcatenateFilesJobConfiguration.class);
+    private static Logger logger = LoggerFactory.getLogger(DownloadFileJobConfiguration.class);
 
     @Autowired
     private StepBuilderFactory stepBuilderFactory;
-
-    @Autowired
-    private JobBuilderFactory jobBuilderFactory;
 
     @Autowired
     private Path jobDataDirectory;
@@ -63,29 +60,50 @@ public class ConcatenateFilesJobConfiguration
     @PostConstruct
     private void setupDataDirectory() throws IOException
     {
-        this.dataDir = jobDataDirectory.resolve("concatenateFiles");
+        this.dataDir = jobDataDirectory.resolve("downloadFile");
         try {
             Files.createDirectory(dataDir, DIRECTORY_ATTRIBUTE);
         } catch (FileAlreadyExistsException e) {}
     }
 
-    public class ConcatenateFilesTasklet implements Tasklet
+    /**
+     * A simple tasklet that downloads a URL to a local output file.
+     *
+     * <p>The download is not resumable, and if failed or interrupted will start from
+     * the beginning.
+     */
+    public class DownloadFileTasklet implements Tasklet
     {
-        private final List<Path> input;
-
         private final Path outputDir;
 
-        private final String outputName;
+        private final Path outputName;
 
-        public ConcatenateFilesTasklet(List<Path> input, Path outputDir, String outputName)
+        private final URL url;
+
+        private final String checksum;
+
+        /**
+         * Create an instance of {@link DownloadFileTasklet}
+         *
+         * @param url The target URL to download from
+         * @param checksum A SHA-256 checksum to verify against (may be <tt>null</tt>, in such a
+         *   case no verification will be performed)
+         * @param outputDir The output directory
+         * @param outputName A file name to save our download under
+         */
+        public DownloadFileTasklet(URL url, String checksum, Path outputDir, String outputName)
         {
-            Assert.notNull(outputDir, "An output directory is required");
-            Assert.isTrue(outputDir.isAbsolute(), "The output directory is expected as an absolute path");
-            Assert.notNull(outputName, "An output name is required");
-            Assert.notEmpty(input, "A non-empty input list is required");
-            this.input = input;
+            Assert.notNull(url, "Expected a non-null source URL ");
+            Assert.notNull(outputDir, "Expected a non-null output directory");
+            Assert.isTrue(outputDir.isAbsolute(),
+                "The output directory is expected as an absolute path");
+            Assert.isTrue(!StringUtils.isEmpty(outputName),
+                "Expected a non-empty name for the output file");
+
+            this.url = url;
+            this.checksum = checksum;
             this.outputDir = outputDir;
-            this.outputName = outputName;
+            this.outputName = Paths.get(outputName);
         }
 
         @Override
@@ -99,66 +117,70 @@ public class ConcatenateFilesJobConfiguration
 
             try {
                 Files.createDirectories(outputDir);
-            } catch (FileAlreadyExistsException ex) {
-                // no-op
-            }
+            } catch (FileAlreadyExistsException ex) {}
 
             Assert.state(Files.isDirectory(outputDir) && Files.isWritable(outputDir),
                 "Expected outputDir to be a writable directory");
 
-            // Concatenate input into target
+            // Download file
 
-            Path output = outputDir.resolve(outputName);
+            final Path target = outputDir.resolve(outputName);
+            try (InputStream in = url.openStream()) {
+                Files.copy(in, target, StandardCopyOption.REPLACE_EXISTING);
+            }
 
-            OpenOption[] outputOptions =
-                new StandardOpenOption[] { StandardOpenOption.WRITE, StandardOpenOption.CREATE };
+            // Verify download
 
-            try (OutputStream out = Files.newOutputStream(output, outputOptions)) {
-                for (Path inputPath: input)
-                    Files.copy(inputPath, out);
+            if (checksum != null) {
+                String computedChecksum = null;
+                try (InputStream s = Files.newInputStream(target, StandardOpenOption.READ)) {
+                    computedChecksum = DigestUtils.sha256Hex(s);
+                }
+                if (!checksum.equalsIgnoreCase(computedChecksum))
+                    throw new IllegalStateException("checksum verification has failed");
             }
 
             // Update execution context
 
             executionContext.put("outputDir", outputDir.toString());
-            executionContext.put("outputName", outputName);
+            executionContext.put("outputName", outputName.toString());
 
             return RepeatStatus.FINISHED;
         }
     }
 
-    @Bean("concatenateFiles.tasklet")
+    @Bean("downloadFile.tasklet")
     @JobScope
-    public ConcatenateFilesTasklet  concatenateFilesTasklet(
-        @Value("#{jobParameters['input']}") String input,
+    public DownloadFileTasklet tasklet(
+        @Value("#{jobParameters['url']}") String url,
         @Value("#{jobParameters['outputName']}") String outputName,
+        @Value("#{jobParameters['checksum']}") String checksum,
         @Value("#{jobExecution.jobInstance.id}") Long jobId)
+        throws MalformedURLException
     {
-        List<Path> inputPaths = Arrays.stream(input.split(File.pathSeparator))
-            .map(Paths::get)
-            .collect(Collectors.toList());
         Path outputDir = dataDir.resolve(String.valueOf(jobId));
-        return new ConcatenateFilesTasklet(inputPaths, outputDir, outputName);
+        return new DownloadFileTasklet(new URL(url), checksum, outputDir, outputName);
     }
 
-    @Bean("concatenateFiles.step")
-    Step step(@Qualifier("concatenateFiles.tasklet") ConcatenateFilesTasklet tasklet)
+    @Bean("downloadFile.step")
+    public Step step(@Qualifier("downloadFile.tasklet") DownloadFileTasklet tasklet)
         throws Exception
     {
         StepExecutionListener contextListener = ExecutionContextPromotionListeners
-            .fromKeys("outputDir").strict(true)
+            .fromKeys("outputDir", "outputName")
+            .strict(true)
             .build();
 
-        return stepBuilderFactory.get("concatenateFiles")
+        return stepBuilderFactory.get("downloadFile")
             .tasklet(tasklet)
             .listener(contextListener)
             .build();
     }
 
-    @Bean("concatenateFiles.flow")
-    Flow flow(@Qualifier("concatenateFiles.step") Step step)
+    @Bean("downloadFile.flow")
+    public Flow flow(@Qualifier("downloadFile.step") Step step)
     {
-        return new FlowBuilder<Flow>("concatenateFiles").start(step).end();
+        return new FlowBuilder<Flow>("downloadFile").start(step).end();
     }
 
 }

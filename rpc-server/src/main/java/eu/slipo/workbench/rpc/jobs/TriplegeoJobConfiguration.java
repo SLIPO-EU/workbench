@@ -74,61 +74,58 @@ import eu.slipo.workbench.rpc.jobs.tasklet.docker.RunContainerTasklet;
 public class TriplegeoJobConfiguration
 {
     private static final String JOB_NAME = "triplegeo";
-    
-    private static final Set<PosixFilePermission> DIRECTORY_PERMISSIONS = 
-        PosixFilePermissions.fromString("rwxr-xr-x");
-    
-    private static final FileAttribute<?> DIRECTORY_ATTRIBUTE = 
-        PosixFilePermissions.asFileAttribute(DIRECTORY_PERMISSIONS);
-        
+
+    private static final FileAttribute<?> DIRECTORY_ATTRIBUTE =
+        PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x"));
+
     /**
      * The default key for the (single) configuration file
      */
     public static final String CONFIG_KEY = "options";
-    
+
     /**
      * The default filename for the (single) configuration file
      */
     public static final String CONFIG_FILENAME = "options.conf";
-    
+
     /**
      * The default timeout (milliseconds) for a container run
      */
     public static final long DEFAULT_RUN_TIMEOUT = 30 * 1000L;
-    
+
     /**
-     * The default interval (milliseconds) for polling a container 
+     * The default interval (milliseconds) for polling a container
      */
     public static final long DEFAULT_CHECK_INTERVAL = 1000L;
-    
+
     @Autowired
     private JobBuilderFactory jobBuilderFactory;
 
     @Autowired
     private StepBuilderFactory stepBuilderFactory;
-    
+
     @Autowired
     private DockerClient docker;
-   
+
     @Autowired
     private PropertiesConverterService propertiesConverterService;
-    
+
     @Autowired
     private Path jobDataDirectory;
-    
+
     /**
      * The root directory on the docker host, under which we bind-mount volumes.
      */
     private Path dataDir;
-    
+
     /**
-     * The root directory on a container, under which directories (or files) will be 
+     * The root directory on a container, under which directories (or files) will be
      * mounted from the host.
-     * <p>This directory is typically be under the <tt>/var</tt> or <tt>/var/local</tt> 
+     * <p>This directory is typically be under the <tt>/var</tt> or <tt>/var/local</tt>
      * hierarchy.
      */
     private Path containerDataDir;
-    
+
     @Autowired
     private void setContainerDataDirectory(
         @Value("${slipo.rpc-server.tools.triplegeo.docker.container-data-dir:/var/local/triplegeo}") String dir)
@@ -138,13 +135,13 @@ public class TriplegeoJobConfiguration
         Assert.isTrue(path.isAbsolute(), "Expected an absolute path (inside a container)");
         this.containerDataDir = path;
     }
-    
+
     @PostConstruct
     private void setupDataDirectory() throws IOException
     {
         this.dataDir = jobDataDirectory.resolve("triplegeo");
         try {
-            Files.createDirectory(dataDir, DIRECTORY_ATTRIBUTE); 
+            Files.createDirectory(dataDir, DIRECTORY_ATTRIBUTE);
         } catch (FileAlreadyExistsException e) {}
     }
 
@@ -162,16 +159,16 @@ public class TriplegeoJobConfiguration
             {
                 StepContext stepContext = context.getStepContext();
                 ExecutionContext executionContext = stepContext.getStepExecution().getExecutionContext();
-                
+
                 TriplegeoConfiguration config = propertiesConverterService.propertiesToValue(
                     stepContext.getJobParameters(), TriplegeoConfiguration.class);
-                
+
                 executionContext.put("config", config);
                 return RepeatStatus.FINISHED;
             }
         };
     }
-    
+
     @Bean("triplegeo.setupExecutionContextStep")
     public Step setupExecutionContextStep(
         @Qualifier("triplegeo.setupExecutionContextTasklet") Tasklet tasklet)
@@ -180,13 +177,13 @@ public class TriplegeoJobConfiguration
             .fromKeys("config")
             .strict(true)
             .build();
-        
+
         return stepBuilderFactory.get("triplegeo.setupExecutionContext")
             .tasklet(tasklet)
             .listener(stepContextListener)
             .build();
     }
-    
+
     @Bean("triplegeo.validateConfigurationTasklet")
     @JobScope
     public Tasklet validateConfigurationTasklet(
@@ -199,7 +196,7 @@ public class TriplegeoJobConfiguration
             public RepeatStatus execute(StepContribution contribution, ChunkContext context)
                 throws Exception
             {
-                Set<ConstraintViolation<TriplegeoConfiguration>> errors = 
+                Set<ConstraintViolation<TriplegeoConfiguration>> errors =
                     validator.validate(config);
                 if (!errors.isEmpty()) {
                     throw InvalidConfigurationException.fromErrors(errors);
@@ -208,7 +205,7 @@ public class TriplegeoJobConfiguration
             }
         };
     }
-    
+
     @Bean("triplegeo.validateConfigurationStep")
     public Step validateConfigurationStep(
         @Qualifier("triplegeo.validateConfigurationTasklet") Tasklet tasklet)
@@ -217,7 +214,7 @@ public class TriplegeoJobConfiguration
             .tasklet(tasklet)
             .build();
     }
-    
+
     /**
      * Α tasklet to prepare the working directory for a Triplegeo job instance.
      */
@@ -226,10 +223,10 @@ public class TriplegeoJobConfiguration
     public PrepareWorkingDirectoryTasklet prepareWorkingDirectoryTasklet(
         ConfigurationGeneratorService configurationGeneratorService,
         @Value("#{jobExecutionContext['config']}") TriplegeoConfiguration config,
-        @Value("#{jobExecution.jobInstance.id}") Long jobId) 
+        @Value("#{jobExecution.jobInstance.id}") Long jobId)
     {
         Path workDir = dataDir.resolve(String.format("%04x", jobId));
-        
+
         return PrepareWorkingDirectoryTasklet.builder()
             .workingDirectory(workDir)
             .input(config.getInput())
@@ -238,10 +235,10 @@ public class TriplegeoJobConfiguration
             .config(CONFIG_KEY, CONFIG_FILENAME, config, EnumConfigurationFormat.PROPERTIES)
             .build();
     }
-    
+
     @Bean("triplegeo.prepareWorkingDirectoryStep")
     public Step prepareWorkingDirectoryStep(
-        @Qualifier("triplegeo.prepareWorkingDirectoryTasklet") PrepareWorkingDirectoryTasklet tasklet) 
+        @Qualifier("triplegeo.prepareWorkingDirectoryTasklet") PrepareWorkingDirectoryTasklet tasklet)
         throws Exception
     {
         StepExecutionListener stepContextListener = ExecutionContextPromotionListeners
@@ -249,19 +246,19 @@ public class TriplegeoJobConfiguration
                 "workDir", "inputDir", "inputFiles", "inputFormat", "outputDir", "configByName")
             .strict(true)
             .build();
-        
+
         return stepBuilderFactory.get("triplegeo.prepareWorkingDirectory")
             .tasklet(tasklet)
             .listener(stepContextListener)
-            .build();   
-    }    
-    
+            .build();
+    }
+
     @Bean("triplegeo.createContainerTasklet")
     @JobScope
     public CreateContainerTasklet createContainerTasklet(
         @Value("${slipo.rpc-server.tools.triplegeo.docker.image}") String imageName,
         @Value("#{jobExecution.jobInstance.id}") Long jobId,
-        @Value("#{jobExecutionContext['workDir']}") String workDir, 
+        @Value("#{jobExecutionContext['workDir']}") String workDir,
         @Value("#{jobExecutionContext['inputDir']}") String inputDir,
         @Value("#{jobExecutionContext['inputFormat']}") String inputFormatName,
         @Value("#{jobExecutionContext['inputFiles']}") List<String> inputFiles,
@@ -269,21 +266,21 @@ public class TriplegeoJobConfiguration
         @Value("#{jobExecutionContext['configByName']}") Map<String, String> configByName)
     {
         String containerName = String.format("triplegeo-%04x", jobId);
-        
+
         Path containerInputDir = containerDataDir.resolve("input");
         Path containerOutputDir = containerDataDir.resolve("output");
         Path containerConfigDir = containerDataDir;
-        
+
         EnumDataFormat inputFormat = EnumDataFormat.valueOf(inputFormatName);
         String inputNameExtension = inputFormat.getFilenameExtension();
-       
+
         String input = inputFiles.stream()
             .filter(name -> StringUtils.getFilenameExtension(name).equals(inputNameExtension))
             .map(name -> containerInputDir.resolve(name).toString())
             .collect(Collectors.joining(File.pathSeparator));
-        
+
         Path configPath = Paths.get(workDir).resolve(configByName.get(CONFIG_KEY));
-        
+
         return CreateContainerTasklet.builder()
             .client(docker)
             .name(containerName)
@@ -297,22 +294,22 @@ public class TriplegeoJobConfiguration
                 .env("OUTPUT_DIR", containerOutputDir.toString()))
             .build();
     }
-    
+
     @Bean("triplegeo.createContainerStep")
     public Step createContainerStep(
-        @Qualifier("triplegeo.createContainerTasklet") CreateContainerTasklet tasklet) 
+        @Qualifier("triplegeo.createContainerTasklet") CreateContainerTasklet tasklet)
         throws Exception
     {
         StepExecutionListener stepContextListener = ExecutionContextPromotionListeners
             .fromKeys("containerId", "containerName")
             .build();
-        
+
         return stepBuilderFactory.get("triplegeo.createContainer")
             .tasklet(tasklet)
             .listener(stepContextListener)
-            .build();   
+            .build();
     }
-    
+
     @Bean("triplegeo.runContainerTasklet")
     @JobScope
     public RunContainerTasklet runContainerTasklet(
@@ -326,18 +323,18 @@ public class TriplegeoJobConfiguration
             .removeOnFinished(false)
             .build();
     }
-    
+
     @Bean("triplegeo.runContainerStep")
     public Step runContainerStep(
-        @Qualifier("triplegeo.runContainerTasklet") RunContainerTasklet tasklet) 
+        @Qualifier("triplegeo.runContainerTasklet") RunContainerTasklet tasklet)
         throws Exception
-    {       
+    {
         return stepBuilderFactory.get("triplegeo.runContainer")
             .tasklet(tasklet)
             .listener(tasklet)
             .build();
     }
-    
+
     /**
      * Create the basic flow of a job, expecting relevant configuration as an instance
      * of {@link TriplegeoConfiguration} keyed under <tt>config</tt> inside execution context.
@@ -347,20 +344,20 @@ public class TriplegeoJobConfiguration
         @Qualifier("breakpointStep") Step breakpointStep, // Fixme breakpointStep
         @Qualifier("triplegeo.validateConfigurationStep") Step validateConfigurationStep,
         @Qualifier("triplegeo.prepareWorkingDirectoryStep") Step prepareWorkingDirectoryStep,
-        @Qualifier("triplegeo.createContainerStep") Step createContainerStep, 
+        @Qualifier("triplegeo.createContainerStep") Step createContainerStep,
         @Qualifier("triplegeo.runContainerStep") Step runContainerStep)
     {
         return new FlowBuilder<Flow>("triplegeo.basicFlow")
             .start(validateConfigurationStep)
             .next(prepareWorkingDirectoryStep)
             .next(createContainerStep)
-            //.next(breakpointStep) // Fixme breakpointStep
+            //.next(breakpointStep)
             .next(runContainerStep)
             .end();
     }
-    
+
     /**
-     * Create flow for a job expecting configuration via normal {@link JobParameters}.  
+     * Create flow for a job expecting configuration via normal {@link JobParameters}.
      */
     @Bean("triplegeo.flow")
     public Flow flow(
@@ -372,7 +369,7 @@ public class TriplegeoJobConfiguration
             .next(basicFlow)
             .build();
     }
-    
+
     @Bean("triplegeo.job")
     public Job job(
         @Qualifier("triplegeo.setupExecutionContextStep") Step setupExecutionContextStep,
@@ -385,7 +382,7 @@ public class TriplegeoJobConfiguration
                 .end()
             .build();
     }
-    
+
     @Bean("triplegeo.jobFactory")
     public JobFactory jobFactory(@Qualifier("triplegeo.job") Job job)
     {
@@ -396,7 +393,7 @@ public class TriplegeoJobConfiguration
             {
                 return JOB_NAME;
             }
-            
+
             @Override
             public Job createJob()
             {

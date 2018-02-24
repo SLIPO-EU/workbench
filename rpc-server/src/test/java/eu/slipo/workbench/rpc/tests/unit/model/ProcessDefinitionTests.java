@@ -53,7 +53,7 @@ import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 public class ProcessDefinitionTests
 {
     private static final String DATASOURCE_1_PATH = "uploads/1.csv";
-    
+
     @TestConfiguration
     public static class Configuration
     {
@@ -62,12 +62,12 @@ public class ProcessDefinitionTests
         {
             return new ObjectMapper();
         }
-        
+
         @Bean
         public TriplegeoConfiguration sampleTriplegeoConfiguration1()
         {
             TriplegeoConfiguration configuration = new TriplegeoConfiguration();
-            
+
             configuration.setInputFormat(EnumDataFormat.CSV);
             configuration.setOutputFormat(EnumDataFormat.N_TRIPLES);
             configuration.setOutputDir(Paths.get("/var/local/triplegeo/1"));
@@ -78,44 +78,44 @@ public class ProcessDefinitionTests
             configuration.setAttrKey("id");
             configuration.setAttrName("name");
             configuration.setAttrCategory("type");
-            
+
             return configuration;
         }
-        
+
         @Bean
         public DeerConfiguration sampleDeerConfiguration1()
         {
             return new DeerConfiguration();
         }
-        
+
         @Bean
         public FileSystemDataSource dataSource1()
         {
             return new FileSystemDataSource(DATASOURCE_1_PATH);
         }
     }
-    
+
     @Autowired
     private ObjectMapper jsonMapper;
-    
+
     @Autowired
     private FileSystemDataSource dataSource1;
-    
+
     @Autowired
     private TriplegeoConfiguration sampleTriplegeoConfiguration1;
-    
+
     @Autowired
     private DeerConfiguration sampleDeerConfiguration1;
-    
+
     private ProcessDefinition buildDefinition1()
     {
         final int resourceKey1 = 1, resourceKey2 = 2;
-        
-        ResourceMetadataCreate metadata1 = 
+
+        ResourceMetadataCreate metadata1 =
             new ResourceMetadataCreate("out-1", "A sample output file");
-        ResourceMetadataCreate metadata2 = 
+        ResourceMetadataCreate metadata2 =
             new ResourceMetadataCreate("out-2", "Another sample output file");
-        
+
         ProcessDefinition definition1 = ProcessDefinitionBuilder.create("proc-a-1")
             .resource("resource-a-1.1", 101, ResourceIdentifier.of(1L, 5L))
             .resource("resource-a-1.2", 102, ResourceIdentifier.of(3L, 17L))
@@ -135,28 +135,28 @@ public class ProcessDefinitionTests
             .register("register-1", resourceKey1, metadata1)
             .register("register-2", resourceKey2, metadata2)
             .build();
-        
+
         return definition1;
     }
-    
+
     @Test
-    public void test1_checkDefinition1() throws Exception 
-    {        
+    public void test1_checkDefinition1() throws Exception
+    {
         ProcessDefinition definition1 = buildDefinition1();
         assertNotNull(definition1);
         assertEquals("proc-a-1", definition1.getName());
-        
+
         List<ProcessInput> resources = definition1.getResources();
         assertEquals(4, resources.size());
         assertEquals(4, resources.stream().mapToInt(r -> r.key()).distinct().count());
-        
+
         List<Step> steps = definition1.getSteps();
         assertEquals(4, steps.size());
         assertEquals(4, steps.stream().mapToInt(s -> s.key()).distinct().count());
         assertEquals(
             new HashSet<>(Arrays.asList("register-1", "register-2", "triplegeo-1", "enrich-with-deer-1")),
             steps.stream().map(r -> r.name()).collect(Collectors.toSet()));
-        
+
         Step step1 = steps.stream().filter(s -> s.name().equals("triplegeo-1"))
             .findFirst().get();
         assertTrue(step1 instanceof TransformStep);
@@ -171,9 +171,9 @@ public class ProcessDefinitionTests
             jsonMapper.writeValueAsString(sampleTriplegeoConfiguration1),
             jsonMapper.writeValueAsString(step1.configuration()));
         assertTrue(step1.configuration() instanceof TriplegeoConfiguration);
-        assertEquals(EnumDataFormat.N_TRIPLES, 
+        assertEquals(EnumDataFormat.N_TRIPLES,
             ((TriplegeoConfiguration) step1.configuration()).getOutputFormat());
-        
+
         Step step2 = steps.stream().filter(s -> s.name().equals("enrich-with-deer-1"))
             .findFirst().get();
         assertEquals(EnumTool.DEER, step2.tool());
@@ -185,7 +185,7 @@ public class ProcessDefinitionTests
             jsonMapper.writeValueAsString(sampleDeerConfiguration1),
             jsonMapper.writeValueAsString(step2.configuration()));
         assertTrue(step2.configuration() instanceof DeerConfiguration);
-        
+
         Step step3 = steps.stream().filter(s -> s.name().equals("register-1"))
             .findFirst().get();
         assertTrue(step3 instanceof RegisterStep);
@@ -195,7 +195,7 @@ public class ProcessDefinitionTests
         assertNull(step3.outputKey());
         assertNotNull(step3.configuration());
         assertTrue(step3.configuration() instanceof MetadataRegistrationConfiguration);
-        
+
         Step step4 = steps.stream().filter(s -> s.name().equals("register-2"))
             .findFirst().get();
         assertTrue(step4 instanceof RegisterStep);
@@ -205,7 +205,7 @@ public class ProcessDefinitionTests
         assertNull(step4.outputKey());
         assertNotNull(step4.configuration());
         assertTrue(step4.configuration() instanceof MetadataRegistrationConfiguration);
-        
+
         List<CatalogResource> catalogResources = resources.stream()
             .filter(r -> r.getInputType() == EnumInputType.CATALOG)
             .map(r -> CatalogResource.class.cast(r))
@@ -217,7 +217,7 @@ public class ProcessDefinitionTests
         assertEquals(
             new HashSet<>(Arrays.asList(ResourceIdentifier.of(1L, 5L), ResourceIdentifier.of(3L, 17L))),
             catalogResources.stream().map(r -> r.getResource()).collect(Collectors.toSet()));
-        
+
         List<ProcessOutput> outputResources = resources.stream()
             .filter(r -> r.getInputType() == EnumInputType.OUTPUT)
             .map(r -> ProcessOutput.class.cast(r))
@@ -226,71 +226,97 @@ public class ProcessDefinitionTests
         assertEquals(
             new HashSet<>(Arrays.asList("triplegeo-1", "enrich-with-deer-1")),
             outputResources.stream().map(r -> r.getName()).collect(Collectors.toSet()));
-        
+
         ProcessOutput outputResource1 = outputResources.stream()
             .filter(r -> r.getName().equals("triplegeo-1"))
             .findFirst().get();
         assertEquals(EnumTool.TRIPLEGEO, outputResource1.getTool());
-        
+
         ProcessOutput outputResource2 = outputResources.stream()
             .filter(r -> r.getName().equals("enrich-with-deer-1"))
             .findFirst().get();
         assertEquals(EnumTool.DEER, outputResource2.getTool());
     }
-    
+
     @Test
     public void test1_checkDefinition1ConvertsToJson() throws Exception
     {
         ProcessDefinition definition1 = buildDefinition1();
         assertNotNull(definition1);
-        
+
         String s1 = jsonMapper.writeValueAsString(definition1);
         //System.err.println(s1);
-        
+
         ProcessDefinition definition1a = jsonMapper.readValue(s1, ProcessDefinition.class);
         assertEquals(s1, jsonMapper.writeValueAsString(definition1a));
     }
-    
+
     @Test(expected = UnsupportedOperationException.class)
     public void test2_checkDefinition1UnmodifiableSteps1()
     {
         ProcessDefinition definition1 = buildDefinition1();
         assertNotNull(definition1);
-        
+
         List<Step> steps = definition1.getSteps();
         steps.remove(0); // attempt to remove a step
     }
-    
+
     @Test(expected = UnsupportedOperationException.class)
     public void test2_checkDefinition1UnmodifiableSteps2()
     {
         ProcessDefinition definition1 = buildDefinition1();
         assertNotNull(definition1);
-        
+
         List<Step> steps = definition1.getSteps();
         Step step1 = steps.get(0);
         steps.add(step1); // attempt to add a step
     }
-    
+
     @Test(expected = UnsupportedOperationException.class)
     public void test2_checkDefinition1UnmodifiableResources1()
     {
         ProcessDefinition definition1 = buildDefinition1();
         assertNotNull(definition1);
-        
+
         List<ProcessInput> resources = definition1.getResources();
         resources.remove(0); // attempt to remove a resource
     }
-    
+
     @Test(expected = UnsupportedOperationException.class)
     public void test2_checkDefinition1UnmodifiableResources2()
     {
         ProcessDefinition definition1 = buildDefinition1();
         assertNotNull(definition1);
-        
+
         List<ProcessInput> resources = definition1.getResources();
         ProcessInput res1 = resources.get(0);
         resources.add(res1);
     }
-    
+
+    @Test(expected = IllegalStateException.class)
+    public void test3_checkRegisterUndefinedResource1()
+    {
+        final int resourceKey = 1; // not a catalog resource, neither is an output from another step
+        ProcessDefinition definition = ProcessDefinitionBuilder.create("register-1")
+            .register("register-1", resourceKey, new ResourceMetadataCreate("sample", "Another sample"))
+            .build();
+        System.err.println(definition);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void test3_checkInputFromUndefinedResource1()
+    {
+        final int inputKey1 = 1;
+        final int inputKey2 = 2; // not a catalog resource, neither is an output from another step
+        final int outputKey = 10;
+        ProcessDefinition definition = ProcessDefinitionBuilder.create("register-1")
+            .resource("res-1", inputKey1, ResourceIdentifier.of(5L, 27L))
+            .transform("triplegeo-1", builder -> builder
+                .input(inputKey2)
+                .configuration(sampleTriplegeoConfiguration1)
+                .outputFormat(EnumDataFormat.N_TRIPLES)
+                .outputKey(outputKey))
+            .build();
+        System.err.println(definition);
+    }
 }

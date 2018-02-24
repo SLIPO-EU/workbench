@@ -1,5 +1,6 @@
 package eu.slipo.workbench.common.model.process;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
@@ -51,5 +52,10 @@ public class ProcessOutput extends ProcessInput
     public int getStepKey() {
         return stepKey;
     }
-
+    
+    @JsonIgnore
+    public int stepKey()
+    {
+        return stepKey;
+    }
 }

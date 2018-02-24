@@ -233,11 +233,21 @@ public class ProcessDefinitionBuilder
             return this;
         }
         
-        public TransformStepBuilder source(DataSource s)
+        public TransformStepBuilder source(DataSource source)
         {
-            Assert.isTrue(this.stepBuilder.sources.isEmpty(), 
-                "A data source is already specified for this step");
-            this.stepBuilder.source(s);
+            Assert.isTrue(
+                this.stepBuilder.sources.isEmpty() && this.stepBuilder.inputKeys.isEmpty(), 
+                "A input (either datasource or a key) is already specified for this step");
+            this.stepBuilder.source(source);
+            return this;
+        }
+        
+        public TransformStepBuilder input(int inputKey)
+        {
+            Assert.isTrue(
+                this.stepBuilder.sources.isEmpty() && this.stepBuilder.inputKeys.isEmpty(), 
+                "A input (either datasource or a key) is already specified for this step");
+            this.stepBuilder.input(inputKey);
             return this;
         }
         
@@ -273,10 +283,6 @@ public class ProcessDefinitionBuilder
         
         protected Step build()
         {
-            Assert.state(this.stepBuilder.inputKeys.isEmpty(), 
-                "Did not expect any input keys (only external data sources)");
-            Assert.state(this.stepBuilder.sources.size() == 1, 
-                "Expected a single data source to import and transform data");
             return this.stepBuilder.build();
         }
     }

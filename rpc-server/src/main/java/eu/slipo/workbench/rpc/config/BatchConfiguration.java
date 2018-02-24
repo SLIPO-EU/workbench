@@ -20,17 +20,17 @@ import org.springframework.core.task.TaskExecutor;
 @Configuration
 @EnableBatchProcessing
 @DependsOn("dataSource")
-public class BatchConfiguration 
+public class BatchConfiguration
 {
     @Autowired
     JobExplorer explorer;
-    
+
     @Autowired
     JobRepository repository;
-    
+
     @Autowired
     JobRegistry registry;
-    
+
     @Bean({ "jobLauncher", "defaultJobLauncher", "asyncJobLauncher"})
     @Primary
     JobLauncher jobLauncher(TaskExecutor taskExecutor)
@@ -41,7 +41,7 @@ public class BatchConfiguration
         launcher.setTaskExecutor(taskExecutor);
         return launcher;
     }
-    
+
     @Bean({"syncJobLauncher"})
     JobLauncher syncJobLauncher()
     {
@@ -51,9 +51,9 @@ public class BatchConfiguration
         launcher.setTaskExecutor(null);
         return launcher;
     }
-    
-    
-    @Bean 
+
+
+    @Bean
     JobOperator jobOperator(JobLauncher launcher)
     {
         // Setup operator to use our asynchronous launcher
@@ -62,7 +62,7 @@ public class BatchConfiguration
         operator.setJobLauncher(launcher);
         operator.setJobRegistry(registry);
         operator.setJobRepository(repository);
-        
+
         return operator;
     }
  }

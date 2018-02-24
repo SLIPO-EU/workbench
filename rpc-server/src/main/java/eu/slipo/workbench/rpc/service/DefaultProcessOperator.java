@@ -1,25 +1,50 @@
 package eu.slipo.workbench.rpc.service;
 
 import java.nio.ByteBuffer;
+import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
+
+import eu.slipo.workbench.common.model.poi.EnumTool;
+import eu.slipo.workbench.common.model.process.CatalogResource;
+import eu.slipo.workbench.common.model.process.EnumInputType;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStartException;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStopException;
+import eu.slipo.workbench.common.model.process.ProcessInput;
 import eu.slipo.workbench.common.model.process.ProcessNotFoundException;
+import eu.slipo.workbench.common.model.process.ProcessOutput;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
+import eu.slipo.workbench.common.model.process.Step;
+import eu.slipo.workbench.common.model.resource.DataSource;
+import eu.slipo.workbench.common.model.resource.EnumDataSourceType;
+import eu.slipo.workbench.common.model.resource.FileSystemDataSource;
+import eu.slipo.workbench.common.model.resource.ResourceRecord;
+import eu.slipo.workbench.common.model.resource.UploadDataSource;
 import eu.slipo.workbench.common.repository.AccountRepository;
 import eu.slipo.workbench.common.repository.ProcessRepository;
+import eu.slipo.workbench.common.repository.ResourceRepository;
 import eu.slipo.workbench.common.service.ProcessOperator;
 import eu.slipo.workflows.Workflow;
 import eu.slipo.workflows.WorkflowBuilderFactory;
@@ -33,7 +58,18 @@ public class DefaultProcessOperator implements ProcessOperator
     private static final Logger logger = LoggerFactory.getLogger(DefaultProcessOperator.class);
 
     @Autowired
+    @Qualifier("tempDataDirectory")
+    private Path tempDir;
+
+    @Autowired
+    @Qualifier("catalogDataDirectory")
+    private Path catalogDataDir;
+
+    @Autowired
     private ProcessRepository processRepository;
+
+    @Autowired
+    private ResourceRepository resourceRepository;
 
     @Autowired
     private AccountRepository accountRepository;
@@ -89,11 +125,122 @@ public class DefaultProcessOperator implements ProcessOperator
      */
     private Workflow buildWorkflow(UUID workflowId, ProcessDefinition definition)
     {
-        Workflow.Builder workflowBuilder = workflowBuilderFactory.get(workflowId);
+        final List<ProcessInput> inputs = definition.getResources();
+        final List<Step> steps = definition.getSteps();
 
-        // Todo Build workflow
+        // Map each resource key of catalog resource to a resource record
+
+        final Map<Integer, ResourceRecord> resourceKeyToRecord = inputs.stream()
+            .filter(r -> r.getInputType() == EnumInputType.CATALOG)
+            .collect(Collectors.toMap(r -> r.key(), r -> findResourceRecord((CatalogResource) r)));
+
+        final Map<Integer, Path> resourceKeyToPath = resourceKeyToRecord.entrySet().stream()
+            .collect(Collectors.toMap(Map.Entry::getKey, e -> resolveToPath(e.getValue())));
+
+        // Map each output key to the key of processing step (expected to produce it)
+
+        final BiMap<Integer, Integer> outputKeyToStepKey = HashBiMap.create(inputs.stream()
+            .filter(r -> r.getInputType() == EnumInputType.OUTPUT)
+            .map(r -> Pair.of(r.key(), ((ProcessOutput) r).stepKey()))
+            .collect(Collectors.toMap(Pair::getFirst, Pair::getSecond)));
+
+        // Map step key to step descriptor
+
+        final Map<Integer, Step> stepByKey = steps.stream()
+            .collect(Collectors.toMap(Step::key, Function.identity()));
+
+        // Build workflow
+
+        final Workflow.Builder workflowBuilder = workflowBuilderFactory.get(workflowId);
+
+        for (Step step: steps) {
+            final EnumTool tool = step.tool();
+            switch (tool) {
+            case REGISTER_METADATA:
+                {
+                    // Todo Add a job node to register an output to the catalog
+                }
+                break;
+            case TRIPLEGEO:
+                {
+                    // Todo Add a job node to transform an input via Triplegeo
+                }
+                break;
+            case LIMES:
+            case DEER:
+            case FAGI:
+                throw new NotImplementedException("todo: a job for a tool of type [" + tool + "]");
+            default:
+                Assert.state(false, "Did not expect a tool of type [" + tool + "]");
+            }
+        }
 
         return workflowBuilder.build();
+    }
+
+    /**
+     * Resolve a reference to a resource (an instance of {@link CatalogResource}) to a
+     * resource record.
+     *
+     * @param r The reference to a catalog's resource (pair of id and version)
+     * @return a full-fledged record as returned from resource repository
+     *
+     * @throws NoSuchElementException if the pair of (id,version) does not correspond to
+     *   a registered resource.
+     */
+    private ResourceRecord findResourceRecord(CatalogResource r)
+    {
+        Assert.state(r != null, "Expected a non-null instance of CatalogResource");
+
+        final long id = r.getId(), version = r.getVersion();
+        Assert.state(id > 0, "The resource id is not valid");
+        Assert.state(version > 0, "The resource version is not valid");
+
+        ResourceRecord record = resourceRepository.findOne(id, version);
+        if (record == null)
+            throw new NoSuchElementException(
+                String.format("The resource does not exist (id=%d, version=%d)", id, version));
+
+        return record;
+    }
+
+    private Path resolveToPath(ResourceRecord record)
+    {
+        Assert.state(record != null, "Expected a non-null record");
+
+        final String p = record.getFilePath();
+        Assert.state(!StringUtils.isEmpty(p), "Expected a non-empty relative path");
+
+        return catalogDataDir.resolve(p);
+    }
+
+    private Path resolveToPath(DataSource source)
+    {
+        Assert.state(source != null, "Expected a non-null source");
+
+        Path path = null;
+
+        final EnumDataSourceType type = source.getType();
+        switch (type) {
+        case UPLOAD:
+            path = tempDir.resolve(((UploadDataSource) source).getPath());
+            break;
+        case FILESYSTEM:
+            path = tempDir.resolve(((FileSystemDataSource) source).getPath());
+            break;
+        case EXTERNAL_URL:
+            // Todo A data source of EXTERNAL_URL should be handled in the workflow itself.
+            // Add a preparation job nodes (not mapped to processing steps) handling all download tasks.
+            throw new UnsupportedOperationException(
+                "A data source of [" + type + "] cannot be resolved to a local file path");
+        case HARVESTER:
+            throw new NotImplementedException(
+                "A data source of type [" + type + "] is not supported (yet)");
+        default:
+            Assert.state(false, "Did not expect a source type of type [" + type + "]");
+        }
+
+        return path;
     }
 
     /**
@@ -104,18 +251,18 @@ public class DefaultProcessOperator implements ProcessOperator
      * a process revision entity). As a consequence, a process revision can only have a single
      * active execution at a given time (because a workflow does so).
      *
-     * @param process
+     * @param processRecord The process record (representing a specific revision)
      * @return
      * @throws ProcessNotFoundException
      * @throws ProcessExecutionStartException
      */
-    private ProcessExecutionRecord startExecution(ProcessRecord process, int uid)
+    private ProcessExecutionRecord startExecution(ProcessRecord processRecord, int uid)
         throws ProcessNotFoundException, ProcessExecutionStartException
     {
-        Assert.state(process != null, "Expected a non-null process record");
+        Assert.state(processRecord != null, "Expected a non-null process record");
 
-        final long id = process.getId();
-        final long version = process.getVersion();
+        final long id = processRecord.getId();
+        final long version = processRecord.getVersion();
 
         // Build a workflow from the definition of this process
 
@@ -123,15 +270,13 @@ public class DefaultProcessOperator implements ProcessOperator
             ByteBuffer.wrap(new byte[16])
                 .putLong(id).putLong(version)
                 .array());
-        Workflow workflow = buildWorkflow(workflowId, process.getDefinition());
+        Workflow workflow = buildWorkflow(workflowId, processRecord.getDefinition());
 
         // Todo Create a process-execution entity and associate with captured events
 
-        ProcessExecutionRecord processExecution = processRepository.createExecution(id, version, uid);
+        ProcessExecutionRecord executionRecord = processRepository.createExecution(id, version, uid);
 
-        // Todo return a DTO for process execution (ProcessExecutionRecord)
-
-        throw new NotImplementedException("Todo");
+        return executionRecord;
     }
 
     private void stopExecution(ProcessRecord process)
