@@ -9,32 +9,20 @@ import { DynamicRoutes, buildPath } from '../../model/routes';
 import JobStatus from './job-status';
 
 /**
- * Job grid sample data
+ * Job grid data
  */
-export const JobGridData = [{
-  process: {
-    id: 1,
-    version: 2,
-  },
-  executionId: 1,
-  name: 'Import POI from OSM',
-  startedOn: moment().add(-2, 'days').toDate(),
-  completedOn: moment().add(-1, 'hours').toDate(),
-  status: 'Completed',
-}, {
-  process: {
-    id: 2,
-    version: 3,
-  },
-  executionId: 1,
-  name: 'Register resource \'Restaurants\'',
-  startedOn: moment().add(-21, 'days').add(-13, 'hours').toDate(),
-  completedOn: moment().add(-21, 'days').add(1, 'hours').toDate(),
-  status: 'Failed',
-}];
+export const JobGridData = (processes) => processes.map(proc => ({
+  process: proc.process,
+  executionId: proc.id,
+  name: proc.name,
+  submittedBy: proc.submittedBy.name,
+  startedOn: moment(proc.startedOn).toDate(),
+  completedOn: !proc.completedOn ? '' : moment(proc.completedOn).toDate(),
+  status: proc.status,
+}));
 
 /**
- * Job grid sample column configuration
+ * Job grid column configuration
  */
 export const JobGridColumns = [{
   Header: 'Workflow Id',
@@ -47,12 +35,15 @@ export const JobGridColumns = [{
 }, {
   Header: 'Name',
   accessor: 'name',
-  minWidth: 250,
+  minWidth: 200,
   Cell: props => {
     return (
       <Link to={buildPath(DynamicRoutes.ProcessExecutionViewer, [props.original.process.id, props.original.process.version, props.original.executionId])}>{props.value}</Link>
     );
   }
+}, {
+  Header: 'Submitted By',
+  accessor: 'submittedBy'
 }, {
   Header: 'Started On',
   accessor: 'startedOn',
@@ -64,10 +55,10 @@ export const JobGridColumns = [{
 }, {
   id: 'completedOn',
   Header: 'Completed On',
-  accessor: d => d.completedOn,
+  accessor: 'completedOn',
   Cell: props => {
     return (
-      <FormattedTime value={props.value} day='numeric' month='numeric' year='numeric' />
+      props.value=='' ? props.value : <FormattedTime value={props.value} day='numeric' month='numeric' year='numeric' />
     );
   }
 }, {

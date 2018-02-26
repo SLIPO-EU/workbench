@@ -37,10 +37,10 @@ class Dashboard extends React.Component {
             <Card { ...CardConfig.ResourceCardConfig(this.props.stats.resources, this.props.intl) } />
           </div>
           <div className="col-sm-12 col-md-6 col-lg-3">
-            <Card { ...CardConfig.JobCardConfig} />
+            <Card { ...CardConfig.JobCardConfig(this.props.stats.processes, this.props.intl) } />
           </div>
           <div className="col-sm-12 col-md-6 col-lg-3">
-            <Card { ...CardConfig.SystemCardConfig} />
+            <Card { ...CardConfig.SystemCardConfig(this.props.stats.system) } />
           </div>
           <div className="col-sm-12 col-md-6 col-lg-3">
             <Card { ...CardConfig.EventCardConfig(this.props.stats.events, this.props.intl) } />
@@ -50,7 +50,7 @@ class Dashboard extends React.Component {
           <Col className="col-sm-12 col-md-12 col-lg-6">
             <DashboardCard { ...DashboardCardConfig.DashboardProcessExplorerConfig} filterChange={this.props.changeDashboardFilter} filterValue={this.props.filters.processExplorer} >
               <Table
-                data={TableConfig.JobGridData}
+                data={TableConfig.JobGridData(this.props.processes)}
                 columns={TableConfig.JobGridColumns}
               />
             </DashboardCard>
@@ -85,6 +85,7 @@ class Dashboard extends React.Component {
 //export default Dashboard;
 const mapStateToProps = (state) => ({
   stats: state.ui.views.dashboard.statistics,
+  processes: state.ui.views.dashboard.processes,
   resources: state.ui.views.dashboard.resources,
   events: state.ui.views.dashboard.events,
   filters: state.ui.views.dashboard.filters,
@@ -94,7 +95,7 @@ const mapStateToProps = (state) => ({
 const mapDispatchToProps = (dispatch) => bindActionCreators({ fetchDashboardData, changeDashboardFilter }, dispatch);
 
 const mergeProps = (stateProps, dispatchProps, ownProps) => {
-  let resVisible;
+  let resVisible, procVisible;
   switch (stateProps.filters.resources) {
     case 'all':
       resVisible = stateProps.resources;
@@ -105,6 +106,19 @@ const mergeProps = (stateProps, dispatchProps, ownProps) => {
     case 'updated':
       resVisible = stateProps.resources.filter(resource => moment(resource.updatedOn).isAfter(moment().subtract(7, 'd')) && (resource.updatedOn !== resource.createdOn));
   }
+  switch (stateProps.filters.processExplorer) {
+    case 'allProcess':
+      procVisible = stateProps.processes;
+      break;
+    case 'completed':
+      procVisible = stateProps.processes.filter(process => process.status=='COMPLETED');
+      break;
+    case 'running':
+      procVisible = stateProps.processes.filter(process => process.status=='RUNNING');
+      break;
+    case 'failed':
+      procVisible = stateProps.processes.filter(process => process.status=='FAILED');
+  }
 
   return {
     ...stateProps,
@@ -112,6 +126,7 @@ const mergeProps = (stateProps, dispatchProps, ownProps) => {
     ...ownProps,
     events: stateProps.filters.events === "ALL" ? stateProps.events : stateProps.events.filter(event => event.level === stateProps.filters.events),
     resources: resVisible,
+    processes: procVisible
   };
 };
 

@@ -1,15 +1,15 @@
 import { StaticRoutes } from '../../model/routes';
 
-export const JobCardConfig = {
+export const JobCardConfig = (props, intl) => ({
   title: 'dashboard.card.jobs',
   items: [{
-    value: 2,
+    value: props.completed,
     label: 'Completed',
   }, {
-    value: 1,
+    value: props.running,
     label: 'Running',
   }, {
-    value: 0,
+    value: props.failed,
     label: 'Failed',
   }],
   color: '#ffffff',
@@ -20,7 +20,7 @@ export const JobCardConfig = {
     label: 'See more...',
   },
   iconClass: 'fa fa-cog',
-};
+});
 
 export const ResourceCardConfig = (props, intl) => ({
   title: 'dashboard.card.resources',
@@ -44,22 +44,22 @@ export const ResourceCardConfig = (props, intl) => ({
   iconClass: 'fa fa-book',
 });
 
-export const SystemCardConfig = {
+export const SystemCardConfig = (props) => ({
   title: 'dashboard.card.system',
   items: [{
-    value: 12,
-    label: ' / 100 Cores',
+    value: [props.usedCores, props.totalCores],
+    label: 'Cores',
   }, {
-    value: 24,
-    label: ' / 128 Memory',
+    value: [props.usedMemory, props.totalMemory],
+    label: 'Memory',
   }, {
-    value: 75,
-    label: ' / 2048 Disk Space',
+    value: [props.usedDisk, props.totalDisk],
+    label: 'Disk Space',
   }],
   color: '#ffffff',
   background: '#d9534f',
   iconClass: 'fa fa-cubes',
-};
+});
 
 export const EventCardConfig = (props, intl) => ({
   title: 'dashboard.card.events',
