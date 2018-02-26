@@ -131,7 +131,7 @@ export const ResourceGridData = (resources) => resources.map(resource => ({
   name: resource.metadata.name,
   version: resource.version,
   createdOn: moment(resource.createdOn).toDate(),
-  count: resource.metadata.size,
+  count: resource.numberOfEntities,
   process: resource.jobExecutionId,
 }));
 

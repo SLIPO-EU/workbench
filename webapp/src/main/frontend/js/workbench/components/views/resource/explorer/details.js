@@ -153,7 +153,7 @@ class ResourceDetails extends React.Component {
             <TextField
               id="entities"
               label="# of Elements"
-              value={r.metadata.size.toString()}
+              value={r.numberOfEntities.toString()}
               readOnly={true}
             />
           </Col>
