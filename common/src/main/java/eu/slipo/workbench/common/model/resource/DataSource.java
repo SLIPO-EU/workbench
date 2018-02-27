@@ -42,5 +42,5 @@ public abstract class DataSource implements Serializable
      */
     public EnumDataSourceType getType() {
         return type;
-    }
+    } 
 }

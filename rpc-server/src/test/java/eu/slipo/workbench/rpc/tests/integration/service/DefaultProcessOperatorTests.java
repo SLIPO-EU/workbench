@@ -1,6 +1,10 @@
 package eu.slipo.workbench.rpc.tests.integration.service;
 
+import static org.junit.Assert.assertNotNull;
+import static org.springframework.util.StringUtils.stripFilenameExtension;
+
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,15 +21,12 @@ import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
-import org.apache.commons.collections4.BidiMap;
-import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.batch.item.util.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -38,12 +39,9 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.springframework.util.StringUtils.stripFilenameExtension;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.util.concurrent.Futures;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 
 import eu.slipo.workbench.common.domain.AccountEntity;
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
@@ -53,7 +51,7 @@ import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStartException;
 import eu.slipo.workbench.common.model.process.ProcessNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
-import eu.slipo.workbench.common.model.resource.DataSource;
+import eu.slipo.workbench.common.model.resource.ExternalUrlDataSource;
 import eu.slipo.workbench.common.model.resource.FileSystemDataSource;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
@@ -250,26 +248,28 @@ public class DefaultProcessOperatorTests
 
                 final List<String> inputNames = Files.list(inputDir)
                     .map(p -> inputDir.relativize(p))
-                    .filter(p -> p.getNameCount() == 1)
                     .map(p -> p.getFileName().toString())
                     .collect(Collectors.toList());
 
-                final BidiMap<String,Path> inputNameToTempPath = new DualHashBidiMap<>();
+                final BiMap<String,Path> inputNameToTempPath = HashBiMap.create();
 
                 for (String inputName: inputNames) {
-                    Path p = Files.createTempFile(stagingInputDir, null, ".csv");
+                    Path p = Files.createTempFile(
+                        stagingInputDir,
+                        StringUtils.stripFilenameExtension(inputName) + "-",
+                        ".csv");
                     Files.copy(inputDir.resolve(inputName), p, StandardCopyOption.REPLACE_EXISTING);
                     inputNameToTempPath.put(inputName, p);
                 }
 
-                this.transformFixtures = inputNames.stream()
+                inputNames.stream()
                     .map(p -> new TransformFixture(
                         stripFilenameExtension(p),
                         stagingInputDir,
                         stagingInputDir.relativize(inputNameToTempPath.get(p)),
                         resultsDir.resolve(stripFilenameExtension(p) + ".nt"),
                         configuration))
-                    .collect(Collectors.toList());
+                    .forEach(transformFixtures::add);
             }
 
             //
@@ -320,7 +320,7 @@ public class DefaultProcessOperatorTests
     private List<TransformFixture> transformFixtures;
 
     private void tranformAndRegister(final TransformFixture fixture, Account creator)
-        throws ProcessNotFoundException, ProcessExecutionStartException
+        throws ProcessNotFoundException, ProcessExecutionStartException, IOException
     {
         final int creatorId = creator.getId();
 
@@ -347,9 +347,10 @@ public class DefaultProcessOperatorTests
         // Start process
 
         ProcessExecutionRecord executionRecord =
-            processOperator.start(record.getId(), record.getVersion(), creatorId);
+            processOperator.start(record.getId(), record.getVersion());
         assertNotNull(executionRecord);
 
+        // Todo poll execution for completion
     }
 
     @Test
@@ -361,4 +362,53 @@ public class DefaultProcessOperatorTests
         tranformAndRegister(transformFixtures.get(0), user.toDto());
     }
 
+    ///////////////////////////////////////////////////////////////////////////////
+    //                Fixme scratch                                              //
+    ///////////////////////////////////////////////////////////////////////////////
+
+    //@Test
+    public void test99_transformAndRegister1() throws Exception
+    {
+        AccountEntity user = accountRepository.findOneByUsername("baz");
+        assertNotNull(user);
+
+        final String name = "register-" + Long.toHexString(System.currentTimeMillis());
+        final int resourceKey = 1;
+
+        final ResourceMetadataCreate metadata =
+            new ResourceMetadataCreate("sample", "A sample input file");
+
+        ExternalUrlDataSource source = new ExternalUrlDataSource("http://localhost/~malex/share/1.csv");
+
+        TriplegeoConfiguration configuration = new TriplegeoConfiguration();
+        configuration.setInputFormat(EnumDataFormat.CSV);
+        configuration.setOutputFormat(EnumDataFormat.N_TRIPLES);
+        configuration.setTmpDir(Paths.get("/tmp/triplegeo/1"));
+        configuration.setAttrX("lon");
+        configuration.setAttrX("lat");
+        configuration.setFeatureName("points");
+        configuration.setAttrKey("id");
+        configuration.setAttrName("name");
+        configuration.setAttrCategory("type");
+
+        ProcessDefinition definition = ProcessDefinitionBuilder.create(name)
+            .transform("triplegeo-1", builder -> builder
+                .source(source)
+                .outputFormat(EnumDataFormat.N_TRIPLES)
+                .outputKey(resourceKey)
+                .configuration(configuration))
+            .register("register-1", resourceKey, metadata)
+            .build();
+
+        ProcessRecord record = processRepository.create(definition, user.getId());
+        assertNotNull(record);
+
+        // Start process
+
+        ProcessExecutionRecord executionRecord =
+            processOperator.start(record.getId(), record.getVersion());
+        assertNotNull(executionRecord);
+
+
+    }
 }

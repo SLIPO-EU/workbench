@@ -163,4 +163,14 @@ public class Step implements Serializable
     {
         return outputFormat;
     }
+
+    @Override
+    public String toString()
+    {
+        return String.format(
+            "Step [key=%s, name=%s, operation=%s, tool=%s, outputFormat=%s]", 
+            key, name, operation, tool, outputFormat);
+    }
+    
+    
 }

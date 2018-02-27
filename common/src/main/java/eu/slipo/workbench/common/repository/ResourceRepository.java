@@ -70,7 +70,7 @@ public interface ResourceRepository
      * @param executionId The id of the process execution
      * @param stepKey The key of the step inside the execution 
      * @param metadata The metadata that accompany this file resource
-     * @return
+     * @return an resource record for the newly created entity 
      */
     ResourceRecord createFromProcessExecution(long executionId, int stepKey, ResourceMetadataCreate metadata);
     
@@ -80,7 +80,27 @@ public interface ResourceRepository
      * @param id The id of the targeted resource entity
      * @param record The DTO record that models our entity
      * @param updatedBy The id of the user that updated this resource
-     * @return
+     * @return a resource record for the updated entity
      */
     ResourceRecord update(long id, ResourceRecord record, int updatedBy);
+    
+    /**
+     * Update the resource entity identified by given <tt>id</tt> and <tt>version</tt> by associating 
+     * to a given process execution.  
+     * 
+     * <p>This method does <em>not</em> affect versioning of resources in any way: simply links to
+     * a given process execution. It expects to find a null link, and will refuse to update a non-null
+     * link (different from the one given one).
+     * 
+     * <p>The main reason this method is provided is that sometimes the information related to 
+     * process execution is not be available to the Batch job that created/updated the target resource
+     * entity. In such a case, we can set this link in a post-processing callback (e.g. in a completion 
+     * listener). 
+     * 
+     * @param id The id of the resource entity
+     * @param version The version of the resource entity
+     * @param executionId The id of a process execution
+     * @return a resource record for the updated entity
+     */
+    void setProcessExecution(long id, long version, long executionId);
 }

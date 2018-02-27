@@ -353,7 +353,7 @@ public class DefaultProcessRepositoryTests
         // Update execution by adding one step as RUNNING
         //
 
-        final int step1Key = sampleProcessDefinition1.getSteps().stream()
+        final int step1Key = sampleProcessDefinition1.steps().stream()
             .filter(s -> s.operation() == EnumOperation.TRANSFORM)
             .mapToInt(s -> s.key())
             .findFirst()

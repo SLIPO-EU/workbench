@@ -66,6 +66,12 @@ public class CatalogResource extends ProcessInput
         this.description = description;
     }
 
+    @JsonIgnore
+    public ResourceIdentifier resourceIdentifier()
+    {
+        return resource;
+    }
+    
     @Override
     public String toString()
     {

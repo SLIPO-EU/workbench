@@ -1,5 +1,7 @@
 package eu.slipo.workbench.common.repository;
 
+import static org.apache.commons.collections4.map.DefaultedMap.defaultedMap;
+
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,10 +15,9 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
-import org.apache.commons.collections4.map.DefaultedMap;
 import org.apache.commons.lang3.StringUtils;
-import static org.apache.commons.collections4.map.DefaultedMap.defaultedMap;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,12 +37,10 @@ import eu.slipo.workbench.common.model.poi.EnumOperation;
 import eu.slipo.workbench.common.model.poi.EnumResourceType;
 import eu.slipo.workbench.common.model.process.EnumStepFile;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
-import eu.slipo.workbench.common.model.process.Step;
 import eu.slipo.workbench.common.model.resource.DataSource;
 import eu.slipo.workbench.common.model.resource.EnumDataSourceType;
 import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
-import eu.slipo.workbench.common.model.resource.ResourceMetadataView;
 import eu.slipo.workbench.common.model.resource.ResourceQuery;
 import eu.slipo.workbench.common.model.resource.ResourceRecord;
 
@@ -49,6 +48,8 @@ import eu.slipo.workbench.common.model.resource.ResourceRecord;
 @Transactional
 public class DefaultResourceRepository implements ResourceRepository 
 {
+    private static Logger logger = LoggerFactory.getLogger(DefaultResourceRepository.class);
+    
     @PersistenceContext(unitName = "default")
     EntityManager entityManager;
 
@@ -285,6 +286,48 @@ public class DefaultResourceRepository implements ResourceRepository
     }
     
     @Override
+    public void setProcessExecution(long id, long version, long executionId)
+    {
+        ResourceRevisionEntity resourceRevisionEntity = findRevision(id, version);
+        Assert.notNull(resourceRevisionEntity, 
+            "The pair of (id, version) does not refer to a ResourceRevision entity");
+        
+        ProcessExecutionEntity executionEntity = 
+            entityManager.find(ProcessExecutionEntity.class, executionId);
+        Assert.notNull(executionEntity, 
+            "The execution id does not refer to a ProcessExecution entity");
+        
+        // Associate targeted revision entity with given execution
+        
+        String qlUpdateRevision = 
+            "UPDATE ResourceRevision r SET r.processExecution = :execution " +
+            "WHERE r.id = :id AND r.version = :version AND r.processExecution is NULL";
+        
+        int countUpdated = entityManager.createQuery(qlUpdateRevision)
+            .setParameter("execution", executionEntity)
+            .setParameter("id", id)
+            .setParameter("version", version)
+            .executeUpdate();
+        
+        if (countUpdated == 0) {
+            logger.warn("Did not update process execution for resource %d@%d (already set)",
+                id, version);
+        }
+        
+        // If targeted revision is the latest, parent entity must also be updated
+        
+        String qlUpdateParent = 
+            "UPDATE Resource r SET r.processExecution = :execution " +
+            "WHERE r.id = :id AND r.version = :version";
+        
+        entityManager.createQuery(qlUpdateParent)
+            .setParameter("execution", executionEntity)
+            .setParameter("id", id)
+            .setParameter("version", version)
+            .executeUpdate();
+    }
+    
+    @Override
     public ResourceRecord update(long id, ResourceRecord record, int userId)
     {
         Assert.notNull(record, "Expected a non-null record");
@@ -297,7 +340,7 @@ public class DefaultResourceRepository implements ResourceRepository
         ZonedDateTime now = ZonedDateTime.now();
         
         ResourceEntity entity = entityManager.find(ResourceEntity.class, id);
-        Assert.notNull(entity, "The given id does not refer to a ResourceEntity");
+        Assert.notNull(entity, "The given id does not refer to a Resource entity");
         
         // Update entity and create new revision
         
@@ -322,6 +365,8 @@ public class DefaultResourceRepository implements ResourceRepository
         if (executionId != null) {
             entity.setProcessExecution(
                 entityManager.find(ProcessExecutionEntity.class, executionId));
+        } else {
+            entity.setProcessExecution(null);
         }
         
         ResourceRevisionEntity revisionEntity = new ResourceRevisionEntity(entity);
@@ -335,13 +380,13 @@ public class DefaultResourceRepository implements ResourceRepository
     
     private ResourceRevisionEntity findRevision(long id, long version)
     {
-        String queryString =
+        String qlString =
             "FROM ResourceRevision r WHERE r.parent.id = :id AND r.version = :version";
 
-        TypedQuery<ResourceRevisionEntity> query = entityManager
-            .createQuery(queryString, ResourceRevisionEntity.class)
-            .setParameter("id", id)
-            .setParameter("version", version);
+        TypedQuery<ResourceRevisionEntity> query = 
+            entityManager.createQuery(qlString, ResourceRevisionEntity.class)
+                .setParameter("id", id)
+                .setParameter("version", version);
 
         ResourceRevisionEntity r = null;
         try {
@@ -441,7 +486,7 @@ public class DefaultResourceRepository implements ResourceRepository
         final ProcessExecutionEntity executionEntity = stepEntity.getExecution();
         final ProcessDefinition definition = executionEntity.getProcess().getDefinition();
         
-        List<DataSource> sources = definition.getSteps().stream()
+        List<DataSource> sources = definition.steps().stream()
             .filter(s -> s.key() == stepKey)
             .findFirst()
             .map(s -> s.sources())

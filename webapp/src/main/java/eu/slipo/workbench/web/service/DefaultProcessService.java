@@ -94,7 +94,7 @@ public class DefaultProcessService implements ProcessService {
         List<Error> errors = new ArrayList<Error>();
 
         // Process name must be unique
-        if ((id == null) && (processRepository.findOne(definition.getName()) != null)) {
+        if ((id == null) && (processRepository.findOne(definition.name()) != null)) {
             errors.add(new Error(ProcessErrorCode.NAME_DUPLICATE, "Workflow name already exists."));
         }
 

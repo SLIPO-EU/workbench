@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.time.ZonedDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -32,11 +33,15 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Scope;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.util.Pair;
+import org.springframework.expression.Expression;
+import org.springframework.expression.ParserContext;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.google.common.collect.ImmutableMap;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
@@ -61,6 +66,7 @@ import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.repository.AccountRepository;
 import eu.slipo.workbench.common.repository.DefaultResourceRepository;
 import eu.slipo.workbench.common.repository.ResourceRepository;
+
 
 @RunWith(SpringRunner.class)
 @ActiveProfiles({ "testing" })
@@ -219,4 +225,90 @@ public class DefaultResourceRepositoryTests
         assertEquals(2L, revision1b2.getVersion());
 
     }
+
+
+    /////////////////////////////////////////////////////////////////////////////
+    //                                                                         //
+    // Fixme test2_scratch                                                     //
+    //                                                                         //
+    /////////////////////////////////////////////////////////////////////////////
+
+    public static class P
+    {
+        String foo;
+
+        public String getFoo()
+        {
+            return foo;
+        }
+    }
+
+    private ResourceRecord findResourceRecord(ProcessInput p)
+    {
+        CatalogResource r = (CatalogResource) p;
+        return resourceRepository.findOne(r.getId(), r.getVersion());
+    }
+
+    @Test
+    public void test2_scratch1()
+    {
+        QueryResultPage<ResourceRecord> resultPage = resourceRepository.find(null, null);
+        System.err.println(resultPage);
+
+        ResourceRecord record = resultPage.getItems().get(0);
+        long id = record.getId(), version = record.getVersion();
+
+        final long executionId = 1L;
+
+        resourceRepository.setProcessExecution(record.getId(), record.getVersion(), executionId);
+    }
+
+    // @Test
+    public void test2_scratch2()
+    {
+        QueryResultPage<ResourceRecord> resultPage = resourceRepository.find(null, null);
+        System.err.println(resultPage);
+
+        ResourceRecord record = resultPage.getItems().get(0);
+        long id = record.getId(), version = record.getVersion();
+
+        TriplegeoConfiguration configuration = new TriplegeoConfiguration();
+        configuration.setOutputFormat(EnumDataFormat.GEOJSON);
+
+        ProcessDefinition def = ProcessDefinitionBuilder.create("foo")
+            .resource("res-1", 19, ResourceIdentifier.of(id, version))
+            .register("register-2", 2, new ResourceMetadataCreate("sample", "Something"))
+            .transform("triplegeo", c -> c
+                .input(19)
+                .outputFormat(EnumDataFormat.GEOJSON)
+                .outputKey(2)
+                .configuration(configuration))
+            .build();
+
+        final List<ProcessInput> inputs = def.resources();
+        final List<Step> steps = def.steps();
+
+        // Map each resource key of catalog resource to a resource record
+
+        final Map<Integer, ResourceRecord> resourceKeyToRecord = inputs.stream()
+            .filter(r -> r.getInputType() == EnumInputType.CATALOG)
+            .collect(Collectors.toMap(r -> r.key(), r -> findResourceRecord(r)));
+
+
+        System.err.println(resourceKeyToRecord);
+
+        final BiMap<Integer, Integer> outputKeyToStepKey = HashBiMap.create(inputs.stream()
+            .filter(r -> r.getInputType() == EnumInputType.OUTPUT)
+            .map(r -> Pair.of(r.key(), ((ProcessOutput) r).stepKey()))
+            .collect(Collectors.toMap(Pair::getFirst, Pair::getSecond)));
+
+        System.err.println(outputKeyToStepKey);
+
+        final Map<Integer, Step> stepByKey = steps.stream()
+            .collect(Collectors.toMap(step -> step.key(), Function.identity()));
+
+        System.err.println(stepByKey);
+
+    }
+
 }

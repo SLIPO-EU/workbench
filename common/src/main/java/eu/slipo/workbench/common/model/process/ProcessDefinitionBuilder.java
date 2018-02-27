@@ -1,6 +1,7 @@
 package eu.slipo.workbench.common.model.process;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiFunction;
@@ -9,6 +10,8 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.apache.commons.beanutils.BeanUtils;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -152,6 +155,27 @@ public class ProcessDefinitionBuilder
         }
 
         /**
+         * @see {@link Step.BasicStepBuilder#input(List)}
+         * @param inputKey
+         */
+        public BasicStepBuilder input(int inputKey1, int inputKey2)
+        {
+            this.inputKeys.add(inputKey1);
+            this.inputKeys.add(inputKey2);
+            return this;
+        }
+        
+        /**
+         * @see {@link Step.BasicStepBuilder#input(List)}
+         * @param inputKey
+         */
+        public BasicStepBuilder input(int ...inputKeys)
+        {
+            this.inputKeys.addAll(Arrays.asList(ArrayUtils.toObject(inputKeys)));
+            return this;
+        }
+
+        /**
          * Set a list of external data sources that should be input to this step.
          *
          * <p>A {@link DataSource} is an input that is external to the application, i.e it is
@@ -209,7 +233,7 @@ public class ProcessDefinitionBuilder
                 // Make a defensive copy of the configuration bean
                 step.configuration = (ToolConfiguration) BeanUtils.cloneBean(configuration);
             } catch (ReflectiveOperationException ex) {
-                throw new IllegalStateException("Cannot clone configuration", ex);
+                throw new IllegalStateException("Cannot clone the configuration bean", ex);
             }
 
             return step;
@@ -293,6 +317,8 @@ public class ProcessDefinitionBuilder
         
         private ResourceMetadataCreate metadata;
         
+        private ResourceIdentifier resourceIdentifier;
+        
         protected RegisterStepBuilder(int key, String name) 
         {
             this.stepBuilder = new BasicStepBuilder(key, name, RegisterStep::new)
@@ -308,14 +334,28 @@ public class ProcessDefinitionBuilder
             return this;
         }
         
+        /**
+         * Set metadata to accompany resource
+         * @param metadata
+         */
         public RegisterStepBuilder metadata(ResourceMetadataCreate metadata)
         {
             Assert.isTrue(metadata != null && !StringUtils.isEmpty(metadata.getName()), 
                 "Expected non-empty metadata to accompany this resource");
-            final MetadataRegistrationConfiguration configuration = 
-                new MetadataRegistrationConfiguration(metadata);
-            this.stepBuilder.configuration(configuration);
             this.metadata = metadata;
+            return this;
+        }
+        
+        /**
+         * Register this resource as a new revision of an existing resource
+         * @param resourceIdentifier The identifier of a catalog resource
+         */
+        public RegisterStepBuilder revisionOf(ResourceIdentifier resourceIdentifier)
+        {
+            Assert.notNull(resourceIdentifier, "A resource identifier is required");
+            Assert.isTrue(resourceIdentifier.getId() > 0, "The id of referenced resource is invalid");
+            Assert.isTrue(resourceIdentifier.getVersion() < 0, "A version must not be specified");
+            this.resourceIdentifier = resourceIdentifier;
             return this;
         }
         
@@ -325,6 +365,9 @@ public class ProcessDefinitionBuilder
                 "The required metadata for a resource are missing");
             Assert.state(!stepBuilder.inputKeys.isEmpty(), 
                 "No resource key is specified (as input for the registration step)");
+            MetadataRegistrationConfiguration configuration = 
+                new MetadataRegistrationConfiguration(metadata, resourceIdentifier);
+            this.stepBuilder.configuration(configuration);
             return this.stepBuilder.build();
         }
     }
@@ -412,8 +455,7 @@ public class ProcessDefinitionBuilder
     }
     
     /**
-     * Register an intermediate result (produced by this process) to the catalog. The actual
-     * registration will take place after successful completion of the entire process.
+     * Register an intermediate result (produced by a processing step) as a new catalog resource. 
      * 
      * @param name The user-friendly name for this step
      * @param configurer A function to build this step
@@ -426,10 +468,37 @@ public class ProcessDefinitionBuilder
         return this.addStep(name, configurer, RegisterStepBuilder::new);
     }
     
+    /**
+     * Register an intermediate result (produced by a processing step) as a new catalog resource.
+     * 
+     * @param name The user-friendly name for this step
+     * @param resourceKey The resource key defined as the output by some processing step 
+     * @param metadata The metadata to accompany the resource
+     * @return this builder
+     */
     public ProcessDefinitionBuilder register(String name, int resourceKey, ResourceMetadataCreate metadata)
     {
         Assert.notNull(metadata, "The resource metadata are required");
         return this.register(name, b -> b.resource(resourceKey).metadata(metadata));
+    }
+    
+    /**
+     * Register an intermediate result (produced by a processing step) as a new revision of an 
+     * existing catalog resource.
+     * 
+     * @param name The user-friendly name for this step
+     * @param resourceKey The resource key defined as the output by some processing step 
+     * @param metadata The metadata to accompany the resource
+     * @param target The identifier of an existing catalog resource
+     * @return this builder
+     */
+    public ProcessDefinitionBuilder registerAsNewRevision(
+        String name, int resourceKey, ResourceMetadataCreate metadata, ResourceIdentifier target)
+    {
+        Assert.notNull(metadata, "The resource metadata are required");
+        Assert.notNull(target, "A target resource is required");
+        return this.register(
+            name, b -> b.resource(resourceKey).metadata(metadata).revisionOf(target));
     }
     
     public ProcessDefinition build()
@@ -446,19 +515,31 @@ public class ProcessDefinitionBuilder
             "The list of given steps contains duplicate names!");
         
         final Set<Integer> resourceKeys = this.resources.stream()
-            .map(ProcessInput::getKey)
+            .map(r -> r.key())
             .collect(Collectors.toSet());
-
+        
+        final Set<Integer> outputKeys = this.resources.stream()
+            .filter(r -> r instanceof ProcessOutput)
+            .map(r -> r.key())
+            .collect(Collectors.toSet());
+        
         Assert.state(resourceKeys.size() == this.resources.size(),
             "The list of given resources contains duplicate keys!");
         
         Assert.state(resourceKeys.stream().allMatch(key -> key > 0), 
             "The resource keys must all be positive integers");
         
-        Assert.state(this.steps.stream()
+        Assert.state(
+            this.steps.stream()
                 .allMatch(step -> resourceKeys.containsAll(step.inputKeys())),
             "The input keys (for every step) must refer to existing resource keys");
 
+        Assert.state(
+            this.steps.stream()
+                .filter(step -> step.operation == EnumOperation.REGISTER)
+                .allMatch(step -> outputKeys.containsAll(step.inputKeys())), 
+           "The input key for a registration step must refer to an output of another step");
+        
         // The definition seems valid
 
         return new ProcessDefinition(this.name, this.resources, this.steps);
@@ -469,7 +550,7 @@ public class ProcessDefinitionBuilder
     {
         Assert.state(builderFactory != null, "Expected a non-null factory for a StepBuilder");
         
-        int stepKey = ++this.stepKeySequence;
+        int stepKey = this.stepKeySequence++;
         
         B stepBuilder = builderFactory.apply(stepKey, name);
         configurer.accept(stepBuilder);

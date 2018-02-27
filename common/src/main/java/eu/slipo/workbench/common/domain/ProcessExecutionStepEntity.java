@@ -54,7 +54,7 @@ public class ProcessExecutionStepEntity
     @JoinColumn(name = "process_execution", nullable = false, updatable = false)
     ProcessExecutionEntity execution;
 
-    @Min(1)
+    @Min(0)
     @NotNull
     @NaturalId
     @Column(name = "step_key", nullable = false, updatable = false)

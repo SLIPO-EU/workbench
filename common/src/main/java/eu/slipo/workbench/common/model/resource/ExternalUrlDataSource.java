@@ -1,33 +1,41 @@
 package eu.slipo.workbench.common.model.resource;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * External URL data source
+ * Represent a data source from a public URL
  */
 public class ExternalUrlDataSource extends DataSource 
 {
-    @JsonProperty("url")
-    private String url;
+    private static final long serialVersionUID = 1L;
+    
+    private URL url;
 
-    public ExternalUrlDataSource() 
+    protected ExternalUrlDataSource() 
     {
         super(EnumDataSourceType.EXTERNAL_URL);
     }
     
-    public ExternalUrlDataSource(String url) 
+    public ExternalUrlDataSource(URL url) 
     {
         super(EnumDataSourceType.EXTERNAL_URL);
         this.url = url;
     }
+    
+    public ExternalUrlDataSource(String url)
+    {
+        try {
+            this.url = new URL(url);
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException("The given URL is invalid", e);
+        }
+    }
 
-    /**
-     * URL for downloading the resource
-     *
-     * @return the URL
-     */
     @JsonProperty("url")
-    public String getUrl() {
+    public URL getUrl() {
         return url;
     }
 
@@ -35,5 +43,22 @@ public class ExternalUrlDataSource extends DataSource
     public String toString()
     {
         return String.format("ExternalUrlDataSource [url=%s]", url);
+    }
+    
+    @Override
+    public int hashCode()
+    {
+        return url == null? 0 : url.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (this == obj)
+            return true;
+        if (obj == null || !(obj instanceof ExternalUrlDataSource))
+            return false;
+        ExternalUrlDataSource other = (ExternalUrlDataSource) obj;
+        return url == null? (other.url == null) : url.equals(other.url);
     }
 }

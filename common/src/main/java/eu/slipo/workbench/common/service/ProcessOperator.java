@@ -1,5 +1,7 @@
 package eu.slipo.workbench.common.service;
 
+import java.io.IOException;
+
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStartException;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStopException;
@@ -20,9 +22,16 @@ public interface ProcessOperator
      * 
      * @throws ProcessNotFoundException if no matching revision entity is found
      * @throws ProcessExecutionStartException if the execution failed to start
+     * @throws IOException 
      */
     ProcessExecutionRecord start(long id, long version, int submittedBy) 
-        throws ProcessNotFoundException, ProcessExecutionStartException;
+        throws ProcessNotFoundException, ProcessExecutionStartException, IOException;
+    
+    default ProcessExecutionRecord start(long id, long version)
+        throws ProcessNotFoundException, ProcessExecutionStartException, IOException 
+    {
+        return start(id, version, -1);
+    }
     
     /**
      * Request from a process execution to stop. The execution will be identified as the

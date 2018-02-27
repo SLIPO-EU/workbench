@@ -19,6 +19,8 @@ import org.apache.commons.collections4.IterableUtils;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
@@ -52,6 +54,8 @@ import eu.slipo.workbench.common.model.resource.ResourceRecord;
 @Transactional
 public class DefaultProcessRepository implements ProcessRepository 
 {
+    private static Logger logger = LoggerFactory.getLogger(DefaultProcessRepository.class);
+    
     @PersistenceContext(unitName = "default")
     EntityManager entityManager;
 
@@ -305,11 +309,8 @@ public class DefaultProcessRepository implements ProcessRepository
         // Update process entity
 
         ProcessEntity entity = revision.getParent();
-        // Fixme is it ok to modify definition here (is the source of our update)? 
-        definition.setName(entity.getName());
-
         entity.setVersion(entity.getVersion() + 1);
-        entity.setDescription(definition.getDescription());
+        entity.setDescription(definition.description());
         entity.setUpdatedBy(updatedBy);
         entity.setUpdatedOn(ZonedDateTime.now());
         entity.setDefinition(definition);

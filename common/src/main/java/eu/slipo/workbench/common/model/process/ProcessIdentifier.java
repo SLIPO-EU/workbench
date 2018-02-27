@@ -1,19 +1,25 @@
 package eu.slipo.workbench.common.model.process;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/**
+ * Represent an identifier for a persisted process
+ */
 public class ProcessIdentifier implements Serializable
 {
     private static final long serialVersionUID = 1L;
 
-    private long id;
+    private final long id;
 
-    private long version;
-
-    protected ProcessIdentifier() {}
+    private final long version;
+    
+    @JsonIgnore
+    private final int h;
     
     @JsonCreator
     public ProcessIdentifier(
@@ -21,11 +27,13 @@ public class ProcessIdentifier implements Serializable
     {
         this.id = id;
         this.version = version;
+        
+        this.h = Arrays.hashCode(new long[] { id, version }); 
     }
     
-    public ProcessIdentifier(ProcessIdentifier other) {
-        this.id = other.id;
-        this.version = other.version;
+    public ProcessIdentifier(ProcessIdentifier other) 
+    {
+        this(other.id, other.version);
     }
 
     @JsonProperty("id")
@@ -45,10 +53,16 @@ public class ProcessIdentifier implements Serializable
         return new ProcessIdentifier(id, version);
     }
     
+    public static ProcessIdentifier of(long id)
+    {
+        return new ProcessIdentifier(id, -1);
+    }
+    
     @Override
     public String toString()
     {
-        return String.format("%d@%d", id, version);
+        return version < 0?
+            String.format("%d@latest", id) : String.format("%d@%d", id, version);
     }
     
     @Override
@@ -65,6 +79,6 @@ public class ProcessIdentifier implements Serializable
     @Override
     public int hashCode()
     {
-        return toString().hashCode();
+        return h;
     }
 }

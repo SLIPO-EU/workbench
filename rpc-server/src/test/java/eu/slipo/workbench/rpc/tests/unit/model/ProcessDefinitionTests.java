@@ -1,5 +1,6 @@
 package eu.slipo.workbench.rpc.tests.unit.model;
 
+import org.apache.commons.collections4.IterableUtils;
 import org.apache.commons.collections4.set.UnmodifiableSet;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
@@ -9,12 +10,14 @@ import org.junit.runners.MethodSorters;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,9 +46,13 @@ import eu.slipo.workbench.common.model.resource.FileSystemDataSource;
 import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
 import eu.slipo.workbench.common.model.tool.DeerConfiguration;
+import eu.slipo.workbench.common.model.tool.LimesConfiguration;
 import eu.slipo.workbench.common.model.tool.MetadataRegistrationConfiguration;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
+import eu.slipo.workflows.util.digraph.DependencyGraph;
+import eu.slipo.workflows.util.digraph.DependencyGraphs;
+import eu.slipo.workflows.util.digraph.ExportDependencyGraph;
 
 @RunWith(SpringRunner.class)
 @ActiveProfiles({ "testing" })
@@ -53,6 +60,8 @@ import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 public class ProcessDefinitionTests
 {
     private static final String DATASOURCE_1_PATH = "uploads/1.csv";
+
+    private static final String DATASOURCE_2_PATH = "uploads/2.csv";
 
     @TestConfiguration
     public static class Configuration
@@ -89,9 +98,21 @@ public class ProcessDefinitionTests
         }
 
         @Bean
+        public LimesConfiguration sampleLimesConfiguration1()
+        {
+            return new LimesConfiguration();
+        }
+
+        @Bean
         public FileSystemDataSource dataSource1()
         {
             return new FileSystemDataSource(DATASOURCE_1_PATH);
+        }
+
+        @Bean
+        public FileSystemDataSource dataSource2()
+        {
+            return new FileSystemDataSource(DATASOURCE_2_PATH);
         }
     }
 
@@ -102,10 +123,16 @@ public class ProcessDefinitionTests
     private FileSystemDataSource dataSource1;
 
     @Autowired
+    private FileSystemDataSource dataSource2;
+
+    @Autowired
     private TriplegeoConfiguration sampleTriplegeoConfiguration1;
 
     @Autowired
     private DeerConfiguration sampleDeerConfiguration1;
+
+    @Autowired
+    private LimesConfiguration sampleLimesConfiguration1;
 
     private ProcessDefinition buildDefinition1()
     {
@@ -144,13 +171,13 @@ public class ProcessDefinitionTests
     {
         ProcessDefinition definition1 = buildDefinition1();
         assertNotNull(definition1);
-        assertEquals("proc-a-1", definition1.getName());
+        assertEquals("proc-a-1", definition1.name());
 
-        List<ProcessInput> resources = definition1.getResources();
+        List<ProcessInput> resources = definition1.resources();
         assertEquals(4, resources.size());
         assertEquals(4, resources.stream().mapToInt(r -> r.key()).distinct().count());
 
-        List<Step> steps = definition1.getSteps();
+        List<Step> steps = definition1.steps();
         assertEquals(4, steps.size());
         assertEquals(4, steps.stream().mapToInt(s -> s.key()).distinct().count());
         assertEquals(
@@ -257,7 +284,7 @@ public class ProcessDefinitionTests
         ProcessDefinition definition1 = buildDefinition1();
         assertNotNull(definition1);
 
-        List<Step> steps = definition1.getSteps();
+        List<Step> steps = definition1.steps();
         steps.remove(0); // attempt to remove a step
     }
 
@@ -267,7 +294,7 @@ public class ProcessDefinitionTests
         ProcessDefinition definition1 = buildDefinition1();
         assertNotNull(definition1);
 
-        List<Step> steps = definition1.getSteps();
+        List<Step> steps = definition1.steps();
         Step step1 = steps.get(0);
         steps.add(step1); // attempt to add a step
     }
@@ -278,7 +305,7 @@ public class ProcessDefinitionTests
         ProcessDefinition definition1 = buildDefinition1();
         assertNotNull(definition1);
 
-        List<ProcessInput> resources = definition1.getResources();
+        List<ProcessInput> resources = definition1.resources();
         resources.remove(0); // attempt to remove a resource
     }
 
@@ -288,7 +315,7 @@ public class ProcessDefinitionTests
         ProcessDefinition definition1 = buildDefinition1();
         assertNotNull(definition1);
 
-        List<ProcessInput> resources = definition1.getResources();
+        List<ProcessInput> resources = definition1.resources();
         ProcessInput res1 = resources.get(0);
         resources.add(res1);
     }
@@ -318,5 +345,86 @@ public class ProcessDefinitionTests
                 .outputKey(outputKey))
             .build();
         System.err.println(definition);
+    }
+
+
+    ////////////////////////////////////////////////////////////////////////////////////
+    //                          Fixme Scratch                                         //
+    ////////////////////////////////////////////////////////////////////////////////////
+
+    @Test
+    public void test99_scratch1() throws Exception
+    {
+        final int resourceKey1 = 1, resourceKey2 = 2, resourceKey3 = 3;
+
+        ResourceMetadataCreate metadata1 =
+            new ResourceMetadataCreate("out-1", "A sample output file");
+        ResourceMetadataCreate metadata2 =
+            new ResourceMetadataCreate("out-2", "Another sample output file");
+        ResourceMetadataCreate metadata3 =
+            new ResourceMetadataCreate("out-3", "Yet another sample output file");
+
+
+        ProcessDefinition definition1 = ProcessDefinitionBuilder.create("proc-a-1")
+            .resource("resource-a-1.1", 101, ResourceIdentifier.of(1L, 5L))
+            .resource("resource-a-1.2", 102, ResourceIdentifier.of(3L, 17L))
+            .resource("resource-a-1.3", 103, ResourceIdentifier.of(8L, 2L))
+            .transform("triplegeo-1", b -> b
+                .group(1)
+                .outputKey(resourceKey1)
+                .source(dataSource1)
+                .configuration(sampleTriplegeoConfiguration1))
+            .transform("triplegeo-2", b -> b
+                .group(1)
+                .outputKey(resourceKey2)
+                .source(dataSource2)
+                .configuration(sampleTriplegeoConfiguration1))
+            .step("interlink-1-2", b -> b
+                .group(2)
+                .operation(EnumOperation.INTERLINK)
+                .tool(EnumTool.LIMES)
+                .configuration(sampleLimesConfiguration1)
+                .input(resourceKey1, resourceKey2)
+                .outputKey(resourceKey3)
+                .outputFormat(EnumDataFormat.N_TRIPLES))
+            .register("register-1", resourceKey1, metadata1)
+            .register("register-2", resourceKey2, metadata2)
+            .register("register-3", resourceKey3, metadata3)
+            .build();
+
+        final List<ProcessInput> inputs = definition1.resources();
+        final List<Step> steps = definition1.steps();
+
+        // Map each output key to the key of processing step (expected to produce it)
+        final Map<Integer, Integer> outputKeyToStepKey = inputs.stream()
+            .filter(r -> r.getInputType() == EnumInputType.OUTPUT)
+            .collect(Collectors.toMap(r -> r.key(), r -> ((ProcessOutput) r).stepKey()));
+
+        // Build dependency graph
+        final DependencyGraph dependencyGraph = DependencyGraphs.create(steps.size());
+        for (Step step: steps) {
+            for (Integer k: step.inputKeys()) {
+                if (outputKeyToStepKey.containsKey(k))
+                    dependencyGraph.addDependency(step.key(), outputKeyToStepKey.get(k));
+            }
+        }
+
+        System.err.println(
+            DependencyGraphs.toString(dependencyGraph, v -> definition1.stepByKey(v).name()));
+
+        Iterable<Step> sortedSteps =
+            IterableUtils.transformedIterable(
+                DependencyGraphs.topologicalSort(dependencyGraph), k -> definition1.stepByKey(k));
+        for (Step step: sortedSteps) {
+            System.err.println(step);
+        }
+
+
+        String s1 = jsonMapper.writeValueAsString(definition1);
+        //System.err.println(s1);
+
+        ProcessDefinition definition1a = jsonMapper.readValue(s1, ProcessDefinition.class);
+        String s2 = jsonMapper.writeValueAsString(definition1a);
+        assertEquals(s1, s2);
     }
 }

@@ -80,7 +80,7 @@ public class ResourceRevisionEntity {
     EnumDataFormat format;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "process_execution", updatable = false)
+    @JoinColumn(name = "process_execution")
     ProcessExecutionEntity processExecution;
 
     @NotBlank
@@ -100,11 +100,11 @@ public class ResourceRevisionEntity {
     @JoinColumn(name = "updated_by", nullable = false, updatable = false)
     AccountEntity updatedBy;
 
-    @Column(name = "bbox", updatable = false)
+    @Column(name = "bbox")
     Geometry boundingBox;
 
     @Min(0)
-    @Column(name = "number_of_entities", updatable = false)
+    @Column(name = "number_of_entities")
     Integer numberOfEntities;
 
     @NotBlank
@@ -115,7 +115,7 @@ public class ResourceRevisionEntity {
     @Column(name = "file_size", updatable = false)
     Long fileSize;
 
-    @Column(name = "table_name", updatable = false, columnDefinition = "uuid")
+    @Column(name = "table_name", columnDefinition = "uuid")
     UUID tableName;
 
     protected ResourceRevisionEntity() {}
@@ -190,6 +190,11 @@ public class ResourceRevisionEntity {
     {
         return processExecution;
     }
+    
+    public void setProcessExecution(ProcessExecutionEntity processExecution)
+    {
+        this.processExecution = processExecution;
+    }
 
     public String getName()
     {
@@ -215,10 +220,20 @@ public class ResourceRevisionEntity {
     {
         return boundingBox;
     }
+    
+    public void setBoundingBox(Geometry boundingBox)
+    {
+        this.boundingBox = boundingBox;
+    }
 
     public Integer getNumberOfEntities()
     {
         return numberOfEntities;
+    }
+    
+    public void setNumberOfEntities(Integer numberOfEntities)
+    {
+        this.numberOfEntities = numberOfEntities;
     }
 
     public String getFilePath()
@@ -234,6 +249,11 @@ public class ResourceRevisionEntity {
     public UUID getTableName()
     {
         return tableName;
+    }
+    
+    public void setTableName(UUID tableName)
+    {
+        this.tableName = tableName;
     }
 
     public ResourceRecord toResourceRecord()

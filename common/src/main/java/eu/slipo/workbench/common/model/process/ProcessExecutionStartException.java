@@ -23,4 +23,9 @@ public class ProcessExecutionStartException extends Exception
     {
         super(message);
     }
+    
+    public ProcessExecutionStartException(String message, Throwable ex)
+    {
+        super(message, ex);
+    }
 }

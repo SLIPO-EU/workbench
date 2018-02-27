@@ -4,20 +4,22 @@ import java.io.Serializable;
 import java.util.Arrays;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Unique resource identifier
+ * Represent an identifier for catalog resource 
  */
 public class ResourceIdentifier implements Serializable 
 {
     private static final long serialVersionUID = 1L;
 
-    private long id;
+    private final long id;
 
-    private long version;
-
-    protected ResourceIdentifier() {}
+    private final long version;
+    
+    @JsonIgnore
+    private final int h;
 
     @JsonCreator
     public ResourceIdentifier(
@@ -25,12 +27,13 @@ public class ResourceIdentifier implements Serializable
     {
         this.id = id;
         this.version = version;
+        
+        this.h = Arrays.hashCode(new long[] { id, version });
     }
     
     public ResourceIdentifier(ResourceIdentifier other)
     {
-        this.id = other.id;
-        this.version = other.version;
+        this(other.id, other.version);
     }
 
     @JsonProperty("id")
@@ -47,11 +50,17 @@ public class ResourceIdentifier implements Serializable
     {
         return new ResourceIdentifier(id, version);
     }
+    
+    public static ResourceIdentifier of(long id)
+    {
+        return new ResourceIdentifier(id, -1);
+    }
 
     @Override
     public String toString()
     {
-        return String.format("%d@%d", id, version);
+        return version < 0?
+            String.format("%d@latest", id) : String.format("%d@%d", id, version);
     }
     
     @Override
@@ -62,12 +71,12 @@ public class ResourceIdentifier implements Serializable
         if (obj == null || !(obj instanceof ResourceIdentifier))
             return false;
         ResourceIdentifier x = (ResourceIdentifier) obj;
-        return x.id == id && x.version == version;
+        return id == x.id && version == x.version; 
     }
     
     @Override
     public int hashCode()
     {
-        return toString().hashCode();
+        return h;
     }
 }

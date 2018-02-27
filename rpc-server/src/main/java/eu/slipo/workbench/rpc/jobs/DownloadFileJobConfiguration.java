@@ -163,7 +163,7 @@ public class DownloadFileJobConfiguration
     }
 
     @Bean("downloadFile.step")
-    public Step step(@Qualifier("downloadFile.tasklet") DownloadFileTasklet tasklet)
+    public Step step(@Qualifier("downloadFile.tasklet") Tasklet tasklet)
         throws Exception
     {
         StepExecutionListener contextListener = ExecutionContextPromotionListeners
@@ -182,5 +182,4 @@ public class DownloadFileJobConfiguration
     {
         return new FlowBuilder<Flow>("downloadFile").start(step).end();
     }
-
 }

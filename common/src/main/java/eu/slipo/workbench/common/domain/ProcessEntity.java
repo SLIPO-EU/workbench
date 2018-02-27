@@ -104,8 +104,8 @@ public class ProcessEntity {
     {
         this.version = 1;
         this.definition = definition;
-        this.name = definition.getName();
-        this.description = definition.getDescription();
+        this.name = definition.name();
+        this.description = definition.description();
     }
     
     public long getVersion() {
