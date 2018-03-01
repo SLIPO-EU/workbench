@@ -21,18 +21,18 @@ function toFeatures(resources) {
       return (r !== null);
     })
     .map((r, index) => {
-      if (r.metadata.boundingBox) {
+      if (r.boundingBox) {
         return {
           type: 'Feature',
           geometry: {
-            ...r.metadata.boundingBox,
+            ...r.boundingBox,
           },
           properties: {
             id: r.id,
             version: r.version,
             name: r.metadata.name,
             description: r.metadata.description,
-            size: r.metadata.size,
+            size: r.numberOfEntities,
           }
         };
       }
