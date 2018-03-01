@@ -289,7 +289,7 @@ module.exports = function (grunt) {
   ]);
   grunt.registerTask('deploy', ['copy']);
 
-  grunt.registerTask('default', ['build', 'docs', 'deploy']);
+  grunt.registerTask('default', ['clean', 'build', 'docs', 'deploy']);
 
   grunt.registerTask('develop', ['clean', 'build', 'copy', 'watch']);
 };

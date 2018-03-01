@@ -1,0 +1,23 @@
+%slipo-error-level {
+  padding: 4px 4px;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.slipo-error-level-error {
+  @extend %slipo-error-level;
+  color: #D8000C;
+  background-color: #FFBABA;
+}
+
+.slipo-error-level-warn {
+  @extend %slipo-error-level;
+  color: #9F6000;
+  background-color: #FEEFB3;
+}
+
+.slipo-error-level-info {
+  @extend %slipo-error-level;
+  color: #00529B;
+  background-color: #BDE5F8;
+}

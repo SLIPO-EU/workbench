@@ -8,7 +8,6 @@ import java.util.List;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.resource.ResourceRecord;
 
-
 /**
  * Dashboard data
  */
@@ -16,13 +15,13 @@ public class Dashboard {
 
     private ZonedDateTime updatedOn = ZonedDateTime.now();
 
-    private StatisticsCollection statistics;
+    private StatisticsCollection statistics = new Dashboard.StatisticsCollection();
 
     private List<ResourceRecord> resources = new ArrayList<ResourceRecord>();
 
     private List<ProcessExecutionRecord> processes = new ArrayList<ProcessExecutionRecord>();
 
-    private List<Event> events = new ArrayList<Event>();
+    private List<EventRecord> events = new ArrayList<EventRecord>();
 
     public ZonedDateTime getUpdatedOn() {
         return updatedOn;
@@ -40,7 +39,7 @@ public class Dashboard {
         return Collections.unmodifiableList(processes);
     }
 
-    public List<Event> getEvents() {
+    public List<EventRecord> getEvents() {
         return Collections.unmodifiableList(events);
     }
 
@@ -52,7 +51,7 @@ public class Dashboard {
         this.processes.add(e);
     }
 
-    public void addEvent(Event e) {
+    public void addEvent(EventRecord e) {
         this.events.add(e);
     }
 
@@ -68,10 +67,6 @@ public class Dashboard {
 
     }
 
-    public void setStatistics(StatisticsCollection statistics) {
-        this.statistics = statistics;
-    }
-
     public static abstract class Statistics {
 
         public ZonedDateTime updatedOn = ZonedDateTime.now();
@@ -80,55 +75,55 @@ public class Dashboard {
 
     public static class ResourceStatistics extends Statistics {
 
-        public ResourceStatistics(int total, int crearted, int updated) {
+        public ResourceStatistics(long total, long created, long updated) {
             super();
             this.total = total;
-            this.crearted = crearted;
+            this.created = created;
             this.updated = updated;
         }
 
-        public int total;
+        public long total;
 
-        public int crearted;
+        public long created;
 
-        public int updated;
+        public long updated;
     }
 
     public static class ProcessStatistics extends Statistics {
 
-        public ProcessStatistics(int completed, int running, int failed) {
+        public ProcessStatistics(long completed, long running, long failed) {
             super();
             this.completed = completed;
             this.running = running;
             this.failed = failed;
         }
 
-        public int completed;
+        public long completed;
 
-        public int running;
+        public long running;
 
-        public int failed;
+        public long failed;
     }
 
     public static class EventStatistics extends Statistics {
 
-        public EventStatistics(int error, int warning, int information) {
+        public EventStatistics(long error, long warning, long information) {
             super();
             this.error = error;
             this.warning = warning;
             this.information = information;
         }
 
-        public int error;
+        public long error;
 
-        public int warning;
+        public long warning;
 
-        public int information;
+        public long information;
     }
 
     public static class SystemStatistics extends Statistics {
 
-        public SystemStatistics(int usedCores, int totalCores, int usedMemory, int totalMemory, int usedDisk, int totalDisk) {
+        public SystemStatistics(long usedCores, long totalCores, long usedMemory, long totalMemory, long usedDisk, long totalDisk) {
             this.usedCores = usedCores;
             this.totalCores = totalCores;
             this.usedMemory = usedMemory;
@@ -137,17 +132,17 @@ public class Dashboard {
             this.totalDisk = totalDisk;
         }
 
-        public int usedCores;
+        public long usedCores;
 
-        public int totalCores;
+        public long totalCores;
 
-        public int usedMemory;
+        public long usedMemory;
 
-        public int totalMemory;
+        public long totalMemory;
 
-        public int usedDisk;
+        public long usedDisk;
 
-        public int totalDisk;
+        public long totalDisk;
     }
 
 }

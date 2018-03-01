@@ -1,63 +1,64 @@
-
-
 export const DashboardProcessExplorerConfig = {
-  name: 'Workflow Explorer',
-  cardname: 'processExplorer',
+  name: 'Executions',
+  cardName: 'processExplorer',
   changedOn: new Date(),
-  cardFilters: [
-    {
-      id:"allProcess",
-      name:"All",
-    },
-    {
-      id:"completed",
-      name:"Completed",
-    },
-    {
-      id:"running",
-      name:"Running",
-    },
-    {
-      id:"failed",
-      name:"Failed",
-    }],
+  cardFilters: [{
+    id: "allProcess",
+    name: "All",
+  },
+  {
+    id: "completed",
+    name: "Completed",
+  },
+  {
+    id: "running",
+    name: "Running",
+  },
+  {
+    id: "failed",
+    name: "Failed",
+  }],
+  footer: 'Workflow executions for the last 7 days'
 };
-
 
 export const DashboardEventsConfig = {
   name: 'Events',
-  cardname: 'events',
+  cardName: 'events',
   changedOn: new Date(),
-  cardFilters: [
-    {
-      id:"ALL",
-      name:"All",
-    },
-    {
-      id:"ERROR",
-      name:"Error",
-    },
-    {
-      id:"WARNING",
-      name:"Warning",
-    }],
+  cardFilters: [{
+    id: "ALL",
+    name: "All",
+  },
+  {
+    id: "ERROR",
+    name: "Error",
+  },
+  {
+    id: "WARNING",
+    name: "Warning",
+  },
+  {
+    id: "INFO",
+    name: "Information",
+  }],
+  footer: '50 most recent system events'
 };
 
 export const DashboardResourcesConfig = {
   name: 'Resources',
-  cardname: 'resources',
+  cardName: 'resources',
   changedOn: new Date(),
-  cardFilters: [
-    {
-      id:"all",
-      name:"All",
-    },
-    {
-      id:"new",
-      name:"New",
-    },
-    {
-      id:"updated",
-      name:"Updated",
-    }],
+  cardFilters: [{
+    id: "all",
+    name: "All",
+  },
+  {
+    id: "new",
+    name: "New",
+  },
+  {
+    id: "updated",
+    name: "Updated",
+  }],
+  footer: 'New or updated resources for the last 7 days'
 };

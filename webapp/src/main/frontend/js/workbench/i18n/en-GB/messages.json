@@ -49,10 +49,32 @@
   },
   "dashboard": {
     "card": {
-      "jobs": "Jobs",
+      "jobs": "Workflows",
       "resources": "Resources",
       "system": "System",
-      "events": "Events"
+      "events": "Events",
+      "fields": {
+        "jobs": {
+          "completed": "Completed",
+          "running": "Running",
+          "failed": "Failed"
+        },
+        "events": {
+          "error": "Error",
+          "warn": "Warning",
+          "info": "Information"
+        },
+        "resources": {
+          "total": "Resources",
+          "new": "New",
+          "updated": "Updated"
+        },
+        "system": {
+          "cores": "Cores",
+          "memory": "Memory",
+          "disk-space": "Disk Space"
+        }
+      }
     }
   },
   "enum": {

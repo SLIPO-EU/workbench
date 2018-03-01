@@ -19,21 +19,23 @@ class Card extends React.Component {
   }
 
   render() {
-    let items = [];
+    const items = [];
 
     // Render counters
-    for (let index in this.props.items) {
-      let item = this.props.items[index];
-      items.push(
-        <tr key={index} className="slipo-card-item">
-          <td>
-            {Array.isArray(item.value) ? item.value.join(" / ") : item.value}
-          </td>
-          <td>
-            <FormattedMessage id={item.label} defaultMessage={item.label} />
-          </td>
-        </tr>
-      );
+    if (this.props.items) {
+      for (let index in this.props.items) {
+        let item = this.props.items[index];
+        items.push(
+          <tr key={index} className="slipo-card-item">
+            <td>
+              {Array.isArray(item.value) ? item.value.join(" / ") : item.value}
+            </td>
+            <td>
+              <FormattedMessage id={item.label} defaultMessage={item.label} />
+            </td>
+          </tr>
+        );
+      }
     }
 
     return (
@@ -52,13 +54,17 @@ class Card extends React.Component {
               id={this.props.title}
             />
           </h3>
-          <h4>
-            <table>
-              <tbody>
-                {items}
-              </tbody>
-            </table>
-          </h4>
+          {items.length !== 0 ?
+            <h4>
+              <table>
+                <tbody>
+                  {items}
+                </tbody>
+              </table>
+            </h4>
+            :
+            <div className="mt-3">No data available</div>
+          }
           <h6 className="slipo-card-footer">
             {this.props.footer &&
               <span className="slipo-card-footer-label">{this.props.footer}</span>

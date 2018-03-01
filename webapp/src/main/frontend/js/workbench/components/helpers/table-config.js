@@ -4,9 +4,15 @@ import { FormattedTime } from 'react-intl';
 
 import moment from 'moment';
 
-import { DynamicRoutes, buildPath } from '../../model/routes';
+import {
+  DynamicRoutes,
+  buildPath,
+} from '../../model/routes';
 
-import JobStatus from './job-status';
+import {
+  ErrorLevel,
+  JobStatus,
+} from './';
 
 /**
  * Job grid data
@@ -58,7 +64,7 @@ export const JobGridColumns = [{
   accessor: 'completedOn',
   Cell: props => {
     return (
-      props.value=='' ? props.value : <FormattedTime value={props.value} day='numeric' month='numeric' year='numeric' />
+      props.value == '' ? props.value : <FormattedTime value={props.value} day='numeric' month='numeric' year='numeric' />
     );
   }
 }, {
@@ -90,7 +96,11 @@ export const EventGridData = (events) => events.map(event => ({
 export const EventGridColumns = [{
   Header: 'Level',
   accessor: 'level',
-  style: { 'textAlign': 'center' }
+  Cell: props => {
+    return (
+      <ErrorLevel value={props.value} />
+    );
+  },
 }, {
   Header: 'Category',
   accessor: 'category',
@@ -130,7 +140,7 @@ export const ResourceGridData = (resources) => resources.map(resource => ({
   id: resource.id,
   name: resource.metadata.name,
   version: resource.version,
-  createdOn: moment(resource.createdOn).toDate(),
+  updatedOn: moment(resource.updatedOn).toDate(),
   count: resource.numberOfEntities,
   process: resource.jobExecutionId,
 }));
@@ -170,8 +180,8 @@ export const ResourceGridColumns = [{
   accessor: 'version',
   style: { 'textAlign': 'center' }
 }, {
-  Header: 'Created On',
-  accessor: 'createdOn',
+  Header: 'Updated On',
+  accessor: 'updatedOn',
   Cell: props => {
     return (
       <FormattedTime value={props.value} day='numeric' month='numeric' year='numeric' />

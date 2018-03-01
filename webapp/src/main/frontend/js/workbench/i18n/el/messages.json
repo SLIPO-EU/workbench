@@ -52,7 +52,29 @@
       "jobs": "Διεργασίες",
       "resources": "Δεδομένα",
       "system": "Διαθέσιμοι Πόροι",
-      "events": "Συμβάντα"
+      "events": "Συμβάντα",
+      "fields": {
+        "jobs": {
+          "completed": "Completed",
+          "running": "Running",
+          "failed": "Failed"
+        },
+        "events": {
+          "error": "Error",
+          "warn": "Warning",
+          "info": "Information"
+        },
+        "resources": {
+          "total": "Resources",
+          "new": "New",
+          "updated": "Updated"
+        },
+        "system": {
+          "cores": "Cores",
+          "memory": "Memory",
+          "disk-space": "Disk Space"
+        }
+      }
     }
   },
   "enum": {
