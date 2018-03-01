@@ -15,13 +15,21 @@ import * as ChartConfig from '../helpers/chart-config';
 import * as DashboardCardConfig from '../helpers/dashboardCard-config';
 
 import {
+  Roles,
+} from '../../model';
+
+import {
   BarChart,
   Card,
   DashboardCard,
+  SecureContent,
   Table,
 } from '../helpers';
 
-import { fetchDashboardData, changeDashboardFilter } from '../../ducks/ui/views/dashboard';
+import {
+  changeDashboardFilter,
+  fetchDashboardData,
+} from '../../ducks/ui/views/dashboard';
 
 class Dashboard extends React.Component {
   componentWillMount() {
@@ -34,47 +42,67 @@ class Dashboard extends React.Component {
       <div className="animated fadeIn">
         <div className="row">
           <div className="col-sm-12 col-md-6 col-lg-3">
-            <Card { ...CardConfig.ResourceCardConfig(this.props.stats.resources, this.props.intl) } />
+            <Card {...CardConfig.ResourceCardConfig(this.props.stats.resources, this.props.intl)} />
           </div>
           <div className="col-sm-12 col-md-6 col-lg-3">
-            <Card { ...CardConfig.JobCardConfig(this.props.stats.processes, this.props.intl) } />
+            <Card {...CardConfig.JobCardConfig(this.props.stats.processes, this.props.intl)} />
           </div>
           <div className="col-sm-12 col-md-6 col-lg-3">
-            <Card { ...CardConfig.SystemCardConfig(this.props.stats.system) } />
+            <Card {...CardConfig.SystemCardConfig(this.props.stats.system)} />
           </div>
           <div className="col-sm-12 col-md-6 col-lg-3">
-            <Card { ...CardConfig.EventCardConfig(this.props.stats.events, this.props.intl) } />
+            <Card {...CardConfig.EventCardConfig(this.props.stats.events, this.props.intl)} />
           </div>
         </div>
         <Row>
           <Col className="col-sm-12 col-md-12 col-lg-6">
-            <DashboardCard { ...DashboardCardConfig.DashboardProcessExplorerConfig} filterChange={this.props.changeDashboardFilter} filterValue={this.props.filters.processExplorer} >
+            <DashboardCard
+              {...DashboardCardConfig.DashboardProcessExplorerConfig}
+              filterChange={this.props.changeDashboardFilter}
+              filterValue={this.props.filters.processExplorer}
+            >
               <Table
                 data={TableConfig.JobGridData(this.props.processes)}
                 columns={TableConfig.JobGridColumns}
+                minRows={10}
+                showPagination={true}
               />
             </DashboardCard>
           </Col>
           <Col className="col-sm-12 col-md-12 col-lg-6">
-            <DashboardCard { ...DashboardCardConfig.DashboardResourcesConfig } filterChange={this.props.changeDashboardFilter} filterValue={this.props.filters.resources} >
+            <DashboardCard
+              {...DashboardCardConfig.DashboardResourcesConfig}
+              filterChange={this.props.changeDashboardFilter}
+              filterValue={this.props.filters.resources}
+            >
               <Table
                 data={TableConfig.ResourceGridData(this.props.resources)}
                 columns={TableConfig.ResourceGridColumns}
+                minRows={10}
+                showPagination={true}
               />
             </DashboardCard>
 
           </Col>
         </Row >
-        <Row>
-          <Col className="col-12">
-            <DashboardCard { ...DashboardCardConfig.DashboardEventsConfig } filterChange={this.props.changeDashboardFilter} filterValue={this.props.filters.events} >
-              <Table
-                data={TableConfig.EventGridData(this.props.events)}
-                columns={TableConfig.EventGridColumns}
-              />
-            </DashboardCard>
-          </Col>
-        </Row >
+        <SecureContent role={Roles.ADMIN}>
+          <Row>
+            <Col className="col-12">
+              <DashboardCard
+                {...DashboardCardConfig.DashboardEventsConfig}
+                filterChange={this.props.changeDashboardFilter}
+                filterValue={this.props.filters.events}
+              >
+                <Table
+                  data={TableConfig.EventGridData(this.props.events)}
+                  columns={TableConfig.EventGridColumns}
+                  minRows={10}
+                  showPagination={true}
+                />
+              </DashboardCard>
+            </Col>
+          </Row >
+        </SecureContent>
       </div >
     );
   }
@@ -89,7 +117,6 @@ const mapStateToProps = (state) => ({
   resources: state.ui.views.dashboard.resources,
   events: state.ui.views.dashboard.events,
   filters: state.ui.views.dashboard.filters,
-  //givenName: state.user.profile.givenName,
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({ fetchDashboardData, changeDashboardFilter }, dispatch);
@@ -101,23 +128,23 @@ const mergeProps = (stateProps, dispatchProps, ownProps) => {
       resVisible = stateProps.resources;
       break;
     case 'new':
-      resVisible = stateProps.resources.filter(resource => moment(resource.createdOn).isAfter(moment().subtract(7, 'd')));
+      resVisible = stateProps.resources.filter(resource => resource.createdOn === resource.updatedOn);
       break;
     case 'updated':
-      resVisible = stateProps.resources.filter(resource => moment(resource.updatedOn).isAfter(moment().subtract(7, 'd')) && (resource.updatedOn !== resource.createdOn));
+      resVisible = stateProps.resources.filter(resource => resource.createdOn !== resource.updatedOn);
   }
   switch (stateProps.filters.processExplorer) {
     case 'allProcess':
       procVisible = stateProps.processes;
       break;
     case 'completed':
-      procVisible = stateProps.processes.filter(process => process.status=='COMPLETED');
+      procVisible = stateProps.processes.filter(process => process.status == 'COMPLETED');
       break;
     case 'running':
-      procVisible = stateProps.processes.filter(process => process.status=='RUNNING');
+      procVisible = stateProps.processes.filter(process => process.status == 'RUNNING');
       break;
     case 'failed':
-      procVisible = stateProps.processes.filter(process => process.status=='FAILED');
+      procVisible = stateProps.processes.filter(process => process.status == 'FAILED');
   }
 
   return {

@@ -12,7 +12,7 @@ const initialState = {
     resources: "all",
     events: "ALL",
     processExplorer:"allProcess",
-    
+
   },
   processes:[],
   resources:[],
@@ -22,7 +22,7 @@ const initialState = {
       created: 0,
       total: 0,
       updated: 0,
-      updatedOn: null, 
+      updatedOn: null,
     },
     events:{
       error:0,
@@ -56,20 +56,20 @@ export default (state = initialState, action) => {
       return {
         ...state,
         ...action.data,
-        statistics:{ 
+        statistics:{
           ...action.data.statistics,
           resources:{
             ...action.data.statistics.resources,
-            created:action.data.statistics.resources.crearted
-          } 
-        } 
+            created:action.data.statistics.resources.created
+          }
+        }
       };
     case CHANGE_CARD_FILTER:
       return {
         ...state,
         filters:{
           ...state.filters,
-          [action.cardname]: action.selection,
+          [action.cardName]: action.selection,
         },
       };
     default:
@@ -81,15 +81,15 @@ export default (state = initialState, action) => {
 const requestDashboardData = () => ({
   type: REQUEST_DASHBOARD_DATA,
 });
-  
+
 const receiveDashboardData = (data) => ({
   type: RECEIVE_DASHBOARD_DATA,
   data,
 });
 
-export const changeDashboardFilter = (cardname, selection) => ({
+export const changeDashboardFilter = (cardName, selection) => ({
   type: CHANGE_CARD_FILTER,
-  cardname,
+  cardName,
   selection,
 });
 

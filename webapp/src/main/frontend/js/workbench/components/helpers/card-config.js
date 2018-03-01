@@ -2,16 +2,16 @@ import { StaticRoutes } from '../../model/routes';
 
 export const JobCardConfig = (props, intl) => ({
   title: 'dashboard.card.jobs',
-  items: [{
+  items: props ? [{
     value: props.completed,
-    label: 'Completed',
+    label: 'dashboard.card.fields.jobs.completed',
   }, {
     value: props.running,
-    label: 'Running',
+    label: 'dashboard.card.fields.jobs.running',
   }, {
     value: props.failed,
-    label: 'Failed',
-  }],
+    label: 'dashboard.card.fields.jobs.failed',
+  }] : null,
   color: '#ffffff',
   background: '#00bcf2',
   footer: 'Since last week',
@@ -24,19 +24,19 @@ export const JobCardConfig = (props, intl) => ({
 
 export const ResourceCardConfig = (props, intl) => ({
   title: 'dashboard.card.resources',
-  items: [{
+  items: props ? [{
     value: props.total,
-    label: 'Resources',
+    label: 'dashboard.card.fields.resources.total',
   }, {
     value: props.created,
-    label: 'New',
+    label: 'dashboard.card.fields.resources.new',
   }, {
     value: props.updated,
-    label: 'Updated',
-  }],
+    label: 'dashboard.card.fields.resources.updated',
+  }] : null,
   color: '#ffffff',
   background: '#999999',
-  footer: intl.formatRelative(props.updatedOn),
+  footer: 'Since last week',
   link: {
     path: StaticRoutes.ResourceExplorer,
     label: 'See more...',
@@ -46,36 +46,36 @@ export const ResourceCardConfig = (props, intl) => ({
 
 export const SystemCardConfig = (props) => ({
   title: 'dashboard.card.system',
-  items: [{
+  items: props ? [{
     value: [props.usedCores, props.totalCores],
-    label: 'Cores',
+    label: 'dashboard.card.fields.system.cores',
   }, {
     value: [props.usedMemory, props.totalMemory],
-    label: 'Memory',
+    label: 'dashboard.card.fields.system.memory',
   }, {
     value: [props.usedDisk, props.totalDisk],
-    label: 'Disk Space',
-  }],
+    label: 'dashboard.card.fields.system.disk-space',
+  }] : null,
   color: '#ffffff',
   background: '#d9534f',
-  iconClass: 'fa fa-cubes',
+  iconClass: 'fa fa-server',
 });
 
 export const EventCardConfig = (props, intl) => ({
   title: 'dashboard.card.events',
-  items: [{
+  items: props ? [{
     value: props.error,
-    label: 'Error',
+    label: 'dashboard.card.fields.events.error',
   }, {
     value: props.warning,
-    label: 'Warning',
+    label: 'dashboard.card.fields.events.warn',
   }, {
     value: props.information,
-    label: 'Information',
-  }],
+    label: 'dashboard.card.fields.events.info',
+  }] : null,
   color: '#ffffff',
   background: '#5cb85c',
-  footer: intl.formatRelative(props.updatedOn),
+  footer: 'Since last 24 hours',
   link: {
     path: StaticRoutes.EventViewer,
     label: 'See more...',

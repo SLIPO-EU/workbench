@@ -25,6 +25,7 @@ class Table extends React.Component {
           defaultPageSize={defaultPageSize || 10}
           minRows={minRows || 5}
           sortable={sortable || false}
+          showPageSizeOptions={false}
         />
       </div>
     );
