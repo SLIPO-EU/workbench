@@ -19,6 +19,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+import javax.validation.constraints.AssertTrue;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
@@ -205,6 +206,27 @@ public class ProcessExecutionStepEntity
         return status;
     }
 
+    @AssertTrue
+    public boolean isStatusValid()
+    {
+        boolean check = true;
+        switch (status) {
+        case UNKNOWN:
+            check = false;
+            break;
+        case RUNNING:
+            check = completedOn == null;
+            break;
+        case COMPLETED:
+        case FAILED:
+            check = completedOn != null;
+        default:
+            break;
+        }
+        
+        return check;
+    }
+    
     public void setStatus(EnumProcessExecutionStatus status) 
     {
         this.status = status;

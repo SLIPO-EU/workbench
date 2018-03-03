@@ -67,7 +67,7 @@ public class RegisterResourceJobConfiguration
 
         private final ResourceIdentifier resourceIdentifier;
 
-        public RegisterResourceTasklet(
+        private RegisterResourceTasklet(
             String processName,
             Path inputPath,
             int createdBy,
@@ -75,14 +75,6 @@ public class RegisterResourceJobConfiguration
             ResourceMetadataCreate metadata,
             ResourceIdentifier resourceIdentifier)
         {
-            Assert.notNull(processName,
-                "The name of the creating process is required");
-            Assert.notNull(metadata,
-                "The user-provided metadata are required for a resource");
-            Assert.notNull(metadata.getName(), "A name is required");
-            Assert.isTrue(inputPath != null && inputPath.isAbsolute(),
-                "An absolute input path is required");
-
             this.processName = processName;
             this.inputPath = inputPath;
             this.dataFormat = dataFormat;
@@ -131,8 +123,6 @@ public class RegisterResourceJobConfiguration
             record.setType(EnumResourceType.POI_DATA);
             record.setSourceType(EnumDataSourceType.FILESYSTEM);
 
-            // Todo set/compute boundingBox and tableName
-
             // Save to repository
 
             if (resourceIdentifier == null) {
@@ -150,20 +140,19 @@ public class RegisterResourceJobConfiguration
 
             // Update execution context
 
-            executionContext.put("targetPath", targetPath.toString());
+            executionContext.put("path", targetPath.toString());
             executionContext.put("resourceId", record.getId());
             executionContext.put("resourceVersion", record.getVersion());
 
             return RepeatStatus.FINISHED;
         }
-
     }
 
     @Bean("registerResource.tasklet")
     @JobScope
     public RegisterResourceTasklet tasklet(
-        @Value("#{jobParameters['createdBy']}") Long createdBy,
         @Value("#{jobParameters['input']}") String input,
+        @Value("#{jobParameters['createdBy']}") Long createdBy,
         @Value("#{jobParameters['dataFormat']}") EnumDataFormat dataFormat,
         @Value("#{jobParameters['processName']}") String processName,
         @Value("#{jobParameters['name']}") String name,
@@ -171,17 +160,28 @@ public class RegisterResourceJobConfiguration
         @Value("#{jobParameters['resourceId']}") Long resourceId,
         @Value("#{jobExecution.jobInstance.id}") Long jobId)
     {
+        Assert.notNull(processName, "Expected a name for the creating process");
+        Assert.notNull(createdBy, "Expected a user id for the creator of this resource");
+        Assert.isTrue(dataFormat != null && dataFormat != EnumDataFormat.UNDEFINED,
+            "Expected a data format for this resource");
+
+        Assert.notNull(name, "Expected a user-provided name for a resource");
+        ResourceMetadataCreate metadata = new ResourceMetadataCreate(name, description);
+
         Assert.isTrue(!StringUtils.isEmpty(input), "Expected an non-empty input path");
         String[] inputs = input.split(File.pathSeparator);
-        Assert.isTrue(inputs.length == 1, "Expected a single input path");
-
+        Assert.isTrue(inputs.length == 1,
+            "A registration step expects a single input path");
         Path inputPath = Paths.get(inputs[0]);
+        Assert.isTrue(inputPath != null && inputPath.isAbsolute(),
+            "An absolute file path is required for a resource");
+
         return new RegisterResourceTasklet(
             processName,
             inputPath,
             createdBy.intValue(),
             dataFormat,
-            new ResourceMetadataCreate(name, description),
+            metadata,
             resourceId == null? null : ResourceIdentifier.of(resourceId));
     }
 
@@ -190,7 +190,7 @@ public class RegisterResourceJobConfiguration
         throws Exception
     {
         StepExecutionListener listener = ExecutionContextPromotionListeners
-            .fromKeys("resourceId", "resourceVersion", "targetPath")
+            .fromKeys("resourceId", "resourceVersion", "path")
             .strict(true)
             .build();
 

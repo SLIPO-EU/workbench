@@ -15,6 +15,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
@@ -79,6 +80,10 @@ public class ProcessRevisionEntity {
         mappedBy = "process", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     List<ProcessExecutionEntity> executions = new ArrayList<>();
 
+    @OneToOne(
+        mappedBy = "process", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
+    ProcessExecutionMonitorEntity monitor;
+    
     protected ProcessRevisionEntity() {}
     
     public ProcessRevisionEntity(ProcessEntity parent)
@@ -148,6 +153,16 @@ public class ProcessRevisionEntity {
         return executions;
     }
 
+    public void setMonitor(ProcessExecutionMonitorEntity monitor)
+    {
+        this.monitor = monitor;
+    }
+    
+    public ProcessExecutionMonitorEntity getMonitor()
+    {
+        return monitor;
+    }
+    
     public ProcessRecord toProcessRecord()
     {
         return toProcessRecord(false, false);

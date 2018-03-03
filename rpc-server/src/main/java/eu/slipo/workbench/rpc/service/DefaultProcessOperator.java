@@ -1,6 +1,5 @@
 package eu.slipo.workbench.rpc.service;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.ByteBuffer;
@@ -8,24 +7,28 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import javax.annotation.PostConstruct;
+
 import org.apache.commons.collections4.IterableUtils;
-import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.JobExecutionListener;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.job.flow.Flow;
+import org.springframework.batch.core.listener.JobExecutionListenerSupport;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -33,26 +36,21 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
+import com.google.common.collect.ImmutableMap;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumOperation;
 import eu.slipo.workbench.common.model.poi.EnumTool;
-import eu.slipo.workbench.common.model.process.CatalogResource;
-import eu.slipo.workbench.common.model.process.EnumInputType;
 import eu.slipo.workbench.common.model.process.EnumProcessExecutionStatus;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
+import eu.slipo.workbench.common.model.process.ProcessExecutionNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStartException;
+import eu.slipo.workbench.common.model.process.ProcessExecutionStepRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStopException;
-import eu.slipo.workbench.common.model.process.ProcessInput;
 import eu.slipo.workbench.common.model.process.ProcessNotFoundException;
-import eu.slipo.workbench.common.model.process.ProcessOutput;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
-import eu.slipo.workbench.common.model.process.RegisterStep;
 import eu.slipo.workbench.common.model.process.Step;
-import eu.slipo.workbench.common.model.process.TransformStep;
 import eu.slipo.workbench.common.model.resource.DataSource;
 import eu.slipo.workbench.common.model.resource.EnumDataSourceType;
 import eu.slipo.workbench.common.model.resource.ExternalUrlDataSource;
@@ -65,6 +63,8 @@ import eu.slipo.workbench.common.model.tool.MetadataRegistrationConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.repository.AccountRepository;
 import eu.slipo.workbench.common.repository.ProcessRepository;
+import eu.slipo.workbench.common.repository.ProcessRepository.ProcessExecutionNotActiveException;
+import eu.slipo.workbench.common.repository.ProcessRepository.ProcessHasActiveExecutionException;
 import eu.slipo.workbench.common.repository.ResourceRepository;
 import eu.slipo.workbench.common.service.ProcessOperator;
 import eu.slipo.workbench.common.service.util.PropertiesConverterService;
@@ -73,7 +73,9 @@ import eu.slipo.workflows.Workflow.JobDefinitionBuilder;
 import eu.slipo.workflows.WorkflowBuilderFactory;
 import eu.slipo.workflows.WorkflowExecutionEventListener;
 import eu.slipo.workflows.WorkflowExecutionSnapshot;
+import eu.slipo.workflows.WorkflowExecutionStopListener;
 import eu.slipo.workflows.exception.WorkflowExecutionStartException;
+import eu.slipo.workflows.exception.WorkflowExecutionStopException;
 import eu.slipo.workflows.service.WorkflowScheduler;
 import eu.slipo.workflows.util.digraph.DependencyGraph;
 import eu.slipo.workflows.util.digraph.DependencyGraphs;
@@ -122,6 +124,62 @@ public class DefaultProcessOperator implements ProcessOperator
     @Qualifier("downloadFile.flow")
     private Flow downloadFileFlow;
 
+    /**
+     * Fix status of interrupted executions.
+     *
+     * <p>Before starting any execution, must clear the statuses of executions that falsely appear
+     * as RUNNING (most commonly as a result of a non-graceful shutdown).
+     */
+    @PostConstruct
+    private void clearRunningExecutions()
+    {
+        processRepository.clearRunningExecutions();
+    }
+
+    /**
+     * A job-level listener for resource-related post-registration duties
+     */
+    private class PostRegistrationHandler extends JobExecutionListenerSupport
+    {
+        private final long processExecutionId;
+
+        private PostRegistrationHandler(long executionId)
+        {
+            this.processExecutionId = executionId;
+        }
+
+        @Override
+        public void afterJob(JobExecution jobExecution)
+        {
+            // Check if registration has failed or was interrupted
+            if (jobExecution.getStatus() != BatchStatus.COMPLETED)
+                return; // no-op
+
+            // Extract resource (id, version) from execution context
+
+            final ExecutionContext executionContext = jobExecution.getExecutionContext();
+
+            final String RESOURCE_ID_KEY = "resourceId";
+            final String RESOURCE_VERSION_KEY = "resourceVersion";
+
+            long resourceId = executionContext.getLong(RESOURCE_ID_KEY, -1L);
+            if (resourceId <= 0)
+                throw new IllegalStateException(
+                    "Expected a resource id under [" + RESOURCE_ID_KEY + "] in execution context");
+
+            long resourceVersion = executionContext.getLong(RESOURCE_VERSION_KEY, -1L);
+            if (resourceVersion <= 0)
+                throw new IllegalStateException(
+                    "Expected a resource version under [" + RESOURCE_VERSION_KEY + "] in execution context");
+
+            // Associate registered resource with current execution id
+            resourceRepository.setProcessExecution(resourceId, resourceVersion, processExecutionId);
+        }
+    }
+
+    /**
+     * The basic workflow-level execution listener
+     */
     private class ExecutionListener implements WorkflowExecutionEventListener
     {
         private final long executionId;
@@ -130,7 +188,7 @@ public class DefaultProcessOperator implements ProcessOperator
 
         private final ProcessDefinition definition;
 
-        public ExecutionListener(long executionId, long userId, ProcessDefinition definition)
+        private ExecutionListener(long executionId, long userId, ProcessDefinition definition)
         {
             this.executionId = executionId;
             this.userId = userId;
@@ -141,19 +199,29 @@ public class DefaultProcessOperator implements ProcessOperator
         public void onSuccess(WorkflowExecutionSnapshot workflowExecutionSnapshot)
         {
             final Workflow workflow = workflowExecutionSnapshot.workflow();
-
-            // Todo DefaultProcessOperator$ExecutionListener.onSuccess
             logger.info("The workflow {} has completed successfully", workflow.id());
+            try {
+                processRepository.updateExecution(
+                    executionId, EnumProcessExecutionStatus.COMPLETED, null, ZonedDateTime.now(), null);
+            } catch (ProcessExecutionNotFoundException ex) {
+                throw new IllegalStateException("The execution entity has disappeared!", ex);
+            }
         }
 
         @Override
         public void onFailure(WorkflowExecutionSnapshot workflowExecutionSnapshot)
         {
             final Workflow workflow = workflowExecutionSnapshot.workflow();
-
-            // Todo DefaultProcessOperator$ExecutionListener.onFailure
-
             logger.warn("The workflow {} has failed", workflow.id());
+
+            // Todo Retrieve failure exceptions from actual job execution
+
+            try {
+                processRepository.updateExecution(
+                    executionId, EnumProcessExecutionStatus.FAILED, null, ZonedDateTime.now(), null);
+            } catch (ProcessExecutionNotFoundException ex) {
+                throw new IllegalStateException("The execution entity has disappeared!", ex);
+            }
         }
 
         @Override
@@ -161,11 +229,29 @@ public class DefaultProcessOperator implements ProcessOperator
             WorkflowExecutionSnapshot snapshot, String nodeName, JobExecution jobExecution)
         {
             final Workflow workflow = snapshot.workflow();
+            final Step step = definition.stepByName(nodeName);
+            final ZonedDateTime now = ZonedDateTime.now();
 
-            // Todo DefaultProcessOperator$ExecutionListener.beforeNode
+            logger.info("The workflow node {}/{} has started", workflow.id(), nodeName);
 
-            logger.info("The workflow {} has started node [{}]",
-                workflow.id(), nodeName);
+            ProcessExecutionStepRecord stepRecord = new ProcessExecutionStepRecord(step.key(), step.name());
+            stepRecord.setStartedOn(now);
+            stepRecord.setJobExecutionId(jobExecution.getId());
+            stepRecord.setStatus(EnumProcessExecutionStatus.RUNNING);
+            stepRecord.setOperation(step.operation());
+            stepRecord.setTool(step.tool());
+
+            // Todo add (a generated) configuration file as a step files
+
+            // Update record in repository
+
+            try {
+                processRepository.createExecutionStep(executionId, stepRecord);
+            } catch (ProcessExecutionNotFoundException ex) {
+                throw new IllegalStateException("The execution entity has disappeared!", ex);
+            } catch (ProcessExecutionNotActiveException ex) {
+                throw new IllegalStateException("The execution entity is not active!", ex);
+            }
         }
 
         @Override
@@ -173,18 +259,61 @@ public class DefaultProcessOperator implements ProcessOperator
             WorkflowExecutionSnapshot snapshot, String nodeName, JobExecution jobExecution)
         {
             final Workflow workflow = snapshot.workflow();
-
             final Step step = definition.stepByName(nodeName);
+            final ZonedDateTime now = ZonedDateTime.now();
 
-            // Todo DefaultProcessOperator$ExecutionListener.afterNode
+            final ExecutionContext executionContext = jobExecution.getExecutionContext();
+            final BatchStatus batchStatus = jobExecution.getStatus();
 
-            ExecutionContext executionContext = jobExecution.getExecutionContext();
             logger.info(
-                "The workflow {} has finished node [{}] with status of [{}]; context={}",
-                workflow.id(), nodeName, jobExecution.getStatus(), executionContext);
+                "The workflow node {}/{} finished with a status of [{}]; context={}",
+                workflow.id(), nodeName, batchStatus, executionContext);
 
+            ProcessExecutionRecord executionRecord = processRepository.findExecution(executionId);
+            ProcessExecutionStepRecord stepRecord = executionRecord.getStep(step.key());
 
+            // Update step record
+
+            switch (batchStatus) {
+            case COMPLETED:
+                {
+                    stepRecord.setStatus(EnumProcessExecutionStatus.COMPLETED);
+                    stepRecord.setCompletedOn(now);
+                }
+                break;
+            case FAILED:
+                {
+                    List<Throwable> failureExceptions = jobExecution.getFailureExceptions();
+                    stepRecord.setStatus(EnumProcessExecutionStatus.FAILED);
+                    stepRecord.setCompletedOn(now);
+                    if (!failureExceptions.isEmpty())
+                        stepRecord.setErrorMessage(failureExceptions.get(0).getMessage());
+                }
+                break;
+            case STOPPED:
+                {
+                    stepRecord.setStatus(EnumProcessExecutionStatus.STOPPED);
+                }
+                break;
+            default:
+                Assert.state(false,
+                    "Did not expect a batch status of ["+ batchStatus + "] in a afterNode callback");
+                break;
+            }
+
+            // Todo If successful, add output file as step file record
+
+            // Update record in repository
+
+            try {
+                processRepository.updateExecutionStep(executionId, step.key(), stepRecord);
+            } catch (ProcessExecutionNotFoundException ex) {
+                throw new IllegalStateException("The execution entity has disappeared!", ex);
+            } catch (ProcessExecutionNotActiveException ex) {
+                throw new IllegalStateException("The execution entity is not active!", ex);
+            }
         }
+
     }
 
     private static class ProcessDefinitionDependencyAnalyzer
@@ -221,6 +350,19 @@ public class DefaultProcessOperator implements ProcessOperator
 
             return IterableUtils.transformedIterable(keysInTopologicalOrder, k -> definition.stepByKey(k));
         }
+    }
+
+    /**
+     * Compute the workflow id from the identity of a process revision
+     *
+     * @param id The id (parent id) of a process
+     * @param version The version of a process revision
+     * @return
+     */
+    private UUID computeWorkflowId(long id, long version)
+    {
+        return UUID.nameUUIDFromBytes(
+            ByteBuffer.wrap(new byte[16]).putLong(id).putLong(version).array());
     }
 
     /**
@@ -383,7 +525,7 @@ public class DefaultProcessOperator implements ProcessOperator
     }
 
     /**
-     * Resolve a reference to a resource (an instance of {@link CatalogResource}) to a
+     * Resolve a resource identifier (an instance of {@link ResourceIdentifier}) into a
      * resource record.
      *
      * @param resourceIdentifier A pair of id and version
@@ -461,11 +603,8 @@ public class DefaultProcessOperator implements ProcessOperator
      *
      * @param processRecord The process record (representing a specific revision)
      * @param userId
-     * @return
      * @throws ProcessNotFoundException
      * @throws ProcessExecutionStartException
-     * @throws MalformedURLException
-     * @throws WorkflowExecutionStartException
      */
     private ProcessExecutionRecord startExecution(ProcessRecord processRecord, int userId)
         throws ProcessNotFoundException, ProcessExecutionStartException
@@ -477,14 +616,9 @@ public class DefaultProcessOperator implements ProcessOperator
         final ProcessDefinition definition = processRecord.getDefinition();
 
         // Map (id, version) of definition to the workflow identifier
-
-        final UUID workflowId = UUID.nameUUIDFromBytes(
-            ByteBuffer.wrap(new byte[16])
-                .putLong(id).putLong(version)
-                .array());
+        final UUID workflowId = computeWorkflowId(id, version);
 
         // Build a workflow from the definition of this process
-
         final Workflow.Builder workflowBuilder = workflowBuilderFactory.get(workflowId);
         try {
             buildWorkflow(workflowBuilder, definition, userId);
@@ -492,56 +626,104 @@ public class DefaultProcessOperator implements ProcessOperator
             throw new IllegalStateException("The process definition has cyclic dependencies");
         }
 
-        // Create a process-execution entity and associate with captured events
+        // Create a new process execution entity
 
-        ProcessExecutionRecord executionRecord =
-            processRepository.createExecution(id, version, userId);
+        ProcessExecutionRecord executionRecord = null;
+        try {
+            executionRecord = processRepository.createExecution(id, version, userId);
+        } catch (ProcessHasActiveExecutionException ex) {
+            throw new ProcessExecutionStartException("Failed to create a new execution entity", ex);
+        }
         final long executionId = executionRecord.getId();
 
         // Add workflow listeners targeting specific nodes (or group of nodes)
 
-        // Fixme afterRegisterHandler
-//        final WorkflowExecutionEventListener afterRegisterHandler = null; // Todo
-//        definition.steps().stream()
-//            .filter(step -> step.operation() == EnumOperation.REGISTER)
-//            .forEach(step -> workflowBuilder.listener(step.name(), afterRegisterHandler));
+        final JobExecutionListener postRegistrationHandler = new PostRegistrationHandler(executionId);
+        definition.steps().stream()
+            .filter(step -> step.operation() == EnumOperation.REGISTER)
+            .forEach(step -> workflowBuilder.listener(step.name(), postRegistrationHandler));
 
         final Workflow workflow = workflowBuilder.build();
-        logger.info("About to start workflow #{}", workflow.id());
+        logger.info("About to start workflow {}", workflow.id());
+
+        // Start!
 
         ExecutionListener listener = new ExecutionListener(executionId, userId, definition);
 
         try {
             workflowScheduler.start(workflow, listener);
         } catch (WorkflowExecutionStartException ex) {
-            throw new ProcessExecutionStartException("failed to start workflow", ex);
+            // Discard process execution entity (the workflow execution did not even start)
+            try {
+                processRepository.discardExecution(executionId);
+            } catch (ProcessExecutionNotFoundException ex1) {
+               throw new IllegalStateException("Expected to find the execution just created!");
+            }
+            throw new ProcessExecutionStartException("Failed to start workflow", ex);
         }
 
         // Update status for process execution entity
 
-        executionRecord.setStartedOn(ZonedDateTime.now());
-        executionRecord.setStatus(EnumProcessExecutionStatus.RUNNING);
-        executionRecord = processRepository.updateExecution(executionId, executionRecord);
+        try {
+            executionRecord = processRepository.updateExecution(
+                executionId, EnumProcessExecutionStatus.RUNNING, ZonedDateTime.now(), null, null);
+        } catch (ProcessExecutionNotFoundException e) {
+            throw new IllegalStateException("Expected to find the execution just created!");
+        }
+
         return executionRecord;
     }
 
-    private void stopExecution(ProcessRecord process)
+    private void stopExecution(ProcessRecord processRecord)
+        throws ProcessExecutionStopException
     {
-        // Todo Find and stop workflow associated with process of given (id,version)
+        Assert.state(processRecord != null, "Expected a non-null process record");
 
-        throw new NotImplementedException("Todo");
+        final long id = processRecord.getId(), version = processRecord.getVersion();
+
+        // Map (id, version) of definition to the workflow identifier
+        final UUID workflowId = computeWorkflowId(id, version);
+
+        // Find latest execution (which is the only one possibly running)
+        final ProcessExecutionRecord executionRecord = processRepository.findLatestExecution(id, version);
+        if (executionRecord == null)
+            throw new ProcessExecutionStopException("The given process has no associated executions");
+        final long executionId = executionRecord.getId();
+
+        // Stop
+
+        WorkflowExecutionStopListener stopListener = new WorkflowExecutionStopListener()
+        {
+            @Override
+            public void onStopped(WorkflowExecutionSnapshot workflowExecutionSnapshot)
+            {
+                try {
+                    processRepository.updateExecution(
+                        executionId, EnumProcessExecutionStatus.STOPPED, null, null, null);
+                } catch (ProcessExecutionNotFoundException ex) {
+                    throw new IllegalArgumentException("The execution entity has disappeared!", ex);
+                }
+            }
+        };
+
+        try {
+            workflowScheduler.stop(workflowId, stopListener);
+        } catch (WorkflowExecutionStopException ex) {
+            throw new ProcessExecutionStopException("Failed to stop workflow", ex);
+        }
     }
 
-    private ProcessExecutionRecord pollStatus(ProcessRecord process)
+    private ProcessExecutionRecord pollStatus(ProcessRecord processRecord)
     {
-        // Todo Poll the status of workflow associated with process of given (id,version)
+        Assert.state(processRecord != null, "Expected a non-null process record");
 
-        throw new NotImplementedException("Todo");
+        final long id = processRecord.getId(), version = processRecord.getVersion();
+        return processRepository.findLatestExecution(id, version);
     }
 
     @Override
     public ProcessExecutionRecord start(long id, long version, int userId)
-        throws ProcessNotFoundException, ProcessExecutionStartException, IOException
+        throws ProcessNotFoundException, ProcessExecutionStartException
     {
         Assert.isTrue(userId < 0 || accountRepository.exists(userId), "No user with given id");
 
