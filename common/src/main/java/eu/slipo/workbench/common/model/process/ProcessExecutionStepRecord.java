@@ -35,7 +35,7 @@ public class ProcessExecutionStepRecord
 
     private List<ProcessExecutionStepFileRecord> files;
 
-    public ProcessExecutionStepRecord() {}
+    protected ProcessExecutionStepRecord() {}
     
     public ProcessExecutionStepRecord(long id, int key, String name) 
     {
@@ -43,6 +43,11 @@ public class ProcessExecutionStepRecord
         this.key = key;
         this.name = name;
         this.files = new ArrayList<>();
+    }
+    
+    public ProcessExecutionStepRecord(int key, String name)
+    {
+        this(-1L, key, name); 
     }
     
     public ProcessExecutionStepRecord(ProcessExecutionStepRecord record)

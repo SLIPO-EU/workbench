@@ -18,6 +18,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.validation.constraints.AssertTrue;
 import javax.validation.constraints.NotNull;
 
 import eu.slipo.workbench.common.model.process.EnumProcessExecutionStatus;
@@ -30,7 +31,10 @@ public class ProcessExecutionEntity
     @Id
     @Column(name = "id", updatable = false)
     @SequenceGenerator(
-        sequenceName = "process_execution_id_seq", name = "process_execution_id_seq", initialValue = 1, allocationSize = 1)
+        sequenceName = "process_execution_id_seq", 
+        name = "process_execution_id_seq", 
+        initialValue = 1, 
+        allocationSize = 1)
     @GeneratedValue(generator = "process_execution_id_seq", strategy = GenerationType.SEQUENCE)
     long id = -1L;
 
@@ -61,7 +65,11 @@ public class ProcessExecutionEntity
     @Column(name = "error_message")
     private String errorMessage;
 
-    @OneToMany(mappedBy = "execution", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(
+        mappedBy = "execution", 
+        fetch = FetchType.LAZY, 
+        cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH }, 
+        orphanRemoval = false)
     List<ProcessExecutionStepEntity> steps = new ArrayList<>();
 
     protected ProcessExecutionEntity() {}
@@ -72,67 +80,119 @@ public class ProcessExecutionEntity
         this.status = EnumProcessExecutionStatus.UNKNOWN;
     }
     
-    public long getId() {
+    public long getId() 
+    {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(long id) 
+    {
         this.id = id;
     }
 
-    public ProcessRevisionEntity getProcess() {
+    public ProcessRevisionEntity getProcess() 
+    {
         return process;
     }
 
-    public void setProcess(ProcessRevisionEntity process) {
+    public void setProcess(ProcessRevisionEntity process) 
+    {
         this.process = process;
     }
 
-    public AccountEntity getSubmittedBy() {
+    public AccountEntity getSubmittedBy() 
+    {
         return submittedBy;
     }
 
-    public void setSubmittedBy(AccountEntity submittedBy) {
+    public void setSubmittedBy(AccountEntity submittedBy) 
+    {
         this.submittedBy = submittedBy;
     }
 
-    public ZonedDateTime getSubmittedOn() {
+    public ZonedDateTime getSubmittedOn() 
+    {
         return submittedOn;
     }
 
-    public void setSubmittedOn(ZonedDateTime submittedOn) {
+    public void setSubmittedOn(ZonedDateTime submittedOn) 
+    {
         this.submittedOn = submittedOn;
     }
 
-    public ZonedDateTime getStartedOn() {
+    public ZonedDateTime getStartedOn() 
+    {
         return startedOn;
     }
 
-    public void setStartedOn(ZonedDateTime startedOn) {
+    public void setStartedOn(ZonedDateTime startedOn) 
+    {
         this.startedOn = startedOn;
     }
 
-    public ZonedDateTime getCompletedOn() {
+    public ZonedDateTime getCompletedOn() 
+    {
         return completedOn;
     }
 
-    public void setCompletedOn(ZonedDateTime completedOn) {
+    public void setCompletedOn(ZonedDateTime completedOn) 
+    {
         this.completedOn = completedOn;
     }
 
-    public EnumProcessExecutionStatus getStatus() {
+    public EnumProcessExecutionStatus getStatus() 
+    {
         return status;
     }
 
-    public void setStatus(EnumProcessExecutionStatus status) {
+    public void setStatus(EnumProcessExecutionStatus status) 
+    {
         this.status = status;
     }
+    
+    public boolean isRunning()
+    {
+        return status.isRunning();
+    }
+    
+    public boolean isFinished()
+    {
+        return status.isFinished();
+    }
+    
+    public boolean isTerminated()
+    {
+        return status.isTerminated();
+    }
+    
+    @AssertTrue
+    public boolean isStatusValid()
+    {
+        boolean check = true;
+        switch (status) {
+        case UNKNOWN:
+            check = startedOn == null && completedOn == null;
+            break;
+        case RUNNING:
+            check = completedOn == null;
+            break;
+        case COMPLETED:
+        case FAILED:
+            check = completedOn != null;
+            break;
+        default:
+            break;
+        }
+        return check;
+    }
 
-    public String getErrorMessage() {
+    public String getErrorMessage() 
+    {
         return errorMessage;
     }
 
-    public void setErrorMessage(String errorMessage) {
+    public void setErrorMessage(String errorMessage) 
+    {
         this.errorMessage = errorMessage;
     }
 
@@ -184,5 +244,4 @@ public class ProcessExecutionEntity
 
         return e;
     }
-
 }

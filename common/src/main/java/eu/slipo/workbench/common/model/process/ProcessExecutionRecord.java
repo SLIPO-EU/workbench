@@ -155,5 +155,16 @@ public class ProcessExecutionRecord
         }
         this.steps.add(s);
     }
-
+    
+    public ProcessExecutionStepRecord getStep(int stepKey)
+    {
+        if (this.steps == null)
+            return null;
+        
+        for (ProcessExecutionStepRecord r: this.steps) {
+            if (r.getKey() == stepKey)
+                return r;
+        }
+        return null;
+    }
 }

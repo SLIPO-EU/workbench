@@ -3,10 +3,9 @@ package eu.slipo.workbench.common.repository;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Set;
-import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -16,8 +15,6 @@ import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
 import org.apache.commons.collections4.IterableUtils;
-import org.apache.commons.collections4.ListUtils;
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,21 +27,22 @@ import org.springframework.util.Assert;
 import eu.slipo.workbench.common.domain.AccountEntity;
 import eu.slipo.workbench.common.domain.ProcessEntity;
 import eu.slipo.workbench.common.domain.ProcessExecutionEntity;
+import eu.slipo.workbench.common.domain.ProcessExecutionMonitorEntity;
 import eu.slipo.workbench.common.domain.ProcessExecutionStepEntity;
 import eu.slipo.workbench.common.domain.ProcessExecutionStepFileEntity;
 import eu.slipo.workbench.common.domain.ProcessRevisionEntity;
-import eu.slipo.workbench.common.domain.ResourceEntity;
 import eu.slipo.workbench.common.domain.ResourceRevisionEntity;
-import eu.slipo.workbench.common.model.ApplicationException;
 import eu.slipo.workbench.common.model.QueryResultPage;
+import eu.slipo.workbench.common.model.process.EnumProcessExecutionStatus;
 import eu.slipo.workbench.common.model.process.EnumProcessTaskType;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
-import eu.slipo.workbench.common.model.process.ProcessErrorCode;
+import eu.slipo.workbench.common.model.process.ProcessExecutionNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessExecutionQuery;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepFileRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepRecord;
 import eu.slipo.workbench.common.model.process.ProcessIdentifier;
+import eu.slipo.workbench.common.model.process.ProcessNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessQuery;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
 import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
@@ -57,21 +55,47 @@ public class DefaultProcessRepository implements ProcessRepository
     private static Logger logger = LoggerFactory.getLogger(DefaultProcessRepository.class);
     
     @PersistenceContext(unitName = "default")
-    EntityManager entityManager;
+    private EntityManager entityManager;
 
     @Autowired
-    ResourceRepository resourceRepository;
+    private ResourceRepository resourceRepository;
     
-    @Transactional(readOnly = true)
     @Override
-    public QueryResultPage<ProcessRecord> find(ProcessQuery query, PageRequest pageReq)
+    public void clearRunningExecutions()
     {
-        return ProcessRepository.super.find(query, pageReq);
+        // Update execution steps
+        
+        Query q1 = entityManager.createQuery(
+                "UPDATE ProcessExecutionStep e SET e.status = :nextStatus WHERE e.status = :status")
+            .setParameter("status", EnumProcessExecutionStatus.RUNNING)
+            .setParameter("nextStatus", EnumProcessExecutionStatus.STOPPED);
+        int n1 = q1.executeUpdate();
+        if (n1 > 0)
+            logger.info("Cleared {} execution step(s) from RUNNING to STOPPED", n1);
+        
+        // Update executions
+        
+        Query q2 = entityManager.createQuery(
+                "UPDATE ProcessExecution e SET e.status = :nextStatus " +
+                "WHERE e.status = :status1 OR e.status = :status2")
+            .setParameter("status1", EnumProcessExecutionStatus.UNKNOWN)
+            .setParameter("status2", EnumProcessExecutionStatus.RUNNING)
+            .setParameter("nextStatus", EnumProcessExecutionStatus.STOPPED);
+        int n2 = q2.executeUpdate();  
+        if (n2 > 0)
+            logger.info("Cleared {} execution(s) from UNKNOWN/RUNNING to STOPPED", n2);
     }
     
     @Transactional(readOnly = true)
     @Override
-    public QueryResultPage<ProcessRecord> find(
+    public QueryResultPage<ProcessRecord> query(ProcessQuery query, PageRequest pageReq)
+    {
+        return ProcessRepository.super.query(query, pageReq);
+    }
+    
+    @Transactional(readOnly = true)
+    @Override
+    public QueryResultPage<ProcessRecord> query(
         ProcessQuery query, PageRequest pageReq, final boolean includeExecutions)
     {
         // Check query parameters
@@ -131,7 +155,7 @@ public class DefaultProcessRepository implements ProcessRepository
     
     @Transactional(readOnly = true)
     @Override
-    public QueryResultPage<ProcessExecutionRecord> findExecutions(ProcessExecutionQuery query, PageRequest pageReq)
+    public QueryResultPage<ProcessExecutionRecord> queryExecutions(ProcessExecutionQuery query, PageRequest pageReq)
     {
         // Check query parameters
         if (pageReq == null) {
@@ -262,6 +286,38 @@ public class DefaultProcessRepository implements ProcessRepository
     
     @Transactional(readOnly = true)
     @Override
+    public ProcessExecutionRecord findLatestExecution(long id, long version)
+    {
+        final ProcessRevisionEntity revisionEntity = findRevision(id, version);
+        Assert.notNull(revisionEntity, 
+            "The pair of (id, version) does not correspond to a process revision entity");
+        
+        final List<ProcessExecutionEntity> executionEntities = revisionEntity.getExecutions(); 
+        if (executionEntities.isEmpty())
+            return null;
+        if (!executionEntities.stream().anyMatch(e -> e.getStartedOn() != null))
+            return null;
+        
+        Comparator<ProcessExecutionEntity> comparatorByStarted = Comparator.comparing(e -> e.getStartedOn());
+        ProcessExecutionEntity executionEntity = executionEntities.stream()
+            .filter(e -> e.getStartedOn() != null)
+            .sorted(comparatorByStarted.reversed())
+            .findFirst().get();
+        long executionId = executionEntity.getId();
+        
+        List<Long> runningExecutionIds = executionEntities.stream()
+            .filter(e -> e.isRunning())
+            .collect(Collectors.mapping(e -> e.getId(), Collectors.toList()));
+        Assert.state(runningExecutionIds.size() < 2, 
+            "Expected at most 1 running execution for a given process revision");
+        Assert.state(runningExecutionIds.isEmpty() || runningExecutionIds.get(0).equals(executionId),
+            "Expected a running execution to be the one started most recently!");
+        
+        return executionEntity.toProcessExecutionRecord();
+    }
+    
+    @Transactional(readOnly = true)
+    @Override
     public List<ProcessExecutionRecord> findExecutions(long id, long version)
     {
         ProcessRecord r = findOne(id, version, true);
@@ -271,7 +327,9 @@ public class DefaultProcessRepository implements ProcessRepository
     @Override
     public ProcessRecord create(ProcessDefinition definition, int userId)
     {
-        AccountEntity createdBy = entityManager.getReference(AccountEntity.class, userId);
+        AccountEntity createdBy = entityManager.find(AccountEntity.class, userId);
+        Assert.notNull(createdBy, "The userId does not correspond to a user entity");
+        
         ZonedDateTime now = ZonedDateTime.now();
 
         // Create new process entity
@@ -289,6 +347,11 @@ public class DefaultProcessRepository implements ProcessRepository
         ProcessRevisionEntity revisionEntity = new ProcessRevisionEntity(entity);
         entity.addRevision(revisionEntity);
 
+        // Create an execution monitor for this revision
+        
+        ProcessExecutionMonitorEntity monitorEntity = new ProcessExecutionMonitorEntity(revisionEntity, now);
+        revisionEntity.setMonitor(monitorEntity);
+        
         // Save
 
         entityManager.persist(entity);
@@ -298,45 +361,64 @@ public class DefaultProcessRepository implements ProcessRepository
 
     @Override
     public ProcessRecord update(long id, ProcessDefinition definition, int userId)
+        throws ProcessNotFoundException
     {
-        AccountEntity updatedBy = entityManager.getReference(AccountEntity.class, userId);
-
-        ProcessRevisionEntity revision = findLatestRevision(id);
-        if(revision == null) {
-            throw ApplicationException.fromPattern(ProcessErrorCode.NOT_FOUND);
-        }
-
+        AccountEntity updatedBy = entityManager.find(AccountEntity.class, userId);
+        Assert.notNull(updatedBy, "The userId does not correspond to a user entity");
+        
+        ProcessEntity entity = entityManager.find(ProcessEntity.class, id);
+        if (entity == null)
+            throw new ProcessNotFoundException(id);
+        
+        final ZonedDateTime now = ZonedDateTime.now();
+        
         // Update process entity
-
-        ProcessEntity entity = revision.getParent();
         entity.setVersion(entity.getVersion() + 1);
         entity.setDescription(definition.description());
         entity.setUpdatedBy(updatedBy);
-        entity.setUpdatedOn(ZonedDateTime.now());
+        entity.setUpdatedOn(now);
         entity.setDefinition(definition);
 
         // Create new process revision, update references
-
         ProcessRevisionEntity revisionEntity = new ProcessRevisionEntity(entity);
         entity.addRevision(revisionEntity);
 
+        // Create an execution monitor for this revision
+        ProcessExecutionMonitorEntity monitorEntity = new ProcessExecutionMonitorEntity(revisionEntity, now);
+        revisionEntity.setMonitor(monitorEntity);
+        
         // Save
-
         entityManager.flush();
         return entity.toProcessRecord();
     }
 
     @Override
-    public ProcessExecutionRecord createExecution(long id, long version, int uid)
+    public ProcessExecutionRecord createExecution(long id, long version, int userId)
+        throws ProcessNotFoundException, ProcessHasActiveExecutionException
     {
-        final ZonedDateTime now = ZonedDateTime.now();
+        final AccountEntity submittedBy = userId < 0? null : entityManager.find(AccountEntity.class, userId);
+        Assert.notNull(submittedBy, "The user id does not correspond to a user entity");
         
-        ProcessRevisionEntity revisionEntity = findRevision(id, version);
-        AccountEntity submittedBy = uid < 0? null : entityManager.find(AccountEntity.class, uid);
+        final ProcessRevisionEntity revisionEntity = findRevision(id, version);
+        if (revisionEntity == null)
+            throw new ProcessNotFoundException(id, version);
+        
+        final List<ProcessExecutionEntity> executionEntities = revisionEntity.getExecutions();
+        
+        // Check if a running execution already exists on this process
+        
+        if (executionEntities.stream().anyMatch(e -> !e.isTerminated()))
+            throw new ProcessHasActiveExecutionException(id, version);
+       
+        // Create an execution entity
+        
+        final ZonedDateTime now = ZonedDateTime.now();
         
         ProcessExecutionEntity executionEntity = new ProcessExecutionEntity(revisionEntity);
         executionEntity.setSubmittedBy(submittedBy);
         executionEntity.setSubmittedOn(now);
+        
+        revisionEntity.getMonitor().setModifiedOn(now);
         
         entityManager.persist(executionEntity);
         entityManager.flush();
@@ -345,19 +427,78 @@ public class DefaultProcessRepository implements ProcessRepository
     
     @Override
     public ProcessExecutionRecord updateExecution(long executionId, ProcessExecutionRecord record)
+        throws ProcessExecutionNotFoundException
     {
-        ProcessExecutionEntity executionEntity = 
+        Assert.notNull(record, "A process-execution record is required");
+        return updateExecution(
+            executionId, 
+            record.getStatus(), 
+            record.getStartedOn(), 
+            record.getCompletedOn(),
+            record.getErrorMessage());
+    }
+    
+    @Override
+    public ProcessExecutionRecord updateExecution(
+        long executionId,
+        EnumProcessExecutionStatus status, 
+        ZonedDateTime started, 
+        ZonedDateTime completed,
+        String errorMessage) 
+        throws ProcessExecutionNotFoundException
+    {
+        final ProcessExecutionEntity executionEntity = 
             entityManager.find(ProcessExecutionEntity.class, executionId);
-        Assert.notNull(executionEntity, "The execution id does not match an execution entity");
+        if (executionEntity == null)
+            throw ProcessExecutionNotFoundException.forExecution(executionId);
         
-        if (record.getStartedOn() != null)
-            executionEntity.setStartedOn(record.getStartedOn());
+        final ProcessRevisionEntity revisionEntity = executionEntity.getProcess();
+        final EnumProcessExecutionStatus previousStatus = executionEntity.getStatus();
         
-        if (record.getCompletedOn() != null)
-            executionEntity.setCompletedOn(record.getCompletedOn());
+        if (status != null && status != previousStatus) {
+            Assert.isTrue(status != EnumProcessExecutionStatus.UNKNOWN, 
+                "The status cannot be updated to UNKNOWN");
+            switch (previousStatus) {
+            case UNKNOWN:
+                Assert.isTrue(status != EnumProcessExecutionStatus.COMPLETED, 
+                    "A transition from a status of UNKNOWN to COMPLETED is impossible");
+                break;
+            case COMPLETED:
+            case FAILED:
+            case STOPPED:
+                Assert.isTrue(false, 
+                    "The execution status of [" + previousStatus + "] is a terminal status");
+                break;
+            default:
+                break;
+            }
+            executionEntity.setStatus(status);
+        }
         
-        executionEntity.setStatus(record.getStatus());
-        executionEntity.setErrorMessage(record.getErrorMessage());
+        if (errorMessage != null) {
+            Assert.isTrue(executionEntity.getStatus() == EnumProcessExecutionStatus.FAILED,
+                "An error message is only expected for FAILED executions");
+            executionEntity.setErrorMessage(errorMessage);
+        }
+        
+        if (started != null && !started.equals(executionEntity.getStartedOn())) {
+            Assert.isTrue(previousStatus == EnumProcessExecutionStatus.UNKNOWN &&
+                    status == EnumProcessExecutionStatus.RUNNING, 
+                "The `started` timestamp can only be updated for an execution moving from " +
+                    "UNKNOWN to RUNNING status");
+            executionEntity.setStartedOn(started);
+        }
+        
+        if (completed != null) {
+            Assert.isTrue(previousStatus == EnumProcessExecutionStatus.RUNNING && (
+                    status == EnumProcessExecutionStatus.COMPLETED || 
+                    status == EnumProcessExecutionStatus.FAILED), 
+                "The `completed` timestamp is only expected for an execution moving from " +
+                    "RUNNING to a COMPLETED/FAILED status");
+            executionEntity.setCompletedOn(completed);
+        }
+        
+        revisionEntity.getMonitor().setModifiedOn(ZonedDateTime.now());
         
         // Save
         
@@ -367,12 +508,16 @@ public class DefaultProcessRepository implements ProcessRepository
 
     @Override
     public ProcessExecutionRecord createExecutionStep(long executionId, ProcessExecutionStepRecord record)
+        throws ProcessExecutionNotFoundException, ProcessExecutionNotActiveException
     {
         Assert.notNull(record, "A non-empty record is required");
         
         final ProcessExecutionEntity executionEntity = 
             entityManager.find(ProcessExecutionEntity.class, executionId);
-        Assert.notNull(executionEntity, "The execution id does not match an execution entity");
+        if (executionEntity == null)
+            throw ProcessExecutionNotFoundException.forExecution(executionId);
+        if (executionEntity.isTerminated())
+            throw new ProcessExecutionNotActiveException(executionId);
         
         // Set step metadata
         
@@ -398,29 +543,31 @@ public class DefaultProcessRepository implements ProcessRepository
         
         executionEntity.addStep(executionStepEntity);
         
-        // Save
-        
+        // Save    
         entityManager.flush();
         return executionEntity.toProcessExecutionRecord(true);
     }
 
     @Override
-    public ProcessExecutionRecord updateExecutionStep(
-        long executionId, int stepKey, ProcessExecutionStepRecord record)
+    public ProcessExecutionRecord updateExecutionStep(long executionId, int stepKey, ProcessExecutionStepRecord record)
+        throws ProcessExecutionNotFoundException, ProcessExecutionNotActiveException
     {
         Assert.notNull(record, "A non-empty record is required");
         
         final ProcessExecutionEntity executionEntity = 
             entityManager.find(ProcessExecutionEntity.class, executionId);
-        Assert.notNull(executionEntity, "The execution id does not match an execution entity");
+        if (executionEntity == null)
+            throw ProcessExecutionNotFoundException.forExecution(executionId);
+        if (executionEntity.isTerminated())
+            throw new ProcessExecutionNotActiveException(executionId);
         
         final ProcessExecutionStepEntity executionStepEntity = executionEntity.getStepByKey(stepKey);
-        Assert.notNull(executionStepEntity, 
-            "The step key does not correspond to a step inside the execution entity");
+        if (executionStepEntity == null)
+            throw ProcessExecutionNotFoundException.forExecutionStep(executionId, stepKey);
         
         final List<ProcessExecutionStepFileRecord> fileRecords = record.getFiles();
-        final List<Long> fids = fileRecords.stream().map(r -> r.getId())
-            .collect(Collectors.toList());
+        final List<Long> fids = fileRecords.stream()
+            .collect(Collectors.mapping(r -> r.getId(), Collectors.toList()));
         
         // Update top-level step metadata
         
@@ -465,14 +612,13 @@ public class DefaultProcessRepository implements ProcessRepository
         }
         
         // Save
-        
         entityManager.flush();
         return executionEntity.toProcessExecutionRecord(true);
     }
   
     @Override
-    public ProcessExecutionRecord updateExecutionStepAddingFile(
-        long executionId, int stepKey, ProcessExecutionStepFileRecord fileRecord)
+    public ProcessExecutionRecord updateExecutionStepAddingFile(long executionId, int stepKey, ProcessExecutionStepFileRecord fileRecord)
+        throws ProcessExecutionNotFoundException, ProcessExecutionNotActiveException
     {
         Assert.notNull(fileRecord, "A non-empty record is required");
         Assert.state(fileRecord.getId() < 0, 
@@ -480,11 +626,14 @@ public class DefaultProcessRepository implements ProcessRepository
         
         final ProcessExecutionEntity executionEntity = 
             entityManager.find(ProcessExecutionEntity.class, executionId);
-        Assert.notNull(executionEntity, "The execution id does not match an execution entity");
+        if (executionEntity == null)
+            throw ProcessExecutionNotFoundException.forExecution(executionId);
+        if (executionEntity.isTerminated())
+            throw new ProcessExecutionNotActiveException(executionId);
         
         final ProcessExecutionStepEntity executionStepEntity = executionEntity.getStepByKey(stepKey);
-        Assert.notNull(executionStepEntity, 
-            "The step key does not correspond to a step inside the execution entity");
+        if (executionStepEntity == null)
+            throw ProcessExecutionNotFoundException.forExecutionStep(executionId, stepKey);
         
         // Add file record
         
@@ -497,11 +646,42 @@ public class DefaultProcessRepository implements ProcessRepository
         executionStepEntity.addFile(fileEntity);
         
         // Save
-        
         entityManager.flush();
         return executionEntity.toProcessExecutionRecord(true);
     }
     
+    @Override
+    public boolean discardExecution(long executionId, boolean forceIfNotEmpty)
+        throws ProcessExecutionNotFoundException
+    {
+        final ProcessExecutionEntity executionEntity = 
+            entityManager.find(ProcessExecutionEntity.class, executionId);
+        if (executionEntity == null)
+            throw ProcessExecutionNotFoundException.forExecution(executionId);
+        
+        if (executionEntity.getSteps().isEmpty()) {
+            entityManager.remove(executionEntity);
+            return true;
+        } else if (forceIfNotEmpty) {
+            // First remove each one of children steps (will cascade to children files)
+            logger.info("Removing execution entity #{} along with {} processing step(s)",
+                executionId, executionEntity.getSteps().size());
+            for (ProcessExecutionStepEntity stepEntity: executionEntity.getSteps()) {
+                entityManager.remove(stepEntity);
+            }
+            entityManager.remove(executionEntity);
+            return true;
+        }
+        
+        return false;
+    }
+    
+    @Override
+    public boolean discardExecution(long executionId) throws ProcessExecutionNotFoundException
+    {
+        return ProcessRepository.super.discardExecution(executionId);
+    }
+        
     private void setFindParameters(ProcessQuery processQuery, Query query)
     {
         if (processQuery.getCreatedBy() != null)

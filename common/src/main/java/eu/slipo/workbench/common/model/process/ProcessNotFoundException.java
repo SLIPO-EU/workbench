@@ -6,11 +6,11 @@ public class ProcessNotFoundException extends Exception
     
     public ProcessNotFoundException(long id)
     {
-        super(String.format("No such process (id=%d)", id));
+        super(String.format("No process entity for id = (%d)", id));
     }
     
     public ProcessNotFoundException(long id, long version)
     {
-        super(String.format("No such process (id=%d@%d)", id, version));
+        super(String.format("No process entity for (id, version) = (%d, %d)", id, version));
     }
 }

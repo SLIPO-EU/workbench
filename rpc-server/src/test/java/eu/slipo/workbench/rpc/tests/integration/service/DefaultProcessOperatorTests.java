@@ -1,5 +1,6 @@
 package eu.slipo.workbench.rpc.tests.integration.service;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.springframework.util.StringUtils.stripFilenameExtension;
 
@@ -29,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
@@ -45,10 +47,12 @@ import com.google.common.collect.HashBiMap;
 
 import eu.slipo.workbench.common.domain.AccountEntity;
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
+import eu.slipo.workbench.common.model.process.EnumProcessExecutionStatus;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.ProcessDefinitionBuilder;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStartException;
+import eu.slipo.workbench.common.model.process.ProcessExecutionStepRecord;
 import eu.slipo.workbench.common.model.process.ProcessNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
 import eu.slipo.workbench.common.model.resource.ExternalUrlDataSource;
@@ -75,8 +79,12 @@ public class DefaultProcessOperatorTests
     private static Logger logger = LoggerFactory.getLogger(DefaultProcessOperatorTests.class);
 
     /**
-     * A test fixture that represents a basic transform-to-rdf operation (using
-     * triplegeo as the transformation tool).
+     * The polling interval (in milliseconds) to check the status of a process execution
+     */
+    private static final long POLL_INTERVAL = 1500L;
+
+    /**
+     * A test fixture that represents a basic to-RDF operation (using Triplegeo).
      */
     private static class TransformFixture
     {
@@ -320,7 +328,7 @@ public class DefaultProcessOperatorTests
     private List<TransformFixture> transformFixtures;
 
     private void tranformAndRegister(final TransformFixture fixture, Account creator)
-        throws ProcessNotFoundException, ProcessExecutionStartException, IOException
+        throws ProcessNotFoundException, ProcessExecutionStartException, IOException, InterruptedException
     {
         final int creatorId = creator.getId();
 
@@ -341,7 +349,7 @@ public class DefaultProcessOperatorTests
             .register("register-1", resourceKey, metadata)
             .build();
 
-        ProcessRecord record = processRepository.create(definition, creatorId);
+        final ProcessRecord record = processRepository.create(definition, creatorId);
         assertNotNull(record);
 
         // Start process
@@ -349,11 +357,36 @@ public class DefaultProcessOperatorTests
         ProcessExecutionRecord executionRecord =
             processOperator.start(record.getId(), record.getVersion());
         assertNotNull(executionRecord);
+        final long executionId = executionRecord.getId();
 
-        // Todo poll execution for completion
+        assertNotNull(executionRecord.getStatus());
+        assertNotNull(executionRecord.getSubmittedOn());
+        assertNotNull(executionRecord.getSubmittedBy());
+
+        // Poll execution for completion
+
+        do {
+            Thread.sleep(POLL_INTERVAL);
+            executionRecord = processOperator.poll(record.getId(), record.getVersion());
+            assertEquals(executionId, executionRecord.getId());
+            assertNotNull(executionRecord.getStartedOn());
+        } while (!executionRecord.getStatus().isTerminated());
+
+        Thread.sleep(1000L);
+
+        // Test
+
+        assertEquals(EnumProcessExecutionStatus.COMPLETED, executionRecord.getStatus());
+        assertNotNull(executionRecord.getCompletedOn());
+
+        List<ProcessExecutionStepRecord> stepRecords = executionRecord.getSteps();
+        assertNotNull(stepRecords);
+        assertEquals(2, stepRecords.size());
+
+        // Todo check result is registered
     }
 
-    @Test
+    @Test(timeout = 30 * 1000L)
     public void test1_transformAndRegister1() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername("baz");
@@ -408,7 +441,6 @@ public class DefaultProcessOperatorTests
         ProcessExecutionRecord executionRecord =
             processOperator.start(record.getId(), record.getVersion());
         assertNotNull(executionRecord);
-
 
     }
 }

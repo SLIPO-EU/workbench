@@ -28,4 +28,21 @@ public enum EnumProcessExecutionStatus
         return EnumProcessExecutionStatus.UNKNOWN;
     }
 
+    public boolean isRunning()
+    {
+        return this == EnumProcessExecutionStatus.RUNNING;
+    }
+    
+    public boolean isFinished()
+    {
+        return this == EnumProcessExecutionStatus.COMPLETED || 
+            this == EnumProcessExecutionStatus.FAILED;
+    }
+    
+    public boolean isTerminated()
+    {
+        return this == EnumProcessExecutionStatus.COMPLETED || 
+            this == EnumProcessExecutionStatus.FAILED ||
+            this == EnumProcessExecutionStatus.STOPPED;
+    }
 }

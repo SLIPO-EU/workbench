@@ -85,8 +85,7 @@ public interface ResourceRepository
     ResourceRecord update(long id, ResourceRecord record, int updatedBy);
     
     /**
-     * Update the resource entity identified by given <tt>id</tt> and <tt>version</tt> by associating 
-     * to a given process execution.  
+     * Link a resource entity to a given process execution.  
      * 
      * <p>This method does <em>not</em> affect versioning of resources in any way: simply links to
      * a given process execution. It expects to find a null link, and will refuse to update a non-null

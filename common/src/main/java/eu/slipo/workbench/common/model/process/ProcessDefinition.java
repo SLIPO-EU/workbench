@@ -39,9 +39,11 @@ public class ProcessDefinition implements Serializable
      * Map a step name to a step descriptor
      */
     private final Map<String, Step> nameToStep;
+        
+    private final Map<Integer, ProcessInput> resourceKeyToResource;
     
     /**
-     * Map a resource key to the step key of a processing step (producing it as an output)
+     * Map a resource key to the step key of a processing step which produces it as an output
      */
     private final Map<Integer, Integer> resourceKeyToStepKey;
     
@@ -67,12 +69,13 @@ public class ProcessDefinition implements Serializable
         this.steps = Collections.unmodifiableList(steps);
         
         this.keyToStep = Collections.unmodifiableMap(
-            steps.stream()
-                .collect(Collectors.toMap(s -> s.key(), Function.identity())));
+            steps.stream().collect(Collectors.toMap(s -> s.key(), Function.identity())));
         
         this.nameToStep = Collections.unmodifiableMap(
-            steps.stream()
-                .collect(Collectors.toMap(s -> s.name(), Function.identity())));
+            steps.stream().collect(Collectors.toMap(s -> s.name(), Function.identity())));
+        
+        this.resourceKeyToResource = Collections.unmodifiableMap(
+            resources.stream().collect(Collectors.toMap(r -> r.key(), Function.identity())));
         
         this.resourceKeyToResourceIdentifier = Collections.unmodifiableMap(
             resources.stream()
@@ -148,9 +151,21 @@ public class ProcessDefinition implements Serializable
     }
     
     /**
+     * Get a resource by its key
+     * 
+     * @param resourceKey The resource key
+     * @return
+     */
+    @JsonIgnore
+    public ProcessInput resourceByResourceKey(int resourceKey)
+    {
+        return resourceKeyToResource.get(resourceKey);
+    }
+    
+    /**
      * Get a {@link Step} descriptor by a resource key
      * 
-     * @param resourceKey The resource key assigned to the output of a step
+     * @param resourceKey The resource key assigned to the <em>output</em> of a step
      * @return a {@link Step} descriptor if the given key corresponds to an output, 
      *   else <tt>null</tt> (i.e when the key is not not known, or it corresponds to
      *   other a non-output kind of resource)

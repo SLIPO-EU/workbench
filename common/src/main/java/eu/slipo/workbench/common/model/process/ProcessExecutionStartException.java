@@ -1,7 +1,7 @@
 package eu.slipo.workbench.common.model.process;
 
 /**
- * An exception representing a failure while trying to start a process execution.
+ * An exception representing an operator-level failure while trying to start a process execution.
  * 
  * A more specific start-related exception should subclass this generic exception.    
  */

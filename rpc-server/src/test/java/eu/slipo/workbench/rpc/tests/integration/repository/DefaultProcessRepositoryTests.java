@@ -520,4 +520,44 @@ public class DefaultProcessRepositoryTests
         assertNull(outputResourceRecord1.getNumberOfEntities());
     }
 
+    @Test(expected = ProcessRepository.ProcessHasActiveExecutionException.class)
+    public void test1_createMultipleRunningExecutions() throws Exception
+    {
+        AccountEntity createdBy = accountRepository.findOneByUsername("baz");
+        assertNotNull(createdBy);
+        AccountEntity submittedBy = createdBy;
+
+        ProcessRecord processRecord =
+            processRepository.create(sampleProcessDefinition1, createdBy.getId());
+        assertNotNull(processRecord);
+
+        final long id = processRecord.getId(), version = processRecord.getVersion();
+
+        // Create a running execution
+
+        ProcessExecutionRecord executionRecord1 =
+            processRepository.createExecution(id, version, submittedBy.getId());
+        assertNotNull(executionRecord1);
+        final long executionId1 = executionRecord1.getId();
+        final ZonedDateTime startedOn = ZonedDateTime.now();
+
+        executionRecord1 = processRepository.updateExecution(
+            executionId1, EnumProcessExecutionStatus.RUNNING, startedOn, null, null);
+        assertEquals(EnumProcessExecutionStatus.RUNNING, executionRecord1.getStatus());
+
+        // Now, attempt to create another execution
+
+        ProcessExecutionRecord executionRecord2 =
+            processRepository.createExecution(id, version, submittedBy.getId());
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    //                       Fixme Scratch                                    //
+    ////////////////////////////////////////////////////////////////////////////
+
+    @Test
+    public void test99_scratch1()
+    {
+        System.err.println("Hello");
+    }
 }

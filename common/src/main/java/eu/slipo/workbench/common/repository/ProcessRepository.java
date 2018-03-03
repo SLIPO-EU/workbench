@@ -1,22 +1,61 @@
 package eu.slipo.workbench.common.repository;
 
-import java.util.Collections;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 import org.springframework.data.domain.PageRequest;
 
+import eu.slipo.workbench.common.domain.ProcessExecutionEntity;
+import eu.slipo.workbench.common.domain.ProcessRevisionEntity;
 import eu.slipo.workbench.common.model.QueryResultPage;
+import eu.slipo.workbench.common.model.process.EnumProcessExecutionStatus;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
+import eu.slipo.workbench.common.model.process.ProcessExecutionNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessExecutionQuery;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepFileRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepRecord;
 import eu.slipo.workbench.common.model.process.ProcessIdentifier;
+import eu.slipo.workbench.common.model.process.ProcessNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessQuery;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
 
 public interface ProcessRepository 
 {
+    /**
+     * A repository-level exception that represents an error to create a new execution entity
+     * ({@link ProcessExecutionEntity}) when the parent entity (i.e a {@link ProcessRevisionEntity}) 
+     * is already associated with an active (starting or running) execution.
+     */
+    public static class ProcessHasActiveExecutionException extends Exception
+    {
+        private static final long serialVersionUID = 1L;
+
+        public ProcessHasActiveExecutionException(long id, long version)
+        {
+            super(String.format(
+                "There is already an active (running or starting) execution for the process " +
+                    "with (id,version) = (%d, %d)", 
+                id, version));
+        }
+    }
+    
+    /**
+     * A repository-level exception thrown whenever an execution entity is expected to be active 
+     * (e.g when creating or updating a processing step inside it) but its not. 
+     */
+    public static class ProcessExecutionNotActiveException extends Exception
+    {
+        private static final long serialVersionUID = 1L;
+        
+        public ProcessExecutionNotActiveException(long executionId)
+        {
+            super(String.format(
+                "The process execution #%d was expected to be active (starting or running)", 
+                executionId));
+        }
+    }
+
     /**
      * Find processes filtered by a {@link ProcessQuery}
      * 
@@ -24,11 +63,11 @@ public interface ProcessRepository
      * @param pageReq A page request
      * @param includeExecutions A flag to indicate if executions should also be returned
      */
-    QueryResultPage<ProcessRecord> find(ProcessQuery query, PageRequest pageReq, boolean includeExecutions);
+    QueryResultPage<ProcessRecord> query(ProcessQuery query, PageRequest pageReq, boolean includeExecutions);
 
-    default QueryResultPage<ProcessRecord> find(ProcessQuery query, PageRequest pageReq)
+    default QueryResultPage<ProcessRecord> query(ProcessQuery query, PageRequest pageReq)
     {
-        return find(query, pageReq, false);
+        return query(query, pageReq, false);
     }
     
     /**
@@ -81,25 +120,27 @@ public interface ProcessRepository
     ProcessRecord findOne(String name);
 
     /**
-     * Create a new process
+     * Create a new process entity
      *
      * @param definition the process definition
      * @param createdBy The id of the user creating this entity
      * 
-     * @return a view of the newly created entity
+     * @return a record for the newly created entity
      */
     ProcessRecord create(ProcessDefinition definition, int createdBy);
 
     /**
-     * Update an existing process
+     * Update an existing process entity
      *
      * @param id The id of the process under update
      * @param definition the process definition
      * @param updatedBy The id of the user updating this entity
      * 
-     * @return a view of the updated entity
+     * @return a record for updated entity
+     * @throws ProcessNotFoundException if given id does not correspond to a process entity
      */
-    ProcessRecord update(long id, ProcessDefinition definition, int updatedBy);
+    ProcessRecord update(long id, ProcessDefinition definition, int updatedBy)
+        throws ProcessNotFoundException;
     
     /**
      * Find a single process execution record
@@ -120,25 +161,43 @@ public interface ProcessRepository
     List<ProcessExecutionRecord> findExecutions(long id, long version);
     
     /**
+     * Find the latest execution for a process of given id and version. Note that if a
+     * process revision has a running execution, it will always be the latest one.
+     * 
+     * @param id The process id
+     * @param version The version of a specific revision of a process
+     * @return A record representing the execution entity
+     */
+    ProcessExecutionRecord findLatestExecution(long id, long version);
+    
+    /**
      * Find process executions filtered by a {@link ProcessExecutionQuery}.
      *
      * @param query A query to filter records, or <tt>null</tt> to fetch everything
      * @return an instance of {@link QueryResult} with {@link ProcessExecutionRecord} items
      */
-    QueryResultPage<ProcessExecutionRecord> findExecutions(ProcessExecutionQuery query, PageRequest pageReq);
+    QueryResultPage<ProcessExecutionRecord> queryExecutions(ProcessExecutionQuery query, PageRequest pageReq);
     
     /**
-     * Create a (new) execution for a process revision with a given id and version. 
+     * Create a (new) execution for a process revision with a given id and version. The new
+     * execution will always be initialized with a status of {@link EnumProcessExecutionStatus#UNKNOWN}.
      * 
      * @param id The process id
      * @param version
      * @param submittedBy The id of the user that submitted this execution
-     * @return A record representing the state of the new execution entity
+     * @return A record representing the the new execution entity
+     * 
+     * @throws ProcessNotFoundException if given pair of (id, version) does not correspond to 
+     *   a process revision entity
+     * @throws ProcessHasActiveExecutionException if an active execution entity is found to be
+     *   associated with target process (at any time, only a single a process may be associated 
+     *   to at most 1 active execution).
      */
-    ProcessExecutionRecord createExecution(long id, long version, int submittedBy);
+    ProcessExecutionRecord createExecution(long id, long version, int submittedBy)
+        throws ProcessNotFoundException, ProcessHasActiveExecutionException;
     
     /**
-     * Update the execution state for an entire process. 
+     * Update the execution state for a process. 
      * 
      * <p>This method performs a shallow update of execution metadata, i.e it does not
      * examine steps or files to also update referencing entities. If instead, some step-related 
@@ -150,9 +209,34 @@ public interface ProcessRepository
      * @param record A record holding updatable metadata. The only updatable fields are:
      *    started/completed timestamps, status and error messages.
      * @return A record representing the updated state of the execution entity
+     * 
+     * @throws ProcessExecutionNotFoundException if given executionId does not correspond to
+     *   a process execution entity
      */
-    ProcessExecutionRecord updateExecution(long executionId, ProcessExecutionRecord record);
+    ProcessExecutionRecord updateExecution(long executionId, ProcessExecutionRecord record)
+        throws ProcessExecutionNotFoundException;
     
+    /**
+     * Update the execution state for a process.
+     * 
+     * <p>This is a convenience method using all updatable fields in an one-liner. If a timestamp
+     * parameter is <tt>null</tt>, the corresponding timestamp column will not be updated.
+     * 
+     * @param executionId The execution id of a process revision
+     * @param status The execution status; if <tt>null</tt> is given, status will not be updated
+     * @param started The time when the execution started; may be <tt>null</tt>
+     * @param completed The time when the execution completed (successfully or not); may be <tt>null</tt>
+     * @param errorMessage An optional error message; meaningful only when status is
+     *   {@link EnumProcessExecutionStatus#FAILED})
+     * @return A record representing the updated state of the execution entity
+     * 
+     * @see ProcessRepository#updateExecution(long, ProcessExecutionRecord)
+     */
+    ProcessExecutionRecord updateExecution(
+            long executionId, 
+            EnumProcessExecutionStatus status, ZonedDateTime started, ZonedDateTime completed, String errorMessage) 
+        throws ProcessExecutionNotFoundException;
+
     /**
      * Add a processing step to an existing execution.
      * 
@@ -160,7 +244,8 @@ public interface ProcessRepository
      * @param record A record holding updatable metadata of a step execution
      * @return A record representing the updated state of the (parent) execution entity
      */
-    ProcessExecutionRecord createExecutionStep(long executionId, ProcessExecutionStepRecord record);
+    ProcessExecutionRecord createExecutionStep(long executionId, ProcessExecutionStepRecord record)
+        throws ProcessExecutionNotFoundException, ProcessExecutionNotActiveException;
     
     /**
      * Update the execution state of an existing processing step.
@@ -168,9 +253,13 @@ public interface ProcessRepository
      * @param executionId The execution id of a process revision
      * @param stepKey The step key
      * @param record A record representing the updated state of the (parent) execution entity
-     * @return
+     * @return A record representing the updated state of the (parent) execution entity
+     * 
+     * @throws ProcessExecutionNotFoundException if given executionId does not correspond to a
+     *   a process execution entity, or if the given stepKey is invalid
      */
-    ProcessExecutionRecord updateExecutionStep(long executionId, int stepKey, ProcessExecutionStepRecord record);
+    ProcessExecutionRecord updateExecutionStep(long executionId, int stepKey, ProcessExecutionStepRecord record)
+        throws ProcessExecutionNotFoundException, ProcessExecutionNotActiveException;
     
     /**
      * Update the execution state of an existing processing step by adding a new file.
@@ -183,6 +272,33 @@ public interface ProcessRepository
      * @param record A record representing the file record to be added (i.e associated with this
      *   processing step).
      * @return
+     * 
+     * @see ProcessRepository#updateExecutionStep(long, int, ProcessExecutionStepRecord)
      */
-    ProcessExecutionRecord updateExecutionStepAddingFile(long executionId, int stepKey, ProcessExecutionStepFileRecord record);
+    ProcessExecutionRecord updateExecutionStepAddingFile(long executionId, int stepKey, ProcessExecutionStepFileRecord record)
+        throws ProcessExecutionNotFoundException, ProcessExecutionNotActiveException;
+    
+    /**
+     * Discard (i.e delete) an execution entity.
+     * 
+     * @param executionId The execution id of a process revision
+     * @param forceIfNotEmpty A flag to indicate if we should continue and delete the entity even
+     *   if it has processing steps associated to it; if <tt>true</tt>, then all processing steps 
+     *   will be also deleted.
+     * @return <tt>true</tt> if the execution was actually deleted   
+     */
+    boolean discardExecution(long executionId, boolean forceIfNotEmpty)
+        throws ProcessExecutionNotFoundException;
+    
+    default boolean discardExecution(long executionId) throws ProcessExecutionNotFoundException
+    {
+        return discardExecution(executionId, false);
+    }
+    
+    /**
+     * Fix status of running executions. This is only for recovery purposes, e.g. after a non-graceful
+     * shutdown that left executions and steps in an unknown state. It scans all executions (along with
+     * their steps) and marks as STOPPED all that appear as UNKNOWN/RUNNING.  
+     */
+    void clearRunningExecutions();
 }

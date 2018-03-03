@@ -61,31 +61,27 @@ public class RegisterResourceJobConfiguration
 
         private final int createdBy;
 
-        private final EnumDataFormat dataFormat;
+        private final EnumDataFormat format;
+
+        private final EnumDataFormat inputFormat;
 
         private final ResourceMetadataCreate metadata;
 
         private final ResourceIdentifier resourceIdentifier;
 
-        public RegisterResourceTasklet(
+        private RegisterResourceTasklet(
             String processName,
             Path inputPath,
             int createdBy,
-            EnumDataFormat dataFormat,
+            EnumDataFormat format,
+            EnumDataFormat inputFormat,
             ResourceMetadataCreate metadata,
             ResourceIdentifier resourceIdentifier)
         {
-            Assert.notNull(processName,
-                "The name of the creating process is required");
-            Assert.notNull(metadata,
-                "The user-provided metadata are required for a resource");
-            Assert.notNull(metadata.getName(), "A name is required");
-            Assert.isTrue(inputPath != null && inputPath.isAbsolute(),
-                "An absolute input path is required");
-
             this.processName = processName;
             this.inputPath = inputPath;
-            this.dataFormat = dataFormat;
+            this.format = format;
+            this.inputFormat = inputFormat;
             this.createdBy = createdBy;
             this.metadata = metadata;
             this.resourceIdentifier = resourceIdentifier;
@@ -99,13 +95,12 @@ public class RegisterResourceJobConfiguration
             ExecutionContext executionContext = stepContext.getStepExecution().getExecutionContext();
 
             // Resolve target path under catalog root directory
-
+            String targetName = metadata.getName() + "." + format.getFilenameExtension();
             Path targetPath = Paths.get(
-                Integer.valueOf(createdBy).toString(), processName, metadata.getName());
+                Integer.valueOf(createdBy).toString(), processName, targetName);
             targetPath = catalogDataDir.resolve(targetPath);
 
             // Create parent directories if needed
-
             try {
                 Files.createDirectories(targetPath.getParent());
             } catch (FileAlreadyExistsException ex) {
@@ -113,28 +108,24 @@ public class RegisterResourceJobConfiguration
             }
 
             // Copy
-
             try {
                 Files.createLink(targetPath, inputPath);
             } catch (FileSystemException ex) {
-                // Failed to create a hard link: resort to plain copying
+                // Failed to create a hard link: fallback to plain copying
                 Files.copy(inputPath, targetPath);
             }
 
             // Create a resource record
-
             ResourceRecord record = new ResourceRecord();
             record.setFilePath(catalogDataDir.relativize(targetPath).toString());
             record.setFileSize(Files.size(targetPath));
-            record.setFormat(dataFormat);
+            record.setFormat(format);
+            record.setInputFormat(inputFormat);
             record.setMetadata(metadata.getName(), metadata.getDescription());
             record.setType(EnumResourceType.POI_DATA);
             record.setSourceType(EnumDataSourceType.FILESYSTEM);
 
-            // Todo set/compute boundingBox and tableName
-
             // Save to repository
-
             if (resourceIdentifier == null) {
                 record = resourceRepository.create(record, createdBy);
                 logger.info("Registered as a new resource #{}: path={}",
@@ -145,43 +136,52 @@ public class RegisterResourceJobConfiguration
                     record.getVersion(), record.getId(), targetPath);
             }
 
-            record = resourceRepository.create(record, createdBy);
-            logger.info("Registered resource #{}: {}", record.getId(), record);
-
             // Update execution context
-
-            executionContext.put("targetPath", targetPath.toString());
+            executionContext.put("inputPath", inputPath.toString());
+            executionContext.put("path", targetPath.toString());
             executionContext.put("resourceId", record.getId());
             executionContext.put("resourceVersion", record.getVersion());
 
             return RepeatStatus.FINISHED;
         }
-
     }
 
     @Bean("registerResource.tasklet")
     @JobScope
     public RegisterResourceTasklet tasklet(
-        @Value("#{jobParameters['createdBy']}") Long createdBy,
         @Value("#{jobParameters['input']}") String input,
-        @Value("#{jobParameters['dataFormat']}") EnumDataFormat dataFormat,
+        @Value("#{jobParameters['createdBy']}") Long createdBy,
+        @Value("#{jobParameters['format']}") EnumDataFormat format,
+        @Value("#{jobParameters['inputFormat']}") EnumDataFormat inputFormat,
         @Value("#{jobParameters['processName']}") String processName,
         @Value("#{jobParameters['name']}") String name,
         @Value("#{jobParameters['description']}") String description,
         @Value("#{jobParameters['resourceId']}") Long resourceId,
         @Value("#{jobExecution.jobInstance.id}") Long jobId)
     {
+        Assert.notNull(processName, "Expected a name for the creating process");
+        Assert.notNull(createdBy, "Expected a user id for the creator of this resource");
+        Assert.isTrue(format != null && format != EnumDataFormat.UNDEFINED,
+            "Expected a data format for this resource");
+
+        Assert.notNull(name, "Expected a user-provided name for a resource");
+        ResourceMetadataCreate metadata = new ResourceMetadataCreate(name, description);
+
         Assert.isTrue(!StringUtils.isEmpty(input), "Expected an non-empty input path");
         String[] inputs = input.split(File.pathSeparator);
-        Assert.isTrue(inputs.length == 1, "Expected a single input path");
-
+        Assert.isTrue(inputs.length == 1,
+            "A registration step expects a single input path");
         Path inputPath = Paths.get(inputs[0]);
+        Assert.isTrue(inputPath != null && inputPath.isAbsolute(),
+            "An absolute file path is required for a resource");
+
         return new RegisterResourceTasklet(
             processName,
             inputPath,
             createdBy.intValue(),
-            dataFormat,
-            new ResourceMetadataCreate(name, description),
+            format,
+            inputFormat,
+            metadata,
             resourceId == null? null : ResourceIdentifier.of(resourceId));
     }
 
@@ -190,7 +190,7 @@ public class RegisterResourceJobConfiguration
         throws Exception
     {
         StepExecutionListener listener = ExecutionContextPromotionListeners
-            .fromKeys("resourceId", "resourceVersion", "targetPath")
+            .fromKeys("resourceId", "resourceVersion", "path")
             .strict(true)
             .build();
 

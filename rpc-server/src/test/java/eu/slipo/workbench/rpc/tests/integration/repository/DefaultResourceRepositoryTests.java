@@ -249,20 +249,6 @@ public class DefaultResourceRepositoryTests
         return resourceRepository.findOne(r.getId(), r.getVersion());
     }
 
-    @Test
-    public void test2_scratch1()
-    {
-        QueryResultPage<ResourceRecord> resultPage = resourceRepository.find(null, null);
-        System.err.println(resultPage);
-
-        ResourceRecord record = resultPage.getItems().get(0);
-        long id = record.getId(), version = record.getVersion();
-
-        final long executionId = 1L;
-
-        resourceRepository.setProcessExecution(record.getId(), record.getVersion(), executionId);
-    }
-
     // @Test
     public void test2_scratch2()
     {

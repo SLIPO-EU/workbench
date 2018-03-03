@@ -310,7 +310,8 @@ public class DefaultResourceRepository implements ResourceRepository
             .executeUpdate();
         
         if (countUpdated == 0) {
-            logger.warn("Did not update process execution for resource %d@%d (already set)",
+            logger.warn("Did not update process execution for resource %d@%d: " +
+                "resource is already linked to a process execution",
                 id, version);
         }
         

@@ -1,5 +1,6 @@
 package eu.slipo.workbench.common.model.process;
 
+import java.nio.file.Path;
 import java.util.UUID;
 
 import com.vividsolutions.jts.geom.Geometry;
@@ -37,6 +38,11 @@ public class ProcessExecutionStepFileRecord
         this(type, path, null, null);
     }
     
+    public ProcessExecutionStepFileRecord(EnumStepFile type, Path path)
+    {
+        this(type, path.toString(), null, null);
+    }
+    
     public ProcessExecutionStepFileRecord(
         EnumStepFile type, String path, Long size, EnumDataFormat format)
     {
@@ -44,6 +50,12 @@ public class ProcessExecutionStepFileRecord
         this.filePath = path;
         this.fileSize = size;
         this.dataFormat = format;
+    }
+    
+    public ProcessExecutionStepFileRecord(
+        EnumStepFile type, Path path, Long size, EnumDataFormat format)
+    {
+        this(type, path.toString(), size, format);
     }
     
     public ProcessExecutionStepFileRecord(ProcessExecutionStepFileRecord record)
