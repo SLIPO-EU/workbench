@@ -78,9 +78,6 @@ public class ProcessEntity {
     @JoinColumn(name = "updated_by", nullable = false)
     AccountEntity updatedBy;
 
-    @Column(name = "executed_on")
-    ZonedDateTime executedOn;
-
     @NotNull
     @Column(name = "definition", nullable = false, length = 4096)
     @Convert(converter = ProcessDefinitionConverter.class)
@@ -156,14 +153,6 @@ public class ProcessEntity {
         this.updatedBy = updatedBy;
     }
 
-    public ZonedDateTime getExecutedOn() {
-        return executedOn;
-    }
-
-    public void setExecutedOn(ZonedDateTime executedOn) {
-        this.executedOn = executedOn;
-    }
-
     public ProcessDefinition getDefinition() {
         return definition;
     }
@@ -231,11 +220,12 @@ public class ProcessEntity {
         p.setUpdatedBy(updatedBy.getId(), updatedBy.getFullName());
         p.setDescription(description);
         p.setName(name);
-        p.setExecutedOn(executedOn);
         p.setTaskType(taskType);
         p.setDefinition(definition);
         p.setTemplate(isTemplate);
 
+        p.setExecutedOn(null); // a record from a process revision will have this information
+        
         if (includeRevisions) {
             for (ProcessRevisionEntity r: revisions) {
                 p.addRevision(r.toProcessRecord(includeExecutions, includeSteps));

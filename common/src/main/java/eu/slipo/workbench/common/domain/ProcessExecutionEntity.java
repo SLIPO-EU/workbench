@@ -2,6 +2,7 @@ package eu.slipo.workbench.common.domain;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import javax.persistence.CascadeType;
@@ -72,6 +73,12 @@ public class ProcessExecutionEntity
         orphanRemoval = false)
     List<ProcessExecutionStepEntity> steps = new ArrayList<>();
 
+    public static final Comparator<ProcessExecutionEntity> ORDER_BY_STARTED = 
+        Comparator.comparing(e -> e.getStartedOn());
+    
+    public static final Comparator<ProcessExecutionEntity> ORDER_BY_SUBMITTED = 
+        Comparator.comparing(e -> e.getSubmittedOn());
+    
     protected ProcessExecutionEntity() {}
     
     public ProcessExecutionEntity(ProcessRevisionEntity processRevisionEntity)

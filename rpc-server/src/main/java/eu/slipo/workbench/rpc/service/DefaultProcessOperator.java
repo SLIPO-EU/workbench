@@ -9,7 +9,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,11 +25,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.JobExecutionListener;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.job.flow.Flow;
-import org.springframework.batch.core.listener.JobExecutionListenerSupport;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -38,9 +35,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-import com.google.common.collect.ImmutableMap;
-
-import antlr.build.Tool;
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumOperation;
 import eu.slipo.workbench.common.model.poi.EnumTool;
@@ -102,6 +96,10 @@ public class DefaultProcessOperator implements ProcessOperator
     private Path catalogDataDir;
 
     @Autowired
+    @Qualifier("jobDataDirectory")
+    private Path jobDataDir;
+
+    @Autowired
     private PropertiesConverterService propertiesConverter;
 
     @Autowired
@@ -156,7 +154,7 @@ public class DefaultProcessOperator implements ProcessOperator
 
         private final ProcessDefinition definition;
 
-        private AfterRegistrationHandler(long executionId,ProcessDefinition definition)
+        private AfterRegistrationHandler(long executionId, ProcessDefinition definition)
         {
             this.executionId = executionId;
             this.definition = definition;
@@ -172,7 +170,7 @@ public class DefaultProcessOperator implements ProcessOperator
             // Todo resourceRepository.setProcessExecution(resourceId, resourceVersion, executionId, stepKey);
 
             // Check if registration has failed or was interrupted
-            if (jobExecution.getStatus() != BatchStatus.COMPLETED)
+            if (batchStatus != BatchStatus.COMPLETED)
                 return; // no-op
 
             // Extract resource (id, version) from execution context
@@ -299,6 +297,7 @@ public class DefaultProcessOperator implements ProcessOperator
                     Assert.state(outputPaths.size() < 2, "Expected at most 1 output file");
                     stepRecord.setStatus(EnumProcessExecutionStatus.COMPLETED);
                     stepRecord.setCompletedOn(now);
+                    // Add output file as a file record associated to this step
                     if (outputPaths.size() > 0) {
                         final Path outputPath = outputPaths.get(0);
                         Assert.state(outputPath.isAbsolute(),
@@ -312,7 +311,8 @@ public class DefaultProcessOperator implements ProcessOperator
                             outputSize,
                             step.outputFormat()));
                     }
-                    // Todo Add a generated configuration file as a step files
+                    // Todo Add configuration file(s) as file record(s) of this step
+                    // Check if jobExecution contains a `configByName` entry
                 }
                 break;
             case FAILED:

@@ -298,10 +298,9 @@ public class DefaultProcessRepository implements ProcessRepository
         if (!executionEntities.stream().anyMatch(e -> e.getStartedOn() != null))
             return null;
         
-        Comparator<ProcessExecutionEntity> comparatorByStarted = Comparator.comparing(e -> e.getStartedOn());
         ProcessExecutionEntity executionEntity = executionEntities.stream()
             .filter(e -> e.getStartedOn() != null)
-            .sorted(comparatorByStarted.reversed())
+            .sorted(ProcessExecutionEntity.ORDER_BY_STARTED.reversed())
             .findFirst().get();
         long executionId = executionEntity.getId();
         

@@ -2,7 +2,9 @@ package eu.slipo.workbench.common.domain;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -67,9 +69,6 @@ public class ProcessRevisionEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "updated_by", nullable = false, updatable = false)
     AccountEntity updatedBy;
-
-    @Column(name = "executed_on")
-    ZonedDateTime executedOn;
 
     @NotNull
     @Column(name = "definition", nullable = false, updatable = false, length = 4096)
@@ -138,11 +137,6 @@ public class ProcessRevisionEntity {
         return updatedBy;
     }
 
-    public ZonedDateTime getExecutedOn()
-    {
-        return executedOn;
-    }
-
     public ProcessDefinition getDefinition()
     {
         return definition;
@@ -163,6 +157,25 @@ public class ProcessRevisionEntity {
         return monitor;
     }
     
+    public ZonedDateTime getExecutedOn()
+    {
+        // Find the time when the latest execution started
+        
+        if (executions.isEmpty())
+            return null;
+        else if (executions.size() == 1)
+            return executions.get(0).getStartedOn();
+        
+        // More than 1 executions are present: find the latest
+        
+        return executions.stream()
+            .map(ProcessExecutionEntity::getStartedOn)
+            .filter(Objects::nonNull)
+            .sorted(Comparator.reverseOrder())
+            .findFirst()
+            .orElse(null);
+    }
+    
     public ProcessRecord toProcessRecord()
     {
         return toProcessRecord(false, false);
@@ -170,26 +183,27 @@ public class ProcessRevisionEntity {
     
     public ProcessRecord toProcessRecord(boolean includeExecutions, boolean includeSteps) 
     {
-        ProcessRecord p = new ProcessRecord(parent.id, version);
+        ProcessRecord record = new ProcessRecord(parent.id, version);
         AccountEntity createdBy = parent.createdBy;
 
-        p.setCreatedOn(parent.createdOn);
-        p.setCreatedBy(createdBy.getId(), createdBy.getFullName());
-        p.setUpdatedOn(updatedOn);
-        p.setUpdatedBy(updatedBy.getId(), updatedBy.getFullName());
-        p.setDescription(description);
-        p.setName(name);
-        p.setExecutedOn(executedOn);
-        p.setTaskType(parent.getTaskType());
-        p.setDefinition(definition);
-        p.setTemplate(parent.isTemplate);
+        record.setCreatedOn(parent.createdOn);
+        record.setCreatedBy(createdBy.getId(), createdBy.getFullName());
+        record.setUpdatedOn(updatedOn);
+        record.setUpdatedBy(updatedBy.getId(), updatedBy.getFullName());
+        record.setDescription(description);
+        record.setName(name);
+        record.setTaskType(parent.getTaskType());
+        record.setDefinition(definition);
+        record.setTemplate(parent.isTemplate);
 
+        record.setExecutedOn(getExecutedOn());
+        
         if (includeExecutions) {
             for (ProcessExecutionEntity e: executions) {
-                p.addExecution(e.toProcessExecutionRecord(includeSteps));
+                record.addExecution(e.toProcessExecutionRecord(includeSteps));
             }
         }
 
-        return p;
+        return record;
     }
 }

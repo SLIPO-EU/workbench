@@ -17,6 +17,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -76,12 +77,18 @@ import eu.slipo.workbench.rpc.Application;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class DefaultProcessOperatorTests
 {
-    private static Logger logger = LoggerFactory.getLogger(DefaultProcessOperatorTests.class);
+    private static final Logger logger = LoggerFactory.getLogger(DefaultProcessOperatorTests.class);
+
+    private static final Random random = new Random(System.currentTimeMillis());
 
     /**
      * The polling interval (in milliseconds) to check the status of a process execution
      */
     private static final long POLL_INTERVAL = 1500L;
+
+    private static final String USER_NAME = "user-" + Long.toUnsignedString(random.nextLong(), 36);
+
+    private static final String USER_EMAIL = USER_NAME + "@example.com";
 
     /**
      * A test fixture that represents a basic to-RDF operation (using Triplegeo).
@@ -218,7 +225,7 @@ public class DefaultProcessOperatorTests
         {
             // Load sample user accounts
 
-            AccountEntity a = new AccountEntity("baz", "baz@example.com");
+            AccountEntity a = new AccountEntity(USER_NAME, USER_EMAIL);
             a.setBlocked(false);
             a.setActive(true);
             a.setRegistered(ZonedDateTime.now());
@@ -351,11 +358,11 @@ public class DefaultProcessOperatorTests
 
         final ProcessRecord record = processRepository.create(definition, creatorId);
         assertNotNull(record);
+        final long id = record.getId(), version = record.getVersion();
 
         // Start process
 
-        ProcessExecutionRecord executionRecord =
-            processOperator.start(record.getId(), record.getVersion());
+        ProcessExecutionRecord executionRecord = processOperator.start(id, version);
         assertNotNull(executionRecord);
         final long executionId = executionRecord.getId();
 
@@ -367,12 +374,18 @@ public class DefaultProcessOperatorTests
 
         do {
             Thread.sleep(POLL_INTERVAL);
-            executionRecord = processOperator.poll(record.getId(), record.getVersion());
+            executionRecord = processOperator.poll(id, version);
             assertEquals(executionId, executionRecord.getId());
             assertNotNull(executionRecord.getStartedOn());
         } while (!executionRecord.getStatus().isTerminated());
 
-        Thread.sleep(1000L);
+        Thread.sleep(2000L);
+
+        final ProcessRecord record1 = processRepository.findOne(id, version, true);
+        assertNotNull(record1);
+        assertNotNull(record1.getExecutedOn());
+        assertNotNull(record1.getExecutions());
+        assertEquals(1, record1.getExecutions().size());
 
         // Test
 
@@ -383,13 +396,13 @@ public class DefaultProcessOperatorTests
         assertNotNull(stepRecords);
         assertEquals(2, stepRecords.size());
 
-        // Todo check result is registered
+        // Todo check result is registered by this process execution
     }
 
     @Test(timeout = 30 * 1000L)
     public void test1_transformAndRegister1() throws Exception
     {
-        AccountEntity user = accountRepository.findOneByUsername("baz");
+        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
         assertNotNull(user);
 
         tranformAndRegister(transformFixtures.get(0), user.toDto());
@@ -402,7 +415,7 @@ public class DefaultProcessOperatorTests
     //@Test
     public void test99_transformAndRegister1() throws Exception
     {
-        AccountEntity user = accountRepository.findOneByUsername("baz");
+        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
         assertNotNull(user);
 
         final String name = "register-" + Long.toHexString(System.currentTimeMillis());
