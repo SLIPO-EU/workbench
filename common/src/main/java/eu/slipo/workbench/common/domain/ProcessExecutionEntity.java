@@ -173,7 +173,7 @@ public class ProcessExecutionEntity
     }
     
     @AssertTrue
-    public boolean isStatusValid()
+    protected boolean isStatusValid()
     {
         boolean check = true;
         switch (status) {
