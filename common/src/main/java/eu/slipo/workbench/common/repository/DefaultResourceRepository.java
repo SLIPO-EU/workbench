@@ -286,7 +286,7 @@ public class DefaultResourceRepository implements ResourceRepository
     }
     
     @Override
-    public void setProcessExecution(long id, long version, long executionId)
+    public void setProcessExecution(long id, long version, long executionId, Integer stepKey)
     {
         ResourceRevisionEntity resourceRevisionEntity = findRevision(id, version);
         Assert.notNull(resourceRevisionEntity, 
@@ -301,7 +301,7 @@ public class DefaultResourceRepository implements ResourceRepository
         
         String qlUpdateRevision = 
             "UPDATE ResourceRevision r SET r.processExecution = :execution " +
-            "WHERE r.id = :id AND r.version = :version AND r.processExecution is NULL";
+            "WHERE r.parent.id = :id AND r.version = :version AND r.processExecution is NULL";
         
         int countUpdated = entityManager.createQuery(qlUpdateRevision)
             .setParameter("execution", executionEntity)
@@ -315,6 +315,17 @@ public class DefaultResourceRepository implements ResourceRepository
                 id, version);
         }
         
+        // If stepKey is given, must also update the step file entity
+        
+        if (stepKey != null) {
+            ProcessExecutionStepEntity stepEntity = executionEntity.getStepByKey(stepKey);
+            Assert.state(stepEntity != null, "Expected a step entity for given step key");
+            ProcessExecutionStepFileEntity fileEntity = stepEntity.getFiles().stream()
+                .filter(f -> f.getType() == EnumStepFile.OUTPUT)
+                .findFirst().get();
+            fileEntity.setResource(resourceRevisionEntity);
+        }
+        
         // If targeted revision is the latest, parent entity must also be updated
         
         String qlUpdateParent = 
@@ -326,6 +337,12 @@ public class DefaultResourceRepository implements ResourceRepository
             .setParameter("id", id)
             .setParameter("version", version)
             .executeUpdate();
+    }
+    
+    @Override
+    public void setProcessExecution(long id, long version, long executionId)
+    {
+        ResourceRepository.super.setProcessExecution(id, version, executionId);
     }
     
     @Override

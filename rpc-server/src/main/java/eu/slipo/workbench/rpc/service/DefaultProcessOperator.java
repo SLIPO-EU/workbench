@@ -15,12 +15,14 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
 import org.apache.commons.collections4.IterableUtils;
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.BatchStatus;
@@ -137,7 +139,7 @@ public class DefaultProcessOperator implements ProcessOperator
      * Fix status of interrupted executions.
      *
      * <p>Before starting any execution, must clear the statuses of executions that falsely
-     * appear as active (RUNNING or UNKNOWN), most commonly as a result of a non-graceful shutdown.
+     * appear as active (RUNNING/UNKNOWN), most commonly as a result of a non-graceful shutdown.
      */
     @PostConstruct
     private void clearRunningExecutions()
@@ -150,14 +152,26 @@ public class DefaultProcessOperator implements ProcessOperator
      */
     private class AfterRegistrationHandler extends WorkflowExecutionEventListenerSupport
     {
+        /**
+         * The process execution id
+         */
         private final long executionId;
 
+        /**
+         * The definition for the entire process
+         */
         private final ProcessDefinition definition;
+
+        /**
+         * Map a step-key (of the step that produced this resource) to resource identifier
+         */
+        private final Map<Integer, ResourceIdentifier> resourceIdentifierByStepKey;
 
         private AfterRegistrationHandler(long executionId, ProcessDefinition definition)
         {
             this.executionId = executionId;
             this.definition = definition;
+            this.resourceIdentifierByStepKey = new ConcurrentHashMap<>();
         }
 
         @Override
@@ -165,13 +179,22 @@ public class DefaultProcessOperator implements ProcessOperator
             JobExecution jobExecution)
         {
             final Step step = definition.stepByName(nodeName);
+            Assert.state(step.operation() == EnumOperation.REGISTER, "Expected a registration step");
+            Assert.state(step.inputKeys().size() == 1, "Expected a single input for a registration step!");
+
+            // Check batch status; proceed only if registration was successful
+
             final BatchStatus batchStatus = jobExecution.getStatus();
-
-            // Todo resourceRepository.setProcessExecution(resourceId, resourceVersion, executionId, stepKey);
-
-            // Check if registration has failed or was interrupted
             if (batchStatus != BatchStatus.COMPLETED)
-                return; // no-op
+                return;
+
+            // Determine the step that produced (as output) the input for registration step
+
+            final int inputKey = step.inputKeys().get(0);
+            final Step producerStep = definition.stepByResourceKey(inputKey);
+            if (producerStep == null)
+                throw new IllegalStateException(
+                    "Expected a step to produce output with resource-key = [" + inputKey + "]");
 
             // Extract resource (id, version) from execution context
 
@@ -190,8 +213,27 @@ public class DefaultProcessOperator implements ProcessOperator
                 throw new IllegalStateException(
                     "Expected a resource version under [" + RESOURCE_VERSION_KEY + "] in execution context");
 
-            // Associate registered resource with current execution id
-            resourceRepository.setProcessExecution(resourceId, resourceVersion, executionId);
+            // Map step-key of producer to the actual resource identifier
+
+            resourceIdentifierByStepKey.put(
+                producerStep.key(), ResourceIdentifier.of(resourceId, resourceVersion));
+        }
+
+        @Override
+        public void onSuccess(WorkflowExecutionSnapshot workflowExecutionSnapshot)
+        {
+            // Associate process execution with registered resources
+
+            final ResourceRepository resourceRepository =
+                DefaultProcessOperator.this.resourceRepository;
+
+            resourceIdentifierByStepKey.forEach((stepKey, resourceIdentifier) -> {
+                resourceRepository.setProcessExecution(
+                    resourceIdentifier.getId(),
+                    resourceIdentifier.getVersion(),
+                    executionId,
+                    stepKey);
+            });
         }
     }
 
@@ -200,10 +242,19 @@ public class DefaultProcessOperator implements ProcessOperator
      */
     private class ExecutionListener implements WorkflowExecutionEventListener
     {
+        /**
+         * The process execution id
+         */
         private final long executionId;
 
+        /**
+         * The user id of the owner of the process execution
+         */
         private final long userId;
 
+        /**
+         * The definition for the entire process
+         */
         private final ProcessDefinition definition;
 
         private ExecutionListener(long executionId, long userId, ProcessDefinition definition)
@@ -805,5 +856,4 @@ public class DefaultProcessOperator implements ProcessOperator
         ProcessRecord r = processRepository.findOne(id, version);
         return r == null? null : pollStatus(r);
     }
-
 }

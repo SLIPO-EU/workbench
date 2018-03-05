@@ -399,7 +399,7 @@ public class DefaultProcessOperatorTests
         // Todo check result is registered by this process execution
     }
 
-    @Test(timeout = 30 * 1000L)
+    @Test // Fixme (timeout = 30 * 1000L)
     public void test1_transformAndRegister1() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
