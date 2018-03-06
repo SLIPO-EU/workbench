@@ -6,6 +6,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.util.StringUtils;
+
+import com.vividsolutions.jts.util.Assert;
+
 import eu.slipo.workbench.common.model.user.AccountInfo;
 
 public class ProcessExecutionRecord 
@@ -160,9 +164,21 @@ public class ProcessExecutionRecord
     {
         if (this.steps == null)
             return null;
-        
         for (ProcessExecutionStepRecord r: this.steps) {
             if (r.getKey() == stepKey)
+                return r;
+        }
+        return null;
+    }
+    
+    public ProcessExecutionStepRecord getStep(String stepName)
+    {
+        Assert.isTrue(!StringUtils.isEmpty(stepName), "A non-empty name is required");
+        
+        if (this.steps == null)
+            return null;
+        for (ProcessExecutionStepRecord r: this.steps) {
+            if (r.getName().equals(stepName))
                 return r;
         }
         return null;

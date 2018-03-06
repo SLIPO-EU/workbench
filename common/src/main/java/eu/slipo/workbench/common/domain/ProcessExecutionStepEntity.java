@@ -89,10 +89,10 @@ public class ProcessExecutionStepEntity
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "status")
+    @Column(name = "status", nullable = false)
     private EnumProcessExecutionStatus status;
 
-    @Column(name = "error_message")
+    @Column(name = "error_message", length = 2048)
     private String errorMessage;
 
     @OneToMany(mappedBy = "step", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)

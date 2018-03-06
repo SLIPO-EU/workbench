@@ -2,10 +2,14 @@ package eu.slipo.workbench.rpc.tests.integration.service;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.springframework.util.StringUtils.stripFilenameExtension;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,7 +21,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -29,6 +39,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.batch.test.AssertFile;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,10 +48,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.task.TaskExecutor;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
+import org.springframework.util.concurrent.ListenableFuture;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.BiMap;
@@ -49,6 +63,7 @@ import com.google.common.collect.HashBiMap;
 import eu.slipo.workbench.common.domain.AccountEntity;
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.process.EnumProcessExecutionStatus;
+import eu.slipo.workbench.common.model.process.EnumStepFile;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.ProcessDefinitionBuilder;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
@@ -56,12 +71,16 @@ import eu.slipo.workbench.common.model.process.ProcessExecutionStartException;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepRecord;
 import eu.slipo.workbench.common.model.process.ProcessNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
+import eu.slipo.workbench.common.model.resource.DataSource;
 import eu.slipo.workbench.common.model.resource.ExternalUrlDataSource;
 import eu.slipo.workbench.common.model.resource.FileSystemDataSource;
+import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
+import eu.slipo.workbench.common.model.resource.ResourceRecord;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.model.user.Account;
+import eu.slipo.workbench.common.model.user.AccountInfo;
 import eu.slipo.workbench.common.repository.AccountRepository;
 import eu.slipo.workbench.common.repository.ProcessRepository;
 import eu.slipo.workbench.common.repository.ResourceRepository;
@@ -97,15 +116,9 @@ public class DefaultProcessOperatorTests
     {
         final String name;
 
-        /**
-         * The root directory for input data (as an absolute path).
-         */
-        final Path inputDir;
+        final URI input;
 
-        /**
-         * The input name
-         */
-        final String inputName;
+        final Path stagingDir;
 
         /**
          * The absolute path for the expected result of the transformation applied on given input
@@ -118,29 +131,36 @@ public class DefaultProcessOperatorTests
         final TriplegeoConfiguration configuration;
 
         public TransformFixture(
-            String name, Path inputDir, String inputName, Path expectedResultPath, TriplegeoConfiguration configuration)
+            String name, URI input, Path stagingDir, Path expectedResultPath, TriplegeoConfiguration configuration)
         {
-            Assert.isTrue(inputDir != null && inputDir.isAbsolute()
-                    && Files.isDirectory(inputDir),
-                "An existing input directory is required (as an absolute path)");
-            Assert.isTrue(!StringUtils.isEmpty(inputName), "A input name is required");
+            Assert.notNull(!StringUtils.isEmpty(name), "A non-empty name is required");
             Assert.isTrue(expectedResultPath != null && expectedResultPath.isAbsolute()
                     && Files.isReadable(expectedResultPath),
                 "An absolute file path is required for the expected result");
             Assert.notNull(configuration, "The triplegeo configuration is required");
-            Assert.notNull(!StringUtils.isEmpty(name), "A non-empty name is required");
+            Assert.notNull(stagingDir, "The path for the staging directory is required");
+            Assert.isTrue(stagingDir.isAbsolute()
+                    && Files.isDirectory(stagingDir) && Files.isReadable(stagingDir),
+                "The stagingDir should be an absolute path for an existing readable directory");
+            Assert.isTrue(!input.getScheme().equals("file") || Paths.get(input).startsWith(stagingDir),
+                "If input is a local file, must be located under staging directory");
 
+            this.input = input;
             this.name = name;
-            this.inputDir = inputDir;
-            this.inputName = inputName;
+            this.stagingDir = stagingDir;
             this.expectedResultPath = expectedResultPath;
             this.configuration = configuration;
         }
 
         public TransformFixture(
-            String name, Path inputDir, Path inputPath, Path expectedResultPath, TriplegeoConfiguration configuration)
+            Path inputPath, Path stagingDir, Path expectedResultPath, TriplegeoConfiguration configuration)
         {
-            this(name, inputDir, inputPath.getFileName().toString(), expectedResultPath, configuration);
+            this(
+                stripFilenameExtension(inputPath.getFileName().toString()),
+                inputPath.toUri(),
+                stagingDir,
+                expectedResultPath,
+                configuration);
         }
 
         public TriplegeoConfiguration getConfiguration()
@@ -153,24 +173,22 @@ public class DefaultProcessOperatorTests
             return expectedResultPath;
         }
 
-        public Path getInputDir()
-        {
-            return inputDir;
-        }
-
-        public String getInputName()
-        {
-            return inputName;
-        }
-
         public Path getInputAsAbsolutePath()
         {
-            return inputDir.resolve(inputName);
+            return input.getScheme().equals("file")? Paths.get(input) : null;
         }
 
-        public FileSystemDataSource getInputAsDataSource()
+        public DataSource getInputAsDataSource() throws MalformedURLException
         {
-            return new FileSystemDataSource(inputName);
+            final String scheme = input.getScheme();
+            if (scheme.equals("file")) {
+                return new FileSystemDataSource(stagingDir.relativize(Paths.get(input)));
+            } else if (scheme.equals("http") || scheme.equals("ftp")) {
+                return new ExternalUrlDataSource(input.toURL());
+            } else {
+                 throw new IllegalStateException(
+                     "Did not expect an input with a scheme of  [" + scheme + "]");
+            }
         }
 
         public String getName()
@@ -181,10 +199,7 @@ public class DefaultProcessOperatorTests
         @Override
         public String toString()
         {
-            return String.format(
-                "TransformFixture [" +
-                    "name=%s, inputDir=%s, inputName=%s, expectedResultPath=%s, configuration=%s]",
-                name, inputDir, inputName, expectedResultPath, configuration);
+            return String.format("TransformFixture [name=%s, input=%s]", name, input);
         }
     }
 
@@ -266,7 +281,7 @@ public class DefaultProcessOperatorTests
                     .map(p -> p.getFileName().toString())
                     .collect(Collectors.toList());
 
-                final BiMap<String,Path> inputNameToTempPath = HashBiMap.create();
+                final BiMap<String, Path> inputNameToTempPath = HashBiMap.create();
 
                 for (String inputName: inputNames) {
                     Path p = Files.createTempFile(
@@ -279,9 +294,8 @@ public class DefaultProcessOperatorTests
 
                 inputNames.stream()
                     .map(p -> new TransformFixture(
-                        stripFilenameExtension(p),
+                        inputNameToTempPath.get(p),
                         stagingInputDir,
-                        stagingInputDir.relativize(inputNameToTempPath.get(p)),
                         resultsDir.resolve(stripFilenameExtension(p) + ".nt"),
                         configuration))
                     .forEach(transformFixtures::add);
@@ -297,9 +311,10 @@ public class DefaultProcessOperatorTests
         public void teardownFixtures() throws Exception
         {
             // Delete staging input files
-
             for (TransformFixture f: transformFixtures) {
-                Files.delete(f.getInputAsAbsolutePath());
+                Path p = f.getInputAsAbsolutePath();
+                if (p != null)
+                    Files.delete(p);
             }
         }
 
@@ -334,12 +349,44 @@ public class DefaultProcessOperatorTests
     @Autowired
     private List<TransformFixture> transformFixtures;
 
-    private void tranformAndRegister(final TransformFixture fixture, Account creator)
-        throws ProcessNotFoundException, ProcessExecutionStartException, IOException, InterruptedException
+    @Autowired
+    private ThreadPoolTaskExecutor taskExecutor;
+
+    private class TransformRunnable implements Runnable
+    {
+        private final String procName;
+
+        private final TransformFixture fixture;
+
+        private final Account creator;
+
+        public TransformRunnable(String procName, TransformFixture fixture, Account creator)
+        {
+            this.procName = procName;
+            this.fixture = fixture;
+            this.creator = creator;
+        }
+
+        @Override
+        public void run()
+        {
+            logger.info("Starting tranformAndRegister for fixture {}", fixture);
+            try {
+                DefaultProcessOperatorTests.this.tranformAndRegister(procName, fixture, creator);
+            } catch (RuntimeException e) {
+                e.printStackTrace();
+                throw e;
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new IllegalStateException("runnable has failed", e);
+            }
+        }
+    }
+
+    private void tranformAndRegister(String procName, TransformFixture fixture, Account creator)
+        throws Exception
     {
         final int creatorId = creator.getId();
-
-        final String name = "register-" + stripFilenameExtension(fixture.getInputName());
         final int resourceKey = 1;
 
         final ResourceMetadataCreate metadata =
@@ -347,18 +394,20 @@ public class DefaultProcessOperatorTests
 
         // Define the process, create a new entity
 
-        ProcessDefinition definition = ProcessDefinitionBuilder.create(name)
+        DataSource source = fixture.getInputAsDataSource();
+
+        ProcessDefinition definition = ProcessDefinitionBuilder.create(procName)
             .transform("triplegeo-1", builder -> builder
-                .source(fixture.getInputAsDataSource())
+                .source(source)
                 .outputFormat(EnumDataFormat.N_TRIPLES)
                 .outputKey(resourceKey)
                 .configuration(fixture.getConfiguration()))
             .register("register-1", resourceKey, metadata)
             .build();
 
-        final ProcessRecord record = processRepository.create(definition, creatorId);
-        assertNotNull(record);
-        final long id = record.getId(), version = record.getVersion();
+        final ProcessRecord processRecord = processRepository.create(definition, creatorId);
+        assertNotNull(processRecord);
+        final long id = processRecord.getId(), version = processRecord.getVersion();
 
         // Start process
 
@@ -379,15 +428,15 @@ public class DefaultProcessOperatorTests
             assertNotNull(executionRecord.getStartedOn());
         } while (!executionRecord.getStatus().isTerminated());
 
-        Thread.sleep(2000L);
+        Thread.sleep(2500L);
 
-        final ProcessRecord record1 = processRepository.findOne(id, version, true);
-        assertNotNull(record1);
-        assertNotNull(record1.getExecutedOn());
-        assertNotNull(record1.getExecutions());
-        assertEquals(1, record1.getExecutions().size());
+        final ProcessRecord processRecord1 = processRepository.findOne(id, version, true);
+        assertNotNull(processRecord1);
+        assertNotNull(processRecord1.getExecutedOn());
+        assertNotNull(processRecord1.getExecutions());
+        assertEquals(1, processRecord1.getExecutions().size());
 
-        // Test
+        // Test that output of transformation step is registered as a resource
 
         assertEquals(EnumProcessExecutionStatus.COMPLETED, executionRecord.getStatus());
         assertNotNull(executionRecord.getCompletedOn());
@@ -396,16 +445,90 @@ public class DefaultProcessOperatorTests
         assertNotNull(stepRecords);
         assertEquals(2, stepRecords.size());
 
-        // Todo check result is registered by this process execution
+        ProcessExecutionStepRecord step1Record = executionRecord.getStep("triplegeo-1");
+        assertNotNull(step1Record);
+        assertEquals(EnumProcessExecutionStatus.COMPLETED, step1Record.getStatus());
+        ResourceIdentifier resourceIdentifier = step1Record.getFiles().stream()
+            .filter(f -> f.getType() == EnumStepFile.OUTPUT)
+            .map(f -> f.getResource())
+            .findFirst().orElse(null);
+        assertNotNull(resourceIdentifier);
+        ResourceRecord resourceRecord = resourceRepository.findOne(resourceIdentifier);
+        assertNotNull(resourceRecord);
+        assertEquals(Long.valueOf(executionId), resourceRecord.getProcessExecutionId());
+
+        ProcessExecutionStepRecord step2Record = executionRecord.getStep("register-1");
+        assertNotNull(step2Record);
+        assertEquals(EnumProcessExecutionStatus.COMPLETED, step2Record.getStatus());
+
+        // Todo Find and check resource by (name,user)
+
+        // Check output against expected result
+
+        Path resourcePath = catalogDataDir.resolve(resourceRecord.getFilePath());
+        assertTrue(Files.isRegularFile(resourcePath) && Files.isReadable(resourcePath));
+        AssertFile.assertFileEquals(
+            fixture.getExpectedResultPath().toFile(), resourcePath.toFile());
     }
 
-    @Test // Fixme (timeout = 30 * 1000L)
-    public void test1_transformAndRegister1() throws Exception
+    @Test(timeout = 35 * 1000L)
+    public void test1_transformAndRegister1a() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
-        assertNotNull(user);
+        tranformAndRegister("register-1-1-a", transformFixtures.get(0), user.toDto());
+    }
 
-        tranformAndRegister(transformFixtures.get(0), user.toDto());
+    @Test(timeout = 35 * 1000L)
+    public void test1_transformAndRegister2a() throws Exception
+    {
+        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
+        tranformAndRegister("register-1-2-a", transformFixtures.get(1), user.toDto());
+    }
+
+    @Test(timeout = 35 * 1000L)
+    public void test1_transformAndRegister3a() throws Exception
+    {
+        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
+        tranformAndRegister("register-1-3-a", transformFixtures.get(2), user.toDto());
+    }
+
+    @Test(timeout = 35 * 1000L)
+    public void test1_transformAndRegister1b() throws Exception
+    {
+        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
+        tranformAndRegister("register-1-1-b", transformFixtures.get(0), user.toDto());
+    }
+
+    @Test // Fixme (timeout = 35 * 1000L)
+    public void test2_transformAndRegisterP3() throws Exception
+    {
+        final AccountEntity userEntity = accountRepository.findOneByUsername(USER_NAME);
+        final Account user = userEntity.toDto();
+
+        final CountDownLatch done = new CountDownLatch(1);
+
+        Future<?> f1 = taskExecutor.submit(
+            new TransformRunnable("register-2-1", transformFixtures.get(0), user));
+
+        Future<?> f2 = taskExecutor.submit(
+            new TransformRunnable("register-2-2", transformFixtures.get(1), user));
+
+        Future<?> f3 = taskExecutor.submit(
+            new TransformRunnable("register-2-3", transformFixtures.get(2), user));
+
+        for (Future<?> f: Arrays.asList(f1, f2, f3)) {
+            try {
+                f.get();
+            } catch (ExecutionException e) {
+                // Unwrap the exception and rethrow
+                Throwable cause = e.getCause();
+                if (cause instanceof Error)
+                    throw ((Error) cause);
+                else
+                    throw ((Exception) cause);
+            }
+
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////

@@ -372,8 +372,7 @@ public class DefaultProcessOperator implements ProcessOperator
                     stepRecord.setStatus(EnumProcessExecutionStatus.FAILED);
                     stepRecord.setCompletedOn(now);
                     if (!failureExceptions.isEmpty())
-                        stepRecord.setErrorMessage(
-                            failureExceptions.get(0).getMessage().substring(0, 255));
+                        stepRecord.setErrorMessage(failureExceptions.get(0).getMessage());
                 }
                 break;
             case STOPPED:
