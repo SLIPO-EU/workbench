@@ -33,6 +33,7 @@ import org.springframework.batch.core.job.flow.Flow;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -296,11 +297,20 @@ public class DefaultProcessOperator implements ProcessOperator
             WorkflowExecutionSnapshot workflowExecutionSnapshot, String nodeName, JobExecution jobExecution)
         {
             final Workflow workflow = workflowExecutionSnapshot.workflow();
-            final Step step = definition.stepByName(nodeName);
-            final ZonedDateTime now = ZonedDateTime.now();
-
             logger.info("The workflow node {}/{} has started", workflow.id(), nodeName);
 
+            final Step step = definition.stepByName(nodeName);
+            if (step != null) {
+                beforeProcessingStep(workflowExecutionSnapshot, step, jobExecution);
+            }
+        }
+
+        private void beforeProcessingStep(
+            WorkflowExecutionSnapshot workflowExecutionSnapshot, Step step, JobExecution jobExecution)
+        {
+            final ZonedDateTime now = ZonedDateTime.now();
+
+            // Create a record to represent this processing step
             ProcessExecutionStepRecord stepRecord = new ProcessExecutionStepRecord(step.key(), step.name());
             stepRecord.setStartedOn(now);
             stepRecord.setJobExecutionId(jobExecution.getId());
@@ -308,8 +318,7 @@ public class DefaultProcessOperator implements ProcessOperator
             stepRecord.setOperation(step.operation());
             stepRecord.setTool(step.tool());
 
-            // Update record in repository
-
+            // Update corresponding entity
             try {
                 processRepository.createExecutionStep(executionId, stepRecord);
             } catch (ProcessExecutionNotFoundException ex) {
@@ -321,29 +330,36 @@ public class DefaultProcessOperator implements ProcessOperator
 
         @Override
         public void afterNode(
-            WorkflowExecutionSnapshot snapshot, String nodeName, JobExecution jobExecution)
+            WorkflowExecutionSnapshot workflowExecutionSnapshot, String nodeName, JobExecution jobExecution)
         {
-            final Workflow workflow = snapshot.workflow();
-            final Workflow.JobNode node = workflow.node(nodeName);
+            final Workflow workflow = workflowExecutionSnapshot.workflow();
+            logger.info("The workflow node {}/{} finished with a status of [{}]",
+                workflow.id(), nodeName, jobExecution.getStatus());
+
             final Step step = definition.stepByName(nodeName);
-            final ExecutionContext executionContext = jobExecution.getExecutionContext();
+            if (step != null) {
+                afterProcessingStep(workflowExecutionSnapshot, step, jobExecution);;
+            }
+        }
+
+        private void afterProcessingStep(
+            WorkflowExecutionSnapshot workflowExecutionSnapshot, Step step, JobExecution jobExecution)
+        {
+            final Workflow workflow = workflowExecutionSnapshot.workflow();
+            final Workflow.JobNode node = workflow.node(step.name());
             final BatchStatus batchStatus = jobExecution.getStatus();
             final ZonedDateTime now = ZonedDateTime.now();
 
-            logger.info(
-                "The workflow node {}/{} finished with a status of [{}]; step-key={} context={}",
-                workflow.id(), nodeName, batchStatus, step.key(), executionContext);
-
             ProcessExecutionRecord executionRecord = processRepository.findExecution(executionId);
             ProcessExecutionStepRecord stepRecord = executionRecord.getStep(step.key());
-            Assert.state(stepRecord != null,
-                "Expected to find a step record for key [" + step.key() + "]");
+            Assert.state(stepRecord != null, "Expected a step record for key [" + step.key() + "]");
 
             // Update step record
+
             switch (batchStatus) {
             case COMPLETED:
                 {
-
+                    final ExecutionContext executionContext = jobExecution.getExecutionContext();
                     final List<Path> outputPaths = node.output();
                     Assert.state(outputPaths.size() < 2, "Expected at most 1 output file");
                     stepRecord.setStatus(EnumProcessExecutionStatus.COMPLETED);
@@ -387,6 +403,7 @@ public class DefaultProcessOperator implements ProcessOperator
             }
 
             // Update record in repository
+
             try {
                 processRepository.updateExecutionStep(executionId, step.key(), stepRecord);
             } catch (ProcessExecutionNotFoundException ex) {
@@ -395,7 +412,6 @@ public class DefaultProcessOperator implements ProcessOperator
                 throw new IllegalStateException("The execution entity is not active!", ex);
             }
         }
-
     }
 
     private static class ProcessDefinitionDependencyAnalyzer
@@ -444,6 +460,9 @@ public class DefaultProcessOperator implements ProcessOperator
         }
     }
 
+    @Value("${slipo.rpc-server.workflows.salt-for-identifier:1}")
+    private Long salt;
+
     /**
      * Compute the workflow id from the identity of a process revision
      *
@@ -453,9 +472,32 @@ public class DefaultProcessOperator implements ProcessOperator
      */
     private UUID computeWorkflowId(long id, long version)
     {
-        return UUID.nameUUIDFromBytes(
-            ByteBuffer.wrap(new byte[16]).putLong(id).putLong(version).array());
+        byte[] data = ByteBuffer.wrap(new byte[3 * Long.BYTES])
+            .putLong(id).putLong(version).putLong(salt)
+            .array();
+
+        return UUID.nameUUIDFromBytes(data);
     }
+
+    /**
+     * Extract an output name for data downloaded from a URL. This name will be suitable to be
+     * used as the file name (under which data will be saved).
+     *
+     * @param url A downloadable public URL
+     * @param useFragment If the URL reference (i.e. fragment) should be used as part of the output
+     *   name
+     */
+    private String extractOutputName(URL url, boolean useFragment)
+    {
+        String fileName = Paths.get(url.getPath()).getFileName().toString();
+        String fragment = url.getRef();
+        if (!useFragment || fragment == null)
+            return fileName;
+
+        String name = StringUtils.stripFilenameExtension(fileName);
+        String extension = fileName.substring(1 + name.length());
+        return String.format("%s-%s.%s", name, fragment, extension);
+     }
 
     /**
      * Build workflow from a process definition.
@@ -483,17 +525,17 @@ public class DefaultProcessOperator implements ProcessOperator
 
         for (DataSource source: sourcesThatMustDownload) {
             final URL url = ((ExternalUrlDataSource) source).getUrl();
-            final String fileName = Paths.get(url.getPath()).getFileName().toString();
             final String nodeName = "download-" + Integer.toHexString(source.hashCode());
+            final String outputName = extractOutputName(url, true);
             // Add a job node into workflow
             workflowBuilder.job(b -> b.name(nodeName)
                 .flow(downloadFileFlow)
                 .parameters(
-                    p -> p.addString("url", url.toString()).addString("outputName", fileName))
-                .output(fileName));
+                    p -> p.addString("url", url.toString()).addString("outputName", outputName))
+                .output(outputName));
             // Map this source to a node name
             sourceToNodeName.put(source, nodeName);
-            nodeNameToOutputName.put(nodeName, fileName);
+            nodeNameToOutputName.put(nodeName, outputName);
         }
 
         // Map each processing step to a job node inside the workflow
@@ -551,7 +593,7 @@ public class DefaultProcessOperator implements ProcessOperator
                     Assert.state(inputKeys.size() == 1, "A registration step expects a single input");
                     Step dependency = definition.stepByResourceKey(inputKeys.get(0));
                     JobParameters parameters =
-                        buildParametersForRegistration(step, dependency, definition.name(), userId);
+                        buildParametersForRegistration(step, dependency, definition, userId);
                     jobDefinitionBuilder
                         .flow(registerResourceFlow)
                         .parameters(parameters);
@@ -573,7 +615,7 @@ public class DefaultProcessOperator implements ProcessOperator
             case LIMES:
             case DEER:
             case FAGI:
-                throw new NotImplementedException("Spring-Batch flow for a tool of type [" + tool + "]");
+                throw new NotImplementedException("Α Batch flow for a tool of type [" + tool + "]");
             default:
                 Assert.state(false, "Did not expect a tool of type [" + tool + "]");
             }
@@ -589,7 +631,7 @@ public class DefaultProcessOperator implements ProcessOperator
     }
 
     private JobParameters buildParametersForRegistration(
-        Step registerStep, Step producerStep, String procName, int userId)
+        Step registerStep, Step producerStep, ProcessDefinition definition, int userId)
     {
         final JobParametersBuilder parametersBuilder = new JobParametersBuilder();
 
@@ -609,7 +651,7 @@ public class DefaultProcessOperator implements ProcessOperator
         parametersBuilder.addLong("createdBy", Integer.valueOf(userId).longValue());
         parametersBuilder.addString("format", format.toString());
         parametersBuilder.addString("inputFormat", inputFormat.toString());
-        parametersBuilder.addString("processName", procName);
+        parametersBuilder.addString("processName", definition.name());
 
         ResourceMetadataCreate metadata = configuration.getMetadata();
         parametersBuilder.addString("name", metadata.getName());
