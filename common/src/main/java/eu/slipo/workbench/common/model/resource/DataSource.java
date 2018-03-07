@@ -14,7 +14,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 @JsonSubTypes({
     @Type(value = UploadDataSource.class, name = "UPLOAD"),
     @Type(value = FileSystemDataSource.class, name = "FILESYSTEM"),
-    @Type(value = ExternalUrlDataSource.class, name = "EXTERNAL_URL"),
+    @Type(value = UrlDataSource.class, name = "URL"),
     @Type(value = HarvesterDataSource.class, name = "HARVESTER"),
 })
 public abstract class DataSource implements Serializable 

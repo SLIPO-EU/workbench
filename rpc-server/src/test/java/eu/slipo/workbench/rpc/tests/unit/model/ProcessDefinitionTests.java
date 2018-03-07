@@ -216,7 +216,7 @@ public class ProcessDefinitionTests
         Step step3 = steps.stream().filter(s -> s.name().equals("register-1"))
             .findFirst().get();
         assertTrue(step3 instanceof RegisterStep);
-        assertEquals(EnumTool.REGISTER_METADATA, step3.tool());
+        assertEquals(EnumTool.REGISTER, step3.tool());
         assertEquals(EnumOperation.REGISTER, step3.operation());
         assertEquals(Collections.singletonList(step1.outputKey()), step3.inputKeys());
         assertNull(step3.outputKey());
@@ -226,7 +226,7 @@ public class ProcessDefinitionTests
         Step step4 = steps.stream().filter(s -> s.name().equals("register-2"))
             .findFirst().get();
         assertTrue(step4 instanceof RegisterStep);
-        assertEquals(EnumTool.REGISTER_METADATA, step4.tool());
+        assertEquals(EnumTool.REGISTER, step4.tool());
         assertEquals(EnumOperation.REGISTER, step4.operation());
         assertEquals(Collections.singletonList(step2.outputKey()), step4.inputKeys());
         assertNull(step4.outputKey());

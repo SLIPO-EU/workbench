@@ -12,21 +12,24 @@ public interface IResourceValidationService {
      * Validates a resource registration request of type
      * {@link ResourceRegistrationRequest}
      *
-     * @param request the request
+     * @param request The request
+     * @param userId The id of the user that performs the request
+     * 
      * @return an array of {@link Error} objects if validation has failed or an empty
      * array.
      */
-    List<Error> validate(ResourceRegistrationRequest request);
+    List<Error> validate(ResourceRegistrationRequest request, int userId);
 
     /**
      * Validates a resource registration request of type {@link RegistrationRequest}
      *
-     * @param request
      * @param request the request
+     * @param userId The id of the user that performs the request
      * @param inputFileName the input file name
+     * 
      * @return an array of {@link Error} objects if validation has failed or an empty
      * array.
      */
-    List<Error> validate(RegistrationRequest request, String inputFileName);
+    List<Error> validate(RegistrationRequest request, int userId, String inputFileName);
 
 }

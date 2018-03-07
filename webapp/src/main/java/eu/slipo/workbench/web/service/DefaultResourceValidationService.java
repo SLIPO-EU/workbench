@@ -22,11 +22,12 @@ public class DefaultResourceValidationService implements IResourceValidationServ
     private ResourceRepository resourceRepository;
 
     @Override
-    public List<Error> validate(ResourceRegistrationRequest request) {
+    public List<Error> validate(ResourceRegistrationRequest request, int userId) 
+    {
         List<Error> errors = new ArrayList<Error>();
 
         // Shared validation rules
-        validateMetadata(request.getMetadata(), errors);
+        validateMetadata(request.getMetadata(), userId, errors);
 
         // File upload is not a valid data source
         if (request.getDataSource().getType() == EnumDataSourceType.UPLOAD) {
@@ -37,11 +38,12 @@ public class DefaultResourceValidationService implements IResourceValidationServ
     }
 
     @Override
-    public List<Error> validate(RegistrationRequest request, String inputFileNane) {
+    public List<Error> validate(RegistrationRequest request, int userId, String inputFileNane) 
+    {
         List<Error> errors = new ArrayList<Error>();
 
         // Shared validation rules
-        validateMetadata(request.getMetadata(), errors);
+        validateMetadata(request.getMetadata(), userId, errors);
 
         // Check if file exists
         File inputFile = new File(inputFileNane);
@@ -52,8 +54,9 @@ public class DefaultResourceValidationService implements IResourceValidationServ
         return errors;
     }
 
-    private void validateMetadata(ResourceMetadataCreate metadata, List<Error> errors) {
-        if (resourceRepository.findOne(metadata.getName()) != null) {
+    private void validateMetadata(ResourceMetadataCreate metadata, int userId, List<Error> errors) 
+    {
+        if (resourceRepository.findOne(metadata.getName(), userId) != null) {
             errors.add(new Error(ResourceErrorCode.NAME_DUPLICATE, "Resource name already exists."));
         }
     }

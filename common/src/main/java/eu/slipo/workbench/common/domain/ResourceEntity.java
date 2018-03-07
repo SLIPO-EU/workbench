@@ -24,6 +24,7 @@ import javax.persistence.Version;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
+import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.Type;
 import org.hibernate.validator.constraints.NotBlank;
 
@@ -80,6 +81,7 @@ public class ResourceEntity
     ProcessExecutionEntity processExecution;
 
     @NotBlank
+    @NaturalId(mutable = true)
     @Column(name = "`name`", nullable = false)
     String name;
 
@@ -91,6 +93,7 @@ public class ResourceEntity
     ZonedDateTime createdOn;
 
     @NotNull
+    @NaturalId
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false, updatable = false)
     AccountEntity createdBy;

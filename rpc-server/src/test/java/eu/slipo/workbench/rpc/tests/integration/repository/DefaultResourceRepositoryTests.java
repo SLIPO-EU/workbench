@@ -189,112 +189,49 @@ public class DefaultResourceRepositoryTests
         assertTrue(revision1a1.getId() > 0);
         assertEquals(1L, revision1a1.getVersion());
 
+        ResourceRecord record1b = resourceRepository.findOne(record1.getName(), createdBy);
+        assertNotNull(record1b);
+        assertEquals(record1a.getId(), record1b.getId());
+        assertEquals(record1a.getVersion(), record1b.getVersion());
+
         // Update with a new revision
 
         ResourceRecord record2 = sampleResourceRecord1v2;
         ResourceMetadataView metadata2 = record2.getMetadata();
         Integer updatedBy = createdBy;
 
-        ResourceRecord record1b = resourceRepository.update(id, record2, updatedBy);
-        assertNotNull(record1b);
+        ResourceRecord record2a = resourceRepository.update(id, record2, updatedBy);
+        assertNotNull(record2a);
+        assertEquals(id, record2a.getId());
+        assertEquals(2L, record2a.getVersion());
 
-        assertEquals(id, record1b.getId());
-        assertEquals(2L, record1b.getVersion());
+        assertEquals(createdBy, record2a.getCreatedBy().getId());
+        assertEquals(record1a.getCreatedOn(), record2a.getCreatedOn());
+        assertEquals(updatedBy, record2a.getUpdatedBy().getId());
+        assertNotNull(record2a.getUpdatedOn());
+        assertTrue(record1a.getUpdatedOn().isBefore(record2a.getUpdatedOn()));
+        assertEquals(record2.getInputFormat(), record2a.getInputFormat());
+        assertEquals(record2.getFormat(), record2a.getFormat());
+        assertEquals(record2.getType(), record2a.getType());
+        assertEquals(record2.getSourceType(), record2a.getSourceType());
+        assertEquals(record2.getFilePath(), record2a.getFilePath());
+        assertEquals(record2.getFileSize(), record2a.getFileSize());
+        assertEquals(metadata2.getName(), record2a.getName());
+        assertEquals(metadata2.getDescription(), record2a.getDescription());
+        assertEquals(record2.getBoundingBox(), record2a.getBoundingBox());
+        assertEquals(record2.getTableName(), record2a.getTableName());
 
-        assertEquals(createdBy, record1b.getCreatedBy().getId());
-        assertEquals(record1a.getCreatedOn(), record1b.getCreatedOn());
-        assertEquals(updatedBy, record1b.getUpdatedBy().getId());
-        assertNotNull(record1b.getUpdatedOn());
-        assertTrue(record1a.getUpdatedOn().isBefore(record1b.getUpdatedOn()));
-        assertEquals(record2.getInputFormat(), record1b.getInputFormat());
-        assertEquals(record2.getFormat(), record1b.getFormat());
-        assertEquals(record2.getType(), record1b.getType());
-        assertEquals(record2.getSourceType(), record1b.getSourceType());
-        assertEquals(record2.getFilePath(), record1b.getFilePath());
-        assertEquals(record2.getFileSize(), record1b.getFileSize());
-        assertEquals(metadata2.getName(), record1b.getName());
-        assertEquals(metadata2.getDescription(), record1b.getDescription());
-        assertEquals(record2.getBoundingBox(), record1b.getBoundingBox());
-        assertEquals(record2.getTableName(), record1b.getTableName());
-
-        List<ResourceRecord> revisions1b = record1b.getRevisions();
+        List<ResourceRecord> revisions2a = record2a.getRevisions();
         assertNotNull(revisions1a);
-        assertTrue(revisions1b.size() == 2);
-        ResourceRecord revision1b2 = revisions1b.get(1);
-        assertEquals(id, revision1b2.getId());
-        assertEquals(2L, revision1b2.getVersion());
+        assertTrue(revisions2a.size() == 2);
+        ResourceRecord revision2a2 = revisions2a.get(1);
+        assertEquals(id, revision2a2.getId());
+        assertEquals(2L, revision2a2.getVersion());
+
+        ResourceRecord record2b = resourceRepository.findOne(record2.getName(), createdBy);
+        assertNotNull(record2b);
+        assertEquals(record2a.getId(), record2b.getId());
+        assertEquals(record2a.getVersion(), record2b.getVersion());
 
     }
-
-
-    /////////////////////////////////////////////////////////////////////////////
-    //                                                                         //
-    // Fixme test2_scratch                                                     //
-    //                                                                         //
-    /////////////////////////////////////////////////////////////////////////////
-
-    public static class P
-    {
-        String foo;
-
-        public String getFoo()
-        {
-            return foo;
-        }
-    }
-
-    private ResourceRecord findResourceRecord(ProcessInput p)
-    {
-        CatalogResource r = (CatalogResource) p;
-        return resourceRepository.findOne(r.getId(), r.getVersion());
-    }
-
-    // @Test
-    public void test2_scratch2()
-    {
-        QueryResultPage<ResourceRecord> resultPage = resourceRepository.find(null, null);
-        System.err.println(resultPage);
-
-        ResourceRecord record = resultPage.getItems().get(0);
-        long id = record.getId(), version = record.getVersion();
-
-        TriplegeoConfiguration configuration = new TriplegeoConfiguration();
-        configuration.setOutputFormat(EnumDataFormat.GEOJSON);
-
-        ProcessDefinition def = ProcessDefinitionBuilder.create("foo")
-            .resource("res-1", 19, ResourceIdentifier.of(id, version))
-            .register("register-2", 2, new ResourceMetadataCreate("sample", "Something"))
-            .transform("triplegeo", c -> c
-                .input(19)
-                .outputFormat(EnumDataFormat.GEOJSON)
-                .outputKey(2)
-                .configuration(configuration))
-            .build();
-
-        final List<ProcessInput> inputs = def.resources();
-        final List<Step> steps = def.steps();
-
-        // Map each resource key of catalog resource to a resource record
-
-        final Map<Integer, ResourceRecord> resourceKeyToRecord = inputs.stream()
-            .filter(r -> r.getInputType() == EnumInputType.CATALOG)
-            .collect(Collectors.toMap(r -> r.key(), r -> findResourceRecord(r)));
-
-
-        System.err.println(resourceKeyToRecord);
-
-        final BiMap<Integer, Integer> outputKeyToStepKey = HashBiMap.create(inputs.stream()
-            .filter(r -> r.getInputType() == EnumInputType.OUTPUT)
-            .map(r -> Pair.of(r.key(), ((ProcessOutput) r).stepKey()))
-            .collect(Collectors.toMap(Pair::getFirst, Pair::getSecond)));
-
-        System.err.println(outputKeyToStepKey);
-
-        final Map<Integer, Step> stepByKey = steps.stream()
-            .collect(Collectors.toMap(step -> step.key(), Function.identity()));
-
-        System.err.println(stepByKey);
-
-    }
-
 }

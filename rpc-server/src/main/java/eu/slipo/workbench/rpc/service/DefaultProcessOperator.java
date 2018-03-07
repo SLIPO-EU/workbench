@@ -55,7 +55,7 @@ import eu.slipo.workbench.common.model.process.ProcessRecord;
 import eu.slipo.workbench.common.model.process.Step;
 import eu.slipo.workbench.common.model.resource.DataSource;
 import eu.slipo.workbench.common.model.resource.EnumDataSourceType;
-import eu.slipo.workbench.common.model.resource.ExternalUrlDataSource;
+import eu.slipo.workbench.common.model.resource.UrlDataSource;
 import eu.slipo.workbench.common.model.resource.FileSystemDataSource;
 import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
@@ -520,11 +520,11 @@ public class DefaultProcessOperator implements ProcessOperator
 
         final Set<DataSource> sourcesThatMustDownload = definition.steps().stream()
             .flatMap(step -> step.sources().stream())
-            .filter(source -> source instanceof ExternalUrlDataSource)
+            .filter(source -> source instanceof UrlDataSource)
             .collect(Collectors.toSet());
 
         for (DataSource source: sourcesThatMustDownload) {
-            final URL url = ((ExternalUrlDataSource) source).getUrl();
+            final URL url = ((UrlDataSource) source).getUrl();
             final String nodeName = "download-" + Integer.toHexString(source.hashCode());
             final String outputName = extractOutputName(url, true);
             // Add a job node into workflow
@@ -588,7 +588,7 @@ public class DefaultProcessOperator implements ProcessOperator
             // Define flow, parameters, and output name
             String outputName = null;
             switch (tool) {
-            case REGISTER_METADATA:
+            case REGISTER:
                 {
                     Assert.state(inputKeys.size() == 1, "A registration step expects a single input");
                     Step dependency = definition.stepByResourceKey(inputKeys.get(0));
@@ -723,7 +723,7 @@ public class DefaultProcessOperator implements ProcessOperator
         case FILESYSTEM:
             path = tempDir.resolve(((FileSystemDataSource) source).getPath());
             break;
-        case EXTERNAL_URL:
+        case URL:
             throw new UnsupportedOperationException(
                 "A data source of [" + type + "] cannot be resolved to a local file path");
         case HARVESTER:

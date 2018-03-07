@@ -28,9 +28,9 @@ public enum EnumDataSourceType {
      */
     HARVESTER(3),
     /**
-     * Data loaded from a public external URL
+     * Data loaded from a public URL
      */
-    EXTERNAL_URL(4),
+    URL(4),
     ;
 
     private final int value;

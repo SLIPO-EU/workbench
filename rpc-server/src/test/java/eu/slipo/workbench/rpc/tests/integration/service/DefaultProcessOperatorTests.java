@@ -63,7 +63,7 @@ import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepRecord;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
 import eu.slipo.workbench.common.model.resource.DataSource;
-import eu.slipo.workbench.common.model.resource.ExternalUrlDataSource;
+import eu.slipo.workbench.common.model.resource.UrlDataSource;
 import eu.slipo.workbench.common.model.resource.FileSystemDataSource;
 import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
@@ -175,7 +175,7 @@ public class DefaultProcessOperatorTests
             if (scheme.equals("file")) {
                 return new FileSystemDataSource(stagingDir.relativize(Paths.get(input)));
             } else if (scheme.equals("http") || scheme.equals("https") || scheme.equals("ftp")) {
-                return new ExternalUrlDataSource(input.toURL());
+                return new UrlDataSource(input.toURL());
             } else {
                  throw new IllegalStateException(
                      "Did not expect an input with a scheme of  [" + scheme + "]");
@@ -298,7 +298,7 @@ public class DefaultProcessOperatorTests
                 for (int index = 0; index < inputNames.size(); ++index) {
                     String inputName = inputNames.get(index);
                     Path inputPath = inputNameToTempPath.get(inputName);
-                    String fixtureName = inputNameToTempName.get(inputName);
+                    String fixtureName = "file-" + inputNameToTempName.get(inputName);
                     TransformFixture fixture = new TransformFixture(
                         fixtureName,
                         inputPath.toUri(),
@@ -315,7 +315,7 @@ public class DefaultProcessOperatorTests
                     new URL(resourcesBaseUrl, Paths.get(path, "input").toString() + "/");
                 for (int index = 0; index < inputNames.size(); ++index) {
                     String inputName = inputNames.get(index);
-                    String fixtureName = inputNameToTempName.get(inputName);
+                    String fixtureName = "url-" + inputNameToTempName.get(inputName);
                     URL url = new URL(resourcesUrl, inputName);
                     String urlFragment = fixtureName.substring(1 + inputName.length());
                     TransformFixture fixture = new TransformFixture(
@@ -413,8 +413,9 @@ public class DefaultProcessOperatorTests
         final int creatorId = creator.getId();
         final int resourceKey = 1;
 
+        final String resourceName = procName + "." + fixture.getName();
         final ResourceMetadataCreate metadata =
-            new ResourceMetadataCreate(fixture.getName(), "A sample input file");
+            new ResourceMetadataCreate(resourceName, "A sample input file");
 
         // Define the process, create a new entity
 
@@ -486,7 +487,12 @@ public class DefaultProcessOperatorTests
         assertNotNull(step2Record);
         assertEquals(EnumProcessExecutionStatus.COMPLETED, step2Record.getStatus());
 
-        // Todo Find and check resource by (name,user)
+        // Find and check resource by (name, user)
+
+        ResourceRecord resourceRecord1 = resourceRepository.findOne(metadata.getName(), creatorId);
+        assertNotNull(resourceRecord1);
+        assertEquals(resourceRecord.getId(), resourceRecord1.getId());
+        assertEquals(resourceRecord.getVersion(), resourceRecord1.getVersion());
 
         // Check output against expected result
 

@@ -16,9 +16,9 @@ public enum EnumTool {
      */
     UNDEFINED(0),
     /**
-     * Catalog management component
+     * Catalog registration component
      */
-    REGISTER_METADATA(1),
+    REGISTER(1),
     /**
      * Data transformation component
      */

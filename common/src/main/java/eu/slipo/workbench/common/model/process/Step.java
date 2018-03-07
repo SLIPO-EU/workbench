@@ -63,7 +63,7 @@ public class Step implements Serializable
         @Type(name = "LIMES", value = LimesConfiguration.class),
         @Type(name = "FAGI", value = FagiConfiguration.class),
         @Type(name = "DEER", value = DeerConfiguration.class),
-        @Type(name = "REGISTER_METADATA", value = MetadataRegistrationConfiguration.class)
+        @Type(name = "REGISTER", value = MetadataRegistrationConfiguration.class)
     })
     protected ToolConfiguration configuration;
 
@@ -171,6 +171,4 @@ public class Step implements Serializable
             "Step [key=%s, name=%s, operation=%s, tool=%s, outputFormat=%s]", 
             key, name, operation, tool, outputFormat);
     }
-    
-    
 }

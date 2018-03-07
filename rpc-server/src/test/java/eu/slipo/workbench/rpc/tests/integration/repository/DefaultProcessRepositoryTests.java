@@ -291,7 +291,8 @@ public class DefaultProcessRepositoryTests
         assertNotNull(createdBy);
         AccountEntity submittedBy = createdBy;
 
-        ResourceRecord inputResourceRecord1 = resourceRepository.findOne(INPUT_1_RESOURCE_NAME);
+        ResourceRecord inputResourceRecord1 =
+            resourceRepository.findOne(INPUT_1_RESOURCE_NAME, createdBy.getId());
         assertNotNull(inputResourceRecord1);
         ResourceIdentifier inputResourceIdentifier1 = new ResourceIdentifier(
             inputResourceRecord1.getId(), inputResourceRecord1.getVersion());

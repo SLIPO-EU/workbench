@@ -140,16 +140,26 @@ public class DefaultResourceRepository implements ResourceRepository
 
     @Transactional(readOnly = true)
     @Override
-    public ResourceRecord findOne(String name) 
+    public ResourceRecord findOne(String resourceName, int userId) 
     {
-        String queryString = "select r from Resource r where r.name = :name";
-
-        List<ResourceEntity> resources = entityManager
-            .createQuery(queryString, ResourceEntity.class)
-            .setParameter("name", name)
-            .getResultList();
-
-        return (resources.isEmpty() ? null : resources.get(0).toResourceRecord());
+        Assert.isTrue(!StringUtils.isEmpty(resourceName), "Expected a non-empty resource name");
+        
+        AccountEntity createdBy = entityManager.find(AccountEntity.class, userId);
+        Assert.notNull(createdBy, "The userId does not correspond to a user entity");
+        
+        String qlString = "FROM Resource r WHERE r.name = :name AND r.createdBy.id = :userId";
+        TypedQuery<ResourceEntity> query = entityManager.createQuery(qlString, ResourceEntity.class)
+            .setParameter("name", resourceName)
+            .setParameter("userId", userId);
+        
+        ResourceEntity entity = null;
+        try {
+            entity = query.getSingleResult();
+        } catch (NoResultException ex) {
+            entity = null;
+        }
+        
+        return entity == null? null : entity.toResourceRecord();
     }
     
     @Transactional(readOnly = true)

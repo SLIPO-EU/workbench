@@ -8,24 +8,24 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * Represent a data source from a public URL
  */
-public class ExternalUrlDataSource extends DataSource 
+public class UrlDataSource extends DataSource 
 {
     private static final long serialVersionUID = 1L;
     
     private URL url;
 
-    protected ExternalUrlDataSource() 
+    protected UrlDataSource() 
     {
-        super(EnumDataSourceType.EXTERNAL_URL);
+        super(EnumDataSourceType.URL);
     }
     
-    public ExternalUrlDataSource(URL url) 
+    public UrlDataSource(URL url) 
     {
-        super(EnumDataSourceType.EXTERNAL_URL);
+        super(EnumDataSourceType.URL);
         this.url = url;
     }
     
-    public ExternalUrlDataSource(String url)
+    public UrlDataSource(String url)
     {
         try {
             this.url = new URL(url);
@@ -42,7 +42,7 @@ public class ExternalUrlDataSource extends DataSource
     @Override
     public String toString()
     {
-        return String.format("ExternalUrlDataSource [url=%s]", url);
+        return String.format("UrlDataSource [url=%s]", url);
     }
     
     @Override
@@ -56,9 +56,9 @@ public class ExternalUrlDataSource extends DataSource
     {
         if (this == obj)
             return true;
-        if (obj == null || !(obj instanceof ExternalUrlDataSource))
+        if (obj == null || !(obj instanceof UrlDataSource))
             return false;
-        ExternalUrlDataSource other = (ExternalUrlDataSource) obj;
+        UrlDataSource other = (UrlDataSource) obj;
         return url == null? (other.url == null) : url.equals(other.url);
     }
 }

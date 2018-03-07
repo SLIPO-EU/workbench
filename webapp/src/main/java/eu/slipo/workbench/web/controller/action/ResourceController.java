@@ -152,7 +152,7 @@ public class ResourceController {
     public RestResponse<?> registerResource(@RequestBody ResourceRegistrationRequest request) throws InvalidProcessDefinitionException {
 
         // Validate
-        List<Error> errors = resourceValidationService.validate(request);
+        List<Error> errors = resourceValidationService.validate(request, currentUserId());
         if (!errors.isEmpty()) {
             return RestResponse.error(errors);
         }
@@ -176,14 +176,16 @@ public class ResourceController {
     {     
         Path inputPath = null;
         try {
-            inputPath = createTemporaryFile(file.getBytes(), FilenameUtils.getExtension(file.getOriginalFilename()));
+            inputPath = createTemporaryFile(
+                file.getBytes(), FilenameUtils.getExtension(file.getOriginalFilename()));
         } catch (IOException ex) {
             logger.error(ex.getMessage(), ex);
             return RestResponse.error(BasicErrorCode.IO_ERROR, "An i/o exception has occured: " + ex.getMessage());
         }
 
         // Validate
-        List<Error> errors = resourceValidationService.validate(request, inputPath.toString());
+        List<Error> errors = resourceValidationService
+            .validate(request, currentUserId(), inputPath.toString());
         if (!errors.isEmpty()) {
             FileUtils.deleteQuietly(inputPath.toFile());
             return RestResponse.error(errors);

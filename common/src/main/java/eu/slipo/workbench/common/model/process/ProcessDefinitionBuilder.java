@@ -323,7 +323,7 @@ public class ProcessDefinitionBuilder
         {
             this.stepBuilder = new BasicStepBuilder(key, name, RegisterStep::new)
                 .operation(EnumOperation.REGISTER)
-                .tool(EnumTool.REGISTER_METADATA);
+                .tool(EnumTool.REGISTER);
         }
         
         public RegisterStepBuilder resource(int resourceKey)

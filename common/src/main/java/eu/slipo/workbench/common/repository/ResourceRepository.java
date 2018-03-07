@@ -42,14 +42,14 @@ public interface ResourceRepository
     }
     
     /**
-     * Find a single record by name
+     * Find a single resource identified by the pair of (resource-name, owner). If the
+     * corresponding resource has more than 1 revisions, the latest is returned.
      *
-     * Todo: Lookup by pair of (name,creator)
-     *
-     * @param name the resource unique name
-     * @return an instance of {@link ResourceRecord} if the resource exists, else <tt>null</tt>
+     * @param resourceName The resource name (assigned by creator)
+     * @param createdBy The id of the user that created (and owns) this resource  
+     * @return an instance of {@link ResourceRecord} if it exists, else <tt>null</tt>
      */
-    ResourceRecord findOne(String name);
+    ResourceRecord findOne(String resourceName, int createdBy);
     
     /**
      * Create a new resource entity.
