@@ -22,9 +22,6 @@ export const validator = (value) => {
   if (!value.name) {
     errors.name = 'File name required';
   }
-  if (!value.format) {
-    errors.format = 'Format required';
-  }
   if (!value.description || value.description.length < 5) {
     errors.description = 'Description should be longer than 5 characters';
   }
@@ -48,13 +45,6 @@ export const Component = (props) => {
         id="description"
         label="Resource description"
         help="Resource description"
-      />
-      <SelectField
-        {...props}
-        id="format"
-        label="Resource type"
-        help="Upload file format"
-        options={supportedFiles}
       />
     </div>
   );

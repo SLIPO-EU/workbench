@@ -7,8 +7,11 @@ import {
   EnumTool,
   EnumToolboxItem,
   EnumDragSource,
-} from './constants';
-import Step from './step';
+} from '../../../../model/process-designer';
+
+import {
+  Step,
+} from './';
 
 /**
  * Drop target specification
@@ -92,7 +95,7 @@ class StepGroup extends React.Component {
     removeStep: PropTypes.func.isRequired,
     moveStep: PropTypes.func.isRequired,
     configureStepBegin: PropTypes.func.isRequired,
-    openStepFileBrowser: PropTypes.func.isRequired,
+    showStepExecutionDetails: PropTypes.func.isRequired,
     setStepProperty: PropTypes.func.isRequired,
 
     // Step input actions
@@ -142,7 +145,7 @@ class StepGroup extends React.Component {
         removeStep={this.props.removeStep}
         moveStep={this.props.moveStep}
         configureStepBegin={this.props.configureStepBegin}
-        openStepFileBrowser={this.props.openStepFileBrowser}
+        showStepExecutionDetails={this.props.showStepExecutionDetails}
         setStepProperty={this.props.setStepProperty}
         addStepInput={this.props.addStepInput}
         removeStepInput={this.props.removeStepInput}

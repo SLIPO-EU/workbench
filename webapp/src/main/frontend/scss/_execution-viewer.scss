@@ -2,7 +2,36 @@
  * Variables
  */
 
- $slipo-ev-layer-color: #616161 !default;
+$slipo-ev-layer-color: #616161 !default;
+
+/*
+ * Sidebar (layers)
+ */
+
+.slipo-pd-sidebar-layer-list {
+  display: flex;
+  padding: 10px;
+  flex-direction: column;
+  overflow-y: scroll;
+  max-height: 40vh;
+  margin-right: -18px;
+}
+
+.slipo-pd-sidebar-layer-list-empty {
+  border: none;
+}
+
+.slipo-pd-sidebar-feature-list {
+  overflow-y: scroll;
+  margin-right: -18px;
+  max-height: 60vh;
+}
+
+.slipo-pd-sidebar-feature-list .card {
+  margin-bottom: -1px;
+  margin-left: -1px;
+}
+
 
 /*
  * Layer
@@ -16,6 +45,12 @@
   margin: 0.25rem 0rem;
   display: inline-block;
   opacity: 1;
+}
+
+.slipo-layer-toggle {
+  padding: 5px;
+  font-size: 1.2em;
+  cursor: pointer;
 }
 
 .slipo-ev-layer-active {

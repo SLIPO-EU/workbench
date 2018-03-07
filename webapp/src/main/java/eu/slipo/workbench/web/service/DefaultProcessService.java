@@ -1,5 +1,6 @@
 package eu.slipo.workbench.web.service;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -12,12 +13,16 @@ import org.springframework.stereotype.Service;
 import eu.slipo.workbench.common.model.ApplicationException;
 import eu.slipo.workbench.common.model.Error;
 import eu.slipo.workbench.common.model.ErrorCode;
+import eu.slipo.workbench.common.model.process.EnumProcessTaskType;
 import eu.slipo.workbench.common.model.process.InvalidProcessDefinitionException;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.ProcessErrorCode;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
+import eu.slipo.workbench.common.model.process.ProcessExecutionStartException;
+import eu.slipo.workbench.common.model.process.ProcessNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
 import eu.slipo.workbench.common.repository.ProcessRepository;
+import eu.slipo.workbench.common.service.ProcessOperator;
 
 @Service
 public class DefaultProcessService implements ProcessService {
@@ -26,10 +31,13 @@ public class DefaultProcessService implements ProcessService {
     private MessageSource messageSource;
 
     @Autowired
-    IAuthenticationFacade authenticationFacade;
+    private IAuthenticationFacade authenticationFacade;
 
     @Autowired
     private ProcessRepository processRepository;
+
+    @Autowired
+    private ProcessOperator processOperator;
 
     private int currentUserId() {
         return authenticationFacade.getCurrentUserId();
@@ -45,32 +53,46 @@ public class DefaultProcessService implements ProcessService {
 
     @Override
     public ProcessRecord create(ProcessDefinition definition) throws InvalidProcessDefinitionException {
-        validate(null, definition);
+        return this.create(definition, EnumProcessTaskType.DATA_INTEGRATION);
+    }
 
-        ProcessRecord record = null;
+    /**
+     * Create a new process given an {@link ProcessDefinition} instance
+     *
+     * @param definition the process definition
+     * @param taskType the process task type
+     * @return an instance of {@link ProcessRecord} for the new process
+     * @throws InvalidProcessDefinitionException if the given definition is invalid
+     */
+    @Override
+    public ProcessRecord create(ProcessDefinition definition, EnumProcessTaskType taskType) throws InvalidProcessDefinitionException {
+
         try {
-            record = processRepository.create(definition, currentUserId());
+            validate(null, definition);
+
+            return  processRepository.create(definition, currentUserId(), taskType);
+        } catch(InvalidProcessDefinitionException ex) {
+            throw ex;
         } catch (ApplicationException ex) {
             throw ex.withFormattedMessage(messageSource, currentUserLocale());
         } catch (Exception ex) {
             throw wrapAndFormatException(ex, ProcessErrorCode.UNKNOWN, "Failed to create process");
         }
-        return record;
     }
 
     @Override
     public ProcessRecord update(long id, ProcessDefinition definition) throws InvalidProcessDefinitionException {
-        validate(id, definition);
 
-        ProcessRecord record = null;
         try {
-            record = processRepository.update(id, definition, currentUserId());
+            validate(id, definition);
+            return processRepository.update(id, definition, currentUserId());
+        } catch (InvalidProcessDefinitionException ex) {
+            throw ex;
         } catch (ApplicationException ex) {
             throw ex.withFormattedMessage(messageSource, currentUserLocale());
         } catch (Exception ex) {
             throw wrapAndFormatException(ex, ProcessErrorCode.UNKNOWN, "Failed to update process");
         }
-        return record;
     }
 
     @Override
@@ -102,4 +124,10 @@ public class DefaultProcessService implements ProcessService {
             throw new InvalidProcessDefinitionException(errors);
         }
     }
+
+    @Override
+    public ProcessExecutionRecord start(long id, long version) throws ProcessNotFoundException, ProcessExecutionStartException, IOException {
+        return this.processOperator.start(id, version, this.authenticationFacade.getCurrentUserId());
+    }
+
 }

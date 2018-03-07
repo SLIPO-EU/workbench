@@ -27,14 +27,14 @@ import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 
 @Entity(name = "ProcessExecution")
 @Table(schema = "public", name = "process_execution")
-public class ProcessExecutionEntity 
+public class ProcessExecutionEntity
 {
     @Id
     @Column(name = "id", updatable = false)
     @SequenceGenerator(
-        sequenceName = "process_execution_id_seq", 
-        name = "process_execution_id_seq", 
-        initialValue = 1, 
+        sequenceName = "process_execution_id_seq",
+        name = "process_execution_id_seq",
+        initialValue = 1,
         allocationSize = 1)
     @GeneratedValue(generator = "process_execution_id_seq", strategy = GenerationType.SEQUENCE)
     long id = -1L;
@@ -67,111 +67,111 @@ public class ProcessExecutionEntity
     private String errorMessage;
 
     @OneToMany(
-        mappedBy = "execution", 
-        fetch = FetchType.LAZY, 
-        cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH }, 
+        mappedBy = "execution",
+        fetch = FetchType.LAZY,
+        cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH },
         orphanRemoval = false)
     List<ProcessExecutionStepEntity> steps = new ArrayList<>();
 
-    public static final Comparator<ProcessExecutionEntity> ORDER_BY_STARTED = 
+    public static final Comparator<ProcessExecutionEntity> ORDER_BY_STARTED =
         Comparator.comparing(e -> e.getStartedOn());
-    
-    public static final Comparator<ProcessExecutionEntity> ORDER_BY_SUBMITTED = 
+
+    public static final Comparator<ProcessExecutionEntity> ORDER_BY_SUBMITTED =
         Comparator.comparing(e -> e.getSubmittedOn());
-    
+
     protected ProcessExecutionEntity() {}
-    
+
     public ProcessExecutionEntity(ProcessRevisionEntity processRevisionEntity)
     {
         this.process = processRevisionEntity;
         this.status = EnumProcessExecutionStatus.UNKNOWN;
     }
-    
-    public long getId() 
+
+    public long getId()
     {
         return id;
     }
 
-    public void setId(long id) 
+    public void setId(long id)
     {
         this.id = id;
     }
 
-    public ProcessRevisionEntity getProcess() 
+    public ProcessRevisionEntity getProcess()
     {
         return process;
     }
 
-    public void setProcess(ProcessRevisionEntity process) 
+    public void setProcess(ProcessRevisionEntity process)
     {
         this.process = process;
     }
 
-    public AccountEntity getSubmittedBy() 
+    public AccountEntity getSubmittedBy()
     {
         return submittedBy;
     }
 
-    public void setSubmittedBy(AccountEntity submittedBy) 
+    public void setSubmittedBy(AccountEntity submittedBy)
     {
         this.submittedBy = submittedBy;
     }
 
-    public ZonedDateTime getSubmittedOn() 
+    public ZonedDateTime getSubmittedOn()
     {
         return submittedOn;
     }
 
-    public void setSubmittedOn(ZonedDateTime submittedOn) 
+    public void setSubmittedOn(ZonedDateTime submittedOn)
     {
         this.submittedOn = submittedOn;
     }
 
-    public ZonedDateTime getStartedOn() 
+    public ZonedDateTime getStartedOn()
     {
         return startedOn;
     }
 
-    public void setStartedOn(ZonedDateTime startedOn) 
+    public void setStartedOn(ZonedDateTime startedOn)
     {
         this.startedOn = startedOn;
     }
 
-    public ZonedDateTime getCompletedOn() 
+    public ZonedDateTime getCompletedOn()
     {
         return completedOn;
     }
 
-    public void setCompletedOn(ZonedDateTime completedOn) 
+    public void setCompletedOn(ZonedDateTime completedOn)
     {
         this.completedOn = completedOn;
     }
 
-    public EnumProcessExecutionStatus getStatus() 
+    public EnumProcessExecutionStatus getStatus()
     {
         return status;
     }
 
-    public void setStatus(EnumProcessExecutionStatus status) 
+    public void setStatus(EnumProcessExecutionStatus status)
     {
         this.status = status;
     }
-    
+
     public boolean isRunning()
     {
         return status.isRunning();
     }
-    
+
     public boolean isFinished()
     {
         return status.isFinished();
     }
-    
+
     public boolean isTerminated()
     {
         return status.isTerminated();
     }
-    
+
     @AssertTrue
     protected boolean isStatusValid()
     {
@@ -193,12 +193,12 @@ public class ProcessExecutionEntity
         return check;
     }
 
-    public String getErrorMessage() 
+    public String getErrorMessage()
     {
         return errorMessage;
     }
 
-    public void setErrorMessage(String errorMessage) 
+    public void setErrorMessage(String errorMessage)
     {
         this.errorMessage = errorMessage;
     }
@@ -208,8 +208,8 @@ public class ProcessExecutionEntity
         return steps;
     }
 
-    public void addStep(ProcessExecutionStepEntity processExecutionStepEntity) 
-    {    
+    public void addStep(ProcessExecutionStepEntity processExecutionStepEntity)
+    {
         processExecutionStepEntity.setExecution(this);
         steps.add(processExecutionStepEntity);
     }
@@ -217,20 +217,21 @@ public class ProcessExecutionEntity
     public ProcessExecutionStepEntity getStepByKey(int stepKey)
     {
         for (ProcessExecutionStepEntity step: steps) {
-            if (step.key == stepKey)
+            if (step.key == stepKey) {
                 return step;
+            }
         }
         return null;
     }
-    
+
     public ProcessExecutionRecord toProcessExecutionRecord()
     {
         return toProcessExecutionRecord(true);
     }
-    
-    public ProcessExecutionRecord toProcessExecutionRecord(boolean includeSteps) 
+
+    public ProcessExecutionRecord toProcessExecutionRecord(boolean includeSteps)
     {
-        ProcessExecutionRecord e = 
+        ProcessExecutionRecord e =
             new ProcessExecutionRecord(id, process.parent.id, process.version);
 
         if (submittedBy != null) {
@@ -240,6 +241,7 @@ public class ProcessExecutionEntity
         e.setStartedOn(startedOn);
         e.setCompletedOn(completedOn);
         e.setStatus(status);
+        e.setTaskType(process.getParent().getTaskType());
         e.setName(process.getName());
         e.setErrorMessage(errorMessage);
 

@@ -35,6 +35,7 @@ class Layers extends React.Component {
       React.Children.map(children, (child, index) => {
         return React.cloneElement(child, {
           map: this.props.map,
+          index,
         });
       }, this)
     );

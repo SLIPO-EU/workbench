@@ -21,6 +21,7 @@ class BingMapsLayer extends React.Component {
 
   static propTypes = {
     map: PropTypes.instanceOf(OpenLayersMap),
+    index: PropTypes.number,
     applicationKey: PropTypes.string.isRequired,
     imagerySet: PropTypes.string,
   }
@@ -38,8 +39,7 @@ class BingMapsLayer extends React.Component {
         })
       });
 
-
-      this.props.map.addLayer(this.layer);
+      this.props.map.getLayers().insertAt(this.props.index, this.layer);
     }
   }
 

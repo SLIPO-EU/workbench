@@ -21,7 +21,7 @@ export const JobGridData = (processes) => processes.map(proc => ({
   process: proc.process,
   executionId: proc.id,
   name: proc.name,
-  submittedBy: proc.submittedBy.name,
+  submittedBy: proc.submittedBy ? proc.submittedBy.name : '-',
   startedOn: moment(proc.startedOn).toDate(),
   completedOn: !proc.completedOn ? '' : moment(proc.completedOn).toDate(),
   status: proc.status,
@@ -31,6 +31,21 @@ export const JobGridData = (processes) => processes.map(proc => ({
  * Job grid column configuration
  */
 export const JobGridColumns = [{
+  Header: 'Actions',
+  accessor: 'process',
+  Cell: props => {
+    return (
+      props.original.completedOn ?
+        <Link style={{ color: '#263238' }} to={buildPath(DynamicRoutes.ProcessExecutionMapViewer, [props.original.process.id, props.original.process.version, props.original.executionId])}>
+          <i className='fa fa-map-o'></i>
+        </Link>
+        :
+        null
+    );
+  },
+  style: { 'textAlign': 'center' },
+  minWidth: 60,
+}, {
   Header: 'Workflow Id',
   accessor: 'processId',
   show: false
@@ -152,20 +167,6 @@ export const ResourceGridColumns = [{
   Header: 'Id',
   accessor: 'id',
   show: false
-}, {
-  Header: 'Actions',
-  accessor: 'process',
-  Cell: props => {
-    return (
-      props.value ?
-        <Link style={{ color: '#00bcf2' }} to={buildPath(DynamicRoutes.ProcessExecutionMapViewer, { id: props.value })}>
-          <i className='fa fa-map'></i>
-        </Link>
-        :
-        <span className='fa fa-chain-broken'> </span>
-    );
-  },
-  style: { 'textAlign': 'center' },
 }, {
   Header: 'Name',
   accessor: 'name',

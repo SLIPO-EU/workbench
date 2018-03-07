@@ -7,7 +7,7 @@ import {
 
 import {
   EnumKpiViewMode,
-} from '../../../../model';
+} from '../../../../model/process-designer';
 
 import {
   FormattedTime
@@ -33,8 +33,11 @@ import {
 import {
   EnumStepFileType,
   EnumTool,
-  stepFileTypeToText,
   ToolIcons,
+} from '../../../../model/process-designer';
+
+import {
+  stepFileTypeToText,
 } from '../../process/designer';
 
 import {
@@ -114,16 +117,16 @@ const tableColumns = [{
   style: { 'textAlign': 'center' },
 }];
 
-export default class StepExecutionFileBrowser extends React.Component {
+export default class ExecutionStepDetails extends React.Component {
 
   constructor(props) {
     super(props);
 
-    this.closeStepFileBrowser = this.closeStepFileBrowser.bind(this);
+    this.hideStepExecutionDetails = this.hideStepExecutionDetails.bind(this);
   }
 
   static propTypes = {
-    closeStepFileBrowser: PropTypes.func.isRequired,
+    hideStepExecutionDetails: PropTypes.func.isRequired,
     files: PropTypes.arrayOf(PropTypes.object).isRequired,
     resetSelectedFile: PropTypes.func.isRequired,
     resetSelectedKpi: PropTypes.func.isRequired,
@@ -170,8 +173,8 @@ export default class StepExecutionFileBrowser extends React.Component {
     );
   }
 
-  closeStepFileBrowser() {
-    this.props.closeStepFileBrowser();
+  hideStepExecutionDetails() {
+    this.props.hideStepExecutionDetails();
     this.props.resetSelectedFile();
   }
 
@@ -195,7 +198,7 @@ export default class StepExecutionFileBrowser extends React.Component {
               </Col>
               <Col>
                 <div className="float-right">
-                  <Button color="primary" onClick={this.closeStepFileBrowser}>Return</Button>
+                  <Button color="primary" onClick={this.hideStepExecutionDetails}>Return</Button>
                 </div>
               </Col>
             </Row>
@@ -210,6 +213,7 @@ export default class StepExecutionFileBrowser extends React.Component {
                   defaultPageSize={10}
                   showPageSizeOptions={false}
                   manual
+                  minRows={1}
                   getTrProps={(state, rowInfo) => ({
                     className: (this.isSelected(rowInfo) ? 'slipo-react-table-selected' : null),
                   })}

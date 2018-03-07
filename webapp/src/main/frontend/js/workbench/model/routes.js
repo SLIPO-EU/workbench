@@ -6,9 +6,9 @@ import pathToRegexp from 'path-to-regexp';
 /**
  * Components
  */
-import ResourceExplorerSidebar from '../components/views/resource/explorer/sidebar';
-import ProcessDesignerSidebar from '../components/views/process/designer/sidebar';
-import ExecutionViewerSidebar from '../components/views/execution/viewer/sidebar';
+import { ResourceExplorerSidebar } from '../components/views/resource/explorer';
+import { ProcessDesignerSidebar } from '../components/views/process/designer';
+import { ExecutionViewerSidebar } from '../components/views/execution/viewer';
 
 /**
  * Model
@@ -232,7 +232,8 @@ const routes = {
     description: 'View a POI dataset',
     title: 'links.process.execution.map-viewer',
     defaultTitle: 'Map Viewer',
-    links: defaultLinks
+    links: defaultLinks,
+    contextComponent: ExecutionViewerSidebar,
   },
   // Error Pages
   [Forbidden]: {

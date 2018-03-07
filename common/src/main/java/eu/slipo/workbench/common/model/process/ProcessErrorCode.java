@@ -12,6 +12,7 @@ public enum ProcessErrorCode implements ErrorCode
     NAME_DUPLICATE,
     NOT_FOUND,
     QUERY_IS_EMPTY,
+    FAILED_TO_START,
     ;
 
     @Override

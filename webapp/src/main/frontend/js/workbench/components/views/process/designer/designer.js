@@ -3,11 +3,12 @@ import PropTypes from 'prop-types';
 import classnames from 'classnames';
 
 import {
-  EnumTool,
   EnumToolboxItem,
-  EnumDragSource,
-} from './constants';
-import StepGroup from './step-group';
+} from '../../../../model/process-designer';
+
+import {
+  StepGroup,
+} from './';
 
 /**
  * A presentational component for rendering multiple step groups
@@ -36,7 +37,7 @@ class Designer extends React.Component {
     removeStep: PropTypes.func.isRequired,
     moveStep: PropTypes.func.isRequired,
     configureStepBegin: PropTypes.func.isRequired,
-    openStepFileBrowser: PropTypes.func.isRequired,
+    showStepExecutionDetails: PropTypes.func.isRequired,
     setStepProperty: PropTypes.func.isRequired,
 
     addStepInput: PropTypes.func.isRequired,
@@ -76,7 +77,7 @@ class Designer extends React.Component {
         removeStep={this.props.removeStep}
         moveStep={this.props.moveStep}
         configureStepBegin={this.props.configureStepBegin}
-        openStepFileBrowser={this.props.openStepFileBrowser}
+        showStepExecutionDetails={this.props.showStepExecutionDetails}
         setStepProperty={this.props.setStepProperty}
         addStepInput={this.props.addStepInput}
         removeStepInput={this.props.removeStepInput}

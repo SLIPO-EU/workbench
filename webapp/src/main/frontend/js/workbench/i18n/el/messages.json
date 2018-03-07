@@ -96,7 +96,7 @@
       "UPLOAD": "Upload",
       "FILESYSTEM": "File System",
       "HARVESTER": "Harvester",
-      "EXTERNAL_URL": "External Url"
+      "URL": "External Url"
     },
     "operation": {
       "UNDEFINED": "Not Supported",
@@ -113,7 +113,7 @@
     },
     "tool": {
       "UNDEFINED": "Unknown",
-      "REGISTER_METADATA": "Catalog Manager",
+      "REGISTER": "Catalog Manager",
       "TRIPLEGEO": "TripleGeo",
       "LIMES": "LIMES",
       "FAGI": "FAGI",

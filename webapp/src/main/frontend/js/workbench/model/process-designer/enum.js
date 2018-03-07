@@ -1,7 +1,7 @@
 /**
- * Process designer actions
+ * Process designer mode
  */
-export const EnumMode = {
+export const EnumDesignerMode = {
   CREATE: 'new',
   EDIT: 'edit',
   VIEW: 'view',
@@ -11,11 +11,11 @@ export const EnumMode = {
 /*
  * Process designer views
  */
-export const EnumViews = {
+export const EnumDesignerView = {
   Designer: 'Designer',
   StepConfiguration: 'StepConfiguration',
   DataSourceConfiguration: 'DataSourceConfiguration',
-  StepExecutionFileBrowser: 'FileBrowser',
+  StepExecution: 'StepExecution',
 };
 
 /**
@@ -56,7 +56,7 @@ export const EnumResourceType = {
  */
 export const EnumDataSource = {
   FILESYSTEM: 'FILESYSTEM',
-  EXTERNAL_URL: 'EXTERNAL_URL',
+  URL: 'URL',
   HARVESTER: 'HARVESTER',
 };
 
@@ -85,7 +85,7 @@ export const EnumTool = {
   LIMES: 'LIMES',
   FAGI: 'FAGI',
   DEER: 'DEER',
-  CATALOG: 'REGISTER_METADATA',
+  CATALOG: 'REGISTER',
 };
 
 /**
@@ -138,3 +138,37 @@ export const EnumSelection = {
   Input: 'Input',
   DataSource: 'DataSource',
 };
+
+/*
+ * Supported data formats
+ */
+export const EnumDataFormat = {
+  CSV: 'CSV',
+  GPX: 'GPX',
+  GEOJSON: 'GEOJSON',
+  OSM: 'OSM',
+  SHAPEFILE: 'SHAPEFILE',
+  RDF_XML: 'RDF_XML',
+  RDF_XML_ABBREV: 'RDF_XML_ABBREV',
+  TURTLE: 'TURTLE',
+  N_TRIPLES: 'N_TRIPLES',
+  N3: 'N3',
+};
+
+/**
+ * Process Save actions
+ */
+export const EnumDesignerSaveAction = {
+  Save: 'SAVE',
+  SaveAndExecute: 'SAVE_AND_EXECUTE',
+  SaveAsTemplate: 'SAVE_TEMPLATE',
+};
+
+/**
+ * KPI view mode
+ */
+export const EnumKpiViewMode = {
+  GRID: 'Grid',
+  CHART: 'Chart',
+};
+

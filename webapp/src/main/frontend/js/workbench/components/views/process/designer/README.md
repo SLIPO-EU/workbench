@@ -3,7 +3,7 @@
 This document describes the structure of the simple JavaScript objects stored
 in the application state and exchanged in action creators. 
 
-All enumeration values are declared in file [constants.js](./constants.js)
+All enumeration values are declared in file [constants.js](../../../../model/process-designer/constants.js)
 
 ## Step
 
@@ -25,6 +25,7 @@ of the state.
 | configuration       | Object    | Configuration object that is resolved based on the `tool` value |
 | errors              | Object    | Configuration errors |
 | outputKey           | Number    | Key of the output resource if the step returns a result or `undefined` |
+| outputFormat        | String    | A value of type `EnumFormat` |
 
 
 ## Data Sources

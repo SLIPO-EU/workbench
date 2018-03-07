@@ -8,7 +8,7 @@ import {
 } from '../../../../model/routes';
 import {
   EnumInputType
-} from './constants';
+} from '../../../../model/process-designer';
 
 /**
  * A presentational component for rendering a process resource input.
@@ -56,13 +56,13 @@ class StepInput extends React.Component {
         onClick={(e) => this.select(e)}
       >
         <div className="slipo-pd-step-resource-actions">
-          {!this.props.readOnly &&
-            <i className="slipo-pd-step-resource-action slipo-pd-step-resource-delete fa fa-trash" onClick={() => { this.remove(); }}></i>
-          }
           {this.props.resource.inputType === EnumInputType.CATALOG &&
             <Link to={buildPath(DynamicRoutes.ResourceViewer, [this.props.resource.id, this.props.resource.version])}>
               <i className="slipo-pd-step-resource-action slipo-pd-step-resource-view fa fa-search"></i>
             </Link>
+          }
+          {!this.props.readOnly &&
+            <i className="slipo-pd-step-resource-action slipo-pd-step-resource-delete fa fa-trash" onClick={() => { this.remove(); }}></i>
           }
         </div>
         <div className="slipo-pd-step-input-icon">

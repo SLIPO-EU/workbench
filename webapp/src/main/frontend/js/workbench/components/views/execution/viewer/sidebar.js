@@ -12,15 +12,15 @@ import {
   Row,
 } from 'reactstrap';
 
-
 import {
-  Layer
+  FeaturePropertyViewer,
+  Layer,
 } from './';
 
 import {
-  removeFromMap,
   selectLayer,
-} from '../../../../ducks/ui/views/process-execution-viewer';
+  toggleLayer,
+} from '../../../../ducks/ui/views/process-designer';
 
 /**
  * A connected component for rendering execution selected files available to map
@@ -41,11 +41,11 @@ class Sidebar extends React.Component {
   renderLayer(layer) {
     return (
       <Layer
-        key={layer.id}
+        key={layer.tableName}
         layer={layer}
-        remove={this.props.removeFromMap}
+        toggle={this.props.toggleLayer}
         select={this.props.selectLayer}
-        selected={this.props.selectedLayer === layer.id}
+        selected={this.props.selectedLayer === layer.tableName}
       />
     );
   }
@@ -57,8 +57,8 @@ class Sidebar extends React.Component {
           <Col>
             <div className={
               classnames({
-                "slipo-pd-sidebar-resource-list": true,
-                "slipo-pd-sidebar-resource-list-empty": (this.props.layers.length === 0),
+                "slipo-pd-sidebar-layer-list": true,
+                "slipo-pd-sidebar-layer-list-empty": (this.props.layers.length === 0),
               })
             }>
               {this.props.layers.length > 0 &&
@@ -70,6 +70,17 @@ class Sidebar extends React.Component {
             </div>
           </Col>
         </Row>
+        <Row>
+          <Col>
+            <div className="slipo-pd-sidebar-feature-list">
+              {this.props.selectedFeatures.length > 0 &&
+                <FeaturePropertyViewer
+                  features={this.props.selectedFeatures}
+                />
+              }
+            </div>
+          </Col>
+        </Row>
       </div >
     );
   }
@@ -77,13 +88,14 @@ class Sidebar extends React.Component {
 }
 
 const mapStateToProps = (state) => ({
-  layers: state.ui.views.execution.viewer.layers,
-  selectedLayer: state.ui.views.execution.viewer.selectedLayer,
+  layers: state.ui.views.process.designer.execution.layers,
+  selectedLayer: state.ui.views.process.designer.execution.selectedLayer,
+  selectedFeatures: state.ui.views.process.designer.execution.selectedFeatures,
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
-  removeFromMap,
   selectLayer,
+  toggleLayer,
 }, dispatch);
 
 const mergeProps = (stateProps, dispatchProps, ownProps) => {

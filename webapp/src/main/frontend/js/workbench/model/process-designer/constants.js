@@ -5,7 +5,7 @@ import {
   EnumResourceType,
   EnumTool,
   EnumInputType,
-} from './constants';
+} from './enum';
 
 /**
  * Default resource type icons
@@ -20,7 +20,7 @@ export const ResourceTypeIcons = {
  */
 export const DataSourceIcons = {
   [EnumDataSource.FILESYSTEM]: 'fa fa-file-code-o',
-  [EnumDataSource.EXTERNAL_URL]: 'fa fa-link',
+  [EnumDataSource.URL]: 'fa fa-link',
 };
 
 /*
@@ -28,7 +28,7 @@ export const DataSourceIcons = {
  */
 export const DataSourceTitles = {
   [EnumDataSource.FILESYSTEM]: 'File System',
-  [EnumDataSource.EXTERNAL_URL]: 'External URL',
+  [EnumDataSource.URL]: 'External URL',
 };
 
 /**
@@ -45,17 +45,6 @@ export const HarvesterTitles = {
   [EnumHarvester.OSM]: 'OSM',
 };
 
-/*
- * Default tool titles
- */
-export const ToolTitles = {
-  [EnumTool.TripleGeo]: 'TripleGeo',
-  [EnumTool.LIMES]: 'LIMES',
-  [EnumTool.FAGI]: 'FAGI',
-  [EnumTool.DEER]: 'DEER',
-  [EnumTool.CATALOG]: 'Register Resource',
-};
-
 /**
  * Default tool icons
  */
@@ -65,6 +54,17 @@ export const ToolIcons = {
   [EnumTool.FAGI]: 'fa fa-object-ungroup',
   [EnumTool.DEER]: 'fa fa-tags',
   [EnumTool.CATALOG]: 'fa fa-book',
+};
+
+/*
+ * Default tool titles
+ */
+export const ToolTitles = {
+  [EnumTool.TripleGeo]: 'TripleGeo',
+  [EnumTool.LIMES]: 'LIMES',
+  [EnumTool.FAGI]: 'FAGI',
+  [EnumTool.DEER]: 'DEER',
+  [EnumTool.CATALOG]: 'Register Resource',
 };
 
 /**
@@ -79,17 +79,9 @@ export const ToolDefaultOperation = {
 };
 
 /**
- * Default process input type icons
- */
-export const ProcessInputIcons = {
-  [EnumInputType.CATALOG]: 'fa fa-book',
-  [EnumInputType.OUTPUT]: 'fa fa-cog',
-};
-
-/**
  * Static configuration of tool input requirements
  */
-export const ToolInput = {
+export const ToolInputRequirements = {
   [EnumTool.TripleGeo]: {
     source: 1,
     poi: 0,
@@ -120,4 +112,12 @@ export const ToolInput = {
     linked: 0,
     any: 1,
   }
+};
+
+/**
+ * Default process input type icons
+ */
+export const ProcessInputIcons = {
+  [EnumInputType.CATALOG]: 'fa fa-book',
+  [EnumInputType.OUTPUT]: 'fa fa-cog',
 };

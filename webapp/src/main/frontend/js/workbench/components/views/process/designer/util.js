@@ -1,6 +1,6 @@
 import {
-  EnumStepFileType
-} from './constants';
+  EnumStepFileType,
+} from '../../../../model/process-designer';
 
 export const stepFileTypeToText = (value) => {
   switch (value) {

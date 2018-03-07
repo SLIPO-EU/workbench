@@ -1,41 +1,47 @@
-const Redux = require('redux');
+import * as Redux from 'redux';
 
-import { config, i18n, meta, user } from './ducks';
-import { viewport, menu } from './ducks/ui/';
 import {
-  resourceRegistration,
-  resourceExplorer,
+  config,
+  i18n,
+  meta,
+  user
+} from './ducks';
+
+import {
+  menu,
+  viewport,
+} from './ducks/ui/';
+
+import {
   dashboardReducer,
-  processReducer,
-  processDesigner,
-  processConfigStep,
+  processDesignerReducer,
   processExecutionReducer,
-  processExecutionViewReducer,
+  processExplorerReducer,
+  resourceExplorerReducer,
+  resourceRegistrationReducer,
 } from './ducks/ui/views';
 
 module.exports = Redux.combineReducers({
   config,
   i18n,
   meta,
-  user,
   ui: Redux.combineReducers({
-    viewport,
     menu,
+    viewport,
     views: Redux.combineReducers({
       dashboard: dashboardReducer,
       resources: Redux.combineReducers({
-        registration: resourceRegistration,
-        explorer: resourceExplorer,
+        explorer: resourceExplorerReducer,
+        registration: resourceRegistrationReducer,
       }),
       process: Redux.combineReducers({
-        explorer: processReducer,
-        designer: processDesigner,
-        configuration: processConfigStep,
+        designer: processDesignerReducer,
+        explorer: processExplorerReducer,
       }),
       execution: Redux.combineReducers({
         explorer: processExecutionReducer,
-        viewer: processExecutionViewReducer,
       }),
     }),
   }),
+  user,
 });

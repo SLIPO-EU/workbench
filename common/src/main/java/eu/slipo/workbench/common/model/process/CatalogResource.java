@@ -1,7 +1,10 @@
 package eu.slipo.workbench.common.model.process;
 
+import java.util.UUID;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.vividsolutions.jts.geom.Geometry;
 
 import eu.slipo.workbench.common.model.poi.EnumResourceType;
 import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
@@ -17,19 +20,23 @@ public class CatalogResource extends ProcessInput
 
     private String description;
 
-    protected CatalogResource() 
+    private UUID tableName;
+
+    private Geometry boundingBox;
+
+    protected CatalogResource()
     {
         super(-1, EnumInputType.CATALOG, null);
     }
 
     protected CatalogResource(
-        int key, String name, EnumResourceType resourceType, ResourceIdentifier resourceIdentifier) 
+        int key, String name, EnumResourceType resourceType, ResourceIdentifier resourceIdentifier)
     {
         super(key, EnumInputType.CATALOG, name, resourceType);
         this.resource = new ResourceIdentifier(resourceIdentifier);
     }
-    
-    protected CatalogResource(int key, String name, ResourceIdentifier resourceIdentifier) 
+
+    protected CatalogResource(int key, String name, ResourceIdentifier resourceIdentifier)
     {
         super(key, EnumInputType.CATALOG, name);
         this.resource = new ResourceIdentifier(resourceIdentifier);
@@ -59,7 +66,7 @@ public class CatalogResource extends ProcessInput
     public String getDescription() {
         return description;
     }
-    
+
     @JsonProperty
     public void setDescription(String description)
     {
@@ -71,7 +78,23 @@ public class CatalogResource extends ProcessInput
     {
         return resource;
     }
-    
+
+    public UUID getTableName() {
+        return tableName;
+    }
+
+    public void setTableName(UUID tableName) {
+        this.tableName = tableName;
+    }
+
+    public Geometry getBoundingBox() {
+        return boundingBox;
+    }
+
+    public void setBoundingBox(Geometry boundingBox) {
+        this.boundingBox = boundingBox;
+    }
+
     @Override
     public String toString()
     {
