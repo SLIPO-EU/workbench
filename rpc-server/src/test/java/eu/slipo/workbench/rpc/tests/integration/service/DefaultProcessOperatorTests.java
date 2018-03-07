@@ -448,7 +448,7 @@ public class DefaultProcessOperatorTests
 
         do {
             Thread.sleep(POLL_INTERVAL);
-            logger.debug("Polling execution of process {}@{}", id, version);
+            logger.debug("Polling execution status for process #{}", id);
             executionRecord = processOperator.poll(id, version);
             assertEquals(executionId, executionRecord.getId());
             assertNotNull(executionRecord.getStartedOn());

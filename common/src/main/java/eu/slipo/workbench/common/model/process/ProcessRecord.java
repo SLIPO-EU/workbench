@@ -176,8 +176,7 @@ public class ProcessRecord
     public String toString()
     {
         return String.format(
-            "ProcessRecord [id=%s, version=%s, createdOn=%s, updatedOn=%s, name=%s]",
-            id, version, createdOn, updatedOn, name);
+            "ProcessRecord [id=%s, version=%s, name=%s]", id, version, name);
     }
 
 

@@ -803,7 +803,8 @@ public class DefaultProcessOperator implements ProcessOperator
             } catch (ProcessExecutionNotFoundException ex1) {
                throw new IllegalStateException("Expected to find the execution just created!");
             }
-            throw new ProcessExecutionStartException("Failed to start workflow", ex);
+            throw new ProcessExecutionStartException(
+                String.format("Failed to start workflow (%s)", ex.getMessage()), ex);
         }
 
         // Update status for process execution entity
