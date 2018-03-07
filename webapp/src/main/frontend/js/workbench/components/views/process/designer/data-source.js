@@ -8,7 +8,7 @@ import {
   EnumDataSource,
   EnumDragSource,
   EnumHarvester,
-} from './constants';
+} from '../../../../model/process-designer';
 
 /**
  * Drag source specification

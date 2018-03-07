@@ -8,7 +8,7 @@ import {
   EnumTool,
   EnumOperation,
   EnumDragSource,
-} from './constants';
+} from '../../../../model/process-designer';
 
 /**
  * Drag source specification

@@ -16,6 +16,14 @@ import {
 } from 'reactstrap';
 
 import {
+  EnumSelection,
+  EnumInputType,
+  EnumResourceType,
+  ProcessInputIcons,
+  ResourceTypeIcons
+} from '../../../../model/process-designer';
+
+import {
   filterResource,
   filteredResources,
   removeResourceFromBag,
@@ -23,17 +31,6 @@ import {
   processValidate,
   processUpdate,
 } from '../../../../ducks/ui/views/process-designer';
-
-import {
-  ProcessInputIcons,
-  ResourceTypeIcons
-} from './config';
-
-import {
-  EnumSelection,
-  EnumInputType,
-  EnumResourceType
-} from './constants';
 
 import ProcessInput from './process-input';
 import PropertyViewer from './property-viewer';
@@ -72,7 +69,6 @@ const filters = [{
  * @extends {React.Component}
  */
 class Sidebar extends React.Component {
-
 
   getSelectedStepItem() {
     const step = this.props.steps.find((step) => {
@@ -224,7 +220,7 @@ const mapStateToProps = (state) => ({
   resources: filteredResources(state.ui.views.process.designer),
   filters: state.ui.views.process.designer.filters,
   // Execution properties
-  execution: state.ui.views.execution.viewer.execution,
+  execution: state.ui.views.process.designer.execution.data,
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({

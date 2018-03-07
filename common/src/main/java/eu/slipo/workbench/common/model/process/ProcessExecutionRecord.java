@@ -12,7 +12,7 @@ import com.vividsolutions.jts.util.Assert;
 
 import eu.slipo.workbench.common.model.user.AccountInfo;
 
-public class ProcessExecutionRecord 
+public class ProcessExecutionRecord
 {
     private long id = -1L;
 
@@ -29,6 +29,8 @@ public class ProcessExecutionRecord
     private ZonedDateTime completedOn;
 
     private EnumProcessExecutionStatus status;
+
+    private EnumProcessTaskType taskType;
 
     private String errorMessage;
 
@@ -52,13 +54,13 @@ public class ProcessExecutionRecord
     {
         this(record, true);
     }
-    
+
     /**
      * Create a new {@link ProcessExecutionRecord} by copying another record.
-     * 
+     *
      * @param record The record to copy from
      * @param copyDeep A flag to indicate if we should deep copy the step records
-     *   from source record.  
+     *   from source record.
      */
     public ProcessExecutionRecord(ProcessExecutionRecord record, boolean copyDeep)
     {
@@ -66,10 +68,11 @@ public class ProcessExecutionRecord
         this.name = record.name;
         this.submittedBy = record.submittedBy;
         this.submittedOn = record.startedOn;
-        this.process = record.process; 
+        this.process = record.process;
         this.startedOn = record.startedOn;
         this.completedOn = record.completedOn;
         this.status = record.status;
+        this.taskType = record.getTaskType();
         this.errorMessage = record.errorMessage;
         this.steps = copyDeep?
             (record.steps.stream()
@@ -77,7 +80,7 @@ public class ProcessExecutionRecord
                 .collect(Collectors.toList())):
             (new ArrayList<>(record.steps));
     }
-    
+
     public String getName() {
         return name;
     }
@@ -130,6 +133,14 @@ public class ProcessExecutionRecord
         this.status = status;
     }
 
+    public EnumProcessTaskType getTaskType() {
+        return taskType;
+    }
+
+    public void setTaskType(EnumProcessTaskType taskType) {
+        this.taskType = taskType;
+    }
+
     public String getErrorMessage() {
         return errorMessage;
     }
@@ -159,27 +170,31 @@ public class ProcessExecutionRecord
         }
         this.steps.add(s);
     }
-    
+
     public ProcessExecutionStepRecord getStep(int stepKey)
     {
-        if (this.steps == null)
+        if (this.steps == null) {
             return null;
+        }
         for (ProcessExecutionStepRecord r: this.steps) {
-            if (r.getKey() == stepKey)
+            if (r.getKey() == stepKey) {
                 return r;
+            }
         }
         return null;
     }
-    
+
     public ProcessExecutionStepRecord getStep(String stepName)
     {
         Assert.isTrue(!StringUtils.isEmpty(stepName), "A non-empty name is required");
-        
-        if (this.steps == null)
+
+        if (this.steps == null) {
             return null;
+        }
         for (ProcessExecutionStepRecord r: this.steps) {
-            if (r.getName().equals(stepName))
+            if (r.getName().equals(stepName)) {
                 return r;
+            }
         }
         return null;
     }

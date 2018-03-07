@@ -4,6 +4,7 @@ import * as PropTypes from 'prop-types';
 import OpenLayersMap from 'ol/map';
 
 import Style from 'ol/style/style';
+import Text from 'ol/style/text';
 import Circle from 'ol/style/circle';
 import Stroke from 'ol/style/stroke';
 import Fill from 'ol/style/fill';
@@ -32,11 +33,14 @@ class WfsLayer extends React.Component {
 
   static propTypes = {
     map: PropTypes.instanceOf(OpenLayersMap),
+    index: PropTypes.number,
     url: PropTypes.string.isRequired,
     typename: PropTypes.string.isRequired,
     version: PropTypes.string,
     outputFormat: PropTypes.string,
     srsName: PropTypes.string,
+    icon: PropTypes.string,
+    color: PropTypes.string,
   }
 
   static defaultProps = {
@@ -61,6 +65,34 @@ class WfsLayer extends React.Component {
       .toString();
   }
 
+  buildStyle() {
+    if ((this.props.icon) && (this.props.color)) {
+
+      return new Style({
+        text: new Text({
+          text: this.props.icon,
+          font: 'normal 32px FontAwesome',
+          fill: new Fill({
+            color: this.props.color,
+          }),
+        }),
+      });
+    }
+
+    return new Style({
+      image: new Circle({
+        radius: 5,
+        fill: new Fill({
+          color: 'rgba(0, 0, 255, 0.4)'
+        }),
+        stroke: new Stroke({
+          color: 'rgba(0, 0, 255, 1.0)',
+          width: 1
+        })
+      })
+    });
+  }
+
   componentDidMount() {
     if (this.props.map) {
       const source = new VectorSource({
@@ -69,25 +101,14 @@ class WfsLayer extends React.Component {
         strategy: LoadingStrategy.bbox
       });
 
-      const style = new Style({
-        image: new Circle({
-          radius: 5,
-          fill: new Fill({
-            color: 'rgba(0, 0, 255, 0.4)'
-          }),
-          stroke: new Stroke({
-            color: 'rgba(0, 0, 255, 1.0)',
-            width: 1
-          })
-        })
-      });
+      const style = this.buildStyle();
 
       this.layer = new VectorLayer({
         source,
         style,
       });
 
-      this.props.map.addLayer(this.layer);
+      this.props.map.getLayers().insertAt(this.props.index, this.layer);
     }
   }
 

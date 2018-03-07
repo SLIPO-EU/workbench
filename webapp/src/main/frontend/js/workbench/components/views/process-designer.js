@@ -6,11 +6,7 @@ import {
 } from 'redux';
 
 import {
-  FormattedTime
-} from 'react-intl';
-
-import {
-  toast
+  toast,
 } from 'react-toastify';
 
 import {
@@ -28,10 +24,17 @@ import {
 
 import {
   DynamicRoutes,
-  EnumProcessSaveAction,
   StaticRoutes,
   buildPath,
 } from '../../model';
+
+import {
+  EnumDesignerMode,
+  EnumDesignerSaveAction,
+  EnumDesignerView,
+  EnumHarvester,
+  EnumSelection,
+} from '../../model/process-designer';
 
 import {
   Dialog,
@@ -41,12 +44,6 @@ import {
 import {
   DataSourceConfig,
   Designer,
-  EnumMode,
-  EnumHarvester,
-  EnumOperation,
-  EnumSelection,
-  EnumTool,
-  EnumViews,
   Operation,
   StepConfig,
   Toolbox,
@@ -54,13 +51,15 @@ import {
 
 import {
   Execution,
-  StepExecutionFileBrowser,
+  ExecutionStepDetails,
 } from './execution/viewer';
 
 import {
-  reset as resetProcess,
+  reset,
   fetchProcess,
   fetchProcessRevision,
+  fetchExecutionDetails,
+  fetchExecutionKpiData,
   save,
   addStep,
   removeStep,
@@ -86,18 +85,12 @@ import {
   setActiveResource,
   undo,
   redo,
-  openStepFileBrowser,
-  closeStepFileBrowser,
-} from '../../ducks/ui/views/process-designer';
-
-import {
-  fetchExecutionDetails,
-  fetchExecutionKpiData,
-  reset as resetExecution,
+  showStepExecutionDetails,
+  hideStepExecutionDetails,
   resetSelectedFile,
   resetSelectedKpi,
   selectFile,
-} from '../../ducks/ui/views/process-execution-viewer';
+} from '../../ducks/ui/views/process-designer';
 
 /**
  * Component actions
@@ -139,35 +132,37 @@ class ProcessDesigner extends React.Component {
     this.viewMap = this.viewMap.bind(this);
   }
 
-  resolveAction() {
+  resolveMode() {
     const { id, version, execution, ...rest } = this.props.match.params;
 
     if (id && version && execution) {
-      return EnumMode.EXECUTION;
+      return EnumDesignerMode.EXECUTION;
     }
     if (id && version) {
-      return EnumMode.VIEW;
+      return EnumDesignerMode.VIEW;
     }
     if (id) {
-      return EnumMode.EDIT;
+      return EnumDesignerMode.EDIT;
     }
 
-    return EnumMode.CREATE;
+    return EnumDesignerMode.CREATE;
   }
 
   componentDidMount() {
     const { id, version, execution, ...rest } = this.props.match.params;
 
-    const action = this.resolveAction();
+    const action = this.resolveMode();
 
     switch (action) {
-      case EnumMode.CREATE:
-        this.reset();
+      case EnumDesignerMode.CREATE:
+        if (this.shouldReload(id, version)) {
+          this.reset();
+        }
         this.select();
         this.resume();
         break;
 
-      case EnumMode.EDIT:
+      case EnumDesignerMode.EDIT:
         if (this.shouldReload(id, version)) {
           this.reset();
           this.props.fetchProcess(Number.parseInt(id))
@@ -176,19 +171,16 @@ class ProcessDesigner extends React.Component {
         }
         break;
 
-      case EnumMode.VIEW:
+      case EnumDesignerMode.VIEW:
         this.reset();
         this.props.fetchProcessRevision(Number.parseInt(id), Number.parseInt(version))
           .then(this.onFetchSuccess)
           .catch(this.onFetchError);
         break;
 
-      case EnumMode.EXECUTION:
+      case EnumDesignerMode.EXECUTION:
         this.reset();
-        this.props.fetchProcessRevision(Number.parseInt(id), Number.parseInt(version))
-          .then(() => {
-            return this.props.fetchExecutionDetails(Number.parseInt(id), Number.parseInt(version), Number.parseInt(execution));
-          })
+        this.props.fetchExecutionDetails(Number.parseInt(id), Number.parseInt(version), Number.parseInt(execution))
           .then(this.onFetchSuccess)
           .catch(this.onFetchError);
         break;
@@ -199,6 +191,9 @@ class ProcessDesigner extends React.Component {
   }
 
   shouldReload(id, version) {
+    id = id || null;
+    version = version || null;
+
     return ((this.props.process.id !== id) || (this.props.process.version !== version));
   }
 
@@ -230,11 +225,11 @@ class ProcessDesigner extends React.Component {
   mapToSaveAction(action) {
     switch (action) {
       case EnumComponentAction.Save:
-        return EnumProcessSaveAction.Save;
+        return EnumDesignerSaveAction.Save;
       case EnumComponentAction.SaveAndExecute:
-        return EnumProcessSaveAction.SaveAndExecute;
+        return EnumDesignerSaveAction.SaveAndExecute;
       case EnumComponentAction.SaveAsTemplate:
-        return EnumProcessSaveAction.SaveAsTemplate;
+        return EnumDesignerSaveAction.SaveAsTemplate;
     }
     return null;
   }
@@ -258,8 +253,7 @@ class ProcessDesigner extends React.Component {
       e.stopPropagation();
     }
 
-    this.props.resetProcess();
-    this.props.resetExecution();
+    this.props.reset();
   }
 
   select() {
@@ -366,7 +360,7 @@ class ProcessDesigner extends React.Component {
                   resources={this.props.resources}
                   addStep={this.props.addStep}
                   configureStepBegin={this.props.configureStepBegin}
-                  openStepFileBrowser={this.props.openStepFileBrowser}
+                  showStepExecutionDetails={this.props.showStepExecutionDetails}
                   removeStep={this.props.removeStep}
                   moveStep={this.props.moveStep}
                   setStepProperty={this.props.setStepProperty}
@@ -419,7 +413,7 @@ class ProcessDesigner extends React.Component {
     );
   }
 
-  renderStepFileBrowser() {
+  renderStepExecutionDetails() {
     const { active, steps, execution, ...rest } = this.props;
 
     if ((!active) || (active.type !== EnumSelection.Step)) {
@@ -430,8 +424,8 @@ class ProcessDesigner extends React.Component {
     const files = (step ? step.files : []);
 
     return (
-      <StepExecutionFileBrowser
-        closeStepFileBrowser={this.props.closeStepFileBrowser}
+      <ExecutionStepDetails
+        hideStepExecutionDetails={this.props.hideStepExecutionDetails}
         files={files}
         resetSelectedFile={this.props.resetSelectedFile}
         resetSelectedKpi={this.props.resetSelectedKpi}
@@ -482,10 +476,10 @@ class ProcessDesigner extends React.Component {
       <div className="animated fadeIn">
         <Row>
           <Col>
-            {this.props.view.type === EnumViews.Designer && this.renderDesigner()}
-            {this.props.view.type === EnumViews.StepConfiguration && this.renderStepConfiguration()}
-            {this.props.view.type === EnumViews.DataSourceConfiguration && this.renderDataSourceConfiguration()}
-            {this.props.view.type === EnumViews.StepExecutionFileBrowser && this.renderStepFileBrowser()}
+            {this.props.view.type === EnumDesignerView.Designer && this.renderDesigner()}
+            {this.props.view.type === EnumDesignerView.StepConfiguration && this.renderStepConfiguration()}
+            {this.props.view.type === EnumDesignerView.DataSourceConfiguration && this.renderDataSourceConfiguration()}
+            {this.props.view.type === EnumDesignerView.StepExecution && this.renderStepExecutionDetails()}
           </Col>
         </Row>
         {this.state.cancelDialogOpen &&
@@ -510,14 +504,14 @@ const mapStateToProps = (state) => ({
   undo: state.ui.views.process.designer.undo,
   view: state.ui.views.process.designer.view,
   // Execution viewer
-  execution: state.ui.views.execution.viewer.execution,
-  selectedExecutionFile: state.ui.views.execution.viewer.selectedFile,
-  selectedKpi: state.ui.views.execution.viewer.selectedKpi,
+  execution: state.ui.views.process.designer.execution.data,
+  selectedExecutionFile: state.ui.views.process.designer.execution.selectedFile,
+  selectedKpi: state.ui.views.process.designer.execution.selectedKpi,
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
   // Workflow designer
-  resetProcess,
+  reset,
   fetchProcess,
   fetchProcessRevision,
   save,
@@ -545,12 +539,11 @@ const mapDispatchToProps = (dispatch) => bindActionCreators({
   setActiveResource,
   undoAction: undo,
   redoAction: redo,
-  openStepFileBrowser,
-  closeStepFileBrowser,
+  showStepExecutionDetails,
+  hideStepExecutionDetails,
   // Execution viewer
   fetchExecutionDetails,
   fetchExecutionKpiData,
-  resetExecution,
   resetSelectedFile,
   resetSelectedKpi,
   selectFile,

@@ -40,20 +40,20 @@ class Dashboard extends React.Component {
 
     return (
       <div className="animated fadeIn">
-        <div className="row">
-          <div className="col-sm-12 col-md-6 col-lg-3">
+        <Row>
+          <Col className="col-sm-12 col-md-6 col-lg-3">
             <Card {...CardConfig.ResourceCardConfig(this.props.stats.resources, this.props.intl)} />
-          </div>
-          <div className="col-sm-12 col-md-6 col-lg-3">
+          </Col>
+          <Col className="col-sm-12 col-md-6 col-lg-3">
             <Card {...CardConfig.JobCardConfig(this.props.stats.processes, this.props.intl)} />
-          </div>
-          <div className="col-sm-12 col-md-6 col-lg-3">
+          </Col>
+          <Col className="col-sm-12 col-md-6 col-lg-3">
             <Card {...CardConfig.SystemCardConfig(this.props.stats.system)} />
-          </div>
-          <div className="col-sm-12 col-md-6 col-lg-3">
+          </Col>
+          <Col className="col-sm-12 col-md-6 col-lg-3">
             <Card {...CardConfig.EventCardConfig(this.props.stats.events, this.props.intl)} />
-          </div>
-        </div>
+          </Col>
+        </Row>
         <Row>
           <Col className="col-sm-12 col-md-12 col-lg-6">
             <DashboardCard

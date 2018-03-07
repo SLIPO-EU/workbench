@@ -3,6 +3,12 @@ import * as PropTypes from 'prop-types';
 
 import OpenLayersMap from 'ol/map';
 
+import Style from 'ol/style/style';
+import Text from 'ol/style/text';
+import Circle from 'ol/style/circle';
+import Stroke from 'ol/style/stroke';
+import Fill from 'ol/style/fill';
+
 import GeoJSON from 'ol/format/geojson';
 import Select from 'ol/interaction/select';
 
@@ -43,9 +49,36 @@ class SelectInteraction extends React.Component {
     }
   }
 
+
+  buildStyle() {
+    if (this.props.icon) {
+      return new Style({
+        text: new Text({
+          text: this.props.icon,
+          font: 'normal 32px FontAwesome',
+        }),
+      });
+    }
+
+    return new Style({
+      image: new Circle({
+        radius: 5,
+        fill: new Fill({
+          color: 'rgba(0, 0, 255, 0.4)'
+        }),
+        stroke: new Stroke({
+          color: 'rgba(0, 0, 255, 1.0)',
+          width: 1
+        })
+      })
+    });
+  }
+
   componentDidMount() {
     if (this.props.map) {
-      this.interaction = new Select();
+      this.interaction = new Select({
+        style: this.buildStyle(),
+      });
 
       this.parseFeatures(this.props.selected);
 

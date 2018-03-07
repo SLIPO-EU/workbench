@@ -17,8 +17,7 @@ import {
   EnumSelection,
   EnumInputType,
   EnumResourceType,
-  ToolIcons,
-} from './';
+} from '../../../../model/process-designer';
 
 import {
   JobStatus,

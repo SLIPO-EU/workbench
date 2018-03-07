@@ -21,6 +21,7 @@ class OsmLayer extends React.Component {
 
   static propTypes = {
     map: PropTypes.instanceOf(OpenLayersMap),
+    index: PropTypes.number,
     url: PropTypes.string,
   }
 
@@ -33,11 +34,10 @@ class OsmLayer extends React.Component {
       this.layer = new TileLayer({
         source: new OSM({
           url: this.props.url,
-        })
+        }),
       });
 
-
-      this.props.map.addLayer(this.layer);
+      this.props.map.getLayers().insertAt(this.props.index, this.layer);
     }
   }
 

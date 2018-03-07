@@ -11,7 +11,7 @@ import {
   EnumDragSource,
   EnumResourceType,
   EnumInputType,
-} from './constants';
+} from '../../../../model/process-designer';
 
 /**
  * Drag source specification

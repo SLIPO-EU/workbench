@@ -2,20 +2,16 @@ import * as React from 'react';
 import PropTypes from 'prop-types';
 import classnames from 'classnames';
 
-import {
-  stepFileTypeToText,
-  ToolIcons,
-} from '../../process/designer';
-
 class Layer extends React.Component {
 
   constructor(props) {
     super(props);
+
   }
 
   static propTypes = {
     layer: PropTypes.object.isRequired,
-    remove: PropTypes.func.isRequired,
+    toggle: PropTypes.func.isRequired,
     select: PropTypes.func.isRequired,
     selected: PropTypes.bool.isRequired,
   };
@@ -23,7 +19,13 @@ class Layer extends React.Component {
   select(e) {
     e.nativeEvent.stopImmediatePropagation();
 
-    this.props.select(this.props.layer.id);
+    this.props.select(this.props.layer.tableName);
+  }
+
+  toggle(e) {
+    e.nativeEvent.stopImmediatePropagation();
+
+    this.props.toggle(this.props.layer.tableName);
   }
 
   render() {
@@ -37,16 +39,19 @@ class Layer extends React.Component {
         }
         onClick={(e) => this.select(e)}
       >
-        <div className="slipo-ev-layer-actions">
-          <i className="slipo-ev-layer-delete fa fa-trash" onClick={() => { this.props.remove(this.props.layer.id); }}></i>
+        <div style={{ marginTop: '6px', float: 'left' }}>
+          {this.props.layer.hidden &&
+            <i className='fa fa-square-o slipo-layer-toggle' onClick={(e) => this.toggle(e)}></i>
+          }
+          {!this.props.layer.hidden &&
+            <i className='fa fa-check-square-o slipo-layer-toggle' onClick={(e) => this.toggle(e)}></i>
+          }
         </div>
-        <div className="slipo-ev-layer-icon">
-          <i className={ToolIcons[this.props.layer.tool]}></i>
+        <div style={{ marginTop: '8px', float: 'left' }}>
+          {this.props.layer.title}
         </div>
-        <div className="slipo-ev-layer-label">
-          <span>{`${this.props.layer.step} / ${stepFileTypeToText(this.props.layer.type)}`}</span>
-          <br />
-          <span>{this.props.layer.file}</span>
+        <div style={{ float: 'right', fontSize: '2em', padding: '5px' }}>
+          <i className={this.props.layer.iconClass} style={{ color: this.props.layer.color, float: 'right' }}></i>
         </div>
       </div>
     );

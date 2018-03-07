@@ -8,8 +8,9 @@ import {
   EnumInputType,
   EnumResourceType,
   EnumSelection,
-} from './constants';
-import { ToolInput } from './config';
+  ToolInputRequirements,
+} from '../../../../model/process-designer';
+
 import StepInput from './step-input';
 
 /**
@@ -19,7 +20,7 @@ import StepInput from './step-input';
  * @returns a plain JavaScript object
  */
 function getRequiredResources(step, resources) {
-  let { poi, linked, any } = ToolInput[step.tool];
+  let { poi, linked, any } = ToolInputRequirements[step.tool];
 
   let counters = resources.reduce((counters, resource) => {
     switch (resource.resourceType) {

@@ -20,7 +20,7 @@ import {
 import {
   EnumInputType,
   ResourceTypeIcons,
-} from '../../process/designer';
+} from '../../../../model/process-designer';
 
 import {
   Table

@@ -1,28 +1,25 @@
 import actions from './api/fetch-actions';
 
 import {
-  EnumProcessSaveAction,
-} from '../model';
+  EnumDesignerSaveAction,
+} from '../model/process-designer';
 
 import {
+  EnumDataFormat,
+  EnumDataSource,
   EnumInputType,
   EnumTool,
-  EnumDataSource,
-  EnumToolboxItem
-} from '../components/views/process/designer/constants';
-
-import {
+  EnumToolboxItem,
   DataSourceIcons,
   DataSourceTitles,
   ResourceTypeIcons,
   ToolIcons,
-} from '../components/views/process/designer/config';
+} from '../model/process-designer';
 
 function buildProcessRequest(action, designer) {
-  const allInputResources = designer.steps.reduce((agg, value) => {
-    return agg.concat(value.resources);
+  const allInputOutputResources = designer.steps.reduce((result, step) => {
+    return (step.outputKey ? result.concat(step.resources, [step.outputKey]) : result.concat(step.resources));
   }, []);
-
   const model = {
     action,
     definition: {
@@ -56,8 +53,8 @@ function buildProcessRequest(action, designer) {
               return null;
           }
         }).filter((r) => {
-          // Require resources only used in a step definition
-          return ((r !== null) && (allInputResources.includes(r.key)));
+          // Require input resources used in a step definition and output resources
+          return ((r !== null) && (allInputOutputResources.includes(r.key)));
         }),
       steps: designer.steps.map((s) => {
         return {
@@ -70,6 +67,7 @@ function buildProcessRequest(action, designer) {
           sources: buildDataSource(s),
           configuration: buildConfiguration(s),
           outputKey: s.outputKey,
+          EnumDataFormat: EnumDataFormat.N_TRIPLES,
         };
       }).filter((s) => {
         return (s.configuration !== null);
@@ -117,7 +115,7 @@ function buildDataSource(step) {
         }];
       }
       break;
-    case EnumDataSource.EXTERNAL_URL:
+    case EnumDataSource.URL:
       if (dataSource.configuration && dataSource.configuration.url) {
         return [{
           type: dataSource.source,
@@ -131,7 +129,6 @@ function buildDataSource(step) {
 
 function readProcessResponse(result) {
   const { id, version, definition } = result;
-
   return {
     ...definition,
     id,
@@ -149,6 +146,8 @@ function readProcessResponse(result) {
               id: r.resource.id,
               version: r.resource.version,
               description: r.description,
+              boundingBox: r.boundingBox,
+              tableName: r.tableName,
             };
           case EnumInputType.OUTPUT:
             return {
@@ -181,6 +180,7 @@ function readProcessResponse(result) {
         configuration: readConfiguration(s),
         errors: {},
         outputKey: s.outputKey,
+        outputFormat: EnumDataFormat.N_TRIPLES,
       };
     }),
   };
@@ -229,7 +229,7 @@ function readDataSource(step) {
         errors: {},
       }];
 
-    case EnumDataSource.EXTERNAL_URL:
+    case EnumDataSource.URL:
       return [{
         key: 0,
         type: EnumToolboxItem.DataSource,
@@ -276,7 +276,14 @@ export function fetchProcessExecutions(process, version, token) {
 }
 
 export function fetchExecutionDetails(process, version, execution, token) {
-  return actions.get(`/action/process/${process}/${version}/execution/${execution}`, token);
+  return actions
+    .get(`/action/process/${process}/${version}/execution/${execution}`, token)
+    .then((result) => {
+      return {
+        process: readProcessResponse(result.process),
+        execution: result.execution,
+      };
+    });
 }
 
 export function fetchExecutionKpiData(process, version, execution, file, token) {
@@ -299,25 +306,50 @@ export function fetchExecutionKpiData(process, version, execution, file, token) 
   });
 }
 
-export function validate(action, designer) {
-  if ((!designer.process.properties.name) || (!designer.process.properties.description)) {
-    return false;
+export function validate(action, model) {
+  const errors = [];
+  const { process, steps, resources, ...rest } = model;
+
+  // All input resources (exclude registered step output)
+  const allInputResources = steps.reduce((agg, value) =>
+    (value.tool === EnumTool.CATALOG ? agg : agg.concat(value.resources)), []);
+  // All output resources that are not used as an input
+  const stepOutputResources = steps.reduce((agg, value) =>
+    (((value.outputKey) && (allInputResources.indexOf(value.outputKey) === -1)) ? agg.concat([value.outputKey]) : agg), []);
+
+  // Properties
+  if ((!process.properties.name) || (!process.properties.description)) {
+    errors.push({ code: 1, text: 'One or more workflow properties are missing' });
   }
-  if (designer.steps.length === 0) {
-    return false;
-  } else {
-    if (designer.steps.find((s) => s.configuration === null)) {
-      return false;
+  // Steps
+  if (steps.length === 0) {
+    errors.push({ code: 1, text: 'At least a single step is required' });
+  }
+  steps.forEach((s) => {
+    if (s.configuration === null) {
+      errors.push({ code: 1, text: `Configuration for step ${s.name} is not set` });
+    } else if (Object.keys(s.errors).length !== 0) {
+      errors.push({ code: 1, text: `Configuration for step ${s.name} is not valid` });
     }
+
+    s.dataSources.forEach((ds) => {
+      if (ds.configuration === null) {
+        errors.push({ code: 1, text: `Configuration for step ${s.name} data source is not set` });
+      } else if (Object.keys(ds.errors).length !== 0) {
+        errors.push({ code: 1, text: `Configuration for step ${s.name} data source is not valid` });
+      }
+    });
+  });
+  // Output
+  if (stepOutputResources.length !== 1) {
+    errors.push({ code: 1, text: 'A workflow must generate a single output' });
   }
-  if (designer.resources.length === 0) {
-    return false;
-  }
-  return true;
+  console.log(errors);
+  return errors;
 }
 
 export function save(action, designer, token) {
-  const id = (action === EnumProcessSaveAction.SaveAsTemplate ? null : designer.process.id);
+  const id = (action === EnumDesignerSaveAction.SaveAsTemplate ? null : designer.process.id);
   const data = buildProcessRequest(action, designer);
 
   if (id) {

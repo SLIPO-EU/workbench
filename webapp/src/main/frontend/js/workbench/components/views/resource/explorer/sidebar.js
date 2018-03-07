@@ -6,21 +6,19 @@ import {
   ButtonToolbar, Button, ButtonGroup, Label, Input
 } from 'reactstrap';
 import {
+  EnumSelection,
+  EnumInputType,
+  EnumResourceType,
+  ProcessInputIcons,
+  ResourceTypeIcons
+} from '../../../../model/process-designer';
+import {
   filterResource,
   filteredResources,
   removeResourceFromBag,
   setActiveResource,
 } from '../../../../ducks/ui/views/process-designer';
 import classnames from 'classnames';
-import {
-  ProcessInputIcons,
-  ResourceTypeIcons
-} from '../../process/designer/config';
-import {
-  EnumSelection,
-  EnumInputType,
-  EnumResourceType
-} from '../../process/designer/constants';
 import ProcessInput from '../../process/designer/process-input';
 
 /**

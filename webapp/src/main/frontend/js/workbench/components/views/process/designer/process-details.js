@@ -3,10 +3,9 @@ import PropTypes from 'prop-types';
 import * as ReactRedux from 'react-redux';
 import { FormattedTime } from 'react-intl';
 import {
-  EnumSelection,
   EnumInputType,
   EnumResourceType,
-} from './constants';
+} from '../../../../model/process-designer';
 import { Form } from '../../../helpers/forms';
 import * as process from './process-form';
 

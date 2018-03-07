@@ -9,14 +9,17 @@ import {
   EnumResourceType,
   EnumSelection,
   EnumTool,
-  StepDataSourceContainer,
-  StepInputContainer,
-  ToolInput,
-} from './';
+  ToolInputRequirements,
+} from '../../../../model/process-designer';
 
 import {
   JobStatus,
 } from '../../../helpers';
+
+import {
+  StepDataSourceContainer,
+  StepInputContainer,
+} from './';
 
 /**
  * Drag source specification
@@ -160,7 +163,7 @@ class Step extends React.Component {
     moveStep: PropTypes.func.isRequired,
     configureStepBegin: PropTypes.func.isRequired,
     setStepProperty: PropTypes.func.isRequired,
-    openStepFileBrowser: PropTypes.func.isRequired,
+    showStepExecutionDetails: PropTypes.func.isRequired,
 
     addStepInput: PropTypes.func.isRequired,
     removeStepInput: PropTypes.func.isRequired,
@@ -190,7 +193,7 @@ class Step extends React.Component {
    */
   isInputMissing() {
     const step = this.props.step;
-    const { source, poi, linked, any } = ToolInput[step.tool];
+    const { source, poi, linked, any } = ToolInputRequirements[step.tool];
 
     const counters = this.props.resources.reduce((counters, resource) => {
       switch (resource.resourceType) {
@@ -268,16 +271,16 @@ class Step extends React.Component {
   }
 
   /**
-   * Shows files for the current step
+   * Shows details for the current step
    *
    * @param {any} e
    * @memberof Step
    */
-  viewFiles(e) {
+  viewDetails(e) {
     e.stopPropagation();
 
     this.props.setActiveStep(this.props.step);
-    this.props.openStepFileBrowser();
+    this.props.showStepExecutionDetails();
   }
 
   /**
@@ -370,7 +373,7 @@ class Step extends React.Component {
             {this.props.readOnly ?
               <div className="slipo-pd-step-actions">
                 {this.props.stepExecution && this.props.stepExecution.files && this.props.stepExecution.files.length !== 0 &&
-                  <i className="slipo-pd-step-action slipo-pd-step-config fa fa-folder-open" onClick={(e) => { this.viewFiles(e); }}></i>
+                  <i className="slipo-pd-step-action slipo-pd-step-config fa fa-folder-open" onClick={(e) => { this.viewDetails(e); }}></i>
                 }
                 <i className="slipo-pd-step-action slipo-pd-step-config fa fa-wrench" onClick={(e) => { this.configure(e); }}></i>
               </div>

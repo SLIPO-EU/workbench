@@ -9,21 +9,6 @@ import {
   Row,
 } from 'reactstrap';
 
-import {
-  Table,
-} from '../../../helpers';
-
-export const PropertyGridColumns = [{
-  Header: 'Property',
-  accessor: 'key',
-  headerStyle: { 'textAlign': 'left' },
-}, {
-  Header: 'Value',
-  accessor: 'value',
-  headerStyle: { 'textAlign': 'center' },
-  style: { 'textAlign': 'center' },
-}];
-
 class FeaturePropertyViewer extends React.Component {
 
   constructor(props) {
@@ -37,31 +22,29 @@ class FeaturePropertyViewer extends React.Component {
   renderFeature(feature, index) {
     const properties = feature.getProperties();
     const keys = Object.keys(properties).filter((k) => k !== feature.getGeometryName());
-    //map((k) => ({ key: k, value: properties[k] }));
-    return (
-      <div class="col-sm-6 col-lg-4" key={index}>
-        <Card>
-          <CardHeader>
-            <i className="fa fa-map-marker"></i>
-            <span>{`Feature ${index + 1}`}</span>
-          </CardHeader>
-          <CardBody>
-            <Row>
-              {
-                keys.map((key) => {
-                  return (
 
-                    <div class="col-sm-6 col-md-4" key={key}>
-                      <div className="font-weight-bold mb-2">{key}</div>
-                      <div className="font-weight-italic">{properties[key]}</div>
-                    </div>
-                  );
-                })
-              }
-            </Row>
-          </CardBody>
-        </Card>
-      </div >
+    return (
+      <Card key={index}>
+        <CardHeader>
+          <i className="fa fa-map-marker"></i>
+          <span>{`Feature ${index + 1}`}</span>
+        </CardHeader>
+        <CardBody>
+          <Row>
+            {
+              keys.map((key) => {
+                return (
+
+                  <Col key={key}>
+                    <div className="font-weight-bold mb-2">{key}</div>
+                    <div className="font-weight-italic">{properties[key]}</div>
+                  </Col>
+                );
+              })
+            }
+          </Row>
+        </CardBody>
+      </Card>
     );
   }
 
@@ -71,7 +54,7 @@ class FeaturePropertyViewer extends React.Component {
     }
 
     return (
-      <div class="row">
+      <div>
         {this.props.features.map(this.renderFeature)}
       </div>
     );
