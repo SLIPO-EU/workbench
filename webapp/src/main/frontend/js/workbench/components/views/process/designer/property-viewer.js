@@ -129,7 +129,9 @@ class PropertyViewer extends React.Component {
           <Row className="mb-2">
             <Col>
               <div className="form-control-label mb-2">Error message</div>
-              {execution.errorMessage}
+              <div className="font-weight-bold">
+                {execution.errorMessage}
+              </div>
             </Col>
           </Row>
         }

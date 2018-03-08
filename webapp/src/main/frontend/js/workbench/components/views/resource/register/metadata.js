@@ -1,15 +1,6 @@
 import React from 'react';
 import { SelectField, TextField } from '../../../helpers/forms/form-fields/';
 
-const supportedFiles = [
-  { value: 'SHAPEFILE' },
-  { value: 'CSV' },
-  { value: 'GPX' },
-  { value: 'GEOJSON' },
-  { value: 'XML' },
-  { value: 'OSM' },
-];
-
 export const initialValue = {
   name: '',
   description: '',

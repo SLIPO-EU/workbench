@@ -12,7 +12,6 @@ const inputFormats = [
   { value: 'GEOJSON', label: 'GEOJSON' },
   { value: 'OSM', label: 'OSM' },
   { value: 'SHAPEFILE', label: 'SHAPEFILE' },
-  { value: 'XML', label: 'XML' },
 ];
 
 const modes = [
@@ -112,7 +111,7 @@ export const Component = (props) => {
         help="File (in YML or CSV format) containing classification hierarchy of categories"
       /> */}
 
-      <div>
+      {/* <div>
         <h4>Output parameters</h4>
         <hr />
       </div>
@@ -131,7 +130,7 @@ export const Component = (props) => {
         label="Ontology Type"
         help="Specify the type of the spatial ontology where the exported data will refer to"
         options={ontologies}
-      />
+      /> */}
 
       <div>
         <h4>Data parameters</h4>

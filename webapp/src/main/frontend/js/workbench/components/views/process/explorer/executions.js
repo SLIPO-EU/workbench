@@ -57,19 +57,19 @@ const processExecutionsColumns = [{
 }, {
   Header: 'Started',
   id: 'startedOn',
-  accessor: r => <FormattedTime value={r.startedOn} day='numeric' month='numeric' year='numeric' />,
+  accessor: r => (r.startedOn ? <FormattedTime value={r.startedOn} day='numeric' month='numeric' year='numeric' /> : '-'),
   headerStyle: { 'textAlign': 'center' },
   style: { 'textAlign': 'center' },
 }, {
   Header: 'End',
   id: 'completedOn',
-  accessor: r => <FormattedTime value={r.completedOn} day='numeric' month='numeric' year='numeric' />,
+  accessor: r => (r.completedOn ? <FormattedTime value={r.completedOn} day='numeric' month='numeric' year='numeric' /> : '-'),
   headerStyle: { 'textAlign': 'center' },
   style: { 'textAlign': 'center' },
 }, {
   Header: 'Duration',
   id: 'dur',
-  accessor: r => moment.duration(r.startedOn - r.completedOn).humanize(),
+  accessor: r => (r.startedOn && r.completedOn ? moment.duration(r.startedOn - r.completedOn).humanize() : '-'),
   headerStyle: { 'textAlign': 'center' },
   style: { 'textAlign': 'center' },
 }];
