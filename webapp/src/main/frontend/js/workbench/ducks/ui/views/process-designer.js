@@ -1,10 +1,12 @@
 import _ from 'lodash';
+import * as processService from '../../../service/process';
 
 import {
   EnumInputType,
   EnumResourceType,
   EnumTool,
   EnumDesignerView,
+  EnumDesignerSaveAction,
 } from '../../../model/process-designer';
 
 /*
@@ -64,6 +66,8 @@ const initialState = {
   filters: {
     resource: null,
   },
+  // Errors
+  errors: [],
 };
 
 /*
@@ -117,6 +121,9 @@ import {
 export default (state = initialState, action) => {
   let newState = state;
 
+  let requireValidation = false;
+  let supportUndo = false;
+
   switch (action.type) {
     case Types.LOGOUT:
     case Types.RESET:
@@ -142,14 +149,23 @@ export default (state = initialState, action) => {
       };
 
     case Types.ADD_STEP:
+      requireValidation = true;
+      supportUndo = true;
+
       newState = addStepReducer(state, action);
       break;
 
     case Types.SET_STEP_PROPERTY:
+      requireValidation = true;
+      supportUndo = true;
+
       newState = setStepPropertyReducer(state, action);
       break;
 
     case Types.REMOVE_STEP:
+      requireValidation = true;
+      supportUndo = true;
+
       newState = {
         ...state,
         groups: groupReducer(state.groups, action),
@@ -173,7 +189,9 @@ export default (state = initialState, action) => {
       };
 
     case Types.CONFIGURE_STEP_UPDATE:
-      return {
+      requireValidation = true;
+
+      newState = {
         ...state,
         view: {
           ...state.view,
@@ -183,15 +201,19 @@ export default (state = initialState, action) => {
           }
         }
       };
+      break;
 
     case Types.CONFIGURE_STEP_VALIDATE:
-      return {
+      requireValidation = true;
+
+      newState = {
         ...state,
         view: {
           ...state.view,
           errors: { ...action.errors },
         }
       };
+      break;
 
     case Types.CONFIGURE_STEP_END:
       if (!action.configuration) {
@@ -202,6 +224,9 @@ export default (state = initialState, action) => {
           },
         };
       }
+
+      requireValidation = true;
+      supportUndo = true;
 
       newState = {
         ...state,
@@ -223,6 +248,9 @@ export default (state = initialState, action) => {
 
     case Types.ADD_STEP_INPUT:
     case Types.REMOVE_STEP_INPUT:
+      requireValidation = true;
+      supportUndo = true;
+
       newState = {
         ...state,
         steps: stepReducer(state.steps, action),
@@ -231,6 +259,9 @@ export default (state = initialState, action) => {
 
     case Types.ADD_STEP_DATA_SOURCE:
     case Types.REMOVE_STEP_DATA_SOURCE:
+      requireValidation = true;
+      supportUndo = true;
+
       newState = {
         ...state,
         steps: stepReducer(state.steps, action),
@@ -250,7 +281,9 @@ export default (state = initialState, action) => {
       };
 
     case Types.CONFIGURE_DATA_SOURCE_UPDATE:
-      return {
+      requireValidation = true;
+
+      newState = {
         ...state,
         view: {
           ...state.view,
@@ -260,15 +293,19 @@ export default (state = initialState, action) => {
           }
         }
       };
+      break;
 
     case Types.CONFIGURE_DATA_SOURCE_VALIDATE:
-      return {
+      requireValidation = true;
+
+      newState = {
         ...state,
         view: {
           ...state.view,
           errors: { ...action.errors },
         }
       };
+      break;
 
     case Types.CONFIGURE_DATA_SOURCE_END:
       if (!action.configuration) {
@@ -279,6 +316,9 @@ export default (state = initialState, action) => {
           },
         };
       }
+
+      requireValidation = true;
+      supportUndo = true;
 
       newState = {
         ...state,
@@ -307,16 +347,21 @@ export default (state = initialState, action) => {
       break;
 
     case Types.PROCESS_VALIDATE:
-      return {
+      requireValidation = true;
+
+      newState = {
         ...state,
         process: {
           ...state.process,
           errors: { ...action.errors },
         },
       };
+      break;
 
     case Types.PROCESS_UPDATE:
-      return {
+      requireValidation = true;
+
+      newState = {
         ...state,
         process: {
           ...state.process,
@@ -325,12 +370,18 @@ export default (state = initialState, action) => {
           },
         },
       };
+      break;
 
     case Types.ADD_RESOURCE_TO_BAG:
+      supportUndo = true;
+
       newState = addResourceToBagReducer(state, action);
       break;
 
     case Types.REMOVE_RESOURCE_FROM_BAG:
+      requireValidation = true;
+      supportUndo = true;
+
       newState = {
         ...state,
         active: activeReducer(state.active, action),
@@ -358,13 +409,22 @@ export default (state = initialState, action) => {
       };
 
     case Types.UNDO:
-      return undoReducer(state, action);
+      requireValidation = true;
+
+      newState = undoReducer(state, action);
+      break;
 
     case Types.REDO:
-      return redoReducer(state, action);
+      requireValidation = true;
+
+      newState = redoReducer(state, action);
+      break;
 
     case Types.LOAD_RECEIVE_RESPONSE:
-      return processReducer(state, action);
+      requireValidation = true;
+
+      newState = processReducer(state, action);
+      break;
 
     case Types.SHOW_STEP_EXECUTION:
       return {
@@ -402,16 +462,21 @@ export default (state = initialState, action) => {
       return state;
   }
 
-
-  return {
-    ...newState,
-    undo: [...newState.undo, {
-      groups: newState.groups,
-      steps: newState.steps,
-      resources: newState.resources
-    }],
-    redo: [],
-  };
+  if (requireValidation) {
+    newState.errors = processService.validate(EnumDesignerSaveAction.None, newState);
+  }
+  if (supportUndo) {
+    return {
+      ...newState,
+      undo: [...newState.undo, {
+        groups: newState.groups,
+        steps: newState.steps,
+        resources: newState.resources
+      }],
+      redo: [],
+    };
+  }
+  return newState;
 };
 
 /*

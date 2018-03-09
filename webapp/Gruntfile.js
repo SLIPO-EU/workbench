@@ -164,6 +164,13 @@ module.exports = function (grunt) {
             src: 'css/*.css',
             dest: '<%= targetDir %>',
           },
+          {
+            expand: true,
+            filter: 'isFile',
+            cwd: 'node_modules',
+            src: 'ol/*.css',
+            dest: '<%= targetDir %>/css',
+          },
         ],
       },
       'vendor': {

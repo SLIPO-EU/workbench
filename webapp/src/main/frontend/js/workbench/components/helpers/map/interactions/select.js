@@ -24,12 +24,20 @@ class SelectInteraction extends React.Component {
     super(props);
 
     this.interaction = null;
+    this.styles = this.buildStyles();
   }
 
   static propTypes = {
     map: PropTypes.instanceOf(OpenLayersMap),
     onFeatureSelect: PropTypes.func,
     selected: PropTypes.object,
+    color: PropTypes.string,
+    width: PropTypes.number,
+  }
+
+  static defaultProps = {
+    width: 1,
+    color: '#0D47A1',
   }
 
   parseFeatures(selected) {
@@ -49,35 +57,84 @@ class SelectInteraction extends React.Component {
     }
   }
 
+  buildStyles() {
+    const image = new Circle({
+      radius: this.props.width + 3,
+      fill: new Fill({
+        color: this.props.color + '80',
+      }),
+      stroke: new Stroke({
+        color: this.props.color,
+        width: this.props.width,
+      }),
+    });
 
-  buildStyle() {
-    if (this.props.icon) {
-      return new Style({
-        text: new Text({
-          text: this.props.icon,
-          font: 'normal 32px FontAwesome',
-        }),
-      });
-    }
+    const stroke = new Stroke({
+      color: this.props.color,
+      width: this.props.width,
+    });
 
-    return new Style({
-      image: new Circle({
-        radius: 5,
-        fill: new Fill({
-          color: 'rgba(0, 0, 255, 0.4)'
-        }),
-        stroke: new Stroke({
-          color: 'rgba(0, 0, 255, 1.0)',
-          width: 1
-        })
-      })
+    const fill = new Fill({
+      color: this.props.color + '80',
+    });
+
+    const style = new Style({
+      fill,
+      stroke,
+    });
+
+    const styles = {
+      'Point': new Style({
+        image,
+      }),
+      'MultiPoint': new Style({
+        image,
+      }),
+      'LineString': style,
+      'MultiLineString': style,
+      'Polygon': style,
+      'MultiPolygon': style,
+    };
+
+    return styles;
+  }
+
+  buildStyleFunction() {
+    return ((feature) => {
+      const type = feature.getGeometry().getType();
+      const style = this.styles[type];
+      const image = (type === 'Point' ? style.getImage() : null);
+      const color = feature.get('__color') || this.props.color;
+
+      if (image) {
+        if (image.getFill()) {
+          image.getFill().setColor(color + '80');
+        }
+        if (image.getStroke()) {
+          image.getStroke().setColor(color);
+        }
+      } else {
+        if (style.getFill()) {
+          style.getFill().setColor(color + '80');
+        }
+        if (style.getStroke()) {
+          style.getStroke().setColor(color);
+        }
+      }
+
+      return style;
     });
   }
 
+
   componentDidMount() {
     if (this.props.map) {
+      const style = this.buildStyleFunction();
+
       this.interaction = new Select({
-        style: this.buildStyle(),
+        multi: this.props.multi,
+        hitTolerance: 5,
+        style,
       });
 
       this.parseFeatures(this.props.selected);

@@ -34,6 +34,7 @@ h3 {
 
 .app-footer {
   min-height: 51px;
+  z-index: 1;
 }
 
 .card-block .tab-content {
@@ -43,6 +44,14 @@ h3 {
 
 .nav-tabs .nav-item {
   cursor: pointer;
+}
+
+.sidebar {
+  z-index: 1;
+}
+
+.breadcrumb {
+  z-index: 1;
 }
 
 

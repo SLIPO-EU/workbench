@@ -307,7 +307,7 @@ class ProcessDesigner extends React.Component {
     return (
       <div onClick={this.select}>
         {!this.props.readOnly &&
-          <Card className="mb-2">
+          <Card className="mb-1">
             <CardBody className="card-body">
               <Row>
                 <Col>

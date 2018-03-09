@@ -1,3 +1,14 @@
 .slipo-map-container {
   margin-bottom: 10px;
 }
+
+.slipo-map-container-full-screen {
+  margin-bottom: 10px;
+  position: fixed;
+  left: 0px;
+  top: 0px;
+  height: 100% !important;
+  width: 100%;
+  padding: 96px 0px 50px 0px;
+  margin-left: -5px;
+}

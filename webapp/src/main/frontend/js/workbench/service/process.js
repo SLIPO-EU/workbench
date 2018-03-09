@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import actions from './api/fetch-actions';
 
 import {
@@ -329,22 +330,40 @@ export function validate(action, model) {
     if (s.configuration === null) {
       errors.push({ code: 1, text: `Configuration for step ${s.name} is not set` });
     } else if (Object.keys(s.errors).length !== 0) {
-      errors.push({ code: 1, text: `Configuration for step ${s.name} is not valid` });
+      errors.push({ code: 1, text: `Configuration for step ${s.name} is not valid`, items: { ...s.errors } });
     }
 
     s.dataSources.forEach((ds) => {
       if (ds.configuration === null) {
         errors.push({ code: 1, text: `Configuration for step ${s.name} data source is not set` });
       } else if (Object.keys(ds.errors).length !== 0) {
-        errors.push({ code: 1, text: `Configuration for step ${s.name} data source is not valid` });
+        errors.push({ code: 1, text: `Configuration for step ${s.name} data source is not valid`, items: { ...ds.errors } });
       }
     });
   });
+  const countStepWithoutName = steps.reduce((count, step) => {
+    return (step.name ? count : ++count);
+  }, 0);
+  if (countStepWithoutName > 0) {
+    errors.push({ code: 1, text: `The name of one or more steps is not set` });
+  }
+  _(steps)
+    .groupBy('name')
+    .map(function (steps, name) {
+      return { name, count: steps.length };
+    })
+    .value()
+    .forEach((r) => {
+      if (r.count > 1) {
+        errors.push({ code: 1, text: `Name ${r.name} is not unique.` });
+      }
+    });
+
   // Output
   if (stepOutputResources.length !== 1) {
     errors.push({ code: 1, text: 'A workflow must generate a single output' });
   }
-  console.log(errors);
+
   return errors;
 }
 

@@ -69,7 +69,7 @@ class ResourceExplorer extends React.Component {
   componentWillMount() {
     if (!this.props.items.length) {
       this.props.fetchResources({
-        query: {...this.props.filters},
+        query: { ...this.props.filters },
       });
     }
   }
@@ -154,7 +154,7 @@ class ResourceExplorer extends React.Component {
             <Card>
               <CardBody className="card-body">
                 <Row>
-                  <Col xs="6">
+                  <Col xs="6" className="slipo-map-container">
                     <OpenLayers.Map minZoom={5} maxZoom={15} zoom={9}>
                       <OpenLayers.Layers>
                         <OpenLayers.Layer.OSM
@@ -168,6 +168,9 @@ class ResourceExplorer extends React.Component {
                         <OpenLayers.Interaction.Select
                           onFeatureSelect={this.onFeatureSelect}
                           selected={this.props.selectedFeatures}
+                          color={'#0D47A1'}
+                          multi={false}
+                          width={1}
                         />
                       </OpenLayers.Interactions>
                     </OpenLayers.Map>

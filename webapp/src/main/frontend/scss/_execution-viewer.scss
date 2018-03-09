@@ -8,7 +8,7 @@ $slipo-ev-layer-color: #616161 !default;
  * Sidebar (layers)
  */
 
-.slipo-pd-sidebar-layer-list {
+.slipo-pd-sidebar-map-layer-list {
   display: flex;
   padding: 10px;
   flex-direction: column;
@@ -17,8 +17,12 @@ $slipo-ev-layer-color: #616161 !default;
   margin-right: -18px;
 }
 
-.slipo-pd-sidebar-layer-list-empty {
+.slipo-pd-sidebar-map-layer-list-empty {
   border: none;
+}
+
+.slipo-pd-sidebar-map-settings {
+  padding: 10px;
 }
 
 .slipo-pd-sidebar-feature-list {
