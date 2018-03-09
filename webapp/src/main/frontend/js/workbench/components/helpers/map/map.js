@@ -27,6 +27,7 @@ class Map extends React.Component {
     zoom: PropTypes.number,
     minZoom: PropTypes.number,
     maxZoom: PropTypes.number,
+    className: PropTypes.string,
   }
 
   static defaultProps = {
@@ -94,7 +95,7 @@ class Map extends React.Component {
     const map = this.state.map;
 
     return (
-      <div className="slipo-map-container" style={{ height: this.props.height || '600px' }} ref={(el) => { this._el = el; }}>
+      <div className={this.props.className || 'slipo-map-container'} style={{ height: this.props.height || '600px' }} ref={(el) => { this._el = el; }}>
         {map &&
           React.Children.map(children, (child, index) => {
             return React.cloneElement(child, {

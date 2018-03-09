@@ -5,13 +5,13 @@ import {
 } from '../../../../model/process-designer';
 
 const colors = [
-  '#1A237E',
   '#1B5E20',
-  '#FF6F00',
   '#B71C1C',
-  '#212121',
   '#607D8B',
+  '#FF6F00',
   '#9E9E9E',
+  '#1A237E',
+  '#212121',
 ];
 
 export function resourceToLayers(steps, resources, execution) {

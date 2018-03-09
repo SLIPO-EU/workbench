@@ -29,6 +29,7 @@ class WfsLayer extends React.Component {
     super(props);
 
     this.layer = null;
+    this.styles = this.buildStyles();
   }
 
   static propTypes = {
@@ -65,32 +66,50 @@ class WfsLayer extends React.Component {
       .toString();
   }
 
-  buildStyle() {
-    if ((this.props.icon) && (this.props.color)) {
-
-      return new Style({
-        text: new Text({
-          text: this.props.icon,
-          font: 'normal 32px FontAwesome',
-          fill: new Fill({
-            color: this.props.color,
-          }),
-        }),
-      });
-    }
-
-    return new Style({
-      image: new Circle({
-        radius: 5,
-        fill: new Fill({
-          color: 'rgba(0, 0, 255, 0.4)'
-        }),
-        stroke: new Stroke({
-          color: 'rgba(0, 0, 255, 1.0)',
-          width: 1
-        })
-      })
+  buildStyles() {
+    const image = new Circle({
+      radius: 5,
+      fill: new Fill({
+        color: this.props.color + '4D',
+      }),
+      stroke: new Stroke({
+        color: this.props.color,
+        width: 2
+      }),
     });
+
+    const stroke = new Stroke({
+      color: this.props.color,
+      width: 1
+    });
+
+    const fill = new Fill({
+      color: this.props.color + '4D',
+    });
+
+    const style = new Style({
+      fill,
+      stroke,
+    });
+
+    const styles = {
+      'Point': new Style({
+        image: image
+      }),
+      'MultiPoint': new Style({
+        image: image
+      }),
+      'LineString': style,
+      'MultiLineString': style,
+      'Polygon': style,
+      'MultiPolygon': style,
+    };
+
+    return styles;
+  }
+
+  buildStyleFunction() {
+    return ((feature) => (this.styles[feature.getGeometry().getType()] || this.styles['Point']));
   }
 
   componentDidMount() {
@@ -98,10 +117,16 @@ class WfsLayer extends React.Component {
       const source = new VectorSource({
         format: new GeoJSON(),
         url: this.buildRequest.bind(this),
-        strategy: LoadingStrategy.bbox
+        strategy: LoadingStrategy.bbox,
       });
 
-      const style = this.buildStyle();
+      source.on('addfeature', (e) => {
+        e.feature.set('__layer', this.props.typename, true);
+        e.feature.set('__color', this.props.color || null, true);
+        e.feature.set('__icon', this.props.icon || null, true);
+      }, this);
+
+      const style = this.buildStyleFunction();
 
       this.layer = new VectorLayer({
         source,

@@ -20,7 +20,7 @@ export const initializeExecution = () => ({
   data: null,
   lastUpdate: null,
   layers: [],
-  baseLayer: 'BingMaps',
+  baseLayer: 'BingMaps-Road',
   selectedFile: null,
   selectedKpi: null,
   selectedLayer: null,

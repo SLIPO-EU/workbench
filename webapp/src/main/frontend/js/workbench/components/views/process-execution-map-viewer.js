@@ -27,14 +27,8 @@ import {
 } from '../../components/helpers';
 
 import {
-  buildPath,
-  DynamicRoutes,
-} from '../../model';
-
-import {
   fetchExecutionDetails,
   reset,
-  setBaseLayer,
   selectFeatures,
 } from '../../ducks/ui/views/process-designer';
 
@@ -60,19 +54,6 @@ class ProcessExecutionMapViewer extends React.Component {
     this.onFetchError = this.onFetchError.bind(this);
     this.onFetchSuccess = this.onFetchSuccess.bind(this);
     this.onFeatureSelect = this.onFeatureSelect.bind(this);
-    this.viewExecution = this.viewExecution.bind(this);
-  }
-
-  get supportedBaseLayers() {
-    const baseLayers = [
-      { value: 'OSM', label: 'Open Street Maps' },
-    ];
-
-    if (this.props.bingMaps.applicationKey) {
-      baseLayers.push({ value: 'BingMaps', label: 'Bing Maps' });
-    }
-
-    return baseLayers;
   }
 
   get center() {
@@ -110,13 +91,6 @@ class ProcessExecutionMapViewer extends React.Component {
     this.props.selectFeatures(features);
   }
 
-  viewExecution() {
-    const { id, version, execution, ...rest } = this.props.match.params;
-    const path = buildPath(DynamicRoutes.ProcessExecutionViewer, [id, version, execution]);
-
-    this.props.history.push(path);
-  }
-
   error(message, goBack) {
     toast.dismiss();
 
@@ -141,13 +115,14 @@ class ProcessExecutionMapViewer extends React.Component {
           />
         );
         break;
-      case 'BingMaps':
+      case 'BingMaps-Road':
+      case 'BingMaps-Aerial':
         if (this.props.bingMaps.applicationKey) {
           layers.push(
             <OpenLayers.Layer.BingMaps
-              key="bing-maps"
+              key={this.props.baseLayer === 'BingMaps-Road' ? 'bing-maps-road' : 'bing-maps-aerial'}
               applicationKey={this.props.bingMaps.applicationKey}
-              imagerySet={this.props.bingMaps.imagerySet}
+              imagerySet={this.props.baseLayer === 'BingMaps-Road' ? 'Road' : 'Aerial'}
             />
           );
         }
@@ -178,56 +153,33 @@ class ProcessExecutionMapViewer extends React.Component {
     }
     return (
       <div className="animated fadeIn">
-        <Card>
-          <CardBody>
-            <Row>
-              <Col xs={6} md={3}>
-                <SelectField
-                  id="baseLayer"
-                  label="Base Layer"
-                  value={this.props.baseLayer || 'OSM'}
-                  onChange={(value) => this.props.setBaseLayer(value)}
-                  options={this.supportedBaseLayers}
-                />
-              </Col>
-              <Col className="pt-1">
-                <Button color="primary" onClick={this.viewExecution} className="float-right"><i className="fa fa-cog"></i> View Execution</Button>
-              </Col>
-            </Row>
-            <Row>
-              <Col>
-                <OpenLayers.Map minZoom={12} maxZoom={18} zoom={15} center={this.center}>
-                  <OpenLayers.Layers>
-                    {this.getLayers()}
-                  </OpenLayers.Layers>
-                  <OpenLayers.Interactions>
-                    <OpenLayers.Interaction.Select
-                      onFeatureSelect={this.onFeatureSelect}
-                      icon={'\uf21d'}
-                    />
-                  </OpenLayers.Interactions>
-                </OpenLayers.Map>
-                <div className="small text-muted">Hold Shift to select multiple features</div>
-              </Col>
-            </Row>
-          </CardBody>
-        </Card>
+        <OpenLayers.Map minZoom={12} maxZoom={18} zoom={15} center={this.center} className="slipo-map-container-full-screen">
+          <OpenLayers.Layers>
+            {this.getLayers()}
+          </OpenLayers.Layers>
+          <OpenLayers.Interactions>
+            <OpenLayers.Interaction.Select
+              onFeatureSelect={this.onFeatureSelect}
+              icon={'\uf21d'}
+              multi={true}
+              width={4}
+            />
+          </OpenLayers.Interactions>
+        </OpenLayers.Map>
       </div>
     );
   }
 }
 
 const mapStateToProps = (state) => ({
-  // Configuration
-  osm: state.config.osm,
+  baseLayer: state.ui.views.process.designer.execution.baseLayer,
   bingMaps: state.config.bingMaps,
   layers: state.ui.views.process.designer.execution.layers,
-  baseLayer: state.ui.views.process.designer.execution.baseLayer,
+  osm: state.config.osm,
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
   fetchExecutionDetails,
-  setBaseLayer,
   reset,
   selectFeatures,
 }, dispatch);

@@ -21,7 +21,7 @@ class FeaturePropertyViewer extends React.Component {
 
   renderFeature(feature, index) {
     const properties = feature.getProperties();
-    const keys = Object.keys(properties).filter((k) => k !== feature.getGeometryName());
+    const keys = Object.keys(properties).filter((k) => k !== feature.getGeometryName() && !k.startsWith('__'));
 
     return (
       <Card key={index}>
