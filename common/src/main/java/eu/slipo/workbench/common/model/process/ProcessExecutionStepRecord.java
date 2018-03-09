@@ -1,5 +1,6 @@
 package eu.slipo.workbench.common.model.process;
 
+import java.io.Serializable;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -11,8 +12,10 @@ import org.springframework.util.Assert;
 import eu.slipo.workbench.common.model.poi.EnumOperation;
 import eu.slipo.workbench.common.model.poi.EnumTool;
 
-public class ProcessExecutionStepRecord 
+public class ProcessExecutionStepRecord implements Serializable
 {
+    private static final long serialVersionUID = 1L;
+
     private long id = -1L;
 
     private int key;

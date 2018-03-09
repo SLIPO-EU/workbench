@@ -1,5 +1,6 @@
 package eu.slipo.workbench.common.model.resource;
 
+import java.io.Serializable;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,8 +15,10 @@ import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumResourceType;
 import eu.slipo.workbench.common.model.user.AccountInfo;
 
-public class ResourceRecord
+public class ResourceRecord implements Serializable
 {
+    private static final long serialVersionUID = 1L;
+
     private long id = -1L;
 
     private long version = -1L;

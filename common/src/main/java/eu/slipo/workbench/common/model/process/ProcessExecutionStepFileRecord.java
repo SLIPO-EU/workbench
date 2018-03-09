@@ -1,5 +1,6 @@
 package eu.slipo.workbench.common.model.process;
 
+import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.UUID;
 
@@ -8,8 +9,10 @@ import com.vividsolutions.jts.geom.Geometry;
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
 
-public class ProcessExecutionStepFileRecord 
+public class ProcessExecutionStepFileRecord implements Serializable
 {
+    private static final long serialVersionUID = 1L;
+
     private long id = -1L;
 
     private EnumStepFile type;

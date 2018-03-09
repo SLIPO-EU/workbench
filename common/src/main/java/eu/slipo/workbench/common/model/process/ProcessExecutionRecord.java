@@ -1,19 +1,21 @@
 package eu.slipo.workbench.common.model.process;
 
+import java.io.Serializable;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
-
-import com.vividsolutions.jts.util.Assert;
 
 import eu.slipo.workbench.common.model.user.AccountInfo;
 
-public class ProcessExecutionRecord
+public class ProcessExecutionRecord implements Serializable
 {
+    private static final long serialVersionUID = 1L;
+
     private long id = -1L;
 
     private String name;
