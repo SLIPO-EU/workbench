@@ -67,7 +67,7 @@ function buildProcessRequest(action, designer) {
           sources: buildDataSource(s),
           configuration: buildConfiguration(s),
           outputKey: s.outputKey,
-          EnumDataFormat: EnumDataFormat.N_TRIPLES,
+          outputFormat: (s.tool === EnumTool.CATALOG ? null : EnumDataFormat.N_TRIPLES),
         };
       }).filter((s) => {
         return (s.configuration !== null);
