@@ -21,6 +21,11 @@
     </Appenders>
     
     <Loggers>
+
+        <Logger name="eu.slipo.workbench.rpc.tests" level="DEBUG" additivity="false">
+            <AppenderRef ref="console" />
+        </Logger>
+
         <Root level="INFO">
             <AppenderRef ref="console" />
             <AppenderRef ref="file" />
