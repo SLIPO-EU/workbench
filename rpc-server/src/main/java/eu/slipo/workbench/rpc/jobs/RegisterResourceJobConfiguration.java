@@ -96,8 +96,7 @@ public class RegisterResourceJobConfiguration
 
             // Resolve target path under catalog root directory
             String targetName = metadata.getName() + "." + format.getFilenameExtension();
-            Path targetPath = Paths.get(
-                Integer.valueOf(createdBy).toString(), processName, targetName);
+            Path targetPath = Paths.get(Integer.toString(createdBy), targetName);
             targetPath = catalogDataDir.resolve(targetPath);
 
             // Create parent directories if needed
