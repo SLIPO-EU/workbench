@@ -5,6 +5,7 @@ export {
 export { default as DataSource } from './data-source';
 export { default as DataSourceConfig } from './data-source-config';
 export { default as Designer } from './designer';
+export { default as ErrorList } from './error-list';
 export { default as Operation } from './operation';
 export { default as ProcessDetails } from './process-details';
 export { default as PropertyViewer } from './property-viewer';

@@ -96,8 +96,8 @@ class Sidebar extends React.Component {
     const filter = filters.find((f) => f.id === this.props.filters.resource);
     return (
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <Row>
-          <Col>
+        <Row className="slipo-re-sidebar-resource-list-wrapper">
+          <Col className="slipo-re-sidebar-resource-list-wrapper">
             <div style={{ borderBottom: '1px solid #cfd8dc', padding: 11 }}>
               Resources
               <ButtonToolbar style={{ position: 'absolute', right: 20, top: 4 }}>
@@ -121,8 +121,8 @@ class Sidebar extends React.Component {
             <div className="text-muted slipo-pd-tip" style={{ paddingLeft: 11 }}>{filter ? filter.description : 'Displaying all resources'}</div>
             <div className={
               classnames({
-                "slipo-pd-sidebar-resource-list": true,
-                "slipo-pd-sidebar-resource-list-empty": (this.props.resources.length === 0),
+                "slipo-re-sidebar-resource-list": true,
+                "slipo-re-sidebar-resource-list-empty": (this.props.resources.length === 0),
               })
             }>
               {this.props.resources.length > 0 &&
@@ -137,7 +137,6 @@ class Sidebar extends React.Component {
       </div >
     );
   }
-
 }
 
 const mapStateToProps = (state) => ({

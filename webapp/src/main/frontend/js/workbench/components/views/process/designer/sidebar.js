@@ -7,13 +7,23 @@ import {
 } from 'redux';
 
 import {
+  Button,
   ButtonGroup,
   ButtonToolbar,
   Col,
   Input,
   Label,
+  Nav,
+  NavItem,
+  NavLink,
   Row,
+  TabContent,
+  TabPane,
 } from 'reactstrap';
+
+import {
+  ErrorList,
+} from './';
 
 import {
   EnumSelection,
@@ -48,7 +58,7 @@ const filters = [{
   id: EnumInputType.OUTPUT,
   iconClass: ProcessInputIcons[EnumInputType.OUTPUT],
   title: 'Output resources',
-  description: 'Displaying step output resources',
+  description: 'Displaying step output',
 }, {
   id: EnumResourceType.POI,
   iconClass: ResourceTypeIcons[EnumResourceType.POI],
@@ -70,7 +80,17 @@ const filters = [{
  */
 class Sidebar extends React.Component {
 
-  getSelectedStepItem() {
+  constructor(props) {
+    super(props);
+
+    this.toggle = this.toggle.bind(this);
+
+    this.state = {
+      activeTab: '2',
+    };
+  }
+
+  get selectedStepItem() {
     const step = this.props.steps.find((step) => {
       return (step.key === this.props.active.step);
     }) || null;
@@ -83,13 +103,13 @@ class Sidebar extends React.Component {
     };
   }
 
-  getSelectedItem() {
+  get selectedItem() {
     switch (this.props.active.type) {
       case EnumSelection.Process:
         return this.props.active.item;
 
       case EnumSelection.Step:
-        return this.getSelectedStepItem();
+        return this.selectedStepItem;
 
       case EnumSelection.Resource:
         return this.props.resources.find((resource) => {
@@ -103,6 +123,14 @@ class Sidebar extends React.Component {
         }) || null;
       default:
         return null;
+    }
+  }
+
+  toggle(tab) {
+    if (this.state.activeTab !== tab) {
+      this.setState({
+        activeTab: tab
+      });
     }
   }
 
@@ -129,86 +157,127 @@ class Sidebar extends React.Component {
     const filter = filters.find((f) => f.id === this.props.filters.resource);
     return (
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        {!this.props.execution &&
-          <Row>
-            <Col>
-              <div style={{ borderBottom: '1px solid #cfd8dc', padding: 11 }}>
-                Resources
-              <ButtonToolbar style={{ position: 'absolute', right: 20, top: 4 }}>
-                  <ButtonGroup data-toggle="buttons" aria-label="First group">
-                    {filters.map((f) => (
-                      <Label
-                        key={f.id}
-                        htmlFor={f.id}
-                        className={f.id === this.props.filters.resource ? "btn btn-outline-secondary active" : "btn btn-outline-secondary "}
-                        check={f.id === this.props.filters.resource}
-                        style={{ border: 'none', padding: '0.5rem 0.7rem' }}
-                        title={f.title}
-                      >
-                        <Input type="radio" name="resourceFilter" id={f.id} onClick={() => this.props.filterResource(f.id)} />
-                        <i className={f.iconClass}></i>
-                      </Label>))
+        <Nav tabs style={{ height: '44px' }}>
+          {!this.props.execution &&
+            <NavItem>
+              <NavLink
+                className={classnames({ active: this.state.activeTab === '1' })}
+                onClick={() => { this.toggle('1'); }}
+              >
+                <i className="icon-list"></i>
+              </NavLink>
+            </NavItem>
+          }
+          <NavItem>
+            <NavLink
+              className={classnames({ active: this.state.activeTab === '2' })}
+              onClick={() => { this.toggle('2'); }}
+            >
+              <i className="icon-settings"></i>
+            </NavLink>
+          </NavItem>
+          {!this.props.execution &&
+            <NavItem>
+              <NavLink
+                className={classnames({ active: this.state.activeTab === '3' })}
+                onClick={() => { this.toggle('3'); }}
+                style={{ position: 'relative' }}
+              >
+                <i className="icon-bell"></i>
+                {this.props.errors.length > 0 &&
+                  <span className="badge badge-pill badge-danger slipo-pd-error-badge">{this.props.errors.length}</span>
+                }
+              </NavLink>
+            </NavItem>
+          }
+        </Nav>
+        <TabContent activeTab={this.state.activeTab}>
+          {!this.props.execution &&
+            <TabPane tabId="1">
+              <Row className="slipo-pd-sidebar-resource-list-wrapper">
+                <Col>
+                  <div style={{ borderBottom: '1px solid #cfd8dc', padding: 11 }}>
+                    Resources
+                    <ButtonToolbar style={{ position: 'absolute', right: 20, top: 4 }}>
+                      <ButtonGroup data-toggle="buttons" aria-label="First group">
+                        {filters.map((f) => (
+                          <Label
+                            key={f.id}
+                            htmlFor={f.id}
+                            className={f.id === this.props.filters.resource ? "btn btn-outline-secondary active" : "btn btn-outline-secondary "}
+                            check={f.id === this.props.filters.resource}
+                            style={{ border: 'none', padding: '0.5rem 0.7rem' }}
+                            title={f.title}
+                          >
+                            <Input type="radio" name="resourceFilter" id={f.id} onClick={() => this.props.filterResource(f.id)} />
+                            <i className={f.iconClass}></i>
+                          </Label>))
+                        }
+                      </ButtonGroup>
+                    </ButtonToolbar>
+                  </div>
+                  <div className="text-muted slipo-pd-tip" style={{ paddingLeft: 11 }}>{filter ? filter.description : 'Displaying all resources'}</div>
+                  <div className={
+                    classnames({
+                      "slipo-pd-sidebar-resource-list": true,
+                      "slipo-pd-sidebar-resource-list-empty": (this.props.resources.length === 0),
+                    })
+                  }>
+                    {this.props.resources.length > 0 &&
+                      this.props.resources.map((r) => this.renderResource(r))
                     }
-                  </ButtonGroup>
-                </ButtonToolbar>
-              </div>
-              <div className="text-muted slipo-pd-tip" style={{ paddingLeft: 11 }}>{filter ? filter.description : 'Displaying all resources'}</div>
-              <div className={
-                classnames({
-                  "slipo-pd-sidebar-resource-list": true,
-                  "slipo-pd-sidebar-resource-list-empty": (this.props.resources.length === 0),
-                })
-              }>
-                {this.props.resources.length > 0 &&
-                  this.props.resources.map((r) => this.renderResource(r))
-                }
-                {this.props.resources.length === 0 &&
-                  <div className="text-muted slipo-pd-tip" style={{ paddingLeft: 1 }}>No resources selected</div>
-                }
-              </div>
-            </Col>
-          </Row>
-        }
-        <Row className="mb-2" style={{ flex: '1 1 auto' }}>
-          <Col>
-            <div>
-              {this.props.execution ?
-                <div style={{ borderBottom: '1px solid #cfd8dc', padding: 11 }}>
-                  Properties
-              </div>
-                :
-                <div style={{ borderTop: '1px solid #cfd8dc', borderBottom: '1px solid #cfd8dc', padding: 11 }}>
-                  Properties
-              </div>
-              }
-              {this.getSelectedItem() ?
-                <div className="slipo-pd-properties">
-                  {this.props.active.type === EnumSelection.Process && !this.props.readOnly &&
-                    <ProcessDetails
-                      values={this.props.process.properties}
-                      errors={this.props.process.errors}
-                      processValidate={this.props.processValidate}
-                      processUpdate={this.props.processUpdate}
-                      readOnly={this.props.readOnly}
-                    />
-                  }
-                  {this.props.readOnly &&
-                    <PropertyViewer
-                      item={this.getSelectedItem()}
-                      type={this.props.active.type}
-                    />
+                    {this.props.resources.length === 0 &&
+                      <div className="text-muted slipo-pd-tip" style={{ paddingLeft: 1 }}>No resources selected</div>
+                    }
+                  </div>
+                </Col>
+              </Row>
+            </TabPane>
+          }
+          <TabPane tabId="2">
+            <Row className="mb-2" style={{ flex: '1 1 auto' }}>
+              <Col>
+                <div>
+                  <div style={{ borderBottom: '1px solid #cfd8dc', padding: 11 }}>
+                    Properties
+                  </div>
+                  {this.selectedItem ?
+                    <div className="slipo-pd-properties">
+                      {this.props.active.type === EnumSelection.Process && !this.props.readOnly &&
+                        <ProcessDetails
+                          values={this.props.process.properties}
+                          errors={this.props.process.errors}
+                          processValidate={this.props.processValidate}
+                          processUpdate={this.props.processUpdate}
+                          readOnly={this.props.readOnly}
+                        />
+                      }
+                      {this.props.readOnly &&
+                        <PropertyViewer
+                          item={this.selectedItem}
+                          type={this.props.active.type}
+                        />
+                      }
+                    </div>
+                    :
+                    <div className="text-muted slipo-pd-tip" style={{ paddingLeft: 11 }}>No item selected</div>
                   }
                 </div>
-                :
-                <div className="text-muted slipo-pd-tip" style={{ paddingLeft: 11 }}>No item selected</div>
-              }
-            </div>
-          </Col>
-        </Row>
+              </Col>
+            </Row>
+          </TabPane>
+          {!this.props.execution &&
+            <TabPane tabId="3">
+              <ErrorList
+                errors={this.props.errors}
+              >
+              </ErrorList>
+            </TabPane>
+          }
+        </TabContent>
       </div >
     );
   }
-
 }
 
 const mapStateToProps = (state) => ({
@@ -219,8 +288,8 @@ const mapStateToProps = (state) => ({
   steps: state.ui.views.process.designer.steps,
   resources: filteredResources(state.ui.views.process.designer),
   filters: state.ui.views.process.designer.filters,
-  // Execution properties
   execution: state.ui.views.process.designer.execution.data,
+  errors: state.ui.views.process.designer.errors,
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({

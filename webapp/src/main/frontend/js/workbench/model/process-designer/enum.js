@@ -159,6 +159,7 @@ export const EnumDataFormat = {
  * Process Save actions
  */
 export const EnumDesignerSaveAction = {
+  None: null,
   Save: 'SAVE',
   SaveAndExecute: 'SAVE_AND_EXECUTE',
   SaveAsTemplate: 'SAVE_TEMPLATE',
