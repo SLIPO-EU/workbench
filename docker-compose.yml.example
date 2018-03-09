@@ -18,6 +18,7 @@ services:
     
     extra_hosts:
     - 'db-server:${DATABASE_SERVER}'
+    - 'docker-n1-server:${DOCKER_SERVER_1}'
 
     ports:
     - '127.0.0.1:9080:8080'
@@ -47,7 +48,7 @@ services:
       DB_NAME: "slipo-workbench" 
       DB_USERNAME: "slipo" 
       DB_PASSWORD_FILE: "/etc/secrets/db-password"
-      RPC_SERVER: "http://rpc-server:8080/"  
+      #RPC_SERVER: "rpc-server"
 
     volumes:
     - /mnt/nfs-1/app-data/slipo-workbench/:/mnt/nfs-1/app-data/slipo-workbench/:rw
