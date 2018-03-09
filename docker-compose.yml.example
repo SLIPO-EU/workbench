@@ -16,9 +16,12 @@ services:
       DB_USERNAME: "slipo" 
       DB_PASSWORD_FILE: "/etc/secrets/db-password"
     
-    external_links:
-    - 'postgres-1:db-server'
+    extra_hosts:
+    - 'db-server:${DATABASE_SERVER}'
 
+    ports:
+    - '127.0.0.1:9080:8080'
+    
     volumes:
     - /mnt/nfs-1/app-data/slipo-workbench/:/mnt/nfs-1/app-data/slipo-workbench/:rw
     - .secrets/db-password:/etc/secrets/db-password:ro
@@ -28,11 +31,15 @@ services:
     build:
       context: ./webapp/target/docker-build/
     
-    external_links:
-    - 'postgres-1:db-server'
+    extra_hosts:
+    - 'db-server:${DATABASE_SERVER}'
     
     links:
     - 'rpc_server:rpc-server'
+    
+    ports:
+    - '127.0.0.1:8080:8080'
+    - '127.0.0.1:8009:8009'
 
     environment:
       PROFILE: "development"
@@ -43,6 +50,8 @@ services:
       RPC_SERVER: "http://rpc-server:8080/"  
 
     volumes:
+    - /mnt/nfs-1/app-data/slipo-workbench/:/mnt/nfs-1/app-data/slipo-workbench/:rw
     - .secrets/db-password:/etc/secrets/db-password:ro
-   
+
 volumes: {}
+
