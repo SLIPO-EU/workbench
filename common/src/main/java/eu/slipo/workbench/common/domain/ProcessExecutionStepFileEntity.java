@@ -102,6 +102,9 @@ public class ProcessExecutionStepFileEntity {
     @Column(name = "table_name", columnDefinition = "uuid")
     UUID tableName;
     
+    @Column(name = "verified")
+    boolean verified;
+    
     protected ProcessExecutionStepFileEntity() {}
    
     public ProcessExecutionStepFileEntity(
@@ -114,6 +117,7 @@ public class ProcessExecutionStepFileEntity {
         this.dataFormat = record.getDataFormat();
         this.boundingBox = record.getBoundingBox();
         this.tableName = record.getTableName();
+        this.verified = false;
     }
     
     public ProcessExecutionStepFileEntity(
@@ -125,6 +129,7 @@ public class ProcessExecutionStepFileEntity {
         this.path = filePath;
         this.size = fileSize;
         this.dataFormat = dataFormat;
+        this.verified = false;
     }
     
     public ProcessExecutionStepFileEntity(
@@ -227,6 +232,16 @@ public class ProcessExecutionStepFileEntity {
     public UUID getTableName()
     {
         return tableName;
+    }
+    
+    public void setVerified(boolean verified)
+    {
+        this.verified = verified;
+    }
+    
+    public boolean isVerified()
+    {
+        return verified;
     }
     
     public ProcessExecutionStepFileRecord toProcessExecutionStepFileRecord() 

@@ -293,12 +293,19 @@ public class DefaultProcessRepository implements ProcessRepository
 
     @Transactional(readOnly = true)
     @Override
-    public ProcessExecutionRecord findExecution(long executionId)
+    public ProcessExecutionRecord findExecution(long executionId, boolean includeNonVerifiedFiles)
     {
         ProcessExecutionEntity e = entityManager.find(ProcessExecutionEntity.class, executionId);
-        return e == null? null : e.toProcessExecutionRecord(true);
+        return e == null? null : e.toProcessExecutionRecord(true, includeNonVerifiedFiles);
     }
-
+    
+    @Transactional(readOnly = true)
+    @Override
+    public ProcessExecutionRecord findExecution(long executionId)
+    {
+        return ProcessRepository.super.findExecution(executionId);
+    }
+    
     @Transactional(readOnly = true)
     @Override
     public ProcessExecutionRecord findLatestExecution(long id, long version)
@@ -329,7 +336,7 @@ public class DefaultProcessRepository implements ProcessRepository
         Assert.state(runningExecutionIds.isEmpty() || runningExecutionIds.get(0).equals(executionId),
             "Expected a running execution to be the one started most recently!");
 
-        return executionEntity.toProcessExecutionRecord();
+        return executionEntity.toProcessExecutionRecord(true, false);
     }
 
     @Transactional(readOnly = true)
@@ -446,7 +453,7 @@ public class DefaultProcessRepository implements ProcessRepository
 
         entityManager.persist(executionEntity);
         entityManager.flush();
-        return executionEntity.toProcessExecutionRecord();
+        return executionEntity.toProcessExecutionRecord(true, true);
     }
 
     @Override
@@ -528,7 +535,7 @@ public class DefaultProcessRepository implements ProcessRepository
         // Save
 
         entityManager.flush();
-        return executionEntity.toProcessExecutionRecord(true);
+        return executionEntity.toProcessExecutionRecord(true, true);
     }
 
     @Override
@@ -557,6 +564,8 @@ public class DefaultProcessRepository implements ProcessRepository
 
         // Add file entities associated with this step
 
+        final boolean verified = record.getStatus() == EnumProcessExecutionStatus.COMPLETED;
+        
         for (ProcessExecutionStepFileRecord fileRecord: record.getFiles()) {
             Assert.state(fileRecord.getId() < 0,
                 "Did not expect an id for a record of a new file entity");
@@ -566,6 +575,7 @@ public class DefaultProcessRepository implements ProcessRepository
             if (resourceIdentifier != null) {
                 fileEntity.setResource(findResourceEntity(resourceIdentifier, true));
             }
+            fileEntity.setVerified(verified);
             executionStepEntity.addFile(fileEntity);
         }
 
@@ -573,7 +583,7 @@ public class DefaultProcessRepository implements ProcessRepository
 
         // Save
         entityManager.flush();
-        return executionEntity.toProcessExecutionRecord(true);
+        return executionEntity.toProcessExecutionRecord(true, true);
     }
 
     @Override
@@ -581,7 +591,7 @@ public class DefaultProcessRepository implements ProcessRepository
         throws ProcessExecutionNotFoundException, ProcessExecutionNotActiveException
     {
         Assert.notNull(record, "A non-empty record is required");
-
+        
         final ProcessExecutionEntity executionEntity =
             entityManager.find(ProcessExecutionEntity.class, executionId);
         if (executionEntity == null) {
@@ -595,7 +605,7 @@ public class DefaultProcessRepository implements ProcessRepository
         if (executionStepEntity == null) {
             throw ProcessExecutionNotFoundException.forExecutionStep(executionId, stepKey);
         }
-
+        
         final List<ProcessExecutionStepFileRecord> fileRecords = record.getFiles();
         final List<Long> fids = fileRecords.stream()
             .collect(Collectors.mapping(r -> r.getId(), Collectors.toList()));
@@ -610,6 +620,8 @@ public class DefaultProcessRepository implements ProcessRepository
         // Due to the nature of a processing step, a file record can never be removed; it can
         // only be added or updated (on specific updatable fields).
 
+        final boolean verified = record.getStatus() == EnumProcessExecutionStatus.COMPLETED;
+        
         // Update existing file records
 
         for (ProcessExecutionStepFileEntity fileEntity: executionStepEntity.getFiles()) {
@@ -623,6 +635,7 @@ public class DefaultProcessRepository implements ProcessRepository
             fileEntity.setSize(fileRecord.getFileSize());
             fileEntity.setBoundingBox(fileRecord.getBoundingBox());
             fileEntity.setTableName(fileRecord.getTableName());
+            fileEntity.setVerified(verified);
             ResourceIdentifier resourceIdentifier = fileRecord.getResource();
             fileEntity.setResource(
                 resourceIdentifier == null? null : findResourceEntity(resourceIdentifier, true));
@@ -640,12 +653,13 @@ public class DefaultProcessRepository implements ProcessRepository
             if (resourceIdentifier != null) {
                 fileEntity.setResource(findResourceEntity(resourceIdentifier, true));
             }
+            fileEntity.setVerified(verified);
             executionStepEntity.addFile(fileEntity);
         }
 
         // Save
         entityManager.flush();
-        return executionEntity.toProcessExecutionRecord(true);
+        return executionEntity.toProcessExecutionRecord(true, true);
     }
 
     @Override
@@ -683,7 +697,7 @@ public class DefaultProcessRepository implements ProcessRepository
 
         // Save
         entityManager.flush();
-        return executionEntity.toProcessExecutionRecord(true);
+        return executionEntity.toProcessExecutionRecord(true, true);
     }
 
     @Override

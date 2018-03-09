@@ -343,7 +343,7 @@ public class DefaultProcessRepositoryTests
         assertEquals(started, executionRecord1b.getStartedOn());
         assertNull(executionRecord1b.getCompletedOn());
 
-        ProcessExecutionRecord executionRecord1c = processRepository.findExecution(executionId);
+        ProcessExecutionRecord executionRecord1c = processRepository.findExecution(executionId, true);
         assertNotNull(executionRecord1c);
         assertEquals(EnumProcessExecutionStatus.RUNNING, executionRecord1c.getStatus());
         assertEquals(started, executionRecord1c.getStartedOn());
@@ -383,7 +383,7 @@ public class DefaultProcessRepositoryTests
         ProcessExecutionRecord executionRecord1d =
             processRepository.createExecutionStep(executionId, stepRecord1);
         assertNotNull(executionRecord1d);
-        executionRecord1d = processRepository.findExecution(executionId);
+        executionRecord1d = processRepository.findExecution(executionId, true);
         assertNotNull(executionRecord1d);
         List<ProcessExecutionStepRecord> executionRecord1dSteps = executionRecord1d.getSteps();
         assertTrue(executionRecord1dSteps.size() == 1);
@@ -435,7 +435,7 @@ public class DefaultProcessRepositoryTests
         ProcessExecutionRecord executionRecord1e =
             processRepository.updateExecutionStep(executionId, step1Key, stepRecord1);
         assertNotNull(executionRecord1e);
-        executionRecord1e = processRepository.findExecution(executionId);
+        executionRecord1e = processRepository.findExecution(executionId, true);
         assertNotNull(executionRecord1e);
         List<ProcessExecutionStepRecord> executionRecord1eSteps = executionRecord1e.getSteps();
         assertTrue(executionRecord1eSteps.size() == 1);
@@ -482,7 +482,7 @@ public class DefaultProcessRepositoryTests
         ProcessExecutionRecord executionRecord1f =
             processRepository.updateExecution(executionId, executionRecord);
         assertNotNull(executionRecord1f);
-        executionRecord1f = processRepository.findExecution(executionId);
+        executionRecord1f = processRepository.findExecution(executionId, true);
         assertNotNull(executionRecord1f);
 
         assertEquals(started, executionRecord1f.getStartedOn());

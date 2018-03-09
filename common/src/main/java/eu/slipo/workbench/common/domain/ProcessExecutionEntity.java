@@ -226,10 +226,15 @@ public class ProcessExecutionEntity
 
     public ProcessExecutionRecord toProcessExecutionRecord()
     {
-        return toProcessExecutionRecord(true);
+        return toProcessExecutionRecord(true, false);
+    }
+    
+    public ProcessExecutionRecord toProcessExecutionRecord(boolean includeSteps)
+    {
+        return toProcessExecutionRecord(includeSteps, false);
     }
 
-    public ProcessExecutionRecord toProcessExecutionRecord(boolean includeSteps)
+    public ProcessExecutionRecord toProcessExecutionRecord(boolean includeSteps, boolean includeNonVerifiedFiles)
     {
         ProcessExecutionRecord e =
             new ProcessExecutionRecord(id, process.parent.id, process.version);
@@ -246,8 +251,8 @@ public class ProcessExecutionEntity
         e.setErrorMessage(errorMessage);
 
         if (includeSteps) {
-            for (ProcessExecutionStepEntity s: this.getSteps()) {
-                e.addStep(s.toProcessExecutionStepRecord());
+            for (ProcessExecutionStepEntity s: steps) {
+                e.addStep(s.toProcessExecutionStepRecord(includeNonVerifiedFiles));
             }
         }
 

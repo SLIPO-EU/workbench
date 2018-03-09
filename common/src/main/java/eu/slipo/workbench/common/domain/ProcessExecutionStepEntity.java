@@ -23,6 +23,7 @@ import javax.validation.constraints.AssertTrue;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
+import org.apache.commons.collections4.IterableUtils;
 import org.hibernate.annotations.NaturalId;
 
 import eu.slipo.workbench.common.model.poi.EnumOperation;
@@ -253,7 +254,12 @@ public class ProcessExecutionStepEntity
         files.add(f);
     }
     
-    public ProcessExecutionStepRecord toProcessExecutionStepRecord() 
+    public ProcessExecutionStepRecord toProcessExecutionStepRecord()
+    {
+        return toProcessExecutionStepRecord(false);
+    }
+    
+    public ProcessExecutionStepRecord toProcessExecutionStepRecord(boolean includeNonVerifiedFiles) 
     {
         ProcessExecutionStepRecord stepRecord = new ProcessExecutionStepRecord(id, key, name);
 
@@ -264,9 +270,10 @@ public class ProcessExecutionStepEntity
         stepRecord.setCompletedOn(completedOn);
         stepRecord.setErrorMessage(errorMessage);
         stepRecord.setStatus(status);
-        
+
         for (ProcessExecutionStepFileEntity f: files) {
-            stepRecord.addFile(f.toProcessExecutionStepFileRecord());
+            if (includeNonVerifiedFiles || f.isVerified())
+                stepRecord.addFile(f.toProcessExecutionStepFileRecord());
         }
 
         return stepRecord;

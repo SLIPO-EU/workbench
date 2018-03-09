@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -238,12 +239,10 @@ public class DefaultResourceRepository implements ResourceRepository
             "Expected a valid operation type for this processing step");
         
         Map<EnumStepFile, List<ProcessExecutionStepFileEntity>> fileEntitiesByType = 
-            stepEntity.getFiles()
-                .stream()
+            stepEntity.getFiles().stream()
+                .filter(ProcessExecutionStepFileEntity::isVerified)
                 .collect(Collectors.groupingBy(ProcessExecutionStepFileEntity::getType));
         fileEntitiesByType = defaultedMap(fileEntitiesByType, Collections.emptyList());
-        Assert.state(fileEntitiesByType.get(EnumStepFile.INPUT).size() >= 1, 
-            "A processing step is expected to receive at least one input file");  
         Assert.state(fileEntitiesByType.get(EnumStepFile.OUTPUT).size() == 1, 
             "A processing step is expected to produce a single output file!");  
 
@@ -329,11 +328,20 @@ public class DefaultResourceRepository implements ResourceRepository
         
         if (stepKey != null) {
             ProcessExecutionStepEntity stepEntity = executionEntity.getStepByKey(stepKey);
-            Assert.state(stepEntity != null, "Expected a step entity for given step key");
+            if (stepEntity == null) {
+                Assert.state(false, String.format(
+                    "No step entity for step #%d inside execution #%d", stepKey, executionId));
+            }
             ProcessExecutionStepFileEntity fileEntity = stepEntity.getFiles().stream()
                 .filter(f -> f.getType() == EnumStepFile.OUTPUT)
-                .findFirst().get();
-            fileEntity.setResource(resourceRevisionEntity);
+                .findFirst()
+                .orElse(null);
+            if (fileEntity != null) {
+                fileEntity.setResource(resourceRevisionEntity);
+            } else {
+                Assert.state(false, String.format(
+                    "No output file entity for step #%d inside execution #%d", stepKey, executionId));
+            }
         }
         
         // If targeted revision is the latest, parent entity must also be updated

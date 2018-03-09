@@ -155,14 +155,26 @@ public interface ProcessRepository
         throws ProcessNotFoundException;
 
     /**
-     * Find a single process execution record
+     * Find process execution record
      *
      * @param executionId the execution id (i.e the primary key of the execution)
+     * @param includeNonVerifiedFiles if the result should include records for non-verified
+     *   output files (i.e. not yet confirmed to exist or abandoned as part of a failed step)
      * @return an instance of {@link ProcessExecutionRecord} or <tt>null</tt> if no
      *   such execution exists
      */
-    ProcessExecutionRecord findExecution(long executionId);
+    ProcessExecutionRecord findExecution(long executionId, boolean includeNonVerifiedFiles);
 
+    /**
+     * Find process execution record
+     * 
+     * @see ProcessRepository#findExecution(long, boolean)
+     */
+    default ProcessExecutionRecord findExecution(long executionId)
+    {
+        return findExecution(executionId, false);
+    }
+    
     /**
      * Find executions for a process of given id and version
      *

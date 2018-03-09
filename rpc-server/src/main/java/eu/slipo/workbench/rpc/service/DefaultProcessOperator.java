@@ -22,6 +22,7 @@ import javax.annotation.PostConstruct;
 
 import org.apache.commons.collections4.IterableUtils;
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -163,16 +164,17 @@ public class DefaultProcessOperator implements ProcessOperator
          */
         private final ProcessDefinition definition;
 
-        /**
-         * Map a step-key (of the step that produced this resource) to resource identifier
-         */
-        private final Map<Integer, ResourceIdentifier> resourceIdentifierByStepKey;
-
         private AfterRegistrationHandler(long executionId, ProcessDefinition definition)
         {
             this.executionId = executionId;
             this.definition = definition;
-            this.resourceIdentifierByStepKey = new ConcurrentHashMap<>();
+        }
+
+        @Override
+        public boolean aboutNode(String nodeName)
+        {
+            final Step step = definition.stepByName(nodeName);
+            return step != null && step.operation() == EnumOperation.REGISTER;
         }
 
         @Override
@@ -193,16 +195,14 @@ public class DefaultProcessOperator implements ProcessOperator
 
             final int inputKey = step.inputKeys().get(0);
             final Step producerStep = definition.stepByResourceKey(inputKey);
-            if (producerStep == null)
-                throw new IllegalStateException(
-                    "Expected a step to produce output with resource-key = [" + inputKey + "]");
+            Assert.state(producerStep != null, "A processing step is expected to produce this resource!");
 
             // Extract resource (id, version) from execution context
 
-            final ExecutionContext executionContext = jobExecution.getExecutionContext();
-
             final String RESOURCE_ID_KEY = "resourceId";
             final String RESOURCE_VERSION_KEY = "resourceVersion";
+
+            final ExecutionContext executionContext = jobExecution.getExecutionContext();
 
             long resourceId = executionContext.getLong(RESOURCE_ID_KEY, -1L);
             if (resourceId <= 0)
@@ -214,34 +214,18 @@ public class DefaultProcessOperator implements ProcessOperator
                 throw new IllegalStateException(
                     "Expected a resource version under [" + RESOURCE_VERSION_KEY + "] in execution context");
 
-            // Map step-key of producer to the actual resource identifier
-
-            resourceIdentifierByStepKey.put(
-                producerStep.key(), ResourceIdentifier.of(resourceId, resourceVersion));
-        }
-
-        @Override
-        public void onSuccess(WorkflowExecutionSnapshot workflowExecutionSnapshot)
-        {
             // Associate process execution with registered resources
 
-            final ResourceRepository resourceRepository =
-                DefaultProcessOperator.this.resourceRepository;
-
-            resourceIdentifierByStepKey.forEach((stepKey, resourceIdentifier) -> {
-                resourceRepository.setProcessExecution(
-                    resourceIdentifier.getId(),
-                    resourceIdentifier.getVersion(),
-                    executionId,
-                    stepKey);
-            });
+            resourceRepository.setProcessExecution(
+                resourceId, resourceVersion, executionId, producerStep.key());
         }
     }
 
     /**
-     * The basic workflow-level execution listener
+     * The basic workflow-level execution listener which records the status/progress of the
+     * process execution
      */
-    private class ExecutionListener implements WorkflowExecutionEventListener
+    private class ReportingExecutionListener implements WorkflowExecutionEventListener
     {
         /**
          * The process execution id
@@ -249,19 +233,13 @@ public class DefaultProcessOperator implements ProcessOperator
         private final long executionId;
 
         /**
-         * The user id of the owner of the process execution
-         */
-        private final long userId;
-
-        /**
          * The definition for the entire process
          */
         private final ProcessDefinition definition;
 
-        private ExecutionListener(long executionId, long userId, ProcessDefinition definition)
+        private ReportingExecutionListener(long executionId, ProcessDefinition definition)
         {
             this.executionId = executionId;
-            this.userId = userId;
             this.definition = definition;
         }
 
@@ -308,9 +286,12 @@ public class DefaultProcessOperator implements ProcessOperator
         private void beforeProcessingStep(
             WorkflowExecutionSnapshot workflowExecutionSnapshot, Step step, JobExecution jobExecution)
         {
+            final Workflow workflow = workflowExecutionSnapshot.workflow();
+            final Workflow.JobNode node = workflow.node(step.name());
             final ZonedDateTime now = ZonedDateTime.now();
 
             // Create a record to represent this processing step
+
             ProcessExecutionStepRecord stepRecord = new ProcessExecutionStepRecord(step.key(), step.name());
             stepRecord.setStartedOn(now);
             stepRecord.setJobExecutionId(jobExecution.getId());
@@ -318,7 +299,25 @@ public class DefaultProcessOperator implements ProcessOperator
             stepRecord.setOperation(step.operation());
             stepRecord.setTool(step.tool());
 
-            // Update corresponding entity
+            // Add the expected output file into stepRecord
+
+            final List<Path> outputPaths = node.output();
+            Assert.state(outputPaths.size() < 2, "Expected at most 1 output file");
+            if (!outputPaths.isEmpty()) {
+                final Path outputPath = outputPaths.get(0);
+                Assert.state(outputPath.isAbsolute() && outputPath.startsWith(workflowDataDir),
+                    "Expected output as an absolute path under workflow data directory");
+                ProcessExecutionStepFileRecord fileRecord = new ProcessExecutionStepFileRecord(
+                    EnumStepFile.OUTPUT, workflowDataDir.relativize(outputPath));
+                fileRecord.setDataFormat(step.outputFormat());
+                stepRecord.addFile(fileRecord);
+            }
+
+            // Todo Add configuration file(s) as file record(s) of this step
+            // Check if jobExecution contains a `configByName` entry. Resolve against `workDir`.
+
+            // Update record in repository
+
             try {
                 processRepository.createExecutionStep(executionId, stepRecord);
             } catch (ProcessExecutionNotFoundException ex) {
@@ -350,36 +349,38 @@ public class DefaultProcessOperator implements ProcessOperator
             final BatchStatus batchStatus = jobExecution.getStatus();
             final ZonedDateTime now = ZonedDateTime.now();
 
-            ProcessExecutionRecord executionRecord = processRepository.findExecution(executionId);
+            ProcessExecutionRecord executionRecord = processRepository.findExecution(executionId, true);
             ProcessExecutionStepRecord stepRecord = executionRecord.getStep(step.key());
-            Assert.state(stepRecord != null, "Expected a step record for key [" + step.key() + "]");
+            if (stepRecord == null)
+                throw new IllegalStateException(String.format(
+                    "Expected to find a step record for step #%d", step.key()));
 
             // Update step record
 
             switch (batchStatus) {
             case COMPLETED:
                 {
-                    final ExecutionContext executionContext = jobExecution.getExecutionContext();
-                    final List<Path> outputPaths = node.output();
-                    Assert.state(outputPaths.size() < 2, "Expected at most 1 output file");
                     stepRecord.setStatus(EnumProcessExecutionStatus.COMPLETED);
                     stepRecord.setCompletedOn(now);
-                    // Add output file as a file record associated to this step
-                    if (outputPaths.size() > 0) {
+                    final List<Path> outputPaths = node.output();
+                    // Update file record for output (with size or other computed metadata)
+                    if (!outputPaths.isEmpty()) {
                         final Path outputPath = outputPaths.get(0);
-                        Assert.state(outputPath.isAbsolute(),
-                            "Expected output to be an absolute path");
-                        Assert.state(outputPath.startsWith(workflowDataDir),
-                            "Expected output to reside under workflow data directory");
-                        final long outputSize = determineFileSize(outputPath);
-                        stepRecord.addFile(new ProcessExecutionStepFileRecord(
-                            EnumStepFile.OUTPUT,
-                            workflowDataDir.relativize(outputPath),
-                            outputSize,
-                            step.outputFormat()));
+                        ProcessExecutionStepFileRecord fileRecord = IterableUtils.find(
+                            stepRecord.getFiles(), f -> f.getType() == EnumStepFile.OUTPUT);
+                        if (fileRecord == null)
+                            throw new IllegalStateException(String.format(
+                                "Expected a file record for the output of step #%d of execution #%d",
+                                step.key(), executionId));
+                        try {
+                            fileRecord.setFileSize(Files.size(outputPath));
+                        } catch (IOException ex) {
+                            String errMessage = String.format(
+                                "The output of step#{} of execution #{} is not readable",
+                                step.key(), executionId);
+                            throw new IllegalStateException(errMessage, ex);
+                        }
                     }
-                    // Todo Add configuration file(s) as file record(s) of this step
-                    // Check if jobExecution contains a `configByName` entry
                 }
                 break;
             case FAILED:
@@ -450,16 +451,6 @@ public class DefaultProcessOperator implements ProcessOperator
         }
     }
 
-    private long determineFileSize(Path path)
-    {
-        try {
-            return Files.size(path);
-        } catch (IOException ex) {
-            String message = String.format("Failed to determine file size (path=%s)", path);
-            throw new IllegalStateException(message, ex);
-        }
-    }
-
     @Value("${slipo.rpc-server.workflows.salt-for-identifier:1}")
     private Long salt;
 
@@ -508,15 +499,15 @@ public class DefaultProcessOperator implements ProcessOperator
      * @throws MalformedURLException if encounters a malformed URL (of an external datasource)
      * @throws CycleDetected if the process definition has cyclic dependencies
      */
-    private void buildWorkflow(Workflow.Builder workflowBuilder, ProcessDefinition definition, int userId)
+    private Workflow buildWorkflow(Workflow.Builder workflowBuilder, ProcessDefinition definition, int userId)
         throws CycleDetected
     {
         final Map<DataSource, String> sourceToNodeName = new HashMap<>();
         final Map<String, String> nodeNameToOutputName = new HashMap<>();
 
         // Examine referenced sources.
-        // A data source of EXTERNAL_URL is handled by adding a job node that will download
-        // the resource (to make it available to other workflow nodes).
+        // A data source of URL is handled by adding a job node that will download the
+        // resource (to make it available to other workflow nodes).
 
         final Set<DataSource> sourcesThatMustDownload = definition.steps().stream()
             .flatMap(step -> step.sources().stream())
@@ -628,6 +619,7 @@ public class DefaultProcessOperator implements ProcessOperator
             workflowBuilder.job(jobDefinitionBuilder.build());
         }
 
+        return workflowBuilder.build();
     }
 
     private JobParameters buildParametersForRegistration(
@@ -758,13 +750,13 @@ public class DefaultProcessOperator implements ProcessOperator
         final long id = processRecord.getId(), version = processRecord.getVersion();
         final ProcessDefinition definition = processRecord.getDefinition();
 
-        // Map (id, version) of definition to the workflow identifier
-        final UUID workflowId = computeWorkflowId(id, version);
-
         // Build a workflow from the definition of this process
+
+        final UUID workflowId = computeWorkflowId(id, version);
         final Workflow.Builder workflowBuilder = workflowBuilderFactory.get(workflowId);
+        Workflow workflow = null;
         try {
-            buildWorkflow(workflowBuilder, definition, userId);
+            workflow = buildWorkflow(workflowBuilder, definition, userId);
         } catch (CycleDetected e) {
             throw new IllegalStateException("The process definition has cyclic dependencies");
         }
@@ -779,23 +771,19 @@ public class DefaultProcessOperator implements ProcessOperator
         }
         final long executionId = executionRecord.getId();
 
-        // Add workflow listeners targeting specific nodes (or group of nodes)
+        // Create listeners for this workflow execution
 
-        final WorkflowExecutionEventListener afterRegistrationHandler =
+        ReportingExecutionListener reportingListener =
+            new ReportingExecutionListener(executionId, definition);
+        AfterRegistrationHandler registrationHandler =
             new AfterRegistrationHandler(executionId, definition);
-        definition.steps().stream()
-            .filter(step -> step.operation() == EnumOperation.REGISTER)
-            .forEach(step -> workflowBuilder.listener(step.name(), afterRegistrationHandler));
-
-        final Workflow workflow = workflowBuilder.build();
-        logger.info("About to start workflow {}", workflow.id());
 
         // Start!
 
-        ExecutionListener listener = new ExecutionListener(executionId, userId, definition);
-
+        logger.info("About to start workflow {} associated with process execution #{}",
+            workflow.id(), executionId);
         try {
-            workflowScheduler.start(workflow, listener);
+            workflowScheduler.start(workflow, reportingListener, registrationHandler);
         } catch (WorkflowExecutionStartException ex) {
             // Discard process execution entity (the workflow execution did not even start)
             try {
@@ -807,7 +795,7 @@ public class DefaultProcessOperator implements ProcessOperator
                 String.format("Failed to start workflow (%s)", ex.getMessage()), ex);
         }
 
-        // Update status for process execution entity
+        // The execution has started: update status for process execution entity
 
         try {
             executionRecord = processRepository.updateExecution(

@@ -60,6 +60,7 @@ import eu.slipo.workbench.common.model.process.EnumStepFile;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.ProcessDefinitionBuilder;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
+import eu.slipo.workbench.common.model.process.ProcessExecutionStepFileRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepRecord;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
 import eu.slipo.workbench.common.model.resource.DataSource;
@@ -474,10 +475,12 @@ public class DefaultProcessOperatorTests
         ProcessExecutionStepRecord step1Record = executionRecord.getStep("triplegeo-1");
         assertNotNull(step1Record);
         assertEquals(EnumProcessExecutionStatus.COMPLETED, step1Record.getStatus());
-        ResourceIdentifier resourceIdentifier = step1Record.getFiles().stream()
+        ProcessExecutionStepFileRecord outfile1Record = step1Record.getFiles().stream()
             .filter(f -> f.getType() == EnumStepFile.OUTPUT)
-            .map(f -> f.getResource())
             .findFirst().orElse(null);
+        assertNotNull(outfile1Record);
+        assertNotNull(outfile1Record.getFileSize());
+        ResourceIdentifier resourceIdentifier = outfile1Record.getResource();
         assertNotNull(resourceIdentifier);
         ResourceRecord resourceRecord = resourceRepository.findOne(resourceIdentifier);
         assertNotNull(resourceRecord);
