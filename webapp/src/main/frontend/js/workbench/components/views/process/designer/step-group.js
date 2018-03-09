@@ -7,8 +7,11 @@ import {
   EnumTool,
   EnumToolboxItem,
   EnumDragSource,
-} from './constants';
-import Step from './step';
+} from '../../../../model/process-designer';
+
+import {
+  Step,
+} from './';
 
 /**
  * Drop target specification
@@ -61,7 +64,7 @@ const groupTarget = {
 
 /**
  * A presentational component which acts as a drop target for {@link EnumToolboxItem}
- * items. The component is used for designing a POI data integration process.
+ * items. The component is used for designing a POI data integration workflow.
  *
  * @class StepGroup
  * @extends {React.Component}
@@ -92,6 +95,7 @@ class StepGroup extends React.Component {
     removeStep: PropTypes.func.isRequired,
     moveStep: PropTypes.func.isRequired,
     configureStepBegin: PropTypes.func.isRequired,
+    showStepExecutionDetails: PropTypes.func.isRequired,
     setStepProperty: PropTypes.func.isRequired,
 
     // Step input actions
@@ -107,6 +111,9 @@ class StepGroup extends React.Component {
     setActiveStep: PropTypes.func.isRequired,
     setActiveStepInput: PropTypes.func.isRequired,
     setActiveStepDataSource: PropTypes.func.isRequired,
+
+    // Step execution data
+    stepExecutions: PropTypes.arrayOf(PropTypes.object.isRequired),
 
     // Top-level designer properties
     readOnly: PropTypes.bool.isRequired,
@@ -126,15 +133,19 @@ class StepGroup extends React.Component {
    * @memberof Designer
    */
   renderStep(step) {
+    const resources = this.props.resources.filter((resource) => { return (step.resources.indexOf(resource.key) !== -1); });
+    const stepExecution = this.props.stepExecutions.find((e) => e.key === step.key) || null;
+
     return (
       <Step
         key={step.key}
         active={this.props.active}
         step={step}
-        resources={this.props.resources.filter((resource) => { return (step.resources.indexOf(resource.key) !== -1); })}
+        resources={resources}
         removeStep={this.props.removeStep}
         moveStep={this.props.moveStep}
         configureStepBegin={this.props.configureStepBegin}
+        showStepExecutionDetails={this.props.showStepExecutionDetails}
         setStepProperty={this.props.setStepProperty}
         addStepInput={this.props.addStepInput}
         removeStepInput={this.props.removeStepInput}
@@ -145,6 +156,7 @@ class StepGroup extends React.Component {
         setActiveStepInput={this.props.setActiveStepInput}
         setActiveStepDataSource={this.props.setActiveStepDataSource}
         readOnly={this.props.readOnly}
+        stepExecution={stepExecution}
       />
     );
   }

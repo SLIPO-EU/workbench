@@ -1,0 +1,85 @@
+/*
+ * Variables
+ */
+
+$slipo-ev-layer-color: #616161 !default;
+
+/*
+ * Sidebar (layers)
+ */
+
+.slipo-pd-sidebar-layer-list {
+  display: flex;
+  padding: 10px;
+  flex-direction: column;
+  overflow-y: scroll;
+  max-height: 40vh;
+  margin-right: -18px;
+}
+
+.slipo-pd-sidebar-layer-list-empty {
+  border: none;
+}
+
+.slipo-pd-sidebar-feature-list {
+  overflow-y: scroll;
+  margin-right: -18px;
+  max-height: 60vh;
+}
+
+.slipo-pd-sidebar-feature-list .card {
+  margin-bottom: -1px;
+  margin-left: -1px;
+}
+
+
+/*
+ * Layer
+ */
+
+.slipo-ev-layer {
+  width: 100%;
+  padding: 5px 0px;
+  border: 1px dotted $slipo-ev-layer-color;
+  border-radius: 0.25rem;
+  margin: 0.25rem 0rem;
+  display: inline-block;
+  opacity: 1;
+}
+
+.slipo-layer-toggle {
+  padding: 5px;
+  font-size: 1.2em;
+  cursor: pointer;
+}
+
+.slipo-ev-layer-active {
+  background: #EEEEEE;
+  border: 1px solid #EEEEEE;
+}
+
+.slipo-ev-layer-actions {
+  display: none;
+  position: relative;
+}
+
+.slipo-ev-layer-delete {
+  right: 5px;
+  position: absolute;
+  top: 5px;
+  cursor: pointer;
+}
+
+.slipo-ev-layer-icon {
+  text-align: center;
+  font-size: 2rem;
+}
+
+.slipo-ev-layer-label {
+  text-align: center;
+}
+
+.slipo-ev-layer:hover .slipo-ev-layer-actions,
+.slipo-ev-layer-active .slipo-ev-layer-actions {
+  display: block;
+}

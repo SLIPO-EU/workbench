@@ -87,6 +87,21 @@
             <scope>provided</scope>
         </dependency> 
         
+
+        <!-- Utilities -->
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>21.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.10</version>
+        </dependency>
+
         <!-- JDBC drivers -->    
 
         <dependency>
@@ -183,7 +198,9 @@
                 <configuration>
                     <skipITs>${integration-tests.skip}</skipITs>
                     <includes>
+                        <include>eu.slipo.workbench.rpc.tests.integration.repository.*</include>
                         <include>eu.slipo.workbench.rpc.tests.integration.jobs.*</include>
+                        <include>eu.slipo.workbench.rpc.tests.integration.service.*</include>
                     </includes>
                 </configuration>
             </plugin>

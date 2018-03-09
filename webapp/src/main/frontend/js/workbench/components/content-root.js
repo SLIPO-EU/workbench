@@ -8,12 +8,12 @@ import { ToastContainer } from 'react-toastify';
 
 import { Pages, StaticRoutes, DynamicRoutes, ErrorPages } from '../model/routes';
 import { userPropType } from '../model/prop-types/user';
+import { toggleSidebar } from '../ducks/ui/menu';
 import { resize } from '../ducks/ui/viewport';
 import { getFilesystem } from '../ducks/config';
 
 import Home from './home';
 import LoginForm from './pages/login-form';
-import RegisterForm from './pages/register-form';
 
 import Page403 from './pages/page-403.js';
 import Page404 from './pages/page-404.js';
@@ -69,7 +69,6 @@ class ContentRoot extends React.Component {
       routes = (
         <Switch>
           <Route path={Pages.Login} name="login" component={LoginForm} />
-          <Route path={Pages.Register} name="register" component={RegisterForm} />
           <Route path={Pages.ResetPassword} name="reset-password" component={Placeholder} />
           <Redirect push={true} to={Pages.Login} />
         </Switch>
@@ -87,7 +86,17 @@ class ContentRoot extends React.Component {
           <Redirect from={Pages.Register} to={StaticRoutes.Dashboard} exact />
           <Redirect from={Pages.ResetPassword} to={StaticRoutes.Dashboard} exact />
           {/* Default component */}
-          <Route path="/" name="home" component={() => (<Home user={this.props.user} />)} />
+          <Route
+            path="/"
+            name="home"
+            component={() => (
+              <Home
+                user={this.props.user}
+                sidebarOpen={this.props.sidebarOpen}
+                toggleSidebar={this.props.toggleSidebar}
+              />
+            )}
+          />
         </Switch>
       );
     }
@@ -120,9 +129,14 @@ ContentRoot.propTypes = {
 
 const mapStateToProps = (state) => ({
   user: state.user.profile,
+  sidebarOpen: state.ui.menu.sidebarOpen,
 });
 
-const mapDispatchToProps = (dispatch) => bindActionCreators({ resize, getFilesystem }, dispatch);
+const mapDispatchToProps = (dispatch) => bindActionCreators({
+  getFilesystem,
+  resize,
+  toggleSidebar,
+}, dispatch);
 
 ContentRoot = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(ContentRoot);
 

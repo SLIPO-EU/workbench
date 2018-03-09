@@ -21,18 +21,18 @@ function toFeatures(resources) {
       return (r !== null);
     })
     .map((r, index) => {
-      if (r.metadata.boundingBox) {
+      if (r.boundingBox) {
         return {
           type: 'Feature',
           geometry: {
-            ...r.metadata.boundingBox,
+            ...r.boundingBox,
           },
           properties: {
             id: r.id,
             version: r.version,
             name: r.metadata.name,
             description: r.metadata.description,
-            size: r.metadata.size,
+            size: r.numberOfEntities,
           }
         };
       }
@@ -136,7 +136,12 @@ export default (state = initialState, action) => {
     case RECEIVE_RESOURCES:
       return {
         ...state,
-        items: action.result.items,
+        items: action.result.items.map((r) => {
+          return {
+            ...r,
+            revisions: r.revisions.sort((v1, v2) => v2.version - v1.version),
+          };
+        }),
         features: toFeatureCollection(toFeatures(action.result.items)),
         pager: {
           index: action.result.pagingOptions.pageIndex,

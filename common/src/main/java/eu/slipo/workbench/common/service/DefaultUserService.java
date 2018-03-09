@@ -13,8 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import eu.slipo.workbench.common.domain.AccountEntity;
-import eu.slipo.workbench.common.model.Account;
 import eu.slipo.workbench.common.model.EnumRole;
+import eu.slipo.workbench.common.model.user.Account;
 import eu.slipo.workbench.common.repository.AccountRepository;
 
 @Service

@@ -174,10 +174,16 @@ public class ApplicationException extends RuntimeException
      *
      * @param messageSource
      * @param locale
-     * @return
      */
     public Error toError(MessageSource messageSource, Locale locale) {
         return new Error(code, withFormattedMessage(messageSource, locale).getMessage());
     }
 
+    /**
+     * Return an instance of an {@link Error} (of same error code) with the existing
+     * message (no formatting takes place).
+     */
+    public Error toError() {
+        return new Error(code, message);
+    }
 }

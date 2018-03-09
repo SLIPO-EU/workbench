@@ -1,8 +1,5 @@
 package eu.slipo.workbench.common.model.tool;
 
-import java.util.Map;
-import java.util.Properties;
-
 import org.apache.commons.beanutils.BeanUtils;
 
 /**

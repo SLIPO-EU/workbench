@@ -6,8 +6,9 @@ import pathToRegexp from 'path-to-regexp';
 /**
  * Components
  */
-import ResourceExplorerSidebar from '../components/views/resource/explorer/sidebar';
-import ProcessDesignerSidebar from '../components/views/process/designer/sidebar';
+import { ResourceExplorerSidebar } from '../components/views/resource/explorer';
+import { ProcessDesignerSidebar } from '../components/views/process/designer';
+import { ExecutionViewerSidebar } from '../components/views/execution/viewer';
 
 /**
  * Model
@@ -66,25 +67,26 @@ export const StaticRoutes = {
  * Dynamic routes
  */
 
-const ResourceViewer = '/resource/view/:id';
+const ResourceViewer = '/resource/view/:id/:version';
 
-const ProcessDesignerCreate = '/process/design';
-const ProcessDesignerEdit = '/process/design/:id';
-const ProcessDesignerView = '/process/design/:id/:version';
+const ProcessDesignerCreate = '/workflow/designer';
+const ProcessDesignerEdit = '/workflow/designer/:id';
+const ProcessDesignerView = '/workflow/designer/:id/:version';
 
-const ProcessExecutionViewer = '/process/:id/:version/execution/:execution';
+const ProcessExecutionViewer = '/workflow/designer/:id/:version/execution/:execution';
+const ProcessExecutionMapViewer = '/workflow/designer/:id/:version/execution/:execution/map';
 
 const SchemaDesigner = '/tools/schema/view/:id';
-const DataViewer = '/tools/data/view/:id';
+
 
 export const DynamicRoutes = {
   ResourceViewer,
   ProcessDesignerCreate,
   ProcessDesignerEdit,
   ProcessDesignerView,
+  ProcessExecutionMapViewer,
   ProcessExecutionViewer,
   SchemaDesigner,
-  DataViewer,
 };
 
 /**
@@ -148,25 +150,25 @@ const routes = {
     links: defaultLinks
   },
   [ProcessExplorer]: {
-    description: 'Browser system processes',
+    description: 'Browse system processes',
     title: 'links.process.explorer',
     defaultTitle: 'Process Explorer',
     links: [Dashboard, ProcessDesignerCreate]
   },
   [ProcessExecutionExplorer]: {
-    description: 'Browser process executions',
-    title: 'links.process.execution',
+    description: 'Browse workflow executions',
+    title: 'links.process.execution.default',
     defaultTitle: 'Execution',
     links: [Dashboard, ProcessExplorer, ProcessDesignerCreate]
   },
   [RecipeExplorer]: {
-    description: 'Browser recipes',
+    description: 'Browse recipes',
     title: 'links.recipe.explorer',
     defaultTitle: 'Recipe Explorer',
     links: defaultLinks
   },
   [SchemaExplorer]: {
-    description: 'Browser schema mappings',
+    description: 'Browse schema mappings',
     title: 'links.tools.schema-explorer',
     defaultTitle: 'Schema Explorer',
     links: defaultLinks
@@ -193,31 +195,32 @@ const routes = {
     links: defaultLinks
   },
   [ProcessDesignerCreate]: {
-    description: 'Create a data integration process',
+    description: 'Create a data integration workflow',
     title: 'links.process.designer.default',
-    defaultTitle: 'Process Designer',
+    defaultTitle: 'Workflow Designer',
     links: defaultLinks,
     contextComponent: ProcessDesignerSidebar,
   },
   [ProcessDesignerEdit]: {
-    description: 'Update a data integration processes',
+    description: 'Update a data integration workflow',
     title: 'links.process.designer.edit',
-    defaultTitle: 'Process Designer',
+    defaultTitle: 'Edit',
     links: defaultLinks,
     contextComponent: ProcessDesignerSidebar,
   },
   [ProcessDesignerView]: {
-    description: 'View a data integration processes',
+    description: 'View a data integration workflow',
     title: 'links.process.designer.view',
-    defaultTitle: 'Process Designer',
+    defaultTitle: 'View',
     links: defaultLinks,
     contextComponent: ProcessDesignerSidebar,
   },
   [ProcessExecutionViewer]: {
-    description: 'View information about a process execution instance',
-    title: 'links.process.execution',
-    defaultTitle: 'Process Viewer',
+    description: 'View information about a workflow execution instance',
+    title: 'links.process.execution.view',
+    defaultTitle: 'Execution',
     links: defaultLinks,
+    contextComponent: ProcessDesignerSidebar,
   },
   [SchemaDesigner]: {
     description: 'View/Update schema mappings',
@@ -225,11 +228,12 @@ const routes = {
     defaultTitle: 'Schema Editor',
     links: defaultLinks
   },
-  [DataViewer]: {
+  [ProcessExecutionMapViewer]: {
     description: 'View a POI dataset',
-    title: 'links.tools.data-viewer',
-    defaultTitle: 'Data Viewer',
-    links: defaultLinks
+    title: 'links.process.execution.map-viewer',
+    defaultTitle: 'Map Viewer',
+    links: defaultLinks,
+    contextComponent: ExecutionViewerSidebar,
   },
   // Error Pages
   [Forbidden]: {
@@ -248,8 +252,10 @@ const routes = {
  * @returns the route properties
  */
 export function getRoute(path) {
-  if (routes.hasOwnProperty(path)) {
-    return routes[path];
+  const prop = matchRoute(path);
+
+  if (routes.hasOwnProperty(prop)) {
+    return routes[prop];
   }
   return null;
 }

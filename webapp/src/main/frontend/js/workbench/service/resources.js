@@ -11,9 +11,9 @@ export function upload(data, file, token) {
     type: 'application/json'
   }));
 
-  return actions.submit('/action/resource/upload', token, form, 'PUT');
+  return actions.submit('/action/resource/upload', token, form);
 }
 
 export function register(data, token) {
-  return actions.put('/action/resource/register', token, data);
+  return actions.post('/action/resource/register', token, data);
 }

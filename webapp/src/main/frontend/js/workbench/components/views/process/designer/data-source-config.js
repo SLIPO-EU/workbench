@@ -5,7 +5,7 @@ import {
 } from 'reactstrap';
 import {
   EnumDataSource
-} from './constants';
+} from '../../../../model/process-designer';
 import Form from '../../../helpers/forms/form';
 
 import * as externalUrl from '../../resource/register/url-select';
@@ -87,7 +87,7 @@ class DataSourceConfig extends React.Component {
     return (
       <Card>
         <CardBody className="card-body">
-          {this.props.dataSource.source === EnumDataSource.EXTERNAL_URL &&
+          {this.props.dataSource.source === EnumDataSource.URL &&
             this.createForm(externalUrl.Component, externalUrl.validator)
           }
           {this.props.dataSource.source === EnumDataSource.FILESYSTEM &&

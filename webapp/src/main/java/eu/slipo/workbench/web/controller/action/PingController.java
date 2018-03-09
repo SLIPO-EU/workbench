@@ -1,5 +1,7 @@
 package eu.slipo.workbench.web.controller.action;
 
+import java.util.Locale;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +18,7 @@ import eu.slipo.workbench.common.model.BasicErrorCode;
 import eu.slipo.workbench.common.model.Error;
 import eu.slipo.workbench.common.model.RestResponse;
 import eu.slipo.workbench.common.model.TextMessage;
-import eu.slipo.workbench.web.service.RpcClientEchoService;
+import eu.slipo.workbench.common.service.EchoService;
 
 @RestController
 @RequestMapping(produces = "application/json")
@@ -25,11 +27,11 @@ public class PingController
     private static Logger logger = LoggerFactory.getLogger(PingController.class);
     
     @Autowired
-    private RpcClientEchoService echoService;
+    private EchoService echoService;
     
     /**
      * Ping our RPC server (echo a text message).
-     * <p>This is an application-level ping to help us determine if our backend server 
+     * <p>This is an application-level ping to help us determine if our back-end server 
      * is up and running. 
      * 
      * @param text A text message to send (and expect to be echoed)
@@ -44,7 +46,7 @@ public class PingController
         long started = -1L, elapsed = -1L;
         try {
             started = System.currentTimeMillis();
-            echoedText = echoService.echo(text);
+            echoedText = echoService.echo(text, Locale.ROOT.getLanguage());
             elapsed = System.currentTimeMillis() - started;
         } catch (ApplicationException ex) {
             error = new Error(ex.getErrorCode(), ex.getMessage());

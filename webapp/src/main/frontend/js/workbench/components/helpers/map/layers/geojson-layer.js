@@ -29,6 +29,7 @@ class GeoJsonLayer extends React.Component {
 
   static propTypes = {
     map: PropTypes.instanceOf(OpenLayersMap),
+    index: PropTypes.number,
     features: PropTypes.object,
     fitToExtent: PropTypes.bool,
   }
@@ -77,7 +78,7 @@ class GeoJsonLayer extends React.Component {
 
       this.parseFeatures(this.props.features, this.props.fitToExtent);
 
-      this.props.map.addLayer(this.layer);
+      this.props.map.getLayers().insertAt(this.props.index, this.layer);
     }
   }
 

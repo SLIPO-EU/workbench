@@ -8,8 +8,9 @@ import {
   EnumInputType,
   EnumResourceType,
   EnumSelection,
-} from './constants';
-import { ToolInput } from './config';
+  ToolInputRequirements,
+} from '../../../../model/process-designer';
+
 import StepInput from './step-input';
 
 /**
@@ -19,7 +20,7 @@ import StepInput from './step-input';
  * @returns a plain JavaScript object
  */
 function getRequiredResources(step, resources) {
-  let { poi, linked, any } = ToolInput[step.tool];
+  let { poi, linked, any } = ToolInputRequirements[step.tool];
 
   let counters = resources.reduce((counters, resource) => {
     switch (resource.resourceType) {
@@ -186,6 +187,7 @@ class StepInputContainer extends React.Component {
       <div className="slipo-pd-step-input-container-wrapper">
         <div
           className={classnames({
+            'm-1': true,
             'slipo-pd-step-input-container': true,
             'slipo-pd-step-input-container-full': (counters.poi <= 0 && counters.linked <= 0 && counters.any <= 0)
           })}

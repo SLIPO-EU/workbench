@@ -1,25 +1,27 @@
 package eu.slipo.workbench.web.model.process;
 
+import eu.slipo.workbench.common.model.process.ProcessDefinition;
+
 public class ProcessCreateRequest {
 
-    private EnumProcessSaveAction action;
+    private EnumProcessSaveActionType action;
 
-    private ProcessDefinitionUpdate process;
+    private ProcessDefinition definition;
 
-    public EnumProcessSaveAction getAction() {
+    public EnumProcessSaveActionType getAction() {
         return action;
     }
 
-    public void setAction(EnumProcessSaveAction action) {
+    public void setAction(EnumProcessSaveActionType action) {
         this.action = action;
     }
 
-    public ProcessDefinitionUpdate getProcess() {
-        return process;
+    public ProcessDefinition getDefinition() {
+        return definition;
     }
 
-    public void setProcess(ProcessDefinitionUpdate process) {
-        this.process = process;
+    public void setDefinition(ProcessDefinition process) {
+        this.definition = process;
     }
 
 }

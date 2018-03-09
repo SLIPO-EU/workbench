@@ -4,40 +4,49 @@ import { FormattedTime } from 'react-intl';
 
 import moment from 'moment';
 
-import { DynamicRoutes, buildPath } from '../../model/routes';
+import {
+  DynamicRoutes,
+  buildPath,
+} from '../../model/routes';
 
-import JobStatus from './job-status';
+import {
+  ErrorLevel,
+  JobStatus,
+} from './';
 
 /**
- * Job grid sample data
+ * Job grid data
  */
-export const JobGridData = [{
-  process: {
-    id: 1,
-    version: 2,
-  },
-  executionId: 1,
-  name: 'Import POI from OSM',
-  startedOn: moment().add(-2, 'days').toDate(),
-  completedOn: moment().add(-1, 'hours').toDate(),
-  status: 'Completed',
-}, {
-  process: {
-    id: 2,
-    version: 3,
-  },
-  executionId: 1,
-  name: 'Register resource \'Restaurants\'',
-  startedOn: moment().add(-21, 'days').add(-13, 'hours').toDate(),
-  completedOn: moment().add(-21, 'days').add(1, 'hours').toDate(),
-  status: 'Failed',
-}];
+export const JobGridData = (processes) => processes.map(proc => ({
+  process: proc.process,
+  executionId: proc.id,
+  name: proc.name,
+  submittedBy: proc.submittedBy ? proc.submittedBy.name : '-',
+  startedOn: moment(proc.startedOn).toDate(),
+  completedOn: !proc.completedOn ? '' : moment(proc.completedOn).toDate(),
+  status: proc.status,
+}));
 
 /**
- * Job grid sample column configuration
+ * Job grid column configuration
  */
 export const JobGridColumns = [{
-  Header: 'Process Id',
+  Header: 'Actions',
+  accessor: 'process',
+  Cell: props => {
+    return (
+      props.original.completedOn ?
+        <Link style={{ color: '#263238' }} to={buildPath(DynamicRoutes.ProcessExecutionMapViewer, [props.original.process.id, props.original.process.version, props.original.executionId])}>
+          <i className='fa fa-map-o'></i>
+        </Link>
+        :
+        null
+    );
+  },
+  style: { 'textAlign': 'center' },
+  minWidth: 60,
+}, {
+  Header: 'Workflow Id',
   accessor: 'processId',
   show: false
 }, {
@@ -47,12 +56,15 @@ export const JobGridColumns = [{
 }, {
   Header: 'Name',
   accessor: 'name',
-  minWidth: 250,
+  minWidth: 200,
   Cell: props => {
     return (
       <Link to={buildPath(DynamicRoutes.ProcessExecutionViewer, [props.original.process.id, props.original.process.version, props.original.executionId])}>{props.value}</Link>
     );
   }
+}, {
+  Header: 'Submitted By',
+  accessor: 'submittedBy'
 }, {
   Header: 'Started On',
   accessor: 'startedOn',
@@ -64,10 +76,10 @@ export const JobGridColumns = [{
 }, {
   id: 'completedOn',
   Header: 'Completed On',
-  accessor: d => d.completedOn,
+  accessor: 'completedOn',
   Cell: props => {
     return (
-      <FormattedTime value={props.value} day='numeric' month='numeric' year='numeric' />
+      props.value == '' ? props.value : <FormattedTime value={props.value} day='numeric' month='numeric' year='numeric' />
     );
   }
 }, {
@@ -99,7 +111,11 @@ export const EventGridData = (events) => events.map(event => ({
 export const EventGridColumns = [{
   Header: 'Level',
   accessor: 'level',
-  style: { 'textAlign': 'center' }
+  Cell: props => {
+    return (
+      <ErrorLevel value={props.value} />
+    );
+  },
 }, {
   Header: 'Category',
   accessor: 'category',
@@ -139,8 +155,8 @@ export const ResourceGridData = (resources) => resources.map(resource => ({
   id: resource.id,
   name: resource.metadata.name,
   version: resource.version,
-  createdOn: moment(resource.createdOn).toDate(),
-  count: resource.metadata.size,
+  updatedOn: moment(resource.updatedOn).toDate(),
+  count: resource.numberOfEntities,
   process: resource.jobExecutionId,
 }));
 
@@ -152,21 +168,12 @@ export const ResourceGridColumns = [{
   accessor: 'id',
   show: false
 }, {
-  Header: 'Actions',
-  accessor: 'process',
-  Cell: props => {
-    return (
-      props.value ? <Link style={{ color: '#00bcf2' }} to={buildPath(DynamicRoutes.DataViewer, { id: props.value })}><i className='fa fa-map'></i></Link> : <span className='fa fa-chain-broken'> </span>
-    );
-  },
-  style: { 'textAlign': 'center' },
-}, {
   Header: 'Name',
   accessor: 'name',
   minWidth: 100,
   Cell: props => {
     return (
-      <Link to={buildPath(DynamicRoutes.ResourceViewer, [props.row.id])}>{props.value}</Link>
+      <Link to={buildPath(DynamicRoutes.ResourceViewer, [props.row.id, props.row.version])}>{props.value}</Link>
     );
   },
 }, {
@@ -174,8 +181,8 @@ export const ResourceGridColumns = [{
   accessor: 'version',
   style: { 'textAlign': 'center' }
 }, {
-  Header: 'Created On',
-  accessor: 'createdOn',
+  Header: 'Updated On',
+  accessor: 'updatedOn',
   Cell: props => {
     return (
       <FormattedTime value={props.value} day='numeric' month='numeric' year='numeric' />

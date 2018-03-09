@@ -1,39 +1,15 @@
 export {
-  EnumDataSource,
-  EnumDragSource,
-  EnumHarvester,
-  EnumOperation,
-  EnumInputType,
-  EnumResourceType,
-  EnumSelection,
-  EnumStepFileType,
-  EnumStepProperty,
-  EnumTool,
-  EnumToolboxItem,
-  EnumToolboxItemGroup,
-  EnumViews,
-} from './constants';
+  stepFileTypeToText
+} from './util';
 
-export {
-  DataSourceIcons,
-  DataSourceTitles,
-  HarvesterIcons,
-  HarvesterTitles,
-  ResourceTypeIcons,
-  ToolDefaultOperation,
-  ToolIcons,
-  ToolInput,
-  ToolTitles,
-} from './config';
 export { default as DataSource } from './data-source';
 export { default as DataSourceConfig } from './data-source-config';
-export { default as DataSourceConfigWizard } from './data-source-config-wizard';
 export { default as Designer } from './designer';
+export { default as Operation } from './operation';
 export { default as ProcessDetails } from './process-details';
 export { default as PropertyViewer } from './property-viewer';
-export { default as Operation } from './operation';
 export { default as ProcessInput } from './process-input';
-export { default as Sidebar } from './sidebar';
+export { default as ProcessDesignerSidebar } from './sidebar';
 export { default as Step } from './step';
 export { default as StepConfig } from './step-config';
 export { default as StepDataSource } from './step-data-source';

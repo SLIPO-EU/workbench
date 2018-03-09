@@ -11,7 +11,7 @@ import {
   EnumDragSource,
   EnumResourceType,
   EnumInputType,
-} from './constants';
+} from '../../../../model/process-designer';
 
 /**
  * Drag source specification
@@ -121,7 +121,7 @@ class ProcessInput extends React.Component {
             <i className="slipo-pd-resource-delete fa fa-trash" onClick={() => { this.remove(); }}></i>
           }
           {this.props.resource.inputType != EnumInputType.OUTPUT &&
-            <Link to={buildPath(DynamicRoutes.ResourceViewer, [this.props.resource.id])}>
+            <Link to={buildPath(DynamicRoutes.ResourceViewer, [this.props.resource.id, this.props.resource.version])}>
               <i className="slipo-pd-resource-view fa fa-search"></i>
             </Link>
           }

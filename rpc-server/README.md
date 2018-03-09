@@ -10,6 +10,10 @@ Build and package the application:
 
     mvn package
 
+Run integration tests (optional):
+
+    mvn -P integration-tests verify
+
 Run the application:
 
     java -jar target/workbench-rpc-server.jar

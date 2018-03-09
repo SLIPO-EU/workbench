@@ -9,12 +9,17 @@ import {
   EnumResourceType,
   EnumSelection,
   EnumTool,
-} from './constants';
+  ToolInputRequirements,
+} from '../../../../model/process-designer';
+
 import {
-  ToolInput
-} from './config';
-import StepInputContainer from './step-input-container';
-import StepDataSourceContainer from './step-data-source-container';
+  JobStatus,
+} from '../../../helpers';
+
+import {
+  StepDataSourceContainer,
+  StepInputContainer,
+} from './';
 
 /**
  * Drag source specification
@@ -151,12 +156,14 @@ class Step extends React.Component {
       name: PropTypes.string.isRequired,
       iconClass: PropTypes.string.isRequired,
     })).isRequired,
+    stepExecution: PropTypes.object,
 
     // Action creators
     removeStep: PropTypes.func.isRequired,
     moveStep: PropTypes.func.isRequired,
     configureStepBegin: PropTypes.func.isRequired,
     setStepProperty: PropTypes.func.isRequired,
+    showStepExecutionDetails: PropTypes.func.isRequired,
 
     addStepInput: PropTypes.func.isRequired,
     removeStepInput: PropTypes.func.isRequired,
@@ -186,7 +193,7 @@ class Step extends React.Component {
    */
   isInputMissing() {
     const step = this.props.step;
-    const { source, poi, linked, any } = ToolInput[step.tool];
+    const { source, poi, linked, any } = ToolInputRequirements[step.tool];
 
     const counters = this.props.resources.reduce((counters, resource) => {
       switch (resource.resourceType) {
@@ -259,7 +266,21 @@ class Step extends React.Component {
   configure(e) {
     e.stopPropagation();
 
+    this.props.setActiveStep(this.props.step);
     this.props.configureStepBegin(this.props.step, this.props.step.configuration);
+  }
+
+  /**
+   * Shows details for the current step
+   *
+   * @param {any} e
+   * @memberof Step
+   */
+  viewDetails(e) {
+    e.stopPropagation();
+
+    this.props.setActiveStep(this.props.step);
+    this.props.showStepExecutionDetails();
   }
 
   /**
@@ -315,28 +336,46 @@ class Step extends React.Component {
               "slipo-pd-step-invalid": !this.isValid(),
             })
           }>
-            <i className={this.getIconClassName()}></i>
+            <div>
+              <i className={this.getIconClassName()}></i>
+            </div>
             {!this.props.readOnly &&
-              <input
-                id={`step-${this.props.step.key}-name`}
-                className={
-                  classnames({
-                    "slipo-pd-step-name-input": true,
-                    "slipo-pd-step-name-input-invalid": (!this.props.step.name)
-                  })
-                }
-                value={this.props.step.name}
-                ref={(el) => { this._titleElement = el; }}
-                onClick={(e) => { this._titleElement.focus; this._titleElement.select(e); }}
-                onChange={this.setTitle}
-              />
+              <div className="slipo-pd-step-name-input-wrapper">
+                <input
+                  id={`step-${this.props.step.key}-name`}
+                  className={
+                    classnames({
+                      "slipo-pd-step-name-input": true,
+                      "slipo-pd-step-name-input-invalid": (!this.props.step.name)
+                    })
+                  }
+                  value={this.props.step.name}
+                  ref={(el) => { this._titleElement = el; }}
+                  onClick={(e) => { this._titleElement.focus; this._titleElement.select(e); }}
+                  onChange={this.setTitle}
+                />
+              </div>
             }
             {this.props.readOnly &&
-              <span className="slipo-pd-step-name-input">{this.props.step.name}</span>
+              <div className="slipo-pd-step-name-input-wrapper">
+                <input
+                  id={`step-${this.props.step.key}-name`}
+                  className={
+                    classnames({
+                      "slipo-pd-step-name-input": true,
+                    })
+                  }
+                  value={this.props.step.name}
+                  readOnly
+                />
+              </div>
             }
             {this.props.readOnly ?
-              <div className="slipo-pd-step-actions float-right">
-                <i className="slipo-pd-step-action slipo-pd-step-config fa fa-search" onClick={(e) => { this.configure(e); }}></i>
+              <div className="slipo-pd-step-actions">
+                {this.props.stepExecution && this.props.stepExecution.files && this.props.stepExecution.files.length !== 0 &&
+                  <i className="slipo-pd-step-action slipo-pd-step-config fa fa-folder-open" onClick={(e) => { this.viewDetails(e); }}></i>
+                }
+                <i className="slipo-pd-step-action slipo-pd-step-config fa fa-wrench" onClick={(e) => { this.configure(e); }}></i>
               </div>
               :
               <div className="slipo-pd-step-actions">
@@ -366,6 +405,11 @@ class Step extends React.Component {
               setActiveStepDataSource={this.props.setActiveStepDataSource}
               readOnly={this.props.readOnly}
             />
+          }
+          {this.props.stepExecution &&
+            <div className='m-1'>
+              <JobStatus status={this.props.stepExecution.status} />
+            </div>
           }
         </div >
       )

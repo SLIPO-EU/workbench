@@ -5,13 +5,15 @@ import classnames from 'classnames';
 import {
   EnumToolboxItem,
   EnumDragSource,
-  EnumTool,
   EnumInputType,
   EnumResourceType,
   EnumSelection,
-} from './constants';
-import { ToolInput } from './config';
-import StepDataSource from './step-data-source';
+  ToolInputRequirements,
+} from '../../../../model/process-designer';
+
+import {
+  StepDataSource,
+} from './';
 
 /**
  * Returns plain JavaScript object with required input counters
@@ -20,7 +22,7 @@ import StepDataSource from './step-data-source';
  * @returns a plain JavaScript object
  */
 function getRequiredDataSources(step) {
-  let { source } = ToolInput[step.tool];
+  let { source } = ToolInputRequirements[step.tool];
 
   return {
     source: source - step.dataSources.length,
@@ -128,6 +130,7 @@ class StepDataSourceContainer extends React.Component {
       <div className="slipo-pd-step-input-container-wrapper">
         <div
           className={classnames({
+            'm-1': true,
             'slipo-pd-step-input-container': true,
             'slipo-pd-step-input-container-full': (counters.source == 0)
           })}

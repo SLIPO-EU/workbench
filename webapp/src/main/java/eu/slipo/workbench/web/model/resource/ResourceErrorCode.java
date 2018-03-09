@@ -7,8 +7,10 @@ import eu.slipo.workbench.common.model.ErrorCode;
  */
 public enum ResourceErrorCode implements ErrorCode {
     UNKNOWN,
-    QUERY_IS_EMPTY,
     DATASOURCE_NOT_SUPPORTED,
+    FILE_NOT_FOUND,
+    NAME_DUPLICATE,
+    QUERY_IS_EMPTY,
     ;
 
     @Override

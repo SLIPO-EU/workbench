@@ -1,17 +1,17 @@
 import { StaticRoutes } from '../../model/routes';
 
-export const JobCardConfig = {
+export const JobCardConfig = (props, intl) => ({
   title: 'dashboard.card.jobs',
-  items: [{
-    value: 2,
-    label: 'Completed',
+  items: props ? [{
+    value: props.completed,
+    label: 'dashboard.card.fields.jobs.completed',
   }, {
-    value: 1,
-    label: 'Running',
+    value: props.running,
+    label: 'dashboard.card.fields.jobs.running',
   }, {
-    value: 0,
-    label: 'Failed',
-  }],
+    value: props.failed,
+    label: 'dashboard.card.fields.jobs.failed',
+  }] : null,
   color: '#ffffff',
   background: '#00bcf2',
   footer: 'Since last week',
@@ -20,23 +20,23 @@ export const JobCardConfig = {
     label: 'See more...',
   },
   iconClass: 'fa fa-cog',
-};
+});
 
 export const ResourceCardConfig = (props, intl) => ({
   title: 'dashboard.card.resources',
-  items: [{
+  items: props ? [{
     value: props.total,
-    label: 'Resources',
+    label: 'dashboard.card.fields.resources.total',
   }, {
     value: props.created,
-    label: 'New',
+    label: 'dashboard.card.fields.resources.new',
   }, {
     value: props.updated,
-    label: 'Updated',
-  }],
+    label: 'dashboard.card.fields.resources.updated',
+  }] : null,
   color: '#ffffff',
   background: '#999999',
-  footer: intl.formatRelative(props.updatedOn),
+  footer: 'Since last week',
   link: {
     path: StaticRoutes.ResourceExplorer,
     label: 'See more...',
@@ -44,39 +44,38 @@ export const ResourceCardConfig = (props, intl) => ({
   iconClass: 'fa fa-book',
 });
 
-export const QuotaCardConfig = {
-  title: 'dashboard.card.quota',
-  items: [{
-    value: 100,
-    label: 'Available',
+export const SystemCardConfig = (props) => ({
+  title: 'dashboard.card.system',
+  items: props ? [{
+    value: [props.usedCores, props.totalCores],
+    label: 'dashboard.card.fields.system.cores',
   }, {
-    value: 25,
-    label: 'Used',
+    value: [props.usedMemory, props.totalMemory],
+    label: 'dashboard.card.fields.system.memory',
   }, {
-    value: 75,
-    label: 'Remaining',
-  }],
+    value: [props.usedDisk, props.totalDisk],
+    label: 'dashboard.card.fields.system.disk-space',
+  }] : null,
   color: '#ffffff',
   background: '#d9534f',
-  footer: 'Since last week',
-  iconClass: 'fa fa-cubes',
-};
+  iconClass: 'fa fa-server',
+});
 
 export const EventCardConfig = (props, intl) => ({
   title: 'dashboard.card.events',
-  items: [{
+  items: props ? [{
     value: props.error,
-    label: 'Error',
+    label: 'dashboard.card.fields.events.error',
   }, {
     value: props.warning,
-    label: 'Warning',
+    label: 'dashboard.card.fields.events.warn',
   }, {
     value: props.information,
-    label: 'Information',
-  }],
+    label: 'dashboard.card.fields.events.info',
+  }] : null,
   color: '#ffffff',
   background: '#5cb85c',
-  footer: intl.formatRelative(props.updatedOn),
+  footer: 'Since last 24 hours',
   link: {
     path: StaticRoutes.EventViewer,
     label: 'See more...',

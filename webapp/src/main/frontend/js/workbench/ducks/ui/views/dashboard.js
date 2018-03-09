@@ -1,5 +1,5 @@
-// dashboard.js
 import dashboardService from '../../../service/dashboard';
+
 // Actions
 const REQUEST_DASHBOARD_DATA = 'ui/dashboard/REQUEST_DASHBOARD_DATA';
 const RECEIVE_DASHBOARD_DATA = 'ui/dashboard/RECEIVE_DASHBOARD_DATA';
@@ -8,30 +8,44 @@ const CHANGE_CARD_FILTER = 'ui/dashboard/CHANGE_CARD_FILTER';
 
 // Reducer
 const initialState = {
-  filters:{
+  filters: {
     resources: "all",
     events: "ALL",
-    processExplorer:"allProcess",
-    
+    processExplorer: "allProcess",
+
   },
-  resources:[],
+  processes: [],
+  resources: [],
   events: [],
-  statistics:{
-    resources:{
+  statistics: {
+    resources: {
       created: 0,
       total: 0,
       updated: 0,
-      updatedOn: null, 
-    },
-    events:{
-      error:0,
-      information:0,
-      warning:0,
       updatedOn: null,
+    },
+    events: {
+      error: 0,
+      information: 0,
+      warning: 0,
+      updatedOn: null,
+    },
+    processes: {
+      completed: 0,
+      running: 0,
+      failed: 0,
+      updateOn: null,
+    },
+    system: {
+      usedCores: 0,
+      totalCores: 0,
+      usedMemory: 0,
+      totalMemory: 0,
+      usedDisk: 0,
+      totalDisk: 0,
+      updateOn: null,
     }
-
   }
-
 };
 
 export default (state = initialState, action) => {
@@ -40,20 +54,20 @@ export default (state = initialState, action) => {
       return {
         ...state,
         ...action.data,
-        statistics:{ 
+        statistics: {
           ...action.data.statistics,
-          resources:{
+          resources: {
             ...action.data.statistics.resources,
-            created:action.data.statistics.resources.crearted
-          } 
-        } 
+            created: action.data.statistics.resources.created
+          }
+        }
       };
     case CHANGE_CARD_FILTER:
       return {
         ...state,
-        filters:{
+        filters: {
           ...state.filters,
-          [action.cardname]: action.selection,
+          [action.cardName]: action.selection,
         },
       };
     default:
@@ -65,15 +79,15 @@ export default (state = initialState, action) => {
 const requestDashboardData = () => ({
   type: REQUEST_DASHBOARD_DATA,
 });
-  
+
 const receiveDashboardData = (data) => ({
   type: RECEIVE_DASHBOARD_DATA,
   data,
 });
 
-export const changeDashboardFilter = (cardname, selection) => ({
+export const changeDashboardFilter = (cardName, selection) => ({
   type: CHANGE_CARD_FILTER,
-  cardname,
+  cardName,
   selection,
 });
 

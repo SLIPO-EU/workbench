@@ -20,10 +20,11 @@ import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 
+import org.hibernate.annotations.NaturalId;
 import org.hibernate.validator.constraints.Email;
 
-import eu.slipo.workbench.common.model.Account;
 import eu.slipo.workbench.common.model.EnumRole;
+import eu.slipo.workbench.common.model.user.Account;
 
 
 @Entity(name = "Account")
@@ -36,17 +37,19 @@ import eu.slipo.workbench.common.model.EnumRole;
 public class AccountEntity
 {
     @Id
-    @Column(name = "`id`")
+    @Column(name = "`id`", updatable = false)
     @SequenceGenerator(
         sequenceName = "account_id_seq", name = "account_id_seq", allocationSize = 1)
     @GeneratedValue(generator = "account_id_seq", strategy = GenerationType.SEQUENCE)
-    Integer id;
+    Integer id ;
 
     @NotNull
-    @Column(name = "`username`", nullable = false)
+    @NaturalId
+    @Column(name = "`username`", nullable = false, updatable = false)
     String username;
 
     @NotNull
+    @NaturalId
     @Email
     @Column(name = "`email`", nullable = false)
     String email;
@@ -74,16 +77,14 @@ public class AccountEntity
     ZonedDateTime registeredAt;
 
     @OneToMany(
-        mappedBy = "account",
-        fetch = FetchType.EAGER,
-        cascade = CascadeType.ALL, orphanRemoval = true)
+        mappedBy = "account", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     List<AccountRoleEntity> roles = new ArrayList<>();
 
     public AccountEntity() {}
 
-    public AccountEntity(int uid)
+    public AccountEntity(int id)
     {
-        this.id = uid;
+        this.id = id;
     }
 
     public AccountEntity(String username, String email)
@@ -128,7 +129,7 @@ public class AccountEntity
         this.registeredAt = registeredAt;
     }
 
-    public int getId()
+    public Integer getId()
     {
         return id;
     }

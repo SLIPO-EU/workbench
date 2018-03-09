@@ -10,6 +10,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 @SpringBootApplication(
     scanBasePackageClasses = {
         eu.slipo.workbench.common.config._Marker.class,
+        eu.slipo.workbench.common.repository._Marker.class,
         eu.slipo.workbench.common.service._Marker.class,
         eu.slipo.workbench.web.config._Marker.class,
         eu.slipo.workbench.web.domain._Marker.class,

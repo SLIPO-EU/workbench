@@ -4,6 +4,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.springframework.data.domain.PageRequest;
+
+import eu.slipo.workbench.common.model.QueryResultPage;
+
 /**
  * Generic query result
  *
@@ -45,4 +49,10 @@ public class QueryResult<Result> {
         this.items.add(r);
     }
 
+    public static <R> QueryResult<R> create(QueryResultPage<R> p)
+    {
+        PageRequest pageReq = p.getPageRequest();
+        return new QueryResult<R>(
+            pageReq.getPageNumber(), pageReq.getPageSize(), (int) p.getCount(), p.getItems());
+    }
 }

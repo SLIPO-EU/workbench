@@ -1,8 +1,7 @@
 package eu.slipo.workbench.web.controller.action;
 
-import java.time.ZonedDateTime;
-import java.util.UUID;
-
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -10,18 +9,18 @@ import org.springframework.web.bind.annotation.RestController;
 
 import eu.slipo.workbench.common.model.RestResponse;
 import eu.slipo.workbench.web.model.Dashboard;
-import eu.slipo.workbench.web.model.EnumDataFormat;
-import eu.slipo.workbench.web.model.EnumResourceType;
-import eu.slipo.workbench.web.model.Event;
-import eu.slipo.workbench.web.model.resource.EnumDataSourceType;
-import eu.slipo.workbench.web.model.resource.ResourceMetadataView;
-import eu.slipo.workbench.web.model.resource.ResourceRecord;
+import eu.slipo.workbench.web.repository.DashboardRepository;
 
 /**
  * Actions for querying generic application data
  */
 @RestController
+@Secured({ "ROLE_USER", "ROLE_ADMIN" })
+@RequestMapping(produces = "application/json")
 public class DashboardController {
+
+    @Autowired
+    DashboardRepository dashboardRepository;
 
     /**
      * Returns data for several KPIs (key performance indicators) relevant to the
@@ -29,81 +28,13 @@ public class DashboardController {
      *
      * @param Authentication the authenticated principal
      * @return an instance of {@link Dashboard}}
+     * @throws Exception if a data access operation fails
      */
-    @RequestMapping(value = "/action/dashboard", method = RequestMethod.GET, produces = "application/json")
-    public RestResponse<Dashboard> getDashboard(Authentication Authentication) {
-        return RestResponse.result(this.createDashboard());
-    }
+    @RequestMapping(value = "/action/dashboard", method = RequestMethod.GET)
+    public RestResponse<Dashboard> getDashboard(Authentication Authentication) throws Exception {
+        final Dashboard dashboard = dashboardRepository.load();
 
-    private Dashboard createDashboard() {
-        Dashboard dashboard = new Dashboard();
-
-        for (int i = 0; i < 10; i++) {
-            long id = i + 1;
-            ResourceRecord resource = this.createResource(id, 1);
-
-            resource.addVersion(this.createResource(id, 2));
-            resource.addVersion(this.createResource(id, 3));
-            resource.addVersion(this.createResource(id, 4));
-
-            dashboard.addResouce(resource);
-        }
-
-        for (int i = 0; i < 10; i++) {
-            dashboard.addEvent(this.createEvent());
-        }
-
-        dashboard.setStatistics(createStatistics());
-
-        return dashboard;
-    }
-
-    private Event createEvent() {
-        return new Event(
-            "webapp",
-            ZonedDateTime.now(),
-            "ERROR",
-            "Authentication has failed for user 'admin'",
-            null,
-            "192.168.0.2",
-            "admin",
-            "Authentication",
-            "Login");
-    }
-
-    private ResourceRecord createResource(long id, int version) {
-        ResourceRecord resource = new ResourceRecord(id, version);
-
-        resource.setType(EnumResourceType.POI_DATA);
-        resource.setDataSource(EnumDataSourceType.UPLOAD);
-        resource.setInputFormat(EnumDataFormat.GPX);
-        resource.setOutputFormat(EnumDataFormat.N_TRIPLES);
-        resource.setProcessExecutionId(1L);
-        resource.setCreatedOn(ZonedDateTime.now());
-        resource.setUpdatedOn(resource.getCreatedOn());
-        resource.setTable(UUID.randomUUID());
-        resource.setFilePath("file.xml");
-        resource.setFileSize((int) (Math.random() * 1024 * 1024) + 100);
-
-
-        resource.setMetadata(
-            new ResourceMetadataView(
-                String.format("Resource %d", id),
-                "Uploaded sample POI data",
-                (int) (Math.random() * 1024*1204 + 100)
-            )
-        );
-
-        return resource;
-    }
-
-    private Dashboard.StatisticsCollection createStatistics() {
-        Dashboard.StatisticsCollection result = new Dashboard.StatisticsCollection();
-
-        result.resources = new Dashboard.ResourceStitistics(120, 10, 4);
-        result.events = new Dashboard.EventStitistics(0, 5, 75);
-
-        return result;
+        return RestResponse.result(dashboard);
     }
 
 }

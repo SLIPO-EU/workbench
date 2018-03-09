@@ -12,12 +12,17 @@
     },
     "process": {
       "explorer": "Διεργασίες",
-      "execution": "Εκτέλεση διεργασιών",
+      "execution": {
+        "default": "Εκτέλεση διεργασιών",
+        "view": "Εκτέλεση",
+        "map-viewer": "Προβολή Χάρτη"
+      },
       "designer": {
         "default": "Σχεδίαση Διεργασίας",
-        "edit": "Ενημέρωση Διεργασίας"
+        "edit": "Ενημέρωση Διεργασίας",
+        "view": "Προβολή Διεργασίας"
       },
-      "execution": "Προβολή Εκτέλεσης Διεργασίας"
+      "viewer": "Προβολή Εκτέλεσης Διεργασίας"
     },
     "recipe": {
       "explorer": "Πρότυπα Διεργασιών"
@@ -28,8 +33,7 @@
     },
     "tools": {
       "schema-explorer": "Οντολογίες",
-      "schema-designer": "Σχεδίαση Οντολογίας",
-      "data-viewer": "Προβολή Δεδομένων"
+      "schema-designer": "Σχεδίαση Οντολογίας"
     }
   },
   "login": {
@@ -47,8 +51,73 @@
     "card": {
       "jobs": "Διεργασίες",
       "resources": "Δεδομένα",
-      "quota": "Διαθέσιμοι Πόροι",
-      "events": "Συμβάντα"
+      "system": "Διαθέσιμοι Πόροι",
+      "events": "Συμβάντα",
+      "fields": {
+        "jobs": {
+          "completed": "Completed",
+          "running": "Running",
+          "failed": "Failed"
+        },
+        "events": {
+          "error": "Error",
+          "warn": "Warning",
+          "info": "Information"
+        },
+        "resources": {
+          "total": "Resources",
+          "new": "New",
+          "updated": "Updated"
+        },
+        "system": {
+          "cores": "Cores",
+          "memory": "Memory",
+          "disk-space": "Disk Space"
+        }
+      }
+    }
+  },
+  "enum": {
+    "dataFormat": {
+      "UNDEFINED": "Unknown",
+      "CSV": "Comma-Separated Values",
+      "GPX": "GPS Exchange Format",
+      "GEOJSON": "GeoJSON",
+      "OSM": "Open Street Maps",
+      "SHAPEFILE": "Shape file",
+      "RDF_XML": "RDF/XML",
+      "RDF_XML_ABBREV": "RDF/XML-ABBREV",
+      "TURTLE": "Turtle",
+      "N_TRIPLES": "N-Triples",
+      "N3": "N3"
+    },
+    "dataSource": {
+      "UNDEFINED": "Not Supported",
+      "UPLOAD": "Upload",
+      "FILESYSTEM": "File System",
+      "HARVESTER": "Harvester",
+      "URL": "External Url"
+    },
+    "operation": {
+      "UNDEFINED": "Not Supported",
+      "REGISTER": "Register",
+      "TRANSFORM": "Transformation",
+      "INTERLINK": "Interlinking",
+      "FUSION": "Fusion",
+      "ENRICHMENT": "Enrichment"
+    },
+    "resourceType": {
+      "UNDEFINED": "Unknown",
+      "POI_DATA": "POI Data",
+      "POI_LINKED_DATA": "POI Linked Data"
+    },
+    "tool": {
+      "UNDEFINED": "Unknown",
+      "REGISTER": "Catalog Manager",
+      "TRIPLEGEO": "TripleGeo",
+      "LIMES": "LIMES",
+      "FAGI": "FAGI",
+      "DEER": "DEER"
     }
   }
 }

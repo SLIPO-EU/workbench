@@ -1,32 +1,28 @@
 import actions from './api/fetch-actions';
 
 import {
-  EnumProcessSaveAction,
-} from '../model';
+  EnumDesignerSaveAction,
+} from '../model/process-designer';
 
 import {
+  EnumDataFormat,
+  EnumDataSource,
   EnumInputType,
   EnumTool,
-  EnumDataSource,
-  EnumToolboxItem
-} from '../components/views/process/designer/constants';
-
-import {
+  EnumToolboxItem,
   DataSourceIcons,
   DataSourceTitles,
   ResourceTypeIcons,
   ToolIcons,
-} from '../components/views/process/designer/config';
+} from '../model/process-designer';
 
 function buildProcessRequest(action, designer) {
-  const allInputResources = designer.steps.reduce((agg, value) => {
-    return agg.concat(value.resources);
+  const allInputOutputResources = designer.steps.reduce((result, step) => {
+    return (step.outputKey ? result.concat(step.resources, [step.outputKey]) : result.concat(step.resources));
   }, []);
-
   const model = {
     action,
-    process: {
-      id: (action === EnumProcessSaveAction.SaveAsTemplate ? null : designer.process.properties.id),
+    definition: {
       name: designer.process.properties.name,
       description: designer.process.properties.description,
       resources: designer.resources
@@ -57,8 +53,8 @@ function buildProcessRequest(action, designer) {
               return null;
           }
         }).filter((r) => {
-          // Require resources only used in a step definition
-          return ((r !== null) && (allInputResources.includes(r.key)));
+          // Require input resources used in a step definition and output resources
+          return ((r !== null) && (allInputOutputResources.includes(r.key)));
         }),
       steps: designer.steps.map((s) => {
         return {
@@ -67,8 +63,11 @@ function buildProcessRequest(action, designer) {
           name: s.name,
           tool: s.tool,
           operation: s.operation,
+          inputKeys: [...s.resources],
+          sources: buildDataSource(s),
           configuration: buildConfiguration(s),
           outputKey: s.outputKey,
+          outputFormat: (s.tool === EnumTool.CATALOG ? null : EnumDataFormat.N_TRIPLES),
         };
       }).filter((s) => {
         return (s.configuration !== null);
@@ -80,31 +79,21 @@ function buildProcessRequest(action, designer) {
 }
 
 function buildConfiguration(step) {
-  const config = step.configuration;
+  const config = step.configuration || null;
 
   switch (step.tool) {
     case EnumTool.TripleGeo:
-      return {
-        tool: step.tool,
-        resources: [...step.resources],
-        settings: config,
-        dataSource: buildDataSource(step),
-      };
+      return config;
 
     case EnumTool.CATALOG:
       return {
-        tool: step.tool,
-        resources: [...step.resources],
         metadata: config,
       };
 
     case EnumTool.LIMES:
     case EnumTool.FAGI:
     case EnumTool.DEER:
-      return {
-        tool: step.tool,
-        resources: [...step.resources],
-      };
+      return config;
 
     default:
       return null;
@@ -113,35 +102,38 @@ function buildConfiguration(step) {
 
 function buildDataSource(step) {
   if (step.dataSources.length !== 1) {
-    return null;
+    return [];
   }
 
   const dataSource = step.dataSources[0];
   switch (dataSource.source) {
     case EnumDataSource.FILESYSTEM:
       if (dataSource.configuration && dataSource.configuration.resource) {
-        return {
+        return [{
           type: dataSource.source,
           path: dataSource.configuration.resource.path,
-        };
+        }];
       }
       break;
-    case EnumDataSource.EXTERNAL_URL:
+    case EnumDataSource.URL:
       if (dataSource.configuration && dataSource.configuration.url) {
-        return {
+        return [{
           type: dataSource.source,
           url: dataSource.configuration.url,
-        };
+        }];
       }
   }
 
   return null;
 }
 
-function readProcessResponse(process) {
+function readProcessResponse(result) {
+  const { id, version, definition } = result;
   return {
-    ...process,
-    resources: process.resources
+    ...definition,
+    id,
+    version,
+    resources: definition.resources
       .map((r) => {
         switch (r.inputType) {
           case EnumInputType.CATALOG:
@@ -154,6 +146,8 @@ function readProcessResponse(process) {
               id: r.resource.id,
               version: r.resource.version,
               description: r.description,
+              boundingBox: r.boundingBox,
+              tableName: r.tableName,
             };
           case EnumInputType.OUTPUT:
             return {
@@ -171,7 +165,7 @@ function readProcessResponse(process) {
       }).filter((r) => {
         return (r != null);
       }),
-    steps: process.steps.map((s, index) => {
+    steps: definition.steps.map((s, index) => {
       return {
         key: s.key,
         group: s.group,
@@ -181,11 +175,12 @@ function readProcessResponse(process) {
         order: index,
         name: s.name,
         iconClass: ToolIcons[s.tool],
-        resources: s.configuration.resources,
+        resources: [...s.inputKeys],
         dataSources: readDataSource(s),
         configuration: readConfiguration(s),
         errors: {},
         outputKey: s.outputKey,
+        outputFormat: EnumDataFormat.N_TRIPLES,
       };
     }),
   };
@@ -193,12 +188,13 @@ function readProcessResponse(process) {
 
 function readConfiguration(step) {
   const config = step.configuration;
+
   if (!config) {
     return null;
   }
-  switch (config.tool) {
+  switch (step.tool) {
     case EnumTool.TripleGeo:
-      return config.settings;
+      return config;
     case EnumTool.CATALOG:
       return config.metadata;
     default:
@@ -207,54 +203,63 @@ function readConfiguration(step) {
 }
 
 function readDataSource(step) {
-  if (step.tool != EnumTool.TripleGeo) {
+  if (step.tool !== EnumTool.TripleGeo) {
     return [];
   }
 
-  const config = step.configuration;
-  if ((!config) || (!config.dataSource)) {
+  const sources = step.sources;
+  if ((!sources) || (sources.length !== 1)) {
     return [];
   }
 
-  const dataSource = config.dataSource;
-  switch (dataSource.type) {
+  const source = sources[0];
+  switch (source.type) {
     case EnumDataSource.FILESYSTEM:
       return [{
         key: 0,
         type: EnumToolboxItem.DataSource,
-        source: dataSource.type,
-        iconClass: DataSourceIcons[dataSource.type],
-        name: DataSourceTitles[dataSource.type],
+        source: source.type,
+        iconClass: DataSourceIcons[source.type],
+        name: DataSourceTitles[source.type],
         configuration: {
           resource: {
-            path: dataSource.path,
+            path: source.path,
           }
         },
         errors: {},
       }];
-    case EnumDataSource.EXTERNAL_URL:
+
+    case EnumDataSource.URL:
       return [{
         key: 0,
         type: EnumToolboxItem.DataSource,
-        source: dataSource.type,
-        iconClass: DataSourceIcons[dataSource.type],
-        name: DataSourceTitles[dataSource.type],
+        source: source.type,
+        iconClass: DataSourceIcons[source.type],
+        name: DataSourceTitles[source.type],
         configuration: {
-          url: dataSource.url,
+          url: source.url,
         },
         errors: {},
       }];
+
     default:
       return [];
   }
 }
 
-export function fetchProcess(id, version, token) {
-  const action = Number.isNaN(version) ? actions.get(`/action/process/${id}`, token) : actions.get(`/action/process/${id}/${version}`, token);
-
-  return action
+export function fetchProcess(id, token) {
+  return actions
+    .get(`/action/process/${id}`, token)
     .then((result) => {
-      return readProcessResponse(result.process);
+      return readProcessResponse(result);
+    });
+}
+
+export function fetchProcessRevision(id, version, token) {
+  return actions
+    .get(`/action/process/${id}/${version}`, token)
+    .then((result) => {
+      return readProcessResponse(result);
     });
 }
 
@@ -266,30 +271,90 @@ export function fetchExecutions(query, token) {
   return actions.post('/action/process/execution/query', token, query);
 }
 
-export function fetchProcessExecutions(id, version, token) {
-  return actions.get(`/action/process/${id}/${version}/execution`, token);
+export function fetchProcessExecutions(process, version, token) {
+  return actions.get(`/action/process/${process}/${version}/execution`, token);
 }
 
-export function fetchExecutionDetails(id, version, execution, token) {
-  return actions.get(`/action/process/${id}/${version}/execution/${execution}`, token);
+export function fetchExecutionDetails(process, version, execution, token) {
+  return actions
+    .get(`/action/process/${process}/${version}/execution/${execution}`, token)
+    .then((result) => {
+      return {
+        process: readProcessResponse(result.process),
+        execution: result.execution,
+      };
+    });
 }
 
-export function validate(action, designer) {
-  const request = buildProcessRequest(action, designer);
+export function fetchExecutionKpiData(process, version, execution, file, token) {
+  //return actions.get(`/action/process/${process}/${version}/execution/${execution}/kpi/${file}`, token);
+  return Promise.resolve({
+    values: [{
+      key: 'Key 1',
+      value: 100,
+    }, {
+      key: 'Key 2',
+      value: 200,
+      description: 'Value 2 description',
+    }, {
+      key: 'Key 3',
+      value: 15,
+    }, {
+      key: 'Key 4',
+      value: 50,
+    }],
+  });
+}
 
-  // Validate process properties
-  if ((!request.process.name) || (!request.process.description)) {
-    return false;
+export function validate(action, model) {
+  const errors = [];
+  const { process, steps, resources, ...rest } = model;
+
+  // All input resources (exclude registered step output)
+  const allInputResources = steps.reduce((agg, value) =>
+    (value.tool === EnumTool.CATALOG ? agg : agg.concat(value.resources)), []);
+  // All output resources that are not used as an input
+  const stepOutputResources = steps.reduce((agg, value) =>
+    (((value.outputKey) && (allInputResources.indexOf(value.outputKey) === -1)) ? agg.concat([value.outputKey]) : agg), []);
+
+  // Properties
+  if ((!process.properties.name) || (!process.properties.description)) {
+    errors.push({ code: 1, text: 'One or more workflow properties are missing' });
   }
-  if (request.process.steps.length === 0) {
-    return false;
+  // Steps
+  if (steps.length === 0) {
+    errors.push({ code: 1, text: 'At least a single step is required' });
   }
-  if (request.process.resources.length === 0) {
-    return false;
+  steps.forEach((s) => {
+    if (s.configuration === null) {
+      errors.push({ code: 1, text: `Configuration for step ${s.name} is not set` });
+    } else if (Object.keys(s.errors).length !== 0) {
+      errors.push({ code: 1, text: `Configuration for step ${s.name} is not valid` });
+    }
+
+    s.dataSources.forEach((ds) => {
+      if (ds.configuration === null) {
+        errors.push({ code: 1, text: `Configuration for step ${s.name} data source is not set` });
+      } else if (Object.keys(ds.errors).length !== 0) {
+        errors.push({ code: 1, text: `Configuration for step ${s.name} data source is not valid` });
+      }
+    });
+  });
+  // Output
+  if (stepOutputResources.length !== 1) {
+    errors.push({ code: 1, text: 'A workflow must generate a single output' });
   }
-  return true;
+  console.log(errors);
+  return errors;
 }
 
 export function save(action, designer, token) {
-  return actions.post('/action/process', token, buildProcessRequest(action, designer));
+  const id = (action === EnumDesignerSaveAction.SaveAsTemplate ? null : designer.process.id);
+  const data = buildProcessRequest(action, designer);
+
+  if (id) {
+    return actions.post(`/action/process/${id}`, token, data);
+  } else {
+    return actions.post('/action/process', token, data);
+  }
 }

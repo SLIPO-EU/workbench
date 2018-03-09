@@ -1,12 +1,31 @@
-const React = require('react');
-const ReactRedux = require('react-redux');
-const PropTypes = require('prop-types');
-const { NavLink } = require('react-router-dom');
-const { FormattedMessage } = require('react-intl');
+import * as React from 'react';
+import * as PropTypes from 'prop-types';
+import * as ReactRedux from 'react-redux';
 
-import { toast } from 'react-toastify';
+import {
+  NavLink,
+} from 'react-router-dom';
 
-import { Pages } from '../../model/routes';
+import {
+  FormattedMessage,
+} from 'react-intl';
+
+import {
+  toast,
+} from 'react-toastify';
+
+import {
+  Pages
+} from '../../model/routes';
+
+import {
+  getConfiguration,
+} from '../../ducks/config';
+
+import {
+  login,
+  refreshProfile,
+} from '../../ducks/user';
 
 //
 // Presentational component
@@ -44,13 +63,13 @@ class LoginForm extends React.Component {
       <div className="app flex-row align-items-center">
         <div className="container">
           <div className="row justify-content-center">
-            <div className="col-md-8">
+            <div className="col-md-4">
               <div className="card-group mb-0">
 
                 <div className="card p-4">
                   <form className="card-block" onSubmit={this._submit}>
 
-                    <h1><FormattedMessage id="login.title" defaultMessage="Sign in" /></h1>
+                    <a className="login-brand" target="_blank" href="http://www.slipo.eu/"></a>
                     <p className="text-muted">
                       <FormattedMessage id="login.subtitle" defaultMessage="Sign-in into your account" />
                     </p>
@@ -86,20 +105,6 @@ class LoginForm extends React.Component {
                   </form>
                 </div>
 
-                <div className="card card-inverse card-primary py-5 d-md-down-none">
-                  <div className="card-block text-center">
-                    <div>
-                      <h2><FormattedMessage id="register.title" defaultMessage="Sign up" /></h2>
-                      <p>
-                        <FormattedMessage id="register.subtitle" defaultMessage="Register for a new account" />
-                      </p>
-                      <NavLink className="btn btn-primary active mt-3" to={Pages.Register}>
-                        <FormattedMessage id="register.register" defaultMessage="Register!" />
-                      </NavLink>
-                    </div>
-                  </div>
-                </div>
-
               </div>
             </div>
           </div>
@@ -118,14 +123,13 @@ LoginForm.propTypes = {
 // Container component
 //
 
-const { login, refreshProfile } = require('../../ducks/user');
-
 const mapStateToProps = null;
 
 const mapDispatchToProps = (dispatch) => ({
   submit: (username, password) => (
     dispatch(login(username, password))
       .then(() => dispatch(refreshProfile()))
+      .then(() => dispatch(getConfiguration()))
       .then(() => toast.dismiss(),
         () => {
           toast.dismiss();

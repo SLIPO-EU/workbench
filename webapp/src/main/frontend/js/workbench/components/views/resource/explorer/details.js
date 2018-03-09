@@ -17,7 +17,7 @@ import {
 } from '../../../../util';
 
 import {
-  TextArea,
+  TextAreaField,
   TextField,
 } from '../../../helpers/forms/fields';
 
@@ -35,7 +35,7 @@ class ResourceDetails extends React.Component {
 
   render() {
     const { resource, version, intl } = this.props;
-    const r = (resource.version === version) ? resource : resource.versions.find((v) => v.version === version);
+    const r = (resource.version === version) ? resource : resource.revisions.find((v) => v.version === version);
 
     return (
       <div>
@@ -60,14 +60,14 @@ class ResourceDetails extends React.Component {
             <TextField
               id="versionCount"
               label="# of Versions"
-              value={(resource.versions.length || 1).toString()}
+              value={(resource.revisions.length || 1).toString()}
               readOnly={true}
             />
           </Col>
         </Row>
         <Row>
           <Col>
-            <TextArea
+            <TextAreaField
               id="description"
               label="Description"
               value={r.metadata.description}
@@ -115,9 +115,9 @@ class ResourceDetails extends React.Component {
         <Row>
           <Col>
             <TextField
-              id="fileName"
+              id="filePath"
               label="Filename"
-              value={r.fileName}
+              value={r.filePath}
               readOnly={true}
             />
           </Col>
@@ -135,10 +135,12 @@ class ResourceDetails extends React.Component {
             <TextField
               id="format"
               label="Format"
-              value={r.outputFormat}
+              value={r.format}
               readOnly={true}
             />
           </Col>
+        </Row>
+        <Row>
           <Col>
             <TextField
               id="fileSize"
@@ -151,7 +153,7 @@ class ResourceDetails extends React.Component {
             <TextField
               id="entities"
               label="# of Elements"
-              value={r.metadata.size.toString()}
+              value={r.numberOfEntities.toString()}
               readOnly={true}
             />
           </Col>

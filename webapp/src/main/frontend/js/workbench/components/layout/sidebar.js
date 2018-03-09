@@ -4,7 +4,7 @@ import { bindActionCreators } from 'redux';
 
 import * as  PropTypes from 'prop-types';
 import { NavLink } from 'react-router-dom';
-import { toggle } from '../../ducks/ui/menu';
+import { toggleMenu } from '../../ducks/ui/menu';
 import * as Roles from '../../model/role';
 import { StaticRoutes, DynamicRoutes, buildPath } from '../../model/routes';
 
@@ -12,7 +12,7 @@ import SecureContent from '../helpers/secure-content';
 
 const Sections = {
   Resource: 'Resource',
-  Process: 'Process',
+  Process: 'Workflow',
   Recipe: 'Recipe',
   Tool: 'Tool',
   Admin: 'Admin',
@@ -28,7 +28,7 @@ class Sidebar extends React.Component {
     );
 
     var toggle = (p) => {
-      this.props.toggle(p);
+      this.props.toggleMenu(p);
     };
 
     return (
@@ -67,7 +67,7 @@ class Sidebar extends React.Component {
               <ul className="nav-dropdown-items">
                 <li className="nav-item">
                   <NavLink to={StaticRoutes.ProcessExplorer} className="nav-link" activeClassName="active">
-                    <i className="fa fa-clock-o"></i>{'Process Explorer'}
+                    <i className="fa fa-clock-o"></i>{'Workflow Explorer'}
                   </NavLink>
                 </li>
                 <li className="nav-item">
@@ -96,7 +96,7 @@ class Sidebar extends React.Component {
               </ul>
             </li>
 
-            <li className={'nav-item nav-dropdown ' + (expanded(Sections.Tool) ? 'open' : '')}>
+            <li className={'d-none nav-item nav-dropdown ' + (expanded(Sections.Tool) ? 'open' : '')}>
               <a className="nav-link nav-dropdown-toggle" onClick={() => (toggle(Sections.Tool), false)}>
                 {'Tools'}
               </a>
@@ -146,6 +146,6 @@ const mapStateToProps = (state) => ({
   expanded: state.ui.menu.expanded,
 });
 
-const mapDispatchToProps = (dispatch) => bindActionCreators({ toggle }, dispatch);
+const mapDispatchToProps = (dispatch) => bindActionCreators({ toggleMenu }, dispatch);
 
 export default connect(mapStateToProps, mapDispatchToProps)(Sidebar);

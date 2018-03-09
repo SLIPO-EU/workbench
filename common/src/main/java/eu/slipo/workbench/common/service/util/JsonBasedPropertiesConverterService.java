@@ -175,7 +175,7 @@ public class JsonBasedPropertiesConverterService implements PropertiesConverterS
             for (String key: chainedIterable(keys, Collections.singleton(SENTINEL_KEY))) {
                 FieldToken token = null;
                 // Parse field token for this key
-                if (key != SENTINEL_KEY) { 
+                if (!key.equals(SENTINEL_KEY)) { 
                     int p = key.indexOf('[', prefixLen);
                     if (p >= 0)
                         token = FieldToken.of(FieldType.ARRAY, key.substring(prefixLen, p));
@@ -238,7 +238,7 @@ public class JsonBasedPropertiesConverterService implements PropertiesConverterS
             for (String key: chainedIterable(keys, Collections.singleton(SENTINEL_KEY))) {
                 FieldToken token = null;
                 // Parse field token for this key
-                if (key != SENTINEL_KEY) { 
+                if (!key.equals(SENTINEL_KEY)) { 
                     Matcher m = fieldPattern.matcher(key);
                     if (m.find(prefixLen)) {
                         int index = Integer.valueOf(m.group(2));

@@ -12,14 +12,11 @@ const inputFormats = [
   { value: 'GEOJSON', label: 'GEOJSON' },
   { value: 'OSM', label: 'OSM' },
   { value: 'SHAPEFILE', label: 'SHAPEFILE' },
-  { value: 'XML', label: 'XML' },
 ];
 
 const modes = [
   { value: 'GRAPH', label: 'GRAPH' },
   { value: 'STREAM', label: 'STREAM' },
-  { value: 'RML', label: 'RML' },
-  { value: 'XSLT', label: 'XSLT' },
 ];
 
 const encodings = [
@@ -53,46 +50,20 @@ const serializations = [
 ];
 
 export const initialValue = {
-  'mode': modes[2].value,
+  'mode': modes[0].value,
   'encoding': encodings[2].value,
-  'serialization': serializations[2].value,
-  'sourceCRS': crs[0].value,
-  'targetCRS': crs[1].value,
-  'defaultLang': languages[0].value,
   'delimiter': '|',
   'quote': '"',
+  'serialization': serializations[2].value,
+  'targetOntology': ontologies[0].value,
+  'nsFeatureURI': 'http://slipo.eu/geodata#',
+  'nsGeometryURI': 'http://www.opengis.net/ont/geosparql#',
+  'sourceCRS': crs[1].value,
+  'targetCRS': crs[1].value,
+  'defaultLang': languages[0].value,
 };
 
-export const validator = function (values, cleared) {
-  const errors = {};
-  if (!values['attrKey']) {
-    errors['attrKey'] = 'Required';
-  }
-  if (!values['featureName']) {
-    errors['featureName'] = 'Required for constructing the resource URI';
-  }
-  if (!values['targetOntology']) {
-    errors['targetOntology'] = 'Required';
-  }
-  if (!values['defaultLang']) {
-    errors['defaultLang'] = 'Select default language';
-  }
-  if (cleared && cleared.metadata && cleared.metadata.format === 'CSV') {
-    if (!values['delimiter']) {
-      errors['delimiter'] = 'Required for CSV';
-    }
-    if (!values['attrX']) {
-      errors['attrX'] = 'Required for CSV';
-    }
-    if (!values['attrY']) {
-      errors['attrY'] = 'Required for CSV';
-    }
-  }
-
-  if (Object.keys(errors).length) {
-    throw errors;
-  }
-};
+export { validator } from '../../../../service/triplegeo';
 
 export const Component = (props) => {
   return (
@@ -140,7 +111,7 @@ export const Component = (props) => {
         help="File (in YML or CSV format) containing classification hierarchy of categories"
       /> */}
 
-      <div>
+      {/* <div>
         <h4>Output parameters</h4>
         <hr />
       </div>
@@ -159,7 +130,7 @@ export const Component = (props) => {
         label="Ontology Type"
         help="Specify the type of the spatial ontology where the exported data will refer to"
         options={ontologies}
-      />
+      /> */}
 
       <div>
         <h4>Data parameters</h4>
@@ -193,38 +164,36 @@ export const Component = (props) => {
         label="Ignore value"
         help="Parameter that specifies particular values (e.g., UNK) in attributes that should not be exported as literals. By default, NULL values in attributes are suppressed and never exported"
       />
-      {
-        props.values && props.values['metadata'] && props.values['metadata'].format === 'CSV' ?
-          <div>
-            <TextField
-              {...props}
-              id="delimiter"
-              label="Delimiter"
-              help="Specify delimiter character"
-            />
+      {props.value && props.value.inputFormat === 'CSV' &&
+        <div>
+          <TextField
+            {...props}
+            id="delimiter"
+            label="Delimiter"
+            help="Specify delimiter character"
+          />
 
-            <TextField
-              {...props}
-              id="quote"
-              label="Quote"
-              help="Specify quote character for string values; Remove for any other types of input data"
-            />
+          <TextField
+            {...props}
+            id="quote"
+            label="Quote"
+            help="Specify quote character for string values; Remove for any other types of input data"
+          />
 
-            <TextField
-              {...props}
-              id="attrX"
-              label="X-attribute"
-              help="Specify attribute holding X-coordinates of point locations"
-            />
+          <TextField
+            {...props}
+            id="attrX"
+            label="X-attribute"
+            help="Specify attribute holding X-coordinates of point locations"
+          />
 
-            <TextField
-              {...props}
-              id="attrY"
-              label="Y-attribute"
-              help="Specify attribute holding Y-coordinates of point locations"
-            />
-          </div>
-          : null
+          <TextField
+            {...props}
+            id="attrY"
+            label="Y-attribute"
+            help="Specify attribute holding Y-coordinates of point locations"
+          />
+        </div>
       }
 
       <div>
@@ -289,19 +258,22 @@ export const Component = (props) => {
         options={crs}
       />
 
-      <div>
-        <h4>Other parameters</h4>
-        <hr />
-      </div>
+      {props.value && (props.value.mode === 'GRAPH' || props.value.mode === 'STREAM') &&
+        <div>
+          <div>
+            <h4>Other parameters</h4>
+            <hr />
+          </div>
 
-      <SelectField
-        {...props}
-        id="defaultLang"
-        label="Default language"
-        help="Default lang for the labels created in the output RDF. By default, the value will be English-en"
-        options={languages}
-      />
-
+          <SelectField
+            {...props}
+            id="defaultLang"
+            label="Default language"
+            help="Default lang for the labels created in the output RDF. By default, the value will be English-en"
+            options={languages}
+          />
+        </div>
+      }
     </div>
   );
 };

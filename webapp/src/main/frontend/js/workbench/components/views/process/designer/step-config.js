@@ -5,7 +5,7 @@ import {
 } from 'reactstrap';
 import {
   EnumTool
-} from './constants';
+} from '../../../../model/process-designer';
 import Form from '../../../helpers/forms/form';
 
 import * as metadata from '../../resource/register/metadata';

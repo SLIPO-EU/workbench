@@ -14,7 +14,7 @@ export default class Filters extends React.Component {
 
   clear() {
     this.props.resetFilters();
-    this.props.fetchProcesses({});
+    this.props.fetchProcesses({query: {}});
   }
 
   search(e) {
@@ -23,7 +23,7 @@ export default class Filters extends React.Component {
     e.preventDefault();
 
     props.fetchProcesses({
-      ...this.props.filters,
+      query: {...this.props.filters},
     });
   }
 

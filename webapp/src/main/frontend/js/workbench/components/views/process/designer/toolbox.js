@@ -16,10 +16,6 @@ import {
   EnumHarvester,
   EnumTool,
   EnumToolboxItemGroup,
-  EnumOperation,
-} from './constants';
-
-import {
   DataSourceIcons,
   DataSourceTitles,
   HarvesterIcons,
@@ -27,7 +23,8 @@ import {
   ToolDefaultOperation,
   ToolIcons,
   ToolTitles,
-} from './config';
+} from '../../../../model/process-designer';
+
 import DataSource from './data-source';
 import Operation from './operation';
 

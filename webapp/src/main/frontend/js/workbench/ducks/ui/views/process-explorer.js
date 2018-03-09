@@ -86,7 +86,7 @@ export default (state = initialState, action) => {
         items: action.result.items.map((p) => {
           return {
             ...p,
-            versions: p.versions.sort((v1, v2) => v2.version - v1.version),
+            revisions: p.revisions.sort((v1, v2) => v2.version - v1.version),
           };
         }),
         pager: {

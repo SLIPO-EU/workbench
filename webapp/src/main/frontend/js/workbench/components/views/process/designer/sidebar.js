@@ -16,6 +16,14 @@ import {
 } from 'reactstrap';
 
 import {
+  EnumSelection,
+  EnumInputType,
+  EnumResourceType,
+  ProcessInputIcons,
+  ResourceTypeIcons
+} from '../../../../model/process-designer';
+
+import {
   filterResource,
   filteredResources,
   removeResourceFromBag,
@@ -23,17 +31,6 @@ import {
   processValidate,
   processUpdate,
 } from '../../../../ducks/ui/views/process-designer';
-
-import {
-  ProcessInputIcons,
-  ResourceTypeIcons
-} from './config';
-
-import {
-  EnumSelection,
-  EnumInputType,
-  EnumResourceType
-} from './constants';
 
 import ProcessInput from './process-input';
 import PropertyViewer from './property-viewer';
@@ -60,8 +57,8 @@ const filters = [{
 }, {
   id: EnumResourceType.LINKED,
   iconClass: ResourceTypeIcons[EnumResourceType.LINKED],
-  title: 'POI Linked Data',
-  description: 'Displaying POI Linked data',
+  title: 'Links',
+  description: 'Displaying Links',
 }];
 
 /**
@@ -73,23 +70,36 @@ const filters = [{
  */
 class Sidebar extends React.Component {
 
-  /**
-   * Resolves selected item
-   *
-   * @returns the selected item
-   * @memberof Sidebar
-   */
+  getSelectedStepItem() {
+    const step = this.props.steps.find((step) => {
+      return (step.key === this.props.active.step);
+    }) || null;
+
+    const stepExecution = (step && this.props.execution ? this.props.execution.steps.find((e) => e.key === step.key) : null) || null;
+
+    return {
+      step,
+      stepExecution,
+    };
+  }
+
   getSelectedItem() {
     switch (this.props.active.type) {
       case EnumSelection.Process:
         return this.props.active.item;
+
+      case EnumSelection.Step:
+        return this.getSelectedStepItem();
+
       case EnumSelection.Resource:
         return this.props.resources.find((resource) => {
           return ((resource.key === this.props.active.item) && (resource.inputType === EnumInputType.CATALOG));
         }) || null;
+
       case EnumSelection.Input:
         return this.props.resources.find((resource) => {
           return ((resource.key === this.props.active.item) && (resource.inputType === EnumInputType.CATALOG));
+
         }) || null;
       default:
         return null;
@@ -119,53 +129,61 @@ class Sidebar extends React.Component {
     const filter = filters.find((f) => f.id === this.props.filters.resource);
     return (
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <Row>
-          <Col>
-            <div style={{ borderBottom: '1px solid #cfd8dc', padding: 11 }}>
-              Resources
+        {!this.props.execution &&
+          <Row>
+            <Col>
+              <div style={{ borderBottom: '1px solid #cfd8dc', padding: 11 }}>
+                Resources
               <ButtonToolbar style={{ position: 'absolute', right: 20, top: 4 }}>
-                <ButtonGroup data-toggle="buttons" aria-label="First group">
-                  {filters.map((f) => (
-                    <Label
-                      key={f.id}
-                      htmlFor={f.id}
-                      className={f.id === this.props.filters.resource ? "btn btn-outline-secondary active" : "btn btn-outline-secondary "}
-                      check={f.id === this.props.filters.resource}
-                      style={{ border: 'none', padding: '0.5rem 0.7rem' }}
-                      title={f.title}
-                    >
-                      <Input type="radio" name="resourceFilter" id={f.id} onClick={() => this.props.filterResource(f.id)} />
-                      <i className={f.iconClass}></i>
-                    </Label>))
-                  }
-                </ButtonGroup>
-              </ButtonToolbar>
-            </div>
-            <div className="text-muted slipo-pd-tip" style={{ paddingLeft: 11 }}>{filter ? filter.description : 'Displaying all resources'}</div>
-            <div className={
-              classnames({
-                "slipo-pd-sidebar-resource-list": true,
-                "slipo-pd-sidebar-resource-list-empty": (this.props.resources.length === 0),
-              })
-            }>
-              {this.props.resources.length > 0 &&
-                this.props.resources.map((r) => this.renderResource(r))
-              }
-              {this.props.resources.length === 0 &&
-                <div className="text-muted slipo-pd-tip" style={{ paddingLeft: 1 }}>No resources selected</div>
-              }
-            </div>
-          </Col>
-        </Row>
+                  <ButtonGroup data-toggle="buttons" aria-label="First group">
+                    {filters.map((f) => (
+                      <Label
+                        key={f.id}
+                        htmlFor={f.id}
+                        className={f.id === this.props.filters.resource ? "btn btn-outline-secondary active" : "btn btn-outline-secondary "}
+                        check={f.id === this.props.filters.resource}
+                        style={{ border: 'none', padding: '0.5rem 0.7rem' }}
+                        title={f.title}
+                      >
+                        <Input type="radio" name="resourceFilter" id={f.id} onClick={() => this.props.filterResource(f.id)} />
+                        <i className={f.iconClass}></i>
+                      </Label>))
+                    }
+                  </ButtonGroup>
+                </ButtonToolbar>
+              </div>
+              <div className="text-muted slipo-pd-tip" style={{ paddingLeft: 11 }}>{filter ? filter.description : 'Displaying all resources'}</div>
+              <div className={
+                classnames({
+                  "slipo-pd-sidebar-resource-list": true,
+                  "slipo-pd-sidebar-resource-list-empty": (this.props.resources.length === 0),
+                })
+              }>
+                {this.props.resources.length > 0 &&
+                  this.props.resources.map((r) => this.renderResource(r))
+                }
+                {this.props.resources.length === 0 &&
+                  <div className="text-muted slipo-pd-tip" style={{ paddingLeft: 1 }}>No resources selected</div>
+                }
+              </div>
+            </Col>
+          </Row>
+        }
         <Row className="mb-2" style={{ flex: '1 1 auto' }}>
           <Col>
             <div>
-              <div style={{ borderTop: '1px solid #cfd8dc', borderBottom: '1px solid #cfd8dc', padding: 11 }}>
-                Properties
+              {this.props.execution ?
+                <div style={{ borderBottom: '1px solid #cfd8dc', padding: 11 }}>
+                  Properties
               </div>
+                :
+                <div style={{ borderTop: '1px solid #cfd8dc', borderBottom: '1px solid #cfd8dc', padding: 11 }}>
+                  Properties
+              </div>
+              }
               {this.getSelectedItem() ?
                 <div className="slipo-pd-properties">
-                  {this.props.active.type === EnumSelection.Process &&
+                  {this.props.active.type === EnumSelection.Process && !this.props.readOnly &&
                     <ProcessDetails
                       values={this.props.process.properties}
                       errors={this.props.process.errors}
@@ -174,12 +192,10 @@ class Sidebar extends React.Component {
                       readOnly={this.props.readOnly}
                     />
                   }
-                  {this.props.active.type !== EnumSelection.Process &&
+                  {this.props.readOnly &&
                     <PropertyViewer
                       item={this.getSelectedItem()}
                       type={this.props.active.type}
-                      processValidate={this.props.processValidate}
-                      processUpdate={this.props.processUpdate}
                     />
                   }
                 </div>
@@ -196,12 +212,15 @@ class Sidebar extends React.Component {
 }
 
 const mapStateToProps = (state) => ({
+  // Workflow properties
   active: state.ui.views.process.designer.active,
   process: state.ui.views.process.designer.process,
   readOnly: state.ui.views.process.designer.readOnly,
   steps: state.ui.views.process.designer.steps,
   resources: filteredResources(state.ui.views.process.designer),
   filters: state.ui.views.process.designer.filters,
+  // Execution properties
+  execution: state.ui.views.process.designer.execution.data,
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({

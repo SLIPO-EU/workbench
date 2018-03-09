@@ -6,16 +6,14 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.EnumMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 
-import org.hibernate.validator.constraints.URL;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.hibernate.validator.constraints.URL;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -32,19 +30,19 @@ import eu.slipo.workbench.common.model.poi.EnumOntology;
  */
 @SuppressWarnings("serial")
 public class TriplegeoConfiguration extends AbstractToolConfiguration
-{    
+{
     /**
      * The set of available processing modes
      */
     public enum Mode {
-        STREAM, 
+        STREAM,
         GRAPH;
     }
-    
+
     /**
      * The set of data formats ({@link EnumDataFormat}) as expected by Triplegeo
      */
-    public enum DataFormat 
+    public enum DataFormat
     {
         CSV(EnumDataFormat.CSV, "CSV"),
         GEOJSON(EnumDataFormat.GEOJSON, "GEOJSON"),
@@ -56,63 +54,67 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
         RDF_XML(EnumDataFormat.RDF_XML, "RDF", "RDF/XML"),
         RDF_XML_ABBREV(EnumDataFormat.RDF_XML_ABBREV, "RDF/XML-ABBREV"),
         SHAPEFILE(EnumDataFormat.SHAPEFILE, "SHAPEFILE", "SHP");
-        
+
         private EnumDataFormat dataFormat;
-        
+
         private final List<String> keys;
-        
+
         private DataFormat(EnumDataFormat dataFormat, String key0, String ...aliases)
         {
             this.dataFormat = dataFormat;
-            
+
             Assert.notNull(key0, "Expected a non-null key for data format " + dataFormat);
             List<String> keys = new ArrayList<>();
             keys.add(key0);
             keys.addAll(Arrays.asList(aliases));
             this.keys = Collections.unmodifiableList(keys);
         }
-        
+
         public List<String> keys()
         {
             return keys;
         }
-        
+
         public String key()
         {
             return keys.get(0);
         }
-        
+
         public EnumDataFormat dataFormat()
         {
             return dataFormat;
         }
-        
+
         public static DataFormat from(String key)
         {
             Assert.isTrue(!StringUtils.isEmpty(key), "Expected a non-empty key to search for");
-            for (DataFormat e: DataFormat.values())
-                if (e.name().equals(key) || e.keys.indexOf(key) >= 0)
+            for (DataFormat e: DataFormat.values()) {
+                if (e.name().equals(key) || e.keys.indexOf(key) >= 0) {
                     return e;
+                }
+            }
             return null;
         }
-        
+
         public static DataFormat from(EnumDataFormat dataFormat)
         {
             Assert.notNull(dataFormat, "Expected a non-null data format to search for");
-            for (DataFormat e: DataFormat.values())
-                if (e.dataFormat == dataFormat)
+            for (DataFormat e: DataFormat.values()) {
+                if (e.dataFormat == dataFormat) {
                     return e;
+                }
+            }
             return null;
         }
-        
+
     }
 
     //
     // Member data
     //
-    
+
     private Mode mode = Mode.STREAM;
-    
+
     private EnumOntology targetOntology = EnumOntology.GEOSPARQL;
 
     /**
@@ -126,13 +128,13 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
     private String attrName = "name";
 
     /**
-     * The name of the field from which a category will be extracted (e.g. type of points, 
-     * road classes). 
+     * The name of the field from which a category will be extracted (e.g. type of points,
+     * road classes).
      */
     private String attrCategory = "type";
 
     /**
-     * A string literal representing an unknown (i.e. null) value. A field with an unknown value 
+     * A string literal representing an unknown (i.e. null) value. A field with an unknown value
      * will not be extracted.
      */
     private String nullValue = "UNK";
@@ -141,6 +143,12 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
      * A field delimiter for records (meaningful only for CSV input).
      */
     private String delimiter = ";";
+
+    /**
+     * Mandatory for CSV input only (case-insensitive): specify quote character for string
+     * values; Remove for any other types of input data. quote = "
+     */
+    private String quote= "\"";
 
     /**
      * Required for CSV input only (case-insensitive): specify attribute holding X-
@@ -194,33 +202,39 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
      * The default language for labels created in output RDF. The default is "en".
      */
     private String defaultLang = "en";
-    
+
+    /**
+     * Optional parameter for the encoding (character set) for strings in the input data.
+     * If not specified, UTF-8 encoding is assumed.
+     */
+    private String encoding = "UTF-8";
+
     /**
      * A default constructor
      */
     public TriplegeoConfiguration()
     {
         this.outputFormat = EnumDataFormat.N_TRIPLES;
-        this.tmpDir = Paths.get("/tmp");
+        this.tmpDir = "/tmp";
     }
-    
+
     @Override
     public TriplegeoConfiguration cloneAsBean() throws ReflectiveOperationException
     {
         return (TriplegeoConfiguration) super.cloneAsBean();
     }
-    
+
     //
     // Helpers
     //
-    
+
     /**
      * Set defaults that can be deduced from input format.
      */
     public void useDefaultsForInputFormat()
     {
         Assert.state(inputFormat != null, "The input format must be set before");
-        
+
         switch (inputFormat)
         {
         case CSV:
@@ -250,23 +264,23 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
             break;
         }
     }
-    
+
     //
     // Getters / Setters
     //
-    
+
     @JsonIgnore
     public EnumDataFormat getInputFormat()
     {
         return inputFormat;
     }
-    
+
     @JsonIgnore
     public void setInputFormat(EnumDataFormat inputFormat)
     {
         this.inputFormat = inputFormat;
     }
-    
+
     @JsonProperty("inputFormat")
     @NotEmpty
     public String getInputFormatAsString()
@@ -274,7 +288,7 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
         DataFormat dataFormat = inputFormat == null? null : DataFormat.from(inputFormat);
         return dataFormat == null? null : dataFormat.key();
     }
-    
+
     @JsonProperty("inputFormat")
     public void setInputFormat(String inputFormat)
     {
@@ -282,48 +296,57 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
         Assert.notNull(f, "The key [" + inputFormat + "] does not map to a data format");
         setInputFormat(f.dataFormat());
     }
-    
-    @Override
+
+    @JsonIgnore
     public void setInput(List<Path> input)
     {
-        super.setInput(input);
+        this.input = Collections.unmodifiableList(
+            input.stream()
+                .map(Path::toString)
+                .collect(Collectors.toList()));
     }
-    
+
     @NotEmpty
-    @Override
+    @JsonIgnore
     public List<Path> getInput()
     {
-        return super.getInput();
+        return this.input.stream()
+            .map(Paths::get)
+            .collect(Collectors.toList());
     }
-    
+
     @JsonAlias({ "inputFiles", "input" })
-    public void setInputFiles(String inputFiles)
+    public void setInputFromString(String inputFiles)
     {
-        Assert.isTrue(!StringUtils.isEmpty(inputFiles), 
-            "Expected a non empty colon-separated list of files");
-        super.setInput(inputFiles.split(File.pathSeparator));
+        if (!StringUtils.isEmpty(inputFiles)) {
+            this.input = Collections.unmodifiableList(
+                Arrays.asList(inputFiles.split(File.pathSeparator)));
+        }
     }
-    
+
     @JsonProperty("inputFiles")
-    public String getInputFiles()
+    public String getInputAsString()
     {
-        return super.getInput().stream()
-            .map(Path::toString)
+        if (input.isEmpty()) {
+            return null;
+        }
+
+        return input.stream()
             .collect(Collectors.joining(File.pathSeparator));
     }
-    
+
     @JsonIgnore
     public EnumDataFormat getOutputFormat()
     {
         return outputFormat;
     }
-    
+
     @JsonIgnore
     public void setOutputFormat(EnumDataFormat outputFormat)
     {
         this.outputFormat = outputFormat;
     }
-    
+
     @JsonProperty("serialization")
     @NotEmpty
     public String getSerializationFormat()
@@ -331,278 +354,278 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
         DataFormat dataFormat = outputFormat == null? null : DataFormat.from(outputFormat);
         return dataFormat == null? null : dataFormat.key();
     }
-    
+
     @JsonProperty("serialization")
     public void setSerializationFormat(String serializationFormat)
     {
         DataFormat f = DataFormat.from(serializationFormat);
-        Assert.notNull(f, 
+        Assert.notNull(f,
             "The key [" + serializationFormat + "] does not map to a data format");
         setOutputFormat(f.dataFormat());
-        
+
     }
-    
+
     @JsonIgnore
     public void setOutputDir(Path outputDir)
     {
-        this.outputDir = outputDir;
+        this.outputDir = outputDir == null? null : outputDir.toString();
     }
-    
+
     @JsonIgnore
     public Path getOutputDir()
     {
-        return outputDir;
+        return outputDir == null? null : Paths.get(outputDir);
     }
-    
+
     @JsonProperty("outputDir")
     public void setOutputDir(String outputDir)
     {
-        this.outputDir = Paths.get(outputDir);
+        this.outputDir = outputDir;
     }
-    
+
     @JsonProperty("outputDir")
     public String getOutputDirAsString()
     {
-        return outputDir == null? null : outputDir.toString();
+        return outputDir;
     }
-    
+
     @JsonIgnore
     public void setTmpDir(Path tmpDir)
     {
-        this.tmpDir = tmpDir;
+        this.tmpDir = tmpDir == null? null : tmpDir.toString();
     }
-    
+
     @JsonIgnore
     public Path getTmpDir()
     {
-        return tmpDir;
+        return tmpDir == null? null : Paths.get(tmpDir);
     }
-    
+
     @JsonProperty("tmpDir")
     public void setTmpDir(String tmpDir)
     {
-        this.tmpDir = Paths.get(tmpDir);
+        this.tmpDir = tmpDir;
     }
-    
+
     @JsonProperty("tmpDir")
     public String getTmpDirAsString()
     {
-        return tmpDir == null? null : tmpDir.toString();
+        return tmpDir;
     }
-    
+
     @JsonProperty("mode")
     public void setMode(Mode mode)
     {
         this.mode = mode;
     }
-    
+
     @JsonProperty("mode")
     @NotNull
     public Mode getMode()
     {
         return mode;
     }
-    
+
     @JsonIgnore
     public void setTargetOntology(EnumOntology targetOntology)
     {
         this.targetOntology = targetOntology;
     }
-    
+
     @JsonIgnore
     public EnumOntology getTargetOntology()
     {
         return targetOntology;
     }
-    
+
     @JsonProperty("targetOntology")
     public void setTargetOntology(String key)
     {
         this.targetOntology = EnumOntology.fromKey(key);
     }
-    
+
     @JsonProperty("targetOntology")
     public String getTargetOntologyKey()
     {
         return targetOntology.key();
     }
-    
+
     @JsonProperty("featureName")
     public void setFeatureName(String featureName)
     {
         this.featureName = featureName;
     }
-    
+
     @JsonProperty("featureName")
     @NotEmpty
     public String getFeatureName()
     {
         return featureName;
     }
-    
+
     @JsonProperty("nsFeatureURI")
     public void setFeatureNamespaceUri(String uri)
     {
         this.featureNamespaceUri = uri;
     }
-        
+
     @JsonProperty("nsFeatureURI")
     @URL
     public String getFeatureNamespaceUri()
     {
         return featureNamespaceUri;
     }
-    
+
     @JsonProperty("prefixFeatureNS")
     public void setFeatureUriPrefix(String prefix)
     {
         this.featureUriPrefix = prefix;
     }
-    
+
     @JsonProperty("prefixFeatureNS")
     public String getFeatureUriPrefix()
     {
         return featureUriPrefix;
     }
-    
+
     @JsonProperty("nsGeometryURI")
     public void setGeometryNamespaceUri(String uri)
     {
         this.geometryNamespaceUri = uri;
     }
-    
+
     @JsonProperty("nsGeometryURI")
     @URL
     public String getGeometryNamespaceUri()
     {
         return geometryNamespaceUri;
     }
-    
+
     @JsonProperty("prefixGeometryNS")
     public void setGeometryUriPrefix(String prefix)
     {
         this.geometryUriPrefix = prefix;
     }
-    
+
     @JsonProperty("prefixGeometryNS")
     public String getGeometryUriPrefix()
     {
         return geometryUriPrefix;
     }
-    
+
     @JsonProperty("attrKey")
     public void setAttrKey(String attrKey)
     {
         this.attrKey = attrKey;
     }
-    
+
     @JsonProperty("attrKey")
     @NotEmpty
     public String getAttrKey()
     {
         return attrKey;
     }
-    
+
     @JsonProperty("attrName")
     public void setAttrName(String attrName)
     {
         this.attrName = attrName;
     }
-    
+
     @JsonProperty("attrName")
     @NotEmpty
     public String getAttrName()
     {
         return attrName;
     }
-    
+
     @JsonProperty("attrCategory")
     public void setAttrCategory(String attrCategory)
     {
         this.attrCategory = attrCategory;
     }
-    
+
     @JsonProperty("attrCategory")
     public String getAttrCategory()
     {
         return attrCategory;
     }
-    
+
     @JsonProperty("valIgnore")
     public void setNullValue(String nullValue)
     {
         this.nullValue = nullValue;
     }
-    
+
     @JsonProperty("valIgnore")
     public String getNullValue()
     {
         return nullValue;
     }
-    
+
     @JsonProperty("attrX")
     public void setAttrX(String attrX)
     {
         this.attrX = attrX;
     }
-    
+
     @JsonProperty("attrX")
     public String getAttrX()
     {
         return attrX;
     }
-    
+
     @JsonProperty("attrY")
     public void setAttrY(String attrY)
     {
         this.attrY = attrY;
     }
-    
+
     @JsonProperty("attrY")
     public String getAttrY()
     {
         return attrY;
     }
-    
+
     @JsonProperty("delimiter")
     public void setDelimiter(String delimiter)
     {
         this.delimiter = delimiter;
     }
-    
+
     @JsonProperty("delimiter")
     @NotEmpty
     public String getDelimiter()
     {
         return delimiter;
     }
-  
+
     @JsonProperty("sourceCRS")
     public void setSourceCRS(String sourceCRS)
     {
         this.sourceCRS = sourceCRS;
     }
-    
+
     @JsonProperty("sourceCRS")
     @Pattern(regexp = "epsg:(\\d)+", flags = {Pattern.Flag.CASE_INSENSITIVE})
     public String getSourceCRS()
     {
         return sourceCRS;
     }
-    
+
     @JsonProperty("targetCRS")
     public void setTargetCRS(String targetCRS)
     {
         this.targetCRS = targetCRS;
     }
-    
+
     @JsonProperty("targetCRS")
     @Pattern(regexp = "epsg:(\\d)+", flags = {Pattern.Flag.CASE_INSENSITIVE})
     public String getTargetCRS()
     {
         return targetCRS;
     }
-    
+
     @JsonProperty("defaultLang")
     public String getDefaultLang()
     {
@@ -614,4 +637,29 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
     {
         this.defaultLang = defaultLang;
     }
+
+    @JsonProperty("encoding")
+    public String getEncoding()
+    {
+        return encoding;
+    }
+
+    @JsonProperty("encoding")
+    public void setEncoding(String encoding)
+    {
+        this.encoding = encoding;
+    }
+
+    @JsonProperty("quote")
+    public String getQuote()
+    {
+        return quote;
+    }
+
+    @JsonProperty("quote")
+    public void setQuote(String quote)
+    {
+        this.quote = quote;
+    }
+
 }

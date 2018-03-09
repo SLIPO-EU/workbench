@@ -3,11 +3,12 @@ import PropTypes from 'prop-types';
 import classnames from 'classnames';
 
 import {
-  EnumTool,
   EnumToolboxItem,
-  EnumDragSource,
-} from './constants';
-import StepGroup from './step-group';
+} from '../../../../model/process-designer';
+
+import {
+  StepGroup,
+} from './';
 
 /**
  * A presentational component for rendering multiple step groups
@@ -22,18 +23,21 @@ class Designer extends React.Component {
   }
 
   static propTypes = {
-    // An array of all groups
+    // Workflow properties
     groups: PropTypes.arrayOf(PropTypes.object.isRequired).isRequired,
-    // An array of all steps
     steps: PropTypes.arrayOf(PropTypes.object.isRequired).isRequired,
-    // An array of all resources
     resources: PropTypes.arrayOf(PropTypes.object.isRequired).isRequired,
+
+    // Execution properties
+    execution: PropTypes.object,
+
 
     // Action creators
     addStep: PropTypes.func.isRequired,
     removeStep: PropTypes.func.isRequired,
     moveStep: PropTypes.func.isRequired,
     configureStepBegin: PropTypes.func.isRequired,
+    showStepExecutionDetails: PropTypes.func.isRequired,
     setStepProperty: PropTypes.func.isRequired,
 
     addStepInput: PropTypes.func.isRequired,
@@ -47,6 +51,7 @@ class Designer extends React.Component {
     setActiveStepInput: PropTypes.func.isRequired,
     setActiveStepDataSource: PropTypes.func.isRequired,
 
+    // Designer state
     readOnly: PropTypes.bool.isRequired,
   };
 
@@ -58,17 +63,21 @@ class Designer extends React.Component {
    * @memberof Designer
    */
   renderStepGroup(group) {
+    const steps = this.props.steps.filter((step) => group.steps.indexOf(step.key) !== -1);
+    const stepExecutions = (this.props.execution ? this.props.execution.steps.filter((e) => !!(steps.find((s) => s.key === e.key))) : []);
+
     return (
       <StepGroup
         key={group.key}
         group={group}
-        steps={this.props.steps.filter((step) => { return (group.steps.indexOf(step.key) !== -1); })}
+        steps={steps}
         resources={this.props.resources}
         active={this.props.active}
         addStep={this.props.addStep}
         removeStep={this.props.removeStep}
         moveStep={this.props.moveStep}
         configureStepBegin={this.props.configureStepBegin}
+        showStepExecutionDetails={this.props.showStepExecutionDetails}
         setStepProperty={this.props.setStepProperty}
         addStepInput={this.props.addStepInput}
         removeStepInput={this.props.removeStepInput}
@@ -79,6 +88,7 @@ class Designer extends React.Component {
         setActiveStepInput={this.props.setActiveStepInput}
         setActiveStepDataSource={this.props.setActiveStepDataSource}
         readOnly={this.props.readOnly}
+        stepExecutions={stepExecutions}
       />
     );
   }

@@ -1,20 +1,19 @@
+import ContextSidebar from './context-sidebar';
 import Dashboard from './dashboard';
-import Profile from './profile';
-import Settings from './settings';
-import DataViewer from './data-viewer';
 import EventViewer from './event-viewer';
 import ProcessDesigner from './process-designer';
-import ProcessExecutionViewer from './process-execution-viewer';
 import ProcessExplorer from './process-explorer';
+import ProcessExecutionMapViewer from './process-execution-map-viewer';
 import ProcessExecutionExplorer from './process-execution-explorer';
+import Profile from './profile';
 import RecipeExplorer from './recipe-explorer';
 import ResourceExplorer from './resource-explorer';
 import ResourceRegistration from './resource-registration';
 import ResourceViewer from './resource-viewer';
 import SchemaDesigner from './schema-designer';
 import SchemaExplorer from './schema-explorer';
+import Settings from './settings';
 import UserManager from './user-manager';
-import ContextSidebar from './context-sidebar';
 
 export {
   Dashboard,
@@ -30,8 +29,7 @@ export {
   EventViewer,
   ResourceViewer,
   ProcessDesigner,
-  ProcessExecutionViewer,
   SchemaDesigner,
-  DataViewer,
+  ProcessExecutionMapViewer,
   ContextSidebar,
 };

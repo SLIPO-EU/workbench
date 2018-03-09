@@ -62,7 +62,7 @@ class Header extends React.Component {
 
         {/* right-aligned menu items */}
         <ul className="nav navbar-nav ml-auto">
-          <li className="nav-item d-md-down-none alert">
+          <li className="nav-item d-md-down-none alert d-none">
             <Link to={StaticRoutes.EventViewer} className="nav-link">
               <i className="icon-bell"></i><span className="badge badge-pill badge-info">5</span>
             </Link>

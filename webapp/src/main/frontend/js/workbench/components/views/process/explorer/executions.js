@@ -34,13 +34,14 @@ const processExecutionsColumns = [{
     return (
       <span>
         <i data-action="view" className='fa fa-search slipo-table-row-action p-1'></i>
-        {props.row.status === 'STARTED' &&
+        <i data-action="map" className='fa fa-map-o slipo-table-row-action p-1'></i>
+        {props.row.status === 'RUNNING' &&
           <i data-action="stop" className='fa fa-stop slipo-table-row-action text-danger p-1'></i>
         }
       </span>
     );
   },
-  width: 60,
+  width: 80,
 }, {
   Header: 'Submitted By',
   id: 'submittedBy',
@@ -56,19 +57,19 @@ const processExecutionsColumns = [{
 }, {
   Header: 'Started',
   id: 'startedOn',
-  accessor: r => <FormattedTime value={r.startedOn} day='numeric' month='numeric' year='numeric' />,
+  accessor: r => (r.startedOn ? <FormattedTime value={r.startedOn} day='numeric' month='numeric' year='numeric' /> : '-'),
   headerStyle: { 'textAlign': 'center' },
   style: { 'textAlign': 'center' },
 }, {
   Header: 'End',
   id: 'completedOn',
-  accessor: r => <FormattedTime value={r.completedOn} day='numeric' month='numeric' year='numeric' />,
+  accessor: r => (r.completedOn ? <FormattedTime value={r.completedOn} day='numeric' month='numeric' year='numeric' /> : '-'),
   headerStyle: { 'textAlign': 'center' },
   style: { 'textAlign': 'center' },
 }, {
   Header: 'Duration',
   id: 'dur',
-  accessor: r => moment.duration(r.startedOn - r.completedOn).humanize(),
+  accessor: r => (r.startedOn && r.completedOn ? moment.duration(r.startedOn - r.completedOn).humanize() : '-'),
   headerStyle: { 'textAlign': 'center' },
   style: { 'textAlign': 'center' },
 }];
@@ -91,6 +92,9 @@ export default class ProcessExecutions extends React.Component {
     switch (e.target.getAttribute('data-action')) {
       case 'view':
         this.props.viewExecution(this.props.selected.id, this.props.selected.version, rowInfo.row.id);
+        break;
+      case 'map':
+        this.props.viewMap(this.props.selected.id, this.props.selected.version, rowInfo.row.id);
         break;
       case 'stop':
         this.props.stopExecution(rowInfo.row.id);
