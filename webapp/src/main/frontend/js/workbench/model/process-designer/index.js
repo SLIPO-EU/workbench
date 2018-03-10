@@ -19,6 +19,7 @@ export {
 } from './enum';
 
 export {
+  Colors,
   DataSourceIcons,
   DataSourceTitles,
   HarvesterIcons,

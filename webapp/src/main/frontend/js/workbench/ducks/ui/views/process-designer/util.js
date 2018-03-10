@@ -1,18 +1,9 @@
 import {
+  Colors,
   EnumInputType,
   EnumTool,
   EnumStepFileType,
 } from '../../../../model/process-designer';
-
-const colors = [
-  '#1B5E20',
-  '#B71C1C',
-  '#607D8B',
-  '#FF6F00',
-  '#9E9E9E',
-  '#1A237E',
-  '#212121',
-];
 
 export function resourceToLayers(steps, resources, execution) {
   const layers = [];
@@ -36,7 +27,7 @@ export function resourceToLayers(steps, resources, execution) {
         hidden: false,
         icon: '\uf041',
         iconClass: 'fa fa-map-marker',
-        color: colors[layers.length % colors.length],
+        color: Colors[layers.length % Colors.length],
         tableName: r.tableName,
         boundingBox: r.boundingBox,
         inputType: r.inputType,
@@ -61,7 +52,7 @@ export function resourceToLayers(steps, resources, execution) {
           hidden: false,
           icon: '\uf041',
           iconClass: 'fa fa-map-marker',
-          color: colors[layers.length % colors.length],
+          color: Colors[layers.length % Colors.length],
           tableName: f.tableName,
           boundingBox: f.boundingBox,
           inputType: EnumInputType.OUTPUT,
