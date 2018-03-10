@@ -2,32 +2,19 @@ import * as React from 'react';
 import { DropTarget } from 'react-dnd';
 import classnames from 'classnames';
 
+import * as processService from '../../../../service/process';
+
 import {
   EnumToolboxItem,
   EnumDragSource,
   EnumInputType,
   EnumResourceType,
   EnumSelection,
-  ToolInputRequirements,
 } from '../../../../model/process-designer';
 
 import {
   StepDataSource,
 } from './';
-
-/**
- * Returns plain JavaScript object with required input counters
- *
- * @param {any} step
- * @returns a plain JavaScript object
- */
-function getRequiredDataSources(step) {
-  let { source } = ToolInputRequirements[step.tool];
-
-  return {
-    source: source - step.dataSources.length,
-  };
-}
 
 /**
  * Drop target specification
@@ -57,7 +44,7 @@ const containerTarget = {
    */
   canDrop(props, monitor) {
     const dataSource = monitor.getItem();
-    const counters = getRequiredDataSources(props.step);
+    const counters = processService.getStepDataSourceRequirements(props.step);
 
     if (dataSource.type != EnumToolboxItem.DataSource) {
       return false;
@@ -109,7 +96,7 @@ class StepDataSourceContainer extends React.Component {
   render() {
     const { connectDropTarget, isOver, canDrop } = this.props;
 
-    const counters = getRequiredDataSources(this.props.step);
+    const counters = processService.getStepDataSourceRequirements(this.props.step);
     const message = (
       <div>
         {counters.source > 0 &&

@@ -9,12 +9,14 @@ import {
   EnumDataFormat,
   EnumDataSource,
   EnumInputType,
+  EnumResourceType,
   EnumTool,
   EnumToolboxItem,
   DataSourceIcons,
   DataSourceTitles,
   ResourceTypeIcons,
   ToolIcons,
+  ToolInputRequirements,
 } from '../model/process-designer';
 
 function buildProcessRequest(action, designer) {
@@ -307,8 +309,38 @@ export function fetchExecutionKpiData(process, version, execution, file, token) 
   });
 }
 
-export function validate(action, model) {
-  const errors = [];
+export function getStepDataSourceRequirements(step) {
+  let { source } = ToolInputRequirements[step.tool];
+
+  return {
+    source: source - step.dataSources.length,
+  };
+}
+
+export function getStepInputRequirements(step, resources) {
+  let { poi, linked, any } = ToolInputRequirements[step.tool];
+
+  let counters = resources.reduce((counters, resource) => {
+    switch (resource.resourceType) {
+      case EnumResourceType.POI:
+        counters.poi++;
+        break;
+      case EnumResourceType.LINKED:
+        counters.linked++;
+        break;
+    }
+
+    return counters;
+  }, { poi: 0, linked: 0 });
+
+  return {
+    poi: poi - counters.poi,
+    linked: linked - counters.linked,
+    any: any - counters.poi - counters.linked,
+  };
+}
+
+function validateProcess(action, model, errors) {
   const { process, steps, resources, ...rest } = model;
 
   // All input resources (exclude registered step output)
@@ -318,14 +350,22 @@ export function validate(action, model) {
   const stepOutputResources = steps.reduce((agg, value) =>
     (((value.outputKey) && (allInputResources.indexOf(value.outputKey) === -1)) ? agg.concat([value.outputKey]) : agg), []);
 
-  // Properties
   if ((!process.properties.name) || (!process.properties.description)) {
-    errors.push({ code: 1, text: 'One or more workflow properties are missing' });
+    errors.push({ code: 1, text: 'One or more workflow property values are missing' });
   }
-  // Steps
+
+  if (stepOutputResources.length !== 1) {
+    errors.push({ code: 1, text: 'A workflow must generate a single output' });
+  }
+}
+
+function validateSteps(action, model, errors) {
+  const { process, steps, resources, ...rest } = model;
+
   if (steps.length === 0) {
     errors.push({ code: 1, text: 'At least a single step is required' });
   }
+
   steps.forEach((s) => {
     if (s.configuration === null) {
       errors.push({ code: 1, text: `Configuration for step ${s.name} is not set` });
@@ -341,12 +381,14 @@ export function validate(action, model) {
       }
     });
   });
+
   const countStepWithoutName = steps.reduce((count, step) => {
     return (step.name ? count : ++count);
   }, 0);
   if (countStepWithoutName > 0) {
     errors.push({ code: 1, text: `The name of one or more steps is not set` });
   }
+
   _(steps)
     .groupBy('name')
     .map(function (steps, name) {
@@ -358,11 +400,64 @@ export function validate(action, model) {
         errors.push({ code: 1, text: `Name ${r.name} is not unique.` });
       }
     });
+}
 
-  // Output
-  if (stepOutputResources.length !== 1) {
-    errors.push({ code: 1, text: 'A workflow must generate a single output' });
-  }
+function validateResources(action, model, errors) {
+  const { process, steps, resources, ...rest } = model;
+
+  steps.forEach((s) => {
+    // Resources
+    const stepResources = resources.filter((r) => { return (s.resources.indexOf(r.key) !== -1); });
+    const requiredResources = getStepInputRequirements(s, stepResources);
+
+    if ((requiredResources.poi > 0) && (requiredResources.any <= 0)) {
+      if (requiredResources.poi === 1) {
+        errors.push({ code: 1, text: `Step ${s.name} requires a single POI dataset` });
+      } else {
+        errors.push({ code: 1, text: `Step ${s.name} requires ${requiredResources.poi} POI datasets` });
+      }
+    }
+
+    if ((requiredResources.linked > 0) && (requiredResources.any <= 0)) {
+      if (requiredResources.poi === 1) {
+        errors.push({ code: 1, text: `Step ${s.name} requires a single Links dataset` });
+      } else {
+        errors.push({ code: 1, text: `Step ${s.name} requires ${requiredResources.linked} Links datasets` });
+      }
+    }
+    if (requiredResources.any > 0) {
+      if (requiredResources.poi === 1) {
+        errors.push({ code: 1, text: `Step ${s.name} requires a single POI or Links dataset` });
+      } else {
+        errors.push({ code: 1, text: `Step ${s.name} requires ${requiredResources.linked} POI or Links datasets` });
+      }
+    }
+
+    // Data sources
+    const requiredDataSources = getStepDataSourceRequirements(s);
+
+    if (requiredDataSources.source > 0) {
+      if (requiredDataSources.source === 1) {
+        errors.push({ code: 1, text: `Step ${s.name} requires a single data source or harvester` });
+      } else {
+        errors.push({ code: 1, text: `Step ${s.name} requires ${requiredDataSources.source} data sources or harvesters` });
+      }
+    }
+
+  });
+}
+
+export function validate(action, model) {
+  const errors = [];
+
+  // Properties
+  validateProcess(action, model, errors);
+
+  // Steps
+  validateSteps(action, model, errors);
+
+  // Resources
+  validateResources(action, model, errors);
 
   return errors;
 }

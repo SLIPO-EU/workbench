@@ -2,45 +2,19 @@ import * as React from 'react';
 import { DropTarget } from 'react-dnd';
 import classnames from 'classnames';
 
+import * as processService from '../../../../service/process';
+
 import {
   EnumDragSource,
   EnumTool,
   EnumInputType,
   EnumResourceType,
   EnumSelection,
-  ToolInputRequirements,
 } from '../../../../model/process-designer';
 
-import StepInput from './step-input';
-
-/**
- * Returns plain JavaScript object with required input counters
- *
- * @param {any} step
- * @returns a plain JavaScript object
- */
-function getRequiredResources(step, resources) {
-  let { poi, linked, any } = ToolInputRequirements[step.tool];
-
-  let counters = resources.reduce((counters, resource) => {
-    switch (resource.resourceType) {
-      case EnumResourceType.POI:
-        counters.poi++;
-        break;
-      case EnumResourceType.LINKED:
-        counters.linked++;
-        break;
-    }
-
-    return counters;
-  }, { poi: 0, linked: 0 });
-
-  return {
-    poi: poi - counters.poi,
-    linked: linked - counters.linked,
-    any: any - counters.poi - counters.linked,
-  };
-}
+import {
+  StepInput,
+} from './';
 
 /**
  * Drop target specification
@@ -70,7 +44,7 @@ const containerTarget = {
    */
   canDrop(props, monitor) {
     const resource = monitor.getItem();
-    const counters = getRequiredResources(props.step, props.resources);
+    const counters = processService.getStepInputRequirements(props.step, props.resources);
 
     // Do not accept owner step output
     if ((resource.inputType === EnumInputType.OUTPUT) && (resource.stepKey == props.step.key)) {
@@ -144,7 +118,7 @@ class StepInputContainer extends React.Component {
   render() {
     const { connectDropTarget, isOver } = this.props;
 
-    const counters = getRequiredResources(this.props.step, this.props.resources);
+    const counters = processService.getStepInputRequirements(this.props.step, this.props.resources);
     const message = (
       <div>
         {counters.poi > 0 && counters.any <= 0 &&
