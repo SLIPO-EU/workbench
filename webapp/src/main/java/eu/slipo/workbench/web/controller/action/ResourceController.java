@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +42,7 @@ import eu.slipo.workbench.common.model.process.ProcessExecutionStartException;
 import eu.slipo.workbench.common.model.process.ProcessNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
 import eu.slipo.workbench.common.model.resource.DataSource;
+import eu.slipo.workbench.common.model.resource.FileSystemDataSource;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataUpdate;
 import eu.slipo.workbench.common.model.resource.ResourceQuery;
@@ -115,23 +117,32 @@ public class ResourceController {
     ) throws InvalidProcessDefinitionException, ProcessNotFoundException, ProcessExecutionStartException, IOException {
 
         Assert.notNull(source, "A data source is required");
-        Assert.notNull(configuration, "Expected configuration for Triplegeo");
+        Assert.notNull(configuration, "Expected configuration for Triplegeo transformation");
         Assert.notNull(metadata, "Expected metadata for resource registration");
+        Assert.isTrue(!StringUtils.isEmpty(metadata.getName()), "A non-empty name is required");
 
         final int resourceKey = 1;
+        final String procName = String.format("Resource registration: %s", metadata.getName());
 
-        ProcessDefinition definition = ProcessDefinitionBuilder.create(String.format("Resource registration: %s", metadata.getName()))
-            .transform("transform", b -> b
+        ProcessDefinition definition = ProcessDefinitionBuilder.create(procName)
+            .transform("transform", stepBuilder -> stepBuilder
+                .group(0)
                 .source(source)
                 .outputKey(resourceKey)
                 .configuration(configuration))
-            .register("register", resourceKey, metadata)
+            .register("register", stepBuilder -> stepBuilder
+                .group(1)
+                .resource(resourceKey)
+                .metadata(metadata))
             .build();
-
+        
         ProcessRecord record = processService.create(definition, EnumProcessTaskType.REGISTRATION);
-
-        this.processService.start(record.getId(), record.getVersion());
-
+        
+        ProcessExecutionRecord executionRecord = processService.start(record.getId(), record.getVersion());
+        logger.info(
+            "A request for registration is submitted as execution #{}: metadata = {}", 
+            executionRecord.getId(), metadata);
+        
         return record;
     }
 
@@ -204,15 +215,17 @@ public class ResourceController {
     public RestResponse<?> uploadResource(@RequestPart("file") MultipartFile file, @RequestPart("data") RegistrationRequest request) {
 
         try {
-            final Path inputPath = createTemporaryFile(file.getBytes(), FilenameUtils.getExtension(file.getOriginalFilename()));
+            final Path inputPath = createTemporaryFile(
+                file.getBytes(), FilenameUtils.getExtension(file.getOriginalFilename()));
 
-            List<Error> errors = resourceValidationService.validate(request, currentUserId(), inputPath.toString());
+            List<Error> errors = resourceValidationService
+                .validate(request, currentUserId(), tempDir.resolve(inputPath));
             if (!errors.isEmpty()) {
                 FileUtils.deleteQuietly(inputPath.toFile());
                 return RestResponse.error(errors);
             }
 
-            final DataSource source = new UploadDataSource(inputPath);
+            final DataSource source = new FileSystemDataSource(inputPath);
             final ProcessRecord record = register(source, request.getConfiguration(), request.getMetadata());
 
             return RestResponse.result(record);
@@ -256,11 +269,10 @@ public class ResourceController {
      * @return the resource metadata
      */
     @RequestMapping(value = "/action/resource/{id}/{version}", method = RequestMethod.GET)
-    public RestResponse<ResourceResult> getResource(@PathVariable long id, @PathVariable long version) {
-
+    public RestResponse<ResourceResult> getResource(@PathVariable long id, @PathVariable long version) 
+    {
         final ResourceRecord resource = resourceRepository.findOne(id, version);
         final ProcessExecutionRecord execution = this.getExecution(resource);
-
         return RestResponse.result(new ResourceResult(resource, execution));
     }
 
@@ -271,8 +283,8 @@ public class ResourceController {
      * @return the updated resource metadata
      */
     @RequestMapping(value = "/action/resource/{id}", method = RequestMethod.POST)
-    public RestResponse<?> updateResource(@PathVariable long id, @RequestBody ResourceMetadataUpdate data) {
-
+    public RestResponse<?> updateResource(@PathVariable long id, @RequestBody ResourceMetadataUpdate data) 
+    {
         return RestResponse.result(resourceRepository.findOne(id));
     }
 
@@ -283,8 +295,8 @@ public class ResourceController {
      * @return
      */
     @RequestMapping(value = "/action/resource/{id}", method = RequestMethod.DELETE)
-    public RestResponse<?> deleteResource(@PathVariable long id) {
-
+    public RestResponse<?> deleteResource(@PathVariable long id) 
+    {
         return RestResponse.result(null);
     }
 
@@ -296,8 +308,8 @@ public class ResourceController {
      * @return an instance {@link
      */
     @RequestMapping(value = "/action/resource/{id}/{version}", method = RequestMethod.DELETE)
-    public RestResponse<?> deleteResource(@PathVariable long id, @PathVariable int version) {
-
+    public RestResponse<?> deleteResource(@PathVariable long id, @PathVariable int version) 
+    {
         return RestResponse.result(null);
     }
 
@@ -307,20 +319,24 @@ public class ResourceController {
      * @param data the content to write to the file
      * @throws IOException in case of an I/O error
      *
-     * @return the file path under which data is written
+     * @return the file path under which data is written (the path will always be relative to
+     *   server-side staging directory)
      */
-    private Path createTemporaryFile(byte[] data, String extension) {
+    private Path createTemporaryFile(byte[] data, String extension) 
+        throws IOException 
+    {
+        Path path = null;
+        
         try {
-            final Path path = Files.createTempFile(tempDir, null, "." + (extension == null ? "dat" : extension));
-
+            path = Files.createTempFile(tempDir, null, "." + (extension == null ? "dat" : extension));
             InputStream in = new ByteArrayInputStream(data);
             Files.copy(in, path, StandardCopyOption.REPLACE_EXISTING);
-
-            return path;
         } catch (IOException ex) {
-            logger.error(ex.getMessage(), ex);
+            logger.error("Failed to create temporary file", ex);
+            throw ex;
         }
-        return null;
+        
+        return tempDir.relativize(path);
     }
 
     /**
@@ -332,8 +348,6 @@ public class ResourceController {
     private ProcessExecutionRecord getExecution(ResourceRecord resource) {
 
         final Long id = (resource != null ? resource.getProcessExecutionId() : null);
-
         return (id != null ? processRepository.findExecution(id) : null);
     }
-
 }

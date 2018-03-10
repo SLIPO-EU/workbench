@@ -35,6 +35,7 @@ import {
 import {
   selectLayer,
   setBaseLayer,
+  setLayerColor,
   toggleLayer,
 } from '../../../../ducks/ui/views/process-designer';
 
@@ -88,11 +89,12 @@ class Sidebar extends React.Component {
   renderLayer(layer) {
     return (
       <Layer
-        key={layer.tableName}
+        key={`${layer.tableName}-${layer.color}`}
         layer={layer}
         toggle={this.props.toggleLayer}
         select={this.props.selectLayer}
         selected={this.props.selectedLayer === layer.tableName}
+        setLayerColor={this.props.setLayerColor}
       />
     );
   }
@@ -186,6 +188,7 @@ const mapStateToProps = (state) => ({
 const mapDispatchToProps = (dispatch) => bindActionCreators({
   selectLayer,
   setBaseLayer,
+  setLayerColor,
   toggleLayer,
 }, dispatch);
 

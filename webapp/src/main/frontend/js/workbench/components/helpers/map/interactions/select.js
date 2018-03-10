@@ -33,11 +33,15 @@ class SelectInteraction extends React.Component {
     selected: PropTypes.object,
     color: PropTypes.string,
     width: PropTypes.number,
+    hitTolerance: PropTypes.number,
+    multi: PropTypes.bool,
   }
 
   static defaultProps = {
     width: 1,
     color: '#0D47A1',
+    hitTolerance: 5,
+    multi: true,
   }
 
   parseFeatures(selected) {
@@ -57,18 +61,29 @@ class SelectInteraction extends React.Component {
     }
   }
 
-  buildStyles() {
-    const image = new Circle({
-      radius: this.props.width + 3,
-      fill: new Fill({
-        color: this.props.color + '80',
-      }),
-      stroke: new Stroke({
-        color: this.props.color,
-        width: this.props.width,
-      }),
+  buildPointStyle(color, width) {
+    const stroke = new Stroke({
+      color,
+      width,
     });
+    const fill = new Fill({
+      color: color + '80',
+    });
+    const newStyle = new Style({
+      fill,
+      stroke,
+    });
+    const image = new Circle({
+      radius: width + 3,
+      fill,
+      stroke,
+    });
+    return new Style({
+      image,
+    });
+  }
 
+  buildStyles() {
     const stroke = new Stroke({
       color: this.props.color,
       width: this.props.width,
@@ -79,6 +94,12 @@ class SelectInteraction extends React.Component {
     });
 
     const style = new Style({
+      fill,
+      stroke,
+    });
+
+    const image = new Circle({
+      radius: this.props.width + 3,
       fill,
       stroke,
     });
@@ -103,16 +124,10 @@ class SelectInteraction extends React.Component {
     return ((feature) => {
       const type = feature.getGeometry().getType();
       const style = this.styles[type];
-      const image = (type === 'Point' ? style.getImage() : null);
       const color = feature.get('__color') || this.props.color;
 
-      if (image) {
-        if (image.getFill()) {
-          image.getFill().setColor(color + '80');
-        }
-        if (image.getStroke()) {
-          image.getStroke().setColor(color);
-        }
+      if (type === 'Point') {
+        return this.buildPointStyle(color, this.props.width);
       } else {
         if (style.getFill()) {
           style.getFill().setColor(color + '80');
@@ -133,7 +148,7 @@ class SelectInteraction extends React.Component {
 
       this.interaction = new Select({
         multi: this.props.multi,
-        hitTolerance: 5,
+        hitTolerance: this.props.hitTolerance,
         style,
       });
 
@@ -156,7 +171,7 @@ class SelectInteraction extends React.Component {
   }
 
   componentWillUnmount() {
-    if ((this.props.map) && (this.layer)) {
+    if ((this.props.map) && (this.interaction)) {
       this.props.map.removeInteraction(this.interaction);
       this.interaction = null;
     }

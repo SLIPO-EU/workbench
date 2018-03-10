@@ -91,6 +91,21 @@ export function executionReducer(state, action) {
         baseLayer: action.layer,
       };
 
+    case Types.SET_LAYER_COLOR:
+      return {
+        ...state.execution,
+        selectedFeatures: [],
+        layers: state.execution.layers.map((l) => {
+          if (l.tableName === action.tableName) {
+            return {
+              ...l,
+              color: action.color,
+            };
+          }
+          return l;
+        }),
+      };
+
     case Types.SET_SELECTED_FEATURES:
       return {
         ...state.execution,

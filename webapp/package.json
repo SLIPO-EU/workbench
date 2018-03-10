@@ -65,6 +65,7 @@
     "react": "^16.0.0",
     "react-addons-css-transition-group": "^16.0.0-alpha.3",
     "react-addons-transition-group": "^16.0.0-alpha.3",
+    "react-color": "^2.14.0",
     "react-dnd": "^2.5.4",
     "react-dnd-html5-backend": "^2.5.4",
     "react-dom": "^16.0.0",

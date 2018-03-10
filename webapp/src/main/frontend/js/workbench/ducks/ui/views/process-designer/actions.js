@@ -280,6 +280,12 @@ export const setBaseLayer = (layer) => ({
   layer,
 });
 
+export const setLayerColor = (tableName, color) => ({
+  type: Types.SET_LAYER_COLOR,
+  tableName,
+  color,
+});
+
 export const selectFeatures = (features) => ({
   type: Types.SET_SELECTED_FEATURES,
   features,

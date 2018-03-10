@@ -29,6 +29,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import com.github.slugify.Slugify;
+
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumResourceType;
 import eu.slipo.workbench.common.model.resource.EnumDataSourceType;
@@ -41,7 +43,9 @@ import eu.slipo.workbench.rpc.jobs.listener.ExecutionContextPromotionListeners;
 @Component
 public class RegisterResourceJobConfiguration
 {
-    private static Logger logger = LoggerFactory.getLogger(RegisterResourceJobConfiguration.class);
+    private static final Logger logger = LoggerFactory.getLogger(RegisterResourceJobConfiguration.class);
+
+    private static final Slugify slugify = new Slugify();
 
     @Autowired
     private StepBuilderFactory stepBuilderFactory;
@@ -95,7 +99,8 @@ public class RegisterResourceJobConfiguration
             ExecutionContext executionContext = stepContext.getStepExecution().getExecutionContext();
 
             // Resolve target path under catalog root directory
-            String targetName = metadata.getName() + "." + format.getFilenameExtension();
+            String targetName = slugify.slugify(metadata.getName()) +
+                "." + format.getFilenameExtension();
             Path targetPath = Paths.get(Integer.toString(createdBy), targetName);
             targetPath = catalogDataDir.resolve(targetPath);
 

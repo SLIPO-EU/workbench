@@ -319,6 +319,12 @@ public class ProcessDefinitionBuilder
         
         private ResourceIdentifier resourceIdentifier;
         
+        public RegisterStepBuilder group(int groupNumber)
+        {
+            this.stepBuilder.group(groupNumber);
+            return this;
+        }
+        
         protected RegisterStepBuilder(int key, String name) 
         {
             this.stepBuilder = new BasicStepBuilder(key, name, RegisterStep::new)
@@ -374,6 +380,8 @@ public class ProcessDefinitionBuilder
     
     private String name;
 
+    private String description;
+    
     private int stepKeySequence = 0;
 
     private List<ProcessInput> resources = new ArrayList<ProcessInput>();
@@ -391,6 +399,12 @@ public class ProcessDefinitionBuilder
     {
         Assert.isTrue(!StringUtils.isEmpty(name), "A non-empty name is required");
         this.name = name;
+        return this;
+    }
+    
+    public ProcessDefinitionBuilder description(String description)
+    {
+        this.description = description;
         return this;
     }
 
@@ -542,7 +556,10 @@ public class ProcessDefinitionBuilder
         
         // The definition seems valid
 
-        return new ProcessDefinition(this.name, this.resources, this.steps);
+        ProcessDefinition definition = new ProcessDefinition(this.name, this.resources, this.steps);
+        definition.setDescription(this.description);
+        
+        return definition;
     }
     
     private <B extends StepBuilder> ProcessDefinitionBuilder addStep(

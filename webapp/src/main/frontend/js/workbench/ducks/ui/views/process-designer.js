@@ -452,6 +452,7 @@ export default (state = initialState, action) => {
     case Types.SELECT_LAYER:
     case Types.TOGGLE_LAYER:
     case Types.SET_BASE_LAYER:
+    case Types.SET_LAYER_COLOR:
     case Types.SET_SELECTED_FEATURES:
       return {
         ...state,
@@ -522,6 +523,7 @@ export {
   selectLayer,
   toggleLayer,
   setBaseLayer,
+  setLayerColor,
   selectFeatures,
 } from './process-designer/actions';
 

@@ -134,7 +134,7 @@ class ProcessExecutionMapViewer extends React.Component {
       .forEach((l) => {
         layers.push(
           <OpenLayers.Layer.WFS
-            key={l.tableName}
+            key={`${l.tableName}-${l.color}`}
             url="/action/proxy/service/wfs"
             version="1.1.0"
             typename={`slipo_eu:${l.tableName}`}

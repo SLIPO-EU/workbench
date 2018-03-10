@@ -268,10 +268,15 @@ class Sidebar extends React.Component {
           </TabPane>
           {!this.props.execution &&
             <TabPane tabId="3">
-              <ErrorList
-                errors={this.props.errors}
-              >
-              </ErrorList>
+              <div>
+                <div style={{ borderBottom: '1px solid #cfd8dc', padding: 11 }}>
+                  Errors
+              </div>
+                <ErrorList
+                  errors={this.props.errors}
+                >
+                </ErrorList>
+              </div>
             </TabPane>
           }
         </TabContent>

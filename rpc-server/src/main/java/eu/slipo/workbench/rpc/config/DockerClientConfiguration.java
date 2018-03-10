@@ -12,12 +12,12 @@ import com.spotify.docker.client.exceptions.DockerCertificateException;
 @Configuration
 public class DockerClientConfiguration
 {
-    /** 
-     * The docker server URL 
+    /**
+     * The docker server URL
      */
     @Value("${slipo.rpc-server.docker.connection-url:unix:///var/run/docker.sock}")
     private String url;
-    
+
     @Bean
     public DockerClient dockerClient() throws DockerCertificateException
     {
@@ -26,5 +26,4 @@ public class DockerClientConfiguration
             .connectTimeoutMillis(2000L)
             .build();
     }
-    
 }

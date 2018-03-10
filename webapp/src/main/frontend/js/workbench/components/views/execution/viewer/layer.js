@@ -2,11 +2,20 @@ import * as React from 'react';
 import PropTypes from 'prop-types';
 import classnames from 'classnames';
 
+import {
+  Colors,
+} from '../../../../model/process-designer';
+
+import {
+  LayerColor,
+} from './';
+
 class Layer extends React.Component {
 
   constructor(props) {
     super(props);
 
+    this.onColorChange = this.onColorChange.bind(this);
   }
 
   static propTypes = {
@@ -14,6 +23,7 @@ class Layer extends React.Component {
     toggle: PropTypes.func.isRequired,
     select: PropTypes.func.isRequired,
     selected: PropTypes.bool.isRequired,
+    setLayerColor: PropTypes.func.isRequired,
   };
 
   select(e) {
@@ -26,6 +36,10 @@ class Layer extends React.Component {
     e.nativeEvent.stopImmediatePropagation();
 
     this.props.toggle(this.props.layer.tableName);
+  }
+
+  onColorChange(color) {
+    this.props.setLayerColor(this.props.layer.tableName, color.hex);
   }
 
   render() {
@@ -50,8 +64,12 @@ class Layer extends React.Component {
         <div style={{ marginTop: '8px', float: 'left' }}>
           {this.props.layer.title}
         </div>
-        <div style={{ float: 'right', fontSize: '2em', padding: '5px' }}>
-          <i className={this.props.layer.iconClass} style={{ color: this.props.layer.color, float: 'right' }}></i>
+        <div style={{ float: 'right', padding: '8px' }}>
+          <LayerColor
+            color={this.props.layer.color}
+            colors={Colors}
+            onColorChange={this.onColorChange}
+          />
         </div>
       </div>
     );
