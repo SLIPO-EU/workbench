@@ -1,5 +1,6 @@
 package eu.slipo.workbench.web.service;
 
+import java.nio.file.Path;
 import java.util.List;
 
 import eu.slipo.workbench.common.model.Error;
@@ -25,11 +26,11 @@ public interface IResourceValidationService {
      *
      * @param request the request
      * @param userId The id of the user that performs the request
-     * @param inputFileName the input file name
+     * @param inputPath the input file name
      * 
      * @return an array of {@link Error} objects if validation has failed or an empty
      * array.
      */
-    List<Error> validate(RegistrationRequest request, int userId, String inputFileName);
+    List<Error> validate(RegistrationRequest request, int userId, Path inputPath);
 
 }

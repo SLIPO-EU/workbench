@@ -1,6 +1,8 @@
 package eu.slipo.workbench.web.service;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,8 +18,8 @@ import eu.slipo.workbench.web.model.resource.ResourceErrorCode;
 import eu.slipo.workbench.web.model.resource.ResourceRegistrationRequest;
 
 @Service
-public class DefaultResourceValidationService implements IResourceValidationService {
-
+public class DefaultResourceValidationService implements IResourceValidationService 
+{
     @Autowired
     private ResourceRepository resourceRepository;
 
@@ -38,7 +40,7 @@ public class DefaultResourceValidationService implements IResourceValidationServ
     }
 
     @Override
-    public List<Error> validate(RegistrationRequest request, int userId, String inputFileNane) 
+    public List<Error> validate(RegistrationRequest request, int userId, Path inputPath) 
     {
         List<Error> errors = new ArrayList<Error>();
 
@@ -46,8 +48,7 @@ public class DefaultResourceValidationService implements IResourceValidationServ
         validateMetadata(request.getMetadata(), userId, errors);
 
         // Check if file exists
-        File inputFile = new File(inputFileNane);
-        if(!inputFile.exists()) {
+        if(!Files.exists(inputPath)) {
             errors.add(new Error(ResourceErrorCode.FILE_NOT_FOUND, "Input file does not exist."));
         }
 

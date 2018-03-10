@@ -710,10 +710,18 @@ public class DefaultProcessOperator implements ProcessOperator
         final EnumDataSourceType type = source.getType();
         switch (type) {
         case UPLOAD:
-            path = tempDir.resolve(((UploadDataSource) source).getPath());
+            {
+                path = Paths.get(((UploadDataSource) source).getPath());
+                Assert.state(!path.isAbsolute(), "Expected a path relative to upload directory");
+                path = tempDir.resolve(path);
+            }
             break;
         case FILESYSTEM:
-            path = tempDir.resolve(((FileSystemDataSource) source).getPath());
+            {
+                path = Paths.get(((FileSystemDataSource) source).getPath());
+                Assert.state(!path.isAbsolute(), "Expected a path relative to file staging directory");
+                path = tempDir.resolve(path);
+            }
             break;
         case URL:
             throw new UnsupportedOperationException(
