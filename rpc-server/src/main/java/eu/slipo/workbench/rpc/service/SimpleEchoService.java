@@ -17,12 +17,12 @@ import eu.slipo.workbench.common.service.EchoService;
 public class SimpleEchoService implements EchoService
 {
     private static Logger logger = LoggerFactory.getLogger(SimpleEchoService.class);
-    
+
     @Autowired
     MessageSource messageSource;
-    
+
     private AtomicInteger serial = new AtomicInteger(0);
-    
+
     @Override
     public TextMessage echo(String message, String lang)
     {
@@ -34,13 +34,11 @@ public class SimpleEchoService implements EchoService
     {
         final String text = message.text();
         final Locale locale = Locale.forLanguageTag(lang);
-        
+
         final String comment = messageSource.getMessage(
             "EchoService.echoedBy", new Object[] { this.toString() }, "Echoed by {0}", locale);
-        
+
         final int id = serial.incrementAndGet();
-        
-        logger.info("Echoing message #{}: {}", id, text);
         return new TextMessage(id, text, comment);
     }
 
