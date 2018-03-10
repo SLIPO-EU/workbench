@@ -153,7 +153,7 @@ class ResourceDetails extends React.Component {
             <TextField
               id="entities"
               label="# of Elements"
-              value={r.numberOfEntities.toString()}
+              value={r.numberOfEntities ? r.numberOfEntities.toString() : '0'}
               readOnly={true}
             />
           </Col>
