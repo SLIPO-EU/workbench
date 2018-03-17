@@ -98,13 +98,26 @@ public class RegisterResourceJobConfiguration
             StepContext stepContext = chunkContext.getStepContext();
             ExecutionContext executionContext = stepContext.getStepExecution().getExecutionContext();
 
+            // Check if already complete (a restart of a stopped yet complete execution)
+
+            if (executionContext.containsKey("resourceId")) {
+                // Assume the task is complete
+                Assert.state(executionContext.getLong("resourceId", -1L) > 0,
+                    "The tasklet is expected to write a resource id into execution context");
+                Assert.state(executionContext.getLong("resourceVersion", -1L) > 0,
+                    "The tasklet is expected to write a resource version into execution context");
+                return RepeatStatus.FINISHED;
+            }
+
             // Resolve target path under catalog root directory
+
             String targetName = slugify.slugify(metadata.getName()) +
                 "." + format.getFilenameExtension();
             Path targetPath = Paths.get(Integer.toString(createdBy), targetName);
             targetPath = catalogDataDir.resolve(targetPath);
 
             // Create parent directories if needed
+
             try {
                 Files.createDirectories(targetPath.getParent());
             } catch (FileAlreadyExistsException ex) {
@@ -112,14 +125,15 @@ public class RegisterResourceJobConfiguration
             }
 
             // Copy
+
             try {
                 Files.createLink(targetPath, inputPath);
             } catch (FileSystemException ex) {
-                // Failed to create a hard link: fallback to plain copying
-                Files.copy(inputPath, targetPath);
+                Files.copy(inputPath, targetPath); // fallback to plain copying
             }
 
             // Create a resource record
+
             ResourceRecord record = new ResourceRecord();
             record.setFilePath(catalogDataDir.relativize(targetPath).toString());
             record.setFileSize(Files.size(targetPath));
@@ -130,17 +144,18 @@ public class RegisterResourceJobConfiguration
             record.setSourceType(EnumDataSourceType.FILESYSTEM);
 
             // Save to repository
+
             if (resourceIdentifier == null) {
                 record = resourceRepository.create(record, createdBy);
-                logger.info("Registered as a new resource #{}: path={}",
-                    record.getId(), targetPath);
+                logger.info("Registered as a new resource #{}: {}", record.getId(), targetPath);
             } else {
                 record = resourceRepository.update(resourceIdentifier.getId(), record, createdBy);
-                logger.info("Registered as a new revision #{} of resource #{}: path={}",
+                logger.info("Registered as a new revision #{} of resource #{}: {}",
                     record.getVersion(), record.getId(), targetPath);
             }
 
             // Update execution context
+
             executionContext.put("inputPath", inputPath.toString());
             executionContext.put("path", targetPath.toString());
             executionContext.put("resourceId", record.getId());

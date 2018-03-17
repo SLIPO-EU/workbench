@@ -113,6 +113,18 @@ public class DownloadFileJobConfiguration
             StepExecution stepExecution = chunkContext.getStepContext().getStepExecution();
             ExecutionContext executionContext = stepExecution.getExecutionContext();
 
+            // Check if already complete (a restart of a stopped yet complete execution)
+
+            if (executionContext.containsKey("outputDir")) {
+                Assert.state(outputDir.toString().equals(executionContext.getString("outputDir")),
+                    "The tasklet is expected to write its outputDir into execution context");
+                Assert.state(executionContext.containsKey("outputName"),
+                    "The tasklet is expected to contain an `outputName` entry");
+                Assert.state(outputName.toString().equals(executionContext.getString("outputName")),
+                    "The tasklet is expected to write its outputName into execution context");
+                return RepeatStatus.FINISHED;
+            }
+
             // Create parent directory if needed
 
             try {

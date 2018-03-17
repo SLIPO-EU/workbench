@@ -5,6 +5,7 @@ import static org.apache.commons.collections4.map.DefaultedMap.defaultedMap;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -30,6 +31,7 @@ import eu.slipo.workbench.common.domain.AccountEntity;
 import eu.slipo.workbench.common.domain.ProcessExecutionEntity;
 import eu.slipo.workbench.common.domain.ProcessExecutionStepEntity;
 import eu.slipo.workbench.common.domain.ProcessExecutionStepFileEntity;
+import eu.slipo.workbench.common.domain.ProcessRevisionEntity;
 import eu.slipo.workbench.common.domain.ResourceEntity;
 import eu.slipo.workbench.common.domain.ResourceRevisionEntity;
 import eu.slipo.workbench.common.model.QueryResultPage;
@@ -297,14 +299,15 @@ public class DefaultResourceRepository implements ResourceRepository
     @Override
     public void setProcessExecution(long id, long version, long executionId, Integer stepKey)
     {
-        ResourceRevisionEntity resourceRevisionEntity = findRevision(id, version);
+        final ResourceRevisionEntity resourceRevisionEntity = findRevision(id, version);
         Assert.notNull(resourceRevisionEntity, 
             "The pair of (id, version) does not refer to a ResourceRevision entity");
         
-        ProcessExecutionEntity executionEntity = 
+        final ProcessExecutionEntity executionEntity = 
             entityManager.find(ProcessExecutionEntity.class, executionId);
         Assert.notNull(executionEntity, 
             "The execution id does not refer to a ProcessExecution entity");
+        final ZonedDateTime submittedOn = executionEntity.getSubmittedOn();
         
         // Associate targeted revision entity with given execution
         
@@ -329,8 +332,18 @@ public class DefaultResourceRepository implements ResourceRepository
         if (stepKey != null) {
             ProcessExecutionStepEntity stepEntity = executionEntity.getStepByKey(stepKey);
             if (stepEntity == null) {
-                Assert.state(false, String.format(
-                    "No step entity for step #%d inside execution #%d", stepKey, executionId));
+                // Find step entity inside a former execution (which handled this step key)
+                ProcessRevisionEntity processRevisionEntity = executionEntity.getProcess();
+                stepEntity = processRevisionEntity.getExecutions().stream()
+                    .filter(x -> x.getSubmittedOn().isBefore(submittedOn))
+                    .sorted(ProcessExecutionEntity.ORDER_BY_SUBMITTED.reversed())
+                    .filter(x -> x.getStepByKey(stepKey) != null)
+                    .findFirst()
+                    .map(x -> x.getStepByKey(stepKey))
+                    .orElse(null);
+                Assert.state(stepEntity != null, String.format(
+                    "No step entity for step #%d inside execution #%d (or former executions of same process)", 
+                    stepKey, executionId));
             }
             ProcessExecutionStepFileEntity fileEntity = stepEntity.getFiles().stream()
                 .filter(f -> f.getType() == EnumStepFile.OUTPUT)
