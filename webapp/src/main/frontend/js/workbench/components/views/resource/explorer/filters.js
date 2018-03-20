@@ -19,7 +19,6 @@ const supportedFiles = [
   { value: 'GPX' , label: 'GPX'},
   { value: 'GEOJSON', label: 'GEOJSON' },
   { value: 'OSM', label: 'OSM' },
-  { value: 'RDF', label: 'RDF' },
 ];
 
 const supportedTypes = [

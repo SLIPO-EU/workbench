@@ -25,10 +25,10 @@ document.addEventListener("DOMContentLoaded", function () {
   Promise.resolve()
     .then(() => store.dispatch(setCsrfToken(token)))
     .then(() => store.dispatch(changeLocale(language)))
+    .then(() => store.dispatch(getConfiguration()))
     .then(() => store.dispatch(refreshProfile())
       // recover from an "Unauthorized" error
       .catch(() => console.error('Cannot refresh user profile')))
-    .then(() => store.dispatch(getConfiguration()))
     .then(() => renderRoot(rootEl));
 });
 

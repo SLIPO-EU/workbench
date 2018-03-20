@@ -532,6 +532,7 @@ export {
  */
 
 export {
+  cloneTemplate,
   fetchExecutionDetails,
   fetchExecutionKpiData,
   fetchProcess,

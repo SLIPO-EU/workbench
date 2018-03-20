@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.remoting.RemoteConnectFailureException;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -69,7 +70,6 @@ public class ProcessController {
     /**
      * Search for processes
      *
-     * @param authentication the authenticated principal
      * @param data the query to execute
      * @return a list of processes
      */
@@ -92,9 +92,32 @@ public class ProcessController {
     }
 
     /**
+     * Search for process templates
+     *
+     * @param data the query to execute
+     * @return a list of process templates
+     */
+    @RequestMapping(value = "/action/process/template/query", method = RequestMethod.POST)
+    public RestResponse<QueryResult<ProcessRecord>> findTemplates(@RequestBody ProcessQueryRequest request) {
+
+        if (request == null || request.getQuery() == null) {
+            return RestResponse.error(ProcessErrorCode.QUERY_IS_EMPTY, "The query is empty");
+        }
+
+        ProcessQuery query = request.getQuery();
+        query.setTaskType(EnumProcessTaskType.DATA_INTEGRATION);
+        query.setTemplate(true);
+        query.setCreatedBy(authenticationFacade.getCurrentUserId());
+
+        PageRequest pageRequest = request.getPageRequest();
+        QueryResultPage<ProcessRecord> r = processRepository.query(query, pageRequest);
+
+        return RestResponse.result(QueryResult.create(r));
+    }
+
+    /**
      * Search for process executions
      *
-     * @param authentication the authenticated principal
      * @param data the query to execute
      * @return a list of processes
      */
@@ -118,7 +141,6 @@ public class ProcessController {
      * Get all executions for a process with a specific id and version. Execution steps
      * are not included
      *
-     * @param authentication the authenticated principal
      * @param id the process id
      * @param version the process version
      * @return a list of {@link ProcessExecutionRecord}
@@ -133,7 +155,6 @@ public class ProcessController {
      * Get an execution for a process with a specific id and version. The response
      * includes the execution steps
      *
-     * @param authentication the authenticated principal
      * @param id the process id
      * @param version the process version
      * @param executionId the execution id
@@ -173,7 +194,6 @@ public class ProcessController {
     /**
      * Loads the most recent version of an existing process
      *
-     * @param authentication the authenticated principal
      * @param id the process id
      * @return the updated process model
      */
@@ -190,7 +210,6 @@ public class ProcessController {
     /**
      * Loads the specific version of an existing process
      *
-     * @param authentication the authenticated principal
      * @param data the process model
      * @return the updated process model
      */
@@ -207,54 +226,38 @@ public class ProcessController {
     /**
      * Create a new process by providing a process definition
      *
-     * @param authentication the authenticated principal
-     * @param request
+     * @param request the process definition
      *
      * @return the created process model
      */
     @RequestMapping(value = "/action/process", method = RequestMethod.POST)
-    public RestResponse<ProcessRecordView> create(@RequestBody ProcessCreateRequest request) {
+    public RestResponse<?> create(@RequestBody ProcessCreateRequest request) {
 
-        try {
-            final ProcessDefinition definition = request.getDefinition();
-            if (definition == null) {
-                return RestResponse.error(BasicErrorCode.INPUT_INVALID, "No process definition");
-            }
-
-            final ProcessRecord record = processService.create(definition);
-            if (request.getAction() == EnumProcessSaveActionType.SAVE_AND_EXECUTE) {
-                this.processService.start(record.getId(), record.getVersion());
-            }
-
-            return RestResponse.result(new ProcessRecordView(record));
-
-            // TODO : Add single error handler
-        } catch (ProcessNotFoundException e) {
-            return RestResponse.error(ProcessErrorCode.NOT_FOUND, "Process was not found");
-        } catch (ProcessExecutionStartException e) {
-            return RestResponse.error(ProcessErrorCode.FAILED_TO_START, "Process execution has failed to start");
-        } catch (IOException e) {
-            return RestResponse.error(BasicErrorCode.IO_ERROR, "An unknown error has occurred");
-        } catch (InvalidProcessDefinitionException ex) {
-            return RestResponse.error(ex.getErrors());
-        } catch (ApplicationException ex) {
-            return RestResponse.error(ex.toError());
-        } catch (Exception ex) {
-            logger.error(ex.getMessage(), ex);
-            return RestResponse.error(BasicErrorCode.UNKNOWN, "An unknown error has occurred");
-        }
+        return this.createOrUpdateProcess(null, request);
     }
 
     /**
      * Update an existing process by providing a newer process definition
      *
-     * @param authentication the authenticated principal
      * @param id The ID of the process to be updated
-     * @param request
+     * @param request the process definition
      * @return the created process model
      */
     @RequestMapping(value = "/action/process/{id}", method = RequestMethod.POST)
-    public RestResponse<ProcessRecordView> update(@PathVariable long id, @RequestBody ProcessCreateRequest request) {
+    public RestResponse<?> update(@PathVariable long id, @RequestBody ProcessCreateRequest request) {
+
+        return this.createOrUpdateProcess(id, request);
+    }
+
+    /**
+     * Create/Update a new/existing process definition
+     *
+     * @param id process id for updating an existing process
+     * @param request the process definition
+     * @return the created or updated process model
+     */
+    private RestResponse<?> createOrUpdateProcess(Long id, ProcessCreateRequest request) {
+        ProcessRecord record = null;
 
         try {
             final ProcessDefinition definition = request.getDefinition();
@@ -262,28 +265,58 @@ public class ProcessController {
                 return RestResponse.error(BasicErrorCode.INPUT_INVALID, "No process definition");
             }
 
-            final ProcessRecord record = processService.update(id, definition);
+            final boolean isTemplate = request.getAction() == EnumProcessSaveActionType.SAVE_TEMPLATE;
+
+            if (id == null) {
+                record = processService.create(definition, isTemplate);
+            } else {
+                record = processService.update(id, definition, isTemplate);
+            }
+        } catch (Exception ex) {
+            return this.exceptionToResponse(ex);
+        }
+
+        try {
             if (request.getAction() == EnumProcessSaveActionType.SAVE_AND_EXECUTE) {
                 this.processService.start(record.getId(), record.getVersion());
             }
-
-            return RestResponse.result(new ProcessRecordView(record));
-
-            // TODO : Add single error handler
-        } catch (ProcessNotFoundException e) {
-            return RestResponse.error(ProcessErrorCode.NOT_FOUND, "Process was not found");
-        } catch (ProcessExecutionStartException e) {
-            return RestResponse.error(ProcessErrorCode.FAILED_TO_START, "Process execution has failed to start");
-        } catch (IOException e) {
-            return RestResponse.error(BasicErrorCode.IO_ERROR, "An unknown error has occurred");
-        } catch (InvalidProcessDefinitionException ex) {
-            return RestResponse.error(ex.getErrors());
-        } catch (ApplicationException ex) {
-            return RestResponse.error(ex.toError());
-        }catch (Exception ex) {
-            logger.error(ex.getMessage(), ex);
-            return RestResponse.error(BasicErrorCode.UNKNOWN, "An unknown error has occurred");
+        } catch (Exception ex) {
+            return this.exceptionToResponse(ex, Error.EnumLevel.WARN);
         }
+
+        return RestResponse.result(new ProcessRecordView(record));
+    }
+
+    private RestResponse<?> exceptionToResponse(Exception ex) {
+        return exceptionToResponse(ex, Error.EnumLevel.ERROR);
+    }
+
+    private RestResponse<?> exceptionToResponse(Exception ex, Error.EnumLevel level) {
+        if (ex instanceof IOException) {
+            return RestResponse.error(BasicErrorCode.IO_ERROR, "An unknown error has occurred", level);
+        }
+
+        if (ex instanceof ProcessNotFoundException) {
+            return RestResponse.error(ProcessErrorCode.NOT_FOUND, "Process was not found", level);
+        }
+        if (ex instanceof ProcessExecutionStartException) {
+            return RestResponse.error(ProcessErrorCode.FAILED_TO_START, "Process execution has failed to start", level);
+        }
+
+        if (ex instanceof InvalidProcessDefinitionException) {
+            InvalidProcessDefinitionException typedEx = (InvalidProcessDefinitionException) ex;
+            return RestResponse.error(typedEx.getErrors());
+        }
+        if (ex instanceof ApplicationException) {
+            ApplicationException typedEx = (ApplicationException) ex;
+            return RestResponse.error(typedEx.toError());
+        }
+        if (ex instanceof RemoteConnectFailureException) {
+            return RestResponse.error(ProcessErrorCode.RPC_SERVER_UNREACHABLE, "Process execution has failed to start. RPC server is unreachable", level);
+        }
+
+        logger.error(ex.getMessage(), ex);
+        return RestResponse.error(BasicErrorCode.UNKNOWN, "An unknown error has occurred", level);
     }
 
 }

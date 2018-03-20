@@ -113,12 +113,12 @@ public interface ProcessRepository
     /**
      * Find a single process by name
      *
-     * Todo: Lookup by pair of (name, createdBy)
      *
      * @param name The process unique name
+     * @param createdBy The id of the user who created this entity
      * @return an instance of {@link ProcessRecord} if the process exists or null
      */
-    ProcessRecord findOne(String name);
+    ProcessRecord findOne(String name, int createdBy);
 
     /**
      * Create a new process entity
@@ -126,20 +126,22 @@ public interface ProcessRepository
      * @param definition the process definition
      * @param createdBy The id of the user creating this entity
      * @param taskType the process task type
+     * @param isTemplate {@code true} if process definition should be saved as a template
      *
      * @return a record for the newly created entity
      */
-    ProcessRecord create(ProcessDefinition definition, int createdBy, EnumProcessTaskType taskType);
+    ProcessRecord create(ProcessDefinition definition, int createdBy, EnumProcessTaskType taskType, boolean isTemplate);
 
     /**
      * Create a new process entity
      *
      * @param definition the process definition
      * @param createdBy The id of the user creating this entity
+     * @param isTemplate {@code true} if process definition should be saved as a template
      *
      * @return a record for the newly created entity
      */
-    ProcessRecord create(ProcessDefinition definition, int createdBy);
+    ProcessRecord create(ProcessDefinition definition, int createdBy, boolean isTemplate);
 
     /**
      * Update an existing process entity
@@ -151,8 +153,7 @@ public interface ProcessRepository
      * @return a record for updated entity
      * @throws ProcessNotFoundException if given id does not correspond to a process entity
      */
-    ProcessRecord update(long id, ProcessDefinition definition, int updatedBy)
-        throws ProcessNotFoundException;
+    ProcessRecord update(long id, ProcessDefinition definition, int updatedBy) throws ProcessNotFoundException;
 
     /**
      * Find process execution record
@@ -167,14 +168,14 @@ public interface ProcessRepository
 
     /**
      * Find process execution record
-     * 
+     *
      * @see ProcessRepository#findExecution(long, boolean)
      */
     default ProcessExecutionRecord findExecution(long executionId)
     {
         return findExecution(executionId, false);
     }
-    
+
     /**
      * Find executions for a process of given id and version
      *

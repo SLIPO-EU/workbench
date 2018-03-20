@@ -1,9 +1,14 @@
-const fetch = require('fetch');
+import fetch from 'fetch';
 
-const { checkStatus } = require('../util/check-fetch-status');
-const { checkError } = require('../util/check-json');
+import {
+  checkStatus,
+} from '../util/check-fetch-status';
 
-module.exports = (url, method, token, body, headers) => fetch(url, {
+import {
+  checkError,
+} from '../util/check-json';
+
+export default (url, method, token, body, headers) => fetch(url, {
   method,
   headers: {
     ...headers,

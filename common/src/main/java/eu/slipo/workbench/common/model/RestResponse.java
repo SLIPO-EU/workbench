@@ -56,9 +56,19 @@ public class RestResponse<Result>
         return new RestResponse<>(r);
     }
 
+    public static <R> RestResponse<R> success()
+    {
+        return new RestResponse<R>();
+    }
+
+    public static <R> RestResponse<R> error(ErrorCode code, String description, Error.EnumLevel level)
+    {
+        return RestResponse.<R>error(new Error(code, description, level));
+    }
+
     public static <R> RestResponse<R> error(ErrorCode code, String description)
     {
-        return RestResponse.<R>error(new Error(code, description));
+        return error(code, description, Error.EnumLevel.ERROR);
     }
 
     public static <R> RestResponse<R> error(Error e)

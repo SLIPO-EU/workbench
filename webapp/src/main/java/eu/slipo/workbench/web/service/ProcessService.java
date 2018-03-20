@@ -16,15 +16,6 @@ import eu.slipo.workbench.web.model.process.ProcessRecordView;
 public interface ProcessService {
 
     /**
-     * Validate a process definition
-     *
-     * @id id the process unique id if an instance already exists
-     * @param process the process definition
-     * @throws InvalidProcessDefinitionException if the given definition is invalid
-     */
-    void validate(Long id, ProcessDefinition definition) throws InvalidProcessDefinitionException;
-
-    /**
      * Finds the most recent version of an existing process instance
      *
      * @param id the unique process id
@@ -47,15 +38,6 @@ public interface ProcessService {
      * Create a new process given an {@link ProcessDefinition} instance
      *
      * @param definition the process definition
-     * @return an instance of {@link ProcessRecord} for the new process
-     * @throws InvalidProcessDefinitionException if the given definition is invalid
-     */
-    ProcessRecord create(ProcessDefinition definition) throws InvalidProcessDefinitionException;
-
-    /**
-     * Create a new process given an {@link ProcessDefinition} instance
-     *
-     * @param definition the process definition
      * @param taskType the process task type
      * @return an instance of {@link ProcessRecord} for the new process
      * @throws InvalidProcessDefinitionException if the given definition is invalid
@@ -63,13 +45,24 @@ public interface ProcessService {
     ProcessRecord create(ProcessDefinition definition, EnumProcessTaskType taskType) throws InvalidProcessDefinitionException;
 
     /**
+     * Create a new process given an {@link ProcessDefinition} instance
+     *
+     * @param definition the process definition
+     * @param isTemplate {@code true} if process definition should be saved as a template
+     * @return an instance of {@link ProcessRecord} for the new process
+     * @throws InvalidProcessDefinitionException if the given definition is invalid
+     */
+    ProcessRecord create(ProcessDefinition definition, boolean isTemplate) throws InvalidProcessDefinitionException;
+
+    /**
      * Update an existing process by providing a newer definition
      *
      * @param id The id of the process under update
      * @param definition The newer definition
+     * @param isTemplate {@code true} if process definition should be saved as a template
      * @throws InvalidProcessDefinitionException if the given definition is invalid
      */
-    ProcessRecord update(long id, ProcessDefinition definition) throws InvalidProcessDefinitionException;
+    ProcessRecord update(long id, ProcessDefinition definition, boolean isTemplate) throws InvalidProcessDefinitionException;
 
     /**
      * Finds all executions for a specific version of an existing process instance

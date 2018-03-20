@@ -13,6 +13,7 @@ public enum ProcessErrorCode implements ErrorCode
     NOT_FOUND,
     QUERY_IS_EMPTY,
     FAILED_TO_START,
+    RPC_SERVER_UNREACHABLE,
     ;
 
     @Override

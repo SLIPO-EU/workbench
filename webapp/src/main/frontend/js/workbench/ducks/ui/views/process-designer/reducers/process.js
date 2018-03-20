@@ -7,15 +7,29 @@ export function processReducer(state, action) {
   const data = action.process;
 
   // Create process
-  const process = {
-    id: data.id,
-    version: data.version,
-    properties: {
-      name: data.name,
-      description: data.description,
-    },
-    errors: {},
-  };
+  const process = action.clone ?
+    {
+      id: null,
+      version: null,
+      template: false,
+      clone: true,
+      properties: {
+        name: '',
+        description: '',
+      },
+      errors: {},
+    } : {
+      id: data.id,
+      version: data.version,
+      template: data.template,
+      clone: false,
+      properties: {
+        name: data.name,
+        description: data.description,
+      },
+      errors: {},
+    };
+
 
   // Create groups
   const groupCounter = data.steps.reduce((result, current) => {

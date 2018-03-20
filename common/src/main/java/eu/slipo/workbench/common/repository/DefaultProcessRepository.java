@@ -142,7 +142,7 @@ public class DefaultProcessRepository implements ProcessRepository
         if (!filters.isEmpty()) {
             qlString += " where " + StringUtils.join(filters, " and ");
         }
-        qlString += " order by p.name, p.updatedOn ";
+        qlString += " order by p.updatedOn desc, p.name ";
 
         TypedQuery<ProcessEntity> selectQuery = entityManager.createQuery(qlString, ProcessEntity.class);
         if (query != null) {
@@ -276,15 +276,16 @@ public class DefaultProcessRepository implements ProcessRepository
 
     @Transactional(readOnly = true)
     @Override
-    public ProcessRecord findOne(String name)
+    public ProcessRecord findOne(String name, int createdBy)
     {
         String queryString =
-            "select p from ProcessRevision p where p.parent.name = :name " +
+            "select p from ProcessRevision p where p.parent.name = :name and p.parent.createdBy.id = :createdBy " +
             "order by p.version desc";
 
         List<ProcessRevisionEntity> result = entityManager
             .createQuery(queryString, ProcessRevisionEntity.class)
             .setParameter("name", name)
+            .setParameter("createdBy", createdBy)
             .setMaxResults(1)
             .getResultList();
 
@@ -298,14 +299,14 @@ public class DefaultProcessRepository implements ProcessRepository
         ProcessExecutionEntity e = entityManager.find(ProcessExecutionEntity.class, executionId);
         return e == null? null : e.toProcessExecutionRecord(true, includeNonVerifiedFiles);
     }
-    
+
     @Transactional(readOnly = true)
     @Override
     public ProcessExecutionRecord findExecution(long executionId)
     {
         return ProcessRepository.super.findExecution(executionId);
     }
-    
+
     @Transactional(readOnly = true)
     @Override
     public ProcessExecutionRecord findLatestExecution(long id, long version)
@@ -348,13 +349,17 @@ public class DefaultProcessRepository implements ProcessRepository
     }
 
     @Override
-    public ProcessRecord create(ProcessDefinition definition, int userId) {
-        return this.create(definition, userId, EnumProcessTaskType.DATA_INTEGRATION);
+    public ProcessRecord create(ProcessDefinition definition, int userId, boolean isTemplate) {
+        return create(definition, userId, EnumProcessTaskType.DATA_INTEGRATION, isTemplate);
     }
 
     @Override
-    public ProcessRecord create(ProcessDefinition definition, int userId, EnumProcessTaskType taskType)
+    public ProcessRecord create(ProcessDefinition definition, int userId, EnumProcessTaskType taskType, boolean isTemplate)
     {
+        Assert.isTrue((taskType == EnumProcessTaskType.REGISTRATION && !isTemplate) ||
+                      (taskType == EnumProcessTaskType.DATA_INTEGRATION),
+                      "Registration process definition cannot be a template");
+
         AccountEntity createdBy = entityManager.find(AccountEntity.class, userId);
         Assert.notNull(createdBy, "The userId does not correspond to a user entity");
 
@@ -369,6 +374,7 @@ public class DefaultProcessRepository implements ProcessRepository
         entity.setUpdatedBy(createdBy);
         entity.setCreatedOn(now);
         entity.setUpdatedOn(now);
+        entity.setTemplate(isTemplate);
 
         // Create an associated process revision, update reference
 
@@ -565,7 +571,7 @@ public class DefaultProcessRepository implements ProcessRepository
         // Add file entities associated with this step
 
         final boolean verified = record.getStatus() == EnumProcessExecutionStatus.COMPLETED;
-        
+
         for (ProcessExecutionStepFileRecord fileRecord: record.getFiles()) {
             Assert.state(fileRecord.getId() < 0,
                 "Did not expect an id for a record of a new file entity");
@@ -591,7 +597,7 @@ public class DefaultProcessRepository implements ProcessRepository
         throws ProcessExecutionNotFoundException, ProcessExecutionNotActiveException
     {
         Assert.notNull(record, "A non-empty record is required");
-        
+
         final ProcessExecutionEntity executionEntity =
             entityManager.find(ProcessExecutionEntity.class, executionId);
         if (executionEntity == null) {
@@ -605,7 +611,7 @@ public class DefaultProcessRepository implements ProcessRepository
         if (executionStepEntity == null) {
             throw ProcessExecutionNotFoundException.forExecutionStep(executionId, stepKey);
         }
-        
+
         final List<ProcessExecutionStepFileRecord> fileRecords = record.getFiles();
         final List<Long> fids = fileRecords.stream()
             .collect(Collectors.mapping(r -> r.getId(), Collectors.toList()));
@@ -621,7 +627,7 @@ public class DefaultProcessRepository implements ProcessRepository
         // only be added or updated (on specific updatable fields).
 
         final boolean verified = record.getStatus() == EnumProcessExecutionStatus.COMPLETED;
-        
+
         // Update existing file records
 
         for (ProcessExecutionStepFileEntity fileEntity: executionStepEntity.getFiles()) {

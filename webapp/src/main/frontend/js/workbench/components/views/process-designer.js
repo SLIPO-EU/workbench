@@ -23,9 +23,10 @@ import {
 } from 'reactstrap';
 
 import {
-  DynamicRoutes,
-  StaticRoutes,
   buildPath,
+  DynamicRoutes,
+  EnumErrorLevel,
+  StaticRoutes,
 } from '../../model';
 
 import {
@@ -150,7 +151,6 @@ class ProcessDesigner extends React.Component {
 
   componentDidMount() {
     const { id, version, execution, ...rest } = this.props.match.params;
-
     const action = this.resolveMode();
 
     switch (action) {
@@ -194,18 +194,25 @@ class ProcessDesigner extends React.Component {
     id = id || null;
     version = version || null;
 
+    if (this.props.process.clone) {
+      return false;
+    }
+
     return ((this.props.process.id !== id) || (this.props.process.version !== version));
   }
 
-  error(message, goBack) {
-    toast.dismiss();
+  error(message, redirect) {
+    const isTemplate = this.props.process.template;
 
+    toast.dismiss();
     toast.error(
       <ToastTemplate iconClass='fa-warning' text={message} />
     );
 
-    if ((typeof goBack === 'undefined') || (goBack)) {
-      setTimeout(() => this.props.history.goBack(), 500);
+    if ((typeof redirect === 'undefined') || (redirect)) {
+      setTimeout(() => {
+        this.props.history.push(isTemplate ? StaticRoutes.RecipeExplorer : StaticRoutes.ProcessExplorer);
+      }, 500);
     }
   }
 
@@ -261,14 +268,18 @@ class ProcessDesigner extends React.Component {
   }
 
   cancelDialogHandler(action) {
+    const isTemplate = this.props.process.template;
+
     switch (action.key) {
       case EnumComponentAction.Discard:
         this.reset();
-        this.props.history.push(StaticRoutes.ProcessExplorer);
+        this.props.history.push(isTemplate ? StaticRoutes.RecipeExplorer : StaticRoutes.ProcessExplorer);
         break;
+
       default:
         this.toggleCancelDialog();
         break;
+
     }
   }
 
@@ -277,16 +288,34 @@ class ProcessDesigner extends React.Component {
 
     this.props.save(this.mapToSaveAction(action), this.props.designer)
       .then((result) => {
+        const isTemplate = this.props.process.template || action === EnumComponentAction.SaveAsTemplate;
+        const text = `${isTemplate ? "Template" : "Process"} has been saved successfully!`;
         toast.success(
-          <ToastTemplate iconClass='fa-save' text='Process has been saved successfully!' />
+          <ToastTemplate iconClass='fa-save' text={text} />
         );
         this.reset();
-        this.props.history.push(StaticRoutes.ProcessExplorer);
+        this.props.history.push(isTemplate ? StaticRoutes.RecipeExplorer : StaticRoutes.ProcessExplorer);
       })
       .catch((err) => {
-        toast.error(
-          <ToastTemplate iconClass='fa-warning' text={err.message} />
-        );
+        switch (err.level) {
+          case EnumErrorLevel.INFO:
+            toast.info(
+              <ToastTemplate iconClass='fa-warning' text={err.message} />
+            );
+            this.props.history.push(StaticRoutes.ProcessExplorer);
+            break;
+          case EnumErrorLevel.WARN:
+            toast.warn(
+              <ToastTemplate iconClass='fa-warning' text={err.message} />
+            );
+            this.props.history.push(StaticRoutes.ProcessExplorer);
+            break;
+          default:
+            toast.error(
+              <ToastTemplate iconClass='fa-warning' text={err.message} />
+            );
+            break;
+        }
       });
   }
 
@@ -335,15 +364,17 @@ class ProcessDesigner extends React.Component {
                   <Button color="default" onClick={this.props.redoAction} className="float-left ml-3" disabled={this.props.redo.length === 0}>Redo</Button>
                   <ButtonGroup className="float-right">
                     <Button color="primary" onClick={this.save.bind(this, EnumComponentAction.Save)}>Save</Button>
-                    <ButtonDropdown isOpen={this.state.saveDropdownOpen} toggle={this.toggleSaveButtonDropdown}>
-                      <DropdownToggle caret>
-                        More ...
+                    {!this.props.process.template &&
+                      <ButtonDropdown isOpen={this.state.saveDropdownOpen} toggle={this.toggleSaveButtonDropdown}>
+                        <DropdownToggle caret>
+                          More ...
                       </DropdownToggle>
-                      <DropdownMenu>
-                        <DropdownItem onClick={this.save.bind(this, EnumComponentAction.SaveAndExecute)}>Save & Execute</DropdownItem>
-                        <DropdownItem onClick={this.save.bind(this, EnumComponentAction.SaveAsTemplate)}>Save Recipe </DropdownItem>
-                      </DropdownMenu>
-                    </ButtonDropdown>
+                        <DropdownMenu>
+                          <DropdownItem onClick={this.save.bind(this, EnumComponentAction.SaveAndExecute)}>Save & Execute</DropdownItem>
+                          <DropdownItem onClick={this.save.bind(this, EnumComponentAction.SaveAsTemplate)}>Save Recipe </DropdownItem>
+                        </DropdownMenu>
+                      </ButtonDropdown>
+                    }
                   </ButtonGroup>
                 </Col>
               </Row>

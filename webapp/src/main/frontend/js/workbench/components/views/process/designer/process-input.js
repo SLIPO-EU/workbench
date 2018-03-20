@@ -95,12 +95,17 @@ class ProcessInput extends React.Component {
       },
     }).isRequired,
 
+    readOnly: PropTypes.bool,
     setActiveResource: PropTypes.func.isRequired,
 
     // Injected by React DnD
     connectDragSource: PropTypes.func.isRequired,
     isDragging: PropTypes.bool.isRequired
   };
+
+  static defaultProps = {
+    readOnly: false,
+  }
 
   render() {
     const { isDragging, connectDragSource, id } = this.props;
@@ -117,7 +122,7 @@ class ProcessInput extends React.Component {
         onClick={(e) => this.select(e)}
       >
         <div className="slipo-pd-resource-actions">
-          {this.props.resource.inputType != EnumInputType.OUTPUT &&
+          {this.props.resource.inputType != EnumInputType.OUTPUT && !this.props.readOnly &&
             <i className="slipo-pd-resource-delete fa fa-trash" onClick={() => { this.remove(); }}></i>
           }
           {this.props.resource.inputType != EnumInputType.OUTPUT &&

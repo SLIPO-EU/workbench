@@ -64,11 +64,11 @@ import eu.slipo.workbench.common.model.process.ProcessExecutionStepFileRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepRecord;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
 import eu.slipo.workbench.common.model.resource.DataSource;
-import eu.slipo.workbench.common.model.resource.UrlDataSource;
 import eu.slipo.workbench.common.model.resource.FileSystemDataSource;
 import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
 import eu.slipo.workbench.common.model.resource.ResourceRecord;
+import eu.slipo.workbench.common.model.resource.UrlDataSource;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.model.user.Account;
@@ -336,8 +336,9 @@ public class DefaultProcessOperatorTests
             // Delete staging input files
             for (TransformFixture f: transformFixtures.values()) {
                 Path p = f.getInputAsAbsolutePath();
-                if (p != null)
+                if (p != null) {
                     Files.delete(p);
+                }
             }
         }
 
@@ -431,7 +432,7 @@ public class DefaultProcessOperatorTests
             .register("register-1", resourceKey, metadata)
             .build();
 
-        final ProcessRecord processRecord = processRepository.create(definition, creatorId);
+        final ProcessRecord processRecord = processRepository.create(definition, creatorId, false);
         assertNotNull(processRecord);
         final long id = processRecord.getId(), version = processRecord.getVersion();
 
@@ -589,10 +590,11 @@ public class DefaultProcessOperatorTests
             } catch (ExecutionException e) {
                 // Unwrap the exception and rethrow
                 Throwable cause = e.getCause();
-                if (cause instanceof Error)
+                if (cause instanceof Error) {
                     throw ((Error) cause);
-                else
+                } else {
                     throw ((Exception) cause);
+                }
             }
         }
     }

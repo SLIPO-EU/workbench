@@ -53,11 +53,12 @@ export const fetchExecutionKpiData = (process, version, execution, file, mode) =
     });
 };
 
-const processLoaded = function (process, readOnly) {
+const processLoaded = function (process, readOnly, clone) {
   return {
     type: Types.LOAD_RECEIVE_RESPONSE,
     process,
     readOnly,
+    clone,
   };
 };
 
@@ -69,7 +70,7 @@ export function fetchProcess(id) {
 
     const { meta: { csrfToken: token } } = getState();
     return processService.fetchProcess(id, token).then((process) => {
-      dispatch(processLoaded(process, false));
+      dispatch(processLoaded(process, false, false));
     });
   };
 }
@@ -85,17 +86,13 @@ export function fetchProcessRevision(id, version) {
 
     const { meta: { csrfToken: token } } = getState();
     return processService.fetchProcessRevision(id, version, token).then((process) => {
-      dispatch(processLoaded(process, true));
+      dispatch(processLoaded(process, true, false));
     });
   };
 }
 
 export function save(action, process) {
   return (dispatch, getState) => {
-    if (action === EnumDesignerSaveAction.SaveAsTemplate) {
-      return Promise.reject(new Error('Not Implemented!'));
-    }
-
     const errors = processService.validate(action, process);
     if (errors.length !== 0) {
       return Promise.reject(new Error('Validation has failed'));
@@ -103,5 +100,21 @@ export function save(action, process) {
 
     const { meta: { csrfToken: token } } = getState();
     return processService.save(action, process, token);
+  };
+}
+
+export function cloneTemplate(id, version) {
+  return (dispatch, getState) => {
+    if (Number.isNaN(id)) {
+      return Promise.reject(new Error('Invalid id. Failed to load template instance'));
+    }
+    if (Number.isNaN(version)) {
+      return Promise.reject(new Error('Invalid version. Failed to load template instance'));
+    }
+
+    const { meta: { csrfToken: token } } = getState();
+    return processService.fetchProcessRevision(id, version, token).then((process) => {
+      dispatch(processLoaded(process, false, true));
+    });
   };
 }

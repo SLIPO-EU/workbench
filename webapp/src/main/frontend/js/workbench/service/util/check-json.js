@@ -1,12 +1,14 @@
-const _ = require('lodash');
+import _ from 'lodash';
 
-function checkError(r) {
+import {
+  EnumErrorLevel,
+  ServerError,
+} from '../../model/error';
+
+export function checkError(r) {
   if (_.isEmpty(r.errors)) {
     return r;
   } else {
-    var e = _.first(r.errors);
-    throw new Error(e.description);
+    throw new ServerError(r.errors);
   }
 }
-
-module.exports = { checkError };

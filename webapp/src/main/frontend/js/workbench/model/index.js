@@ -6,6 +6,11 @@ export {
   StaticRoutes,
 } from './routes';
 
+export {
+  EnumErrorLevel,
+  ServerError,
+} from './error';
+
 export const Roles = {
   ...RoleNames,
 };

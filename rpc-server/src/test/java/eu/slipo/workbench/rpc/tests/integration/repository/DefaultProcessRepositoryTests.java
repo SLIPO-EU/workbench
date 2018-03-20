@@ -235,7 +235,7 @@ public class DefaultProcessRepositoryTests
         assertNotNull(createdBy);
 
         ProcessRecord record1 =
-            processRepository.create(sampleProcessDefinition1, createdBy.getId());
+            processRepository.create(sampleProcessDefinition1, createdBy.getId(), false);
         assertNotNull(record1);
         assertTrue(record1.getId() > 0 && record1.getVersion() > 0);
 
@@ -298,7 +298,7 @@ public class DefaultProcessRepositoryTests
             inputResourceRecord1.getId(), inputResourceRecord1.getVersion());
 
         ProcessRecord record1 =
-            processRepository.create(sampleProcessDefinition1, createdBy.getId());
+            processRepository.create(sampleProcessDefinition1, createdBy.getId(), false);
         assertNotNull(record1);
 
         final long id = record1.getId();
@@ -529,7 +529,7 @@ public class DefaultProcessRepositoryTests
         AccountEntity submittedBy = createdBy;
 
         ProcessRecord processRecord =
-            processRepository.create(sampleProcessDefinition1, createdBy.getId());
+            processRepository.create(sampleProcessDefinition1, createdBy.getId(), false);
         assertNotNull(processRecord);
 
         final long id = processRecord.getId(), version = processRecord.getVersion();
@@ -548,8 +548,7 @@ public class DefaultProcessRepositoryTests
 
         // Now, attempt to create another execution
 
-        ProcessExecutionRecord executionRecord2 =
-            processRepository.createExecution(id, version, submittedBy.getId());
+        processRepository.createExecution(id, version, submittedBy.getId());
     }
 
     ////////////////////////////////////////////////////////////////////////////

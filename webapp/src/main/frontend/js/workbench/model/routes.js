@@ -73,6 +73,8 @@ const ProcessDesignerCreate = '/workflow/designer';
 const ProcessDesignerEdit = '/workflow/designer/:id';
 const ProcessDesignerView = '/workflow/designer/:id/:version';
 
+const ProcessDesignerEditTemplate = '/workflow/template/designer/:id';
+
 const ProcessExecutionViewer = '/workflow/designer/:id/:version/execution/:execution';
 const ProcessExecutionMapViewer = '/workflow/designer/:id/:version/execution/:execution/map';
 
@@ -83,6 +85,7 @@ export const DynamicRoutes = {
   ResourceViewer,
   ProcessDesignerCreate,
   ProcessDesignerEdit,
+  ProcessDesignerEditTemplate,
   ProcessDesignerView,
   ProcessExecutionMapViewer,
   ProcessExecutionViewer,
@@ -205,6 +208,13 @@ const routes = {
     description: 'Update a data integration workflow',
     title: 'links.process.designer.edit',
     defaultTitle: 'Edit',
+    links: defaultLinks,
+    contextComponent: ProcessDesignerSidebar,
+  },
+  [ProcessDesignerEditTemplate]: {
+    description: 'Update a template integration workflow',
+    title: 'links.process.designer.edit-template',
+    defaultTitle: 'Edit Template',
     links: defaultLinks,
     contextComponent: ProcessDesignerSidebar,
   },

@@ -17,6 +17,7 @@ import {
   processDesignerReducer,
   processExecutionReducer,
   processExplorerReducer,
+  processTemplateExplorerReducer,
   resourceExplorerReducer,
   resourceRegistrationReducer,
 } from './ducks/ui/views';
@@ -37,6 +38,9 @@ module.exports = Redux.combineReducers({
       process: Redux.combineReducers({
         designer: processDesignerReducer,
         explorer: processExplorerReducer,
+      }),
+      template: Redux.combineReducers({
+        explorer: processTemplateExplorerReducer,
       }),
       execution: Redux.combineReducers({
         explorer: processExecutionReducer,
