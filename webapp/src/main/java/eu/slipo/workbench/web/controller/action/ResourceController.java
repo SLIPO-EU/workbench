@@ -47,7 +47,6 @@ import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataUpdate;
 import eu.slipo.workbench.common.model.resource.ResourceQuery;
 import eu.slipo.workbench.common.model.resource.ResourceRecord;
-import eu.slipo.workbench.common.model.resource.UploadDataSource;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.repository.ProcessRepository;
 import eu.slipo.workbench.common.repository.ResourceRepository;
@@ -135,14 +134,14 @@ public class ResourceController {
                 .resource(resourceKey)
                 .metadata(metadata))
             .build();
-        
+
         ProcessRecord record = processService.create(definition, EnumProcessTaskType.REGISTRATION);
-        
+
         ProcessExecutionRecord executionRecord = processService.start(record.getId(), record.getVersion());
         logger.info(
-            "A request for registration is submitted as execution #{}: metadata = {}", 
+            "A request for registration is submitted as execution #{}: metadata = {}",
             executionRecord.getId(), metadata);
-        
+
         return record;
     }
 
@@ -269,7 +268,7 @@ public class ResourceController {
      * @return the resource metadata
      */
     @RequestMapping(value = "/action/resource/{id}/{version}", method = RequestMethod.GET)
-    public RestResponse<ResourceResult> getResource(@PathVariable long id, @PathVariable long version) 
+    public RestResponse<ResourceResult> getResource(@PathVariable long id, @PathVariable long version)
     {
         final ResourceRecord resource = resourceRepository.findOne(id, version);
         final ProcessExecutionRecord execution = this.getExecution(resource);
@@ -283,7 +282,7 @@ public class ResourceController {
      * @return the updated resource metadata
      */
     @RequestMapping(value = "/action/resource/{id}", method = RequestMethod.POST)
-    public RestResponse<?> updateResource(@PathVariable long id, @RequestBody ResourceMetadataUpdate data) 
+    public RestResponse<?> updateResource(@PathVariable long id, @RequestBody ResourceMetadataUpdate data)
     {
         return RestResponse.result(resourceRepository.findOne(id));
     }
@@ -295,7 +294,7 @@ public class ResourceController {
      * @return
      */
     @RequestMapping(value = "/action/resource/{id}", method = RequestMethod.DELETE)
-    public RestResponse<?> deleteResource(@PathVariable long id) 
+    public RestResponse<?> deleteResource(@PathVariable long id)
     {
         return RestResponse.result(null);
     }
@@ -308,7 +307,7 @@ public class ResourceController {
      * @return an instance {@link
      */
     @RequestMapping(value = "/action/resource/{id}/{version}", method = RequestMethod.DELETE)
-    public RestResponse<?> deleteResource(@PathVariable long id, @PathVariable int version) 
+    public RestResponse<?> deleteResource(@PathVariable long id, @PathVariable int version)
     {
         return RestResponse.result(null);
     }
@@ -322,11 +321,11 @@ public class ResourceController {
      * @return the file path under which data is written (the path will always be relative to
      *   server-side staging directory)
      */
-    private Path createTemporaryFile(byte[] data, String extension) 
-        throws IOException 
+    private Path createTemporaryFile(byte[] data, String extension)
+        throws IOException
     {
         Path path = null;
-        
+
         try {
             path = Files.createTempFile(tempDir, null, "." + (extension == null ? "dat" : extension));
             InputStream in = new ByteArrayInputStream(data);
@@ -335,7 +334,7 @@ public class ResourceController {
             logger.error("Failed to create temporary file", ex);
             throw ex;
         }
-        
+
         return tempDir.relativize(path);
     }
 
