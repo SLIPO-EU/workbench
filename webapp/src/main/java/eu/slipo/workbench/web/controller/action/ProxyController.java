@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import eu.slipo.workbench.web.model.configuration.MapProperties;
+import eu.slipo.workbench.web.config.MapConfiguration;
 
 @RestController
 @Secured({ "ROLE_USER", "ROLE_ADMIN" })
@@ -40,12 +40,12 @@ public class ProxyController {
     private final String TRANSFER_ENCONDING_CHUNKED = "chunked";
 
     @Autowired
-    private MapProperties properties;
+    private MapConfiguration mapConfiguration;
 
     @RequestMapping(value = "/action/proxy/service/wfs", method = RequestMethod.GET)
     public void geoserverProxy(HttpServletRequest request, HttpServletResponse response) {
         try {
-            proxyRequest(request, response, properties.getGeoServer().getServices().getWfs());
+            proxyRequest(request, response, mapConfiguration.getGeoServer().getServices().getWfs());
         } catch (IOException ex) {
             logger.error("Send Response Error:" + ex.getMessage(), ex);
         }

@@ -1,13 +1,17 @@
-package eu.slipo.workbench.web.model.configuration;
+package eu.slipo.workbench.web.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 
+import eu.slipo.workbench.web.model.configuration.BingMapsConfiguration;
+import eu.slipo.workbench.web.model.configuration.GeoServerConfiguration;
+import eu.slipo.workbench.web.model.configuration.OsmConfiguration;
+
 @Configuration
 @PropertySource("classpath:config/map.properties")
 @ConfigurationProperties()
-public class MapProperties {
+public class MapConfiguration {
 
     private OsmConfiguration osm;
 
