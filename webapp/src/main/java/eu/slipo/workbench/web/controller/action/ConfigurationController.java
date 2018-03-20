@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import eu.slipo.workbench.common.model.RestResponse;
-import eu.slipo.workbench.web.config.MapProperties;
-import eu.slipo.workbench.web.model.Configuration;
+import eu.slipo.workbench.web.model.configuration.ClientConfiguration;
+import eu.slipo.workbench.web.model.configuration.MapProperties;
 
 @RestController
 @Secured({ "ROLE_USER", "ROLE_ADMIN" })
@@ -19,12 +19,12 @@ public class ConfigurationController {
     MapProperties mapProperties;
 
     @RequestMapping(value = "/action/configuration", method = RequestMethod.GET)
-    public RestResponse<Configuration> getConfiguration() {
+    public RestResponse<ClientConfiguration> getConfiguration() {
         return RestResponse.result(this.createConfiguration());
     }
 
-    private Configuration createConfiguration() {
-        Configuration config = new Configuration();
+    private ClientConfiguration createConfiguration() {
+        ClientConfiguration config = new ClientConfiguration();
 
         config.setOsm(this.mapProperties.getOsm());
         config.setBingMaps(this.mapProperties.getBingMaps());

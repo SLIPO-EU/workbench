@@ -1,6 +1,5 @@
 package eu.slipo.workbench.web.service;
 
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -18,13 +17,13 @@ import eu.slipo.workbench.web.model.resource.ResourceErrorCode;
 import eu.slipo.workbench.web.model.resource.ResourceRegistrationRequest;
 
 @Service
-public class DefaultResourceValidationService implements IResourceValidationService 
+public class DefaultResourceValidationService implements IResourceValidationService
 {
     @Autowired
     private ResourceRepository resourceRepository;
 
     @Override
-    public List<Error> validate(ResourceRegistrationRequest request, int userId) 
+    public List<Error> validate(ResourceRegistrationRequest request, int userId)
     {
         List<Error> errors = new ArrayList<Error>();
 
@@ -40,7 +39,7 @@ public class DefaultResourceValidationService implements IResourceValidationServ
     }
 
     @Override
-    public List<Error> validate(RegistrationRequest request, int userId, Path inputPath) 
+    public List<Error> validate(RegistrationRequest request, int userId, Path inputPath)
     {
         List<Error> errors = new ArrayList<Error>();
 
@@ -55,7 +54,7 @@ public class DefaultResourceValidationService implements IResourceValidationServ
         return errors;
     }
 
-    private void validateMetadata(ResourceMetadataCreate metadata, int userId, List<Error> errors) 
+    private void validateMetadata(ResourceMetadataCreate metadata, int userId, List<Error> errors)
     {
         if (resourceRepository.findOne(metadata.getName(), userId) != null) {
             errors.add(new Error(ResourceErrorCode.NAME_DUPLICATE, "Resource name already exists."));

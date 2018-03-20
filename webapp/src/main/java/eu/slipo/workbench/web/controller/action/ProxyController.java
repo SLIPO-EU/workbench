@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import eu.slipo.workbench.web.config.MapProperties;
+import eu.slipo.workbench.web.model.configuration.MapProperties;
 
 @RestController
 @Secured({ "ROLE_USER", "ROLE_ADMIN" })

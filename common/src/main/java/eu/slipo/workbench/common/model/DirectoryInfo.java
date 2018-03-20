@@ -1,4 +1,4 @@
-package eu.slipo.workbench.web.model;
+package eu.slipo.workbench.common.model;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -39,12 +39,11 @@ public class DirectoryInfo extends FileSystemEntry {
     }
 
     @Override
-    public int getSize() {
-        return files.stream().mapToInt(f -> f.getSize()).sum();
+    public long getSize() {
+        return files.stream().mapToLong(f -> f.getSize()).sum();
     }
 
     public void addFile(FileInfo fi) {
-        // TODO: Check folder name collisions
         Optional<FileInfo> existing = files.stream().filter(f -> f.getName().equalsIgnoreCase(fi.getName())).findFirst();
         if (existing.isPresent()) {
             this.files.remove(existing.get());
@@ -53,7 +52,6 @@ public class DirectoryInfo extends FileSystemEntry {
     }
 
     public void addFolder(DirectoryInfo di) {
-        // TODO: Check file name collisions
         Optional<DirectoryInfo> existing = folders.stream().filter(d -> d.getName().equalsIgnoreCase(di.getName())).findFirst();
         if (existing.isPresent()) {
             this.folders.remove(existing.get());

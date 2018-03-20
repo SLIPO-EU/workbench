@@ -1,12 +1,9 @@
-package eu.slipo.workbench.web.model;
-
-import eu.slipo.workbench.web.model.configuration.BingMapsConfiguration;
-import eu.slipo.workbench.web.model.configuration.OsmConfiguration;
+package eu.slipo.workbench.web.model.configuration;
 
 /**
  * Application configuration settings
  */
-public class Configuration {
+public class ClientConfiguration {
 
     private OsmConfiguration osm;
 

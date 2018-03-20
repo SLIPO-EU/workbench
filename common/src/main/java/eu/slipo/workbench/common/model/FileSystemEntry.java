@@ -1,4 +1,4 @@
-package eu.slipo.workbench.web.model;
+package eu.slipo.workbench.common.model;
 
 import java.time.ZonedDateTime;
 
@@ -7,7 +7,7 @@ import java.time.ZonedDateTime;
  */
 public abstract class FileSystemEntry {
 
-    private int size;
+    private long size;
 
     private String path;
 
@@ -15,14 +15,14 @@ public abstract class FileSystemEntry {
 
     private ZonedDateTime createdOn;
 
-    protected FileSystemEntry(int size, String name, String path, ZonedDateTime createdOn) {
+    protected FileSystemEntry(long size, String name, String path, ZonedDateTime createdOn) {
         this.size = size;
         this.name = name;
         this.path = path;
         this.createdOn = createdOn;
     }
 
-    public int getSize() {
+    public long getSize() {
         return size;
     }
 

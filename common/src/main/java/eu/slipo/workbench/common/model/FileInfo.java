@@ -1,4 +1,4 @@
-package eu.slipo.workbench.web.model;
+package eu.slipo.workbench.common.model;
 
 import java.time.ZonedDateTime;
 
@@ -7,7 +7,7 @@ import java.time.ZonedDateTime;
  */
 public class FileInfo extends FileSystemEntry {
 
-    public FileInfo(int size, String name, String path, ZonedDateTime createdOn) {
+    public FileInfo(long size, String name, String path, ZonedDateTime createdOn) {
         super(size, name, path, createdOn);
     }
 
