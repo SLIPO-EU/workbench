@@ -349,10 +349,17 @@ public class DefaultProcessRepository implements ProcessRepository
     }
 
     @Override
-    public ProcessRecord create(ProcessDefinition definition, int userId, boolean isTemplate) {
-        return create(definition, userId, EnumProcessTaskType.DATA_INTEGRATION, isTemplate);
+    public ProcessRecord create(ProcessDefinition definition, int createdBy, boolean isTemplate) 
+    {
+        return create(definition, createdBy, EnumProcessTaskType.DATA_INTEGRATION, isTemplate);
     }
 
+    @Override
+    public ProcessRecord create(ProcessDefinition definition, int createdBy)
+    {
+        return create(definition, createdBy, EnumProcessTaskType.DATA_INTEGRATION, false);
+    }
+    
     @Override
     public ProcessRecord create(ProcessDefinition definition, int userId, EnumProcessTaskType taskType, boolean isTemplate)
     {

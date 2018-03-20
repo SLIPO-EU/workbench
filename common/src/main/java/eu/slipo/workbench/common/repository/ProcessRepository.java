@@ -144,6 +144,15 @@ public interface ProcessRepository
     ProcessRecord create(ProcessDefinition definition, int createdBy, boolean isTemplate);
 
     /**
+     * Create a new process entity
+     * @see ProcessRepository#create(ProcessDefinition, int, EnumProcessTaskType, boolean)
+     */
+    default ProcessRecord create(ProcessDefinition definition, int createdBy)
+    {
+        return create(definition, createdBy, EnumProcessTaskType.DATA_INTEGRATION, false);
+    }
+    
+    /**
      * Update an existing process entity
      *
      * @param id The id of the process under update
