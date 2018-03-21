@@ -756,11 +756,13 @@ public class DefaultProcessOperator implements ProcessOperator
 
         // Build a workflow from the definition of this process
 
+        final int createdBy = processRecord.getCreatedBy().getId();
+
         final UUID workflowId = computeWorkflowId(id, version);
         final Workflow.Builder workflowBuilder = workflowBuilderFactory.get(workflowId);
         Workflow workflow = null;
         try {
-            workflow = buildWorkflow(workflowBuilder, definition, userId);
+            workflow = buildWorkflow(workflowBuilder, definition, createdBy);
         } catch (CycleDetected e) {
             throw new IllegalStateException("The process definition has cyclic dependencies");
         }
