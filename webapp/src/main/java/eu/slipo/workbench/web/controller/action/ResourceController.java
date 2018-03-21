@@ -50,6 +50,7 @@ import eu.slipo.workbench.common.model.resource.ResourceRecord;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.repository.ProcessRepository;
 import eu.slipo.workbench.common.repository.ResourceRepository;
+import eu.slipo.workbench.common.service.FileNamingStrategy;
 import eu.slipo.workbench.web.model.QueryResult;
 import eu.slipo.workbench.web.model.resource.RegistrationRequest;
 import eu.slipo.workbench.web.model.resource.ResourceErrorCode;
@@ -71,9 +72,13 @@ public class ResourceController {
     private static final Logger logger = LoggerFactory.getLogger(ResourceController.class);
 
     @Autowired
-    @Qualifier("tempDataDirectory")
-    private Path tempDir;
+    @Qualifier("userDataDirectory")
+    private Path userDataDir;
 
+    @Autowired
+    @Qualifier("defaultFileNamingStrategy")
+    private FileNamingStrategy userDataNamingStrategy;
+    
     @Autowired
     @Qualifier("catalogDataDirectory")
     private Path catalogDataDir;
@@ -113,8 +118,8 @@ public class ResourceController {
      */
     private ProcessRecord register(
         DataSource source, TriplegeoConfiguration configuration, ResourceMetadataCreate metadata
-    ) throws InvalidProcessDefinitionException, ProcessNotFoundException, ProcessExecutionStartException, IOException {
-
+    ) throws InvalidProcessDefinitionException, ProcessNotFoundException, ProcessExecutionStartException, IOException 
+    {
         Assert.notNull(source, "A data source is required");
         Assert.notNull(configuration, "Expected configuration for Triplegeo transformation");
         Assert.notNull(metadata, "Expected metadata for resource registration");
@@ -152,8 +157,8 @@ public class ResourceController {
      * @return a list of resources
      */
     @RequestMapping(value = "/action/resource/query", method = RequestMethod.POST)
-    public RestResponse<QueryResult<ResourceRecord>> find(@RequestBody ResourceQueryRequest request) {
-
+    public RestResponse<QueryResult<ResourceRecord>> find(@RequestBody ResourceQueryRequest request) 
+    {
         if (request == null || request.getQuery() == null) {
             return RestResponse.error(ResourceErrorCode.QUERY_IS_EMPTY, "The query is empty");
         }
@@ -174,8 +179,8 @@ public class ResourceController {
      * @throws InvalidProcessDefinitionException
      */
     @RequestMapping(value = "/action/resource/register", method = RequestMethod.POST)
-    public RestResponse<?> registerResource(@RequestBody ResourceRegistrationRequest request) {
-
+    public RestResponse<?> registerResource(@RequestBody ResourceRegistrationRequest request) 
+    {
         try {
             List<Error> errors = resourceValidationService.validate(request, currentUserId());
             if (!errors.isEmpty()) {
@@ -211,14 +216,17 @@ public class ResourceController {
      * @throws InvalidProcessDefinitionException
      */
     @RequestMapping(value = "/action/resource/upload", method = RequestMethod.POST)
-    public RestResponse<?> uploadResource(@RequestPart("file") MultipartFile file, @RequestPart("data") RegistrationRequest request) {
-
+    public RestResponse<?> uploadResource(
+        @RequestPart("file") MultipartFile file, @RequestPart("data") RegistrationRequest request) 
+    {
+        
         try {
-            final Path inputPath = createTemporaryFile(
-                file.getBytes(), FilenameUtils.getExtension(file.getOriginalFilename()));
+            final Path userDir = userDataNamingStrategy.getUserDir(currentUserId(), true);
+            final String extension = FilenameUtils.getExtension(file.getOriginalFilename());
+            final Path inputPath = createTemporaryFile(file.getBytes(), userDir, null, extension);
 
             List<Error> errors = resourceValidationService
-                .validate(request, currentUserId(), tempDir.resolve(inputPath));
+                .validate(request, currentUserId(), userDir.resolve(inputPath));
             if (!errors.isEmpty()) {
                 FileUtils.deleteQuietly(inputPath.toFile());
                 return RestResponse.error(errors);
@@ -315,19 +323,24 @@ public class ResourceController {
     /**
      * Creates a new temporary file and stores the given array of bytes.
      *
-     * @param data the content to write to the file
+     * @param data The contents to write to the file
+     * @param dir A directory to create the file under
+     * @param prefix An optional prefix to use; may be <tt>null</tt>
+     * @param extension An optional extension to use for the file; may be <tt>null</tt>, and in
+     *   such a case a ".dat" extension will be used.
+     * 
      * @throws IOException in case of an I/O error
      *
      * @return the file path under which data is written (the path will always be relative to
-     *   server-side staging directory)
+     *   given directory <tt>dir</tt>)
      */
-    private Path createTemporaryFile(byte[] data, String extension)
+    private Path createTemporaryFile(byte[] data, Path dir, String prefix, String extension)
         throws IOException
     {
         Path path = null;
 
         try {
-            path = Files.createTempFile(tempDir, null, "." + (extension == null ? "dat" : extension));
+            path = Files.createTempFile(dir, prefix, "." + (extension == null ? "dat" : extension));
             InputStream in = new ByteArrayInputStream(data);
             Files.copy(in, path, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException ex) {
@@ -335,7 +348,7 @@ public class ResourceController {
             throw ex;
         }
 
-        return tempDir.relativize(path);
+        return dir.relativize(path);
     }
 
     /**

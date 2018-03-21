@@ -15,15 +15,12 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
 import org.apache.commons.collections4.IterableUtils;
 import org.apache.commons.lang3.NotImplementedException;
-import org.apache.commons.lang3.Validate;
-import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.BatchStatus;
@@ -56,12 +53,12 @@ import eu.slipo.workbench.common.model.process.ProcessRecord;
 import eu.slipo.workbench.common.model.process.Step;
 import eu.slipo.workbench.common.model.resource.DataSource;
 import eu.slipo.workbench.common.model.resource.EnumDataSourceType;
-import eu.slipo.workbench.common.model.resource.UrlDataSource;
 import eu.slipo.workbench.common.model.resource.FileSystemDataSource;
 import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
 import eu.slipo.workbench.common.model.resource.ResourceRecord;
 import eu.slipo.workbench.common.model.resource.UploadDataSource;
+import eu.slipo.workbench.common.model.resource.UrlDataSource;
 import eu.slipo.workbench.common.model.tool.MetadataRegistrationConfiguration;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
@@ -70,6 +67,7 @@ import eu.slipo.workbench.common.repository.ProcessRepository;
 import eu.slipo.workbench.common.repository.ProcessRepository.ProcessExecutionNotActiveException;
 import eu.slipo.workbench.common.repository.ProcessRepository.ProcessHasActiveExecutionException;
 import eu.slipo.workbench.common.repository.ResourceRepository;
+import eu.slipo.workbench.common.service.FileNamingStrategy;
 import eu.slipo.workbench.common.service.ProcessOperator;
 import eu.slipo.workbench.common.service.util.PropertiesConverterService;
 import eu.slipo.workflows.Workflow;
@@ -92,16 +90,16 @@ public class DefaultProcessOperator implements ProcessOperator
     private static final Logger logger = LoggerFactory.getLogger(DefaultProcessOperator.class);
 
     @Autowired
-    @Qualifier("tempDataDirectory")
-    private Path tempDir;
+    @Qualifier("userDataDirectory")
+    private Path userDataDir;
+
+    @Autowired
+    @Qualifier("defaultFileNamingStrategy")
+    private FileNamingStrategy userDataNamingStrategy;
 
     @Autowired
     @Qualifier("catalogDataDirectory")
     private Path catalogDataDir;
-
-    @Autowired
-    @Qualifier("jobDataDirectory")
-    private Path jobDataDir;
 
     @Autowired
     private PropertiesConverterService propertiesConverter;
@@ -495,11 +493,11 @@ public class DefaultProcessOperator implements ProcessOperator
      *
      * @param workflowBuilder
      * @param definition The definition of a process revision
-     * @param userId
+     * @param createdBy The id of the user that created the process
      * @throws MalformedURLException if encounters a malformed URL (of an external datasource)
      * @throws CycleDetected if the process definition has cyclic dependencies
      */
-    private Workflow buildWorkflow(Workflow.Builder workflowBuilder, ProcessDefinition definition, int userId)
+    private Workflow buildWorkflow(Workflow.Builder workflowBuilder, ProcessDefinition definition, int createdBy)
         throws CycleDetected
     {
         final Map<DataSource, String> sourceToNodeName = new HashMap<>();
@@ -549,7 +547,7 @@ public class DefaultProcessOperator implements ProcessOperator
                         jobDefinitionBuilder.input(dependencyName, "*");
                         inputNames.add(nodeNameToOutputName.get(dependencyName));
                     } else {
-                        Path inputPath = resolveToPath(source);
+                        Path inputPath = resolveToPath(source, createdBy);
                         jobDefinitionBuilder.input(inputPath);
                         inputNames.add(inputPath.getFileName().toString());
                     }
@@ -584,7 +582,7 @@ public class DefaultProcessOperator implements ProcessOperator
                     Assert.state(inputKeys.size() == 1, "A registration step expects a single input");
                     Step dependency = definition.stepByResourceKey(inputKeys.get(0));
                     JobParameters parameters =
-                        buildParametersForRegistration(step, dependency, definition, userId);
+                        buildParametersForRegistration(step, dependency, definition, createdBy);
                     jobDefinitionBuilder
                         .flow(registerResourceFlow)
                         .parameters(parameters);
@@ -701,7 +699,7 @@ public class DefaultProcessOperator implements ProcessOperator
         return catalogDataDir.resolve(p);
     }
 
-    private Path resolveToPath(DataSource source)
+    private Path resolveToPath(DataSource source, int createdBy)
     {
         Assert.state(source != null, "Expected a non-null source");
 
@@ -712,15 +710,13 @@ public class DefaultProcessOperator implements ProcessOperator
         case UPLOAD:
             {
                 path = Paths.get(((UploadDataSource) source).getPath());
-                Assert.state(!path.isAbsolute(), "Expected a path relative to upload directory");
-                path = tempDir.resolve(path);
+                path = userDataNamingStrategy.resolvePath(createdBy, path);
             }
             break;
         case FILESYSTEM:
             {
                 path = Paths.get(((FileSystemDataSource) source).getPath());
-                Assert.state(!path.isAbsolute(), "Expected a path relative to file staging directory");
-                path = tempDir.resolve(path);
+                path = userDataNamingStrategy.resolvePath(createdBy, path);
             }
             break;
         case URL:

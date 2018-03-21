@@ -2,6 +2,7 @@ package eu.slipo.workbench.web.controller.action;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -42,7 +43,8 @@ public class FileSytemController {
     @RequestMapping(value = "/action/file-system",  method = RequestMethod.GET)
     public RestResponse<?> browserDirectory() {
         try {
-            return RestResponse.result(fileNamingStrategy.getUserFileSystem(authenticationFacade.getCurrentUserId()));
+            final int userId = authenticationFacade.getCurrentUserId();
+            return RestResponse.result(fileNamingStrategy.getUserDirectoryInfo(userId));
         } catch (IOException ex) {
             return RestResponse.error(BasicErrorCode.IO_ERROR, "An unknown error has occurred");
         }
@@ -55,29 +57,33 @@ public class FileSytemController {
      * @return the updated file system
      */
     @RequestMapping(value = "/action/file-system", method = RequestMethod.POST)
-    public RestResponse<?> createFolder(@RequestBody CreateDirectoryRequest request) {
+    public RestResponse<?> createFolder(@RequestBody CreateDirectoryRequest request)
+    {
+        if (StringUtils.isEmpty(request.getPath())) {
+            return RestResponse.error(FileSystemErrorCode.PATH_IS_EMPTY, "A path is required");
+        }
+        
         try {
-            if (StringUtils.isEmpty(request.getPath())) {
-                return RestResponse.error(FileSystemErrorCode.PATH_IS_EMPTY, "Path is not set");
-            }
-            final String filename = fileNamingStrategy.resolveFileName(authenticationFacade.getCurrentUserId(), request.getPath(), false);
-            if (StringUtils.isAllBlank(filename)) {
-                return RestResponse.error(
-                    FileSystemErrorCode.CANNOT_RESOLVE_PATH,
-                    String.format("Cannot resolve path [%s]", request.getPath()));
-            }
-            final Path path = Paths.get(filename);
-            if (Files.exists(path)) {
+            final int userId = authenticationFacade.getCurrentUserId();
+            final Path dir = fileNamingStrategy.resolvePath(userId, request.getPath());
+            
+            if (Files.exists(dir)) {
                 return RestResponse.error(
                     FileSystemErrorCode.PATH_ALREADY_EXISTS,
-                    String.format("Path [%s] already exists", request.getPath()));
+                    String.format("The directory already exists: %s", request.getPath()));
             }
-            Files.createDirectories(path);
-
-            return RestResponse.success();
+            
+            Files.createDirectories(dir);
+            
+        } catch (InvalidPathException ex) {
+            return RestResponse.error(
+                FileSystemErrorCode.CANNOT_RESOLVE_PATH,
+                String.format("The path [%s] is malformed", request.getPath()));
         } catch (IOException ex) {
-            return RestResponse.error(BasicErrorCode.IO_ERROR, "An unknown error has occurred");
+            return RestResponse.error(
+                BasicErrorCode.IO_ERROR, "An unknown error has occurred");
         }
+        
+        return RestResponse.success();
     }
-
 }

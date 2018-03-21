@@ -5,6 +5,7 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 import javax.annotation.PostConstruct;
 
@@ -15,11 +16,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.util.Assert;
 
 @Configuration
-public class CatalogDataConfiguration
+public class DataDirectoryConfiguration
 {
     private Path tempDir;
     
     private Path catalogDataDir;
+    
+    private Path userDataDir;
     
     @Autowired
     private void setTempDir(@Value("${slipo.temp-dir}") String d)
@@ -37,18 +40,26 @@ public class CatalogDataConfiguration
         this.catalogDataDir = path;
     }
     
+    @Autowired
+    private void setUserDataDir(@Value("${slipo.users.data-dir}") String d)
+    {
+        Path path = Paths.get(d);
+        Assert.isTrue(path.isAbsolute(), "Expected an absolute directory path");
+        this.userDataDir = path;
+    }
+    
     @PostConstruct
     private void initialize() throws IOException
     {
-        // Create directory hierarchy, if not already exist
+        // Prepare directory hierarchy
         
-        try {
-            Files.createDirectories(tempDir);
-        } catch (FileAlreadyExistsException ex) {}
-        
-        try {
-            Files.createDirectories(catalogDataDir);
-        } catch (FileAlreadyExistsException ex) {}
+        for (Path dataDir: Arrays.asList(tempDir, catalogDataDir, userDataDir)) {
+            try {
+                Files.createDirectories(dataDir);
+            } catch (FileAlreadyExistsException ex) {
+                // no-op: already exists
+            }
+        }
     }
     
     @Bean
@@ -62,4 +73,11 @@ public class CatalogDataConfiguration
     {
         return catalogDataDir;
     }
+    
+    @Bean
+    Path userDataDirectory()
+    {
+        return userDataDir;
+    }
+    
 }

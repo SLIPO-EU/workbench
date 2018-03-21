@@ -75,6 +75,7 @@ import eu.slipo.workbench.common.model.user.Account;
 import eu.slipo.workbench.common.repository.AccountRepository;
 import eu.slipo.workbench.common.repository.ProcessRepository;
 import eu.slipo.workbench.common.repository.ResourceRepository;
+import eu.slipo.workbench.common.service.FileNamingStrategy;
 import eu.slipo.workbench.common.service.ProcessOperator;
 import eu.slipo.workbench.common.service.util.PropertiesConverterService;
 import eu.slipo.workbench.common.service.util.PropertiesConverterService.ConversionFailedException;
@@ -217,8 +218,8 @@ public class DefaultProcessOperatorTests
         private PropertiesConverterService propertiesConverterService;
 
         @Autowired
-        @Qualifier("tempDataDirectory")
-        private Path stagingInputDir;
+        @Qualifier("defaultFileNamingStrategy")
+        private FileNamingStrategy userDataNamingStrategy;
 
         private Map<String, TransformFixture> transformFixtures = new HashMap<>();
 
@@ -234,27 +235,30 @@ public class DefaultProcessOperatorTests
         }
 
         @PostConstruct
-        public void loadUserData()
+        public void initialize() throws Exception
         {
-            // Load sample user accounts
+            // Load sample user account
 
-            AccountEntity a = new AccountEntity(USER_NAME, USER_EMAIL);
-            a.setBlocked(false);
-            a.setActive(true);
-            a.setRegistered(ZonedDateTime.now());
-            accountRepository.save(a);
-        }
+            AccountEntity accountEntity = new AccountEntity(USER_NAME, USER_EMAIL);
+            accountEntity.setBlocked(false);
+            accountEntity.setActive(true);
+            accountEntity.setRegistered(ZonedDateTime.now());
+            accountEntity = accountRepository.save(accountEntity);
 
-        @PostConstruct
-        public void setupFixtures() throws Exception
-        {
+            // Setup a user's home directory
+
+            final int userId = accountEntity.getId();
+            final Path userDir = userDataNamingStrategy.getUserDir(userId, true);
+
             // Setup fixtures for transformation operations (triplegeo)
-            setupTransformFixtures();
+
+            setupTransformFixtures(userDir);
 
             // Setup other fixtures ...
         }
 
-        private void setupTransformFixtures() throws Exception
+        private void setupTransformFixtures(Path userDir)
+            throws Exception
         {
             final URL resourcesBaseUrl = new URL(rootUrl, "rpc-server/src/test/resources/");
 
@@ -286,12 +290,12 @@ public class DefaultProcessOperatorTests
 
                 for (String inputName: inputNames) {
                     Path p = Files.createTempFile(
-                        stagingInputDir, stripFilenameExtension(inputName) + "-", ".csv");
+                        userDir, stripFilenameExtension(inputName) + "-", ".csv");
                     Files.copy(inputDir.resolve(inputName), p, StandardCopyOption.REPLACE_EXISTING);
                     inputNameToTempPath.put(inputName, p);
                     inputNameToTempName.put(
                         inputName,
-                        stripFilenameExtension(stagingInputDir.relativize(p).getFileName().toString()));
+                        stripFilenameExtension(userDir.relativize(p).getFileName().toString()));
                 }
 
                 // Add fixtures for input as a local file
@@ -303,7 +307,7 @@ public class DefaultProcessOperatorTests
                     TransformFixture fixture = new TransformFixture(
                         fixtureName,
                         inputPath.toUri(),
-                        stagingInputDir,
+                        userDir,
                         resultsDir.resolve(stripFilenameExtension(inputName) + ".nt"),
                         configuration);
                     String key = String.format("file-1-%d", index + 1);
@@ -326,18 +330,6 @@ public class DefaultProcessOperatorTests
                         configuration);
                     String key = String.format("url-1-%d", index + 1);
                     transformFixtures.put(key, fixture);
-                }
-            }
-        }
-
-        @PreDestroy
-        public void teardownFixtures() throws Exception
-        {
-            // Delete staging input files
-            for (TransformFixture f: transformFixtures.values()) {
-                Path p = f.getInputAsAbsolutePath();
-                if (p != null) {
-                    Files.delete(p);
                 }
             }
         }
