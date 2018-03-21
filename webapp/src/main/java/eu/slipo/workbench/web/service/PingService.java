@@ -14,7 +14,6 @@ import eu.slipo.workbench.common.service.EchoService;
  * Ping our RPC backend to ensure we are in touch.
  */
 @Service
-@Scope(value = "singleton")
 @ConditionalOnProperty("slipo.rpc-server.ping")
 public class PingService
 {
