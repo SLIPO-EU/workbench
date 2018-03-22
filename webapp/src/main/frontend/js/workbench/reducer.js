@@ -14,6 +14,7 @@ import {
 
 import {
   dashboardReducer,
+  harvesterDataExplorerReducer,
   processDesignerReducer,
   processExecutionReducer,
   processExplorerReducer,
@@ -31,6 +32,7 @@ module.exports = Redux.combineReducers({
     viewport,
     views: Redux.combineReducers({
       dashboard: dashboardReducer,
+      harvester: harvesterDataExplorerReducer,
       resources: Redux.combineReducers({
         explorer: resourceExplorerReducer,
         registration: resourceRegistrationReducer,

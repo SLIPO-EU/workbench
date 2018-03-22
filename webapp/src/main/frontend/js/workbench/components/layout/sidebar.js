@@ -96,18 +96,25 @@ class Sidebar extends React.Component {
               </ul>
             </li>
 
-            <li className={'d-none nav-item nav-dropdown ' + (expanded(Sections.Tool) ? 'open' : '')}>
-              <a className="nav-link nav-dropdown-toggle" onClick={() => (toggle(Sections.Tool), false)}>
-                {'Tools'}
-              </a>
-              <ul className="nav-dropdown-items">
-                <li className="nav-item">
-                  <NavLink to={StaticRoutes.SchemaExplorer} className="nav-link" activeClassName="active">
-                    <i className="fa fa-file-code-o"></i>{'Schema Mapper'}
-                  </NavLink>
-                </li>
-              </ul>
-            </li>
+            <SecureContent role={Roles.ADMIN}>
+              <li className={'nav-item nav-dropdown ' + (expanded(Sections.Tool) ? 'open' : '')}>
+                <a className="nav-link nav-dropdown-toggle" onClick={() => (toggle(Sections.Tool), false)}>
+                  {'Tools'}
+                </a>
+                <ul className="nav-dropdown-items">
+                  <li className="nav-item">
+                    <NavLink to={StaticRoutes.SchemaExplorer} className="nav-link" activeClassName="active">
+                      <i className="fa fa-file-code-o"></i>{'Schema Mapper'}
+                    </NavLink>
+                  </li>
+                  <li className="nav-item">
+                    <NavLink to={StaticRoutes.HarvesterDataExplorer} className="nav-link" activeClassName="active">
+                      <i className="fa fa-bar-chart"></i>{'Harvester Data'}
+                    </NavLink>
+                  </li>
+                </ul>
+              </li>
+            </SecureContent>
 
             <SecureContent role={Roles.ADMIN}>
               <li className={'nav-item nav-dropdown ' + (expanded(Sections.Admin) ? 'open' : '')}>

@@ -36,6 +36,8 @@ const Dashboard = '/dashboard';
 const Profile = '/profile';
 const Settings = '/settings';
 
+const HarvesterDataExplorer = '/harvester/data/explore';
+
 const ResourceExplorer = '/resource/explore';
 const ResourceRegistration = '/resource/register';
 
@@ -51,6 +53,7 @@ const EventViewer = '/admin/event-viewer';
 
 export const StaticRoutes = {
   Dashboard,
+  HarvesterDataExplorer,
   Profile,
   Settings,
   ResourceExplorer,
@@ -126,6 +129,12 @@ const routes = {
     title: 'links.dashboard',
     defaultTitle: 'Dashboard',
     links: [ResourceExplorer, ProcessExplorer]
+  },
+  [HarvesterDataExplorer]: {
+    description: 'Explore Harvester Data',
+    title: 'links.harvester.data.explore',
+    defaultTitle: 'Explore Harvester Data',
+    links: [Dashboard],
   },
   [Profile]: {
     description: 'Profile',

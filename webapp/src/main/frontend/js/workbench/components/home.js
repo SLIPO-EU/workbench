@@ -29,6 +29,7 @@ import SecureRoute from './helpers/secure-route';
 
 import {
   Dashboard,
+  HarvesterDataExplorer,
   Profile,
   Settings,
   ResourceExplorer,
@@ -159,6 +160,7 @@ class Home extends React.Component {
                 <Route path={DynamicRoutes.SchemaDesigner} component={SchemaDesigner} />
                 {/* Static */}
                 <Route path={StaticRoutes.Dashboard} component={Dashboard} />
+                <Route path={StaticRoutes.HarvesterDataExplorer} component={HarvesterDataExplorer} />
                 <Route path={StaticRoutes.Profile} component={Profile} />
                 <Route path={StaticRoutes.Settings} component={Settings} />
                 <Route path={StaticRoutes.ResourceExplorer} component={ResourceExplorer} />
