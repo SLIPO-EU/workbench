@@ -27,10 +27,12 @@ public class DirectoryInfo extends FileSystemEntry {
     }
 
     public List<FileInfo> getFiles() {
+        files.sort((f1, f2) -> f1.getName().compareTo(f2.getName()));
         return Collections.unmodifiableList(files);
     }
 
     public List<DirectoryInfo> getFolders() {
+        folders.sort((f1, f2) -> f1.getName().compareTo(f2.getName()));
         return Collections.unmodifiableList(folders);
     }
 
@@ -40,7 +42,7 @@ public class DirectoryInfo extends FileSystemEntry {
 
     @Override
     public long getSize() {
-        return files.stream().mapToLong(f -> f.getSize()).sum();
+        return files.stream().mapToLong(f -> f.getSize()).sum() + folders.stream().mapToLong(f -> f.getSize()).sum();
     }
 
     public void addFile(FileInfo fi) {

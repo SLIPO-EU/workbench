@@ -56,6 +56,12 @@ import {
 } from './execution/viewer';
 
 import {
+  createFolder,
+  uploadFile,
+  deletePath,
+} from '../../ducks/config';
+
+import {
   reset,
   fetchProcess,
   fetchProcessRevision,
@@ -440,6 +446,9 @@ class ProcessDesigner extends React.Component {
         configureStepDataSourceEnd={this.props.configureStepDataSourceEnd}
         filesystem={this.props.filesystem}
         readOnly={this.props.readOnly}
+        createFolder={this.props.createFolder}
+        uploadFile={this.props.uploadFile}
+        deletePath={this.props.deletePath}
       />
     );
   }
@@ -525,7 +534,6 @@ const mapStateToProps = (state) => ({
   // Workflow designer
   active: state.ui.views.process.designer.active,
   designer: state.ui.views.process.designer,
-  filesystem: state.config.filesystem,
   groups: state.ui.views.process.designer.groups,
   process: state.ui.views.process.designer.process,
   readOnly: state.ui.views.process.designer.readOnly,
@@ -538,6 +546,8 @@ const mapStateToProps = (state) => ({
   execution: state.ui.views.process.designer.execution.data,
   selectedExecutionFile: state.ui.views.process.designer.execution.selectedFile,
   selectedKpi: state.ui.views.process.designer.execution.selectedKpi,
+  // File system
+  filesystem: state.config.filesystem,
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
@@ -572,12 +582,15 @@ const mapDispatchToProps = (dispatch) => bindActionCreators({
   redoAction: redo,
   showStepExecutionDetails,
   hideStepExecutionDetails,
-  // Execution viewer
   fetchExecutionDetails,
   fetchExecutionKpiData,
   resetSelectedFile,
   resetSelectedKpi,
   selectFile,
+  // File system
+  createFolder,
+  uploadFile,
+  deletePath,
 }, dispatch);
 
 const mergeProps = (stateProps, dispatchProps, ownProps) => {

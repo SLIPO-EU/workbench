@@ -39,6 +39,9 @@ class DataSourceConfig extends React.Component {
     configureStepDataSourceUpdate: PropTypes.func.isRequired,
     configureStepDataSourceEnd: PropTypes.func.isRequired,
     readOnly: PropTypes.bool.isRequired,
+    createFolder: PropTypes.func.isRequired,
+    uploadFile: PropTypes.func.isRequired,
+    deletePath: PropTypes.func.isRequired,
   }
 
   setValue(configuration) {
@@ -91,7 +94,15 @@ class DataSourceConfig extends React.Component {
             this.createForm(externalUrl.Component, externalUrl.validator)
           }
           {this.props.dataSource.source === EnumDataSource.FILESYSTEM &&
-            this.createForm(filesystem.Component, filesystem.validator, { filesystem: this.props.filesystem })
+            this.createForm(filesystem.Component, filesystem.validator, {
+              filesystem: this.props.filesystem,
+              allowUpload: true,
+              allowNewFolder: true,
+              allowDelete: true,
+              createFolder: this.props.createFolder,
+              uploadFile: this.props.uploadFile,
+              deletePath: this.props.deletePath,
+            })
           }
           {this.props.dataSource.source === EnumDataSource.HARVESTER &&
             this.createForm(<Placeholder style={{ height: '100%' }} label="Context" iconClass="fa fa-magic" />, null)

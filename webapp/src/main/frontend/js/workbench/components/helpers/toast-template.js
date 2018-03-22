@@ -7,7 +7,7 @@ import {
 
 import {
   EnumErrorLevel,
-} from '../../model';
+} from '../../model/error';
 
 /**
  * A toast template

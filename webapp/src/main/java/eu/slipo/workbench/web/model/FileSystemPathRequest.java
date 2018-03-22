@@ -1,6 +1,6 @@
 package eu.slipo.workbench.web.model;
 
-public class CreateDirectoryRequest {
+public class FileSystemPathRequest {
 
     private String path;
 

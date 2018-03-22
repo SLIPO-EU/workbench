@@ -9,6 +9,8 @@ public enum FileSystemErrorCode implements ErrorCode {
     PATH_IS_EMPTY,
     PATH_ALREADY_EXISTS,
     PATH_NOT_FOUND,
+    PATH_NOT_EMPTY,
+    NOT_ENOUGH_SPACE,
     ;
 
     @Override

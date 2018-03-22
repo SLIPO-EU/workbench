@@ -50,7 +50,7 @@ class ContentRoot extends React.Component {
   }
 
   _getFileSystem() {
-    this.props.getFilesystem('');
+    this.props.getFilesystem();
   }
 
   _setViewport() {

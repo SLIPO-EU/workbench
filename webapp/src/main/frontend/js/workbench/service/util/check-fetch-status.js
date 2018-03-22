@@ -1,3 +1,8 @@
+import {
+  EnumErrorLevel,
+  ServerError,
+} from "../../model/error";
+
 /**
  * A handler that can be chained to a fetch promise to reject non
  * successful (ie non 2xx) HTTP requests
@@ -10,8 +15,11 @@ function checkStatus(res) {
   if (res.status >= 200 && res.status < 300) {
     return res;
   } else {
-    var err = new Error(`Received: ${res.status} ${res.statusText}`);
-    throw err;
+    throw new ServerError([{
+      code: 'UNKNOWN',
+      level: EnumErrorLevel.ERROR,
+      description: `Received: ${res.status} ${res.statusText}`,
+    }]);
   }
 }
 
