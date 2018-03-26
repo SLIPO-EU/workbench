@@ -58,6 +58,7 @@ class Dashboard extends React.Component {
           <Col className="col-sm-12 col-md-12 col-lg-6">
             <DashboardCard
               {...DashboardCardConfig.DashboardProcessExplorerConfig}
+              updatedOn={new Date()}
               filterChange={this.props.changeDashboardFilter}
               filterValue={this.props.filters.processExplorer}
             >
@@ -72,6 +73,7 @@ class Dashboard extends React.Component {
           <Col className="col-sm-12 col-md-12 col-lg-6">
             <DashboardCard
               {...DashboardCardConfig.DashboardResourcesConfig}
+              updatedOn={new Date()}
               filterChange={this.props.changeDashboardFilter}
               filterValue={this.props.filters.resources}
             >
@@ -90,6 +92,7 @@ class Dashboard extends React.Component {
             <Col className="col-12">
               <DashboardCard
                 {...DashboardCardConfig.DashboardEventsConfig}
+                updatedOn={new Date()}
                 filterChange={this.props.changeDashboardFilter}
                 filterValue={this.props.filters.events}
               >

@@ -383,7 +383,9 @@ class ProcessDesigner extends React.Component {
                       </DropdownToggle>
                         <DropdownMenu>
                           <DropdownItem onClick={this.save.bind(this, EnumComponentAction.SaveAndExecute)}>Save & Execute</DropdownItem>
-                          <DropdownItem onClick={this.save.bind(this, EnumComponentAction.SaveAsTemplate)}>Save Recipe </DropdownItem>
+                          {!this.props.process.id &&
+                            <DropdownItem onClick={this.save.bind(this, EnumComponentAction.SaveAsTemplate)}>Save Recipe </DropdownItem>
+                          }
                         </DropdownMenu>
                       </ButtonDropdown>
                     }
