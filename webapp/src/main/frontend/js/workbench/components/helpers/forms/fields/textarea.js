@@ -4,32 +4,45 @@ import { Input } from 'reactstrap';
 
 import decorateField from './form-field';
 
+export class TextArea extends React.Component {
 
-export function TextArea(props) {
-  return (
-    <Input
-      type="textarea"
-      rows={props.rows || 2}
-      name={props.id}
-      id={props.id}
-      state={props.state}
-      value={props.value || ''}
-      onChange={e => typeof props.onChange === 'function' ? props.onChange(e.target.value) : null}
-      readOnly={props.readOnly}
-      rows={props.rows || 1}
-    />
-  );
+  constructor(props) {
+    super(props);
+  }
+
+  static propTypes = {
+    id: PropTypes.string.isRequired,
+    label: PropTypes.string,
+    help: PropTypes.string,
+    value: PropTypes.string,
+    state: PropTypes.oneOf(['success', 'warning', 'danger']),
+    onChange: PropTypes.func,
+    rows: PropTypes.number,
+    readOnly: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
+  }
+
+  isReadOnly() {
+    if (typeof this.props.readOnly === 'function') {
+      return this.props.readOnly(this.props.id);
+    }
+    return this.props.readOnly;
+  }
+
+  render() {
+    const props = this.props;
+    return (
+      <Input
+        type="textarea"
+        rows={props.rows || 2}
+        name={props.id}
+        id={props.id}
+        state={props.state}
+        value={props.value || ''}
+        onChange={e => typeof props.onChange === 'function' ? props.onChange(e.target.value) : null}
+        readOnly={this.isReadOnly()}
+        rows={props.rows || 1}
+      />
+    );
+  }
 }
-
 export default decorateField(TextArea);
-
-
-TextArea.propTypes = {
-  id: PropTypes.string.isRequired,
-  label: PropTypes.string,
-  help: PropTypes.string,
-  value: PropTypes.string,
-  state: PropTypes.oneOf(['success', 'warning', 'danger']),
-  onChange: PropTypes.func,
-  rows: PropTypes.number,
-};
