@@ -36,6 +36,10 @@ import {
   SelectField,
 } from '../helpers/forms/fields';
 
+import {
+  StaticRoutes,
+} from '../../model';
+
 /**
  * Browse POI data and POI data integration workflow results
  *
@@ -91,15 +95,15 @@ class ProcessExecutionMapViewer extends React.Component {
     this.props.selectFeatures(features);
   }
 
-  error(message, goBack) {
+  error(message, redirect) {
     toast.dismiss();
 
     toast.error(
       <ToastTemplate iconClass='fa-warning' text={message} />
     );
 
-    if ((typeof goBack === 'undefined') || (goBack)) {
-      setTimeout(() => this.props.history.goBack(), 500);
+    if ((typeof redirect === 'undefined') || (redirect)) {
+      setTimeout(() => this.props.history.push(StaticRoutes.ProcessExecutionExplorer), 500);
     }
   }
 
@@ -134,12 +138,12 @@ class ProcessExecutionMapViewer extends React.Component {
       .forEach((l) => {
         layers.push(
           <OpenLayers.Layer.WFS
-            key={`${l.tableName}-${l.color}`}
+            key={`${l.tableName}-${l.color}-${l.icon || ''}`}
             url="/action/proxy/service/wfs"
             version="1.1.0"
             typename={`slipo_eu:${l.tableName}`}
-            icon={l.icon}
             color={l.color}
+            icon={l.icon}
           />
         );
       });
@@ -160,9 +164,8 @@ class ProcessExecutionMapViewer extends React.Component {
           <OpenLayers.Interactions>
             <OpenLayers.Interaction.Select
               onFeatureSelect={this.onFeatureSelect}
-              icon={'\uf21d'}
               multi={true}
-              width={4}
+              width={2}
             />
           </OpenLayers.Interactions>
         </OpenLayers.Map>

@@ -61,7 +61,7 @@ class SelectInteraction extends React.Component {
     }
   }
 
-  buildPointStyle(color, width) {
+  buildPointStyle(color, icon, width) {
     const stroke = new Stroke({
       color,
       width,
@@ -69,18 +69,24 @@ class SelectInteraction extends React.Component {
     const fill = new Fill({
       color: color + '80',
     });
-    const newStyle = new Style({
-      fill,
-      stroke,
-    });
-    const image = new Circle({
-      radius: width + 3,
-      fill,
-      stroke,
-    });
-    return new Style({
-      image,
-    });
+
+    return (icon ?
+      new Style({
+        text: new Text({
+          text: icon,
+          font: 'normal 32px FontAwesome',
+          fill,
+          stroke,
+        }),
+      })
+      :
+      new Style({
+        image: new Circle({
+          radius: width,
+          fill,
+          stroke,
+        }),
+      }));
   }
 
   buildStyles() {
@@ -99,7 +105,7 @@ class SelectInteraction extends React.Component {
     });
 
     const image = new Circle({
-      radius: this.props.width + 3,
+      radius: this.props.width,
       fill,
       stroke,
     });
@@ -125,9 +131,10 @@ class SelectInteraction extends React.Component {
       const type = feature.getGeometry().getType();
       const style = this.styles[type];
       const color = feature.get('__color') || this.props.color;
+      const icon = feature.get('__icon') || null;
 
       if (type === 'Point') {
-        return this.buildPointStyle(color, this.props.width);
+        return this.buildPointStyle(color, icon, this.props.width);
       } else {
         if (style.getFill()) {
           style.getFill().setColor(color + '80');

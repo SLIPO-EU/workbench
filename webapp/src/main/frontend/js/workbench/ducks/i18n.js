@@ -1,6 +1,4 @@
-// locale.js
-
-const { getMessages } = require('../service/i18n');
+import { getMessages } from '../service/i18n';
 
 // Actions
 const SET_LOCALE = 'locale/SET_LOCALE';
@@ -61,5 +59,5 @@ export const changeLocale = (locale) => (dispatch) => {
 
   dispatch(fetchMessages(locale))
     .catch(
-    () => console.warn("No messages for locale " + locale));
+      () => console.warn("No messages for locale " + locale));
 };

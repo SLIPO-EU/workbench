@@ -25,7 +25,7 @@ export function resourceToLayers(steps, resources, execution) {
       layers.push({
         title: r.name,
         hidden: false,
-        icon: '\uf041',
+        icon: '\uf08d',
         iconClass: 'fa fa-map-marker',
         color: Colors[layers.length % Colors.length],
         tableName: r.tableName,
@@ -50,7 +50,7 @@ export function resourceToLayers(steps, resources, execution) {
         layers.push({
           title: step.name,
           hidden: false,
-          icon: '\uf041',
+          icon: '\uf08d',
           iconClass: 'fa fa-map-marker',
           color: Colors[layers.length % Colors.length],
           tableName: f.tableName,
