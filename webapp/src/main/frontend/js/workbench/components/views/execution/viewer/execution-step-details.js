@@ -150,7 +150,7 @@ export default class ExecutionStepDetails extends React.Component {
 
     switch (e.target.getAttribute('data-action')) {
       case 'config-download':
-        this.downloadConfiguration(rowInfo.row.id);
+        this.downloadFile(rowInfo.row.id, rowInfo.row.name.split('/').reverse()[0]);
         break;
 
       case 'kpi-view':
@@ -165,12 +165,15 @@ export default class ExecutionStepDetails extends React.Component {
     }
   }
 
-  downloadConfiguration(id) {
-    toast.dismiss();
+  downloadFile(fileId, fileName) {
+    this.props.downloadFile(this.props.process.id, this.props.process.version, this.props.execution.id, fileId, fileName)
+      .catch(err => {
+        toast.dismiss();
 
-    toast.error(
-      <ToastTemplate iconClass='fa-warning' text='Not implemented!' />
-    );
+        toast.error(
+          <ToastTemplate iconClass='fa-cloud-download' text='Failed to download file' />
+        );
+      });
   }
 
   hideStepExecutionDetails() {
@@ -232,16 +235,6 @@ export default class ExecutionStepDetails extends React.Component {
               <Card>
                 <CardBody>
                   <KpiGridView
-                    data={data}
-                    file={file}
-                  />
-                </CardBody>
-              </Card>
-            </Col>
-            <Col>
-              <Card>
-                <CardBody>
-                  <KpiChartView
                     data={data}
                     file={file}
                   />

@@ -1,11 +1,22 @@
 package eu.slipo.workbench.web.controller.action;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
+import java.util.Properties;
 
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PropertiesLoaderUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.remoting.RemoteConnectFailureException;
 import org.springframework.security.access.annotation.Secured;
@@ -15,20 +26,28 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import eu.slipo.workbench.common.model.ApplicationException;
 import eu.slipo.workbench.common.model.BasicErrorCode;
 import eu.slipo.workbench.common.model.Error;
+import eu.slipo.workbench.common.model.FileSystemErrorCode;
 import eu.slipo.workbench.common.model.QueryResultPage;
 import eu.slipo.workbench.common.model.RestResponse;
 import eu.slipo.workbench.common.model.process.CatalogResource;
 import eu.slipo.workbench.common.model.process.EnumInputType;
 import eu.slipo.workbench.common.model.process.EnumProcessTaskType;
+import eu.slipo.workbench.common.model.process.EnumStepFile;
 import eu.slipo.workbench.common.model.process.InvalidProcessDefinitionException;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.ProcessErrorCode;
 import eu.slipo.workbench.common.model.process.ProcessExecutionQuery;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStartException;
+import eu.slipo.workbench.common.model.process.ProcessExecutionStepFileRecord;
+import eu.slipo.workbench.common.model.process.ProcessExecutionStepRecord;
 import eu.slipo.workbench.common.model.process.ProcessNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessQuery;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
@@ -54,6 +73,12 @@ import eu.slipo.workbench.web.service.ProcessService;
 public class ProcessController {
 
     private static final Logger logger = LoggerFactory.getLogger(ProcessController.class);
+
+    @Autowired
+    private Path catalogDataDirectory;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Autowired
     private ResourceRepository resourceRepository;
@@ -189,6 +214,127 @@ public class ProcessController {
             });
 
         return RestResponse.result(new ProcessExecutionRecordView(processRecord, executionRecord));
+    }
+
+    /**
+     * Get KPI data for the selected execution
+     *
+     * @param id the process id
+     * @param version the process version
+     * @param executionId the execution id
+     * @param fileId the file id
+     * @return a JSON object with KPI data
+     */
+    @RequestMapping(value = "/action/process/{id}/{version}/execution/{executionId}/kpi/{fileId}", method = RequestMethod.GET)
+    public RestResponse<?> getProcessExecutionKpiData(
+        @PathVariable long id, @PathVariable long version, @PathVariable long executionId, @PathVariable long fileId) {
+
+        try {
+            ProcessRecord processRecord = processRepository.findOne(id, version, false);
+            ProcessExecutionRecord executionRecord = processRepository.findExecution(executionId);
+            if (processRecord == null ||
+                executionRecord == null ||
+                executionRecord.getProcess().getId() != id ||
+                executionRecord.getProcess().getVersion() != version) {
+                return RestResponse.error(new Error(ProcessErrorCode.NOT_FOUND, "Execution was not found"));
+            }
+
+            final Optional<Pair<ProcessExecutionStepRecord, ProcessExecutionStepFileRecord>> result = executionRecord
+                .getSteps()
+                .stream()
+                .flatMap(s -> {
+                    return s.getFiles()
+                        .stream()
+                        .map(f-> Pair.<ProcessExecutionStepRecord, ProcessExecutionStepFileRecord>of(s, f));
+                })
+                .filter(f -> f.getRight().getId() == fileId)
+                .findFirst();
+
+            if (!result.isPresent()) {
+                return RestResponse.error(new Error(BasicErrorCode.NO_RESULT, "File was not found"));
+            }
+            final ProcessExecutionStepRecord stepRecord = result.get().getLeft();
+            final ProcessExecutionStepFileRecord fileRecord = result.get().getRight();
+            if (fileRecord.getType() != EnumStepFile.KPI) {
+                return RestResponse.error(new Error(BasicErrorCode.NOT_SUPPORTED, "File type is not supported"));
+            }
+
+            authenticationFacade.getCurrentUserId();
+            final String filename = fileRecord.getFilePath();
+            final Path path = Paths.get(catalogDataDirectory.toString(), filename);
+            final File file = path.toFile();
+
+            if (!file.exists()) {
+                return RestResponse.error(new Error(FileSystemErrorCode.PATH_NOT_FOUND, "File was not found"));
+            }
+
+            switch (stepRecord.getTool()) {
+                case TRIPLEGEO:
+                    JsonNode node = objectMapper.readTree(file);
+                    return RestResponse.result(node);
+                default:
+                    Resource resource = new FileSystemResource(file);
+                    Properties props = PropertiesLoaderUtils.loadProperties(resource);
+                    return RestResponse.result(props);
+            }
+        } catch (JsonParseException ex) {
+            return RestResponse.error(new Error(BasicErrorCode.UNKNOWN, "Failed to parse file"));
+        } catch (IOException ex) {
+            return RestResponse.error(new Error(BasicErrorCode.IO_ERROR, "Failed to read file"));
+        }
+    }
+
+    /**
+     * Downloads a file for the selected execution
+     *
+     * @param id the process id
+     * @param version the process version
+     * @param executionId the execution id
+     * @param fileId the file id
+     * @return a list of {@link ProcessExecutionRecord}
+     * @throws IOException  if process or file is not found
+     */
+    @RequestMapping(value = "/action/process/{id}/{version}/execution/{executionId}/file/{fileId}", method = RequestMethod.GET)
+    public FileSystemResource downloadProcessExecutionFile(
+        @PathVariable long id, @PathVariable long version, @PathVariable long executionId, @PathVariable long fileId,
+        HttpServletResponse response) throws IOException {
+
+        ProcessRecord processRecord = processRepository.findOne(id, version, false);
+        ProcessExecutionRecord executionRecord = processRepository.findExecution(executionId);
+        if (processRecord == null ||
+            executionRecord == null ||
+            executionRecord.getProcess().getId() != id ||
+            executionRecord.getProcess().getVersion() != version) {
+
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Process execution was not found");
+            return null;
+        }
+
+        final Optional<ProcessExecutionStepFileRecord> result = executionRecord
+            .getSteps()
+            .stream()
+            .flatMap(s -> s.getFiles().stream())
+            .filter(f -> f.getId() == fileId)
+            .findFirst();
+
+        if (!result.isPresent()) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "File was not found");
+            return null;
+        }
+
+        authenticationFacade.getCurrentUserId();
+        final String filename = result.get().getFilePath();
+        final Path path = Paths.get(catalogDataDirectory.toString(), filename);
+        final File file = path.toFile();
+
+        if (!file.exists()) {
+            response.sendError(HttpServletResponse.SC_GONE, "File has been removed");
+            return null;
+        }
+
+        response.setHeader("Content-Disposition", String.format("attachment; filename=%s", file.getName()));
+
+        return new FileSystemResource(file);
     }
 
     /**

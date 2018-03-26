@@ -11,7 +11,7 @@ import {
  * @returns The response if a 2xx HTTP status code is returned; Otherwise the
  * an exception is thrown
  */
-function checkStatus(res) {
+export function checkStatus(res) {
   if (res.status >= 200 && res.status < 300) {
     return res;
   } else {
@@ -22,5 +22,3 @@ function checkStatus(res) {
     }]);
   }
 }
-
-module.exports = { checkStatus };

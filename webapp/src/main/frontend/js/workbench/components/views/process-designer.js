@@ -63,6 +63,7 @@ import {
 
 import {
   reset,
+  downloadFile,
   fetchProcess,
   fetchProcessRevision,
   fetchExecutionDetails,
@@ -328,7 +329,12 @@ class ProcessDesigner extends React.Component {
   selectKpi(file, mode) {
     const { id, version, execution } = this.props.match.params;
 
-    this.props.fetchExecutionKpiData(Number.parseInt(id), Number.parseInt(version), Number.parseInt(execution), file, mode);
+    this.props.fetchExecutionKpiData(Number.parseInt(id), Number.parseInt(version), Number.parseInt(execution), file, mode)
+      .catch(err => {
+        toast.error(
+          <ToastTemplate iconClass='fa-warning' text={`Failed to load KPI data. ${err.message}`} />
+        );
+      });
   }
 
   viewMap() {
@@ -465,8 +471,11 @@ class ProcessDesigner extends React.Component {
 
     return (
       <ExecutionStepDetails
-        hideStepExecutionDetails={this.props.hideStepExecutionDetails}
+        downloadFile={this.props.downloadFile}
+        execution={this.props.execution}
         files={files}
+        process={this.props.process}
+        hideStepExecutionDetails={this.props.hideStepExecutionDetails}
         resetSelectedFile={this.props.resetSelectedFile}
         resetSelectedKpi={this.props.resetSelectedKpi}
         selectedFile={this.props.selectedExecutionFile}
@@ -553,6 +562,7 @@ const mapStateToProps = (state) => ({
 const mapDispatchToProps = (dispatch) => bindActionCreators({
   // Workflow designer
   reset,
+  downloadFile,
   fetchProcess,
   fetchProcessRevision,
   save,
