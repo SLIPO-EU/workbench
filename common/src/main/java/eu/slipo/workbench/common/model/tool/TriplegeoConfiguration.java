@@ -134,6 +134,13 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
     private String attrCategory = "type";
 
     /**
+     * Parameter that specifies the name of the geometry column in the input dataset. Omit
+     * this parameter if geometry representation is available with columns specifying X,Y
+     * coordinates for points; otherwise, this parameter is MANDATORY.
+     */
+    private String attrGeometry = "shape";
+
+    /**
      * A string literal representing an unknown (i.e. null) value. A field with an unknown value
      * will not be extracted.
      */
@@ -248,6 +255,7 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
             attrKey = "id";
             attrName = "name";
             attrCategory = "type";
+            attrGeometry = "shape";
             break;
         case GEOJSON:
             mode = Mode.STREAM;
@@ -549,6 +557,18 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
     public String getAttrCategory()
     {
         return attrCategory;
+    }
+
+    @JsonProperty("attrGeometry")
+    public void setAttrGeometry(String attrGeometry)
+    {
+        this.attrGeometry = attrGeometry;
+    }
+
+    @JsonProperty("attrGeometry")
+    public String getAttrGeometry()
+    {
+        return attrGeometry;
     }
 
     @JsonProperty("valIgnore")
