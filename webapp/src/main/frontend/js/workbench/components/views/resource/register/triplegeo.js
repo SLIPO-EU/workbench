@@ -158,6 +158,15 @@ export const Component = (props) => {
         help="Field name from which classification literals (e.g., type of points, road classes etc.) will be extracted. Set value UNK if non applicable"
       />
 
+      {props.value && props.value.inputFormat === 'SHAPEFILE' &&
+        <TextField
+          {...props}
+          id="attrGeometry"
+          label="Attribute geometry"
+          help="The name of the geometry column in the input dataset"
+        />
+      }
+
       <TextField
         {...props}
         id="valIgnore"

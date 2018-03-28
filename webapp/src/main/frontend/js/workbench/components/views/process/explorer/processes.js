@@ -37,12 +37,13 @@ const processColumns = [{
   Cell: props => {
     return (
       <span>
+        <i data-action="view" className='fa fa-search slipo-table-row-action p-1'></i>
         <i data-action="edit" className='fa fa-pencil slipo-table-row-action p-1'></i>
         <i data-action="play" className='fa fa-play slipo-table-row-action text-success p-1'></i>
       </span>
     );
   },
-  maxWidth: 60,
+  maxWidth: 80,
 }, {
   Header: 'Name',
   id: 'name',
@@ -81,15 +82,18 @@ function getProcessHistoryColumns(parent) {
     id: 'actions',
     Cell: props => {
       return (
-        parent.row.version === props.row.version
-          ?
-          <i data-action="edit" className='fa fa-pencil slipo-table-row-action'></i>
-          :
-          <i data-action="view" className='fa fa-search slipo-table-row-action'></i>
+        <span>
+          {
+            parent.row.version === props.row.version
+              ?
+              <i data-action="edit" className='fa fa-pencil slipo-table-row-action p-1'></i>
+              :
+              <i data-action="view" className='fa fa-search slipo-table-row-action p-1'></i>
+          }
+        </span>
       );
     },
-    style: { 'textAlign': 'center' },
-    maxWidth: 60,
+    maxWidth: 80,
   }, {
     Header: 'Description',
     accessor: 'description',
@@ -164,14 +168,14 @@ export default class Processes extends React.Component {
         onPageChange={(index) => {
           this.props.setPager({ ...this.props.pager, index });
           this.props.fetchProcesses({
-            query: {...this.props.filters},
+            query: { ...this.props.filters },
             pagingOptions: { pageIndex: index, pageSize: this.props.pager.size }
           });
         }}
         onPageSizeChange={(size) => {
           this.props.setPager({ ...this.props.pager, size });
           this.props.fetchProcesses({
-            query: {...this.props.filters},
+            query: { ...this.props.filters },
             pagingOptions: { pageIndex: this.props.pager.index, pageSize: size }
           });
         }}

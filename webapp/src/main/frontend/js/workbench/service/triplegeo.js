@@ -36,6 +36,11 @@ export const validator = function (values) {
       errors['attrY'] = 'Required for CSV';
     }
   }
+  if (values && values.inputFormat === 'SHAPEFILE') {
+    if (!values['attrGeometry']) {
+      errors['attrGeometry'] = 'Required for SHAPEFILE';
+    }
+  }
 
   if (Object.keys(errors).length) {
     throw errors;

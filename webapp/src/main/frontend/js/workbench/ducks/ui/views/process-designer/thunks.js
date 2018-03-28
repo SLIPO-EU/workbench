@@ -9,6 +9,16 @@ import {
  */
 import * as Types from './types';
 
+import {
+  EnumErrorLevel,
+  ServerError,
+} from '../../../../model';
+
+import {
+  dom,
+  file,
+} from '../../../../service/api';
+
 /*
  * Thunk actions
  */
@@ -47,7 +57,7 @@ export const fetchExecutionKpiData = (process, version, execution, file, mode) =
   const { meta: { csrfToken: token } } = getState();
   dispatch(requestExecutionKpiData(file, mode));
 
-  return processService.fetchExecutionKpiData(process, version, execution, file, mode, token)
+  return processService.fetchExecutionKpiData(process, version, execution, file, token)
     .then((data) => {
       dispatch(receiveExecutionKpiData(data));
     });
@@ -118,3 +128,25 @@ export function cloneTemplate(id, version) {
     });
   };
 }
+
+const filedDownloaded = function (fileId, fileName) {
+  return {
+    type: Types.FILE_DOWNLOAD_REQUEST,
+    fileId,
+    fileName,
+  };
+};
+
+export const downloadFile = (id, version, executionId, fileId, fileName) => {
+  return (dispatch, getState) => {
+    const { meta: { csrfToken: token } } = getState();
+    const url = `/action/process/${id}/${version}/execution/${executionId}/file/${fileId}`;
+
+    return file.download(url, token)
+      .then(data => {
+        dom.downloadLink(data, fileName);
+
+        dispatch(filedDownloaded(fileId, fileName));
+      });
+  };
+};

@@ -1,7 +1,6 @@
 export const DashboardProcessExplorerConfig = {
   name: 'Executions',
   cardName: 'processExplorer',
-  changedOn: new Date(),
   cardFilters: [{
     id: "allProcess",
     name: "All",
@@ -24,7 +23,6 @@ export const DashboardProcessExplorerConfig = {
 export const DashboardEventsConfig = {
   name: 'Events',
   cardName: 'events',
-  changedOn: new Date(),
   cardFilters: [{
     id: "ALL",
     name: "All",
@@ -47,7 +45,6 @@ export const DashboardEventsConfig = {
 export const DashboardResourcesConfig = {
   name: 'Resources',
   cardName: 'resources',
-  changedOn: new Date(),
   cardFilters: [{
     id: "all",
     name: "All",

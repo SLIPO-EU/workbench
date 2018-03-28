@@ -18,11 +18,11 @@ export const KpiGridColumns = [{
   Header: 'Value',
   accessor: 'value',
   headerStyle: { 'textAlign': 'center' },
-  style: { 'textAlign': 'center' },
 }, {
   Header: 'Description',
   accessor: 'description',
   headerStyle: { 'textAlign': 'left' },
+  show: false,
 }];
 
 class KpiGridView extends React.Component {
@@ -35,7 +35,7 @@ class KpiGridView extends React.Component {
     hide: PropTypes.func,
     data: PropTypes.arrayOf(PropTypes.shape({
       key: PropTypes.string.isRequired,
-      value: PropTypes.number.isRequired,
+      value: PropTypes.oneOfType([PropTypes.string, PropTypes.number, PropTypes.bool]).isRequired,
       description: PropTypes.string,
     })),
     file: PropTypes.object.isRequired,

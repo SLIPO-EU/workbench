@@ -99,6 +99,12 @@ class Sidebar extends React.Component {
     );
   }
 
+  componentWillReceiveProps(nextProps) {
+    if (this.props.selectedFeatures !== nextProps.selectedFeatures) {
+      this.toggle('1');
+    }
+  }
+
   render() {
     return (
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>

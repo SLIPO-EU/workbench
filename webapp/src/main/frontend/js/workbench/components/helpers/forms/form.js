@@ -23,7 +23,7 @@ export default class Form extends React.Component {
     save: PropTypes.func,
     values: PropTypes.object,
     errors: PropTypes.object,
-    readOnly: PropTypes.bool,
+    readOnly: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
   }
 
   static defaultProps = {
@@ -51,6 +51,13 @@ export default class Form extends React.Component {
     this._validate(value);
   }
 
+  _isReadOnly() {
+    if (typeof this.props.readOnly === 'function') {
+      return this.props.readOnly(null);
+    }
+    return this.props.readOnly;
+  }
+
   render() {
     const children = this.props.children;
     return (
@@ -65,19 +72,19 @@ export default class Form extends React.Component {
               <div
                 style={{ position: 'absolute', right: 15, top: -5 }}
               >
-                {!this.props.readOnly &&
+                {!this._isReadOnly() &&
                   <div className="mr-2" style={{ float: 'left' }}>
                     <Button color="danger" onClick={this.props.cancel} className="float-left">{this.props.discardButtonText || 'Cancel'}</Button>
                   </div>
                 }
-                {!this.props.readOnly &&
+                {!this._isReadOnly() &&
                   <div style={{ float: 'left' }}>
                     <Button color="primary" onClick={this.props.save} className="float-left">{this.props.acceptButtonText || 'Save'}</Button>
                   </div>
                 }
-                {this.props.readOnly &&
+                {this._isReadOnly() &&
                   <div style={{ float: 'left' }}>
-                    <Button color="primary" onClick={this.props.cancel} className="float-left">Return</Button>
+                    <Button color="primary" onClick={this.props.cancel} className="float-left"><i className="fa fa-undo" /></Button>
                   </div>
                 }
               </div>

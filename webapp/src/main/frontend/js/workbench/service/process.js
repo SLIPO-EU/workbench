@@ -2,6 +2,10 @@ import _ from 'lodash';
 import actions from './api/fetch-actions';
 
 import {
+  flatten,
+} from 'flat';
+
+import {
   EnumDesignerSaveAction,
 } from '../model/process-designer';
 
@@ -295,23 +299,22 @@ export function fetchExecutionDetails(process, version, execution, token) {
 }
 
 export function fetchExecutionKpiData(process, version, execution, file, token) {
-  //return actions.get(`/action/process/${process}/${version}/execution/${execution}/kpi/${file}`, token);
-  return Promise.resolve({
-    values: [{
-      key: 'Key 1',
-      value: 100,
-    }, {
-      key: 'Key 2',
-      value: 200,
-      description: 'Value 2 description',
-    }, {
-      key: 'Key 3',
-      value: 15,
-    }, {
-      key: 'Key 4',
-      value: 50,
-    }],
-  });
+  return actions.get(`/action/process/${process}/${version}/execution/${execution}/kpi/${file}`, token)
+    .then(data => {
+      // Flatten data
+      data = flatten(data);
+      // Remove empty objects
+      return Object.keys(data).reduce((result, key) => {
+        if (!_.isObject(data[key])) {
+          result.values.push({
+            key,
+            value: data[key],
+            description: null,
+          });
+        }
+        return result;
+      }, { values: [] });
+    });
 }
 
 export function getStepDataSourceRequirements(step) {
@@ -483,4 +486,8 @@ export function save(action, designer, token) {
   } else {
     return actions.post('/action/process', token, data);
   }
+}
+
+export function start(id, token) {
+  return actions.post(`/action/process/${id}/start`, token);
 }

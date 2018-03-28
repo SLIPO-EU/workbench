@@ -84,6 +84,7 @@ class Sidebar extends React.Component {
     super(props);
 
     this.toggle = this.toggle.bind(this);
+    this.isFieldReadOnly = this.isFieldReadOnly.bind(this);
 
     this.state = {
       activeTab: '2',
@@ -131,6 +132,19 @@ class Sidebar extends React.Component {
       this.setState({
         activeTab: tab
       });
+    }
+  }
+
+  isFieldReadOnly(id) {
+    switch (id) {
+      case 'name':
+        if (this.props.process.id) {
+          return true;
+        }
+        return this.props.readOnly;
+
+      default:
+        return this.props.readOnly;
     }
   }
 
@@ -250,7 +264,7 @@ class Sidebar extends React.Component {
                           errors={this.props.process.errors}
                           processValidate={this.props.processValidate}
                           processUpdate={this.props.processUpdate}
-                          readOnly={this.props.readOnly}
+                          readOnly={this.isFieldReadOnly}
                         />
                       }
                       {this.props.readOnly &&
