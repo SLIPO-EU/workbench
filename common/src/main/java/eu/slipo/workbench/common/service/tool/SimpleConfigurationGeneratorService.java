@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 import eu.slipo.workbench.common.model.tool.EnumConfigurationFormat;
 import eu.slipo.workbench.common.service.util.PropertiesConverterService;
@@ -17,6 +18,9 @@ public class SimpleConfigurationGeneratorService implements ConfigurationGenerat
 {
     @Autowired
     private ObjectMapper jsonMapper;
+    
+    @Autowired
+    private XmlMapper xmlMapper;
     
     @Autowired
     private PropertiesConverterService propertiesConverterService;

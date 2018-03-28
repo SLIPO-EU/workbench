@@ -6,6 +6,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,9 +29,10 @@ import eu.slipo.workbench.common.model.poi.EnumOntology;
 /**
  * Configuration for the Triplegeo tool
  */
-@SuppressWarnings("serial")
 public class TriplegeoConfiguration extends AbstractToolConfiguration
 {
+    private static final long serialVersionUID = 1L;
+
     /**
      * The set of available processing modes
      */
@@ -55,18 +57,18 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
         RDF_XML_ABBREV(EnumDataFormat.RDF_XML_ABBREV, "RDF/XML-ABBREV"),
         SHAPEFILE(EnumDataFormat.SHAPEFILE, "SHAPEFILE", "SHP");
 
-        private EnumDataFormat dataFormat;
+        private final EnumDataFormat dataFormat;
 
         private final List<String> keys;
 
         private DataFormat(EnumDataFormat dataFormat, String key0, String ...aliases)
         {
+            Assert.notNull(dataFormat, "Expected an enum constant for data format");
             this.dataFormat = dataFormat;
-
+            
             Assert.notNull(key0, "Expected a non-null key for data format " + dataFormat);
-            List<String> keys = new ArrayList<>();
-            keys.add(key0);
-            keys.addAll(Arrays.asList(aliases));
+            LinkedList<String> keys = new LinkedList<>(Arrays.asList(aliases));
+            keys.addFirst(key0);
             this.keys = Collections.unmodifiableList(keys);
         }
 
@@ -106,7 +108,6 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
             }
             return null;
         }
-
     }
 
     //
@@ -362,7 +363,6 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
         Assert.notNull(f,
             "The key [" + serializationFormat + "] does not map to a data format");
         setOutputFormat(f.dataFormat());
-
     }
 
     @JsonIgnore
