@@ -42,7 +42,6 @@ const processExecutionsColumns = [{
     );
   },
   width: 80,
-  style: { 'textAlign': 'center' },
 }, {
   Header: 'Submitted By',
   id: 'submittedBy',

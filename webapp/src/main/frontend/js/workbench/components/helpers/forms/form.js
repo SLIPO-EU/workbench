@@ -84,7 +84,7 @@ export default class Form extends React.Component {
                 }
                 {this._isReadOnly() &&
                   <div style={{ float: 'left' }}>
-                    <Button color="primary" onClick={this.props.cancel} className="float-left">Return</Button>
+                    <Button color="primary" onClick={this.props.cancel} className="float-left"><i className="fa fa-undo" /></Button>
                   </div>
                 }
               </div>

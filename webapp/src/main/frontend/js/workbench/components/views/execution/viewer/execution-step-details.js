@@ -201,7 +201,7 @@ export default class ExecutionStepDetails extends React.Component {
               </Col>
               <Col>
                 <div className="float-right">
-                  <Button color="primary" onClick={this.hideStepExecutionDetails}>Return</Button>
+                  <Button color="primary" onClick={this.hideStepExecutionDetails}><i className="fa fa-undo" /></Button>
                 </div>
               </Col>
             </Row>

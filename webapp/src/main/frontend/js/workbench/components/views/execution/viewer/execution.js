@@ -96,7 +96,7 @@ class Execution extends React.Component {
           <Row>
             <Col>
               <div className="float-right">
-                <Button color="primary" onClick={this.props.viewMap} className="float-left"><i className="fa fa-map-o"></i> View Map</Button>
+                <Button color="primary" onClick={this.props.viewMap} className="float-left"><i className="fa fa-map-o mr-1"></i> View Map</Button>
               </div>
             </Col>
           </Row>

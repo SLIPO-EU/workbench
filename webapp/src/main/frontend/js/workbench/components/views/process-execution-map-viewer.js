@@ -157,7 +157,7 @@ class ProcessExecutionMapViewer extends React.Component {
     }
     return (
       <div className="animated fadeIn">
-        <OpenLayers.Map minZoom={12} maxZoom={18} zoom={15} center={this.center} className="slipo-map-container-full-screen">
+        <OpenLayers.Map minZoom={13} maxZoom={18} zoom={15} center={this.center} className="slipo-map-container-full-screen">
           <OpenLayers.Layers>
             {this.getLayers()}
           </OpenLayers.Layers>
