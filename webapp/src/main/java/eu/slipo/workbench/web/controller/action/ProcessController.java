@@ -396,6 +396,26 @@ public class ProcessController {
     }
 
     /**
+     * Starts the current version of the selected process.
+     *
+     * @param id the id of the process to start
+     * @return an empty response if operation was successful
+     */
+    @RequestMapping(value = "/action/process/{id}/start", method = RequestMethod.POST)
+    public RestResponse<?> start(@PathVariable long id) {
+        try {
+            final ProcessRecord processRecord = this.processRepository.findOne(id);
+            if (processRecord == null) {
+                return RestResponse.error(new Error(ProcessErrorCode.NOT_FOUND, "Process was not found"));
+            }
+            this.processService.start(processRecord.getId(), processRecord.getVersion());
+        } catch (Exception ex) {
+            return this.exceptionToResponse(ex);
+        }
+        return RestResponse.success();
+    }
+
+    /**
      * Create/Update a new/existing process definition
      *
      * @param id process id for updating an existing process

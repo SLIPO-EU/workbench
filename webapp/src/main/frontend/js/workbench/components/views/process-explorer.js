@@ -43,6 +43,7 @@ import {
   resetFilters,
   setFilter,
   setPager,
+  start,
 } from '../../ducks/ui/views/process-explorer';
 
 /**
@@ -137,11 +138,10 @@ class ProcessExplorer extends React.Component {
    * @memberof ProcessExplorer
    */
   startExecution(id) {
-    toast.dismiss();
-
-    toast.error(
-      <ToastTemplate iconClass='fa-warning' text='Not implemented!' />
-    );
+    this.props.start(id)
+      .catch((err) => {
+        this.displayMessage(err.message);
+      });
   }
 
   /**
@@ -151,10 +151,14 @@ class ProcessExplorer extends React.Component {
    * @memberof ProcessExplorer
    */
   stopExecution(id) {
+    this.displayMessage('Not implemented!');
+  }
+
+  displayMessage(message) {
     toast.dismiss();
 
     toast.error(
-      <ToastTemplate iconClass='fa-warning' text='Not implemented!' />
+      <ToastTemplate iconClass='fa-warning' text={message} />
     );
   }
 
@@ -243,10 +247,11 @@ const mapStateToProps = (state) => ({
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
   fetchProcesses,
-  setFilter,
-  resetFilters,
-  setPager,
   fetchProcessExecutions,
+  resetFilters,
+  setFilter,
+  setPager,
+  start,
 }, dispatch);
 
 export default ReactRedux.connect(mapStateToProps, mapDispatchToProps)(ProcessExplorer);

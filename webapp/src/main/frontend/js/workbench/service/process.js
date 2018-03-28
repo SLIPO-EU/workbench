@@ -487,3 +487,7 @@ export function save(action, designer, token) {
     return actions.post('/action/process', token, data);
   }
 }
+
+export function start(id, token) {
+  return actions.post(`/action/process/${id}/start`, token);
+}

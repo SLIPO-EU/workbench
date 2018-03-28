@@ -15,6 +15,8 @@ const REQUEST_EXECUTION_DATA = 'ui/process/explorer/REQUEST_EXECUTION_DATA';
 const RECEIVE_EXECUTION_DATA = 'ui/process/explorer/RECEIVE_EXECUTION_DATA';
 const SET_SELECTED_EXECUTION = 'ui/process/explorer/SET_SELECTED_EXECUTION';
 
+const START_PROCESS = 'ui/process/explorer/START_PROCESS';
+
 // Initial state
 const initialState = {
   filters: {
@@ -208,5 +210,18 @@ export const fetchProcessExecutions = (id, version) => (dispatch, getState) => {
     })
     .catch((err) => {
       console.error('Failed loading executions:', err);
+    });
+};
+
+const processExecutionStarted = () => ({
+  type: START_PROCESS,
+});
+
+export const start = (id) => (dispatch, getState) => {
+  const { meta: { csrfToken: token } } = getState();
+
+  return processService.start(id, token)
+    .then(() => {
+      processExecutionStarted();
     });
 };
