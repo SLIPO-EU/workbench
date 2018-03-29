@@ -161,7 +161,7 @@ public class JsonBasedPropertiesConverterService implements PropertiesConverterS
         private JsonNode buildTree()
         {
             TreeSet<String> keys = properties.keySet().stream()
-                .map(k -> (String) k)
+                .map(Object::toString)
                 .collect(Collectors.toCollection(TreeSet::new));
             return propertiesToObject(0, keys);
         }
@@ -175,14 +175,20 @@ public class JsonBasedPropertiesConverterService implements PropertiesConverterS
             for (String key: chainedIterable(keys, Collections.singleton(SENTINEL_KEY))) {
                 FieldToken token = null;
                 // Parse field token for this key
-                if (!key.equals(SENTINEL_KEY)) { 
-                    int p = key.indexOf('[', prefixLen);
-                    if (p >= 0)
-                        token = FieldToken.of(FieldType.ARRAY, key.substring(prefixLen, p));
-                    else if ((p = key.indexOf('.', prefixLen)) >= 0)
-                        token = FieldToken.of(FieldType.OBJECT, key.substring(prefixLen, p));
-                    else 
+                if (!key.equals(SENTINEL_KEY)) {
+                    int i1 = key.indexOf('[', prefixLen); 
+                    int i2 = key.indexOf('.', prefixLen);
+                    if (i1 < 0 && i2 < 0) {
                         token = FieldToken.of(FieldType.LEAF, key.substring(prefixLen));
+                    } else if (i1 < 0) {
+                        token = FieldToken.of(FieldType.OBJECT, key.substring(prefixLen, i2));
+                    } else if (i2 < 0) {
+                        token = FieldToken.of(FieldType.ARRAY, key.substring(prefixLen, i1));
+                    } else if (i1 < i2) { // 0 <= i1 < i2
+                        token = FieldToken.of(FieldType.ARRAY, key.substring(prefixLen, i1));
+                    } else { // 0 <= i2 < i1 
+                        token = FieldToken.of(FieldType.OBJECT, key.substring(prefixLen, i2));
+                    }
                 }
                 // Check if field token has changed
                 if (token == null || !token.equals(token1)) {
