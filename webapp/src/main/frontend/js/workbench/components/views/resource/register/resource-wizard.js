@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import ToastTemplate from '../../../helpers/toast-template';
 
 import { MultiStep } from '../../../helpers/forms/';
+import { EnumErrorLevel } from '../../../../model/error';
 import { StaticRoutes } from '../../../../model/routes';
 
 import * as type from './type';
@@ -47,9 +48,19 @@ export default function ResourceWizard(props) {
                 props.goTo(StaticRoutes.ResourceExplorer);
               })
               .catch((err) => {
-                toast.error(
-                  <ToastTemplate iconClass='fa-warning' text={err.message} />
-                );
+                switch (err.level) {
+                  case EnumErrorLevel.WARN:
+                    toast.warn(
+                      <ToastTemplate iconClass='fa-warning' text={err.message} />
+                    );
+                    props.goTo(StaticRoutes.ResourceExplorer);
+                    break;
+                  default:
+                    toast.error(
+                      <ToastTemplate iconClass='fa-warning' text={err.message} />
+                    );
+                    break;
+                }
               });
           }
         }}
