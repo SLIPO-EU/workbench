@@ -28,16 +28,12 @@ import eu.slipo.workbench.common.model.process.InvalidProcessDefinitionException
 import eu.slipo.workbench.common.service.FileNamingStrategy;
 import eu.slipo.workbench.web.model.FileSystemPathRequest;
 import eu.slipo.workbench.web.model.UploadRequest;
-import eu.slipo.workbench.web.service.IAuthenticationFacade;
 
 
 @RestController
 @Secured({ "ROLE_USER", "ROLE_ADMIN" })
 @RequestMapping(produces = "application/json")
-public class FileSytemController {
-
-    @Autowired
-    private IAuthenticationFacade authenticationFacade;
+public class FileSytemController extends BaseController {
 
     @Autowired
     private FileNamingStrategy fileNamingStrategy;
@@ -55,7 +51,7 @@ public class FileSytemController {
     @RequestMapping(value = "/action/file-system",  method = RequestMethod.GET)
     public RestResponse<?> browserDirectory() {
         try {
-            return RestResponse.result(fileNamingStrategy.getUserDirectoryInfo(authenticationFacade.getCurrentUserId()));
+            return RestResponse.result(fileNamingStrategy.getUserDirectoryInfo(currentUserId()));
         } catch (IOException ex) {
             return RestResponse.error(BasicErrorCode.IO_ERROR, "An unknown error has occurred");
         }
@@ -74,7 +70,7 @@ public class FileSytemController {
                 return RestResponse.error(FileSystemErrorCode.PATH_IS_EMPTY, "A path is required");
             }
 
-            final int userId = authenticationFacade.getCurrentUserId();
+            final int userId = currentUserId();
             final Path dir = fileNamingStrategy.resolvePath(userId, request.getPath());
 
             if (Files.exists(dir)) {
@@ -104,7 +100,7 @@ public class FileSytemController {
                 return RestResponse.error(FileSystemErrorCode.PATH_IS_EMPTY, "A path is required");
             }
 
-            final int userId = authenticationFacade.getCurrentUserId();
+            final int userId = currentUserId();
             final Path absolutePath = fileNamingStrategy.resolvePath(userId, relativePath);
             final File file = absolutePath.toFile();
 
@@ -135,7 +131,7 @@ public class FileSytemController {
     public RestResponse<?> upload(@RequestPart("file") MultipartFile file, @RequestPart("data") UploadRequest request) {
 
         try {
-            final int userId = authenticationFacade.getCurrentUserId();
+            final int userId = currentUserId();
             long size = fileNamingStrategy.getUserDirectoryInfo(userId).getSize();
             if (size + file.getSize() > maxUserSpace) {
                 return RestResponse.error(FileSystemErrorCode.NOT_ENOUGH_SPACE, "Insufficient storage space");
@@ -158,7 +154,7 @@ public class FileSytemController {
             InputStream in = new ByteArrayInputStream(file.getBytes());
             Files.copy(in, absolutePath, StandardCopyOption.REPLACE_EXISTING);
 
-            return RestResponse.result(fileNamingStrategy.getUserDirectoryInfo(authenticationFacade.getCurrentUserId()));
+            return RestResponse.result(fileNamingStrategy.getUserDirectoryInfo(currentUserId()));
         } catch (IOException ex) {
             return RestResponse.error(BasicErrorCode.IO_ERROR, "Failed to create file");
         } catch (Exception ex) {

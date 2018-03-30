@@ -61,7 +61,6 @@ import eu.slipo.workbench.web.model.process.ProcessExecutionQueryRequest;
 import eu.slipo.workbench.web.model.process.ProcessExecutionRecordView;
 import eu.slipo.workbench.web.model.process.ProcessQueryRequest;
 import eu.slipo.workbench.web.model.process.ProcessRecordView;
-import eu.slipo.workbench.web.service.IAuthenticationFacade;
 import eu.slipo.workbench.web.service.ProcessService;
 
 /**
@@ -70,7 +69,7 @@ import eu.slipo.workbench.web.service.ProcessService;
 @RestController
 @Secured({ "ROLE_USER", "ROLE_ADMIN" })
 @RequestMapping(produces = "application/json")
-public class ProcessController {
+public class ProcessController extends BaseController {
 
     private static final Logger logger = LoggerFactory.getLogger(ProcessController.class);
 
@@ -89,9 +88,6 @@ public class ProcessController {
     @Autowired
     private ProcessService processService;
 
-    @Autowired
-    private IAuthenticationFacade authenticationFacade;
-
     /**
      * Search for processes
      *
@@ -107,7 +103,7 @@ public class ProcessController {
 
         ProcessQuery query = request.getQuery();
         query.setTemplate(false);
-        query.setCreatedBy(authenticationFacade.getCurrentUserId());
+        query.setCreatedBy(currentUserId());
 
         PageRequest pageRequest = request.getPageRequest();
         QueryResultPage<ProcessRecord> r = processRepository.query(query, pageRequest);
@@ -131,7 +127,7 @@ public class ProcessController {
         ProcessQuery query = request.getQuery();
         query.setTaskType(EnumProcessTaskType.DATA_INTEGRATION);
         query.setTemplate(true);
-        query.setCreatedBy(authenticationFacade.getCurrentUserId());
+        query.setCreatedBy(currentUserId());
 
         PageRequest pageRequest = request.getPageRequest();
         QueryResultPage<ProcessRecord> r = processRepository.query(query, pageRequest);
@@ -153,7 +149,7 @@ public class ProcessController {
         }
 
         ProcessExecutionQuery query = request.getQuery();
-        query.setCreatedBy(authenticationFacade.getCurrentUserId());
+        query.setCreatedBy(currentUserId());
 
         PageRequest pageRequest = request.getPageRequest();
         QueryResultPage<ProcessExecutionRecord> r = processRepository.queryExecutions(query, pageRequest);
@@ -258,7 +254,6 @@ public class ProcessController {
                 return RestResponse.error(new Error(BasicErrorCode.NOT_SUPPORTED, "File type is not supported"));
             }
 
-            authenticationFacade.getCurrentUserId();
             final String filename = fileRecord.getFilePath();
             final Path path = Paths.get(catalogDataDirectory.toString(), filename);
             final File file = path.toFile();
@@ -321,7 +316,6 @@ public class ProcessController {
             return null;
         }
 
-        authenticationFacade.getCurrentUserId();
         final String filename = result.get().getFilePath();
         final Path path = Paths.get(catalogDataDirectory.toString(), filename);
         final File file = path.toFile();

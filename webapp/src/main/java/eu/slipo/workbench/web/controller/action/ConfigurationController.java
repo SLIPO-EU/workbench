@@ -13,7 +13,7 @@ import eu.slipo.workbench.web.model.configuration.ClientConfiguration;
 @RestController
 @Secured({ "ROLE_USER", "ROLE_ADMIN" })
 @RequestMapping(produces = "application/json")
-public class ConfigurationController {
+public class ConfigurationController extends BaseController {
 
     @Autowired
     MapConfiguration mapConfiguration;

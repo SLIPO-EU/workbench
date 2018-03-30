@@ -58,7 +58,6 @@ import eu.slipo.workbench.web.model.resource.ResourceErrorCode;
 import eu.slipo.workbench.web.model.resource.ResourceQueryRequest;
 import eu.slipo.workbench.web.model.resource.ResourceRegistrationRequest;
 import eu.slipo.workbench.web.model.resource.ResourceResult;
-import eu.slipo.workbench.web.service.AuthenticationFacade;
 import eu.slipo.workbench.web.service.IResourceValidationService;
 import eu.slipo.workbench.web.service.ProcessService;
 
@@ -68,7 +67,7 @@ import eu.slipo.workbench.web.service.ProcessService;
 @RestController
 @Secured({ "ROLE_USER", "ROLE_ADMIN" })
 @RequestMapping(produces = "application/json")
-public class ResourceController {
+public class ResourceController extends BaseController {
 
     private static final Logger logger = LoggerFactory.getLogger(ResourceController.class);
 
@@ -85,9 +84,6 @@ public class ResourceController {
     private Path catalogDataDir;
 
     @Autowired
-    private AuthenticationFacade authenticationFacade;
-
-    @Autowired
     private ResourceRepository resourceRepository;
 
     @Autowired
@@ -98,10 +94,6 @@ public class ResourceController {
 
     @Autowired
     private ProcessService processService;
-
-    private int currentUserId() {
-        return authenticationFacade.getCurrentUserId();
-    }
 
     /**
      * Register a resource from a generic data source (i.e. {@link DataSource})
