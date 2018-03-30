@@ -21,6 +21,7 @@ const START_PROCESS = 'ui/process/explorer/START_PROCESS';
 const initialState = {
   filters: {
     name: null,
+    taskType: null,
   },
   pager: {
     index: 0,

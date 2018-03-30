@@ -106,7 +106,6 @@ public class ProcessController {
         }
 
         ProcessQuery query = request.getQuery();
-        query.setTaskType(EnumProcessTaskType.DATA_INTEGRATION);
         query.setTemplate(false);
         query.setCreatedBy(authenticationFacade.getCurrentUserId());
 

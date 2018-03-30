@@ -3,6 +3,13 @@ import { Row, Col, Button } from 'reactstrap';
 
 import { TextField, SelectField } from '../../../helpers/forms/fields/';
 
+// TODO : Load during configuration
+const supportedTask = [
+  { value: null, label: 'Select...' },
+  { value: 'REGISTRATION', label: 'Registration' },
+  { value: 'DATA_INTEGRATION', label: 'Data Integration' },
+];
+
 export default class Filters extends React.Component {
 
   constructor(props) {
@@ -42,7 +49,16 @@ export default class Filters extends React.Component {
               onChange={(val) => props.setFilter('name', val)}
             />
           </Col>
-          <Col xs="12" md="9">
+          <Col xs="12" md="3">
+            <SelectField
+              id="taskType"
+              label="Task"
+              value={props.filters.taskType || ''}
+              onChange={(val) => props.setFilter('taskType', val)}
+              options={supportedTask}
+            />
+          </Col>
+          <Col xs="12" md="6">
             <Button color="warning" onClick={this.clear} style={{ marginTop: 30, float: 'right' }}>Clear</Button>
             <Button type="submit" style={{ marginTop: 30, float: 'right', marginRight: 10 }}>Search</Button>
           </Col>
