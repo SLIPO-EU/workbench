@@ -1,4 +1,4 @@
-package eu.slipo.workbench.common.service.tool;
+package eu.slipo.workbench.rpc.service;
 
 import java.io.IOException;
 

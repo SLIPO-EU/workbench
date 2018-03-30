@@ -13,8 +13,6 @@ public class XmlMapperConfiguration
     public XmlMapper defaultXmlMapper()
     {
         XmlMapper xmlMapper = new XmlMapper();
-        xmlMapper.configure(ToXmlGenerator.Feature.WRITE_XML_DECLARATION, true);
-
         return xmlMapper;
     }
 }

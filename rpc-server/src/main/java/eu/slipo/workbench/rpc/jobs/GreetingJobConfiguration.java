@@ -55,48 +55,48 @@ import eu.slipo.workbench.rpc.jobs.tasklet.docker.RunContainerTasklet;
 public class GreetingJobConfiguration
 {
     private static final String JOB_NAME = "greeting";
-    
+
     @Autowired
     private JobBuilderFactory jobBuilderFactory;
 
     @Autowired
     private StepBuilderFactory stepBuilderFactory;
-    
+
     @Autowired
     private Path jobDataDirectory;
-    
+
     private Path dataDir;
-    
+
     @PostConstruct
     private void setupDataDirectory() throws IOException
     {
         this.dataDir = jobDataDirectory.resolve("greeting");
         try {
-            Files.createDirectory(dataDir); 
+            Files.createDirectory(dataDir);
         } catch (FileAlreadyExistsException e) {}
     }
-    
+
     private static class Step1Tasklet implements Tasklet
     {
         private static Logger logger = LoggerFactory.getLogger(Step1Tasklet.class);
-        
+
         @Override
         public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext)
         {
             StepContext stepContext = chunkContext.getStepContext();
             ExecutionContext executionContext = stepContext.getStepExecution().getExecutionContext();
-            
+
             logger.info("Executing with parameters={} step-exec-context={} exec-context={}",
                 stepContext.getJobParameters(), executionContext, stepContext.getJobExecutionContext());
-            
-            int chunkIndex = executionContext.getInt("step1.chunk-index", 0);            
-            
+
+            int chunkIndex = executionContext.getInt("step1.chunk-index", 0);
+
             try { Thread.sleep(3500); } // simulate some processing
             catch (InterruptedException ex) {
                 logger.info("Interrupted while sleeping!");
             }
             chunkIndex++; // pretend that some progress is done
-            
+
             executionContext.putInt("step1.chunk-index", chunkIndex);
             executionContext.put("step1.key1", "val11");
             executionContext.put("step1.key2", "val12");
@@ -104,28 +104,28 @@ public class GreetingJobConfiguration
             return RepeatStatus.continueIf(chunkIndex < 12);
         }
     }
-    
+
     private static class Step2Tasklet implements Tasklet
     {
         private static Logger logger = LoggerFactory.getLogger(Step2Tasklet.class);
-        
+
         @Override
         public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext)
             throws InterruptedException
         {
             StepContext stepContext = chunkContext.getStepContext();
             ExecutionContext executionContext = stepContext.getStepExecution().getExecutionContext();
-            
+
             logger.info("Executing with parameters={} step-exec-context={} exec-context={}",
                 stepContext.getJobParameters(), executionContext, stepContext.getJobExecutionContext());
-            
+
             Thread.sleep(15000L);
-            executionContext.put("step2.key1", "val21");    
+            executionContext.put("step2.key1", "val21");
             executionContext.put("step2.key2", "val22");
             return RepeatStatus.FINISHED;
         }
     }
-    
+
     @Bean("greeting.createEchoContainerTasklet")
     @JobScope
     public CreateContainerTasklet createEchoContainerTasklet(
@@ -134,7 +134,7 @@ public class GreetingJobConfiguration
         @Value("#{jobExecution.jobInstance.id}") Long jobId)
     {
         final String containerName = String.format("workbench-echo-%d", jobId);
-        
+
         return CreateContainerTasklet.builder()
             .client(dockerClient)
             .name(containerName)
@@ -149,7 +149,7 @@ public class GreetingJobConfiguration
                     "sleep 2; echo Done at $(date)"))
             .build();
     }
-    
+
     @Bean("greeting.runEchoContainerTasklet")
     @JobScope
     public RunContainerTasklet runEchoContainerTasklet(
@@ -165,28 +165,28 @@ public class GreetingJobConfiguration
             .build();
         return tasklet;
     }
-    
+
     @Bean("greeting.createEchoContainerStep")
     public Step createEchoContainerStep(
-        @Qualifier("greeting.createEchoContainerTasklet") CreateContainerTasklet tasklet) 
+        @Qualifier("greeting.createEchoContainerTasklet") CreateContainerTasklet tasklet)
         throws Exception
     {
         StepExecutionListener stepContextListener = ExecutionContextPromotionListeners
-            .fromKeys("containerId", "containerName").prefix("echo")
+            .builder("containerId", "containerName").prefix("echo")
             .build();
-        
+
         return stepBuilderFactory.get("createEchoContainer")
             .tasklet(tasklet)
             .listener(tasklet)
             .listener(stepContextListener)
-            .build();   
+            .build();
     }
-    
+
     @Bean("greeting.runEchoContainerStep")
     public Step runEchoContainerStep(
-        @Qualifier("greeting.runEchoContainerTasklet") RunContainerTasklet tasklet) 
+        @Qualifier("greeting.runEchoContainerTasklet") RunContainerTasklet tasklet)
         throws Exception
-    {       
+    {
         return stepBuilderFactory.get("runEchoContainer")
             .tasklet(tasklet)
             .listener(tasklet)
@@ -198,8 +198,7 @@ public class GreetingJobConfiguration
     {
         return stepBuilderFactory.get("step1")
             .tasklet(new Step1Tasklet())
-            .listener(
-                ExecutionContextPromotionListeners.fromKeys("step1.key1").build())
+            .listener(ExecutionContextPromotionListeners.fromKeys("step1.key1"))
             .build();
     }
 
@@ -208,37 +207,36 @@ public class GreetingJobConfiguration
     {
         return stepBuilderFactory.get("step2")
             .tasklet(new Step2Tasklet())
-            .listener(
-                ExecutionContextPromotionListeners.fromKeys("step2.key1").build())
+            .listener(ExecutionContextPromotionListeners.fromKeys("step2.key1"))
             .build();
     }
-    
+
     @Bean("greeting.job")
     public Job job(
-        @Qualifier("greeting.step1") Step step1, 
+        @Qualifier("greeting.step1") Step step1,
         @Qualifier("greeting.step2") Step step2,
-        @Qualifier("greeting.createEchoContainerStep") Step createEchoContainerStep, 
+        @Qualifier("greeting.createEchoContainerStep") Step createEchoContainerStep,
         @Qualifier("greeting.runEchoContainerStep") Step runEchoContainerStep)
     {
         JobExecutionListener listener = new JobExecutionListenerSupport() {
             @Override
             public void afterJob(JobExecution execution)
             {
-                System.err.printf(" ** After job #%d: status=%s exit-status=%s%n", 
-                    execution.getJobInstance().getId(), 
+                System.err.printf(" ** After job #%d: status=%s exit-status=%s%n",
+                    execution.getJobInstance().getId(),
                     execution.getStatus(), execution.getExitStatus());
-            }  
-        }; 
-        
+            }
+        };
+
         JobParametersValidator parametersValidator = new JobParametersValidator() {
             @Override
             public void validate(JobParameters parameters) throws JobParametersInvalidException
             {
                 if (parameters.getLong("foo", 0L) < 199L)
-                    throw new JobParametersInvalidException("Expected foo >= 199"); 
+                    throw new JobParametersInvalidException("Expected foo >= 199");
             }
         };
-        
+
         return jobBuilderFactory.get(JOB_NAME)
             .incrementer(new RunIdIncrementer())
             .validator(parametersValidator)
@@ -249,7 +247,7 @@ public class GreetingJobConfiguration
             .next(runEchoContainerStep)
             .build();
     }
-    
+
     @Bean("greeting.jobFactory")
     public JobFactory jobFactory(@Qualifier("greeting.job") Job job)
     {
@@ -260,7 +258,7 @@ public class GreetingJobConfiguration
             {
                 return "greeting";
             }
-            
+
             @Override
             public Job createJob()
             {

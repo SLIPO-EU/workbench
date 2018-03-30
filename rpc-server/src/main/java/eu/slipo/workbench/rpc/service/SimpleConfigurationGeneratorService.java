@@ -1,4 +1,4 @@
-package eu.slipo.workbench.common.service.tool;
+package eu.slipo.workbench.rpc.service;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -23,7 +23,7 @@ public class SimpleConfigurationGeneratorService implements ConfigurationGenerat
     private XmlMapper xmlMapper;
     
     @Autowired
-    private PropertiesConverterService propertiesConverterService;
+    private PropertiesConverterService propertiesConverter;
     
     @Override
     public String generate(Object source, EnumConfigurationFormat configFormat)
@@ -46,7 +46,7 @@ public class SimpleConfigurationGeneratorService implements ConfigurationGenerat
                 break;
             default:
             case PROPERTIES:
-                text = generateFromProperties(propertiesConverterService.valueToProperties(source));
+                text = generateFromProperties(propertiesConverter.valueToProperties(source));
                 break;
             }
             return text;

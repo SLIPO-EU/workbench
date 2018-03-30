@@ -215,7 +215,7 @@ public class DefaultProcessOperatorTests
         private ObjectMapper jsonMapper;
 
         @Autowired
-        private PropertiesConverterService propertiesConverterService;
+        private PropertiesConverterService propertiesConverter;
 
         @Autowired
         @Qualifier("defaultFileNamingStrategy")
@@ -227,7 +227,7 @@ public class DefaultProcessOperatorTests
         {
             T t = null;
             try {
-                t = propertiesConverterService.propertiesToValue(map, valueType);
+                t = propertiesConverter.propertiesToValue(map, valueType);
             } catch (ConversionFailedException e) {
                 throw new IllegalStateException("cannot convert properties", e);
             }

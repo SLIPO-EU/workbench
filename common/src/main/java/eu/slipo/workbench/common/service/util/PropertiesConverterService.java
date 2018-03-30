@@ -5,8 +5,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.SortedMap;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-
 /**
  * A service interface converting properties ({@link Properties}) to/from beans. 
  */

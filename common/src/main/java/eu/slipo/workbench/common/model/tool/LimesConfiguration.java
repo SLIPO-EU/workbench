@@ -1,21 +1,22 @@
 package eu.slipo.workbench.common.model.tool;
 
+import java.io.Serializable;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.NavigableSet;
+import java.util.TreeSet;
 
 import javax.validation.Valid;
 import javax.validation.constraints.AssertTrue;
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
-import javax.xml.bind.annotation.XmlType;
 
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -118,12 +119,15 @@ public class LimesConfiguration extends AbstractToolConfiguration
         }
     }
     
+    
     @JsonPropertyOrder({ 
         "namespace", "NAMESPACE",
         "label", "LABEL"
     })
-    public static class Prefix
+    public static class Prefix implements Serializable, Comparable<Prefix>
     {
+        static final long serialVersionUID = 1L;
+
         String label;
         
         String namespace;
@@ -132,6 +136,8 @@ public class LimesConfiguration extends AbstractToolConfiguration
         
         public Prefix(String label, String namespace)
         {
+            Assert.isTrue(!StringUtils.isEmpty(label), "A non-empty label is required");
+            Assert.isTrue(!StringUtils.isEmpty(namespace), "A namespace URI is required");
             this.label = label;
             this.namespace = namespace;
         }
@@ -168,6 +174,32 @@ public class LimesConfiguration extends AbstractToolConfiguration
         {
             return String.format("Prefix [%s=%s]", label, namespace);
         }
+
+        @Override
+        public int hashCode()
+        {
+            return namespace == null? 0 : namespace.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (this == obj)
+                return true;
+            if (!(obj instanceof Prefix))
+                return false;
+            Prefix other = (Prefix) obj;
+            return (namespace == null)? 
+                (other.namespace == null) : namespace.equals(other.namespace);
+        }
+
+        @Override
+        public int compareTo(Prefix other)
+        {
+            if (namespace == null)
+                return other.namespace == null? 0 : -1;
+            return other.namespace == null? 1 : namespace.compareTo(other.namespace);
+        }
     }
    
     @JsonPropertyOrder({ 
@@ -179,8 +211,10 @@ public class LimesConfiguration extends AbstractToolConfiguration
         "properties", "PROPERTY",
         "dataFormat", "TYPE",
     })
-    public static class InputSpec
+    public static class InputSpec implements Serializable
     {
+        static final long serialVersionUID = 1L;
+        
         static final String VAR_NAME_REGEXP = "^[?]\\w[0-9\\w]*$";
                 
         String id;
@@ -327,6 +361,12 @@ public class LimesConfiguration extends AbstractToolConfiguration
             this.dataFormat = f.dataFormat();
         }
         
+        @JsonIgnore
+        public EnumDataFormat getDataFormat()
+        {
+            return dataFormat;
+        }
+        
         /**
          * Check that the given endpoint is given as an absolute path. 
          * Note: This is a limitation applied by SLIPO workbench (not the tool itself).
@@ -343,8 +383,10 @@ public class LimesConfiguration extends AbstractToolConfiguration
         "file", "FILE",
         "relation", "RELATION",
     })
-    public static class OutputSpec
+    public static class OutputSpec implements Serializable
     {
+        static final long serialVersionUID = 1L;
+        
         static final String DEFAULT_RELATION = "owl:sameAs";
         
         Double threshold;
@@ -423,8 +465,10 @@ public class LimesConfiguration extends AbstractToolConfiguration
         "planner", "PLANNER",
         "engine", "ENGINE"
     })
-    public static class Execution
+    public static class Execution implements Serializable
     {
+        static final long serialVersionUID = 1L;
+        
         @JsonProperty("rewriter")
         @JacksonXmlProperty(localName = "REWRITER")
         String rewriterName = "default";
@@ -436,12 +480,36 @@ public class LimesConfiguration extends AbstractToolConfiguration
         @JsonProperty("engine")
         @JacksonXmlProperty(localName = "ENGINE")
         String engineName = "default";
+
+        Execution() {}
+        
+        public Execution(String rewriterName, String plannerName, String engineName)
+        {
+            this.rewriterName = rewriterName;
+            this.plannerName = plannerName;
+            this.engineName = engineName;
+        }
+        
+        public String getRewriterName()
+        {
+            return rewriterName;
+        }
+        
+        public String getPlannerName()
+        {
+            return plannerName;
+        }
+        
+        public String getEngineName()
+        {
+            return engineName;
+        }
     }
     
     /**
      * A list of aliased XML namespaces
      */
-    private List<Prefix> prefixes;
+    private TreeSet<Prefix> prefixes;
     
     /**
      * The specification for the "source" (i.e the first) part of the input
@@ -479,7 +547,7 @@ public class LimesConfiguration extends AbstractToolConfiguration
         this.inputFormat = EnumDataFormat.N_TRIPLES;
         this.outputFormat = EnumDataFormat.N_TRIPLES;
         
-        this.prefixes = new ArrayList<>();
+        this.prefixes = new TreeSet<>();
         this.prefixes.add(new Prefix("owl", "http://www.w3.org/2002/07/owl#"));
         this.prefixes.add(new Prefix("slipo", "http://slipo.eu/def#"));
     }
@@ -487,9 +555,16 @@ public class LimesConfiguration extends AbstractToolConfiguration
     @JsonProperty("prefixes")
     @JacksonXmlProperty(localName = "PREFIX")
     @JacksonXmlElementWrapper(useWrapping = false)
-    public List<Prefix> getPrefixes()
+    public NavigableSet<Prefix> getPrefixes()
     {
         return prefixes;
+    }
+    
+    @JsonProperty("prefixes")
+    @JacksonXmlProperty(localName = "PREFIX")
+    public void setPrefixes(Collection<Prefix> prefixes)
+    {
+        this.prefixes = new TreeSet<>(prefixes);
     }
    
     public void addPrefix(String label, URI namespace)
@@ -497,6 +572,11 @@ public class LimesConfiguration extends AbstractToolConfiguration
         Assert.notNull(label, "Expected a non-null label");
         Assert.notNull(namespace, "Expected a non-null namespace URI");
         this.prefixes.add(new Prefix(label, namespace.toString()));
+    }
+    
+    public void addPrefix(String label, String namespaceUri)
+    {
+        addPrefix(label, URI.create(namespaceUri));
     }
     
     @JsonProperty("source")

@@ -22,8 +22,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.StepExecution;
-import org.springframework.batch.core.StepExecutionListener;
-import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.job.builder.FlowBuilder;
@@ -51,9 +49,6 @@ public class ConcatenateFilesJobConfiguration
 
     @Autowired
     private StepBuilderFactory stepBuilderFactory;
-
-    @Autowired
-    private JobBuilderFactory jobBuilderFactory;
 
     @Autowired
     private Path jobDataDirectory;
@@ -135,8 +130,8 @@ public class ConcatenateFilesJobConfiguration
         @Value("#{jobExecution.jobInstance.id}") Long jobId)
     {
         List<Path> inputPaths = Arrays.stream(input.split(File.pathSeparator))
-            .map(Paths::get)
-            .collect(Collectors.toList());
+            .collect(Collectors.mapping(Paths::get, Collectors.toList()));
+
         Path outputDir = dataDir.resolve(String.valueOf(jobId));
         return new ConcatenateFilesTasklet(inputPaths, outputDir, outputName);
     }
@@ -145,13 +140,9 @@ public class ConcatenateFilesJobConfiguration
     Step step(@Qualifier("concatenateFiles.tasklet") ConcatenateFilesTasklet tasklet)
         throws Exception
     {
-        StepExecutionListener contextListener = ExecutionContextPromotionListeners
-            .fromKeys("outputDir").strict(true)
-            .build();
-
         return stepBuilderFactory.get("concatenateFiles")
             .tasklet(tasklet)
-            .listener(contextListener)
+            .listener(ExecutionContextPromotionListeners.fromKeys("outputDir"))
             .build();
     }
 
@@ -160,5 +151,4 @@ public class ConcatenateFilesJobConfiguration
     {
         return new FlowBuilder<Flow>("concatenateFiles").start(step).end();
     }
-
 }

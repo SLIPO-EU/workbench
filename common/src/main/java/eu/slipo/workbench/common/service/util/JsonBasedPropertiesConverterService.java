@@ -12,10 +12,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Validate;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -25,7 +23,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import static org.apache.commons.collections4.IterableUtils.chainedIterable;
 
-@Service
 public class JsonBasedPropertiesConverterService implements PropertiesConverterService
 {
     private static enum FieldType { LEAF, OBJECT, ARRAY };
@@ -318,8 +315,13 @@ public class JsonBasedPropertiesConverterService implements PropertiesConverterS
         }
     }
     
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
+    
+    public JsonBasedPropertiesConverterService( ObjectMapper objectMapper)
+    {
+        Validate.notNull(objectMapper, "An object mapper is required");
+        this.objectMapper = objectMapper;
+    }
     
     /**
      * Convert a bean to a map of properties by using an intermediate JSON serialization.
@@ -360,7 +362,7 @@ public class JsonBasedPropertiesConverterService implements PropertiesConverterS
             Properties props, String rootPropertyName, Class<T> valueType) 
         throws ConversionFailedException
     {
-        Assert.isTrue(!StringUtils.isEmpty(rootPropertyName), 
+        Validate.isTrue(!StringUtils.isEmpty(rootPropertyName), 
             "Expected a non-empty root property name");
 
         final String prefix = rootPropertyName + '.';
@@ -381,9 +383,9 @@ public class JsonBasedPropertiesConverterService implements PropertiesConverterS
             Map<String, Object> map, String rootPropertyName, Class<T> valueType) 
         throws ConversionFailedException
     {
-        Assert.isTrue(!StringUtils.isEmpty(rootPropertyName), 
+        Validate.isTrue(!StringUtils.isEmpty(rootPropertyName), 
             "Expected a non-empty root property name");
-
+        
         final String prefix = rootPropertyName + '.';
         final int prefixLen = prefix.length();
         
@@ -400,7 +402,7 @@ public class JsonBasedPropertiesConverterService implements PropertiesConverterS
             SortedMap<String, Object> map, String rootPropertyName, Class<T> valueType) 
         throws ConversionFailedException
     {
-        Assert.isTrue(!StringUtils.isEmpty(rootPropertyName), 
+        Validate.isTrue(!StringUtils.isEmpty(rootPropertyName), 
             "Expected a non-empty root property name");
 
         final String prefix = rootPropertyName + '.';
@@ -414,5 +416,4 @@ public class JsonBasedPropertiesConverterService implements PropertiesConverterS
         
         return propertiesToValue(p1, valueType);
     }
-
 }

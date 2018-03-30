@@ -31,7 +31,7 @@ public class InvalidConfigurationException extends RuntimeException
             this.message = message;
         }
         
-        public static <T extends ToolConfiguration> Detail create(ConstraintViolation<T> constraintViolation)
+        public static <T> Detail create(ConstraintViolation<T> constraintViolation)
         {
             return new Detail(
                 constraintViolation.getPropertyPath(), 
@@ -48,14 +48,13 @@ public class InvalidConfigurationException extends RuntimeException
         this.details = details;
     }
     
-    public static <T extends ToolConfiguration> InvalidConfigurationException fromErrors(
+    public static <T> InvalidConfigurationException fromErrors(
         Set<ConstraintViolation<T>> constraintViolations)
     {
         Assert.notEmpty(constraintViolations, "Expected a non-empty set of violations");
         
         List<Detail> details = constraintViolations.stream()
-            .map(Detail::create)
-            .collect(Collectors.toList());
+            .collect(Collectors.mapping(Detail::create, Collectors.toList()));
         
         return new InvalidConfigurationException(Collections.unmodifiableList(details));
     }

@@ -49,7 +49,7 @@ import eu.slipo.workbench.common.model.BasicErrorCode;
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.tool.EnumConfigurationFormat;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
-import eu.slipo.workbench.common.service.tool.ConfigurationGeneratorService;
+import eu.slipo.workbench.rpc.service.ConfigurationGeneratorService;
 
 /**
  * A tasklet that prepares a working directory.

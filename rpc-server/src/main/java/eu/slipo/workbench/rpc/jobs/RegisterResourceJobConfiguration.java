@@ -205,17 +205,16 @@ public class RegisterResourceJobConfiguration
     }
 
     @Bean("registerResource.step")
-    public Step step(@Qualifier("registerResource.tasklet") Tasklet tasklet)
+    public Step step(@Qualifier("registerResource.tasklet") Tasklet registerTasklet)
         throws Exception
     {
-        StepExecutionListener listener = ExecutionContextPromotionListeners
-            .fromKeys("resourceId", "resourceVersion", "path")
-            .strict(true)
-            .build();
+        String[] promotedKeys = new String[] {
+            "resourceId", "resourceVersion", "path"
+        };
 
         return stepBuilderFactory.get("registerResource")
-            .tasklet(tasklet)
-            .listener(listener)
+            .tasklet(registerTasklet)
+            .listener(ExecutionContextPromotionListeners.fromKeys(promotedKeys))
             .build();
     }
 

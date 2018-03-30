@@ -1,25 +1,23 @@
 package eu.slipo.workbench.rpc.tests.unit.model;
 
-import org.apache.commons.collections4.IterableUtils;
-import org.apache.commons.collections4.set.UnmodifiableSet;
-import org.junit.Before;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.MethodSorters;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
-import static org.junit.Assert.*;
-
-import java.io.File;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections4.IterableUtils;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -30,7 +28,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumOperation;
-import eu.slipo.workbench.common.model.poi.EnumResourceType;
 import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.process.CatalogResource;
 import eu.slipo.workbench.common.model.process.EnumInputType;
@@ -41,18 +38,15 @@ import eu.slipo.workbench.common.model.process.ProcessOutput;
 import eu.slipo.workbench.common.model.process.RegisterStep;
 import eu.slipo.workbench.common.model.process.Step;
 import eu.slipo.workbench.common.model.process.TransformStep;
-import eu.slipo.workbench.common.model.resource.DataSource;
 import eu.slipo.workbench.common.model.resource.FileSystemDataSource;
 import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
 import eu.slipo.workbench.common.model.tool.DeerConfiguration;
 import eu.slipo.workbench.common.model.tool.LimesConfiguration;
 import eu.slipo.workbench.common.model.tool.MetadataRegistrationConfiguration;
-import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workflows.util.digraph.DependencyGraph;
 import eu.slipo.workflows.util.digraph.DependencyGraphs;
-import eu.slipo.workflows.util.digraph.ExportDependencyGraph;
 
 @RunWith(SpringRunner.class)
 @ActiveProfiles({ "testing" })
@@ -347,13 +341,8 @@ public class ProcessDefinitionTests
         System.err.println(definition);
     }
 
-
-    ////////////////////////////////////////////////////////////////////////////////////
-    //                          Fixme Scratch                                         //
-    ////////////////////////////////////////////////////////////////////////////////////
-
-    @Test
-    public void test99_scratch1() throws Exception
+    //@Test
+    public void test99() throws Exception
     {
         final int resourceKey1 = 1, resourceKey2 = 2, resourceKey3 = 3;
 
@@ -418,7 +407,6 @@ public class ProcessDefinitionTests
         for (Step step: sortedSteps) {
             System.err.println(step);
         }
-
 
         String s1 = jsonMapper.writeValueAsString(definition1);
         //System.err.println(s1);

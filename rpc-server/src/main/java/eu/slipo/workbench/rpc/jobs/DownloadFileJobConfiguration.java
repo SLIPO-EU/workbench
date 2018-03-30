@@ -175,17 +175,12 @@ public class DownloadFileJobConfiguration
     }
 
     @Bean("downloadFile.step")
-    public Step step(@Qualifier("downloadFile.tasklet") Tasklet tasklet)
+    public Step step(@Qualifier("downloadFile.tasklet") Tasklet downloadTasklet)
         throws Exception
     {
-        StepExecutionListener contextListener = ExecutionContextPromotionListeners
-            .fromKeys("outputDir", "outputName")
-            .strict(true)
-            .build();
-
         return stepBuilderFactory.get("downloadFile")
-            .tasklet(tasklet)
-            .listener(contextListener)
+            .tasklet(downloadTasklet)
+            .listener(ExecutionContextPromotionListeners.fromKeys("outputDir", "outputName"))
             .build();
     }
 

@@ -7,13 +7,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileAttribute;
-import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -21,18 +17,10 @@ import javax.annotation.PostConstruct;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.springframework.batch.core.Job;
-import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.JobInstance;
 import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.JobParametersInvalidException;
-import org.springframework.batch.core.JobParametersValidator;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.StepContribution;
-import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.core.configuration.JobFactory;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
@@ -56,19 +44,19 @@ import org.springframework.util.StringUtils;
 
 import com.spotify.docker.client.DockerClient;
 
-import eu.slipo.workbench.common.model.ApplicationException;
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.tool.EnumConfigurationFormat;
 import eu.slipo.workbench.common.model.tool.InvalidConfigurationException;
-import eu.slipo.workbench.common.model.tool.ToolConfigurationSupport;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
-import eu.slipo.workbench.common.service.tool.ConfigurationGeneratorService;
 import eu.slipo.workbench.common.service.util.PropertiesConverterService;
 import eu.slipo.workbench.rpc.jobs.listener.ExecutionContextPromotionListeners;
 import eu.slipo.workbench.rpc.jobs.listener.LoggingJobExecutionListener;
 import eu.slipo.workbench.rpc.jobs.tasklet.PrepareWorkingDirectoryTasklet;
+import eu.slipo.workbench.rpc.jobs.tasklet.ReadConfigurationTasklet;
+import eu.slipo.workbench.rpc.jobs.tasklet.ValidateConfigurationTasklet;
 import eu.slipo.workbench.rpc.jobs.tasklet.docker.CreateContainerTasklet;
 import eu.slipo.workbench.rpc.jobs.tasklet.docker.RunContainerTasklet;
+import eu.slipo.workbench.rpc.service.ConfigurationGeneratorService;
 
 @Component
 public class TriplegeoJobConfiguration
@@ -108,7 +96,10 @@ public class TriplegeoJobConfiguration
     private DockerClient docker;
 
     @Autowired
-    private PropertiesConverterService propertiesConverterService;
+    private PropertiesConverterService propertiesConverter;
+
+    @Autowired
+    private Validator validator;
 
     @Autowired
     private Path jobDataDirectory;
@@ -119,21 +110,18 @@ public class TriplegeoJobConfiguration
     private Path dataDir;
 
     /**
-     * The root directory on a container, under which directories (or files) will be
-     * mounted from the host.
-     * <p>This directory is typically be under the <tt>/var</tt> or <tt>/var/local</tt>
-     * hierarchy.
+     * The root directory on a container, under which directories/files will be bind-mounted
+     * (eg. <tt>/var/local/triplegeo</tt>).
      */
     private Path containerDataDir;
 
     @Autowired
     private void setContainerDataDirectory(
-        @Value("${slipo.rpc-server.tools.triplegeo.docker.container-data-dir:/var/local/triplegeo}") String dir)
+        @Value("${slipo.rpc-server.tools.triplegeo.docker.container-data-dir}") String dir)
     {
-        Assert.notNull(dir, "Expected a non-null directory path");
-        Path path = Paths.get(dir);
-        Assert.isTrue(path.isAbsolute(), "Expected an absolute path (inside a container)");
-        this.containerDataDir = path;
+        Path dirPath = Paths.get(dir);
+        Assert.isTrue(dirPath.isAbsolute(), "Expected an absolute path (inside a container)");
+        this.containerDataDir = dirPath;
     }
 
     @PostConstruct
@@ -146,64 +134,31 @@ public class TriplegeoJobConfiguration
     }
 
     /**
-     * A tasklet to map job parameters into step execution-context.
+     * A tasklet that reads job parameters to a configuration bean into execution-context.
      */
-    @Bean("triplegeo.setupExecutionContextTasklet")
-    public Tasklet setupExecutionContextTasklet()
+    @Bean("triplegeo.readConfigurationTasklet")
+    public Tasklet readConfigurationTasklet()
     {
-        return new Tasklet()
-        {
-            @Override
-            public RepeatStatus execute(StepContribution contribution, ChunkContext context)
-                throws Exception
-            {
-                StepContext stepContext = context.getStepContext();
-                ExecutionContext executionContext = stepContext.getStepExecution().getExecutionContext();
-
-                TriplegeoConfiguration config = propertiesConverterService.propertiesToValue(
-                    stepContext.getJobParameters(), TriplegeoConfiguration.class);
-
-                executionContext.put("config", config);
-                return RepeatStatus.FINISHED;
-            }
-        };
+        ReadConfigurationTasklet<TriplegeoConfiguration> tasklet =
+            new ReadConfigurationTasklet<>(TriplegeoConfiguration.class, propertiesConverter);
+        tasklet.setValidator(validator);
+        return tasklet;
     }
 
-    @Bean("triplegeo.setupExecutionContextStep")
-    public Step setupExecutionContextStep(
-        @Qualifier("triplegeo.setupExecutionContextTasklet") Tasklet tasklet)
+    @Bean("triplegeo.readConfigurationStep")
+    public Step readConfigurationStep(
+        @Qualifier("triplegeo.readConfigurationTasklet") Tasklet tasklet)
     {
-        StepExecutionListener stepContextListener = ExecutionContextPromotionListeners
-            .fromKeys("config")
-            .strict(true)
-            .build();
-
-        return stepBuilderFactory.get("triplegeo.setupExecutionContext")
+        return stepBuilderFactory.get("triplegeo.readConfiguration")
             .tasklet(tasklet)
-            .listener(stepContextListener)
+            .listener(ExecutionContextPromotionListeners.fromKeys("config"))
             .build();
     }
 
     @Bean("triplegeo.validateConfigurationTasklet")
-    @JobScope
-    public Tasklet validateConfigurationTasklet(
-        @Qualifier("beanValidator") Validator validator,
-        @Value("#{jobExecutionContext['config']}") TriplegeoConfiguration config)
+    public Tasklet validateConfigurationTasklet()
     {
-        return new Tasklet()
-        {
-            @Override
-            public RepeatStatus execute(StepContribution contribution, ChunkContext context)
-                throws Exception
-            {
-                Set<ConstraintViolation<TriplegeoConfiguration>> errors =
-                    validator.validate(config);
-                if (!errors.isEmpty()) {
-                    throw InvalidConfigurationException.fromErrors(errors);
-                }
-                return RepeatStatus.FINISHED;
-            }
-        };
+        return new ValidateConfigurationTasklet<>(TriplegeoConfiguration.class, validator);
     }
 
     @Bean("triplegeo.validateConfigurationStep")
@@ -225,7 +180,7 @@ public class TriplegeoJobConfiguration
         @Value("#{jobExecutionContext['config']}") TriplegeoConfiguration config,
         @Value("#{jobExecution.jobInstance.id}") Long jobId)
     {
-        Path workDir = dataDir.resolve(String.format("%04x", jobId));
+        Path workDir = dataDir.resolve(String.format("%05x", jobId));
 
         return PrepareWorkingDirectoryTasklet.builder()
             .workingDirectory(workDir)
@@ -241,15 +196,13 @@ public class TriplegeoJobConfiguration
         @Qualifier("triplegeo.prepareWorkingDirectoryTasklet") PrepareWorkingDirectoryTasklet tasklet)
         throws Exception
     {
-        StepExecutionListener stepContextListener = ExecutionContextPromotionListeners
-            .fromKeys(
-                "workDir", "inputDir", "inputFiles", "inputFormat", "outputDir", "configByName")
-            .strict(true)
-            .build();
+        String[] promotedKeys = new String[] {
+            "workDir", "inputDir", "inputFiles", "inputFormat", "outputDir", "configByName"
+        };
 
         return stepBuilderFactory.get("triplegeo.prepareWorkingDirectory")
             .tasklet(tasklet)
-            .listener(stepContextListener)
+            .listener(ExecutionContextPromotionListeners.fromKeys(promotedKeys))
             .build();
     }
 
@@ -265,7 +218,7 @@ public class TriplegeoJobConfiguration
         @Value("#{jobExecutionContext['outputDir']}") String outputDir,
         @Value("#{jobExecutionContext['configByName']}") Map<String, String> configByName)
     {
-        String containerName = String.format("triplegeo-%04x", jobId);
+        String containerName = String.format("triplegeo-%05x", jobId);
 
         Path containerInputDir = containerDataDir.resolve("input");
         Path containerOutputDir = containerDataDir.resolve("output");
@@ -300,13 +253,9 @@ public class TriplegeoJobConfiguration
         @Qualifier("triplegeo.createContainerTasklet") CreateContainerTasklet tasklet)
         throws Exception
     {
-        StepExecutionListener stepContextListener = ExecutionContextPromotionListeners
-            .fromKeys("containerId", "containerName")
-            .build();
-
         return stepBuilderFactory.get("triplegeo.createContainer")
             .tasklet(tasklet)
-            .listener(stepContextListener)
+            .listener(ExecutionContextPromotionListeners.fromKeys("containerId", "containerName"))
             .build();
     }
 
@@ -341,7 +290,6 @@ public class TriplegeoJobConfiguration
      */
     @Bean("triplegeo.basicFlow")
     public Flow basicFlow(
-        @Qualifier("breakpointStep") Step breakpointStep, // Fixme breakpointStep
         @Qualifier("triplegeo.validateConfigurationStep") Step validateConfigurationStep,
         @Qualifier("triplegeo.prepareWorkingDirectoryStep") Step prepareWorkingDirectoryStep,
         @Qualifier("triplegeo.createContainerStep") Step createContainerStep,
@@ -351,29 +299,30 @@ public class TriplegeoJobConfiguration
             .start(validateConfigurationStep)
             .next(prepareWorkingDirectoryStep)
             .next(createContainerStep)
-            //.next(breakpointStep)
             .next(runContainerStep)
             .end();
     }
 
     /**
-     * Create flow for a job expecting configuration via normal {@link JobParameters}.
+     * Create flow for a job expecting and reading configuration via normal {@link JobParameters}.
      */
     @Bean("triplegeo.flow")
     public Flow flow(
-        @Qualifier("triplegeo.setupExecutionContextStep") Step setupExecutionContextStep,
-        @Qualifier("triplegeo.basicFlow") Flow basicFlow)
+        @Qualifier("triplegeo.readConfigurationStep") Step readConfigurationStep,
+        @Qualifier("triplegeo.prepareWorkingDirectoryStep") Step prepareWorkingDirectoryStep,
+        @Qualifier("triplegeo.createContainerStep") Step createContainerStep,
+        @Qualifier("triplegeo.runContainerStep") Step runContainerStep)
     {
         return new FlowBuilder<Flow>("triplegeo.flow")
-            .start(setupExecutionContextStep)
-            .next(basicFlow)
+            .start(readConfigurationStep)
+            .next(prepareWorkingDirectoryStep)
+            .next(createContainerStep)
+            .next(runContainerStep)
             .build();
     }
 
     @Bean("triplegeo.job")
-    public Job job(
-        @Qualifier("triplegeo.setupExecutionContextStep") Step setupExecutionContextStep,
-        @Qualifier("triplegeo.flow") Flow flow)
+    public Job job(@Qualifier("triplegeo.flow") Flow flow)
     {
         return jobBuilderFactory.get(JOB_NAME)
             .incrementer(new RunIdIncrementer())
