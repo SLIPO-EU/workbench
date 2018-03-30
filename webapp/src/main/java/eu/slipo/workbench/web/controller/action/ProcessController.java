@@ -423,6 +423,7 @@ public class ProcessController extends BaseController {
             if (definition == null) {
                 return RestResponse.error(BasicErrorCode.INPUT_INVALID, "No process definition");
             }
+            ProcessDefinition.remapKeys(definition);
 
             final boolean isTemplate = request.getAction() == EnumProcessSaveActionType.SAVE_TEMPLATE;
 
