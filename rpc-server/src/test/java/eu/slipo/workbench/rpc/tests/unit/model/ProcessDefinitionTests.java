@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
@@ -69,20 +70,20 @@ public class ProcessDefinitionTests
         @Bean
         public TriplegeoConfiguration sampleTriplegeoConfiguration1()
         {
-            TriplegeoConfiguration configuration = new TriplegeoConfiguration();
+            TriplegeoConfiguration config = new TriplegeoConfiguration();
 
-            configuration.setInputFormat(EnumDataFormat.CSV);
-            configuration.setOutputFormat(EnumDataFormat.N_TRIPLES);
-            configuration.setOutputDir(Paths.get("/var/local/triplegeo/1"));
-            configuration.setTmpDir(Paths.get("/tmp/triplegeo/1"));
-            configuration.setAttrX("lon");
-            configuration.setAttrX("lat");
-            configuration.setFeatureName("points");
-            configuration.setAttrKey("id");
-            configuration.setAttrName("name");
-            configuration.setAttrCategory("type");
+            config.setInputFormat(EnumDataFormat.CSV);
+            config.setOutputFormat(EnumDataFormat.N_TRIPLES);
+            config.setOutputDir(Paths.get("/var/local/triplegeo/1"));
+            config.setTmpDir(Paths.get("/tmp/triplegeo/1"));
+            config.setAttrX("lon");
+            config.setAttrX("lat");
+            config.setFeatureName("points");
+            config.setAttrKey("id");
+            config.setAttrName("name");
+            config.setAttrCategory("type");
 
-            return configuration;
+            return config;
         }
 
         @Bean
@@ -94,7 +95,25 @@ public class ProcessDefinitionTests
         @Bean
         public LimesConfiguration sampleLimesConfiguration1()
         {
-            return new LimesConfiguration();
+            LimesConfiguration config = new LimesConfiguration();
+
+            config.setMetric("trigrams(a.level, b.level)");
+
+            config.setSource("a",
+                Paths.get("/tmp/limes/input/a.nt"),
+                "?x",
+                "slipo:name/slipo:nameType RENAME label");
+            config.setTarget("b",
+                Paths.get("/tmp/limes/input/b.nt"),
+                "?y",
+                "slipo:name/slipo:nameType RENAME label");
+
+            config.setOutputDir("/tmp/limes/output");
+            config.setOutputFormatFromString("N-TRIPLES");
+            config.setAccepted(0.98, Paths.get("accepted.nt"));
+            config.setReview(0.95, Paths.get("review.nt"));
+
+            return config;
         }
 
         @Bean
@@ -266,8 +285,6 @@ public class ProcessDefinitionTests
         assertNotNull(definition1);
 
         String s1 = jsonMapper.writeValueAsString(definition1);
-        //System.err.println(s1);
-
         ProcessDefinition definition1a = jsonMapper.readValue(s1, ProcessDefinition.class);
         assertEquals(s1, jsonMapper.writeValueAsString(definition1a));
     }
@@ -341,7 +358,7 @@ public class ProcessDefinitionTests
         System.err.println(definition);
     }
 
-    //@Test
+    @Test
     public void test99() throws Exception
     {
         final int resourceKey1 = 1, resourceKey2 = 2, resourceKey3 = 3;
@@ -404,9 +421,6 @@ public class ProcessDefinitionTests
         Iterable<Step> sortedSteps =
             IterableUtils.transformedIterable(
                 DependencyGraphs.topologicalSort(dependencyGraph), k -> definition1.stepByKey(k));
-        for (Step step: sortedSteps) {
-            System.err.println(step);
-        }
 
         String s1 = jsonMapper.writeValueAsString(definition1);
         //System.err.println(s1);
