@@ -10,6 +10,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.mutable.MutableInt;
 import org.springframework.util.Assert;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -200,33 +201,44 @@ public class ProcessDefinition implements Serializable
     {
         return resourceKeyToStepKey.keySet();
     }
-
-    public static void remapKeys(ProcessDefinition definition) {
-        Map<Integer, Integer> mapping = new HashMap<Integer, Integer>();
-
-        definition.steps()
-        .stream()
-        .forEach(s-> {
-           if(!mapping.containsKey(s.key())) {
-                mapping.put(s.key(), mapping.size());
-           }
-        });
-
-        // Map resources
-        definition.resources()
-            .stream()
-            .forEach(r -> {
-                if (r.getInputType() == EnumInputType.OUTPUT) {
-                    ProcessOutput typedResource = (ProcessOutput) r;
-                    typedResource.stepKey = mapping.get(typedResource.stepKey());
-                }
-            });
-
-        // Map steps
-        definition.steps()
-            .stream()
-            .forEach(s -> {
-                s.key = mapping.get(s.key());
-            });
+    
+    /**
+     * Transform to a process definition with normalized step keys (i.e in a contiguous 
+     * 0-based range).
+     * 
+     * @param def The source definition (which is not modified)
+     * @return a new definition
+     */
+    public static ProcessDefinition normalize(ProcessDefinition def)
+    {
+        // Re-map given step keys onto a contiguous range of [0, N)
+        
+        final Map<Integer, Integer> mapping = new HashMap<>();
+        int seq = 0;
+        for (Step step: def.steps)
+            mapping.put(step.key, seq++);
+        
+        // Create a new definition with transformed steps/resources 
+        
+        final List<ProcessInput> resources = def.resources.stream()
+            .map(r -> {
+                if (r instanceof ProcessOutput) {
+                    ProcessOutput r1 = new ProcessOutput((ProcessOutput) r);
+                    r1.stepKey = mapping.get(r1.stepKey);
+                    return r1;
+                } 
+                return r;
+            })
+            .collect(Collectors.toList());
+        
+        final List<Step> steps = def.steps.stream()
+            .map(s -> {
+                Step s1 = new Step(s);
+                s1.key = mapping.get(s1.key);
+                return s1;
+            })
+            .collect(Collectors.toList());
+        
+        return new ProcessDefinition(def.name, def.description, resources, steps);
     }
 }

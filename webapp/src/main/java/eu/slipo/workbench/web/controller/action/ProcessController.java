@@ -423,14 +423,14 @@ public class ProcessController extends BaseController {
             if (definition == null) {
                 return RestResponse.error(BasicErrorCode.INPUT_INVALID, "No process definition");
             }
-            ProcessDefinition.remapKeys(definition);
+            final ProcessDefinition normalizedDefinition = ProcessDefinition.normalize(definition);
 
             final boolean isTemplate = request.getAction() == EnumProcessSaveActionType.SAVE_TEMPLATE;
 
             if (id == null) {
-                record = processService.create(definition, isTemplate);
+                record = processService.create(normalizedDefinition, isTemplate);
             } else {
-                record = processService.update(id, definition, isTemplate);
+                record = processService.update(id, normalizedDefinition, isTemplate);
             }
         } catch (Exception ex) {
             return this.exceptionToResponse(ex);

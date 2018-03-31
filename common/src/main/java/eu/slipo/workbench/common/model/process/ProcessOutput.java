@@ -31,12 +31,19 @@ public class ProcessOutput extends ProcessInput
         this.tool = step.tool;
     }
 
+    protected ProcessOutput(ProcessOutput other)
+    {
+        super(other.key, other.inputType, other.name, other.resourceType);
+        this.stepKey = other.stepKey;
+        this.tool = other.tool;
+    }
+    
     protected static ProcessOutput fromStep(Step step)
     {
         final EnumResourceType resourceType = step.tool.getResourceType();
         return new ProcessOutput(step, resourceType);
     }
-
+    
     /**
      * The tool that generated the output
      */

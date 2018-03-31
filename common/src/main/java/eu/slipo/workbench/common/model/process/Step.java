@@ -69,6 +69,20 @@ public class Step implements Serializable
 
     protected Step() {}
 
+    protected Step(Step other)
+    {
+        this.key = other.key;
+        this.name = other.name;
+        this.group = other.group;
+        this.operation = other.operation;
+        this.tool = other.tool;
+        this.inputKeys = other.inputKeys;
+        this.sources = other.sources;
+        this.configuration = other.configuration;
+        this.outputFormat = other.outputFormat;
+        this.outputKey = other.outputKey;
+    }
+    
     /**
      * The unique key for this step
      */
