@@ -135,5 +135,13 @@
             <artifactId>commons-beanutils</artifactId>
         </dependency> 
 
+        <!-- slugify -->
+
+        <dependency>
+            <groupId>com.github.slugify</groupId>
+            <artifactId>slugify</artifactId>
+            <version>2.2</version>
+        </dependency>
+
     </dependencies>
 </project>

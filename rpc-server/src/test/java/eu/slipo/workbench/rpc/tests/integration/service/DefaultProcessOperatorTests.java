@@ -416,12 +416,12 @@ public class DefaultProcessOperatorTests
         DataSource source = fixture.getInputAsDataSource();
 
         ProcessDefinition definition = ProcessDefinitionBuilder.create(procName)
-            .transform("triplegeo-1", builder -> builder
+            .transform("Triplegeo 1", builder -> builder
                 .source(source)
                 .outputFormat(EnumDataFormat.N_TRIPLES)
                 .outputKey(resourceKey)
                 .configuration(fixture.getConfiguration()))
-            .register("register-1", resourceKey, metadata)
+            .register("Register 1", resourceKey, metadata)
             .build();
 
         final ProcessRecord processRecord = processRepository.create(definition, creatorId, false);
@@ -465,7 +465,7 @@ public class DefaultProcessOperatorTests
         assertNotNull(stepRecords);
         assertEquals(2, stepRecords.size());
 
-        ProcessExecutionStepRecord step1Record = executionRecord.getStep("triplegeo-1");
+        ProcessExecutionStepRecord step1Record = executionRecord.getStepByName("Triplegeo 1");
         assertNotNull(step1Record);
         assertEquals(EnumProcessExecutionStatus.COMPLETED, step1Record.getStatus());
         ProcessExecutionStepFileRecord outfile1Record = step1Record.getFiles().stream()
@@ -479,7 +479,7 @@ public class DefaultProcessOperatorTests
         assertNotNull(resourceRecord);
         assertEquals(Long.valueOf(executionId), resourceRecord.getProcessExecutionId());
 
-        ProcessExecutionStepRecord step2Record = executionRecord.getStep("register-1");
+        ProcessExecutionStepRecord step2Record = executionRecord.getStepByName("Register 1");
         assertNotNull(step2Record);
         assertEquals(EnumProcessExecutionStatus.COMPLETED, step2Record.getStatus());
 

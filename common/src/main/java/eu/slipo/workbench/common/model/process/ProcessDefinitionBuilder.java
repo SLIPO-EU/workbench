@@ -47,6 +47,8 @@ public class ProcessDefinitionBuilder
 
         protected final String name;
 
+        protected String nodeName;
+        
         protected int group = 0;
         
         protected EnumOperation operation;
@@ -76,12 +78,21 @@ public class ProcessDefinitionBuilder
             Assert.notNull(stepFactory, "A step factory is required");
             this.key = key;
             this.name = name;
+            this.nodeName = Step.slugifyName(name);
             this.stepFactory = stepFactory;
         }
 
         protected BasicStepBuilder(int key, String name)
         {
             this(key, name, Step::new);
+        }
+        
+        public BasicStepBuilder nodeName(String nodeName)
+        {
+            Assert.notNull(nodeName, "A name is required");
+            Assert.isTrue(nodeName.matches("^[a-zA-Z][-\\w]*$"), "The name is invalid");
+            this.nodeName = nodeName;
+            return this;
         }
         
         /**
@@ -222,6 +233,7 @@ public class ProcessDefinitionBuilder
             step.key = this.key;
             step.group = this.group;
             step.name = this.name;
+            step.nodeName = this.nodeName;
             step.operation = this.operation;
             step.tool = this.tool;
             step.sources = new ArrayList<>(this.sources);
@@ -254,6 +266,12 @@ public class ProcessDefinitionBuilder
         public TransformStepBuilder group(int groupNumber)
         {
             this.stepBuilder.group(groupNumber);
+            return this;
+        }
+        
+        public TransformStepBuilder nodeName(String nodeName)
+        {
+            this.stepBuilder.nodeName(nodeName);
             return this;
         }
         
@@ -322,6 +340,12 @@ public class ProcessDefinitionBuilder
         public RegisterStepBuilder group(int groupNumber)
         {
             this.stepBuilder.group(groupNumber);
+            return this;
+        }
+        
+        public RegisterStepBuilder nodeName(String nodeName)
+        {
+            this.stepBuilder.nodeName(nodeName);
             return this;
         }
         
@@ -522,20 +546,21 @@ public class ProcessDefinitionBuilder
         // Validate definition
 
         final Set<String> names = this.steps.stream()
-            .map(Step::name)
-            .collect(Collectors.toSet());
-        
+            .collect(Collectors.mapping(Step::name, Collectors.toSet()));
         Assert.state(names.size() == this.steps.size(),
             "The list of given steps contains duplicate names!");
         
+        final Set<String> nodeNames = this.steps.stream()
+            .collect(Collectors.mapping(Step::nodeName, Collectors.toSet()));
+        Assert.state(nodeNames.size() == this.steps.size(),
+            "The list of given steps contains duplicate names!");
+        
         final Set<Integer> resourceKeys = this.resources.stream()
-            .map(r -> r.key())
-            .collect(Collectors.toSet());
+            .collect(Collectors.mapping(r -> r.key(), Collectors.toSet()));
         
         final Set<Integer> outputKeys = this.resources.stream()
             .filter(r -> r instanceof ProcessOutput)
-            .map(r -> r.key())
-            .collect(Collectors.toSet());
+            .collect(Collectors.mapping(r -> r.key(), Collectors.toSet()));
         
         Assert.state(resourceKeys.size() == this.resources.size(),
             "The list of given resources contains duplicate keys!");

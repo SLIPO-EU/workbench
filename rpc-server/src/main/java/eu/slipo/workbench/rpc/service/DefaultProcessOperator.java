@@ -171,7 +171,7 @@ public class DefaultProcessOperator implements ProcessOperator
         @Override
         public boolean aboutNode(String nodeName)
         {
-            final Step step = definition.stepByName(nodeName);
+            final Step step = definition.stepByNodeName(nodeName);
             return step != null && step.operation() == EnumOperation.REGISTER;
         }
 
@@ -179,7 +179,7 @@ public class DefaultProcessOperator implements ProcessOperator
         public void afterNode(WorkflowExecutionSnapshot workflowExecutionSnapshot, String nodeName,
             JobExecution jobExecution)
         {
-            final Step step = definition.stepByName(nodeName);
+            final Step step = definition.stepByNodeName(nodeName);
             Assert.state(step.operation() == EnumOperation.REGISTER, "Expected a registration step");
             Assert.state(step.inputKeys().size() == 1, "Expected a single input for a registration step!");
 
@@ -275,7 +275,7 @@ public class DefaultProcessOperator implements ProcessOperator
             final Workflow workflow = workflowExecutionSnapshot.workflow();
             logger.info("The workflow node {}/{} has started", workflow.id(), nodeName);
 
-            final Step step = definition.stepByName(nodeName);
+            final Step step = definition.stepByNodeName(nodeName);
             if (step != null) {
                 beforeProcessingStep(workflowExecutionSnapshot, step, jobExecution);
             }
@@ -285,12 +285,14 @@ public class DefaultProcessOperator implements ProcessOperator
             WorkflowExecutionSnapshot workflowExecutionSnapshot, Step step, JobExecution jobExecution)
         {
             final Workflow workflow = workflowExecutionSnapshot.workflow();
-            final Workflow.JobNode node = workflow.node(step.name());
+            final Workflow.JobNode node = workflow.node(step.nodeName());
             final ZonedDateTime now = ZonedDateTime.now();
 
             // Create a record to represent this processing step
 
-            ProcessExecutionStepRecord stepRecord = new ProcessExecutionStepRecord(step.key(), step.name());
+            ProcessExecutionStepRecord stepRecord = new ProcessExecutionStepRecord(step.key());
+            stepRecord.setName(step.name());
+            stepRecord.setNodeName(step.nodeName());
             stepRecord.setStartedOn(now);
             stepRecord.setJobExecutionId(jobExecution.getId());
             stepRecord.setStatus(EnumProcessExecutionStatus.RUNNING);
@@ -333,7 +335,7 @@ public class DefaultProcessOperator implements ProcessOperator
             logger.info("The workflow node {}/{} finished with a status of [{}]",
                 workflow.id(), nodeName, jobExecution.getStatus());
 
-            final Step step = definition.stepByName(nodeName);
+            final Step step = definition.stepByNodeName(nodeName);
             if (step != null) {
                 afterProcessingStep(workflowExecutionSnapshot, step, jobExecution);;
             }
@@ -343,7 +345,7 @@ public class DefaultProcessOperator implements ProcessOperator
             WorkflowExecutionSnapshot workflowExecutionSnapshot, Step step, JobExecution jobExecution)
         {
             final Workflow workflow = workflowExecutionSnapshot.workflow();
-            final Workflow.JobNode node = workflow.node(step.name());
+            final Workflow.JobNode node = workflow.node(step.nodeName());
             final BatchStatus batchStatus = jobExecution.getStatus();
             final ZonedDateTime now = ZonedDateTime.now();
 
@@ -507,12 +509,12 @@ public class DefaultProcessOperator implements ProcessOperator
         // A data source of URL is handled by adding a job node that will download the
         // resource (to make it available to other workflow nodes).
 
-        final Set<DataSource> sourcesThatMustDownload = definition.steps().stream()
+        final Set<DataSource> sourcesToDownload = definition.steps().stream()
             .flatMap(step -> step.sources().stream())
             .filter(source -> source instanceof UrlDataSource)
             .collect(Collectors.toSet());
 
-        for (DataSource source: sourcesThatMustDownload) {
+        for (DataSource source: sourcesToDownload) {
             final URL url = ((UrlDataSource) source).getUrl();
             final String nodeName = "download-" + Integer.toHexString(source.hashCode());
             final String outputName = extractOutputName(url, true);
@@ -534,7 +536,7 @@ public class DefaultProcessOperator implements ProcessOperator
         for (Step step: dependencyAnalyzedDefinition.stepsInTopologicalOrder()) {
             EnumTool tool = step.tool();
             List<Integer> inputKeys = step.inputKeys();
-            JobDefinitionBuilder jobDefinitionBuilder = JobDefinitionBuilder.create(step.name());
+            JobDefinitionBuilder jobDefinitionBuilder = JobDefinitionBuilder.create(step.nodeName());
 
             // Define inputs for this job node
             List<String> inputNames = new ArrayList<>();
@@ -568,8 +570,8 @@ public class DefaultProcessOperator implements ProcessOperator
                         Step dependency = definition.stepByResourceKey(inputKey);
                         Assert.state(dependency != null,
                             "Expected a step to produce the input we depend on!");
-                        jobDefinitionBuilder.input(dependency.name(), "*");
-                        inputNames.add(nodeNameToOutputName.get(dependency.name()));
+                        jobDefinitionBuilder.input(dependency.nodeName(), "*");
+                        inputNames.add(nodeNameToOutputName.get(dependency.nodeName()));
                     }
                 }
             }
@@ -611,7 +613,7 @@ public class DefaultProcessOperator implements ProcessOperator
 
             // Set output name for this job node
             if (outputName != null)
-                nodeNameToOutputName.put(step.name(), outputName);
+                nodeNameToOutputName.put(step.nodeName(), outputName);
 
             // Add the job node mapping to this processing step
             workflowBuilder.job(jobDefinitionBuilder.build());

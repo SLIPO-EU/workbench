@@ -164,7 +164,7 @@ public class DownloadFileJobTests
         assertEquals(fixture.checksum, checksum);
     }
 
-    @Test(timeout = 2000)
+    @Test(timeout = 8 * 1000)
     public void test1() throws Exception
     {
         URL url = new URL(

@@ -186,17 +186,30 @@ public class ProcessExecutionRecord implements Serializable
         return null;
     }
 
-    public ProcessExecutionStepRecord getStep(String stepName)
+    public ProcessExecutionStepRecord getStepByName(String name)
     {
-        Assert.isTrue(!StringUtils.isEmpty(stepName), "A non-empty name is required");
+        Assert.isTrue(!StringUtils.isEmpty(name), "A non-empty name is required");
 
         if (this.steps == null) {
             return null;
         }
         for (ProcessExecutionStepRecord r: this.steps) {
-            if (r.getName().equals(stepName)) {
+            if (r.getName().equals(name))
                 return r;
-            }
+        }
+        return null;
+    }
+    
+    public ProcessExecutionStepRecord getStepByNodeName(String nodeName)
+    {
+        Assert.isTrue(!StringUtils.isEmpty(nodeName), "A non-empty name is required");
+
+        if (this.steps == null) {
+            return null;
+        }
+        for (ProcessExecutionStepRecord r: this.steps) {
+            if (r.getNodeName().equals(nodeName))
+                return r;
         }
         return null;
     }

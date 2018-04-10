@@ -9,9 +9,8 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.mutable.MutableInt;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -37,9 +36,9 @@ public class ProcessDefinition implements Serializable
     private final Map<Integer, Step> keyToStep;
 
     /**
-     * Map a step name to a step descriptor
+     * Map a step's node name to a step descriptor
      */
-    private final Map<String, Step> nameToStep;
+    private final Map<String, Step> nodeNameToStep;
 
     private final Map<Integer, ProcessInput> resourceKeyToResource;
 
@@ -72,8 +71,8 @@ public class ProcessDefinition implements Serializable
         this.keyToStep = Collections.unmodifiableMap(
             steps.stream().collect(Collectors.toMap(s -> s.key(), Function.identity())));
 
-        this.nameToStep = Collections.unmodifiableMap(
-            steps.stream().collect(Collectors.toMap(s -> s.name(), Function.identity())));
+        this.nodeNameToStep = Collections.unmodifiableMap(
+            steps.stream().collect(Collectors.toMap(s -> s.nodeName(), Function.identity())));
 
         this.resourceKeyToResource = Collections.unmodifiableMap(
             resources.stream().collect(Collectors.toMap(r -> r.key(), Function.identity())));
@@ -141,14 +140,12 @@ public class ProcessDefinition implements Serializable
     }
 
     /**
-     * Get a {@link Step} descriptor by step name
-     *
-     * @param stepName The name of a step
+     * Get a {@link Step} descriptor by node name.
      */
     @JsonIgnore
-    public Step stepByName(String stepName)
+    public Step stepByNodeName(String nodeName)
     {
-        return stepName == null? null : nameToStep.get(stepName);
+        return nodeName == null? null : nodeNameToStep.get(nodeName);
     }
 
     /**

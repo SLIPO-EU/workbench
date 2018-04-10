@@ -66,6 +66,10 @@ public class ProcessExecutionStepEntity
     @Column(name = "step_name", nullable = false, updatable = false)
     String name;
     
+    @NotNull
+    @Column(name = "node_name", nullable = false, updatable = false)
+    String nodeName;
+    
     @Min(1)
     @NotNull
     @Column(name = "job_execution", nullable = false, updatable = false)
@@ -101,20 +105,10 @@ public class ProcessExecutionStepEntity
 
     protected ProcessExecutionStepEntity() {}
     
-    public ProcessExecutionStepEntity(ProcessExecutionEntity executionEntity, int key, String name) 
+    public ProcessExecutionStepEntity(ProcessExecutionEntity executionEntity, int key) 
     {
         this.execution = executionEntity;
         this.key = key;
-        this.name = name;
-    }
-    
-    public ProcessExecutionStepEntity(
-        ProcessExecutionEntity executionEntity, int key, String name, long jobExecutionId) 
-    {
-        this.execution = executionEntity;
-        this.key = key;
-        this.name = name;
-        this.jobExecutionId = jobExecutionId;
     }
     
     public long getId() 
@@ -146,7 +140,17 @@ public class ProcessExecutionStepEntity
     {
         this.name = name;
     }
+    
+    public String getNodeName()
+    {
+        return nodeName;
+    }
 
+    public void setNodeName(String nodeName)
+    {
+        this.nodeName = nodeName;
+    }
+    
     public void setKey(int key) 
     {
         this.key = key;
@@ -261,8 +265,10 @@ public class ProcessExecutionStepEntity
     
     public ProcessExecutionStepRecord toProcessExecutionStepRecord(boolean includeNonVerifiedFiles) 
     {
-        ProcessExecutionStepRecord stepRecord = new ProcessExecutionStepRecord(id, key, name);
+        ProcessExecutionStepRecord stepRecord = new ProcessExecutionStepRecord(id, key);
 
+        stepRecord.setName(name);
+        stepRecord.setNodeName(nodeName);
         stepRecord.setTool(tool);
         stepRecord.setOperation(operation);
         stepRecord.setStartedOn(startedOn);

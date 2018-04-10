@@ -372,7 +372,9 @@ public class DefaultProcessRepositoryTests
         fileRecord1p2 = new ProcessExecutionStepFileRecord(
             EnumStepFile.INPUT, "/tmp/1-2.csv", fileSize1p2, EnumDataFormat.CSV);
 
-        stepRecord1 = new ProcessExecutionStepRecord(-1, step1Key, "triplegeo-1");
+        stepRecord1 = new ProcessExecutionStepRecord(-1, step1Key);
+        stepRecord1.setName("Triplegeo 1");
+        stepRecord1.setNodeName("triplegeo-1");
         stepRecord1.setOperation(EnumOperation.TRANSFORM);
         stepRecord1.setTool(EnumTool.TRIPLEGEO);
         stepRecord1.setJobExecutionId(step1JobExecutionId);
@@ -390,7 +392,8 @@ public class DefaultProcessRepositoryTests
 
         ProcessExecutionStepRecord stepRecord1d1 = executionRecord1dSteps.get(0);
         assertEquals(step1Key, stepRecord1d1.getKey());
-        assertEquals("triplegeo-1", stepRecord1d1.getName());
+        assertEquals("Triplegeo 1", stepRecord1d1.getName());
+        assertEquals("triplegeo-1", stepRecord1d1.getNodeName());
         assertEquals(EnumProcessExecutionStatus.RUNNING, stepRecord1d1.getStatus());
         assertEquals(EnumOperation.TRANSFORM, stepRecord1d1.getOperation());
         assertEquals(EnumTool.TRIPLEGEO, stepRecord1d1.getTool());
@@ -442,7 +445,8 @@ public class DefaultProcessRepositoryTests
 
         ProcessExecutionStepRecord stepRecord1e1 = executionRecord1eSteps.get(0);
         assertEquals(step1Key, stepRecord1e1.getKey());
-        assertEquals("triplegeo-1", stepRecord1e1.getName());
+        assertEquals("Triplegeo 1", stepRecord1e1.getName());
+        assertEquals("triplegeo-1", stepRecord1e1.getNodeName());
         assertEquals(EnumProcessExecutionStatus.COMPLETED, stepRecord1e1.getStatus());
         assertEquals(EnumOperation.TRANSFORM, stepRecord1e1.getOperation());
         assertEquals(EnumTool.TRIPLEGEO, stepRecord1e1.getTool());
@@ -549,15 +553,5 @@ public class DefaultProcessRepositoryTests
         // Now, attempt to create another execution
 
         processRepository.createExecution(id, version, submittedBy.getId());
-    }
-
-    ////////////////////////////////////////////////////////////////////////////
-    //                       Fixme Scratch                                    //
-    ////////////////////////////////////////////////////////////////////////////
-
-    @Test
-    public void test99_scratch1()
-    {
-        System.err.println("Hello");
     }
 }

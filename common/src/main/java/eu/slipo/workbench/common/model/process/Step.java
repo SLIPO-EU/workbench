@@ -5,11 +5,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.springframework.util.StringUtils;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.util.StdConverter;
+import com.github.slugify.Slugify;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumOperation;
@@ -22,10 +26,32 @@ import eu.slipo.workbench.common.model.tool.MetadataRegistrationConfiguration;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 
+@JsonDeserialize(converter = Step.DeserializeSanitizer.class)
 public class Step implements Serializable
 {
     private static final long serialVersionUID = 1L;
 
+    protected static final Slugify slugify = new Slugify();
+    
+    protected static String slugifyName(String name)
+    {
+        return slugify.slugify(name);
+    }
+    
+    protected static class DeserializeSanitizer extends StdConverter<Step,Step>
+    {
+        @Override
+        public Step convert(Step step)
+        {
+            // Sanitize step in-place
+            
+            if (StringUtils.isEmpty(step.nodeName) && !StringUtils.isEmpty(step.name))
+                step.nodeName = Step.slugifyName(step.name);
+            
+            return step;
+        }   
+    }
+    
     @JsonProperty("key")
     protected int key;
 
@@ -34,6 +60,9 @@ public class Step implements Serializable
 
     @JsonProperty("name")
     protected String name;
+    
+    @JsonProperty("nodeName")
+    protected String nodeName;
 
     @JsonProperty("operation")
     @JsonDeserialize(using = EnumOperation.Deserializer.class)
@@ -73,6 +102,7 @@ public class Step implements Serializable
     {
         this.key = other.key;
         this.name = other.name;
+        this.nodeName = other.nodeName;
         this.group = other.group;
         this.operation = other.operation;
         this.tool = other.tool;
@@ -91,14 +121,23 @@ public class Step implements Serializable
     {
         return key;
     }
-
+    
     /**
-     * The name of this step
+     * The human-friendly name of this step
      */
     @JsonProperty("name")
     public String name()
     {
         return name;
+    }
+    
+    /**
+     * The workflow-friendly name of this step
+     */
+    @JsonProperty("nodeName")
+    public String nodeName()
+    {
+        return nodeName;
     }
 
     /**

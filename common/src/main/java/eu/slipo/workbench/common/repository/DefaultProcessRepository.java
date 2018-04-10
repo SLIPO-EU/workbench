@@ -568,12 +568,15 @@ public class DefaultProcessRepository implements ProcessRepository
 
         // Set step metadata
 
-        ProcessExecutionStepEntity executionStepEntity = new ProcessExecutionStepEntity(
-            executionEntity, record.getKey(), record.getName(), record.getJobExecutionId());
+        ProcessExecutionStepEntity executionStepEntity = 
+            new ProcessExecutionStepEntity(executionEntity, record.getKey());
+        executionStepEntity.setName(record.getName());
+        executionStepEntity.setNodeName(record.getNodeName());
         executionStepEntity.setStatus(record.getStatus());
         executionStepEntity.setOperation(record.getOperation());
         executionStepEntity.setTool(record.getTool());
         executionStepEntity.setStartedOn(record.getStartedOn());
+        executionStepEntity.setJobExecutionId(record.getJobExecutionId());
 
         // Add file entities associated with this step
 
