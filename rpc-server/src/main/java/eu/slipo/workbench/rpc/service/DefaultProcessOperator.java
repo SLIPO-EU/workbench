@@ -48,6 +48,7 @@ import eu.slipo.workbench.common.model.process.ProcessExecutionStartException;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepFileRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStopException;
+import eu.slipo.workbench.common.model.process.ProcessIdentifier;
 import eu.slipo.workbench.common.model.process.ProcessNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
 import eu.slipo.workbench.common.model.process.Step;
@@ -76,6 +77,7 @@ import eu.slipo.workflows.WorkflowBuilderFactory;
 import eu.slipo.workflows.WorkflowExecutionEventListener;
 import eu.slipo.workflows.WorkflowExecutionEventListenerSupport;
 import eu.slipo.workflows.WorkflowExecutionSnapshot;
+import eu.slipo.workflows.WorkflowExecutionStatus;
 import eu.slipo.workflows.WorkflowExecutionStopListener;
 import eu.slipo.workflows.exception.WorkflowExecutionStartException;
 import eu.slipo.workflows.exception.WorkflowExecutionStopException;
@@ -773,7 +775,7 @@ public class DefaultProcessOperator implements ProcessOperator
 
         ProcessExecutionRecord executionRecord = null;
         try {
-            executionRecord = processRepository.createExecution(id, version, userId);
+            executionRecord = processRepository.createExecution(id, version, userId, workflowId);
         } catch (ProcessHasActiveExecutionException ex) {
             throw new ProcessExecutionStartException("Failed to create a new execution entity", ex);
         }
@@ -893,5 +895,22 @@ public class DefaultProcessOperator implements ProcessOperator
     {
         ProcessRecord r = processRepository.findOne(id, version);
         return r == null? null : pollStatus(r);
+    }
+
+    @Override
+    public List<ProcessIdentifier> list(boolean includeNonRunning)
+    {
+        List<ProcessIdentifier> processIdentifiers = new ArrayList<>();
+        for (UUID workflowId: workflowScheduler.list()) {
+            if (includeNonRunning || workflowScheduler.status(workflowId) == WorkflowExecutionStatus.RUNNING) {
+                // Map the workflow identifier to a process identifier
+                ProcessIdentifier processIdentifier =
+                    processRepository.mapToProcessIdentifier(workflowId);
+                Assert.state(processIdentifier != null,
+                    "The workflow is not associated with a process revision entity!");
+                processIdentifiers.add(processIdentifier);
+            }
+        }
+        return processIdentifiers;
     }
 }

@@ -53,6 +53,7 @@ import eu.slipo.workbench.common.model.process.ProcessDefinitionBuilder;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepFileRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepRecord;
+import eu.slipo.workbench.common.model.process.ProcessIdentifier;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
 import eu.slipo.workbench.common.model.resource.DataSource;
 import eu.slipo.workbench.common.model.resource.EnumDataSourceType;
@@ -287,6 +288,8 @@ public class DefaultProcessRepositoryTests
     @Test
     public void test2_createAndUpdateExecution() throws Exception
     {
+        UUID workflowId = UUID.randomUUID();
+
         AccountEntity createdBy = accountRepository.findOneByUsername("baz");
         assertNotNull(createdBy);
         AccountEntity submittedBy = createdBy;
@@ -303,13 +306,14 @@ public class DefaultProcessRepositoryTests
 
         final long id = record1.getId();
         final long version = record1.getVersion();
+        final ProcessIdentifier processIdentifier = ProcessIdentifier.of(id, version);
 
         //
         // Create an execution on this process revision
         //
 
         ProcessExecutionRecord executionRecord1 =
-            processRepository.createExecution(id, version, submittedBy.getId());
+            processRepository.createExecution(id, version, submittedBy.getId(), workflowId);
         assertNotNull(executionRecord1);
 
         final long executionId = executionRecord1.getId();
@@ -319,6 +323,9 @@ public class DefaultProcessRepositoryTests
         assertNull(executionRecord1.getStartedOn());
         assertNull(executionRecord1.getCompletedOn());
         assertEquals(Collections.emptyList(), executionRecord1.getSteps());
+
+        assertEquals(processRepository.mapToWorkflowIdentifier(id, version), workflowId);
+        assertEquals(processRepository.mapToProcessIdentifier(workflowId), processIdentifier);
 
         ProcessRecord record1a = processRepository.findOne(id, version, true);
         assertNotNull(record1a);
@@ -528,6 +535,8 @@ public class DefaultProcessRepositoryTests
     @Test(expected = ProcessRepository.ProcessHasActiveExecutionException.class)
     public void test1_createMultipleRunningExecutions() throws Exception
     {
+        UUID workflowId = UUID.randomUUID();
+
         AccountEntity createdBy = accountRepository.findOneByUsername("baz");
         assertNotNull(createdBy);
         AccountEntity submittedBy = createdBy;
@@ -541,7 +550,7 @@ public class DefaultProcessRepositoryTests
         // Create a running execution
 
         ProcessExecutionRecord executionRecord1 =
-            processRepository.createExecution(id, version, submittedBy.getId());
+            processRepository.createExecution(id, version, submittedBy.getId(), workflowId);
         assertNotNull(executionRecord1);
         final long executionId1 = executionRecord1.getId();
         final ZonedDateTime startedOn = ZonedDateTime.now();
@@ -552,6 +561,6 @@ public class DefaultProcessRepositoryTests
 
         // Now, attempt to create another execution
 
-        processRepository.createExecution(id, version, submittedBy.getId());
+        processRepository.createExecution(id, version, submittedBy.getId(), workflowId);
     }
 }

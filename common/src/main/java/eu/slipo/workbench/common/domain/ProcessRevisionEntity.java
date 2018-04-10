@@ -25,6 +25,7 @@ import javax.validation.constraints.NotNull;
 
 import eu.slipo.workbench.common.domain.attributeconverter.ProcessDefinitionConverter;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
+import eu.slipo.workbench.common.model.process.ProcessIdentifier;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
 
 
@@ -82,7 +83,7 @@ public class ProcessRevisionEntity {
     @OneToOne(
         mappedBy = "process", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     ProcessExecutionMonitorEntity monitor;
-    
+        
     protected ProcessRevisionEntity() {}
     
     public ProcessRevisionEntity(ProcessEntity parent)
@@ -174,6 +175,11 @@ public class ProcessRevisionEntity {
             .sorted(Comparator.reverseOrder())
             .findFirst()
             .orElse(null);
+    }
+    
+    public ProcessIdentifier getProcessIdentifier()
+    {
+        return ProcessIdentifier.of(parent.id, version);
     }
     
     public ProcessRecord toProcessRecord()

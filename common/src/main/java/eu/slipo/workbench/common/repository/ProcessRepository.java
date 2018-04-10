@@ -2,6 +2,7 @@ package eu.slipo.workbench.common.repository;
 
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.data.domain.PageRequest;
 
@@ -113,13 +114,40 @@ public interface ProcessRepository
     /**
      * Find a single process by name
      *
-     *
      * @param name The process unique name
      * @param createdBy The id of the user who created this entity
-     * @return an instance of {@link ProcessRecord} if the process exists or null
+     * @return an instance of {@link ProcessRecord} if the process exists or <tt>null</tt>
      */
     ProcessRecord findOne(String name, int createdBy);
 
+    /**
+     * Map a workflow identifier to a process identifier (i.e. a pair of (id, version) 
+     * identifying a process revision entity).
+     * 
+     * @param workflowId
+     * @return a process identifier, or <tt>null</tt> if given workflow id is not mapped to
+     *   a process revision entity.
+     */
+    ProcessIdentifier mapToProcessIdentifier(UUID workflowId);
+    
+    /**
+     * Map a process identifier to a workflow identifier (if any).
+     * 
+     * @param id The process id
+     * @param version The process version
+     * @return a workflow identifier, or <tt>null</tt> if no workflow is associated with
+     *   given process revision entity.
+     */
+    UUID mapToWorkflowIdentifier(long id, long version);
+    
+    /**
+     * @see ProcessRepository#mapToWorkflowIdentifier(long, long)
+     */
+    default UUID mapToWorkflowIdentifier(ProcessIdentifier processIdentifier)
+    {
+        return mapToWorkflowIdentifier(processIdentifier.getId(), processIdentifier.getVersion());
+    }
+    
     /**
      * Create a new process entity
      *
@@ -219,6 +247,7 @@ public interface ProcessRepository
      * @param id The process id
      * @param version
      * @param submittedBy The id of the user that submitted this execution
+     * @param workflowId The id of the workflow that will carry out the actual execution
      * @return A record representing the the new execution entity
      *
      * @throws ProcessNotFoundException if given pair of (id, version) does not correspond to
@@ -227,7 +256,7 @@ public interface ProcessRepository
      *   associated with target process (at any time, only a single a process may be associated
      *   to at most 1 active execution).
      */
-    ProcessExecutionRecord createExecution(long id, long version, int submittedBy)
+    ProcessExecutionRecord createExecution(long id, long version, int submittedBy, UUID workflowId)
         throws ProcessNotFoundException, ProcessHasActiveExecutionException;
 
     /**
@@ -311,7 +340,7 @@ public interface ProcessRepository
      */
     ProcessExecutionRecord updateExecutionStepAddingFile(long executionId, int stepKey, ProcessExecutionStepFileRecord record)
         throws ProcessExecutionNotFoundException, ProcessExecutionNotActiveException;
-
+    
     /**
      * Discard (i.e delete) an execution entity.
      *

@@ -62,6 +62,7 @@ import eu.slipo.workbench.common.model.process.ProcessDefinitionBuilder;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepFileRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepRecord;
+import eu.slipo.workbench.common.model.process.ProcessIdentifier;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
 import eu.slipo.workbench.common.model.resource.DataSource;
 import eu.slipo.workbench.common.model.resource.FileSystemDataSource;
@@ -427,6 +428,7 @@ public class DefaultProcessOperatorTests
         final ProcessRecord processRecord = processRepository.create(definition, creatorId, false);
         assertNotNull(processRecord);
         final long id = processRecord.getId(), version = processRecord.getVersion();
+        final ProcessIdentifier processIdentifier = ProcessIdentifier.of(id, version);
 
         // Start process
 
@@ -437,6 +439,8 @@ public class DefaultProcessOperatorTests
         assertNotNull(executionRecord.getStatus());
         assertNotNull(executionRecord.getSubmittedOn());
         assertNotNull(executionRecord.getSubmittedBy());
+
+        assertTrue(processOperator.list(true).contains(processIdentifier));
 
         // Poll execution for completion
 

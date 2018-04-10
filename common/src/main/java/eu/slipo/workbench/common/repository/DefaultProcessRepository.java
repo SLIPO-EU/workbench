@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -31,6 +32,7 @@ import eu.slipo.workbench.common.domain.ProcessExecutionStepEntity;
 import eu.slipo.workbench.common.domain.ProcessExecutionStepFileEntity;
 import eu.slipo.workbench.common.domain.ProcessRevisionEntity;
 import eu.slipo.workbench.common.domain.ResourceRevisionEntity;
+import eu.slipo.workbench.common.domain.WorkflowEntity;
 import eu.slipo.workbench.common.model.QueryResultPage;
 import eu.slipo.workbench.common.model.process.EnumProcessExecutionStatus;
 import eu.slipo.workbench.common.model.process.EnumProcessTaskType;
@@ -291,7 +293,48 @@ public class DefaultProcessRepository implements ProcessRepository
 
         return (result.isEmpty() ? null : result.get(0).toProcessRecord(false, false));
     }
-
+    
+    @Transactional(readOnly = true)
+    @Override
+    public ProcessIdentifier mapToProcessIdentifier(UUID workflowId)
+    {
+        Assert.notNull(workflowId, "A workflow id is required");
+        WorkflowEntity workflowEntity = entityManager.find(WorkflowEntity.class, workflowId);
+        if (workflowEntity == null)
+            return null;
+        
+        ProcessRevisionEntity revisionEntity = workflowEntity.getProcess(); 
+        return revisionEntity.getProcessIdentifier();
+    }
+    
+    @Transactional(readOnly = true)
+    @Override
+    public UUID mapToWorkflowIdentifier(long id, long version)
+    {
+        ProcessRevisionEntity revisionEntity = findRevision(id, version);
+        if (revisionEntity == null)
+            return null;
+        
+        TypedQuery<WorkflowEntity> query = entityManager
+            .createQuery("FROM Workflow w WHERE w.process.id = :rid", WorkflowEntity.class)
+            .setParameter("rid", revisionEntity.getId());
+        
+        WorkflowEntity workflowEntity = null;
+        try {
+            workflowEntity = query.getSingleResult();
+        } catch (NoResultException ex) {
+            workflowEntity = null;
+        }
+        return workflowEntity == null? null : workflowEntity.getId();
+    }
+    
+    @Transactional(readOnly = true)
+    @Override
+    public UUID mapToWorkflowIdentifier(ProcessIdentifier processIdentifier)
+    {
+        return ProcessRepository.super.mapToWorkflowIdentifier(processIdentifier);
+    }
+    
     @Transactional(readOnly = true)
     @Override
     public ProcessExecutionRecord findExecution(long executionId, boolean includeNonVerifiedFiles)
@@ -435,7 +478,7 @@ public class DefaultProcessRepository implements ProcessRepository
     }
 
     @Override
-    public ProcessExecutionRecord createExecution(long id, long version, int userId)
+    public ProcessExecutionRecord createExecution(long id, long version, int userId, UUID workflowId)
         throws ProcessNotFoundException, ProcessHasActiveExecutionException
     {
         final AccountEntity submittedBy = userId < 0? null : entityManager.find(AccountEntity.class, userId);
@@ -453,7 +496,18 @@ public class DefaultProcessRepository implements ProcessRepository
         if (executionEntities.stream().anyMatch(e -> !e.isTerminated())) {
             throw new ProcessHasActiveExecutionException(id, version);
         }
-
+        
+        // Associate with a workflow (if not already associated by a previous execution)
+        
+        WorkflowEntity workflowEntity = entityManager.find(WorkflowEntity.class, workflowId);
+        if (workflowEntity == null) {
+            workflowEntity = new WorkflowEntity(workflowId, revisionEntity);
+            entityManager.persist(workflowEntity);
+        } else {
+            Assert.state(workflowEntity.getProcess() == revisionEntity,
+                "A workflow entity is expected to map to a single process revision");
+        }
+        
         // Create an execution entity
 
         final ZonedDateTime now = ZonedDateTime.now();

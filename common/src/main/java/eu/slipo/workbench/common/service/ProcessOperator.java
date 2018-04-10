@@ -1,10 +1,12 @@
 package eu.slipo.workbench.common.service;
 
 import java.io.IOException;
+import java.util.List;
 
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStartException;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStopException;
+import eu.slipo.workbench.common.model.process.ProcessIdentifier;
 import eu.slipo.workbench.common.model.process.ProcessNotFoundException;
 
 public interface ProcessOperator
@@ -60,9 +62,26 @@ public interface ProcessOperator
      * Poll the status of an execution (if any) for a process. The process is identified as 
      * the {@link ProcessRevisionEntity} with the given id and the given version.
      * 
-     * @param id The process ID 
+     * @param id The process id
      * @param version The process (revision) version
      * @return <tt>null</tt> if no execution is found, else the latest execution record
      */
     ProcessExecutionRecord poll(long id, long version);
+    
+    /**
+     * List process identifiers managed by this operator.
+     * 
+     * @param includeNonRunning a flag to indicate if processes with non-running executions
+     *   should also be included  
+     * @return a list of identifiers
+     */
+    List<ProcessIdentifier> list(boolean includeNonRunning);
+    
+    /**
+     * @see ProcessOperator#list(boolean)
+     */
+    default List<ProcessIdentifier> list() 
+    {
+        return list(false);
+    }
 }
