@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.NavigableSet;
 import java.util.TreeSet;
 
@@ -31,6 +32,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
@@ -56,9 +58,15 @@ public class LimesConfiguration extends AbstractToolConfiguration
 {
     private static final long serialVersionUID = 1L;
 
+    public static final int SOURCE = 0;
+    
+    public static final int TARGET = 1;
+    
+    public static final String VAR_NAME_REGEXP = "^[?]\\w[0-9\\w]*$";
+    
     private static final SpelExpressionParser spelParser = new SpelExpressionParser();
     
-    private enum DataFormat
+    public enum DataFormat
     {
         N3(EnumDataFormat.N3, "N3"),
         N_TRIPLES(EnumDataFormat.N_TRIPLES, "N-TRIPLES"),
@@ -202,24 +210,11 @@ public class LimesConfiguration extends AbstractToolConfiguration
         }
     }
    
-    @JsonPropertyOrder({ 
-        "id", "ID",
-        "endpoint", "ENDPOINT",
-        "var", "VAR",
-        "pageSize", "PAGESIZE",
-        "restrictions", "RESTRICTION",
-        "properties", "PROPERTY",
-        "dataFormat", "TYPE",
-    })
     public static class InputSpec implements Serializable
     {
         static final long serialVersionUID = 1L;
         
-        static final String VAR_NAME_REGEXP = "^[?]\\w[0-9\\w]*$";
-                
         String id;
-        
-        String endpoint;
         
         String varName;
         
@@ -233,54 +228,106 @@ public class LimesConfiguration extends AbstractToolConfiguration
         
         InputSpec() {}
         
-        InputSpec(String id, Path path, String varName, String propertyExpr, EnumDataFormat dataFormat) 
+        InputSpec(
+            String id, 
+            String varName, 
+            List<String> propertyExprs, 
+            List<String> filterExprs, 
+            EnumDataFormat dataFormat) 
         {
             Assert.isTrue(!StringUtils.isEmpty(id), "Expected a non-empty input identifier");
-            Assert.isTrue(path != null && path.isAbsolute(), "Expected an absolute path");
             Assert.isTrue(!StringUtils.isEmpty(varName), "Expected a non-empty variable name");
-            Assert.isTrue(!StringUtils.isEmpty(propertyExpr), "Expected a non-empty property expression");
+            Assert.isTrue(!propertyExprs.isEmpty(), "Expected a non-empty list of property expressions");
+            Assert.isTrue(propertyExprs.stream().noneMatch(StringUtils::isEmpty), 
+                "A property expession cannot be empty");
             Assert.notNull(dataFormat, "A data format is required");
             this.id = id;
-            this.endpoint = path.toString();
             this.varName = varName;
-            this.propertyExprs = Collections.singletonList(propertyExpr);
+            this.propertyExprs = Collections.unmodifiableList(propertyExprs);
+            this.filterExprs = filterExprs;
             this.dataFormat = dataFormat;
         }
         
+        InputSpec(String id, String varName, List<String> propertyExprs, EnumDataFormat dataFormat)
+        {
+            this(id, varName, propertyExprs, Collections.emptyList(), dataFormat);
+        }
+    }
+    
+    @JsonPropertyOrder({ 
+        "id", "ID",
+        "endpoint", "ENDPOINT",
+        "var", "VAR",
+        "pageSize", "PAGESIZE",
+        "restrictions", "RESTRICTION",
+        "properties", "PROPERTY",
+        "dataFormat", "TYPE",
+    })
+    public static class Input implements Serializable
+    {        
+        private static final long serialVersionUID = 1L;
+        
+        @JsonIgnore
+        InputSpec spec;
+        
+        String path;
+        
+        Input() 
+        {
+            this.spec = new InputSpec();
+        }
+        
+        Input(
+            String id, 
+            Path path, 
+            String varName, 
+            List<String> propertyExprs,
+            List<String> filterExprs,
+            EnumDataFormat dataFormat) 
+        {
+            this.spec = new InputSpec(id, varName, propertyExprs, filterExprs, dataFormat);
+            Assert.isTrue(path != null && path.isAbsolute(), "Expected an absolute path");
+            this.path = path.toString();
+        }
+        
+        Input(Path path, InputSpec spec)
+        {
+            this(spec.id, path, spec.varName, spec.propertyExprs, spec.filterExprs, spec.dataFormat);
+        }
+        
+        Input(String path, InputSpec spec)
+        {
+            this(spec.id, Paths.get(path), spec.varName, spec.propertyExprs, spec.filterExprs, spec.dataFormat);
+        }
+        
+        @JsonProperty("endpoint")
+        @JacksonXmlProperty(localName = "ENDPOINT")
+        @NotEmpty
+        public String getPath()
+        {
+            return path;
+        }
+        
+        @JsonProperty("endpoint")
+        @JacksonXmlProperty(localName = "ENDPOINT")
+        public void setPath(String endpoint)
+        {
+            this.path = endpoint;
+        }
+
         @JsonProperty("id")
         @JacksonXmlProperty(localName = "ID")
         @NotEmpty
         public String getId()
         {
-            return id;
+            return spec.id;
         }
         
         @JsonProperty("id")
         @JacksonXmlProperty(localName = "ID")
         public void setId(String id)
         {
-            this.id = id;
-        }
-        
-        @JsonProperty("endpoint")
-        @JacksonXmlProperty(localName = "ENDPOINT")
-        @NotEmpty
-        public String getEndpoint()
-        {
-            return endpoint;
-        }
-        
-        @JsonProperty("endpoint")
-        @JacksonXmlProperty(localName = "ENDPOINT")
-        public void setEndpoint(String endpoint)
-        {
-            this.endpoint = endpoint;
-        }
-        
-        @JsonIgnore
-        public void setEndpoint(Path inputPath)
-        {
-            this.endpoint = inputPath.toString();
+            this.spec.id = id;
         }
         
         @JsonProperty("var")
@@ -289,28 +336,28 @@ public class LimesConfiguration extends AbstractToolConfiguration
         @Pattern(regexp = VAR_NAME_REGEXP)
         public String getVarName()
         {
-            return varName;
+            return spec.varName;
         }
         
         @JsonProperty("var")
         @JacksonXmlProperty(localName = "VAR")
         public void setVarName(String varName)
         {
-            this.varName = varName;
+            this.spec.varName = varName;
         }
         
         @JsonProperty("pageSize")
         @JacksonXmlProperty(localName = "PAGESIZE")
         public Integer getPageSize()
         {
-            return pageSize;
+            return spec.pageSize;
         }
         
         @JsonProperty("pageSize")
         @JacksonXmlProperty(localName = "PAGESIZE")
         public void setPageSize(Integer pageSize)
         {
-            this.pageSize = pageSize;
+            this.spec.pageSize = pageSize;
         }
         
         @JsonProperty("restrictions")
@@ -318,14 +365,14 @@ public class LimesConfiguration extends AbstractToolConfiguration
         @JacksonXmlElementWrapper(useWrapping = false)
         public List<String> getFilterExprs()
         {
-            return filterExprs;
+            return spec.filterExprs;
         }
         
         @JsonProperty("restrictions")
         @JacksonXmlProperty(localName = "RESTRICTION")
         public void setFilterExpr(List<String> filterExprs)
         {
-            this.filterExprs = filterExprs;
+            this.spec.filterExprs = filterExprs;
         }
         
         @JsonProperty("properties")
@@ -334,14 +381,14 @@ public class LimesConfiguration extends AbstractToolConfiguration
         @NotEmpty
         public List<String> getPropertyExprs()
         {
-            return propertyExprs;
+            return spec.propertyExprs;
         }
         
         @JsonProperty("properties")
         @JacksonXmlProperty(localName = "PROPERTY")
         public void setPropertyExprs(List<String> propertyExprs)
         {
-            this.propertyExprs = propertyExprs;
+            this.spec.propertyExprs = propertyExprs;
         }
         
         @JsonProperty("dataFormat")
@@ -349,7 +396,7 @@ public class LimesConfiguration extends AbstractToolConfiguration
         @NotNull
         String getDataFormatAsString()
         {
-            return DataFormat.from(dataFormat).key();
+            return DataFormat.from(spec.dataFormat).key();
         }
         
         @JsonProperty("dataFormat")
@@ -358,13 +405,13 @@ public class LimesConfiguration extends AbstractToolConfiguration
         {
             DataFormat f = DataFormat.from(key);
             Assert.notNull(f, "The key [" + key + "] does not map to a data format");
-            this.dataFormat = f.dataFormat();
+            this.spec.dataFormat = f.dataFormat();
         }
         
         @JsonIgnore
         public EnumDataFormat getDataFormat()
         {
-            return dataFormat;
+            return spec.dataFormat;
         }
         
         /**
@@ -374,7 +421,7 @@ public class LimesConfiguration extends AbstractToolConfiguration
         @AssertTrue
         boolean isEndpointGivenAsAbsolutePath()
         {
-            return !StringUtils.isEmpty(endpoint) && Paths.get(endpoint).isAbsolute();
+            return !StringUtils.isEmpty(path) && Paths.get(path).isAbsolute();
         }
     }
     
@@ -383,7 +430,7 @@ public class LimesConfiguration extends AbstractToolConfiguration
         "file", "FILE",
         "relation", "RELATION",
     })
-    public static class OutputSpec implements Serializable
+    public static class Output implements Serializable
     {
         static final long serialVersionUID = 1L;
         
@@ -395,9 +442,9 @@ public class LimesConfiguration extends AbstractToolConfiguration
         
         String relation;
         
-        OutputSpec() {}
+        Output() {}
         
-        OutputSpec(double threshold, String path, String relation) 
+        Output(double threshold, String path, String relation) 
         {
             Assert.isTrue(threshold > 0 && threshold < 1, "A threshold is expected as a number in (0, 1)");
             Assert.isTrue(!StringUtils.isEmpty(path), "Expected a non-empty path");
@@ -514,12 +561,12 @@ public class LimesConfiguration extends AbstractToolConfiguration
     /**
      * The specification for the "source" (i.e the first) part of the input
      */
-    private InputSpec source;
+    private InputSpec sourceSpec;
     
     /**
      * The specification for the "target" (i.e the second) part of the input
      */
-    private InputSpec target;
+    private InputSpec targetSpec;
     
     /**
      * An expression for a distance metric
@@ -529,12 +576,12 @@ public class LimesConfiguration extends AbstractToolConfiguration
     /**
      * The specification for output of accepted pairs
      */
-    private OutputSpec accepted;
+    private Output accepted;
     
     /**
      * The specification for output of pairs that must be reviewed
      */
-    private OutputSpec review;
+    private Output review;
     
     /**
      * Configuration for linking engine
@@ -583,27 +630,27 @@ public class LimesConfiguration extends AbstractToolConfiguration
     @JacksonXmlProperty(localName = "SOURCE")
     @NotNull
     @Valid
-    public InputSpec getSource()
+    public Input getSource()
     {
-        return source;
+        return new Input(input.get(SOURCE), sourceSpec);
     }
     
     @JsonProperty("source")
     @JacksonXmlProperty(localName = "SOURCE")
     @JsonInclude(Include.NON_NULL)
-    public void setSource(InputSpec source)
+    public void setSource(Input source)
     {
-        Assert.notNull(source, "Expected a non-null source input specification");
-        this.source = source;
-        this.input.set(0, source.endpoint);
-        this.inputFormat = source.dataFormat;
+        Assert.notNull(source, "Expected a non-null source input");
+        this.sourceSpec = source.spec;
+        this.input.set(SOURCE, source.path);
+        this.inputFormat = source.spec.dataFormat;
     }
     
     @JsonIgnore
     public void setSource(String id, Path path, String varName, String propertyExpr, EnumDataFormat dataFormat)
     {
-       InputSpec source = new InputSpec(id, path, varName, propertyExpr, dataFormat);
-       setSource(source);
+       this.sourceSpec = new InputSpec(id, varName, Collections.singletonList(propertyExpr), dataFormat);
+       this.input.set(SOURCE, path.toString());
     }
     
     @JsonIgnore
@@ -616,26 +663,26 @@ public class LimesConfiguration extends AbstractToolConfiguration
     @JacksonXmlProperty(localName = "TARGET")
     @NotNull
     @Valid
-    public InputSpec getTarget()
+    public Input getTarget()
     {
-        return target;
+        return new Input(input.get(TARGET), targetSpec);
     }
     
     @JsonProperty("target")
     @JacksonXmlProperty(localName = "TARGET")
     @JsonInclude(Include.NON_NULL)
-    public void setTarget(InputSpec target)
+    public void setTarget(Input target)
     {
-        Assert.notNull(target, "Expected a non-null target input specification");
-        this.target = target;
-        this.input.set(1, target.endpoint);
+        Assert.notNull(target, "Expected a non-null source input");
+        this.targetSpec = target.spec;
+        this.input.set(TARGET, target.path);
     }
     
     @JsonIgnore
     public void setTarget(String id, Path path, String varName, String propertyExpr, EnumDataFormat dataFormat)
     {
-        InputSpec target = new InputSpec(id, path, varName, propertyExpr, dataFormat);  
-        setTarget(target);
+        this.targetSpec = new InputSpec(id, varName, Collections.singletonList(propertyExpr), dataFormat);
+        this.input.set(TARGET, path.toString());
     }
     
     @JsonIgnore
@@ -644,6 +691,60 @@ public class LimesConfiguration extends AbstractToolConfiguration
         setTarget(id, path, varName, propertyExpr, EnumDataFormat.N_TRIPLES);
     }
     
+    @JsonIgnore
+    public void setSourcePath(Path path)
+    {
+        this.input.set(SOURCE, path.toString());
+    }
+    
+    @JsonProperty("input.source")
+    @JsonSetter
+    public void setSourcePath(String path)
+    {
+        setSourcePath(Paths.get(path));
+    }
+    
+    @JsonIgnore
+    public String getSourcePath()
+    {
+        return this.input.get(SOURCE);
+    }
+    
+    @JsonIgnore
+    public void setTargetPath(Path path)
+    {
+        this.input.set(TARGET, path.toString());
+    }
+    
+    @JsonIgnore
+    public String getTargetPath()
+    {
+        return this.input.get(TARGET);
+    }
+    
+    @JsonProperty("input.target")
+    @JsonSetter
+    public void setTargetPath(String path)
+    {
+        setTargetPath(Paths.get(path));
+    }
+    
+    @JsonProperty("input")
+    @JsonSetter
+    public void setInput(Map<String, String> inputPaths)
+    {
+        Assert.notNull(inputPaths, "Expected a non-empty map of input paths");
+        
+        if (inputPaths.containsKey("source")) {
+            Path sourcePath = Paths.get(inputPaths.get("source"));
+            setSourcePath(sourcePath);
+        }
+        if (inputPaths.containsKey("target")) {
+            Path targetPath = Paths.get(inputPaths.get("target"));
+            setTargetPath(targetPath);
+        }
+    }
+
     @JsonProperty("metric")
     @JacksonXmlProperty(localName = "METRIC")
     @NotEmpty
@@ -714,7 +815,7 @@ public class LimesConfiguration extends AbstractToolConfiguration
     @JacksonXmlProperty(localName = "ACCEPTANCE")
     @NotNull
     @Valid
-    public OutputSpec getAccepted()
+    public Output getAccepted()
     {
         return accepted;
     }
@@ -722,7 +823,7 @@ public class LimesConfiguration extends AbstractToolConfiguration
     @JsonProperty("acceptance")
     @JacksonXmlProperty(localName = "ACCEPTANCE")
     @JsonInclude(Include.NON_NULL)
-    public void setAccepted(OutputSpec accepted)
+    public void setAccepted(Output accepted)
     {
         Assert.notNull(accepted, "Expected a specification for output of accepted pairs");
         this.accepted = accepted;
@@ -733,20 +834,20 @@ public class LimesConfiguration extends AbstractToolConfiguration
     {
         if (outputDir != null)
             path = Paths.get(outputDir).resolve(path);
-        this.accepted = new OutputSpec(threshold, path.toString(), relation);
+        this.accepted = new Output(threshold, path.toString(), relation);
     }
     
     @JsonIgnore
     public void setAccepted(double threshold, Path path)
     {
-        setAccepted(threshold, path, OutputSpec.DEFAULT_RELATION);
+        setAccepted(threshold, path, Output.DEFAULT_RELATION);
     }
     
     @JsonProperty("review")
     @JacksonXmlProperty(localName = "REVIEW")
     @NotNull
     @Valid
-    public OutputSpec getReview()
+    public Output getReview()
     {
         return review;
     }
@@ -754,7 +855,7 @@ public class LimesConfiguration extends AbstractToolConfiguration
     @JsonProperty("review")
     @JacksonXmlProperty(localName = "REVIEW")
     @JsonInclude(Include.NON_NULL)
-    public void setReview(OutputSpec review)
+    public void setReview(Output review)
     {
         Assert.notNull(review, "Expected a specification for output of pairs to be reviewed");
         this.review = review;
@@ -765,13 +866,13 @@ public class LimesConfiguration extends AbstractToolConfiguration
     {
         if (outputDir != null)
             path = Paths.get(outputDir).resolve(path);
-        this.review = new OutputSpec(threshold, path.toString(), relation);
+        this.review = new Output(threshold, path.toString(), relation);
     }
     
     @JsonIgnore
     public void setReview(double threshold, Path path)
     {
-        setReview(threshold, path, OutputSpec.DEFAULT_RELATION);
+        setReview(threshold, path, Output.DEFAULT_RELATION);
     }
     
     @JsonProperty("outputFormat")

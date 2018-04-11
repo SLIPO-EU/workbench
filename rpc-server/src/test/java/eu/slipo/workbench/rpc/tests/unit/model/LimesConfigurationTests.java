@@ -26,6 +26,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.google.common.collect.ImmutableMap;
 
 import eu.slipo.workbench.common.model.tool.LimesConfiguration;
 import eu.slipo.workbench.common.service.util.JsonBasedPropertiesConverterService;
@@ -105,10 +106,10 @@ public class LimesConfigurationTests
     @Autowired
     LimesConfiguration config1;
 
-    void checkEquals(LimesConfiguration.InputSpec expected, LimesConfiguration.InputSpec actual)
+    void checkEquals(LimesConfiguration.Input expected, LimesConfiguration.Input actual)
     {
         assertEquals(expected.getId(), actual.getId());
-        assertEquals(expected.getEndpoint(), actual.getEndpoint());
+        assertEquals(expected.getPath(), actual.getPath());
         assertEquals(expected.getVarName(), actual.getVarName());
         assertEquals(expected.getPageSize(), actual.getPageSize());
         assertEquals(new HashSet<>(expected.getFilterExprs()), new HashSet<>(actual.getFilterExprs()));
@@ -116,7 +117,7 @@ public class LimesConfigurationTests
         assertEquals(expected.getDataFormat(), actual.getDataFormat());
     }
 
-    void checkEquals(LimesConfiguration.OutputSpec expected, LimesConfiguration.OutputSpec actual)
+    void checkEquals(LimesConfiguration.Output expected, LimesConfiguration.Output actual)
     {
         assertEquals(expected.getThreshold(), actual.getThreshold());
         assertEquals(expected.getPath(), actual.getPath());
@@ -199,5 +200,31 @@ public class LimesConfigurationTests
         ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(serializedData));
         LimesConfiguration config1a = (LimesConfiguration) in.readObject();
         checkEquals(config1, config1a);
+    }
+
+    @Test
+    public void test1_setInputPaths() throws Exception
+    {
+        String s1 = objectMapper.writeValueAsString(config1);
+        LimesConfiguration config1a = objectMapper.readValue(s1, LimesConfiguration.class);
+
+        final String sourcePath = "/tmp/a-1.nt";
+        final String targetPath = "/tmp/b-1.nt";
+        final Map<String, String> inputMap = ImmutableMap.of("source", sourcePath, "target", targetPath);
+
+        config1a.setInput(inputMap);
+        String s1a = objectMapper.writeValueAsString(config1a);
+        LimesConfiguration config1b = objectMapper.readValue(s1a, LimesConfiguration.class);
+
+        final LimesConfiguration.Input sourceInput = config1b.getSource();
+        final LimesConfiguration.Input targetInput = config1b.getTarget();
+
+        assertEquals(sourcePath, sourceInput.getPath());
+        assertEquals(sourcePath, config1b.getSourcePath());
+        assertEquals(targetPath, targetInput.getPath());
+        assertEquals(targetPath, config1b.getTargetPath());
+
+        checkEquals(config1.getAccepted(), config1b.getAccepted());
+        checkEquals(config1.getReview(), config1b.getReview());
     }
 }
