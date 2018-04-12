@@ -1,0 +1,44 @@
+{
+  "prefixes" : [ {
+    "namespace" : "http://slipo.eu/def#",
+    "label" : "slipo"
+  }, {
+    "namespace" : "http://www.w3.org/2002/07/owl#",
+    "label" : "owl"
+  } ],
+  "source" : {
+    "id" : "a",
+    "endpoint" : "/var/local/limes/input/a.nt",
+    "var" : "?x",
+    "pageSize" : -1,
+    "restrictions" : [ "" ],
+    "properties" : [ "slipo:name/slipo:nameType RENAME label" ],
+    "dataFormat" : "N-TRIPLES"
+  },
+  "target" : {
+    "id" : "b",
+    "endpoint" : "/var/local/limes/input/b.nt",
+    "var" : "?y",
+    "pageSize" : -1,
+    "restrictions" : [ "" ],
+    "properties" : [ "slipo:name/slipo:nameType RENAME label" ],
+    "dataFormat" : "N-TRIPLES"
+  },
+  "metric" : "trigrams(x.label, y.label)",
+  "acceptance" : {
+    "threshold" : 0.9999,
+    "file" : "/var/local/limes/output/accepted.nt",
+    "relation" : "owl:sameAs"
+  },
+  "review" : {
+    "threshold" : 0.98,
+    "file" : "/var/local/limes/output/review.nt",
+    "relation" : "owl:sameAs"
+  },
+  "execution" : {
+    "rewriter" : "default",
+    "planner" : "default",
+    "engine" : "default"
+  },
+  "outputFormat" : "N-TRIPLES"
+}

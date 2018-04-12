@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.springframework.util.StringUtils.stripFilenameExtension;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -20,6 +21,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -106,6 +108,14 @@ public class DefaultProcessOperatorTests
     private static final String USER_NAME = "user-" + Long.toUnsignedString(random.nextLong(), 36);
 
     private static final String USER_EMAIL = USER_NAME + "@example.com";
+
+    private static Path getResource(String first, String ...more)
+    {
+        final Path rootPath = Paths.get("/");
+        URL url = DefaultProcessOperatorTests.class
+            .getResource(rootPath.resolve(Paths.get(first, more)).toString());
+        return Paths.get(url.getPath());
+    }
 
     /**
      * A test fixture that represents a basic to-RDF operation (using Triplegeo).
@@ -224,11 +234,11 @@ public class DefaultProcessOperatorTests
 
         private Map<String, TransformFixture> transformFixtures = new HashMap<>();
 
-        private <T extends ToolConfiguration> T fromParameters(Map<String,Object> map, Class<T> valueType)
+        private <T extends ToolConfiguration> T fromParameters(Properties p, Class<T> valueType)
         {
             T t = null;
             try {
-                t = propertiesConverter.propertiesToValue(map, valueType);
+                t = propertiesConverter.propertiesToValue(p, valueType);
             } catch (ConversionFailedException e) {
                 throw new IllegalStateException("cannot convert properties", e);
             }
@@ -264,20 +274,15 @@ public class DefaultProcessOperatorTests
             final URL resourcesBaseUrl = new URL(rootUrl, "rpc-server/src/test/resources/");
 
             for (String path: Arrays.asList("testcases/triplegeo/csv/1/")) {
-                final URL inputUrl = DefaultProcessOperatorTests.class
-                    .getResource(Paths.get("/" + path, "input").toString());
-                final URL resultsUrl = DefaultProcessOperatorTests.class
-                    .getResource(Paths.get("/" + path, "output").toString());
-                final Path inputDir = Paths.get(inputUrl.getPath());
-                final Path resultsDir = Paths.get(resultsUrl.getPath());
+                final Path inputDir = getResource(path, "input");
+                final Path resultsDir = getResource(path, "output");
 
                 // Read configuration parameters
 
-                File f = new File(DefaultProcessOperatorTests.class
-                    .getResource(Paths.get("/" + path, "parameters.json").toString()).getPath());
-                @SuppressWarnings("unchecked")
-                final Map<String, Object> parametersMap = jsonMapper.readValue(f, Map.class);
-
+                final Properties parametersMap = new Properties();
+                try (BufferedReader in = Files.newBufferedReader(getResource(path, "config.properties"))) {
+                    parametersMap.load(in);
+                }
                 final TriplegeoConfiguration configuration =
                     fromParameters(parametersMap, TriplegeoConfiguration.class);
 

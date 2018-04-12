@@ -57,24 +57,24 @@ import eu.slipo.workbench.rpc.service.ConfigurationGeneratorService;
 public class PrepareWorkingDirectoryTasklet implements Tasklet
 {
     private static final Logger logger = LoggerFactory.getLogger(PrepareWorkingDirectoryTasklet.class);
-    
-    private static final Set<PosixFilePermission> DIRECTORY_PERMISSIONS = 
+
+    private static final Set<PosixFilePermission> DIRECTORY_PERMISSIONS =
         PosixFilePermissions.fromString("rwxr-xr-x");
-    
-    private static final FileAttribute<?> DIRECTORY_ATTRIBUTE = 
+
+    private static final FileAttribute<?> DIRECTORY_ATTRIBUTE =
         PosixFilePermissions.asFileAttribute(DIRECTORY_PERMISSIONS);
-    
+
     /**
      * A flag indicating the default behavior on whether a input given as a ZIP archive
      * should be unpacked into our input directory.
      */
     private static final boolean UNPACK_ZIP_ARCHIVE = true;
-    
+
     /**
      * A set of file extensions to be recognized as ZIP archives
      */
     private static final List<String> ZIP_FILE_EXTENSIONS = Arrays.asList("zip", "z", "ZIP", "Z");
-    
+
     /**
      * Check if a given path matches one expected for a ZIP archive
      */
@@ -83,7 +83,7 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
         return ZIP_FILE_EXTENSIONS.contains(
             StringUtils.getFilenameExtension(path.getFileName().toString()));
     }
-    
+
     /**
      * Describe a configuration entry.
      */
@@ -91,10 +91,10 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
     {
         /** Path (relative to working directory) where this configuration should be placed */
         private final Path path;
-        
+
         /** The source for this configuration */
         private final Object source;
-        
+
         /** The desired configuration format for which configuration should be generated */
         private final EnumConfigurationFormat format;
 
@@ -104,42 +104,42 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
             this.source = source;
             this.format = format;
         }
-        
+
         public EnumConfigurationFormat format()
         {
             return format;
         }
-        
+
         public Object source()
         {
             return source;
         }
-        
+
         public Path path()
         {
             return path;
         }
     }
-    
+
     /**
      * A builder for the enclosing class
      */
-    public static class Builder 
+    public static class Builder
     {
         private ConfigurationGeneratorService configurationGeneratorService;
-        
+
         private Path workDir;
-        
+
         private List<Path> input = Collections.emptyList();
-        
+
         private EnumDataFormat inputFormat;
-        
+
         private Map<String, ConfigurationSpec> config = new LinkedHashMap<>();
-        
+
         private Boolean unzip;
-        
+
         /**
-         * Set the configuration-generator service to be used 
+         * Set the configuration-generator service to be used
          * @param service
          */
         public Builder configurationGeneratorService(ConfigurationGeneratorService service)
@@ -148,7 +148,7 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
             this.configurationGeneratorService = service;
             return this;
         }
-        
+
         /**
          * Set working directory
          * @param workDir
@@ -160,12 +160,12 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
             this.workDir = workDir;
             return this;
         }
-        
+
         /**
          * Specify input files to be copied inside input directory
-         * 
+         *
          * <p>Note: The referenced files will be actually copied during tasklet's execution.
-         * @param paths 
+         * @param paths
          */
         public Builder input(List<Path> paths)
         {
@@ -173,34 +173,34 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
             this.input = new ArrayList<>(paths);
             return this;
         }
-        
+
         /**
          * Specify input files to be copied inside input directory
-         * @param paths 
+         * @param paths
          */
         public Builder input(String ...paths)
         {
             return input(Arrays.stream(paths).map(Paths::get).collect(Collectors.toList()));
         }
-        
+
         /**
          * Specify input files to be copied inside input directory
-         * @param paths 
+         * @param paths
          */
         public Builder input(Path ...paths)
         {
             return input(Arrays.asList(paths));
         }
-        
+
         public Builder inputFormat(EnumDataFormat format)
         {
             this.inputFormat = format;
             return this;
         }
-        
+
         /**
-         * Set whether a single input given as a ZIP archive should be extracted into 
-         * our input directory. If so, all ZIP entries will be extracted discarding their 
+         * Set whether a single input given as a ZIP archive should be extracted into
+         * our input directory. If so, all ZIP entries will be extracted discarding their
          * directory prefix (if any).
          * @param flag
          */
@@ -209,10 +209,10 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
             this.unzip = flag;
             return this;
         }
-        
+
         /**
          * Add a configuration file (of properties) under this working directory.
-         * 
+         *
          * @param key The key for this (part of) configuration.
          * @param name The filename for this configuration (resolved against working directory)
          * @param properties The actual configuration as a map of properties.
@@ -223,21 +223,21 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
             Assert.isTrue(key.matches("[a-zA-Z][-_0-9a-zA-Z]*"), "The key contains invalid characters");
             Assert.isTrue(!StringUtils.isEmpty(name), "A name is required for a configuration");
             Assert.notNull(properties, "A non-null map of properties is required");
-                        
+
             Path namePath = Paths.get(name);
             Assert.isTrue(namePath.getNameCount() == 1, "The name cannot be nested in directories");
-            
+
             config.put(key, new ConfigurationSpec(namePath, properties, EnumConfigurationFormat.PROPERTIES));
             return this;
         }
-        
+
         /**
          * Add a tool-specific configuration file under this working directory.
-         * 
+         *
          * @param key The key for this (part of) configuration.
          * @param name The filename for this configuration (resolved against working directory).
          * @param source The actual configuration object from which configuration will be derived
-         * @param configFormat The desired configuration format 
+         * @param configFormat The desired configuration format
          */
         public Builder config(
             String key, String name, ToolConfiguration source, EnumConfigurationFormat configFormat)
@@ -247,75 +247,75 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
             Assert.isTrue(!StringUtils.isEmpty(name), "A name is required for a configuration");
             Assert.notNull(source, "A non-null configuration object is required");
             Assert.notNull(configFormat, "A non-null configuration format is required");
-            
+
             Path namePath = Paths.get(name);
             Assert.isTrue(namePath.getNameCount() == 1, "The name cannot be nested in directories");
-            
+
             config.put(key, new ConfigurationSpec(namePath, source, configFormat));
             return this;
         }
-        
+
         public PrepareWorkingDirectoryTasklet build()
         {
-            Assert.state(configurationGeneratorService != null, 
+            Assert.state(configurationGeneratorService != null,
                 "A configuration-generator service is needed to generate textual representation " +
                 "for several tool-specific configuration sources");
             Assert.state(workDir != null, "A working directory is required");
-            
+
             PrepareWorkingDirectoryTasklet tasklet = new PrepareWorkingDirectoryTasklet(
                 workDir, input, config, configurationGeneratorService);
-            
+
             if (inputFormat != null)
                 tasklet.setInputFormat(inputFormat);
-            
+
             if (unzip != null)
                 tasklet.setUnzip(unzip);
-            
+
             return tasklet;
         }
     }
-    
+
     public static Builder builder()
     {
         return new Builder();
     }
-    
+
     /**
      * The collection of keys used inside our execution context
      */
     public static class Keys
     {
         public static final String WORK_DIR = "workDir";
-        
+
         public static final String INPUT_DIR = "inputDir";
-       
+
         public static final String INPUT_FILES = "inputFiles";
-        
+
         public static final String INPUT_FORMAT = "inputFormat";
-       
+
         public static final String OUTPUT_DIR = "outputDir";
-        
-        public static final String CONFIG_BY_NAME = "configByName";
+
+        public static final String CONFIG_FILE_BY_NAME = "configFileByName";
     }
-    
+
     private final ConfigurationGeneratorService configurationGeneratorService;
-    
+
     private final Path workDir;
-    
+
     private final Path inputDir;
-    
+
     private final Path outputDir;
-    
+
     private final List<Path> input;
-    
+
     private final Map<String, ConfigurationSpec> config;
-    
+
     private EnumDataFormat inputFormat;
-    
+
     private FileAttribute<?> directoryAttribute = DIRECTORY_ATTRIBUTE;
-    
+
     private boolean unzip = UNPACK_ZIP_ARCHIVE;
-    
+
     private PrepareWorkingDirectoryTasklet(
         Path workDir, List<Path> input, Map<String, ConfigurationSpec> config,
         ConfigurationGeneratorService configurationGeneratorService)
@@ -327,58 +327,58 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
         this.inputDir = this.workDir.resolve("input");
         this.outputDir = this.workDir.resolve("output");
     }
-    
+
     private void setInputFormat(EnumDataFormat format)
     {
         this.inputFormat = format;
     }
-    
+
     private void setUnzip(boolean flag)
     {
         this.unzip = flag;
     }
-    
+
     public Path workDir()
     {
         return inputDir;
     }
-    
+
     public Path inputDir()
     {
         return inputDir;
     }
-    
+
     public Path outputDir()
     {
         return outputDir;
     }
-    
+
     public EnumDataFormat inputFormat()
     {
         return inputFormat;
     }
-    
+
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext context)
         throws Exception
     {
         StepExecution stepExecution = context.getStepContext().getStepExecution();
         ExecutionContext executionContext = stepExecution.getExecutionContext();
-        
+
         //
         // Create working directory hierarchy
         //
-        
+
         for (Path p: Arrays.asList(workDir, inputDir, outputDir)) {
             try {
                 Files.createDirectory(p, directoryAttribute);
             } catch (FileAlreadyExistsException ex) {}
         }
-        
+
         //
         // Put (extract or link) each input into our input directory
         //
-        
+
         List<String> inputFiles = new ArrayList<>();
         if (!input.isEmpty()) {
             if (unzip && (input.size() == 1) && matchesNameOfZipArchive(input.get(0))) {
@@ -403,42 +403,42 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
                 }
             }
         }
-       
+
         //
         // Generate configuration files inside working directory
         //
-        
+
         for (ConfigurationSpec u: config.values()) {
-            String configData = 
+            String configData =
                 configurationGeneratorService.generate(u.source(), u.format());
             Files.write(
                 workDir.resolve(u.path()),
                 configData.getBytes(StandardCharsets.UTF_8),
                 StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
         }
-        
+
         //
         // Update execution context
         //
-        
+
         executionContext.putString(Keys.WORK_DIR, workDir.toString());
         executionContext.putString(Keys.INPUT_DIR, inputDir.toString());
         executionContext.putString(Keys.INPUT_FORMAT, inputFormat.name());
         executionContext.put(Keys.INPUT_FILES, inputFiles);
-        
+
         executionContext.putString(Keys.OUTPUT_DIR, outputDir.toString());
-        
-        Map<String,String> configByName = new LinkedHashMap<>();
+
+        Map<String,String> configFileByName = new LinkedHashMap<>();
         for (Map.Entry<String, ConfigurationSpec> p: config.entrySet())
-            configByName.put(p.getKey(), p.getValue().path().toString());
-        executionContext.put(Keys.CONFIG_BY_NAME, configByName);
+            configFileByName.put(p.getKey(), p.getValue().path().toString());
+        executionContext.put(Keys.CONFIG_FILE_BY_NAME, configFileByName);
 
         return RepeatStatus.FINISHED;
     }
-    
+
     /**
      * Extract a named ZIP entry inside our input directory.
-     * 
+     *
      * @param zipfile An opened ZipFile handle
      * @param entryName The entry name
      * @param name The name of the extracted file (relative to input directory)
@@ -452,36 +452,36 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
             Files.copy(in, inputDir.resolve(name));
         }
     }
-    
+
     /**
      * Copy given input file to our input directory.
-     * 
+     *
      * <p>
-     * A shallow hard link will be created, i.e. there is no attempt to create a nested structure 
+     * A shallow hard link will be created, i.e. there is no attempt to create a nested structure
      * inside input directory. If a hard link cannot be created (because of file-system limitations),
-     * we fallback to a plain copying. 
-     * 
+     * we fallback to a plain copying.
+     *
      * @param source The input path to link to
      * @param filename The link name (relative to input directory)
-     * @throws IOException 
+     * @throws IOException
      */
-    private void copyToInputDirectory(Path source, String filename) 
+    private void copyToInputDirectory(Path source, String filename)
         throws IOException
     {
         Path destination = inputDir.resolve(filename);
         Files.deleteIfExists(destination);
-        
+
         // Try to link
-        
+
         Path link = null;
         try {
             link = Files.createLink(destination, source);
         } catch (FileSystemException e) {
             link = null;
         }
-        
+
         // If no link was created, fallback to copying
-        
+
         if (link == null) {
             Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
         }

@@ -127,7 +127,6 @@ public class LimesConfiguration extends AbstractToolConfiguration
         }
     }
     
-    
     @JsonPropertyOrder({ 
         "namespace", "NAMESPACE",
         "label", "LABEL"
@@ -214,13 +213,15 @@ public class LimesConfiguration extends AbstractToolConfiguration
     {
         static final long serialVersionUID = 1L;
         
+        static final String BLANK_FILTER = "";
+        
         String id;
         
         String varName;
         
         Integer pageSize = -1;
         
-        List<String> filterExprs = Collections.emptyList();
+        List<String> filterExprs = Collections.singletonList(BLANK_FILTER);
         
         List<String> propertyExprs = Collections.emptyList();
         
@@ -241,16 +242,21 @@ public class LimesConfiguration extends AbstractToolConfiguration
             Assert.isTrue(propertyExprs.stream().noneMatch(StringUtils::isEmpty), 
                 "A property expession cannot be empty");
             Assert.notNull(dataFormat, "A data format is required");
+            
             this.id = id;
             this.varName = varName;
             this.propertyExprs = Collections.unmodifiableList(propertyExprs);
-            this.filterExprs = filterExprs;
             this.dataFormat = dataFormat;
+            
+            // Note: filter expressions need a somewhat special care because Limes expects
+            // a single blank filter when actually no filters apply (see DTD declaration) 
+            if (filterExprs != null && !filterExprs.isEmpty())
+                this.filterExprs = Collections.unmodifiableList(filterExprs);
         }
         
         InputSpec(String id, String varName, List<String> propertyExprs, EnumDataFormat dataFormat)
         {
-            this(id, varName, propertyExprs, Collections.emptyList(), dataFormat);
+            this(id, varName, propertyExprs, null, dataFormat);
         }
     }
     
@@ -279,25 +285,19 @@ public class LimesConfiguration extends AbstractToolConfiguration
         
         Input(
             String id, 
-            Path path, 
+            String path, 
             String varName, 
             List<String> propertyExprs,
             List<String> filterExprs,
             EnumDataFormat dataFormat) 
         {
             this.spec = new InputSpec(id, varName, propertyExprs, filterExprs, dataFormat);
-            Assert.isTrue(path != null && path.isAbsolute(), "Expected an absolute path");
-            this.path = path.toString();
-        }
-        
-        Input(Path path, InputSpec spec)
-        {
-            this(spec.id, path, spec.varName, spec.propertyExprs, spec.filterExprs, spec.dataFormat);
+            this.path = path;
         }
         
         Input(String path, InputSpec spec)
         {
-            this(spec.id, Paths.get(path), spec.varName, spec.propertyExprs, spec.filterExprs, spec.dataFormat);
+            this(spec.id, path, spec.varName, spec.propertyExprs, spec.filterExprs, spec.dataFormat);
         }
         
         @JsonProperty("endpoint")
@@ -310,9 +310,9 @@ public class LimesConfiguration extends AbstractToolConfiguration
         
         @JsonProperty("endpoint")
         @JacksonXmlProperty(localName = "ENDPOINT")
-        public void setPath(String endpoint)
+        public void setPath(String path)
         {
-            this.path = endpoint;
+            this.path = path;
         }
 
         @JsonProperty("id")
@@ -418,6 +418,7 @@ public class LimesConfiguration extends AbstractToolConfiguration
          * Check that the given endpoint is given as an absolute path. 
          * Note: This is a limitation applied by SLIPO workbench (not the tool itself).
          */
+        @JsonIgnore
         @AssertTrue
         boolean isEndpointGivenAsAbsolutePath()
         {
@@ -446,12 +447,25 @@ public class LimesConfiguration extends AbstractToolConfiguration
         
         Output(double threshold, String path, String relation) 
         {
-            Assert.isTrue(threshold > 0 && threshold < 1, "A threshold is expected as a number in (0, 1)");
-            Assert.isTrue(!StringUtils.isEmpty(path), "Expected a non-empty path");
-            Assert.isTrue(!StringUtils.isEmpty(relation), "Expected a non-empty relation");
             this.threshold = threshold;
             this.path = path;
             this.relation = relation;
+        }
+        
+        Output(double threshold, Path path, String relation)
+        {
+            this(threshold, path.toString(), relation);
+        }
+        
+        Output withAbsolutePath(String dir)
+        {
+            if (Paths.get(path).isAbsolute()) {
+                return this;
+            } else {
+                final Path dirPath = Paths.get(dir);
+                Assert.isTrue(dirPath.isAbsolute(), "Expected an absolute path");
+                return new Output(threshold, dirPath.resolve(path).toString(), relation);
+            }
         }
        
         @JsonProperty("threshold")
@@ -498,12 +512,6 @@ public class LimesConfiguration extends AbstractToolConfiguration
         public void setRelation(String relation)
         {
             this.relation = relation;
-        }
-        
-        @AssertTrue
-        boolean isAbsolutePath()
-        {
-            return !StringUtils.isEmpty(path) && Paths.get(path).isAbsolute();
         }
     }
     
@@ -642,19 +650,27 @@ public class LimesConfiguration extends AbstractToolConfiguration
     {
         Assert.notNull(source, "Expected a non-null source input");
         this.sourceSpec = source.spec;
-        this.input.set(SOURCE, source.path);
         this.inputFormat = source.spec.dataFormat;
+        
+        if (!StringUtils.isEmpty(source.path))
+            this.input.set(SOURCE, source.path);
     }
     
     @JsonIgnore
-    public void setSource(String id, Path path, String varName, String propertyExpr, EnumDataFormat dataFormat)
+    public EnumDataFormat getInputFormat()
+    {
+        return this.inputFormat;
+    }
+    
+    @JsonIgnore
+    public void setSource(String id, String path, String varName, String propertyExpr, EnumDataFormat dataFormat)
     {
        this.sourceSpec = new InputSpec(id, varName, Collections.singletonList(propertyExpr), dataFormat);
-       this.input.set(SOURCE, path.toString());
+       this.input.set(SOURCE, path);
     }
     
     @JsonIgnore
-    public void setSource(String id, Path path, String varName, String propertyExpr)
+    public void setSource(String id, String path, String varName, String propertyExpr)
     {
         setSource(id, path, varName, propertyExpr, EnumDataFormat.N_TRIPLES);
     }
@@ -675,45 +691,35 @@ public class LimesConfiguration extends AbstractToolConfiguration
     {
         Assert.notNull(target, "Expected a non-null source input");
         this.targetSpec = target.spec;
-        this.input.set(TARGET, target.path);
+        
+        if (!StringUtils.isEmpty(target.path))
+            this.input.set(TARGET, target.path);
     }
     
     @JsonIgnore
-    public void setTarget(String id, Path path, String varName, String propertyExpr, EnumDataFormat dataFormat)
+    public void setTarget(String id, String path, String varName, String propertyExpr, EnumDataFormat dataFormat)
     {
         this.targetSpec = new InputSpec(id, varName, Collections.singletonList(propertyExpr), dataFormat);
-        this.input.set(TARGET, path.toString());
+        this.input.set(TARGET, path);
     }
     
     @JsonIgnore
-    public void setTarget(String id, Path path, String varName, String propertyExpr)
+    public void setTarget(String id, String path, String varName, String propertyExpr)
     {
         setTarget(id, path, varName, propertyExpr, EnumDataFormat.N_TRIPLES);
-    }
-    
-    @JsonIgnore
-    public void setSourcePath(Path path)
-    {
-        this.input.set(SOURCE, path.toString());
     }
     
     @JsonProperty("input.source")
     @JsonSetter
     public void setSourcePath(String path)
     {
-        setSourcePath(Paths.get(path));
+        this.input.set(SOURCE, path);
     }
     
     @JsonIgnore
     public String getSourcePath()
     {
         return this.input.get(SOURCE);
-    }
-    
-    @JsonIgnore
-    public void setTargetPath(Path path)
-    {
-        this.input.set(TARGET, path.toString());
     }
     
     @JsonIgnore
@@ -726,7 +732,7 @@ public class LimesConfiguration extends AbstractToolConfiguration
     @JsonSetter
     public void setTargetPath(String path)
     {
-        setTargetPath(Paths.get(path));
+        this.input.set(TARGET, path);
     }
     
     @JsonProperty("input")
@@ -736,12 +742,10 @@ public class LimesConfiguration extends AbstractToolConfiguration
         Assert.notNull(inputPaths, "Expected a non-empty map of input paths");
         
         if (inputPaths.containsKey("source")) {
-            Path sourcePath = Paths.get(inputPaths.get("source"));
-            setSourcePath(sourcePath);
+            setSourcePath(inputPaths.get("source"));
         }
         if (inputPaths.containsKey("target")) {
-            Path targetPath = Paths.get(inputPaths.get("target"));
-            setTargetPath(targetPath);
+            setTargetPath(inputPaths.get("target"));
         }
     }
 
@@ -780,22 +784,20 @@ public class LimesConfiguration extends AbstractToolConfiguration
         return outputDir;
     }
     
-    @JsonIgnore
+    @JsonProperty("outputDir")
+    @JsonSetter
+    @JsonInclude(Include.NON_NULL)
     public void setOutputDir(String dir)
     {
         Assert.isTrue(!StringUtils.isEmpty(dir), "Expected a non-empty directory path");
-        Path dirPath = Paths.get(dir);
-        this.outputDir = dirPath.toString();
-        
-        // If outputs are specified as relative paths, resolve against output directory
-        
-        if (this.accepted != null) {
-           this.accepted.path = dirPath.resolve(this.accepted.path).toString();
-        }
-        
-        if (this.review != null) {
-            this.review.path = dirPath.resolve(this.review.path).toString();
-        }
+        this.outputDir = Paths.get(dir).toString();
+    }
+    
+    @JsonIgnore
+    @AssertTrue
+    public boolean isOutputDirAbsolute()
+    {
+        return outputDir == null || Paths.get(outputDir).isAbsolute();
     }
     
     @JsonIgnore
@@ -817,7 +819,7 @@ public class LimesConfiguration extends AbstractToolConfiguration
     @Valid
     public Output getAccepted()
     {
-        return accepted;
+        return outputDir == null? accepted : accepted.withAbsolutePath(outputDir);
     }
     
     @JsonProperty("acceptance")
@@ -830,15 +832,15 @@ public class LimesConfiguration extends AbstractToolConfiguration
     }
     
     @JsonIgnore
-    public void setAccepted(double threshold, Path path, String relation)
+    public void setAccepted(double threshold, String path, String relation)
     {
         if (outputDir != null)
-            path = Paths.get(outputDir).resolve(path);
-        this.accepted = new Output(threshold, path.toString(), relation);
+            path = Paths.get(outputDir).resolve(path).toString();
+        this.accepted = new Output(threshold, path, relation);
     }
     
     @JsonIgnore
-    public void setAccepted(double threshold, Path path)
+    public void setAccepted(double threshold, String path)
     {
         setAccepted(threshold, path, Output.DEFAULT_RELATION);
     }
@@ -849,7 +851,7 @@ public class LimesConfiguration extends AbstractToolConfiguration
     @Valid
     public Output getReview()
     {
-        return review;
+        return outputDir == null? review : review.withAbsolutePath(outputDir);
     }
     
     @JsonProperty("review")
@@ -862,15 +864,15 @@ public class LimesConfiguration extends AbstractToolConfiguration
     }
     
     @JsonIgnore
-    public void setReview(double threshold, Path path, String relation)
+    public void setReview(double threshold, String path, String relation)
     {
         if (outputDir != null)
-            path = Paths.get(outputDir).resolve(path);
-        this.review = new Output(threshold, path.toString(), relation);
+            path = Paths.get(outputDir).resolve(path).toString();
+        this.review = new Output(threshold, path, relation);
     }
     
     @JsonIgnore
-    public void setReview(double threshold, Path path)
+    public void setReview(double threshold, String path)
     {
         setReview(threshold, path, Output.DEFAULT_RELATION);
     }

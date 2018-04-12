@@ -50,7 +50,7 @@ public interface PropertiesConverterService
      * @param valueType The target type
      * @throws ConversionFailedException
      */
-    <T extends Serializable> T propertiesToValue(Map<String, Object> map, Class<T> valueType)
+    <T extends Serializable> T propertiesToValue(Map<String, ?> map, Class<T> valueType)
         throws ConversionFailedException;
 
     /**

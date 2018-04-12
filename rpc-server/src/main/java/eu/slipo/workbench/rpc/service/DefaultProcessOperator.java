@@ -316,7 +316,7 @@ public class DefaultProcessOperator implements ProcessOperator
             }
 
             // Todo Add configuration file(s) as file record(s) of this step
-            // Check if jobExecution contains a `configByName` entry. Resolve against `workDir`.
+            // Check if jobExecution contains a `configFileByName` context entry. Resolve against `workDir`.
 
             // Update record in repository
 

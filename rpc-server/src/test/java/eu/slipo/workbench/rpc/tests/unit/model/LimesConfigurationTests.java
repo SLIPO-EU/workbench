@@ -67,18 +67,18 @@ public class LimesConfigurationTests
             config.setMetric("trigrams(a.level, b.level)");
 
             config.setSource("a",
-                Paths.get("/tmp/limes/input/a.nt"),
+                "/tmp/limes/input/a.nt",
                 "?x",
                 "slipo:name/slipo:nameType RENAME label");
             config.setTarget("b",
-                Paths.get("/tmp/limes/input/b.nt"),
+                "/tmp/limes/input/b.nt",
                 "?y",
                 "slipo:name/slipo:nameType RENAME label");
 
             config.setOutputDir("/tmp/limes/output");
             config.setOutputFormatFromString("N-TRIPLES");
-            config.setAccepted(0.98, Paths.get("accepted.nt"));
-            config.setReview(0.95, Paths.get("review.nt"));
+            config.setAccepted(0.98, "accepted.nt");
+            config.setReview(0.95, "review.nt");
 
             return config;
         }

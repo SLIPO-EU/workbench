@@ -29,7 +29,8 @@ public class ReadConfigurationTasklet <T extends Serializable> implements Taskle
 
     private Validator validator;
 
-    public ReadConfigurationTasklet(Class<T> targetType, PropertiesConverterService converter)
+    public ReadConfigurationTasklet(
+        Class<T> targetType, PropertiesConverterService converter, Validator validator)
     {
         Assert.notNull(targetType,
             "The class descriptor for target configuration is required");
@@ -37,14 +38,12 @@ public class ReadConfigurationTasklet <T extends Serializable> implements Taskle
             "A properties converter is required (to read job parameters)");
         this.targetType = targetType;
         this.propertiesConverter = converter;
+        this.validator = validator;
     }
 
-    /**
-     * Provide a bean validator to validate target configuration
-     */
-    public void setValidator(Validator validator)
+    public ReadConfigurationTasklet(Class<T> targetType, PropertiesConverterService converter)
     {
-        this.validator = validator;
+        this(targetType, converter, null);
     }
 
     @Override

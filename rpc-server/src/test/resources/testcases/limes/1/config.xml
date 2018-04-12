@@ -11,7 +11,7 @@
 	</PREFIX>	
 	<SOURCE>
 		<ID>a</ID>
-		<ENDPOINT>input/a.nt</ENDPOINT>
+		<ENDPOINT>/var/local/limes/input/a.nt</ENDPOINT>
 		<VAR>?x</VAR>
 		<PAGESIZE>-1</PAGESIZE>
 		<RESTRICTION></RESTRICTION>
@@ -20,7 +20,7 @@
 	</SOURCE>
 	<TARGET>
 		<ID>b</ID>
-		<ENDPOINT>input/b.nt</ENDPOINT>
+		<ENDPOINT>/var/local/limes/input/b.nt</ENDPOINT>
 		<VAR>?y</VAR>
 		<PAGESIZE>-1</PAGESIZE>
 		<RESTRICTION></RESTRICTION>
@@ -30,12 +30,12 @@
 	<METRIC>trigrams(x.label, y.label)</METRIC>	
 	<ACCEPTANCE>
 		<THRESHOLD>0.9999</THRESHOLD>
-		<FILE>output/accepted.nt</FILE>
+		<FILE>/var/local/limes/output/accepted.nt</FILE>
 		<RELATION>owl:sameAs</RELATION>
 	</ACCEPTANCE>
 	<REVIEW>
 		<THRESHOLD>0.98</THRESHOLD>
-		<FILE>output/review.nt</FILE>
+		<FILE>/var/local/limes/output/review.nt</FILE>
 		<RELATION>owl:sameAs</RELATION>
 	</REVIEW>
 	<EXECUTION>
@@ -43,5 +43,5 @@
 		<PLANNER>default</PLANNER>
 		<ENGINE>default</ENGINE>
 	</EXECUTION>
-	<OUTPUT>NT</OUTPUT>
+	<OUTPUT>N-TRIPLES</OUTPUT>
 </LIMES>

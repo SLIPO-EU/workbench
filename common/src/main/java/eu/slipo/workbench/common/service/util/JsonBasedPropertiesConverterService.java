@@ -349,7 +349,7 @@ public class JsonBasedPropertiesConverterService implements PropertiesConverterS
     }
 
     @Override
-    public <T extends Serializable> T propertiesToValue(Map<String, Object> map, Class<T> valueType)
+    public <T extends Serializable> T propertiesToValue(Map<String, ?> map, Class<T> valueType)
         throws ConversionFailedException
     {
         Properties props = new Properties();
