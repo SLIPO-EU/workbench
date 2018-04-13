@@ -1,12 +1,18 @@
 package eu.slipo.workbench.common.model.tool;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import eu.slipo.workbench.common.model.poi.EnumTool;
+
 /**
  * Configuration for DEER
  */
-@SuppressWarnings("serial")
-public class DeerConfiguration extends AbstractToolConfiguration {
+public class DeerConfiguration extends EnrichConfiguration 
+{
+    private static final long serialVersionUID = 1L;
 
-    public DeerConfiguration() {
+    public DeerConfiguration() 
+    {
     }
 
     // TODO: Remove
@@ -20,4 +26,10 @@ public class DeerConfiguration extends AbstractToolConfiguration {
         this.temp = temp;
     }
 
+    @JsonIgnore
+    @Override
+    public EnumTool getTool()
+    {
+        return EnumTool.DEER;
+    }
 }

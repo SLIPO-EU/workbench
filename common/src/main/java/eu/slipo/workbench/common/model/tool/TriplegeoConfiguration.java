@@ -19,17 +19,21 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty.Access;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumOntology;
+import eu.slipo.workbench.common.model.poi.EnumTool;
 
 
 /**
  * Configuration for the Triplegeo tool
  */
-public class TriplegeoConfiguration extends AbstractToolConfiguration
+public class TriplegeoConfiguration extends TransformConfiguration
 {
     private static final long serialVersionUID = 1L;
 
@@ -232,6 +236,13 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
         return (TriplegeoConfiguration) super.cloneAsBean();
     }
 
+    @JsonIgnore
+    @Override
+    public EnumTool getTool()
+    {
+        return EnumTool.TRIPLEGEO;
+    }
+    
     //
     // Helpers
     //
@@ -681,5 +692,4 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
     {
         this.quote = quote;
     }
-
 }

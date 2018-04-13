@@ -38,4 +38,13 @@ public abstract class AbstractToolConfiguration extends ToolConfigurationSupport
      */
     protected String tmpDir;
     
+    public EnumDataFormat getOutputFormat()
+    {
+        return outputFormat;
+    }
+    
+    public EnumDataFormat getInputFormat()
+    {
+        return inputFormat;
+    }
 }

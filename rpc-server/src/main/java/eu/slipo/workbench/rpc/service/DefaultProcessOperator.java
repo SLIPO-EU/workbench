@@ -60,6 +60,7 @@ import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
 import eu.slipo.workbench.common.model.resource.ResourceRecord;
 import eu.slipo.workbench.common.model.resource.UploadDataSource;
 import eu.slipo.workbench.common.model.resource.UrlDataSource;
+import eu.slipo.workbench.common.model.tool.LimesConfiguration;
 import eu.slipo.workbench.common.model.tool.MetadataRegistrationConfiguration;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
@@ -128,6 +129,10 @@ public class DefaultProcessOperator implements ProcessOperator
     @Autowired
     @Qualifier("triplegeo.flow")
     private Flow triplegeoFlow;
+
+    @Autowired
+    @Qualifier("limes.flow")
+    private Flow limesFlow;
 
     @Autowired
     @Qualifier("registerResource.flow")
@@ -606,6 +611,15 @@ public class DefaultProcessOperator implements ProcessOperator
                 }
                 break;
             case LIMES:
+                {
+                    Assert.state(inputNames.size() == 2, "A interlinking step expects a pair of inputs");
+                    LimesConfiguration configuration = (LimesConfiguration) step.configuration();
+                    jobDefinitionBuilder
+                        .flow(limesFlow)
+                        .parameters(propertiesConverter.valueToProperties(configuration))
+                        .output("accepted.nt", "review.nt");
+                }
+                break;
             case DEER:
             case FAGI:
                 throw new NotImplementedException("Α Batch flow for a tool of type [" + tool + "]");

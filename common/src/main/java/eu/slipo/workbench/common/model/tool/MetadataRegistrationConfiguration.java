@@ -1,7 +1,9 @@
 package eu.slipo.workbench.common.model.tool;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
 
@@ -59,5 +61,12 @@ public class MetadataRegistrationConfiguration implements ToolConfiguration
     public void setTarget(ResourceIdentifier target)
     {
         this.target = target;
+    }
+    
+    @JsonIgnore
+    @Override
+    public EnumTool getTool()
+    {
+        return EnumTool.REGISTER;
     }
 }

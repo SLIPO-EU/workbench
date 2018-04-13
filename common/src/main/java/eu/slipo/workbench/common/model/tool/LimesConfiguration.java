@@ -38,6 +38,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
+import eu.slipo.workbench.common.model.poi.EnumTool;
 
 /**
  * Configuration for LIMES
@@ -54,7 +55,7 @@ import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 })
 @JacksonXmlRootElement(localName = "LIMES")
 @eu.slipo.workbench.common.model.tool.serialization.DtdDeclaration(name = "LIMES", href = "limes.dtd")
-public class LimesConfiguration extends AbstractToolConfiguration 
+public class LimesConfiguration extends InterlinkConfiguration 
 {
     private static final long serialVersionUID = 1L;
 
@@ -605,6 +606,13 @@ public class LimesConfiguration extends AbstractToolConfiguration
         this.prefixes = new TreeSet<>();
         this.prefixes.add(new Prefix("owl", "http://www.w3.org/2002/07/owl#"));
         this.prefixes.add(new Prefix("slipo", "http://slipo.eu/def#"));
+    }
+    
+    @JsonIgnore
+    @Override
+    public EnumTool getTool()
+    {
+        return EnumTool.LIMES;
     }
     
     @JsonProperty("prefixes")

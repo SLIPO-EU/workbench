@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -22,9 +21,10 @@ import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.resource.DataSource;
 import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
+import eu.slipo.workbench.common.model.tool.InterlinkConfiguration;
 import eu.slipo.workbench.common.model.tool.MetadataRegistrationConfiguration;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
-import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
+import eu.slipo.workbench.common.model.tool.TransformConfiguration;
 
 /**
  * A builder for a {@link ProcessDefinition}
@@ -130,7 +130,15 @@ public class ProcessDefinitionBuilder
         public BasicStepBuilder configuration(ToolConfiguration configuration)
         {
             Assert.notNull(configuration, "Expected a non-null configuration");
-            this.configuration = configuration;
+            
+            try {
+                // Make a defensive copy of the configuration bean
+                // Todo Maybe clone using serialize + deserialize operations?
+                this.configuration = (ToolConfiguration) BeanUtils.cloneBean(configuration);
+            } catch (ReflectiveOperationException ex) {
+                throw new IllegalStateException("Cannot clone the configuration bean", ex);
+            }
+            
             return this;
         }
 
@@ -211,6 +219,19 @@ public class ProcessDefinitionBuilder
             return this;
         }
         
+        /**
+         * @see {@link Step.BasicStepBuilder#source(List)}
+         * @param s
+         */
+        public BasicStepBuilder source(DataSource s1, DataSource s2)
+        {
+            Assert.notNull(s1, "Expected a non-null data source");
+            Assert.notNull(s2, "Expected a non-null data source");
+            this.sources.add(s1);
+            this.sources.add(s2);
+            return this;
+        }
+        
         public BasicStepBuilder outputFormat(EnumDataFormat outputFormat)
         {
             this.outputFormat = outputFormat;
@@ -225,6 +246,8 @@ public class ProcessDefinitionBuilder
             Assert.state(operation == EnumOperation.REGISTER || 
                     (this.outputKey != null && this.outputFormat != null),
                 "An output key and format is required for a non-registration step");
+            Assert.state(this.tool.supportsOperation(operation), 
+                "The operation is not supported by given tool");
             Assert.state(!this.inputKeys.isEmpty() || !this.sources.isEmpty(),
                 "The list of data sources and list of input keys cannot be both empty!");
 
@@ -240,14 +263,8 @@ public class ProcessDefinitionBuilder
             step.inputKeys = new ArrayList<>(this.inputKeys);
             step.outputKey = this.outputKey;
             step.outputFormat = this.outputFormat;
-
-            try {
-                // Make a defensive copy of the configuration bean
-                step.configuration = (ToolConfiguration) BeanUtils.cloneBean(configuration);
-            } catch (ReflectiveOperationException ex) {
-                throw new IllegalStateException("Cannot clone the configuration bean", ex);
-            }
-
+            step.configuration = this.configuration;
+           
             return step;
         }
     }
@@ -293,16 +310,16 @@ public class ProcessDefinitionBuilder
             return this;
         }
         
-        public TransformStepBuilder configuration(TriplegeoConfiguration configuration)
+        public TransformStepBuilder configuration(TransformConfiguration configuration)
         {
             Assert.notNull(configuration, "Expected a non-null configuration");
-            
             final EnumDataFormat format = this.stepBuilder.outputFormat; 
-            Assert.isTrue(format == null || configuration.getOutputFormat() == null || 
+            Assert.isTrue(this.stepBuilder.outputFormat == null || configuration.getOutputFormat() == null || 
                 (format == configuration.getOutputFormat()), 
                 "The output format must agree with the one supplied at step configuration");
             
             this.stepBuilder.configuration(configuration);
+            this.stepBuilder.tool(configuration.getTool());
             this.stepBuilder.outputFormat(configuration.getOutputFormat());
             return this;
         }
@@ -315,14 +332,106 @@ public class ProcessDefinitionBuilder
         
         public TransformStepBuilder outputFormat(EnumDataFormat format)
         {
-            final TriplegeoConfiguration configuration = 
-                (TriplegeoConfiguration) this.stepBuilder.configuration;
+            final TransformConfiguration configuration = 
+                (TransformConfiguration) this.stepBuilder.configuration;
             Assert.isTrue(configuration == null || format == configuration.getOutputFormat(), 
-                "The output format is different from the one supplied to triplegeo configuration");
+                "The output format is different from the one supplied to configuration");
             this.stepBuilder.outputFormat(format);
             return this;
         }
         
+        @Override
+        protected Step build()
+        {
+            return this.stepBuilder.build();
+        }
+    }
+    
+    public static class InterlinkStepBuilder extends StepBuilder
+    {
+        private final BasicStepBuilder stepBuilder;
+
+        public InterlinkStepBuilder(int key, String name)
+        {
+            this.stepBuilder = new BasicStepBuilder(key, name, InterlinkStep::new)
+                .operation(EnumOperation.INTERLINK)
+                .tool(EnumTool.LIMES);
+        }
+        
+        public InterlinkStepBuilder group(int groupNumber)
+        {
+            this.stepBuilder.group(groupNumber);
+            return this;
+        }
+        
+        public InterlinkStepBuilder nodeName(String nodeName)
+        {
+            this.stepBuilder.nodeName(nodeName);
+            return this;
+        }
+        
+        /**
+         * Link 2 data sources
+         * 
+         * @param first A data source
+         * @param second Another data source
+         */
+        public InterlinkStepBuilder link(DataSource first, DataSource second)
+        {
+            Assert.isTrue(
+                this.stepBuilder.sources.isEmpty() && this.stepBuilder.inputKeys.isEmpty(), 
+                "An input pair (either as datasources or as keys) is already specified for this step");
+            this.stepBuilder.source(first, second);
+            return this;
+        }
+        
+        /**
+         * Link 2 inputs (i.e catalog resources or intermediate processing results)
+         * 
+         * @param first The key of the first input
+         * @param second The key of the second input 
+         * @return
+         */
+        public InterlinkStepBuilder link(int first, int second)
+        {
+            Assert.isTrue(
+                this.stepBuilder.sources.isEmpty() && this.stepBuilder.inputKeys.isEmpty(), 
+                "An input pair (either as datasources or as keys) is already specified for this step");
+            this.stepBuilder.input(first, second);
+            return this;
+        }
+        
+        public InterlinkStepBuilder configuration(InterlinkConfiguration configuration)
+        {
+            Assert.notNull(configuration, "Expected a non-null configuration");
+            final EnumDataFormat format = this.stepBuilder.outputFormat; 
+            Assert.isTrue(format == null || configuration.getOutputFormat() == null || 
+                (format == configuration.getOutputFormat()), 
+                "The output format must agree with the one supplied at step configuration");
+            
+            this.stepBuilder.configuration(configuration);
+            this.stepBuilder.tool(configuration.getTool());
+            this.stepBuilder.outputFormat(configuration.getOutputFormat());
+            return this;
+        }
+        
+        public InterlinkStepBuilder outputKey(int outputKey)
+        {
+            this.stepBuilder.outputKey(outputKey);
+            return this;
+        }
+        
+        public InterlinkStepBuilder outputFormat(EnumDataFormat format)
+        {
+            final InterlinkConfiguration configuration = 
+                (InterlinkConfiguration) this.stepBuilder.configuration;
+            Assert.isTrue(configuration == null || format == configuration.getOutputFormat(), 
+                "The output format is different from the one supplied to configuration");
+            this.stepBuilder.outputFormat(format);
+            return this;
+        }
+        
+        @Override
         protected Step build()
         {
             return this.stepBuilder.build();
@@ -337,6 +446,13 @@ public class ProcessDefinitionBuilder
         
         private ResourceIdentifier resourceIdentifier;
         
+        protected RegisterStepBuilder(int key, String name) 
+        {
+            this.stepBuilder = new BasicStepBuilder(key, name, RegisterStep::new)
+                .operation(EnumOperation.REGISTER)
+                .tool(EnumTool.REGISTER);
+        }
+        
         public RegisterStepBuilder group(int groupNumber)
         {
             this.stepBuilder.group(groupNumber);
@@ -347,13 +463,6 @@ public class ProcessDefinitionBuilder
         {
             this.stepBuilder.nodeName(nodeName);
             return this;
-        }
-        
-        protected RegisterStepBuilder(int key, String name) 
-        {
-            this.stepBuilder = new BasicStepBuilder(key, name, RegisterStep::new)
-                .operation(EnumOperation.REGISTER)
-                .tool(EnumTool.REGISTER);
         }
         
         public RegisterStepBuilder resource(int resourceKey)

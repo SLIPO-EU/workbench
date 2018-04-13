@@ -1,12 +1,18 @@
 package eu.slipo.workbench.common.model.tool;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import eu.slipo.workbench.common.model.poi.EnumTool;
+
 /**
  * Configuration for FAGI
  */
-@SuppressWarnings("serial")
-public class FagiConfiguration extends AbstractToolConfiguration {
+public class FagiConfiguration extends FuseConfiguration 
+{
+    private static final long serialVersionUID = 1L;
 
-    public FagiConfiguration() {
+    public FagiConfiguration() 
+    {
     }
 
     // TODO: Remove
@@ -18,5 +24,12 @@ public class FagiConfiguration extends AbstractToolConfiguration {
 
     public void setTemp(String temp) {
         this.temp = temp;
+    }
+    
+    @JsonIgnore
+    @Override
+    public EnumTool getTool()
+    {
+        return EnumTool.FAGI;
     }
 }
