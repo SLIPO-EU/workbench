@@ -130,18 +130,18 @@ public class TriplegeoJobConfiguration
     /**
      * A tasklet that reads job parameters to a configuration bean into execution-context.
      */
-    @Bean("triplegeo.readConfigurationTasklet")
-    public Tasklet readConfigurationTasklet()
+    @Bean("triplegeo.configureTasklet")
+    public Tasklet configureTasklet()
     {
         return new ReadConfigurationTasklet<>(
             TriplegeoConfiguration.class, propertiesConverterService, validator);
     }
 
-    @Bean("triplegeo.readConfigurationStep")
-    public Step readConfigurationStep(
-        @Qualifier("triplegeo.readConfigurationTasklet") Tasklet tasklet)
+    @Bean("triplegeo.configureStep")
+    public Step configureStep(
+        @Qualifier("triplegeo.configureTasklet") Tasklet tasklet)
     {
-        return stepBuilderFactory.get("triplegeo.readConfiguration")
+        return stepBuilderFactory.get("triplegeo.configure")
             .tasklet(tasklet)
             .listener(ExecutionContextPromotionListeners.fromKeys("config"))
             .build();
@@ -295,13 +295,13 @@ public class TriplegeoJobConfiguration
      */
     @Bean("triplegeo.flow")
     public Flow flow(
-        @Qualifier("triplegeo.readConfigurationStep") Step readConfigurationStep,
+        @Qualifier("triplegeo.configureStep") Step configureStep,
         @Qualifier("triplegeo.prepareWorkingDirectoryStep") Step prepareWorkingDirectoryStep,
         @Qualifier("triplegeo.createContainerStep") Step createContainerStep,
         @Qualifier("triplegeo.runContainerStep") Step runContainerStep)
     {
         return new FlowBuilder<Flow>("triplegeo.flow")
-            .start(readConfigurationStep)
+            .start(configureStep)
             .next(prepareWorkingDirectoryStep)
             .next(createContainerStep)
             .next(runContainerStep)

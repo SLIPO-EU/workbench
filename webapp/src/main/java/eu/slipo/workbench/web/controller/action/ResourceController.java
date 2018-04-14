@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import eu.slipo.workbench.common.config.ProcessDefinitionBuilderFactory;
 import eu.slipo.workbench.common.model.ApplicationException;
 import eu.slipo.workbench.common.model.BasicErrorCode;
 import eu.slipo.workbench.common.model.Error;
@@ -94,6 +95,9 @@ public class ResourceController extends BaseController {
 
     @Autowired
     private ProcessService processService;
+    
+    @Autowired
+    private ProcessDefinitionBuilderFactory processDefinitionBuilderFactory;
 
     /**
      * Register a resource from a generic data source (i.e. {@link DataSource})
@@ -116,8 +120,7 @@ public class ResourceController extends BaseController {
             final int resourceKey = 1;
             final String procName = String.format("Resource registration: %s", metadata.getName());
 
-            ProcessDefinition definition = ProcessDefinitionBuilder
-                .create(procName)
+            ProcessDefinition definition = processDefinitionBuilderFactory.create(procName)
                 .description("Resource registration")
                 .transform("transform", stepBuilder -> stepBuilder
                     .group(0)

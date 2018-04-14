@@ -27,6 +27,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import eu.slipo.workbench.common.config.ProcessDefinitionBuilderFactory;
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumOperation;
 import eu.slipo.workbench.common.model.poi.EnumTool;
@@ -65,6 +66,12 @@ public class ProcessDefinitionTests
         public ObjectMapper jsonMapper()
         {
             return new ObjectMapper();
+        }
+
+        @Bean
+        public ProcessDefinitionBuilderFactory processDefinitionBuilderFactory(ObjectMapper objectMapper)
+        {
+            return new ProcessDefinitionBuilderFactory(objectMapper);
         }
 
         @Bean
@@ -133,6 +140,9 @@ public class ProcessDefinitionTests
     private ObjectMapper jsonMapper;
 
     @Autowired
+    private ProcessDefinitionBuilderFactory processDefinitionBuilderFactory;
+
+    @Autowired
     private FileSystemDataSource dataSource1;
 
     @Autowired
@@ -156,7 +166,7 @@ public class ProcessDefinitionTests
         ResourceMetadataCreate metadata2 =
             new ResourceMetadataCreate("out-2", "Another sample output file");
 
-        ProcessDefinition definition1 = ProcessDefinitionBuilder.create("proc-a-1")
+        ProcessDefinition definition1 = processDefinitionBuilderFactory.create("proc-a-1")
             .resource("resource-a-1.1", 101, ResourceIdentifier.of(1L, 5L))
             .resource("resource-a-1.2", 102, ResourceIdentifier.of(3L, 17L))
             .transform("triplegeo-1", b -> b
@@ -335,7 +345,7 @@ public class ProcessDefinitionTests
     public void test3_checkRegisterUndefinedResource1()
     {
         final int resourceKey = 1; // not a catalog resource, neither is an output from another step
-        ProcessDefinition definition = ProcessDefinitionBuilder.create("register-1")
+        ProcessDefinition definition = processDefinitionBuilderFactory.create("register-1")
             .register("register-1", resourceKey, new ResourceMetadataCreate("sample", "Another sample"))
             .build();
         System.err.println(definition);
@@ -347,7 +357,7 @@ public class ProcessDefinitionTests
         final int inputKey1 = 1;
         final int inputKey2 = 2; // not a catalog resource, neither is an output from another step
         final int outputKey = 10;
-        ProcessDefinition definition = ProcessDefinitionBuilder.create("register-1")
+        ProcessDefinition definition = processDefinitionBuilderFactory.create("register-1")
             .resource("res-1", inputKey1, ResourceIdentifier.of(5L, 27L))
             .transform("triplegeo-1", builder -> builder
                 .input(inputKey2)
@@ -371,7 +381,7 @@ public class ProcessDefinitionTests
             new ResourceMetadataCreate("out-3", "Yet another sample output file");
 
 
-        ProcessDefinition definition1 = ProcessDefinitionBuilder.create("proc-a-1")
+        ProcessDefinition definition1 = processDefinitionBuilderFactory.create("proc-a-1")
             .resource("resource-a-1.1", 101, ResourceIdentifier.of(1L, 5L))
             .resource("resource-a-1.2", 102, ResourceIdentifier.of(3L, 17L))
             .resource("resource-a-1.3", 103, ResourceIdentifier.of(8L, 2L))

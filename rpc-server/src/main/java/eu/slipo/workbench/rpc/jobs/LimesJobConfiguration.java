@@ -125,18 +125,18 @@ public class LimesJobConfiguration
     /**
      * A tasklet that reads job parameters to a configuration bean into execution-context.
      */
-    @Bean("limes.readConfigurationTasklet")
-    public Tasklet readConfigurationTasklet()
+    @Bean("limes.configureTasklet")
+    public Tasklet configureTasklet()
     {
         return new ReadConfigurationTasklet<>(
             LimesConfiguration.class, propertiesConverterService, validator);
     }
 
-    @Bean("limes.readConfigurationStep")
-    public Step readConfigurationStep(
-        @Qualifier("limes.readConfigurationTasklet") Tasklet tasklet)
+    @Bean("limes.configureStep")
+    public Step configureStep(
+        @Qualifier("limes.configureTasklet") Tasklet tasklet)
     {
-        return stepBuilderFactory.get("limes.readConfiguration")
+        return stepBuilderFactory.get("limes.configure")
             .tasklet(tasklet)
             .listener(ExecutionContextPromotionListeners.fromKeys("config"))
             .build();
@@ -285,13 +285,13 @@ public class LimesJobConfiguration
      */
     @Bean("limes.flow")
     public Flow flow(
-        @Qualifier("limes.readConfigurationStep") Step readConfigurationStep,
+        @Qualifier("limes.configureStep") Step configureStep,
         @Qualifier("limes.prepareWorkingDirectoryStep") Step prepareWorkingDirectoryStep,
         @Qualifier("limes.createContainerStep") Step createContainerStep,
         @Qualifier("limes.runContainerStep") Step runContainerStep)
     {
         return new FlowBuilder<Flow>("limes.flow")
-            .start(readConfigurationStep)
+            .start(configureStep)
             .next(prepareWorkingDirectoryStep)
             .next(createContainerStep)
             .next(runContainerStep)

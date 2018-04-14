@@ -617,7 +617,7 @@ public class DefaultProcessOperator implements ProcessOperator
                     jobDefinitionBuilder
                         .flow(limesFlow)
                         .parameters(propertiesConverter.valueToProperties(configuration))
-                        .output("accepted.nt", "review.nt");
+                        .output("accepted.nt");
                 }
                 break;
             case DEER:

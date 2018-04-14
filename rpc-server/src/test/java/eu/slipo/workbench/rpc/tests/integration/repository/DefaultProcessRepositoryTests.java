@@ -40,6 +40,7 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 
+import eu.slipo.workbench.common.config.ProcessDefinitionBuilderFactory;
 import eu.slipo.workbench.common.domain.AccountEntity;
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumOntology;
@@ -74,7 +75,10 @@ import eu.slipo.workbench.common.repository.ResourceRepository;
 @EntityScan(basePackageClasses = { eu.slipo.workbench.common.domain._Marker.class })
 @EnableJpaRepositories(basePackageClasses = { eu.slipo.workbench.common.repository._Marker.class })
 @SpringBootTest(
-    classes = { DefaultResourceRepository.class, DefaultProcessRepository.class },
+    classes = {
+        ProcessDefinitionBuilderFactory.class,
+        DefaultResourceRepository.class,
+        DefaultProcessRepository.class },
     webEnvironment = WebEnvironment.NONE
 )
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -108,6 +112,9 @@ public class DefaultProcessRepositoryTests
     public static class Configuration
     {
         @Autowired
+        private ProcessDefinitionBuilderFactory processDefinitionBuilderFactory;
+
+        @Autowired
         private AccountRepository accountRepository;
 
         @Autowired
@@ -133,7 +140,7 @@ public class DefaultProcessRepositoryTests
             final int resourceKey = 1;
             final DataSource source = new FileSystemDataSource("/tmp/1.csv");
 
-            ProcessDefinition definition = ProcessDefinitionBuilder.create("register-1")
+            ProcessDefinition definition = processDefinitionBuilderFactory.create("register-1")
                 .transform("triplegeo", b -> b
                     .group(1)
                     .outputKey(resourceKey)
@@ -162,7 +169,7 @@ public class DefaultProcessRepositoryTests
             final int resourceKey = 1;
             final DataSource source = new FileSystemDataSource("/tmp/1.zip");
 
-            ProcessDefinition definition = ProcessDefinitionBuilder.create("register-2")
+            ProcessDefinition definition = processDefinitionBuilderFactory.create("register-2")
                 .transform("triplegeo", b -> b
                     .group(1)
                     .outputKey(resourceKey)

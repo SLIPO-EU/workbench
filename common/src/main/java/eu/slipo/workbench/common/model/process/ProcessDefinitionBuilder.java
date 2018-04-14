@@ -1,11 +1,13 @@
 package eu.slipo.workbench.common.model.process;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.IntFunction;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -13,6 +15,10 @@ import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
+
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumOperation;
@@ -41,6 +47,8 @@ public class ProcessDefinitionBuilder
      */
     public static class BasicStepBuilder extends StepBuilder
     {
+        private final ObjectMapper objectMapper;
+        
         private final Supplier<Step> stepFactory;
         
         protected final int key;
@@ -72,19 +80,22 @@ public class ProcessDefinitionBuilder
          * @param name A name (preferably unique) for this step.
          * @param stepFactory A factory to create instances of {@link Step}
          */
-        protected BasicStepBuilder(int key, String name, Supplier<Step> stepFactory)
+        protected BasicStepBuilder(
+            int key, String name, Supplier<Step> stepFactory, ObjectMapper objectMapper)
         {
             Assert.isTrue(!StringUtils.isEmpty(name), "Expected a name for this step");
             Assert.notNull(stepFactory, "A step factory is required");
+            Assert.notNull(objectMapper, "An object mapper is required");
+            this.objectMapper = objectMapper;
             this.key = key;
             this.name = name;
             this.nodeName = Step.slugifyName(name);
             this.stepFactory = stepFactory;
         }
 
-        protected BasicStepBuilder(int key, String name)
+        protected BasicStepBuilder(int key, String name, ObjectMapper objectMapper)
         {
-            this(key, name, Step::new);
+            this(key, name, Step::new, objectMapper);
         }
         
         public BasicStepBuilder nodeName(String nodeName)
@@ -133,9 +144,8 @@ public class ProcessDefinitionBuilder
             
             try {
                 // Make a defensive copy of the configuration bean
-                // Todo Maybe clone using serialize + deserialize operations?
-                this.configuration = (ToolConfiguration) BeanUtils.cloneBean(configuration);
-            } catch (ReflectiveOperationException ex) {
+                this.configuration = cloneAsBean(configuration);
+            } catch (Exception ex) {
                 throw new IllegalStateException("Cannot clone the configuration bean", ex);
             }
             
@@ -238,6 +248,13 @@ public class ProcessDefinitionBuilder
             return this;
         }
 
+        protected ToolConfiguration cloneAsBean(ToolConfiguration value) 
+            throws JsonParseException, JsonMappingException, IOException
+        {
+            String s = objectMapper.writeValueAsString(value);
+            return objectMapper.readValue(s, value.getClass());
+        }
+        
         protected Step build()
         {
             Assert.state(this.operation != null, "The operation must be specified");
@@ -273,9 +290,9 @@ public class ProcessDefinitionBuilder
     {
         private final BasicStepBuilder stepBuilder;
         
-        protected TransformStepBuilder(int key, String name) 
+        protected TransformStepBuilder(int key, String name, ObjectMapper objectMapper) 
         {
-            this.stepBuilder = new BasicStepBuilder(key, name, TransformStep::new)
+            this.stepBuilder = new BasicStepBuilder(key, name, TransformStep::new, objectMapper)
                 .operation(EnumOperation.TRANSFORM)
                 .tool(EnumTool.TRIPLEGEO);
         }
@@ -351,9 +368,9 @@ public class ProcessDefinitionBuilder
     {
         private final BasicStepBuilder stepBuilder;
 
-        public InterlinkStepBuilder(int key, String name)
+        public InterlinkStepBuilder(int key, String name, ObjectMapper objectMapper)
         {
-            this.stepBuilder = new BasicStepBuilder(key, name, InterlinkStep::new)
+            this.stepBuilder = new BasicStepBuilder(key, name, InterlinkStep::new, objectMapper)
                 .operation(EnumOperation.INTERLINK)
                 .tool(EnumTool.LIMES);
         }
@@ -446,9 +463,9 @@ public class ProcessDefinitionBuilder
         
         private ResourceIdentifier resourceIdentifier;
         
-        protected RegisterStepBuilder(int key, String name) 
+        protected RegisterStepBuilder(int key, String name, ObjectMapper objectMapper) 
         {
-            this.stepBuilder = new BasicStepBuilder(key, name, RegisterStep::new)
+            this.stepBuilder = new BasicStepBuilder(key, name, RegisterStep::new, objectMapper)
                 .operation(EnumOperation.REGISTER)
                 .tool(EnumTool.REGISTER);
         }
@@ -511,7 +528,9 @@ public class ProcessDefinitionBuilder
         }
     }
     
-    private String name;
+    private final ObjectMapper objectMapper;
+    
+    private final String name;
 
     private String description;
     
@@ -521,18 +540,12 @@ public class ProcessDefinitionBuilder
 
     private List<Step> steps = new ArrayList<Step>();
 
-    protected ProcessDefinitionBuilder() {}
-    
-    public static ProcessDefinitionBuilder create(String name) 
-    {
-        return (new ProcessDefinitionBuilder()).name(name);
-    }
-
-    public ProcessDefinitionBuilder name(String name)
+    public ProcessDefinitionBuilder(String name, ObjectMapper objectMapper) 
     {
         Assert.isTrue(!StringUtils.isEmpty(name), "A non-empty name is required");
+        Assert.notNull(objectMapper, "An object mapper is required");
+        this.objectMapper = objectMapper;
         this.name = name;
-        return this;
     }
     
     public ProcessDefinitionBuilder description(String description)
@@ -580,12 +593,12 @@ public class ProcessDefinitionBuilder
     {
         Assert.isTrue(!StringUtils.isEmpty(name), "Expected a non-empty name");
         Assert.notNull(configurer, "Expected a non-null configurer for a step");
-        return this.addStep(name, configurer, BasicStepBuilder::new);
+        return this.addStep(configurer, key -> new BasicStepBuilder(key, name, objectMapper));
     }
     
     /**
-     * Add a special-purpose transformation step that imports an external (to the application)
-     * data source into this process.
+     * Add a transformation step on a resource or a external datasource. Commonly, this kind of step 
+     * imports an external (to the application) data source into this process.
      *
      * <p>Currently, this step is always performed by Triplegeo tool, and is usually needed to 
      * make an external resource available to a process (and optionally to the resource catalog).
@@ -598,7 +611,14 @@ public class ProcessDefinitionBuilder
     {
         Assert.isTrue(!StringUtils.isEmpty(name), "Expected a non-empty name");
         Assert.notNull(configurer, "Expected a non-null configurer for a step");
-        return this.addStep(name, configurer, TransformStepBuilder::new);
+        return this.addStep(configurer, key -> new TransformStepBuilder(key, name, objectMapper));
+    }
+    
+    public ProcessDefinitionBuilder interlink(String name, Consumer<InterlinkStepBuilder> configurer)
+    {
+        Assert.isTrue(!StringUtils.isEmpty(name), "Expected a non-empty name");
+        Assert.notNull(configurer, "Expected a non-null configurer for a step");
+        return this.addStep(configurer, key -> new InterlinkStepBuilder(key, name, objectMapper));
     }
     
     /**
@@ -612,7 +632,7 @@ public class ProcessDefinitionBuilder
     {
         Assert.isTrue(!StringUtils.isEmpty(name), "Expected a non-empty name");
         Assert.notNull(configurer, "Expected a non-null configurer for a step");
-        return this.addStep(name, configurer, RegisterStepBuilder::new);
+        return this.addStep(configurer, key -> new RegisterStepBuilder(key, name, objectMapper));
     }
     
     /**
@@ -697,13 +717,13 @@ public class ProcessDefinitionBuilder
     }
     
     private <B extends StepBuilder> ProcessDefinitionBuilder addStep(
-        String name, Consumer<B> configurer, BiFunction<Integer, String, B> builderFactory)
+        Consumer<B> configurer, IntFunction<B> builderFactory)
     {
         Assert.state(builderFactory != null, "Expected a non-null factory for a StepBuilder");
         
         int stepKey = this.stepKeySequence++;
         
-        B stepBuilder = builderFactory.apply(stepKey, name);
+        B stepBuilder = builderFactory.apply(stepKey);
         configurer.accept(stepBuilder);
         Step step = stepBuilder.build();
 
