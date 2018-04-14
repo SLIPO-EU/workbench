@@ -1,5 +1,6 @@
 package eu.slipo.workbench.common.model.tool;
 
+import java.io.File;
 import java.io.Serializable;
 import java.net.URI;
 import java.nio.file.Path;
@@ -745,18 +746,29 @@ public class LimesConfiguration extends InterlinkConfiguration
     
     @JsonProperty("input")
     @JsonSetter
-    public void setInput(Map<String, String> inputPaths)
+    @JsonInclude(Include.NON_NULL)
+    public void setInput(Object input)
     {
-        Assert.notNull(inputPaths, "Expected a non-empty map of input paths");
+        Assert.notNull(input, "A non-null object is expected");
         
-        if (inputPaths.containsKey("source")) {
-            setSourcePath(inputPaths.get("source"));
-        }
-        if (inputPaths.containsKey("target")) {
-            setTargetPath(inputPaths.get("target"));
+        if (input instanceof Map) {
+            // Treat as an input map
+            Map<?,?> inputMap = (Map<?,?>) input;
+            if (inputMap.containsKey("source")) {
+                setSourcePath(inputMap.get("source").toString());
+            }
+            if (inputMap.containsKey("target")) {
+                setTargetPath(inputMap.get("target").toString());
+            }
+        } else {
+            // Treat as a colon-separated list of paths
+            String[] inputPaths = input.toString().split(File.pathSeparator);
+            Assert.isTrue(inputPaths.length == 2, "Expected a pair of input files");
+            setSourcePath(inputPaths[0]);
+            setTargetPath(inputPaths[1]);
         }
     }
-
+        
     @JsonProperty("metric")
     @JacksonXmlProperty(localName = "METRIC")
     @NotEmpty

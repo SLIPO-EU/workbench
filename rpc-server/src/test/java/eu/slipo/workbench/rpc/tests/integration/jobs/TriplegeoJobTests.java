@@ -31,20 +31,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.batch.core.BatchStatus;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.JobExecutionListener;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.JobParametersBuilder;
-import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
-import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.job.flow.Flow;
-import org.springframework.batch.core.launch.JobLauncher;
-import org.springframework.batch.core.launch.JobOperator;
-import org.springframework.batch.core.listener.JobExecutionListenerSupport;
-import org.springframework.batch.item.ExecutionContext;
-import org.springframework.batch.test.AssertFile;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -73,7 +60,7 @@ public class TriplegeoJobTests extends AbstractJobTests
     {
         // Add fixtures from src/test/resources
 
-        for (String path: Arrays.asList("csv/1")) {
+        for (String path: Arrays.asList("csv-1")) {
             Path inputDir = getResource(JOB_NAME, path, "input");
             Path resultsDir = getResource(JOB_NAME, path, "output");
             Path parametersFile = getResource(JOB_NAME, path, "config.properties");
@@ -128,14 +115,18 @@ public class TriplegeoJobTests extends AbstractJobTests
         logger.warn(msg, args);
     }
 
-    @Override
-    protected Map<String, String> inputParameters(Fixture f)
-        throws Exception
+    protected Map<String, String> extractInputParameters(Fixture f)
     {
-        String inputPathsAsString = Files.list(f.inputDir)
-            .sorted()
-            .map(Path::toAbsolutePath)
-            .collect(Collectors.mapping(Path::toString, Collectors.joining(File.pathSeparator)));
+        String inputPathsAsString = null;
+
+        try (Stream<Path> inputPaths = Files.list(f.inputDir)) {
+            inputPathsAsString = inputPaths
+                .sorted()
+                .map(p -> p.toAbsolutePath().toString())
+                .collect(Collectors.joining(File.pathSeparator));
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
 
         return Collections.singletonMap("input", inputPathsAsString);
     }
@@ -147,6 +138,6 @@ public class TriplegeoJobTests extends AbstractJobTests
     @Test(timeout = 10 * 1000L)
     public void test1() throws Exception
     {
-        testWithFixture(fixtures.get(0));
+        testWithFixture(fixtures.get(0), this::extractInputParameters);
     }
 }

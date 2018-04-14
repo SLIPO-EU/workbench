@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -101,14 +103,14 @@ public abstract class AbstractJobTests
 
     protected abstract void warn(String msg, Object ...args);
 
-    protected abstract Map<String, String> inputParameters(Fixture f) throws Exception;
-
-    protected void testWithFixture(Fixture fixture) throws Exception
+    protected void testWithFixture(
+        Fixture fixture, Function<Fixture, Map<String, String>> inputParametersExtractor)
+        throws Exception
     {
         // Build parameters
 
         final JobParametersBuilder parametersBuilder = new JobParametersBuilder(fixture.parameters);
-        this.inputParameters(fixture).forEach(parametersBuilder::addString);
+        inputParametersExtractor.apply(fixture).forEach(parametersBuilder::addString);
 
         final JobParameters parameters = parametersBuilder.toJobParameters();
 

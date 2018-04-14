@@ -15,7 +15,7 @@
 		<VAR>?x</VAR>
 		<PAGESIZE>-1</PAGESIZE>
 		<RESTRICTION></RESTRICTION>
-		<PROPERTY>slipo:name/slipo:nameType RENAME label</PROPERTY>
+		<PROPERTY>slipo:name/slipo:nameValue RENAME label</PROPERTY>
 		<TYPE>N-TRIPLES</TYPE>
 	</SOURCE>
 	<TARGET>
@@ -24,17 +24,17 @@
 		<VAR>?y</VAR>
 		<PAGESIZE>-1</PAGESIZE>
 		<RESTRICTION></RESTRICTION>
-		<PROPERTY>slipo:name/slipo:nameType RENAME label</PROPERTY>
+		<PROPERTY>slipo:name/slipo:nameValue RENAME label</PROPERTY>
 		<TYPE>N-TRIPLES</TYPE>
 	</TARGET>
 	<METRIC>trigrams(x.label, y.label)</METRIC>	
 	<ACCEPTANCE>
-		<THRESHOLD>0.9999</THRESHOLD>
+		<THRESHOLD>0.9</THRESHOLD>
 		<FILE>/var/local/limes/output/accepted.nt</FILE>
 		<RELATION>owl:sameAs</RELATION>
 	</ACCEPTANCE>
 	<REVIEW>
-		<THRESHOLD>0.98</THRESHOLD>
+		<THRESHOLD>0.8</THRESHOLD>
 		<FILE>/var/local/limes/output/review.nt</FILE>
 		<RELATION>owl:sameAs</RELATION>
 	</REVIEW>
