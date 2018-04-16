@@ -1,22 +1,27 @@
-const React = require('react');
-const ReactRedux = require('react-redux');
-const { BrowserRouter, Route } = require('react-router-dom');
-const ReactIntl = require('react-intl');
-const { basename } = require('../history');
+import * as React from 'react';
+import * as ReactRedux from 'react-redux';
+import * as ReactIntl from 'react-intl';
+
+import { BrowserRouter, Route } from 'react-router-dom';
+import { basename } from '../history';
+
+import ContentRoot from './content-root';
 
 //
 // Add locale-specific data for each supported locale
 //
 
-ReactIntl.addLocaleData(require('react-intl/locale-data/en'));
-ReactIntl.addLocaleData(require('react-intl/locale-data/de'));
-ReactIntl.addLocaleData(require('react-intl/locale-data/el'));
+import en from 'react-intl/locale-data/en';
+import de from 'react-intl/locale-data/en';
+import el from 'react-intl/locale-data/en';
+
+ReactIntl.addLocaleData(en);
+ReactIntl.addLocaleData(de);
+ReactIntl.addLocaleData(el);
 
 //
 // Define presentational component
 //
-
-const ContentRoot = require('./content-root');
 
 class Root extends React.Component {
 
@@ -51,6 +56,4 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = null;
 
-Root = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(Root);
-
-module.exports = Root;
+export default ReactRedux.connect(mapStateToProps, mapDispatchToProps)(Root);

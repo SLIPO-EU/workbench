@@ -23,7 +23,7 @@ import {
   resourceRegistrationReducer,
 } from './ducks/ui/views';
 
-module.exports = Redux.combineReducers({
+export default Redux.combineReducers({
   config,
   i18n,
   meta,

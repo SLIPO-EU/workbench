@@ -135,6 +135,4 @@ const mapDispatchToProps = (dispatch) => bindActionCreators({
   resize,
 }, dispatch);
 
-ContentRoot = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(ContentRoot);
-
-module.exports = ContentRoot;
+export default ReactRedux.connect(mapStateToProps, mapDispatchToProps)(ContentRoot);
