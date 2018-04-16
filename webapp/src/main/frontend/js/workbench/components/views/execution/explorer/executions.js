@@ -45,6 +45,9 @@ const executionsColumns = [{
         {props.original.errorMessage &&
           <i data-action="error" className='fa fa-warning slipo-table-row-action p-1'></i>
         }
+        {props.original.status === 'RUNNING' &&
+          <i data-action="stop" className='fa fa-stop slipo-table-row-action text-danger p-1'></i>
+        }
       </span>
     );
   },
@@ -118,6 +121,9 @@ export default class ProcessExecutions extends React.Component {
         break;
       case 'view':
         this.props.viewExecution(rowInfo.original.process.id, rowInfo.original.process.version, rowInfo.original.id);
+        break;
+      case 'stop':
+        this.props.stopExecution(rowInfo.original.process.id, rowInfo.original.process.version);
         break;
       case 'map':
         this.props.viewMap(rowInfo.original.process.id, rowInfo.original.process.version, rowInfo.original.id);

@@ -99,7 +99,19 @@ class TemplateExplorer extends React.Component {
         const path = buildPath(DynamicRoutes.ProcessDesignerCreate);
 
         this.props.history.push(path);
+      })
+      .catch(err => {
+        this.error(err.message);
       });
+  }
+
+  error(message, redirect) {
+    toast.dismiss();
+
+    toast.error(
+      <ToastTemplate iconClass='fa-warning' text={message} />
+    );
+
   }
 
   render() {

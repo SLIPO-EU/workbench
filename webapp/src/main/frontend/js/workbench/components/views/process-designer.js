@@ -291,11 +291,11 @@ class ProcessDesigner extends React.Component {
   }
 
   save(action) {
-    toast.dismiss();
+    const isTemplate = this.props.process.template || action === EnumComponentAction.SaveAsTemplate;
 
-    this.props.save(this.mapToSaveAction(action), this.props.designer)
+    toast.dismiss();
+    this.props.save(this.mapToSaveAction(action), this.props.designer, isTemplate)
       .then((result) => {
-        const isTemplate = this.props.process.template || action === EnumComponentAction.SaveAsTemplate;
         const text = `${isTemplate ? "Template" : "Process"} has been saved successfully!`;
         toast.success(
           <ToastTemplate iconClass='fa-save' text={text} />

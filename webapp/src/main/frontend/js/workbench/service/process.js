@@ -348,7 +348,7 @@ export function getStepInputRequirements(step, resources) {
   };
 }
 
-function validateProcess(action, model, errors) {
+function validateProcess(action, model, isTemplate, errors) {
   const { process, steps, resources, ...rest } = model;
 
   if ((!process.properties.name) || (!process.properties.description)) {
@@ -356,7 +356,7 @@ function validateProcess(action, model, errors) {
   }
 }
 
-function validateSteps(action, model, errors) {
+function validateSteps(action, model, isTemplate, errors) {
   const { process, steps, resources, ...rest } = model;
 
   if (steps.length === 0) {
@@ -393,7 +393,7 @@ function validateSteps(action, model, errors) {
     errors.push({ code: 1, text: 'A workflow must generate a single output' });
   }
 
-  if (model.process.template) {
+  if (isTemplate) {
     return;
   }
 
@@ -414,10 +414,10 @@ function validateSteps(action, model, errors) {
   });
 }
 
-function validateResources(action, model, errors) {
+function validateResources(action, model, isTemplate, errors) {
   const { process, steps, resources, ...rest } = model;
 
-  if (model.process.template) {
+  if (isTemplate) {
     return;
   }
 
@@ -462,17 +462,17 @@ function validateResources(action, model, errors) {
   });
 }
 
-export function validate(action, model) {
+export function validate(action, model, isTemplate) {
   const errors = [];
 
   // Properties
-  validateProcess(action, model, errors);
+  validateProcess(action, model, isTemplate, errors);
 
   // Steps
-  validateSteps(action, model, errors);
+  validateSteps(action, model, isTemplate, errors);
 
   // Resources
-  validateResources(action, model, errors);
+  validateResources(action, model, isTemplate, errors);
 
   return errors;
 }
@@ -488,6 +488,10 @@ export function save(action, designer, token) {
   }
 }
 
-export function start(id, token) {
-  return actions.post(`/action/process/${id}/start`, token);
+export function start(id, version, token) {
+  return actions.post(`/action/process/${id}/${version}/start`, token);
+}
+
+export function stop(id, version, token) {
+  return actions.post(`/action/process/${id}/${version}/stop`, token);
 }

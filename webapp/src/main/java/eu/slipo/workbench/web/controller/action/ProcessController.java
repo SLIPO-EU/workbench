@@ -2,21 +2,14 @@ package eu.slipo.workbench.web.controller.action;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
-import java.util.Optional;
-import java.util.Properties;
 
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PropertiesLoaderUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.remoting.RemoteConnectFailureException;
 import org.springframework.security.access.annotation.Secured;
@@ -26,34 +19,22 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import eu.slipo.workbench.common.model.ApplicationException;
 import eu.slipo.workbench.common.model.BasicErrorCode;
 import eu.slipo.workbench.common.model.Error;
-import eu.slipo.workbench.common.model.FileSystemErrorCode;
 import eu.slipo.workbench.common.model.QueryResultPage;
 import eu.slipo.workbench.common.model.RestResponse;
-import eu.slipo.workbench.common.model.process.CatalogResource;
-import eu.slipo.workbench.common.model.process.EnumInputType;
-import eu.slipo.workbench.common.model.process.EnumProcessTaskType;
-import eu.slipo.workbench.common.model.process.EnumStepFile;
 import eu.slipo.workbench.common.model.process.InvalidProcessDefinitionException;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.ProcessErrorCode;
+import eu.slipo.workbench.common.model.process.ProcessExecutionNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessExecutionQuery;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStartException;
-import eu.slipo.workbench.common.model.process.ProcessExecutionStepFileRecord;
-import eu.slipo.workbench.common.model.process.ProcessExecutionStepRecord;
+import eu.slipo.workbench.common.model.process.ProcessExecutionStopException;
 import eu.slipo.workbench.common.model.process.ProcessNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessQuery;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
-import eu.slipo.workbench.common.model.resource.ResourceRecord;
-import eu.slipo.workbench.common.repository.ProcessRepository;
-import eu.slipo.workbench.common.repository.ResourceRepository;
 import eu.slipo.workbench.web.model.QueryResult;
 import eu.slipo.workbench.web.model.process.EnumProcessSaveActionType;
 import eu.slipo.workbench.web.model.process.ProcessCreateRequest;
@@ -74,18 +55,6 @@ public class ProcessController extends BaseController {
     private static final Logger logger = LoggerFactory.getLogger(ProcessController.class);
 
     @Autowired
-    private Path catalogDataDirectory;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    private ResourceRepository resourceRepository;
-
-    @Autowired
-    private ProcessRepository processRepository;
-
-    @Autowired
     private ProcessService processService;
 
     /**
@@ -102,11 +71,8 @@ public class ProcessController extends BaseController {
         }
 
         ProcessQuery query = request.getQuery();
-        query.setTemplate(false);
-        query.setCreatedBy(currentUserId());
-
         PageRequest pageRequest = request.getPageRequest();
-        QueryResultPage<ProcessRecord> r = processRepository.query(query, pageRequest);
+        QueryResultPage<ProcessRecord> r = this.processService.find(query, pageRequest);
 
         return RestResponse.result(QueryResult.create(r));
     }
@@ -125,12 +91,8 @@ public class ProcessController extends BaseController {
         }
 
         ProcessQuery query = request.getQuery();
-        query.setTaskType(EnumProcessTaskType.DATA_INTEGRATION);
-        query.setTemplate(true);
-        query.setCreatedBy(currentUserId());
-
         PageRequest pageRequest = request.getPageRequest();
-        QueryResultPage<ProcessRecord> r = processRepository.query(query, pageRequest);
+        QueryResultPage<ProcessRecord> r = this.processService.findTemplates(query, pageRequest);
 
         return RestResponse.result(QueryResult.create(r));
     }
@@ -149,10 +111,8 @@ public class ProcessController extends BaseController {
         }
 
         ProcessExecutionQuery query = request.getQuery();
-        query.setCreatedBy(currentUserId());
-
         PageRequest pageRequest = request.getPageRequest();
-        QueryResultPage<ProcessExecutionRecord> r = processRepository.queryExecutions(query, pageRequest);
+        QueryResultPage<ProcessExecutionRecord> r = this.processService.find(query, pageRequest);
 
         return RestResponse.result(QueryResult.create(r));
     }
@@ -181,34 +141,14 @@ public class ProcessController extends BaseController {
      * @return a list of {@link ProcessExecutionRecord}
      */
     @RequestMapping(value = "/action/process/{id}/{version}/execution/{executionId}", method = RequestMethod.GET)
-    public RestResponse<ProcessExecutionRecordView> getProcessExecution(
-        @PathVariable long id, @PathVariable long version, @PathVariable long executionId) {
+    public RestResponse<?> getProcessExecution(@PathVariable long id, @PathVariable long version, @PathVariable long executionId) {
 
-        ProcessRecord processRecord = processRepository.findOne(id, version, false);
-        ProcessExecutionRecord executionRecord = processRepository.findExecution(executionId);
-        if (processRecord == null ||
-            executionRecord == null ||
-            executionRecord.getProcess().getId() != id ||
-            executionRecord.getProcess().getVersion() != version) {
-            return RestResponse.error(new Error(ProcessErrorCode.NOT_FOUND, "Execution was not found"));
+        try {
+            final ProcessExecutionRecordView view = this.processService.getProcessExecution(id, version, executionId);
+            return RestResponse.result(view);
+        } catch (Exception ex) {
+            return this.exceptionToResponse(ex);
         }
-
-        // For catalog resources update bounding box and table name values
-        processRecord
-            .getDefinition()
-            .resources()
-            .stream()
-            .filter(r->r.getInputType() == EnumInputType.CATALOG)
-            .map(r-> (CatalogResource) r)
-            .forEach(r1-> {
-                ResourceRecord r2 = resourceRepository.findOne(r1.getId(), r1.getVersion());
-                if (r2 != null) {
-                    r1.setBoundingBox(r2.getBoundingBox());
-                    r1.setTableName(r2.getTableName());
-                }
-            });
-
-        return RestResponse.result(new ProcessExecutionRecordView(processRecord, executionRecord));
     }
 
     /**
@@ -225,56 +165,10 @@ public class ProcessController extends BaseController {
         @PathVariable long id, @PathVariable long version, @PathVariable long executionId, @PathVariable long fileId) {
 
         try {
-            ProcessRecord processRecord = processRepository.findOne(id, version, false);
-            ProcessExecutionRecord executionRecord = processRepository.findExecution(executionId);
-            if (processRecord == null ||
-                executionRecord == null ||
-                executionRecord.getProcess().getId() != id ||
-                executionRecord.getProcess().getVersion() != version) {
-                return RestResponse.error(new Error(ProcessErrorCode.NOT_FOUND, "Execution was not found"));
-            }
-
-            final Optional<Pair<ProcessExecutionStepRecord, ProcessExecutionStepFileRecord>> result = executionRecord
-                .getSteps()
-                .stream()
-                .flatMap(s -> {
-                    return s.getFiles()
-                        .stream()
-                        .map(f-> Pair.<ProcessExecutionStepRecord, ProcessExecutionStepFileRecord>of(s, f));
-                })
-                .filter(f -> f.getRight().getId() == fileId)
-                .findFirst();
-
-            if (!result.isPresent()) {
-                return RestResponse.error(new Error(BasicErrorCode.NO_RESULT, "File was not found"));
-            }
-            final ProcessExecutionStepRecord stepRecord = result.get().getLeft();
-            final ProcessExecutionStepFileRecord fileRecord = result.get().getRight();
-            if (fileRecord.getType() != EnumStepFile.KPI) {
-                return RestResponse.error(new Error(BasicErrorCode.NOT_SUPPORTED, "File type is not supported"));
-            }
-
-            final String filename = fileRecord.getFilePath();
-            final Path path = Paths.get(catalogDataDirectory.toString(), filename);
-            final File file = path.toFile();
-
-            if (!file.exists()) {
-                return RestResponse.error(new Error(FileSystemErrorCode.PATH_NOT_FOUND, "File was not found"));
-            }
-
-            switch (stepRecord.getTool()) {
-                case TRIPLEGEO:
-                    JsonNode node = objectMapper.readTree(file);
-                    return RestResponse.result(node);
-                default:
-                    Resource resource = new FileSystemResource(file);
-                    Properties props = PropertiesLoaderUtils.loadProperties(resource);
-                    return RestResponse.result(props);
-            }
-        } catch (JsonParseException ex) {
-            return RestResponse.error(new Error(BasicErrorCode.UNKNOWN, "Failed to parse file"));
-        } catch (IOException ex) {
-            return RestResponse.error(new Error(BasicErrorCode.IO_ERROR, "Failed to read file"));
+            Object data = this.processService.getProcessExecutionKpiData(id, version, executionId, fileId);
+            return RestResponse.result(data);
+        } catch (Exception ex) {
+            return this.exceptionToResponse(ex);
         }
     }
 
@@ -293,41 +187,21 @@ public class ProcessController extends BaseController {
         @PathVariable long id, @PathVariable long version, @PathVariable long executionId, @PathVariable long fileId,
         HttpServletResponse response) throws IOException {
 
-        ProcessRecord processRecord = processRepository.findOne(id, version, false);
-        ProcessExecutionRecord executionRecord = processRepository.findExecution(executionId);
-        if (processRecord == null ||
-            executionRecord == null ||
-            executionRecord.getProcess().getId() != id ||
-            executionRecord.getProcess().getVersion() != version) {
-
+        final File file;
+        try {
+            file = this.processService.getProcessExecutionFile(id, version, executionId, fileId);
+            if (file.exists()) {
+                response.setHeader("Content-Disposition", String.format("attachment; filename=%s", file.getName()));
+                return new FileSystemResource(file);
+            }
+        } catch (ProcessNotFoundException ex) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Process was not found");
+        } catch (ProcessExecutionNotFoundException ex) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND, "Process execution was not found");
-            return null;
         }
 
-        final Optional<ProcessExecutionStepFileRecord> result = executionRecord
-            .getSteps()
-            .stream()
-            .flatMap(s -> s.getFiles().stream())
-            .filter(f -> f.getId() == fileId)
-            .findFirst();
-
-        if (!result.isPresent()) {
-            response.sendError(HttpServletResponse.SC_NOT_FOUND, "File was not found");
-            return null;
-        }
-
-        final String filename = result.get().getFilePath();
-        final Path path = Paths.get(catalogDataDirectory.toString(), filename);
-        final File file = path.toFile();
-
-        if (!file.exists()) {
-            response.sendError(HttpServletResponse.SC_GONE, "File has been removed");
-            return null;
-        }
-
-        response.setHeader("Content-Disposition", String.format("attachment; filename=%s", file.getName()));
-
-        return new FileSystemResource(file);
+        response.sendError(HttpServletResponse.SC_GONE, "File has been removed");
+        return null;
     }
 
     /**
@@ -338,10 +212,12 @@ public class ProcessController extends BaseController {
      */
     @RequestMapping(value = "/action/process/{id}", method = RequestMethod.GET)
     public RestResponse<ProcessRecordView> getProcess(@PathVariable long id) {
-
         ProcessRecord record = processService.findOne(id);
         if (record == null) {
             return RestResponse.error(new Error(ProcessErrorCode.NOT_FOUND, "Process was not found"));
+        }
+        if (record.getDefinition() == null) {
+            return RestResponse.error(new Error(ProcessErrorCode.INVALID, "Failed to parse process definition"));
         }
         return RestResponse.result(new ProcessRecordView(record));
     }
@@ -358,6 +234,9 @@ public class ProcessController extends BaseController {
         ProcessRecord record = processService.findOne(id, version);
         if (record == null) {
             return RestResponse.error(new Error(ProcessErrorCode.NOT_FOUND, "Process was not found"));
+        }
+        if (record.getDefinition() == null) {
+            return RestResponse.error(new Error(ProcessErrorCode.INVALID, "Failed to parse process definition"));
         }
         return RestResponse.result(new ProcessRecordView(record));
     }
@@ -394,14 +273,26 @@ public class ProcessController extends BaseController {
      * @param id the id of the process to start
      * @return an empty response if operation was successful
      */
-    @RequestMapping(value = "/action/process/{id}/start", method = RequestMethod.POST)
-    public RestResponse<?> start(@PathVariable long id) {
+    @RequestMapping(value = "/action/process/{id}/{version}/start", method = RequestMethod.POST)
+    public RestResponse<?> start(@PathVariable long id, @PathVariable long version) {
         try {
-            final ProcessRecord processRecord = this.processRepository.findOne(id);
-            if (processRecord == null) {
-                return RestResponse.error(new Error(ProcessErrorCode.NOT_FOUND, "Process was not found"));
-            }
-            this.processService.start(processRecord.getId(), processRecord.getVersion());
+            this.processService.start(id, version);
+        } catch (Exception ex) {
+            return this.exceptionToResponse(ex);
+        }
+        return RestResponse.success();
+    }
+
+    /**
+     * Starts the current version of the selected process.
+     *
+     * @param id the id of the process to start
+     * @return an empty response if operation was successful
+     */
+    @RequestMapping(value = "/action/process/{id}/{version}/stop", method = RequestMethod.POST)
+    public RestResponse<?> stop(@PathVariable long id, @PathVariable long version) {
+        try {
+            this.processService.stop(id, version);
         } catch (Exception ex) {
             return this.exceptionToResponse(ex);
         }
@@ -461,6 +352,9 @@ public class ProcessController extends BaseController {
         }
         if (ex instanceof ProcessExecutionStartException) {
             return RestResponse.error(ProcessErrorCode.FAILED_TO_START, "Process execution has failed to start", level);
+        }
+        if (ex instanceof ProcessExecutionStopException) {
+            return RestResponse.error(ProcessErrorCode.FAILED_TO_START, "Process execution has failed to stop", level);
         }
 
         if (ex instanceof InvalidProcessDefinitionException) {

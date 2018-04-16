@@ -16,6 +16,7 @@ const RECEIVE_EXECUTION_DATA = 'ui/process/explorer/RECEIVE_EXECUTION_DATA';
 const SET_SELECTED_EXECUTION = 'ui/process/explorer/SET_SELECTED_EXECUTION';
 
 const START_PROCESS = 'ui/process/explorer/START_PROCESS';
+const STOP_PROCESS = 'ui/process/explorer/STOP_PROCESS';
 
 // Initial state
 const initialState = {
@@ -44,7 +45,6 @@ export default (state = initialState, action) => {
           ...state.pager,
           ...action.pager,
         },
-        selected: null,
       };
 
     case RESET_PAGER:
@@ -53,7 +53,6 @@ export default (state = initialState, action) => {
         pager: {
           ...initialState.pager
         },
-        selected: null,
         executions: [],
       };
 
@@ -72,14 +71,12 @@ export default (state = initialState, action) => {
         filters: {
           ...initialState.filters
         },
-        selected: null,
         executions: [],
       };
 
     case REQUEST_PROCESS_DATA:
       return {
         ...state,
-        selected: null,
         executions: [],
       };
 
@@ -113,14 +110,13 @@ export default (state = initialState, action) => {
     case RESET_SELECTED_PROCESS:
       return {
         ...state,
-        selected: null,
         executions: [],
       };
 
     case RECEIVE_EXECUTION_DATA:
       return {
         ...state,
-        executions: action.result,
+        executions: action.result.sort((e1, e2) => e2.id - e1.id),
       };
 
     case SET_SELECTED_EXECUTION:
@@ -218,11 +214,24 @@ const processExecutionStarted = () => ({
   type: START_PROCESS,
 });
 
-export const start = (id) => (dispatch, getState) => {
+export const start = (id, version) => (dispatch, getState) => {
   const { meta: { csrfToken: token } } = getState();
 
-  return processService.start(id, token)
+  return processService.start(id, version, token)
     .then(() => {
       processExecutionStarted();
+    });
+};
+
+const processExecutionStopped = () => ({
+  type: STOP_PROCESS,
+});
+
+export const stop = (id, version) => (dispatch, getState) => {
+  const { meta: { csrfToken: token } } = getState();
+
+  return processService.stop(id, version, token)
+    .then(() => {
+      processExecutionStopped();
     });
 };

@@ -26,6 +26,10 @@ import {
 } from '../../model/routes';
 
 import {
+  EnumErrorLevel,
+} from '../../model';
+
+import {
   ToastTemplate,
 } from '../helpers';
 
@@ -44,7 +48,10 @@ import {
   setFilter,
   setPager,
   start,
+  stop,
 } from '../../ducks/ui/views/process-explorer';
+
+// TODO: Add i18n support
 
 /**
  * Browse and manage processes
@@ -72,6 +79,12 @@ class ProcessExplorer extends React.Component {
    * @memberof ProcessExplorer
    */
   componentWillMount() {
+    this.props.fetchProcesses({
+      query: { ...this.props.filters },
+    });
+  }
+
+  search() {
     this.props.fetchProcesses({
       query: { ...this.props.filters },
     });
@@ -132,34 +145,62 @@ class ProcessExplorer extends React.Component {
   }
 
   /**
-   * Starts the execution of the current version of the selected process
+   * Starts the execution of the selected process revision
    *
    * @param {any} id
+   * @param {any} version
    * @memberof ProcessExplorer
    */
-  startExecution(id) {
-    this.props.start(id)
+  startExecution(id, version) {
+    this.props.start(id, version)
+      .then((data) => {
+        this.displayMessage('Process execution has started successfully', EnumErrorLevel.INFO);
+      })
       .catch((err) => {
         this.displayMessage(err.message);
+      })
+      .finally(() => {
+        this.search();
       });
   }
 
   /**
-   * Attempts to stop the selected execution
+   * Attempts to stop the execution of the selected process revision
    *
    * @param {any} id
+   * @param {any} version
    * @memberof ProcessExplorer
    */
-  stopExecution(id) {
-    this.displayMessage('Not implemented!');
+  stopExecution(id, version) {
+    this.props.stop(id, version)
+      .catch((err) => {
+        this.displayMessage(err.message);
+      })
+      .finally(() => {
+        this.search();
+      });
   }
 
-  displayMessage(message) {
+  displayMessage(message, level = EnumErrorLevel.ERROR) {
     toast.dismiss();
 
-    toast.error(
-      <ToastTemplate iconClass='fa-warning' text={message} />
-    );
+    switch (level) {
+      case EnumErrorLevel.WARN:
+        toast.warn(
+          <ToastTemplate iconClass='fa-warning' text={message} />
+        );
+        break;
+      case EnumErrorLevel.INFO:
+        toast.info(
+          <ToastTemplate iconClass='fa-info-circle' text={message} />
+        );
+        break;
+      default:
+        toast.error(
+          <ToastTemplate iconClass='fa-exclamation-circle' text={message} />
+        );
+        break;
+    }
   }
 
   render() {
@@ -205,6 +246,7 @@ class ProcessExplorer extends React.Component {
                       selected={this.props.selected}
                       setPager={this.props.setPager}
                       startExecution={this.startExecution}
+                      stopExecution={this.stopExecution}
                     />
                   </Col>
                 </Row>
@@ -252,6 +294,7 @@ const mapDispatchToProps = (dispatch) => bindActionCreators({
   setFilter,
   setPager,
   start,
+  stop,
 }, dispatch);
 
 export default ReactRedux.connect(mapStateToProps, mapDispatchToProps)(ProcessExplorer);

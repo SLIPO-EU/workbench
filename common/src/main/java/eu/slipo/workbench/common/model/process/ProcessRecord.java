@@ -5,6 +5,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import eu.slipo.workbench.common.model.user.AccountInfo;
 
 public class ProcessRecord
@@ -38,6 +41,9 @@ public class ProcessRecord
     private List<ProcessRecord> revisions;
 
     private List<ProcessExecutionRecord> executions;
+
+    @JsonIgnore()
+    private boolean isRunning;
 
     public ProcessRecord() {}
 
@@ -134,6 +140,16 @@ public class ProcessRecord
 
     public void setTemplate(boolean template) {
         this.template = template;
+    }
+
+    @JsonProperty()
+    public boolean isRunning() {
+        return isRunning;
+    }
+
+    @JsonIgnore()
+    public void setRunning(boolean isRunning) {
+        this.isRunning = isRunning;
     }
 
     public EnumProcessTaskType getTaskType() {

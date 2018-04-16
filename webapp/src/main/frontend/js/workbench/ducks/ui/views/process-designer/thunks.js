@@ -101,9 +101,9 @@ export function fetchProcessRevision(id, version) {
   };
 }
 
-export function save(action, process) {
+export function save(action, process, isTemplate) {
   return (dispatch, getState) => {
-    const errors = processService.validate(action, process);
+    const errors = processService.validate(action, process, isTemplate);
     if (errors.length !== 0) {
       return Promise.reject(new Error('Validation has failed'));
     }
