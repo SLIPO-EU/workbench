@@ -150,6 +150,9 @@ class Sidebar extends React.Component {
             <Row>
               <Col>
                 <div className="small text-muted" style={{ padding: '0px 10px 10px' }}>Hold Shift to select multiple features</div>
+                {this.props.selectedFeatures.length > 1 &&
+                  <div className="small text-muted" style={{ padding: '0px 10px 10px' }}>{this.props.selectedFeatures.length} features selected</div>
+                }
                 <div className="slipo-pd-sidebar-feature-list">
                   {this.props.selectedFeatures.length > 0 &&
                     <FeaturePropertyViewer

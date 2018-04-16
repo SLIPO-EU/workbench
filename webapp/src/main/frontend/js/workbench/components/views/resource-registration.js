@@ -24,7 +24,7 @@ class ResourceRegistration extends React.Component {
   render() {
     return (
       <Row>
-        <Col sm="12" md="12" lg="6">
+        <Col>
           <Card>
             <CardBody className="card-body">
               <ResourceWizard
