@@ -1,18 +1,26 @@
 import * as React from 'react';
 import * as ReactRedux from 'react-redux';
-import { bindActionCreators } from 'redux';
-import { Link } from 'react-router-dom';
-import { FormattedTime, injectIntl } from 'react-intl';
+
 import {
-  Row, Col,
+  bindActionCreators,
+} from 'redux';
+
+import {
+  Link,
+} from 'react-router-dom';
+
+import {
+  FormattedTime,
+  injectIntl,
+} from 'react-intl';
+
+import {
+  Col,
+  CardBody,
+  Row,
 } from 'reactstrap';
 
 import moment from 'moment';
-
-import * as CardConfig from '../helpers/card-config';
-import * as TableConfig from '../helpers/table-config';
-import * as ChartConfig from '../helpers/chart-config';
-import * as DashboardCardConfig from '../helpers/dashboardCard-config';
 
 import {
   Roles,
@@ -29,15 +37,41 @@ import {
 import {
   changeDashboardFilter,
   fetchDashboardData,
+  resetSelectedEvent,
+  selectEvent,
 } from '../../ducks/ui/views/dashboard';
 
+import * as CardConfig from '../helpers/card-config';
+import * as TableConfig from '../helpers/table-config';
+import * as ChartConfig from '../helpers/chart-config';
+import * as DashboardCardConfig from '../helpers/dashboardCard-config';
+
+const UPDATE_INTERVAL_SECONDS = 300;
+
 class Dashboard extends React.Component {
+
+  constructor(props) {
+    super(props);
+
+    this.refreshIntervalId = null;
+  }
+
   componentWillMount() {
+    this.refreshIntervalId = setInterval(() => {
+      this.props.fetchDashboardData();
+    }, UPDATE_INTERVAL_SECONDS * 1000);
+
     this.props.fetchDashboardData();
   }
 
-  render() {
+  componentWillUnmount() {
+    if (this.refreshIntervalId) {
+      clearInterval(this.refreshIntervalId);
+      this.refreshIntervalId = null;
+    }
+  }
 
+  render() {
     return (
       <div className="animated fadeIn">
         <Row>
@@ -63,8 +97,8 @@ class Dashboard extends React.Component {
               filterValue={this.props.filters.processExplorer}
             >
               <Table
-                data={TableConfig.JobGridData(this.props.processes)}
-                columns={TableConfig.JobGridColumns}
+                data={TableConfig.processDataMapper(this.props.processes)}
+                columns={TableConfig.ProcessExecutionGridColumns}
                 minRows={10}
                 showPagination={true}
               />
@@ -78,13 +112,12 @@ class Dashboard extends React.Component {
               filterValue={this.props.filters.resources}
             >
               <Table
-                data={TableConfig.ResourceGridData(this.props.resources)}
+                data={TableConfig.resourceDataMapper(this.props.resources)}
                 columns={TableConfig.ResourceGridColumns}
                 minRows={10}
                 showPagination={true}
               />
             </DashboardCard>
-
           </Col>
         </Row >
         <SecureContent role={Roles.ADMIN}>
@@ -97,10 +130,42 @@ class Dashboard extends React.Component {
                 filterValue={this.props.filters.events}
               >
                 <Table
-                  data={TableConfig.EventGridData(this.props.events)}
+                  data={TableConfig.eventDataMapper(this.props.events)}
                   columns={TableConfig.EventGridColumns}
                   minRows={10}
                   showPagination={true}
+                  getTrProps={(state, rowInfo) => ({
+                    onClick: (e) => {
+                      this.props.selectEvent(rowInfo.viewIndex, rowInfo.original);
+                    }
+                  })}
+                  onPageChange={
+                    (pageIndex) => {
+                      this.props.resetSelectedEvent();
+                    }
+                  }
+                  expanded={
+                    (this.props.selectedEvent) ?
+                      {
+                        [this.props.selectedEvent.index]: true
+                      } :
+                      {}
+                  }
+                  SubComponent={
+                    row => {
+                      if (this.props.selectedEvent &&
+                          this.props.selectedEvent.index === row.viewIndex &&
+                          this.props.selectedEvent.event.message) {
+                        return (
+                          <CardBody>
+                            <div className="font-weight-bold mb-2">Message:</div>
+                            <div className="font-weight-italic" style={{ whiteSpace: 'pre-wrap' }}>{this.props.selectedEvent.event.message}</div>
+                          </CardBody>
+                        );
+                      }
+                      return null;
+                    }
+                  }
                 />
               </DashboardCard>
             </Col>
@@ -111,18 +176,21 @@ class Dashboard extends React.Component {
   }
 }
 
-
-
-//export default Dashboard;
 const mapStateToProps = (state) => ({
-  stats: state.ui.views.dashboard.statistics,
-  processes: state.ui.views.dashboard.processes,
-  resources: state.ui.views.dashboard.resources,
   events: state.ui.views.dashboard.events,
   filters: state.ui.views.dashboard.filters,
+  processes: state.ui.views.dashboard.processes,
+  resources: state.ui.views.dashboard.resources,
+  selectedEvent: state.ui.views.dashboard.selectedEvent,
+  stats: state.ui.views.dashboard.statistics,
 });
 
-const mapDispatchToProps = (dispatch) => bindActionCreators({ fetchDashboardData, changeDashboardFilter }, dispatch);
+const mapDispatchToProps = (dispatch) => bindActionCreators({
+  changeDashboardFilter,
+  fetchDashboardData,
+  resetSelectedEvent,
+  selectEvent,
+}, dispatch);
 
 const mergeProps = (stateProps, dispatchProps, ownProps) => {
   let resVisible, procVisible;

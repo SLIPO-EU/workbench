@@ -123,7 +123,12 @@ public class Dashboard {
 
     public static class SystemStatistics extends Statistics {
 
-        public SystemStatistics(long usedCores, long totalCores, long usedMemory, long totalMemory, long usedDisk, long totalDisk) {
+        public SystemStatistics(boolean isOnline) {
+            this.online = isOnline;
+        }
+
+        public SystemStatistics(Long usedCores, Long totalCores, Long usedMemory, Long totalMemory, Long usedDisk, Long totalDisk) {
+            this.online = true;
             this.usedCores = usedCores;
             this.totalCores = totalCores;
             this.usedMemory = usedMemory;
@@ -132,17 +137,19 @@ public class Dashboard {
             this.totalDisk = totalDisk;
         }
 
-        public long usedCores;
+        public boolean online;
 
-        public long totalCores;
+        public Long usedCores;
 
-        public long usedMemory;
+        public Long totalCores;
 
-        public long totalMemory;
+        public Long usedMemory;
 
-        public long usedDisk;
+        public Long totalMemory;
 
-        public long totalDisk;
+        public Long usedDisk;
+
+        public Long totalDisk;
     }
 
 }

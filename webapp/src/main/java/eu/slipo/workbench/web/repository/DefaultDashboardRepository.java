@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import eu.slipo.workbench.common.domain.ProcessExecutionEntity;
 import eu.slipo.workbench.common.domain.ResourceEntity;
 import eu.slipo.workbench.common.model.process.EnumProcessExecutionStatus;
+import eu.slipo.workbench.common.service.ProcessOperator;
 import eu.slipo.workbench.web.domain.EventEntity;
 import eu.slipo.workbench.web.model.Dashboard;
 import eu.slipo.workbench.web.model.EventCounter;
@@ -30,6 +32,9 @@ public class DefaultDashboardRepository implements DashboardRepository {
 
     @PersistenceContext(unitName = "default")
     EntityManager entityManager;
+
+    @Autowired
+    private ProcessOperator processOperator;
 
     @Override
     public Dashboard load() throws Exception {
@@ -161,8 +166,13 @@ public class DefaultDashboardRepository implements DashboardRepository {
         result.getStatistics().events = new Dashboard.EventStatistics(error, warning, info);
 
         // System status
-
-        // TODO: Get system information from rpc-server
+        try {
+            this.processOperator.list().size();
+            // TODO: Compute cluster resources
+            result.getStatistics().system = new Dashboard.SystemStatistics(null, null, null, null, null, null);
+        } catch(Exception ex) {
+            result.getStatistics().system = new Dashboard.SystemStatistics(false);
+        }
 
         return result;
     }
