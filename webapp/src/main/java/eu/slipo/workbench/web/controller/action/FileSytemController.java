@@ -10,7 +10,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,7 +24,6 @@ import eu.slipo.workbench.common.model.BasicErrorCode;
 import eu.slipo.workbench.common.model.FileSystemErrorCode;
 import eu.slipo.workbench.common.model.RestResponse;
 import eu.slipo.workbench.common.model.process.InvalidProcessDefinitionException;
-import eu.slipo.workbench.common.service.FileNamingStrategy;
 import eu.slipo.workbench.web.model.FileSystemPathRequest;
 import eu.slipo.workbench.web.model.UploadRequest;
 
@@ -34,9 +32,6 @@ import eu.slipo.workbench.web.model.UploadRequest;
 @Secured({ "ROLE_USER", "ROLE_ADMIN" })
 @RequestMapping(produces = "application/json")
 public class FileSytemController extends BaseController {
-
-    @Autowired
-    private FileNamingStrategy fileNamingStrategy;
 
     @Value("${slipo.user.max-space:20971520}")
     private long maxUserSpace;

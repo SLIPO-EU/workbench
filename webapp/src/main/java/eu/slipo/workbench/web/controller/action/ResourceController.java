@@ -14,7 +14,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.remoting.RemoteConnectFailureException;
 import org.springframework.security.access.annotation.Secured;
@@ -37,7 +36,6 @@ import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.process.EnumProcessTaskType;
 import eu.slipo.workbench.common.model.process.InvalidProcessDefinitionException;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
-import eu.slipo.workbench.common.model.process.ProcessDefinitionBuilder;
 import eu.slipo.workbench.common.model.process.ProcessErrorCode;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStartException;
@@ -52,7 +50,6 @@ import eu.slipo.workbench.common.model.resource.ResourceRecord;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.repository.ProcessRepository;
 import eu.slipo.workbench.common.repository.ResourceRepository;
-import eu.slipo.workbench.common.service.FileNamingStrategy;
 import eu.slipo.workbench.web.model.QueryResult;
 import eu.slipo.workbench.web.model.resource.RegistrationRequest;
 import eu.slipo.workbench.web.model.resource.ResourceErrorCode;
@@ -73,18 +70,6 @@ public class ResourceController extends BaseController {
     private static final Logger logger = LoggerFactory.getLogger(ResourceController.class);
 
     @Autowired
-    @Qualifier("userDataDirectory")
-    private Path userDataDir;
-
-    @Autowired
-    @Qualifier("defaultFileNamingStrategy")
-    private FileNamingStrategy userDataNamingStrategy;
-
-    @Autowired
-    @Qualifier("catalogDataDirectory")
-    private Path catalogDataDir;
-
-    @Autowired
     private ResourceRepository resourceRepository;
 
     @Autowired
@@ -95,7 +80,7 @@ public class ResourceController extends BaseController {
 
     @Autowired
     private ProcessService processService;
-    
+
     @Autowired
     private ProcessDefinitionBuilderFactory processDefinitionBuilderFactory;
 
@@ -204,7 +189,7 @@ public class ResourceController extends BaseController {
     {
 
         try {
-            final Path userDir = userDataNamingStrategy.getUserDir(currentUserId(), true);
+            final Path userDir = fileNamingStrategy.getUserDir(currentUserId(), true);
             final String extension = FilenameUtils.getExtension(file.getOriginalFilename());
             final Path inputPath = createTemporaryFile(file.getBytes(), userDir, null, extension);
 
