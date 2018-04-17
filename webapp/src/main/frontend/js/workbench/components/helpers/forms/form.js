@@ -103,6 +103,7 @@ export default class Form extends React.Component {
                     value: this.props.values,
                     errors: this.props.errors,
                     readOnly: this.props.readOnly,
+                    appConfiguration: this.props.appConfiguration,
                   });
                 })
               }

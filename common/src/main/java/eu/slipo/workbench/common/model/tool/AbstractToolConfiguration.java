@@ -14,37 +14,51 @@ public abstract class AbstractToolConfiguration extends ToolConfigurationSupport
     private static final long serialVersionUID = 1L;
 
     /**
-     * The list of input files 
+     * Configuration version
+     */
+    protected String version;
+
+    /**
+     * The list of input files
      */
     protected List<String> input = Collections.emptyList();
-    
+
     /**
      * The data format that input files conform to.
      */
     protected EnumDataFormat inputFormat;
-    
+
     /**
      * The expected data format for output.
      */
     protected EnumDataFormat outputFormat;
-    
+
     /**
      * The directory where output will be created.
      */
     protected String outputDir;
-    
+
     /**
      * The directory where temporary files (if any) will be created.
      */
     protected String tmpDir;
-    
+
     public EnumDataFormat getOutputFormat()
     {
         return outputFormat;
     }
-    
+
     public EnumDataFormat getInputFormat()
     {
         return inputFormat;
     }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
 }

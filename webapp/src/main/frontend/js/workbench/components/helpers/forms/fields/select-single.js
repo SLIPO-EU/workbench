@@ -35,5 +35,6 @@ Select.propTypes = {
   options: PropTypes.array.isRequired,
   value: PropTypes.any,
   onChange: PropTypes.func.isRequired,
+  readOnly: PropTypes.bool,
 };
 

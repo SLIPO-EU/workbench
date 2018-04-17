@@ -68,6 +68,7 @@ class Designer extends React.Component {
 
     return (
       <StepGroup
+        appConfiguration={this.props.appConfiguration}
         key={group.key}
         group={group}
         steps={steps}

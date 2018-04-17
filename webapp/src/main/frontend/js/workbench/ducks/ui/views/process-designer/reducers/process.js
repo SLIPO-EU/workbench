@@ -1,7 +1,20 @@
 import {
   EnumInputType,
   EnumSelection,
+  EnumTool,
 } from '../../../../../model/process-designer';
+
+function resolveVersion(tool, version, appConfiguration) {
+  if (version) {
+    return version;
+  }
+  switch (tool) {
+    case EnumTool.TripleGeo:
+      return appConfiguration.tripleGeo.baselineVersion;
+    default:
+      return null;
+  }
+}
 
 export function processReducer(state, action) {
   const data = action.process;
@@ -47,6 +60,11 @@ export function processReducer(state, action) {
   const steps = data.steps.map((step, index) => {
     return {
       ...step,
+      // Add baseline version if not set
+      configuration: {
+        ...step.configuration,
+        version: resolveVersion(step.tool, step.configuration.version, action.appConfiguration),
+      }
     };
   });
   // Create resources

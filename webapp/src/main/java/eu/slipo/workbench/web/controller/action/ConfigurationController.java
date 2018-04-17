@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import eu.slipo.workbench.common.model.RestResponse;
 import eu.slipo.workbench.web.config.MapConfiguration;
+import eu.slipo.workbench.web.config.ToolkitConfiguration;
 import eu.slipo.workbench.web.model.configuration.ClientConfiguration;
 
 @RestController
@@ -17,6 +18,9 @@ public class ConfigurationController extends BaseController {
 
     @Autowired
     MapConfiguration mapConfiguration;
+
+    @Autowired
+    ToolkitConfiguration toolkitConfiguration;
 
     @RequestMapping(value = "/action/configuration", method = RequestMethod.GET)
     public RestResponse<ClientConfiguration> getConfiguration() {
@@ -28,6 +32,7 @@ public class ConfigurationController extends BaseController {
 
         config.setOsm(this.mapConfiguration.getOsm());
         config.setBingMaps(this.mapConfiguration.getBingMaps());
+        config.setTripleGeo(toolkitConfiguration.getTripleGeo());
 
         return config;
     }

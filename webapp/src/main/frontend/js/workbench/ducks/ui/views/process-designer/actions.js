@@ -13,11 +13,12 @@ export const reset = function () {
   };
 };
 
-export const addStep = function (group, step) {
+export const addStep = function (group, step, appConfiguration) {
   return {
     type: Types.ADD_STEP,
     group,
     step,
+    appConfiguration,
   };
 };
 

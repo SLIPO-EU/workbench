@@ -9,6 +9,8 @@ public class ClientConfiguration {
 
     private BingMapsConfiguration bingMaps;
 
+    private TripleGeoConfiguration tripleGeo;
+
     public OsmConfiguration getOsm() {
         return osm;
     }
@@ -23,6 +25,14 @@ public class ClientConfiguration {
 
     public void setBingMaps(BingMapsConfiguration bingMaps) {
         this.bingMaps = bingMaps;
+    }
+
+    public TripleGeoConfiguration getTripleGeo() {
+        return tripleGeo;
+    }
+
+    public void setTripleGeo(TripleGeoConfiguration tripleGeo) {
+        this.tripleGeo = tripleGeo;
     }
 
 }

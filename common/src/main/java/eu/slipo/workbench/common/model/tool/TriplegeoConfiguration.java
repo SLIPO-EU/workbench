@@ -3,7 +3,6 @@ package eu.slipo.workbench.common.model.tool;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -19,11 +18,8 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
-import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonProperty.Access;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumOntology;
@@ -69,7 +65,7 @@ public class TriplegeoConfiguration extends TransformConfiguration
         {
             Assert.notNull(dataFormat, "Expected an enum constant for data format");
             this.dataFormat = dataFormat;
-            
+
             Assert.notNull(key0, "Expected a non-null key for data format " + dataFormat);
             LinkedList<String> keys = new LinkedList<>(Arrays.asList(aliases));
             keys.addFirst(key0);
@@ -222,6 +218,21 @@ public class TriplegeoConfiguration extends TransformConfiguration
     private String encoding = "UTF-8";
 
     /**
+     * File (in TTL, YML, or XSL format) specifying mappings of the input attribute schema
+     * to RDF properties; i.e., prescribing how input features will be transformed into
+     * RDF triples (typically according to an ontology).
+     */
+    private String mappingSpec;
+
+    /**
+     * File (either in CSV or YML format) containing a classification hierarchy in
+     * categories assigned to input features. Classification is only applied if a suitable
+     * mapping (including a category attribute) has been specified above. Leave blank if
+     * non applicable.
+     */
+    private String classificationSpec;
+
+    /**
      * A default constructor
      */
     public TriplegeoConfiguration()
@@ -242,7 +253,7 @@ public class TriplegeoConfiguration extends TransformConfiguration
     {
         return EnumTool.TRIPLEGEO;
     }
-    
+
     //
     // Helpers
     //
@@ -289,6 +300,7 @@ public class TriplegeoConfiguration extends TransformConfiguration
     // Getters / Setters
     //
 
+    @Override
     @JsonIgnore
     public EnumDataFormat getInputFormat()
     {
@@ -355,6 +367,7 @@ public class TriplegeoConfiguration extends TransformConfiguration
             .collect(Collectors.joining(File.pathSeparator));
     }
 
+    @Override
     @JsonIgnore
     public EnumDataFormat getOutputFormat()
     {
@@ -692,4 +705,25 @@ public class TriplegeoConfiguration extends TransformConfiguration
     {
         this.quote = quote;
     }
+
+    @JsonProperty("mappingSpec")
+    public String getMappingSpec() {
+        return mappingSpec;
+    }
+
+    @JsonProperty("mappingSpec")
+    public void setMappingSpec(String mappingSpec) {
+        this.mappingSpec = mappingSpec;
+    }
+
+    @JsonProperty("classificationSpec")
+    public String getClassificationSpec() {
+        return classificationSpec;
+    }
+
+    @JsonProperty("classificationSpec")
+    public void setClassificationSpec(String classificationSpec) {
+        this.classificationSpec = classificationSpec;
+    }
+
 }

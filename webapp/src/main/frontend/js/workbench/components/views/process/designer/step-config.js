@@ -31,8 +31,9 @@ class StepConfig extends React.Component {
   }
 
   static propTypes = {
+    appConfiguration: PropTypes.object,
     step: PropTypes.object.isRequired,
-    configuration: PropTypes.object,
+    stepConfiguration: PropTypes.object,
     errors: PropTypes.object,
     configureStepValidate: PropTypes.func.isRequired,
     configureStepUpdate: PropTypes.func.isRequired,
@@ -60,9 +61,10 @@ class StepConfig extends React.Component {
         setValue={this.setValue}
         cancel={this.cancel}
         save={this.save}
-        values={this.props.configuration}
+        values={this.props.stepConfiguration}
         errors={this.props.errors}
         readOnly={this.props.readOnly}
+        appConfiguration={this.props.appConfiguration}
       >
         {
           React.isValidElement(Component) ?
@@ -75,7 +77,7 @@ class StepConfig extends React.Component {
   }
 
   save() {
-    this.props.configureStepEnd(this.props.step, this.props.configuration || {}, this.props.errors);
+    this.props.configureStepEnd(this.props.step, this.props.stepConfiguration || {}, this.props.errors);
   }
 
   cancel() {
