@@ -130,15 +130,13 @@ export class FileSelect extends React.Component {
   }
 
   getFolderHierarchy(path) {
-    const hierarchy = [];
+    const hierarchy = [{ name: '..', folder: this.props.filesystem }];
     let currentFolder = this.props.filesystem;
 
     path.split('/').slice(0, -1).forEach((name) => {
       if (name) {
         currentFolder = currentFolder.folders.find((f) => f.name === name);
         hierarchy.push({ name, folder: currentFolder });
-      } else {
-        hierarchy.push({ name: '..', folder: this.props.filesystem });
       }
     });
 
