@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,15 +15,13 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -34,50 +33,69 @@ import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.job.flow.Flow;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import eu.slipo.workbench.rpc.Application;
-import eu.slipo.workbench.rpc.jobs.TriplegeoJobConfiguration;
 
 @RunWith(SpringRunner.class)
 @ActiveProfiles({ "testing" })
+@EnableAutoConfiguration
 @SpringBootTest(classes = { Application.class }, webEnvironment = WebEnvironment.NONE)
 public class TriplegeoJobTests extends AbstractJobTests
 {
     private static Logger logger = LoggerFactory.getLogger(TriplegeoJobTests.class);
 
-    private static final String CONFIG_KEY = TriplegeoJobConfiguration.CONFIG_KEY;
-
     private static final String JOB_NAME = "triplegeo";
 
-    private static final List<Fixture> fixtures = new ArrayList<>();
-
-    @BeforeClass
-    public static void setUpBeforeClass() throws Exception
+    @TestConfiguration
+    public static class Setup
     {
-        // Add fixtures from src/test/resources
+        @Autowired
+        ResourceLoader resourceLoader;
 
-        for (String path: Arrays.asList("csv-1")) {
-            Path inputDir = getResource(JOB_NAME, path, "input");
-            Path resultsDir = getResource(JOB_NAME, path, "output");
-            Path parametersFile = getResource(JOB_NAME, path, "config.properties");
-            Properties parametersMap = new Properties();
-            try (BufferedReader in = Files.newBufferedReader(parametersFile)) {
-                parametersMap.load(in);
+        @Bean
+        public List<Fixture> fixtures() throws IOException
+        {
+            final Resource root = resourceLoader.getResource("classpath:testcases/triplegeo/");
+
+            final List<Fixture> fixtures = new ArrayList<>();
+
+            // Add fixtures from src/test/resources
+
+            for (String fixtureName: Arrays.asList("csv-1")) {
+                final Resource dir = root.createRelative(fixtureName + "/");
+                Resource inputDir = dir.createRelative("input");
+                Resource resultsDir = dir.createRelative("output");
+                Resource optionsRes = dir.createRelative("options.conf");
+                Properties parametersMap = new Properties();
+                try (InputStream in = optionsRes.getInputStream()) {
+                    parametersMap.load(in);
+                }
+                Resource mappingsRes = dir.createRelative("mappings.yml");
+                parametersMap.put("mappingSpec", mappingsRes.getURI());
+                Resource classificationRes = dir.createRelative("classification.csv");
+                parametersMap.put("classificationSpec", classificationRes.getURI());
+                fixtures.add(Fixture.create(inputDir, resultsDir, parametersMap));
             }
-            fixtures.add(new Fixture(inputDir, resultsDir, parametersMap));
+
+            return fixtures;
         }
     }
-
-    @AfterClass
-    public static void tearDownAfterClass() throws Exception {}
 
     @Autowired
     @Qualifier("triplegeo.flow")
     private Flow triplegeoFlow;
+
+    @Autowired
+    private List<Fixture> fixtures;
 
     @Before
     public void setUp() throws Exception {}
@@ -88,7 +106,7 @@ public class TriplegeoJobTests extends AbstractJobTests
     @Override
     protected String configKey()
     {
-        return CONFIG_KEY;
+        return "options";
     }
 
     @Override

@@ -7,12 +7,19 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.NavigableSet;
 import java.util.Properties;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
 
 import org.junit.After;
 import org.junit.Before;
@@ -37,7 +44,7 @@ import eu.slipo.workbench.common.service.util.PropertiesConverterService;
 public class LimesConfigurationTests
 {
     @TestConfiguration
-    public static class Configuration
+    public static class Setup
     {
         @Bean
         public ObjectMapper objectMapper()
@@ -49,6 +56,13 @@ public class LimesConfigurationTests
         public XmlMapper xmlMapper()
         {
             return new XmlMapper();
+        }
+
+        @Bean
+        public Validator validator()
+        {
+            ValidatorFactory validationFactory = Validation.buildDefaultValidatorFactory();
+            return validationFactory.getValidator();
         }
 
         @Bean
@@ -104,6 +118,9 @@ public class LimesConfigurationTests
     PropertiesConverterService propertiesConverter;
 
     @Autowired
+    Validator validator;
+
+    @Autowired
     LimesConfiguration config1;
 
     void checkEquals(LimesConfiguration.Input expected, LimesConfiguration.Input actual)
@@ -152,60 +169,66 @@ public class LimesConfigurationTests
         checkEquals(expected.getExecutionParams(), actual.getExecutionParams());
     }
 
-    @Test
-    public void test1_serializeAsJson() throws Exception
+    private void serializeAsJson(LimesConfiguration configuration) throws Exception
     {
-        String s1 = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(config1);
+        String s1 = objectMapper.writerWithDefaultPrettyPrinter()
+            .writeValueAsString(configuration);
 
-        LimesConfiguration config1a = objectMapper.readValue(s1, LimesConfiguration.class);
-        checkEquals(config1, config1a);
+        LimesConfiguration deserializedConfiguration =
+            objectMapper.readValue(s1, LimesConfiguration.class);
+        checkEquals(configuration, deserializedConfiguration);
 
-        String s1a = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(config1a);
+        String s1a = objectMapper.writerWithDefaultPrettyPrinter()
+            .writeValueAsString(deserializedConfiguration);
         assertEquals(s1, s1a);
     }
 
-    @Test
-    public void test1_serializeAsXml() throws Exception
+    private void serializeAsXml(LimesConfiguration configuration) throws Exception
     {
-        String s1 = xmlMapper.writerWithDefaultPrettyPrinter().writeValueAsString(config1);
+        String s1 = xmlMapper.writerWithDefaultPrettyPrinter()
+            .writeValueAsString(configuration);
 
-        LimesConfiguration config1a = xmlMapper.readValue(s1, LimesConfiguration.class);
-        checkEquals(config1, config1a);
+        LimesConfiguration deserializedConfiguration =
+            xmlMapper.readValue(s1, LimesConfiguration.class);
+        checkEquals(configuration, deserializedConfiguration);
 
-        String s1a = xmlMapper.writerWithDefaultPrettyPrinter().writeValueAsString(config1a);
+        String s1a = xmlMapper.writerWithDefaultPrettyPrinter()
+            .writeValueAsString(deserializedConfiguration);
         assertEquals(s1, s1a);
     }
 
-    @Test
-    public void test1_serializeAsProperties() throws Exception
+    private void serializeAsProperties(LimesConfiguration configuration) throws Exception
     {
-        Properties p1 = propertiesConverter.valueToProperties(config1);
-
-        LimesConfiguration config1a =
+        Properties p1 = propertiesConverter.valueToProperties(configuration);
+        LimesConfiguration deserializedConfiguration =
             propertiesConverter.propertiesToValue(p1, LimesConfiguration.class);
-        checkEquals(config1, config1a);
+        checkEquals(configuration, deserializedConfiguration);
     }
 
-    @Test
-    public void test1_serializeDefault() throws Exception
+    private void serializeDefault(LimesConfiguration configuration) throws Exception
     {
         byte[] serializedData = null;
         try (ByteArrayOutputStream dataStream = new ByteArrayOutputStream()) {
             ObjectOutputStream out = new ObjectOutputStream(dataStream);
-            out.writeObject(config1);
+            out.writeObject(configuration);
             out.flush();
             serializedData = dataStream.toByteArray();
         }
 
         ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(serializedData));
-        LimesConfiguration config1a = (LimesConfiguration) in.readObject();
-        checkEquals(config1, config1a);
+        LimesConfiguration deserializedConfiguration = (LimesConfiguration) in.readObject();
+        checkEquals(configuration, deserializedConfiguration);
     }
 
-    @Test
-    public void test1_setInputPaths() throws Exception
+    private void validate(LimesConfiguration configuration)
     {
-        String s1 = objectMapper.writeValueAsString(config1);
+        Set<ConstraintViolation<LimesConfiguration>> violations = validator.validate(configuration);
+        assertEquals(Collections.emptySet(), violations);
+    }
+
+    private void setInputPaths(LimesConfiguration configuration) throws Exception
+    {
+        String s1 = objectMapper.writeValueAsString(configuration);
         LimesConfiguration config1a = objectMapper.readValue(s1, LimesConfiguration.class);
 
         final String sourcePath = "/tmp/a-1.nt";
@@ -224,7 +247,47 @@ public class LimesConfigurationTests
         assertEquals(targetPath, targetInput.getPath());
         assertEquals(targetPath, config1b.getTargetPath());
 
-        checkEquals(config1.getAccepted(), config1b.getAccepted());
-        checkEquals(config1.getReview(), config1b.getReview());
+        checkEquals(configuration.getAccepted(), config1b.getAccepted());
+        checkEquals(configuration.getReview(), config1b.getReview());
+    }
+
+    //
+    // Tests
+    //
+
+    @Test
+    public void test1_serializeAsJson() throws Exception
+    {
+        serializeAsJson(config1);
+    }
+
+    @Test
+    public void test1_serializeAsXml() throws Exception
+    {
+        serializeAsXml(config1);
+    }
+
+    @Test
+    public void test1_serializeAsProperties() throws Exception
+    {
+        serializeAsProperties(config1);
+    }
+
+    @Test
+    public void test1_serializeDefault() throws Exception
+    {
+        serializeDefault(config1);
+    }
+
+    @Test
+    public void test1_validate() throws Exception
+    {
+        validate(config1);
+    }
+
+    @Test
+    public void test1_setInputPaths() throws Exception
+    {
+        setInputPaths(config1);
     }
 }

@@ -1,5 +1,7 @@
 package eu.slipo.workbench.common.service.util;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Iterator;
@@ -14,6 +16,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
+import org.springframework.core.io.Resource;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -415,5 +418,28 @@ public class JsonBasedPropertiesConverterService implements PropertiesConverterS
             p1.put(k.substring(prefixLen), map.get(k));
         
         return propertiesToValue(p1, valueType);
+    }
+    
+    @Override
+    public <T extends Serializable> T propertiesToValue(Resource resource, Class<T> valueType)
+        throws ConversionFailedException, IOException
+    {   
+        Properties props = new Properties();
+        try (InputStream in = resource.getInputStream()) {
+            props.load(in);
+        }
+        return propertiesToValue(props, valueType);
+    }
+    
+    @Override
+    public <T extends Serializable> T propertiesToValue(
+            Resource resource, String rootPropertyName, Class<T> valueType) 
+        throws ConversionFailedException, IOException
+    {
+        Properties props = new Properties();
+        try (InputStream in = resource.getInputStream()) {
+            props.load(in);
+        }
+        return propertiesToValue(props, rootPropertyName, valueType);
     }
 }

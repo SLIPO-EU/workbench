@@ -7,7 +7,7 @@ import java.util.List;
 
 import org.springframework.util.StringUtils;
 
-public enum EnumOntology
+public enum EnumSpatialOntology
 {
     GEOSPARQL("GeoSPARQL"),
     WGS84_POS("wgs84_pos"),
@@ -21,7 +21,7 @@ public enum EnumOntology
      * @param key The basic key as an identifier for this ontology
      * @param aliases A list of aliases that also serve as identifiers
      */
-    private EnumOntology(String key, String ...aliases)
+    private EnumSpatialOntology(String key, String ...aliases)
     {
         this.keys = new ArrayList<>();
         this.keys.add(key);
@@ -38,10 +38,10 @@ public enum EnumOntology
         return keys.get(0);
     }
     
-    public static EnumOntology fromKey(String key)
+    public static EnumSpatialOntology fromKey(String key)
     {
         if (!StringUtils.isEmpty(key))
-            for (EnumOntology e: EnumOntology.values())
+            for (EnumSpatialOntology e: EnumSpatialOntology.values())
                 if (e.name().equals(key) || e.keys.indexOf(key) >= 0)
                     return e;
         

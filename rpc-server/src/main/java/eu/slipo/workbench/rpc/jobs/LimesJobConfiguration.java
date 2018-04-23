@@ -53,16 +53,6 @@ public class LimesJobConfiguration
         PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x"));
 
     /**
-     * The default key for the (single) configuration file
-     */
-    public static final String CONFIG_KEY = "config";
-
-    /**
-     * The default filename for the (single) configuration file
-     */
-    public static final String CONFIG_FILENAME = "config.xml";
-
-    /**
      * The default timeout (milliseconds) for a container run
      */
     public static final long DEFAULT_RUN_TIMEOUT = 60 * 1000L;
@@ -133,27 +123,11 @@ public class LimesJobConfiguration
     }
 
     @Bean("limes.configureStep")
-    public Step configureStep(
-        @Qualifier("limes.configureTasklet") Tasklet tasklet)
+    public Step configureStep(@Qualifier("limes.configureTasklet") Tasklet tasklet)
     {
         return stepBuilderFactory.get("limes.configure")
             .tasklet(tasklet)
             .listener(ExecutionContextPromotionListeners.fromKeys("config"))
-            .build();
-    }
-
-    @Bean("limes.validateConfigurationTasklet")
-    public Tasklet validateConfigurationTasklet()
-    {
-        return new ValidateConfigurationTasklet<>(LimesConfiguration.class, validator);
-    }
-
-    @Bean("limes.validateConfigurationStep")
-    public Step validateConfigurationStep(
-        @Qualifier("limes.validateConfigurationTasklet") Tasklet tasklet)
-    {
-        return stepBuilderFactory.get("limes.validateConfiguration")
-            .tasklet(tasklet)
             .build();
     }
 
@@ -170,7 +144,7 @@ public class LimesJobConfiguration
             .input(config.getSourcePath(), config.getTargetPath())
             .inputFormat(config.getInputFormat())
             .configurationGeneratorService(configurationGeneratorService)
-            .config(CONFIG_KEY, CONFIG_FILENAME, config, EnumConfigurationFormat.XML)
+            .config("config", "config.xml", config, EnumConfigurationFormat.XML)
             .build();
     }
 
@@ -208,7 +182,7 @@ public class LimesJobConfiguration
 
         Path sourceFileName = Paths.get(config.getSourcePath()).getFileName();
         Path targetFileName = Paths.get(config.getTargetPath()).getFileName();
-        Path configPath = Paths.get(workDir, configFileByName.get(CONFIG_KEY));
+        Path configPath = Paths.get(workDir, configFileByName.get("config"));
 
         return CreateContainerTasklet.builder()
             .client(docker)
@@ -217,10 +191,10 @@ public class LimesJobConfiguration
                 .image(imageName)
                 .volume(Paths.get(inputDir), containerInputDir, true)
                 .volume(Paths.get(outputDir), containerOutputDir)
-                .volume(configPath, containerConfigDir.resolve(CONFIG_FILENAME), true)
+                .volume(configPath, containerConfigDir.resolve("config.xml"), true)
                 .env("SOURCE_FILE", containerInputDir.resolve(sourceFileName).toString())
                 .env("TARGET_FILE", containerInputDir.resolve(targetFileName).toString())
-                .env("CONFIG_FILE", containerConfigDir.resolve(CONFIG_FILENAME).toString())
+                .env("CONFIG_FILE", containerConfigDir.resolve("config.xml").toString())
                 .env("OUTPUT_DIR", containerOutputDir.toString()))
             .build();
     }
@@ -259,25 +233,6 @@ public class LimesJobConfiguration
             .tasklet(tasklet)
             .listener(tasklet)
             .build();
-    }
-
-    /**
-     * Create the basic flow of a job, expecting relevant configuration as an instance
-     * of {@link LimesConfiguration} keyed under <tt>config</tt> inside execution context.
-     */
-    @Bean("limes.basicFlow")
-    public Flow basicFlow(
-        @Qualifier("limes.validateConfigurationStep") Step validateConfigurationStep,
-        @Qualifier("limes.prepareWorkingDirectoryStep") Step prepareWorkingDirectoryStep,
-        @Qualifier("limes.createContainerStep") Step createContainerStep,
-        @Qualifier("limes.runContainerStep") Step runContainerStep)
-    {
-        return new FlowBuilder<Flow>("limes.basicFlow")
-            .start(validateConfigurationStep)
-            .next(prepareWorkingDirectoryStep)
-            .next(createContainerStep)
-            .next(runContainerStep)
-            .end();
     }
 
     /**

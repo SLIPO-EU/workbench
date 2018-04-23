@@ -7,10 +7,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileSystemException;
 import java.nio.file.Files;
+import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -21,6 +23,7 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,9 +43,12 @@ import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.repeat.RepeatStatus;
+import org.springframework.core.io.Resource;
 import org.springframework.data.util.Pair;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
+
+import com.google.common.collect.Maps;
 
 import eu.slipo.workbench.common.model.ApplicationException;
 import eu.slipo.workbench.common.model.BasicErrorCode;
@@ -63,6 +69,11 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
 
     private static final FileAttribute<?> DIRECTORY_ATTRIBUTE =
         PosixFilePermissions.asFileAttribute(DIRECTORY_PERMISSIONS);
+
+    /**
+     * A pattern for a key identifying a configuration entry
+     */
+    private static final String CONFIG_KEY_PATTERN = "^[a-zA-Z][-_0-9a-zA-Z]*$";
 
     /**
      * A flag indicating the default behavior on whether a input given as a ZIP archive
@@ -211,6 +222,28 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
         }
 
         /**
+         * Add a configuration file under this working directory. The configuration is copied verbatim
+         * from the given resource (no conversion taking place).
+         *
+         * @param key The key for this (part of) configuration.
+         * @param name The filename for this configuration (resolved against working directory)
+         * @param resource A resource to read configuration from
+         */
+        public Builder config(String key, String name, Resource resource)
+        {
+            Assert.notNull(key, "A key is required for a configuration");
+            Assert.isTrue(key.matches(CONFIG_KEY_PATTERN), "The key contains invalid characters");
+            Assert.isTrue(!StringUtils.isEmpty(name), "A name is required for a configuration");
+            Path namePath = Paths.get(name);
+            Assert.isTrue(namePath.getNameCount() == 1, "The name cannot be nested in directories");
+
+            Assert.notNull(resource, "A resource is required");
+
+            config.put(key, new ConfigurationSpec(namePath, resource, null));
+            return this;
+        }
+
+        /**
          * Add a configuration file (of properties) under this working directory.
          *
          * @param key The key for this (part of) configuration.
@@ -220,12 +253,12 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
         public Builder config(String key, String name, Properties properties)
         {
             Assert.notNull(key, "A key is required for a configuration");
-            Assert.isTrue(key.matches("[a-zA-Z][-_0-9a-zA-Z]*"), "The key contains invalid characters");
+            Assert.isTrue(key.matches(CONFIG_KEY_PATTERN), "The key contains invalid characters");
             Assert.isTrue(!StringUtils.isEmpty(name), "A name is required for a configuration");
-            Assert.notNull(properties, "A non-null map of properties is required");
-
             Path namePath = Paths.get(name);
             Assert.isTrue(namePath.getNameCount() == 1, "The name cannot be nested in directories");
+
+            Assert.notNull(properties, "A non-null map of properties is required");
 
             config.put(key, new ConfigurationSpec(namePath, properties, EnumConfigurationFormat.PROPERTIES));
             return this;
@@ -243,13 +276,13 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
             String key, String name, ToolConfiguration source, EnumConfigurationFormat configFormat)
         {
             Assert.notNull(key, "A key is required for a configuration");
-            Assert.isTrue(key.matches("[a-zA-Z][-_0-9a-zA-Z]*"), "The key contains invalid characters");
+            Assert.isTrue(key.matches(CONFIG_KEY_PATTERN), "The key contains invalid characters");
             Assert.isTrue(!StringUtils.isEmpty(name), "A name is required for a configuration");
-            Assert.notNull(source, "A non-null configuration object is required");
-            Assert.notNull(configFormat, "A non-null configuration format is required");
-
             Path namePath = Paths.get(name);
             Assert.isTrue(namePath.getNameCount() == 1, "The name cannot be nested in directories");
+
+            Assert.notNull(source, "A non-null configuration object is required");
+            Assert.notNull(configFormat, "A non-null configuration format is required");
 
             config.put(key, new ConfigurationSpec(namePath, source, configFormat));
             return this;
@@ -409,12 +442,19 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
         //
 
         for (ConfigurationSpec u: config.values()) {
-            String configData =
-                configurationGeneratorService.generate(u.source(), u.format());
-            Files.write(
-                workDir.resolve(u.path()),
-                configData.getBytes(StandardCharsets.UTF_8),
-                StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            Path path = workDir.resolve(u.path());
+            Object source = u.source();
+            if (source instanceof Resource) {
+                // Copy configuration from source
+                try (InputStream in = ((Resource) source).getInputStream()) {
+                    Files.copy(in, path, StandardCopyOption.REPLACE_EXISTING);
+                }
+            } else {
+                // Generate configuration from source, then write to destination
+                String data = configurationGeneratorService.generate(source, u.format());
+                Files.write(path, data.getBytes(StandardCharsets.UTF_8),
+                    StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            }
         }
 
         //
@@ -428,9 +468,8 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
 
         executionContext.putString(Keys.OUTPUT_DIR, outputDir.toString());
 
-        Map<String,String> configFileByName = new LinkedHashMap<>();
-        for (Map.Entry<String, ConfigurationSpec> p: config.entrySet())
-            configFileByName.put(p.getKey(), p.getValue().path().toString());
+        Map<String, String> configFileByName = new HashMap<>(
+            Maps.transformValues(config, u -> u.path().toString()));
         executionContext.put(Keys.CONFIG_FILE_BY_NAME, configFileByName);
 
         return RepeatStatus.FINISHED;

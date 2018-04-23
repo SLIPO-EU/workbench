@@ -60,6 +60,8 @@ public class LimesConfiguration extends InterlinkConfiguration
 {
     private static final long serialVersionUID = 1L;
 
+    private static final String TOOL_VERSION = "1.3"; 
+    
     public static final int SOURCE = 0;
     
     public static final int TARGET = 1;
@@ -605,8 +607,8 @@ public class LimesConfiguration extends InterlinkConfiguration
         this.outputFormat = EnumDataFormat.N_TRIPLES;
         
         this.prefixes = new TreeSet<>();
-        this.prefixes.add(new Prefix("owl", "http://www.w3.org/2002/07/owl#"));
-        this.prefixes.add(new Prefix("slipo", "http://slipo.eu/def#"));
+        this.prefixes.add(new Prefix("owl", OWL_NAMESPACE_URI));
+        this.prefixes.add(new Prefix("slipo", SLIPO_ONTOLOGY_NAMESPACE_URI));
     }
     
     @JsonIgnore

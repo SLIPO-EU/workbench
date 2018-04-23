@@ -1,1 +1,5 @@
 /target/
+
+/vendor/triplegeo/config/profiles/*
+!/vendor/triplegeo/config/profiles/.gitkeep
+!/vendor/triplegeo/config/profiles/OSM_Europe/

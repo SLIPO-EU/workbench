@@ -144,4 +144,37 @@
         </dependency>
 
     </dependencies>
+
+	<build>
+
+		<plugins>
+
+			<!-- Copy vendor data under target directory -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>3.0.1</version>
+				<executions>
+					<execution>
+						<id>copy-vendor-data</id>
+						<phase>process-resources</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}/classes/common/vendor</outputDirectory>
+							<resources>
+								<resource>
+									<directory>./vendor</directory>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+		</plugins>
+    
+    </build>
+    
 </project>

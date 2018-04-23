@@ -5,6 +5,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -25,44 +27,58 @@ import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.job.flow.Flow;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.google.common.collect.ImmutableMap;
 
-import eu.slipo.workbench.common.model.tool.LimesConfiguration;
 import eu.slipo.workbench.rpc.Application;
-import eu.slipo.workbench.rpc.jobs.LimesJobConfiguration;
 
 @RunWith(SpringRunner.class)
 @ActiveProfiles({ "testing" })
+@EnableAutoConfiguration
 @SpringBootTest(classes = { Application.class }, webEnvironment = WebEnvironment.NONE)
 public class LimesJobTests extends AbstractJobTests
 {
     private static Logger logger = LoggerFactory.getLogger(LimesJobTests.class);
 
-    private static final String CONFIG_KEY = LimesJobConfiguration.CONFIG_KEY;
-
     private static final String JOB_NAME = "limes";
 
-    private static List<Fixture> fixtures = new ArrayList<>();
-
-    @BeforeClass
-    public static void setUpBeforeClass() throws Exception
+    @TestConfiguration
+    public static class Setup
     {
-        // Add fixtures from src/test/resources
+        @Autowired
+        ResourceLoader resourceLoader;
 
-        for (String path: Arrays.asList("csv-1")) {
-            Path inputDir = getResource(JOB_NAME, path, "input");
-            Path resultsDir = getResource(JOB_NAME, path, "output");
-            Path parametersFile = getResource(JOB_NAME, path, "config.properties");
-            Properties parametersMap = new Properties();
-            try (BufferedReader in = Files.newBufferedReader(parametersFile)) {
-                parametersMap.load(in);
+        @Bean
+        public List<Fixture> fixtures() throws IOException
+        {
+            final Resource root = resourceLoader.getResource("classpath:testcases/limes/");
+
+            final List<Fixture> fixtures = new ArrayList<>();
+
+            // Add fixtures from src/test/resources
+
+            for (String fixtureName: Arrays.asList("csv-1")) {
+                final Resource dir = root.createRelative(fixtureName + "/");
+                Resource inputDir = dir.createRelative("input");
+                Resource resultsDir = dir.createRelative("output");
+                Resource configRes = dir.createRelative("config.properties");
+                Properties parametersMap = new Properties();
+                try (InputStream in = configRes.getInputStream()) {
+                    parametersMap.load(in);
+                }
+                fixtures.add(Fixture.create(inputDir, resultsDir, parametersMap));
             }
-            fixtures.add(new Fixture(inputDir, resultsDir, parametersMap));
+
+            return fixtures;
         }
     }
 
@@ -70,10 +86,13 @@ public class LimesJobTests extends AbstractJobTests
     @Qualifier("limes.flow")
     private Flow limesFlow;
 
+    @Autowired
+    private List<Fixture> fixtures;
+
     @Override
     protected String configKey()
     {
-        return CONFIG_KEY;
+        return "config";
     }
 
     @Override

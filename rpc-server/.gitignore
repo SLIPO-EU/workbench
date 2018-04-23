@@ -15,3 +15,4 @@ docker-compose.yml
 /config/*.yml
 
 ScratchController.java
+ScratchTests.java

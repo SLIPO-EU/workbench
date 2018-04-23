@@ -12,8 +12,6 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import eu.slipo.workbench.common.domain.AccountEntity;
-import eu.slipo.workbench.common.model.EnumRole;
-import eu.slipo.workbench.common.model.user.Account;
 
 @Repository
 @Transactional(readOnly = true)

@@ -43,7 +43,7 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import eu.slipo.workbench.common.config.ProcessDefinitionBuilderFactory;
 import eu.slipo.workbench.common.domain.AccountEntity;
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
-import eu.slipo.workbench.common.model.poi.EnumOntology;
+import eu.slipo.workbench.common.model.poi.EnumSpatialOntology;
 import eu.slipo.workbench.common.model.poi.EnumOperation;
 import eu.slipo.workbench.common.model.poi.EnumResourceType;
 import eu.slipo.workbench.common.model.poi.EnumTool;
@@ -129,11 +129,11 @@ public class DefaultProcessRepositoryTests
             configuration.setAttrX("lon");
             configuration.setAttrX("lat");
             configuration.setDelimiter(";");
-            configuration.setFeatureName("points");
+            configuration.setFeatureSource("points");
             configuration.setAttrKey("id");
             configuration.setAttrName("name");
             configuration.setAttrCategory("type");
-            configuration.setTargetOntology(EnumOntology.GEOSPARQL);
+            configuration.setTargetGeoOntology(EnumSpatialOntology.GEOSPARQL);
 
             final ResourceMetadataCreate metadata =
                 new ResourceMetadataCreate("sample-1", "A sample CSV file");
@@ -158,11 +158,11 @@ public class DefaultProcessRepositoryTests
             final TriplegeoConfiguration configuration = new TriplegeoConfiguration();
             configuration.setInputFormat(EnumDataFormat.SHAPEFILE);
             configuration.setOutputFormat(EnumDataFormat.N_TRIPLES);
-            configuration.setFeatureName("points");
+            configuration.setFeatureSource("points");
             configuration.setAttrKey("id");
             configuration.setAttrName("name");
             configuration.setAttrCategory("type");
-            configuration.setTargetOntology(EnumOntology.GEOSPARQL);
+            configuration.setTargetGeoOntology(EnumSpatialOntology.GEOSPARQL);
 
             final ResourceMetadataCreate metadata =
                 new ResourceMetadataCreate("sample-2", "A sample SHP file");

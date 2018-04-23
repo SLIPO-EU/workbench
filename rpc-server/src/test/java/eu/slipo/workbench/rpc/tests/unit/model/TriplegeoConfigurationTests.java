@@ -8,12 +8,16 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Properties;
+import java.util.Set;
+import java.util.Map;
 
-import org.apache.commons.beanutils.BeanUtils;
-import org.apache.commons.beanutils.BeanUtilsBean;
-import org.junit.After;
-import org.junit.Before;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +29,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
+import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.service.util.JsonBasedPropertiesConverterService;
 import eu.slipo.workbench.common.service.util.PropertiesConverterService;
@@ -34,7 +39,7 @@ import eu.slipo.workbench.common.service.util.PropertiesConverterService;
 public class TriplegeoConfigurationTests
 {
     @TestConfiguration
-    public static class Configuration
+    public static class Setup
     {
         @Bean
         public ObjectMapper objectMapper()
@@ -46,6 +51,13 @@ public class TriplegeoConfigurationTests
         public XmlMapper xmlMapper()
         {
             return new XmlMapper();
+        }
+
+        @Bean
+        public Validator validator()
+        {
+            ValidatorFactory validationFactory = Validation.buildDefaultValidatorFactory();
+            return validationFactory.getValidator();
         }
 
         @Bean
@@ -64,6 +76,8 @@ public class TriplegeoConfigurationTests
             config.setInputFromString("/tmp/triplegeo/input/p1.csv:/tmp/triplegeo/input/p2.csv");
             config.setSerializationFormat("N-TRIPLES");
             config.setOutputDir("/tmp/triplegeo/output");
+            config.setMappingSpec("/tmp/triplegeo/mappings.yml");
+            config.setClassificationSpec("/tmp/triplegeo/classification.yml");
 
             config.setAttrCategory("category");
             config.setAttrKey("id");
@@ -71,20 +85,38 @@ public class TriplegeoConfigurationTests
             config.setAttrX("lon");
             config.setAttrX("lat");
 
-            config.setFeatureName("points");
+            config.setFeatureSource("points");
+            config.addPrefix("foo", "http://example.com/foo#");
 
             return config;
         }
-    }
 
-    @Before
-    public void setUp() throws Exception
-    {
-    }
+        @Bean
+        public TriplegeoConfiguration config2()
+        {
+            TriplegeoConfiguration config = new TriplegeoConfiguration();
 
-    @After
-    public void tearDown() throws Exception
-    {
+            config.setMode(TriplegeoConfiguration.Mode.STREAM);
+            config.setInputFormat(EnumDataFormat.CSV);
+            config.setInput(Arrays.asList(
+                "/tmp/triplegeo/input/p1.csv",
+                "/tmp/triplegeo/input/p2.csv"));
+            config.setSerializationFormat("TTL");
+            config.setOutputDir("/tmp/triplegeo/output");
+            config.setMappingSpec("/tmp/triplegeo/mappings.yml");
+            config.setClassificationSpec("/tmp/triplegeo/classification.yml");
+
+            config.setAttrCategory("category");
+            config.setAttrKey("id");
+            config.setAttrName("name");
+            config.setAttrX("lon");
+            config.setAttrX("lat");
+
+            config.setFeatureSource("points");
+            config.addPrefix("foo", "http://example.com/foo#");
+
+            return config;
+        }
     }
 
     @Autowired
@@ -97,7 +129,13 @@ public class TriplegeoConfigurationTests
     PropertiesConverterService propertiesConverter;
 
     @Autowired
+    Validator validator;
+
+    @Autowired
     TriplegeoConfiguration config1;
+
+    @Autowired
+    TriplegeoConfiguration config2;
 
     void checkEquals(TriplegeoConfiguration expected, TriplegeoConfiguration actual)
     {
@@ -114,9 +152,21 @@ public class TriplegeoConfigurationTests
         assertEquals(expected.getAttrX(), actual.getAttrX());
         assertEquals(expected.getAttrY(), actual.getAttrY());
 
-        assertEquals(expected.getFeatureName(), actual.getFeatureName());
+        assertEquals(expected.getTargetGeoOntology(), actual.getTargetGeoOntology());
+
+        assertEquals(expected.getMappingSpec(), actual.getMappingSpec());
+
+        assertEquals(expected.getClassificationSpec(), actual.getClassificationSpec());
+        assertEquals(expected.getClassifyByName(), actual.getClassifyByName());
+
+        assertEquals(expected.getFeatureSource(), actual.getFeatureSource());
         assertEquals(expected.getFeatureNamespaceUri(), actual.getFeatureNamespaceUri());
-        assertEquals(expected.getFeatureUriPrefix(), actual.getFeatureUriPrefix());
+        assertEquals(expected.getGeometryNamespaceUri(), actual.getGeometryNamespaceUri());
+        assertEquals(expected.getClassNamespaceUri(), actual.getClassNamespaceUri());
+        assertEquals(expected.getClassificationNamespaceUri(), actual.getClassificationNamespaceUri());
+        assertEquals(expected.getDatasourceNamespaceUri(), actual.getDatasourceNamespaceUri());
+
+        assertEquals(expected.getPrefixes(), actual.getPrefixes());
 
         assertEquals(expected.getDelimiter(), actual.getDelimiter());
         assertEquals(expected.getQuote(), actual.getQuote());
@@ -127,53 +177,124 @@ public class TriplegeoConfigurationTests
         assertEquals(expected.getTmpDir(), actual.getTmpDir());
     }
 
-    @Test
-    public void test1_serializeAsJson() throws Exception
+    private void serializeAsJson(TriplegeoConfiguration configuration) throws Exception
     {
-        String s1 = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(config1);
+        String s1 = objectMapper.writerWithDefaultPrettyPrinter()
+            .writeValueAsString(configuration);
 
-        TriplegeoConfiguration config1a = objectMapper.readValue(s1, TriplegeoConfiguration.class);
-        checkEquals(config1, config1a);
+        TriplegeoConfiguration deserializedConfiguration =
+            objectMapper.readValue(s1, TriplegeoConfiguration.class);
+        checkEquals(configuration, deserializedConfiguration);
 
-        String s1a = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(config1a);
+        String s1a = objectMapper.writerWithDefaultPrettyPrinter()
+            .writeValueAsString(deserializedConfiguration);
         assertEquals(s1, s1a);
     }
 
-    @Test
-    public void test1_serializeAsXml() throws Exception
+    private void serializeAsXml(TriplegeoConfiguration configuration) throws Exception
     {
-        String s1 = xmlMapper.writerWithDefaultPrettyPrinter().writeValueAsString(config1);
+        String s1 = xmlMapper.writerWithDefaultPrettyPrinter()
+            .writeValueAsString(configuration);
 
-        TriplegeoConfiguration config1a = xmlMapper.readValue(s1, TriplegeoConfiguration.class);
-        checkEquals(config1, config1a);
+        TriplegeoConfiguration deserializedConfiguration =
+            xmlMapper.readValue(s1, TriplegeoConfiguration.class);
+        checkEquals(configuration, deserializedConfiguration);
 
-        String s1a = xmlMapper.writerWithDefaultPrettyPrinter().writeValueAsString(config1a);
+        String s1a = xmlMapper.writerWithDefaultPrettyPrinter()
+            .writeValueAsString(deserializedConfiguration);
         assertEquals(s1, s1a);
     }
 
-    @Test
-    public void test1_serializeAsProperties() throws Exception
+    private void serializeAsProperties(TriplegeoConfiguration configuration) throws Exception
     {
-        Properties p1 = propertiesConverter.valueToProperties(config1);
-
-        TriplegeoConfiguration config1a =
+        Properties p1 = propertiesConverter.valueToProperties(configuration);
+        TriplegeoConfiguration deserializedConfiguration =
             propertiesConverter.propertiesToValue(p1, TriplegeoConfiguration.class);
-        checkEquals(config1, config1a);
+        checkEquals(configuration, deserializedConfiguration);
     }
 
-    @Test
-    public void test1_serializeDefault() throws Exception
+    private void serializeDefault(TriplegeoConfiguration configuration) throws Exception
     {
         byte[] serializedData = null;
         try (ByteArrayOutputStream dataStream = new ByteArrayOutputStream()) {
             ObjectOutputStream out = new ObjectOutputStream(dataStream);
-            out.writeObject(config1);
+            out.writeObject(configuration);
             out.flush();
             serializedData = dataStream.toByteArray();
         }
 
         ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(serializedData));
-        TriplegeoConfiguration config1a = (TriplegeoConfiguration) in.readObject();
-        checkEquals(config1, config1a);
+        TriplegeoConfiguration deserializedConfiguration = (TriplegeoConfiguration) in.readObject();
+        checkEquals(configuration, deserializedConfiguration);
+    }
+
+    private void validate(TriplegeoConfiguration configuration)
+    {
+        Set<ConstraintViolation<TriplegeoConfiguration>> violations = validator.validate(configuration);
+        assertEquals(Collections.emptySet(), violations);
+    }
+
+    //
+    // Tests
+    //
+
+    @Test
+    public void test1_serializeAsJson() throws Exception
+    {
+        serializeAsJson(config1);
+    }
+
+    @Test
+    public void test2_serializeAsJson() throws Exception
+    {
+        serializeAsJson(config2);
+    }
+
+    @Test
+    public void test1_serializeAsXml() throws Exception
+    {
+        serializeAsXml(config1);
+    }
+
+    @Test
+    public void test2_serializeAsXml() throws Exception
+    {
+        serializeAsXml(config2);
+    }
+
+    @Test
+    public void test1_serializeAsProperties() throws Exception
+    {
+        serializeAsProperties(config1);
+    }
+
+    @Test
+    public void test2_serializeAsProperties() throws Exception
+    {
+        serializeAsProperties(config2);
+    }
+
+    @Test
+    public void test1_serializeDefault() throws Exception
+    {
+        serializeDefault(config1);
+    }
+
+    @Test
+    public void test2_serializeDefault() throws Exception
+    {
+        serializeDefault(config2);
+    }
+
+    @Test
+    public void test1_validate() throws Exception
+    {
+        validate(config1);
+    }
+
+    @Test
+    public void test2_validate() throws Exception
+    {
+        validate(config2);
     }
 }

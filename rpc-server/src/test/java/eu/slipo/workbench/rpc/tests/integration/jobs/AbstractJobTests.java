@@ -33,31 +33,42 @@ import org.springframework.batch.core.listener.JobExecutionListenerSupport;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.test.AssertFile;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
 import org.springframework.util.Assert;
 
 public abstract class AbstractJobTests
 {
     protected static class Fixture
     {
-        final Path inputDir;
+        Path inputDir;
 
-        final Path resultsDir;
+        Path resultsDir;
 
-        final JobParameters parameters;
+        JobParameters parameters;
 
-        Fixture(Path inputDir, Path expectedResultsDir, Map<Object, Object> parametersMap)
+        static Fixture create(Resource inputDir, Resource expectedResultsDir, Map<?, ?> parametersMap)
             throws IOException
         {
             Assert.notNull(inputDir, "Expected a non-null input directory");
+            Assert.notNull(expectedResultsDir, "Expected a non-null results directory");
+            return create(inputDir.getFile().toPath(), expectedResultsDir.getFile().toPath(), parametersMap);
+        }
+
+        static Fixture create(Path inputDir, Path expectedResultsDir, Map<?, ?> parametersMap)
+            throws IOException
+        {
+            Fixture f = new Fixture();
+
+            Assert.notNull(inputDir, "Expected a non-null input directory");
             Assert.isTrue(Files.isDirectory(inputDir) && Files.isReadable(inputDir),
                 "Expected a readable input directory");
-            this.inputDir = inputDir;
+            f.inputDir = inputDir;
 
-            Assert.notNull(expectedResultsDir, "Expected a non-null input directory");
+            Assert.notNull(expectedResultsDir, "Expected a non-null results directory");
             Assert.isTrue(
                 Files.isDirectory(expectedResultsDir) && Files.isReadable(expectedResultsDir),
                 "Expected a readable directory of expected results");
-            this.resultsDir = expectedResultsDir;
+            f.resultsDir = expectedResultsDir;
 
             JobParametersBuilder parametersBuilder = new JobParametersBuilder();
             parametersBuilder.addString("_id", Long.toHexString(System.currentTimeMillis()));
@@ -73,15 +84,17 @@ public abstract class AbstractJobTests
                 else
                     parametersBuilder.addString(name, value.toString());
             });
-            this.parameters = parametersBuilder.toJobParameters();
-        }
-    }
+            f.parameters = parametersBuilder.toJobParameters();
 
-    protected static Path getResource(String ...pathComponents)
-    {
-        URL url = AbstractJobTests.class
-            .getResource(Paths.get("/testcases", pathComponents).toString());
-        return Paths.get(url.getPath());
+            return f;
+        }
+
+        @Override
+        public String toString()
+        {
+            return String.format("Fixture [inputDir=%s, resultsDir=%s, parameters=%s]",
+                inputDir, resultsDir, parameters);
+        }
     }
 
     @Autowired
@@ -184,10 +197,8 @@ public abstract class AbstractJobTests
         assertNotNull(outputDir);
         assertTrue(Files.isDirectory(outputDir) && outputDir.startsWith(jobDataDirectory));
 
-        final List<Path> expectedResults = Files.list(fixture.resultsDir).collect(Collectors.toList());
-        final List<Path> actualResults = Files.list(outputDir).collect(Collectors.toList());
-        assertEquals(expectedResults.size(), actualResults.size());
-
+        final List<Path> expectedResults = Files.list(fixture.resultsDir)
+            .collect(Collectors.toList());
         for (Path expectedResult: expectedResults) {
             Path fileName = expectedResult.getFileName();
             Path result = outputDir.resolve(fileName);

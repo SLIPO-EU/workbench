@@ -60,7 +60,7 @@ public class ProcessDefinitionTests
     private static final String DATASOURCE_2_PATH = "uploads/2.csv";
 
     @TestConfiguration
-    public static class Configuration
+    public static class Setup
     {
         @Bean
         public ObjectMapper jsonMapper()
@@ -81,11 +81,11 @@ public class ProcessDefinitionTests
 
             config.setInputFormat(EnumDataFormat.CSV);
             config.setOutputFormat(EnumDataFormat.N_TRIPLES);
-            config.setOutputDir(Paths.get("/var/local/triplegeo/1"));
-            config.setTmpDir(Paths.get("/tmp/triplegeo/1"));
+            config.setOutputDir("/var/local/triplegeo/1");
+            config.setTmpDir("/tmp/triplegeo/1");
             config.setAttrX("lon");
             config.setAttrX("lat");
-            config.setFeatureName("points");
+            config.setFeatureSource("points");
             config.setAttrKey("id");
             config.setAttrName("name");
             config.setAttrCategory("type");
