@@ -8,6 +8,7 @@ import static org.springframework.util.StringUtils.stripFilenameExtension;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -46,6 +47,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.data.util.Pair;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.test.context.ActiveProfiles;
@@ -170,41 +174,15 @@ public class DefaultProcessOperatorTests
     {
         final URI input;
 
-        /**
-         * The configuration for a triplegeo transformation
-         */
         final TriplegeoConfiguration configuration;
 
         TransformFixture(
-            String name, URI input, Path stagingDir, Path expectedResultPath, TriplegeoConfiguration configuration)
+            String name, URI input, Path stagingDir, Path expectedResultPath,
+            TriplegeoConfiguration configuration)
         {
             super(name, stagingDir, expectedResultPath);
             this.input = input;
             this.configuration = configuration;
-        }
-
-        static TransformFixture create(
-            String name, URI input, Path stagingDir, Path expectedResultPath, TriplegeoConfiguration configuration)
-        {
-            Assert.notNull(!StringUtils.isEmpty(name), "A non-empty name is required");
-            Assert.isTrue(expectedResultPath != null && expectedResultPath.isAbsolute()
-                    && Files.isReadable(expectedResultPath),
-                "The expected result should be given as an absolute file path");
-            Assert.notNull(configuration, "The triplegeo configuration is required");
-            Assert.isTrue(!input.getScheme().equals("file") || (
-                    stagingDir != null && stagingDir.isAbsolute()
-                    && Files.isDirectory(stagingDir) && Files.isReadable(stagingDir)),
-                "The stagingDir should be an absolute path for an existing readable directory");
-            Assert.isTrue(!input.getScheme().equals("file") || Paths.get(input).startsWith(stagingDir),
-                "If input is a local file, must be located under staging directory");
-            return new TransformFixture(name, input, stagingDir, expectedResultPath, configuration);
-        }
-
-        static TransformFixture create(
-            String name, URL input, Path expectedResultPath, TriplegeoConfiguration configuration)
-            throws URISyntaxException
-        {
-            return create(name, input.toURI(), null, expectedResultPath, configuration);
         }
 
         public TriplegeoConfiguration getConfiguration()
@@ -245,50 +223,6 @@ public class DefaultProcessOperatorTests
             this.configuration = configuration;
         }
 
-        static InterlinkFixture create(
-            String name,
-            Path stagingDir,
-            Pair<URI, URI> inputPair,
-            Pair<TriplegeoConfiguration, TriplegeoConfiguration> transformConfigurationPair,
-            Path expectedResultPath, LimesConfiguration configuration)
-        {
-            Assert.notNull(!StringUtils.isEmpty(name), "A non-empty name is required");
-            Assert.isTrue(expectedResultPath != null && expectedResultPath.isAbsolute()
-                    && Files.isReadable(expectedResultPath),
-                "The expected result should be given as an absolute file path");
-            Assert.notNull(configuration, "The triplegeo configuration is required");
-            Assert.notNull(inputPair, "Expected an a pair of input URIs");
-            Assert.notNull(transformConfigurationPair,
-                "Expected an a pair of transform configurations (for inputs to transform to RDF)");
-
-            final URI input1 = inputPair.getFirst();
-            Assert.notNull(input1, "Expected a non-null input URI");
-            final URI input2 = inputPair.getSecond();
-            Assert.notNull(input2, "Expected a non-null input URI");
-            final TriplegeoConfiguration transformConfiguration1 = transformConfigurationPair.getFirst();
-            Assert.notNull(transformConfiguration1, "Expected non-null configuration");
-            final TriplegeoConfiguration transformConfiguration2 = transformConfigurationPair.getSecond();
-            Assert.notNull(transformConfiguration2, "Expected non-null configuration");
-
-            for (URI inputUri: Arrays.asList(input1, input2)) {
-                Assert.isTrue(!inputUri.getScheme().equals("file") || (
-                        stagingDir != null && stagingDir.isAbsolute()
-                        && Files.isDirectory(stagingDir) && Files.isReadable(stagingDir)),
-                    "The stagingDir should be an absolute path for an existing readable directory");
-                Assert.isTrue(!inputUri.getScheme().equals("file") ||
-                        Paths.get(inputUri).startsWith(stagingDir),
-                    "If input is a local file, must be located under staging directory");
-            }
-
-            return new InterlinkFixture(
-                name,
-                stagingDir,
-                inputPair,
-                transformConfigurationPair,
-                expectedResultPath,
-                configuration);
-        }
-
         public LimesConfiguration getConfiguration()
         {
             return configuration;
@@ -320,15 +254,10 @@ public class DefaultProcessOperatorTests
          * The project URL is only needed for testing with external sources (URLDataSource)
          */
         @Value("${slipo.tests.download-url:https://raw.githubusercontent.com/SLIPO-EU/workbench/master/}")
-        private URL rootUrl;
-
-        private URL resourcesBaseUrl;
+        private URL projectDownloadUrl;
 
         @Autowired
         private AccountRepository accountRepository;
-
-        @Autowired
-        private ResourceRepository resourceRepository;
 
         @Autowired
         private ObjectMapper jsonMapper;
@@ -340,47 +269,31 @@ public class DefaultProcessOperatorTests
         @Qualifier("defaultFileNamingStrategy")
         private FileNamingStrategy userDataNamingStrategy;
 
+        private URL baseUrl;
+
+        private Resource baseResource;
+
+        @Autowired
+        private void setBaseUrl(
+            @Value("${slipo.tests.project-download-url:https://raw.githubusercontent.com/SLIPO-EU/workbench/master/}") URL url)
+            throws MalformedURLException
+        {
+            this.baseUrl = new URL(url, "rpc-server/src/test/resources/testcases/");
+        }
+
+        @Autowired
+        private void setBaseResource(ResourceLoader resourceLoader)
+        {
+            this.baseResource = resourceLoader.getResource("classpath:testcases/");
+        }
+
         private Map<String, TransformFixture> transformFixtures = new HashMap<>();
 
         private Map<String, InterlinkFixture> interlinkFixtures = new HashMap<>();
 
-        private Path getResourcePath(String first, String ...more)
-        {
-            final Path rootPath = Paths.get("/testcases");
-            URL url = DefaultProcessOperatorTests.class
-                .getResource(rootPath.resolve(Paths.get(first, more)).toString());
-            return Paths.get(url.getPath());
-        }
-
-        private <T extends ToolConfiguration> T propertiesToConfiguration(Properties p, Class<T> valueType)
-        {
-            T t = null;
-            try {
-                t = propertiesConverter.propertiesToValue(p, valueType);
-            } catch (ConversionFailedException e) {
-                throw new IllegalStateException("Cannot convert properties", e);
-            }
-            return t;
-        }
-
-        private <T extends ToolConfiguration> T readProperties(Path propertiesPath, Class<T> valueType)
-        {
-            final Properties properties = new Properties();
-
-            try (BufferedReader in = Files.newBufferedReader(propertiesPath)) {
-                properties.load(in);
-            } catch (IOException e) {
-                throw new IllegalStateException("Cannot load properties", e);
-            }
-
-            return propertiesToConfiguration(properties, valueType);
-        }
-
         @PostConstruct
         public void initialize() throws Exception
         {
-            resourcesBaseUrl = new URL(rootUrl, "rpc-server/src/test/resources/testcases/");
-
             // Load sample user account
 
             AccountEntity accountEntity = new AccountEntity(USER_NAME, USER_EMAIL);
@@ -405,60 +318,168 @@ public class DefaultProcessOperatorTests
             // Setup other fixtures ...
         }
 
+        /**
+         * Copy source into target directory as a temporary file.
+         * @return the path to created file
+         */
+        private Path copyTempIntoDirectory(Path source, String prefix, String suffix, Path targetDir)
+            throws IOException
+        {
+            Path path = Files.createTempFile(targetDir, prefix, suffix);
+            Files.copy(source, path, StandardCopyOption.REPLACE_EXISTING);
+            return path;
+        }
+
+        private Properties readProperties(Resource r) throws IOException
+        {
+            final Properties props = new Properties();
+            try (InputStream in = r.getInputStream()) {
+                props.load(in);
+            }
+            return props;
+        }
+
         private void setupTransformFixtures(Path userDir) throws Exception
         {
             for (String dirPath: Arrays.asList("triplegeo/csv-1")) {
+                final Resource dir = baseResource.createRelative(dirPath + "/");
                 final String dirName = Paths.get(dirPath).getFileName().toString();
 
-                final Path inputDir = getResourcePath(dirPath, "input");
-                final Path resultsDir = getResourcePath(dirPath, "output");
-                final TriplegeoConfiguration configuration = readProperties(
-                    getResourcePath(dirPath, "config.properties"), TriplegeoConfiguration.class);
+                final URL resourcesUrl = new URL(baseUrl, Paths.get(dirPath, "input").toString() + "/");
 
-                // Copy inputs into application's user directory
+                final Path inputDir = Paths.get(dir.createRelative("input").getURI());
+                final Path resultsDir = Paths.get(dir.createRelative("output").getURI());
+
+                final Properties options = readProperties(dir.createRelative("options.conf"));
+
+                final URI mappingsUri = dir.createRelative("mappings.yml").getURI();
+                final Path mappingsPath = Paths.get(mappingsUri);
+
+                final URI classificationUri = dir.createRelative("classification.csv").getURI();
+                final Path classificationPath = Paths.get(classificationUri);
+
+                // Copy mapping/classification files into user's data directory
+
+                Path mappingsTempPath =
+                    copyTempIntoDirectory(mappingsPath, "mappings-", ".yml", userDir);
+                Path classificationTempPath =
+                    copyTempIntoDirectory(classificationPath, "classification-", ".csv", userDir);
+
+                // Copy inputs into user's data directory
+
                 final List<String> inputNames = Files.list(inputDir)
                     .collect(Collectors.mapping(p -> p.getFileName().toString(), Collectors.toList()));
                 final BiMap<String, String> inputNameToTempName = HashBiMap.create();
                 final BiMap<String, Path> inputNameToTempPath = HashBiMap.create();
                 for (String inputName: inputNames) {
-                    Path p = Files.createTempFile(userDir, null, ".csv");
-                    Files.copy(inputDir.resolve(inputName), p, StandardCopyOption.REPLACE_EXISTING);
-                    inputNameToTempPath.put(inputName, p);
+                    Path path = copyTempIntoDirectory(inputDir.resolve(inputName), null, ".csv", userDir);
+                    inputNameToTempPath.put(inputName, path);
                     inputNameToTempName.put(inputName,
-                        stripFilenameExtension(userDir.relativize(p).getFileName().toString()));
+                        stripFilenameExtension(userDir.relativize(path).toString()));
                 }
 
-                // Add fixtures for input as a local file
+                // Add fixtures for input as a local file (specs given as user-relative paths)
+
                 for (int index = 0; index < inputNames.size(); ++index) {
                     String inputName = inputNames.get(index);
                     Path inputPath = inputNameToTempPath.get(inputName);
-                    TransformFixture fixture = TransformFixture.create(
-                        "file-" + inputNameToTempName.get(inputName),
+                    TransformFixture fixture = createTransformFixture(
+                        "file-" + inputNameToTempName.get(inputName) + "-a",
                         inputPath.toUri(),
                         userDir,
                         resultsDir.resolve(stripFilenameExtension(inputName) + ".nt"),
-                        configuration);
-                    String key = String.format("file-%s-%d", dirName, index + 1);
+                        options,
+                        userDir.relativize(mappingsTempPath).toString(),
+                        userDir.relativize(classificationTempPath).toString());
+                    String key = String.format("file-%s-%d-a", dirName, index + 1);
                     transformFixtures.put(key, fixture);
                 }
 
-                // Add fixtures for input as URL
-                final URL resourcesUrl =
-                    new URL(resourcesBaseUrl, Paths.get(dirPath, "input").toString() + "/");
+                // Add fixtures for input as a local file (specs given as file URIs)
+
                 for (int index = 0; index < inputNames.size(); ++index) {
                     String inputName = inputNames.get(index);
-                    String fixtureName = "url-" + inputNameToTempName.get(inputName);
-                    URL url = new URL(resourcesUrl, inputName);
-                    String urlFragment = fixtureName.substring(1 + inputName.length());
-                    TransformFixture fixture = TransformFixture.create(
-                        fixtureName,
-                        new URL(url, "#" + urlFragment),
+                    Path inputPath = inputNameToTempPath.get(inputName);
+                    TransformFixture fixture = createTransformFixture(
+                        "file-" + inputNameToTempName.get(inputName) + "-b",
+                        inputPath.toUri(),
+                        userDir,
                         resultsDir.resolve(stripFilenameExtension(inputName) + ".nt"),
-                        configuration);
-                    String key = String.format("url-%s-%d", dirName, index + 1);
+                        options,
+                        mappingsUri.toString(),
+                        classificationUri.toString());
+                    String key = String.format("file-%s-%d-b", dirName, index + 1);
+                    transformFixtures.put(key, fixture);
+                }
+
+                // Add fixtures for input as URLs (specs given as user-relative paths)
+
+                for (int index = 0; index < inputNames.size(); ++index) {
+                    String inputName = inputNames.get(index);
+                    String fixtureName = "url-" + inputNameToTempName.get(inputName) + "-a";
+                    URL url = new URL(resourcesUrl, inputName);
+                    TransformFixture fixture = createTransformFixture(
+                        fixtureName,
+                        new URL(url, "#" + fixtureName.substring(1 + inputName.length())),
+                        resultsDir.resolve(stripFilenameExtension(inputName) + ".nt"),
+                        options,
+                        userDir.relativize(mappingsTempPath).toString(),
+                        userDir.relativize(classificationTempPath).toString());
+                    String key = String.format("url-%s-%d-a", dirName, index + 1);
+                    transformFixtures.put(key, fixture);
+                }
+
+                // Add fixtures for input as URLs (specs given as file URIs)
+
+                for (int index = 0; index < inputNames.size(); ++index) {
+                    String inputName = inputNames.get(index);
+                    String fixtureName = "url-" + inputNameToTempName.get(inputName) + "-b";
+                    URL url = new URL(resourcesUrl, inputName);
+                    TransformFixture fixture = createTransformFixture(
+                        fixtureName,
+                        new URL(url, "#" + fixtureName.substring(1 + inputName.length())),
+                        resultsDir.resolve(stripFilenameExtension(inputName) + ".nt"),
+                        options,
+                        mappingsUri.toString(),
+                        classificationUri.toString());
+                    String key = String.format("url-%s-%d-b", dirName, index + 1);
                     transformFixtures.put(key, fixture);
                 }
             }
+        }
+
+        private TransformFixture createTransformFixture(
+            String name, URI input, Path stagingDir, Path expectedResultPath,
+            Properties options, String mappingSpec, String classificationSpec)
+            throws ConversionFailedException
+        {
+            Assert.notNull(!StringUtils.isEmpty(name), "A non-empty name is required");
+            Assert.isTrue(expectedResultPath != null && expectedResultPath.isAbsolute()
+                    && Files.isReadable(expectedResultPath),
+                "The expected result should be given as an absolute file path");
+            Assert.notNull(options, "A map of options is required");
+            Assert.isTrue(!input.getScheme().equals("file") || (
+                    stagingDir != null && stagingDir.isAbsolute()
+                    && Files.isDirectory(stagingDir) && Files.isReadable(stagingDir)),
+                "The stagingDir should be an absolute path for an existing readable directory");
+            Assert.isTrue(!input.getScheme().equals("file") || Paths.get(input).startsWith(stagingDir),
+                "If input is a local file, must be located under staging directory");
+
+            TriplegeoConfiguration configuration =
+                propertiesConverter.propertiesToValue(options, TriplegeoConfiguration.class);
+            configuration.setMappingSpec(mappingSpec);
+            configuration.setClassificationSpec(classificationSpec);
+
+            return new TransformFixture(name, input, stagingDir, expectedResultPath, configuration);
+        }
+
+        private TransformFixture createTransformFixture(
+            String name, URL input, Path expectedResultPath,
+            Properties options, String mappingSpec, String classificationSpec)
+            throws URISyntaxException, ConversionFailedException
+        {
+            return createTransformFixture(
+                name, input.toURI(), null, expectedResultPath, options, mappingSpec, classificationSpec);
         }
 
         @Bean
@@ -470,42 +491,134 @@ public class DefaultProcessOperatorTests
         private void setupInterlinkFixtures(Path userDir) throws Exception
         {
             for (String dirPath: Arrays.asList("limes/csv-1")) {
+                final Resource dir = baseResource.createRelative(dirPath + "/");
                 final String dirName = Paths.get(dirPath).getFileName().toString();
 
-                final Path inputDir = getResourcePath(dirPath, "input");
-                final Path resultsDir = getResourcePath(dirPath, "output");
-                final TriplegeoConfiguration configurationToTransform1 = readProperties(
-                    getResourcePath(dirPath, "transform-a.properties"), TriplegeoConfiguration.class);
-                final TriplegeoConfiguration configurationToTransform2 = readProperties(
-                    getResourcePath(dirPath, "transform-b.properties"), TriplegeoConfiguration.class);
-                final LimesConfiguration configuration = readProperties(
-                    getResourcePath(dirPath, "config.properties"), LimesConfiguration.class);
+                final Path inputDir = Paths.get(dir.createRelative("input").getURI());
+                final Path resultsDir = Paths.get(dir.createRelative("output").getURI());
 
-                // Copy inputs into application's user directory
+                final URI mappingsUri = dir.createRelative("mappings.yml").getURI();
+                final Path mappingsPath = Paths.get(mappingsUri);
+
+                final URI classificationUri = dir.createRelative("classification.csv").getURI();
+                final Path classificationPath = Paths.get(classificationUri);
+
+                final Properties transformOptions1 =
+                    readProperties(dir.createRelative("transform-a.properties"));
+                final Properties transformOptions2 =
+                    readProperties(dir.createRelative("transform-b.properties"));
+                final Properties configuration =
+                    readProperties(dir.createRelative("config.properties"));
+
+                // Copy mapping/classification files into user's data directory
+
+                Path mappingsTempPath =
+                    copyTempIntoDirectory(mappingsPath, "mappings-", ".yml", userDir);
+                Path classificationTempPath =
+                    copyTempIntoDirectory(classificationPath, "classification-", ".csv", userDir);
+
+                // Copy inputs into user's data directory
+
                 final List<String> inputNames = Arrays.asList("a.csv", "b.csv");
                 final BiMap<String, String> inputNameToTempName = HashBiMap.create();
                 final BiMap<String, Path> inputNameToTempPath = HashBiMap.create();
                 for (String inputName: inputNames) {
-                    Path p = Files.createTempFile(userDir, null, ".csv");
-                    Files.copy(inputDir.resolve(inputName), p, StandardCopyOption.REPLACE_EXISTING);
-                    inputNameToTempPath.put(inputName, p);
+                    Path path = copyTempIntoDirectory(inputDir.resolve(inputName), null, ".csv", userDir);
+                    inputNameToTempPath.put(inputName, path);
                     inputNameToTempName.put(inputName,
-                        stripFilenameExtension(userDir.relativize(p).getFileName().toString()));
+                        stripFilenameExtension(userDir.relativize(path).toString()));
                 }
 
-                // Add fixture for input as a local file
-                InterlinkFixture fixture = InterlinkFixture.create(
-                    "file-" + inputNameToTempName.get("a.csv"),
+                // Add fixture for input as a local file (specs given as user-relative paths)
+
+                InterlinkFixture fixtureA = createInterlinkFixture(
+                    "file-" + inputNameToTempName.get("a.csv") + "-a",
                     userDir,
                     Pair.of(
                         inputNameToTempPath.get("a.csv").toUri(),
                         inputNameToTempPath.get("b.csv").toUri()),
-                    Pair.of(configurationToTransform1, configurationToTransform2),
+                    Pair.of(transformOptions1, transformOptions2),
+                    userDir.relativize(mappingsTempPath).toString(),
+                    userDir.relativize(classificationTempPath).toString(),
                     resultsDir.resolve("accepted.nt"),
                     configuration);
-                String key = String.format("file-%s", dirName);
-                interlinkFixtures.put(key, fixture);
+                String keyA = String.format("file-%s-a", dirName);
+                interlinkFixtures.put(keyA, fixtureA);
+
+                // Add fixture for input as a local file (specs given as file URIs)
+
+                InterlinkFixture fixtureB = createInterlinkFixture(
+                    "file-" + inputNameToTempName.get("a.csv") + "-b",
+                    userDir,
+                    Pair.of(
+                        inputNameToTempPath.get("a.csv").toUri(),
+                        inputNameToTempPath.get("b.csv").toUri()),
+                    Pair.of(transformOptions1, transformOptions2),
+                    mappingsUri.toString(),
+                    classificationUri.toString(),
+                    resultsDir.resolve("accepted.nt"),
+                    configuration);
+                String keyB = String.format("file-%s-b", dirName);
+                interlinkFixtures.put(keyB, fixtureB);
             }
+        }
+
+        private InterlinkFixture createInterlinkFixture(
+            String name,
+            Path stagingDir,
+            Pair<URI, URI> inputPair,
+            Pair<Properties, Properties> transformOptionsPair,
+            String mappingSpec,
+            String classificationSpec,
+            Path expectedResultPath,
+            Properties configuration)
+            throws ConversionFailedException
+        {
+            Assert.notNull(!StringUtils.isEmpty(name), "A non-empty name is required");
+            Assert.isTrue(expectedResultPath != null && expectedResultPath.isAbsolute()
+                    && Files.isReadable(expectedResultPath),
+                "The expected result should be given as an absolute file path");
+            Assert.notNull(configuration, "The triplegeo configuration is required");
+            Assert.notNull(inputPair, "Expected an a pair of input URIs");
+            Assert.notNull(transformOptionsPair,
+                "Expected an a pair of transform options (for inputs to transform to RDF)");
+
+            final URI input1 = inputPair.getFirst();
+            Assert.notNull(input1, "Expected a non-null input URI");
+            final URI input2 = inputPair.getSecond();
+            Assert.notNull(input2, "Expected a non-null input URI");
+            final Properties transformOptions1 = transformOptionsPair.getFirst();
+            Assert.notNull(transformOptions1, "Expected non-null options");
+            final Properties transformOptions2 = transformOptionsPair.getSecond();
+            Assert.notNull(transformOptions2, "Expected non-null options");
+
+            for (URI inputUri: Arrays.asList(input1, input2)) {
+                Assert.isTrue(!inputUri.getScheme().equals("file") || (
+                        stagingDir != null && stagingDir.isAbsolute()
+                        && Files.isDirectory(stagingDir) && Files.isReadable(stagingDir)),
+                    "The stagingDir should be an absolute path for an existing readable directory");
+                Assert.isTrue(!inputUri.getScheme().equals("file") ||
+                        Paths.get(inputUri).startsWith(stagingDir),
+                    "If input is a local file, must be located under staging directory");
+            }
+
+            TriplegeoConfiguration transformConfiguration1 =
+                propertiesConverter.propertiesToValue(transformOptions1, TriplegeoConfiguration.class);
+            transformConfiguration1.setMappingSpec(mappingSpec);
+            transformConfiguration1.setClassificationSpec(classificationSpec);
+
+            TriplegeoConfiguration transformConfiguration2 =
+                propertiesConverter.propertiesToValue(transformOptions2, TriplegeoConfiguration.class);
+            transformConfiguration2.setMappingSpec(mappingSpec);
+            transformConfiguration2.setClassificationSpec(classificationSpec);
+
+            return new InterlinkFixture(
+                name,
+                stagingDir,
+                inputPair,
+                Pair.of(transformConfiguration1, transformConfiguration2),
+                expectedResultPath,
+                propertiesConverter.propertiesToValue(configuration, LimesConfiguration.class));
         }
 
         @Bean
@@ -786,12 +899,16 @@ public class DefaultProcessOperatorTests
         AssertFile.assertFileEquals(fixture.getExpectedResultPath().toFile(), resourcePath.toFile());
     }
 
+    //
+    // Tests
+    //
+
     @Test(timeout = 35 * 1000L)
     public void test1_transformAndRegister1a() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
         transformAndRegister(
-            "register-file-csv-1-1-a", transformFixtures.get("file-csv-1-1"), user.toDto());
+            "register-file-csv-1-1-a", transformFixtures.get("file-csv-1-1-a"), user.toDto());
     }
 
     @Test(timeout = 35 * 1000L)
@@ -799,7 +916,7 @@ public class DefaultProcessOperatorTests
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
         transformAndRegister(
-            "register-file-csv-1-1-b", transformFixtures.get("file-csv-1-1"), user.toDto());
+            "register-file-csv-1-1-b", transformFixtures.get("file-csv-1-1-b"), user.toDto());
     }
 
     @Test(timeout = 35 * 1000L)
@@ -807,7 +924,15 @@ public class DefaultProcessOperatorTests
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
         transformAndRegister(
-            "register-file-csv-1-2-a", transformFixtures.get("file-csv-1-2"), user.toDto());
+            "register-file-csv-1-2-a", transformFixtures.get("file-csv-1-2-a"), user.toDto());
+    }
+
+    @Test(timeout = 35 * 1000L)
+    public void test1_transformAndRegister2b() throws Exception
+    {
+        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
+        transformAndRegister(
+            "register-file-csv-1-2-b", transformFixtures.get("file-csv-1-2-b"), user.toDto());
     }
 
     @Test(timeout = 35 * 1000L)
@@ -815,7 +940,15 @@ public class DefaultProcessOperatorTests
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
         transformAndRegister(
-            "register-file-csv-1-3-a", transformFixtures.get("file-csv-1-3"), user.toDto());
+            "register-file-csv-1-3-a", transformFixtures.get("file-csv-1-3-a"), user.toDto());
+    }
+
+    @Test(timeout = 35 * 1000L)
+    public void test1_transformAndRegister3b() throws Exception
+    {
+        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
+        transformAndRegister(
+            "register-file-csv-1-3-b", transformFixtures.get("file-csv-1-3-b"), user.toDto());
     }
 
     @Test(timeout = 35 * 1000L)
@@ -823,7 +956,15 @@ public class DefaultProcessOperatorTests
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
         transformAndRegister(
-            "register-url-csv-1-1-a", transformFixtures.get("url-csv-1-1"), user.toDto());
+            "register-url-csv-1-1-a", transformFixtures.get("url-csv-1-1-a"), user.toDto());
+    }
+
+    @Test(timeout = 35 * 1000L)
+    public void test1_downloadAndTransformAndRegister1b() throws Exception
+    {
+        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
+        transformAndRegister(
+            "register-url-csv-1-1-b", transformFixtures.get("url-csv-1-1-b"), user.toDto());
     }
 
     @Test(timeout = 35 * 1000L)
@@ -831,39 +972,72 @@ public class DefaultProcessOperatorTests
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
         transformAndRegister(
-            "register-url-csv-1-2-a", transformFixtures.get("url-csv-1-2"), user.toDto());
+            "register-url-csv-1-2-a", transformFixtures.get("url-csv-1-2-a"), user.toDto());
     }
+
+    @Test(timeout = 35 * 1000L)
+    public void test1_downloadAndTransformAndRegister2b() throws Exception
+    {
+        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
+        transformAndRegister(
+            "register-url-csv-1-2-b", transformFixtures.get("url-csv-1-2-b"), user.toDto());
+    }
+
 
     @Test(timeout = 35 * 1000L)
     public void test1_downloadAndTransformAndRegister3a() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
         transformAndRegister(
-            "register-url-csv-1-3-a", transformFixtures.get("url-csv-1-3"), user.toDto());
+            "register-url-csv-1-3-a", transformFixtures.get("url-csv-1-3-a"), user.toDto());
     }
 
-    @Test(timeout = 90 * 1000L)
+    @Test(timeout = 35 * 1000L)
+    public void test1_downloadAndTransformAndRegister3b() throws Exception
+    {
+        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
+        transformAndRegister(
+            "register-url-csv-1-3-b", transformFixtures.get("url-csv-1-3-b"), user.toDto());
+    }
+
+    @Test(timeout = 35 * 1000L)
+    public void test1_transformAndLinkAndRegister1a() throws Exception
+    {
+        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
+        transformAndLinkAndRegister(
+            "register-linked-csv-1-a", interlinkFixtures.get("file-csv-1-a"), user.toDto());
+    }
+
+    @Test(timeout = 35 * 1000L)
+    public void test1_transformAndLinkAndRegister1b() throws Exception
+    {
+        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
+        transformAndLinkAndRegister(
+            "register-linked-csv-1-b", interlinkFixtures.get("file-csv-1-b"), user.toDto());
+    }
+
+    @Test(timeout = 120 * 1000L)
     public void test1p_transformAndRegisterP6() throws Exception
     {
         final Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
 
         Future<?> f1 = taskExecutor.submit(
-            new TransformRunnable("register-csv-1-1-p6", transformFixtures.get("file-csv-1-1"), user));
+            new TransformRunnable("register-csv-1-1-a-p6", transformFixtures.get("file-csv-1-1-a"), user));
 
         Future<?> f2 = taskExecutor.submit(
-            new TransformRunnable("register-csv-1-2-p6", transformFixtures.get("file-csv-1-2"), user));
+            new TransformRunnable("register-csv-1-2-a-p6", transformFixtures.get("file-csv-1-2-a"), user));
 
         Future<?> f3 = taskExecutor.submit(
-            new TransformRunnable("register-csv-1-3-p6", transformFixtures.get("file-csv-1-3"), user));
+            new TransformRunnable("register-csv-1-3-a-p6", transformFixtures.get("file-csv-1-3-a"), user));
 
         Future<?> f4 = taskExecutor.submit(
-            new TransformRunnable("register-csv-1-4-p6", transformFixtures.get("url-csv-1-1"), user));
+            new TransformRunnable("register-csv-1-4-a-p6", transformFixtures.get("url-csv-1-1-a"), user));
 
         Future<?> f5 = taskExecutor.submit(
-            new TransformRunnable("register-csv-1-5-p6", transformFixtures.get("url-csv-1-2"), user));
+            new TransformRunnable("register-csv-1-5-a-p6", transformFixtures.get("url-csv-1-2-a"), user));
 
         Future<?> f6 = taskExecutor.submit(
-            new TransformRunnable("register-csv-1-6-p6", transformFixtures.get("url-csv-1-3"), user));
+            new TransformRunnable("register-csv-1-6-a-p6", transformFixtures.get("url-csv-1-3-a"), user));
 
         // Wait for all tasks to complete
 
@@ -884,13 +1058,5 @@ public class DefaultProcessOperatorTests
                 }
             }
         }
-    }
-
-    @Test(timeout = 35 * 1000L)
-    public void test1_transformAndLinkAndRegister1a() throws Exception
-    {
-        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
-        transformAndLinkAndRegister(
-            "register-linked-csv-1", interlinkFixtures.get("file-csv-1"), user.toDto());
     }
 }

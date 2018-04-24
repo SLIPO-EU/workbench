@@ -9,10 +9,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -589,12 +591,14 @@ public class DefaultProcessOperator implements ProcessOperator
             case REGISTER:
                 {
                     Assert.state(inputKeys.size() == 1, "A registration step expects a single input");
-                    Step dependency = definition.stepByResourceKey(inputKeys.get(0));
-                    JobParameters parameters =
-                        buildParametersForRegistration(step, dependency, definition, createdBy);
+                    Step producer = definition.stepByResourceKey(inputKeys.get(0));
+                    MetadataRegistrationConfiguration configuration =
+                        (MetadataRegistrationConfiguration) step.configuration();
+                    Properties parametersMap =
+                        buildParameters(definition, configuration, producer, createdBy);
                     jobDefinitionBuilder
                         .flow(registerResourceFlow)
-                        .parameters(parameters);
+                        .parameters(parametersMap);
                 }
                 break;
             case TRIPLEGEO:
@@ -604,9 +608,10 @@ public class DefaultProcessOperator implements ProcessOperator
                     EnumDataFormat outputFormat = configuration.getOutputFormat();
                     outputName = StringUtils.stripFilenameExtension(inputNames.get(0)) + "."
                         + outputFormat.getFilenameExtension();
+                    Properties parametersMap = buildParameters(definition, configuration, createdBy);
                     jobDefinitionBuilder
                         .flow(triplegeoFlow)
-                        .parameters(propertiesConverter.valueToProperties(configuration))
+                        .parameters(parametersMap)
                         .output(outputName);
                 }
                 break;
@@ -614,9 +619,10 @@ public class DefaultProcessOperator implements ProcessOperator
                 {
                     Assert.state(inputNames.size() == 2, "A interlinking step expects a pair of inputs");
                     LimesConfiguration configuration = (LimesConfiguration) step.configuration();
+                    Properties parametersMap = buildParameters(definition, configuration, createdBy);
                     jobDefinitionBuilder
                         .flow(limesFlow)
-                        .parameters(propertiesConverter.valueToProperties(configuration))
+                        .parameters(parametersMap)
                         .output("accepted.nt");
                 }
                 break;
@@ -638,41 +644,69 @@ public class DefaultProcessOperator implements ProcessOperator
         return workflowBuilder.build();
     }
 
-    private JobParameters buildParametersForRegistration(
-        Step registerStep, Step producerStep, ProcessDefinition definition, int userId)
+    private Properties buildParameters(
+        ProcessDefinition def, MetadataRegistrationConfiguration config, Step producer, int userId)
     {
-        final JobParametersBuilder parametersBuilder = new JobParametersBuilder();
+        final Properties parametersMap = new Properties();
 
-        MetadataRegistrationConfiguration configuration =
-            (MetadataRegistrationConfiguration) registerStep.configuration();
-
-        EnumDataFormat format = producerStep.outputFormat();
-        ToolConfiguration producerConfiguration = producerStep.configuration();
+        EnumDataFormat format = producer.outputFormat();
+        ToolConfiguration producerConfiguration = producer.configuration();
 
         EnumDataFormat inputFormat = EnumDataFormat.N_TRIPLES;
-        if (producerStep.operation() == EnumOperation.TRANSFORM
+        if (producer.operation() == EnumOperation.TRANSFORM
                 && (producerConfiguration instanceof TriplegeoConfiguration))
         {
             inputFormat = ((TriplegeoConfiguration) producerConfiguration).getInputFormat();
         }
 
-        parametersBuilder.addLong("createdBy", Integer.valueOf(userId).longValue());
-        parametersBuilder.addString("format", format.toString());
-        parametersBuilder.addString("inputFormat", inputFormat.toString());
-        parametersBuilder.addString("processName", definition.name());
+        parametersMap.put("createdBy", Integer.valueOf(userId).longValue());
+        parametersMap.put("format", format.toString());
+        parametersMap.put("inputFormat", inputFormat.toString());
+        parametersMap.put("processName", def.name());
 
-        ResourceMetadataCreate metadata = configuration.getMetadata();
-        parametersBuilder.addString("name", metadata.getName());
+        ResourceMetadataCreate metadata = config.getMetadata();
+        parametersMap.put("name", metadata.getName());
         if (metadata.getDescription() != null) {
-            parametersBuilder.addString("description", metadata.getDescription());
+            parametersMap.put("description", metadata.getDescription());
         }
 
-        ResourceIdentifier target = configuration.getTarget();
+        ResourceIdentifier target = config.getTarget();
         if (target != null) {
-            parametersBuilder.addLong("resourceId", target.getId());
+            parametersMap.put("resourceId", target.getId());
         }
 
-        return parametersBuilder.toJobParameters();
+        return parametersMap;
+    }
+
+    private Properties buildParameters(
+        ProcessDefinition def, TriplegeoConfiguration config, int userId)
+    {
+        final Properties parametersMap = propertiesConverter.valueToProperties(config);
+
+        // Todo Load and override a configuration profile (if such a thing is given)
+
+        // This configuration contains references to files (mappingSpec, classificationSpec)
+        // that may need to be resolved to absolute file paths.
+
+        for (String key: Arrays.asList("mappingSpec", "classificationSpec")) {
+            String location = parametersMap.getProperty(key);
+            if (StringUtils.isEmpty(location))
+                continue;
+            if (location.startsWith("/")
+                    || location.startsWith("classpath:") || location.startsWith("file:"))
+                continue; // do not touch if given as a URI or as an absolute path
+            // Assume this is a file resource into user's data directory
+            Path path = userDataNamingStrategy.resolvePath(userId, location);
+            parametersMap.put(key, path.toUri().toString());
+        }
+
+        return parametersMap;
+    }
+
+    private Properties buildParameters(
+        ProcessDefinition def, LimesConfiguration config, int userId)
+    {
+        return propertiesConverter.valueToProperties(config);
     }
 
     /**
@@ -717,7 +751,7 @@ public class DefaultProcessOperator implements ProcessOperator
         return catalogDataDir.resolve(p);
     }
 
-    private Path resolveToPath(DataSource source, int createdBy)
+    private Path resolveToPath(DataSource source, int userId)
     {
         Assert.state(source != null, "Expected a non-null source");
 
@@ -728,13 +762,13 @@ public class DefaultProcessOperator implements ProcessOperator
         case UPLOAD:
             {
                 path = Paths.get(((UploadDataSource) source).getPath());
-                path = userDataNamingStrategy.resolvePath(createdBy, path);
+                path = userDataNamingStrategy.resolvePath(userId, path);
             }
             break;
         case FILESYSTEM:
             {
                 path = Paths.get(((FileSystemDataSource) source).getPath());
-                path = userDataNamingStrategy.resolvePath(createdBy, path);
+                path = userDataNamingStrategy.resolvePath(userId, path);
             }
             break;
         case URL:
