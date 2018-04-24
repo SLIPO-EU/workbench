@@ -1,7 +1,7 @@
 import React from 'react';
 
 import {
-  FileDropField,
+  FileSelectField,
   SelectField,
   TextField,
 } from '../../../helpers/forms/form-fields/';
@@ -66,15 +66,24 @@ export const initialValue = {
 export { validator } from '../../../../service/triplegeo';
 
 export const Component = (props) => {
+  const { errors, readOnly, setValue, value, appConfiguration, ...rest } = props;
+
+  const inject = {
+    errors,
+    readOnly,
+    setValue,
+    value,
+  };
+
   return (
     <div>
-      <div>
+      < div >
         <h4>Input parameters</h4>
         <hr />
       </div>
 
       <SelectField
-        {...props}
+        {...inject}
         id="inputFormat"
         label="Input format"
         help="Specify format for the input geographical file(s): "
@@ -82,7 +91,7 @@ export const Component = (props) => {
       />
 
       <SelectField
-        {...props}
+        {...inject}
         id="mode"
         label="Mode"
         help="Conversion mode"
@@ -90,26 +99,12 @@ export const Component = (props) => {
       />
 
       <SelectField
-        {...props}
+        {...inject}
         id="encoding"
         label="Encoding"
         help="The encoding (character set) for strings in the input data. If not specified, UTF-8 encoding is assumed."
         options={encodings}
       />
-
-      {/* <FileDropField
-        {...props}
-        id="mappingSpec"
-        label="Mapping specification file"
-        help="File containing RML or XSLT mappings from input schema to RDF"
-      />
-
-      <FileDropField
-        {...props}
-        id="classificationSpec"
-        label="Classification specification file"
-        help="File (in YML or CSV format) containing classification hierarchy of categories"
-      /> */}
 
       {/* <div>
         <h4>Output parameters</h4>
@@ -117,7 +112,7 @@ export const Component = (props) => {
       </div>
 
       <SelectField
-        {...props}
+        {...inject}
         id="serialization"
         label="Serialization format"
         help="Specify export serialization for the output file"
@@ -125,7 +120,7 @@ export const Component = (props) => {
       />
 
       <SelectField
-        {...props}
+        {...inject}
         id="targetOntology"
         label="Ontology Type"
         help="Specify the type of the spatial ontology where the exported data will refer to"
@@ -138,21 +133,21 @@ export const Component = (props) => {
       </div>
 
       <TextField
-        {...props}
+        {...inject}
         id="attrKey"
         label="Attribute key"
         help="Field name containing unique identifier for each entity (i.e., each record in the shapefile)"
       />
 
       <TextField
-        {...props}
+        {...inject}
         id="attrName"
         label="Attribute name"
         help="Field name from which name literals (i.e., strings) will be extracted"
       />
 
       <TextField
-        {...props}
+        {...inject}
         id="attrCategory"
         label="Attribute category"
         help="Field name from which classification literals (e.g., type of points, road classes etc.) will be extracted. Set value UNK if non applicable"
@@ -160,7 +155,7 @@ export const Component = (props) => {
 
       {props.value && props.value.inputFormat === 'SHAPEFILE' &&
         <TextField
-          {...props}
+          {...inject}
           id="attrGeometry"
           label="Attribute geometry"
           help="The name of the geometry column in the input dataset"
@@ -168,7 +163,7 @@ export const Component = (props) => {
       }
 
       <TextField
-        {...props}
+        {...inject}
         id="valIgnore"
         label="Ignore value"
         help="Parameter that specifies particular values (e.g., UNK) in attributes that should not be exported as literals. By default, NULL values in attributes are suppressed and never exported"
@@ -176,28 +171,28 @@ export const Component = (props) => {
       {props.value && props.value.inputFormat === 'CSV' &&
         <div>
           <TextField
-            {...props}
+            {...inject}
             id="delimiter"
             label="Delimiter"
             help="Specify delimiter character"
           />
 
           <TextField
-            {...props}
+            {...inject}
             id="quote"
             label="Quote"
             help="Specify quote character for string values; Remove for any other types of input data"
           />
 
           <TextField
-            {...props}
+            {...inject}
             id="attrX"
             label="X-attribute"
             help="Specify attribute holding X-coordinates of point locations"
           />
 
           <TextField
-            {...props}
+            {...inject}
             id="attrY"
             label="Y-attribute"
             help="Specify attribute holding Y-coordinates of point locations"
@@ -211,35 +206,35 @@ export const Component = (props) => {
       </div>
 
       <TextField
-        {...props}
+        {...inject}
         id="featureName"
         label="Feature name"
         help="Parameter that specifies a user-defined name for the resources that will be created"
       />
 
       <TextField
-        {...props}
+        {...inject}
         id="nsFeatureURI"
         label="Feature URI"
         help="Specify the common URI namespace for all generated resources"
       />
 
       <TextField
-        {...props}
+        {...inject}
         id="prefixFeatureNS"
         label="Feature Prefix"
         help="Define a prefix name for the utilized URI namespace (i.e., the previously declared with nsFeatureURI)"
       />
 
       <TextField
-        {...props}
+        {...inject}
         id="nsGeometryURI"
         label="Geometry URI"
         help="Specify the namespace for the underlying geospatial ontology"
       />
 
       <TextField
-        {...props}
+        {...inject}
         id="prefixGeometryNS"
         label="Geometry Prefix"
         help="Define a prefix name for the geospatial ontology (i.e., the previously declared with nsGeometryURI)"
@@ -252,7 +247,7 @@ export const Component = (props) => {
       </div>
 
       <SelectField
-        {...props}
+        {...inject}
         id="sourceCRS"
         label="Source CRS"
         help=""
@@ -260,7 +255,7 @@ export const Component = (props) => {
       />
 
       <SelectField
-        {...props}
+        {...inject}
         id="targetCRS"
         label="Target CRS"
         help=""
@@ -275,7 +270,7 @@ export const Component = (props) => {
           </div>
 
           <SelectField
-            {...props}
+            {...inject}
             id="defaultLang"
             label="Default language"
             help="Default lang for the labels created in the output RDF. By default, the value will be English-en"

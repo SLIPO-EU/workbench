@@ -398,6 +398,7 @@ class ProcessDesigner extends React.Component {
             <Row className="mb-2">
               <Col style={{ padding: '9px' }}>
                 <Designer
+                  appConfiguration={this.props.appConfiguration}
                   active={this.props.active}
                   execution={this.props.execution}
                   groups={this.props.groups}
@@ -431,8 +432,9 @@ class ProcessDesigner extends React.Component {
   renderStepConfiguration() {
     return (
       <StepConfig
+        appConfiguration={this.props.appConfiguration}
         step={this.props.view.step}
-        configuration={this.props.view.configuration}
+        stepConfiguration={this.props.view.configuration}
         errors={this.props.view.errors}
         configureStepValidate={this.props.configureStepValidate}
         configureStepUpdate={this.props.configureStepUpdate}
@@ -559,6 +561,8 @@ const mapStateToProps = (state) => ({
   selectedKpi: state.ui.views.process.designer.execution.selectedKpi,
   // File system
   filesystem: state.config.filesystem,
+  // Application configuration
+  appConfiguration: state.config,
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({

@@ -59,8 +59,6 @@ import eu.slipo.workbench.common.model.poi.EnumTool;
 public class LimesConfiguration extends InterlinkConfiguration 
 {
     private static final long serialVersionUID = 1L;
-
-    private static final String TOOL_VERSION = "1.3"; 
     
     public static final int SOURCE = 0;
     
@@ -668,6 +666,7 @@ public class LimesConfiguration extends InterlinkConfiguration
     }
     
     @JsonIgnore
+    @Override
     public EnumDataFormat getInputFormat()
     {
         return this.inputFormat;
@@ -824,6 +823,7 @@ public class LimesConfiguration extends InterlinkConfiguration
     
     @JsonIgnore
     @NotNull
+    @Override
     public EnumDataFormat getOutputFormat()
     {
         return outputFormat;

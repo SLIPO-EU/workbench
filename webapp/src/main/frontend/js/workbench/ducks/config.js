@@ -11,8 +11,6 @@ const RECEIVE_FILESYSTEM = 'config/RECEIVE_FILESYSTEM';
 
 
 const initialState = {
-  configuration: {
-  },
   filesystem: {
     files: [],
   },

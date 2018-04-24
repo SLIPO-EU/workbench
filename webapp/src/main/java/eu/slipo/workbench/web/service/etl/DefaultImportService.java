@@ -60,10 +60,10 @@ public class DefaultImportService implements ImportService, InitializingBean {
 
     private static final int DEFAULT_TIMEOUT = 60000;
 
-    @Value("${vector-data.schema:spatial}")
+    @Value("${vector-data.default.schema:spatial}")
     private String defaultSchema;
 
-    @Value("${vector-data.geometry-column:the_geom}")
+    @Value("${vector-data.default.geometry-column:the_geom}")
     private String defaultGeometryColumn;
 
     @Autowired

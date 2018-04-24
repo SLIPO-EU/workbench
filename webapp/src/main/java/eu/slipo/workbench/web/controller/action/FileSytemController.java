@@ -8,10 +8,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Locale;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -33,8 +35,13 @@ import eu.slipo.workbench.web.model.UploadRequest;
 @RequestMapping(produces = "application/json")
 public class FileSytemController extends BaseController {
 
-    @Value("${slipo.user.max-space:20971520}")
     private long maxUserSpace;
+
+    @Value("${slipo.user.max-space:20971520}")
+    public void setDefaultLocale(String maxUserSpace) {
+        this.maxUserSpace = this.parseSize(maxUserSpace);
+    }
+
 
     /**
      * Enumerates files and folders for the specified path
@@ -155,6 +162,22 @@ public class FileSytemController extends BaseController {
         } catch (Exception ex) {
             return RestResponse.error(BasicErrorCode.UNKNOWN, "An unknown error has occurred");
         }
+    }
+
+    private long parseSize(String size) {
+        Assert.hasLength(size, "Size must not be empty");
+
+        size = size.toUpperCase(Locale.ENGLISH);
+        if (size.endsWith("KB")) {
+            return Long.valueOf(size.substring(0, size.length() - 2)) * 1024;
+        }
+        if (size.endsWith("MB")) {
+            return Long.valueOf(size.substring(0, size.length() - 2)) * 1024 * 1024;
+        }
+        if (size.endsWith("GB")) {
+            return Long.valueOf(size.substring(0, size.length() - 2)) * 1024 * 1024 * 1024;
+        }
+        return Long.valueOf(size);
     }
 
 }

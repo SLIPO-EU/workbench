@@ -37,7 +37,7 @@ export const fetchExecutionDetails = (process, version, execution) => (dispatch,
 
   return processService.fetchExecutionDetails(process, version, execution, token)
     .then((data) => {
-      dispatch(processLoaded(data.process, true));
+      dispatch(processLoaded(data.process, true, false, getState().config));
       dispatch(receiveExecutionData(data.execution));
     });
 };
@@ -63,12 +63,13 @@ export const fetchExecutionKpiData = (process, version, execution, file, mode) =
     });
 };
 
-const processLoaded = function (process, readOnly, clone) {
+const processLoaded = function (process, readOnly, clone, appConfiguration) {
   return {
     type: Types.LOAD_RECEIVE_RESPONSE,
     process,
     readOnly,
     clone,
+    appConfiguration,
   };
 };
 
@@ -80,7 +81,7 @@ export function fetchProcess(id) {
 
     const { meta: { csrfToken: token } } = getState();
     return processService.fetchProcess(id, token).then((process) => {
-      dispatch(processLoaded(process, false, false));
+      dispatch(processLoaded(process, false, false, getState().config));
     });
   };
 }
@@ -96,7 +97,7 @@ export function fetchProcessRevision(id, version) {
 
     const { meta: { csrfToken: token } } = getState();
     return processService.fetchProcessRevision(id, version, token).then((process) => {
-      dispatch(processLoaded(process, true, false));
+      dispatch(processLoaded(process, true, false, getState().config));
     });
   };
 }
@@ -124,7 +125,7 @@ export function cloneTemplate(id, version) {
 
     const { meta: { csrfToken: token } } = getState();
     return processService.fetchProcessRevision(id, version, token).then((process) => {
-      dispatch(processLoaded(process, false, true));
+      dispatch(processLoaded(process, false, true, getState().config));
     });
   };
 }

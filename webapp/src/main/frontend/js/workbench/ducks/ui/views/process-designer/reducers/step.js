@@ -14,7 +14,7 @@ import {
   validator as tripleGeoValidator,
 } from '../../../../../service/triplegeo';
 
-function createTripleGeoDefaultConfiguration() {
+function createTripleGeoDefaultConfiguration(appConfiguration, effectiveVersion) {
   // TODO : Create enumerations
   const configuration = {
     mode: 'GRAPH',
@@ -28,6 +28,7 @@ function createTripleGeoDefaultConfiguration() {
     sourceCRS: 'EPSG:4326',
     targetCRS: 'EPSG:4326',
     defaultLang: 'en',
+    version: effectiveVersion || appConfiguration.tripleGeo.version,
   };
 
   try {
@@ -45,10 +46,12 @@ function createTripleGeoDefaultConfiguration() {
   };
 }
 
-function createDefaultConfiguration(tool) {
+function createDefaultConfiguration(steps, tool, appConfiguration) {
+  const effectiveVersion = steps.reduce((version, step) => version ? version : step.configuration ? step.configuration.version : null, null) || null;
+
   switch (tool) {
     case EnumTool.TripleGeo:
-      return createTripleGeoDefaultConfiguration();
+      return createTripleGeoDefaultConfiguration(appConfiguration, effectiveVersion);
 
     default:
       return {
@@ -81,7 +84,7 @@ export function addStepReducer(state, action) {
       resources: [],
       dataSources: [],
       key: stepKey,
-      ...createDefaultConfiguration(action.step.tool),
+      ...createDefaultConfiguration(state.steps.filter(s => s.tool === action.step.tool), action.step.tool, action.appConfiguration),
     };
     if (step.tool !== EnumTool.CATALOG) {
       step.outputKey = resourceKey;

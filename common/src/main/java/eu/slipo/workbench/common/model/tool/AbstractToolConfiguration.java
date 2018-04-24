@@ -34,37 +34,53 @@ public abstract class AbstractToolConfiguration extends ToolConfigurationSupport
     public static final String SLIPO_DATASOURCE_NAMESPACE_URI = "http://slipo.eu/id/poisource/";
     
     /**
-     * The list of input files 
+     * The version of the configuration model
+     */
+    protected String _version;
+
+    /**
+     * The list of input files
      */
     protected List<String> input = Collections.emptyList();
-    
+
     /**
      * The data format that input files conform to.
      */
     protected EnumDataFormat inputFormat;
-    
+
     /**
      * The expected data format for output.
      */
     protected EnumDataFormat outputFormat;
-    
+
     /**
      * The directory where output will be created.
      */
     protected String outputDir;
-    
+
     /**
      * The directory where temporary files (if any) will be created.
      */
     protected String tmpDir;
-    
+
     public EnumDataFormat getOutputFormat()
     {
         return outputFormat;
     }
-    
+
     public EnumDataFormat getInputFormat()
     {
         return inputFormat;
     }
+
+    public String getVersion() 
+    {
+        return _version;
+    }
+
+    public void setVersion(String version) 
+    {
+        this._version = version;
+    }
+
 }
