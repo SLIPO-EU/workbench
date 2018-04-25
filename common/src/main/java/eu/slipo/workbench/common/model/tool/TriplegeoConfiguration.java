@@ -42,6 +42,11 @@ public class TriplegeoConfiguration extends TransformConfiguration
     private static final long serialVersionUID = 2L;
     
     /**
+     * This class represents the configuration of a specific version
+     */
+    public static final String VERSION = "1.4";
+    
+    /**
      * The set of available processing modes (see Triplegeo documentation)
      */
     public enum Mode {
@@ -300,6 +305,7 @@ public class TriplegeoConfiguration extends TransformConfiguration
      */
     public TriplegeoConfiguration()
     {
+        this._version = VERSION;
         this.outputFormat = EnumDataFormat.N_TRIPLES;
     }
 
@@ -314,6 +320,13 @@ public class TriplegeoConfiguration extends TransformConfiguration
     public EnumTool getTool()
     {
         return EnumTool.TRIPLEGEO;
+    }
+    
+    @Override
+    @JsonIgnore
+    public String getVersion()
+    {
+        return _version;
     }
     
     //

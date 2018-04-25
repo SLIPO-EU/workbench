@@ -60,6 +60,8 @@ public class LimesConfiguration extends InterlinkConfiguration
 {
     private static final long serialVersionUID = 1L;
     
+    public static final String VERSION = "1.3";
+    
     public static final int SOURCE = 0;
     
     public static final int TARGET = 1;
@@ -600,6 +602,8 @@ public class LimesConfiguration extends InterlinkConfiguration
     
     public LimesConfiguration() 
     {
+        this._version = VERSION;
+        
         this.input = new ArrayList<>(Arrays.asList(null, null));
         this.inputFormat = EnumDataFormat.N_TRIPLES;
         this.outputFormat = EnumDataFormat.N_TRIPLES;
@@ -614,6 +618,13 @@ public class LimesConfiguration extends InterlinkConfiguration
     public EnumTool getTool()
     {
         return EnumTool.LIMES;
+    }
+    
+    @Override
+    @JsonIgnore
+    public String getVersion()
+    {
+        return _version;
     }
     
     @JsonProperty("prefixes")
