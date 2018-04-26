@@ -555,8 +555,11 @@ public class DefaultProcessOperator implements ProcessOperator
                 for (DataSource source: step.sources()) {
                     String dependencyName = sourceToNodeName.get(source);
                     if (dependencyName != null) {
-                        jobDefinitionBuilder.input(dependencyName, "*");
-                        inputNames.add(nodeNameToOutputName.get(dependencyName));
+                        String inputName = nodeNameToOutputName.get(dependencyName);
+                        Assert.state(inputName != null,
+                            "No output is known to be produced by the step we depend on!");
+                        jobDefinitionBuilder.input(dependencyName, inputName);
+                        inputNames.add(inputName);
                     } else {
                         Path inputPath = resolveToPath(source, createdBy);
                         jobDefinitionBuilder.input(inputPath);
@@ -578,9 +581,12 @@ public class DefaultProcessOperator implements ProcessOperator
                         // The input is the output of another step we depend on
                         Step dependency = definition.stepByResourceKey(inputKey);
                         Assert.state(dependency != null,
-                            "Expected a step to produce the input we depend on!");
-                        jobDefinitionBuilder.input(dependency.nodeName(), "*");
-                        inputNames.add(nodeNameToOutputName.get(dependency.nodeName()));
+                            "A step is expected to produce the input we depend on!");
+                        String inputName = nodeNameToOutputName.get(dependency.nodeName());
+                        Assert.state(inputName != null,
+                            "No output is known to be produced by the step we depend on!");
+                        jobDefinitionBuilder.input(dependency.nodeName(), inputName);
+                        inputNames.add(inputName);
                     }
                 }
             }
@@ -620,10 +626,11 @@ public class DefaultProcessOperator implements ProcessOperator
                     Assert.state(inputNames.size() == 2, "A interlinking step expects a pair of inputs");
                     LimesConfiguration configuration = (LimesConfiguration) step.configuration();
                     Properties parametersMap = buildParameters(definition, configuration, createdBy);
+                    outputName = "accepted.nt";
                     jobDefinitionBuilder
                         .flow(limesFlow)
                         .parameters(parametersMap)
-                        .output("accepted.nt");
+                        .output(outputName);
                 }
                 break;
             case DEER:
