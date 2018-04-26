@@ -1,46 +1,28 @@
 package eu.slipo.workbench.rpc.service;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Properties;
-import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
 import org.apache.commons.collections4.IterableUtils;
-import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.JobParametersBuilder;
-import org.springframework.batch.core.job.flow.Flow;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
-import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumOperation;
-import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.process.EnumProcessExecutionStatus;
 import eu.slipo.workbench.common.model.process.EnumStepFile;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
@@ -54,18 +36,6 @@ import eu.slipo.workbench.common.model.process.ProcessIdentifier;
 import eu.slipo.workbench.common.model.process.ProcessNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
 import eu.slipo.workbench.common.model.process.Step;
-import eu.slipo.workbench.common.model.resource.DataSource;
-import eu.slipo.workbench.common.model.resource.EnumDataSourceType;
-import eu.slipo.workbench.common.model.resource.FileSystemDataSource;
-import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
-import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
-import eu.slipo.workbench.common.model.resource.ResourceRecord;
-import eu.slipo.workbench.common.model.resource.UploadDataSource;
-import eu.slipo.workbench.common.model.resource.UrlDataSource;
-import eu.slipo.workbench.common.model.tool.LimesConfiguration;
-import eu.slipo.workbench.common.model.tool.MetadataRegistrationConfiguration;
-import eu.slipo.workbench.common.model.tool.ToolConfiguration;
-import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.repository.AccountRepository;
 import eu.slipo.workbench.common.repository.ProcessRepository;
 import eu.slipo.workbench.common.repository.ProcessRepository.ProcessExecutionNotActiveException;
@@ -73,10 +43,7 @@ import eu.slipo.workbench.common.repository.ProcessRepository.ProcessHasActiveEx
 import eu.slipo.workbench.common.repository.ResourceRepository;
 import eu.slipo.workbench.common.service.FileNamingStrategy;
 import eu.slipo.workbench.common.service.ProcessOperator;
-import eu.slipo.workbench.common.service.util.PropertiesConverterService;
 import eu.slipo.workflows.Workflow;
-import eu.slipo.workflows.Workflow.JobDefinitionBuilder;
-import eu.slipo.workflows.WorkflowBuilderFactory;
 import eu.slipo.workflows.WorkflowExecutionEventListener;
 import eu.slipo.workflows.WorkflowExecutionEventListenerSupport;
 import eu.slipo.workflows.WorkflowExecutionSnapshot;
@@ -85,8 +52,6 @@ import eu.slipo.workflows.WorkflowExecutionStopListener;
 import eu.slipo.workflows.exception.WorkflowExecutionStartException;
 import eu.slipo.workflows.exception.WorkflowExecutionStopException;
 import eu.slipo.workflows.service.WorkflowScheduler;
-import eu.slipo.workflows.util.digraph.DependencyGraph;
-import eu.slipo.workflows.util.digraph.DependencyGraphs;
 import eu.slipo.workflows.util.digraph.TopologicalSort.CycleDetected;
 
 @Service
@@ -105,9 +70,6 @@ public class DefaultProcessOperator implements ProcessOperator
     @Autowired
     @Qualifier("catalogDataDirectory")
     private Path catalogDataDir;
-
-    @Autowired
-    private PropertiesConverterService propertiesConverter;
 
     @Autowired
     private ProcessRepository processRepository;

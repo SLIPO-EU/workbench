@@ -1,6 +1,5 @@
 package eu.slipo.workbench.rpc.service;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;

@@ -1,6 +1,5 @@
 package eu.slipo.workbench.rpc.service;
 
-import java.net.MalformedURLException;
 import java.util.UUID;
 
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
