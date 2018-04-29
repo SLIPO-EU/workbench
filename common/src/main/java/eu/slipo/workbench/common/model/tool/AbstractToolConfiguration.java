@@ -1,15 +1,18 @@
 package eu.slipo.workbench.common.model.tool;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
+import eu.slipo.workbench.common.model.poi.EnumOutputType;
 
 
 /**
  * An abstract base class for (quite) common tool configuration.
  */
-public abstract class AbstractToolConfiguration extends ToolConfigurationSupport
+public abstract class AbstractToolConfiguration implements ToolConfiguration
 {
     private static final long serialVersionUID = 1L;
 
@@ -63,16 +66,80 @@ public abstract class AbstractToolConfiguration extends ToolConfigurationSupport
      */
     protected String tmpDir;
 
-    public EnumDataFormat getOutputFormat()
-    {
-        return outputFormat;
-    }
-
+    //
+    // Basic getters/setters or helper methods
+    //
+    
+    //
+    // Note: Do not place serialization-related (e.g. JsonIgnore, JsonProperty) annotations here.
+    // This kind of annotation should only be present on our concrete subclasses (by overriding
+    // a specific method).
+    //
+    
+    /**
+     * Get the (expected) data format for our input
+     */
     public EnumDataFormat getInputFormat()
     {
         return inputFormat;
     }
+    
+    public void setInputFormat(EnumDataFormat inputFormat)
+    {
+        this.inputFormat = inputFormat;
+    }
+    
+    /**
+     * Get a list of our input files
+     */
+    public List<String> getInput()
+    {
+        return input;
+    }
+    
+    public void setInput(List<String> input)
+    {
+        this.input = Collections.unmodifiableList(new ArrayList<>(input));
+    }
+    
+    public AbstractToolConfiguration withInput(List<String> input)
+    {
+        this.setInput(input);
+        return this;
+    }
+    
+    public void setInput(String input)
+    {
+        this.input = Collections.singletonList(input);
+    }
+    
+    public void clearInput()
+    {
+        this.input = Collections.emptyList();
+    }
+    
+    /**
+     * Get the directory where our expected output will be created.
+     */
+    public String getOutputDir()
+    {
+        return outputDir;
+    }
 
+    /**
+     * Get the expected data format for our basic output.
+     */
+    public EnumDataFormat getOutputFormat()
+    {
+        return outputFormat;
+    }
+    
+    /**
+     * Get the list of expected output names (as plain file names) categorized by their 
+     * output type.
+     */
+    public abstract Map<EnumOutputType, List<String>> getOutputNames();
+    
     public String getVersion() 
     {
         return _version;
@@ -82,5 +149,4 @@ public abstract class AbstractToolConfiguration extends ToolConfigurationSupport
     {
         this._version = version;
     }
-
 }

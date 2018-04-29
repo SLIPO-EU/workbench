@@ -26,8 +26,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 
-import eu.slipo.workbench.common.config.ProcessDefinitionBuilderFactory;
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumOperation;
 import eu.slipo.workbench.common.model.poi.EnumTool;
@@ -35,6 +35,7 @@ import eu.slipo.workbench.common.model.process.CatalogResource;
 import eu.slipo.workbench.common.model.process.EnumInputType;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.ProcessDefinitionBuilder;
+import eu.slipo.workbench.common.model.process.ProcessDefinitionBuilderFactory;
 import eu.slipo.workbench.common.model.process.ProcessInput;
 import eu.slipo.workbench.common.model.process.ProcessOutput;
 import eu.slipo.workbench.common.model.process.RegisterStep;
@@ -44,6 +45,7 @@ import eu.slipo.workbench.common.model.resource.FileSystemDataSource;
 import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
 import eu.slipo.workbench.common.model.tool.DeerConfiguration;
+import eu.slipo.workbench.common.model.tool.FagiConfiguration;
 import eu.slipo.workbench.common.model.tool.LimesConfiguration;
 import eu.slipo.workbench.common.model.tool.MetadataRegistrationConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
@@ -65,7 +67,9 @@ public class ProcessDefinitionTests
         @Bean
         public ObjectMapper jsonMapper()
         {
-            return new ObjectMapper();
+            ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+            return objectMapper;
         }
 
         @Bean
@@ -97,6 +101,12 @@ public class ProcessDefinitionTests
         public DeerConfiguration sampleDeerConfiguration1()
         {
             return new DeerConfiguration();
+        }
+
+        @Bean
+        public FagiConfiguration sampleFagiConfiguration1()
+        {
+            return new FagiConfiguration();
         }
 
         @Bean
@@ -156,6 +166,9 @@ public class ProcessDefinitionTests
 
     @Autowired
     private LimesConfiguration sampleLimesConfiguration1;
+
+    @Autowired
+    private FagiConfiguration sampleFagiConfiguration1;
 
     private ProcessDefinition buildDefinition1()
     {

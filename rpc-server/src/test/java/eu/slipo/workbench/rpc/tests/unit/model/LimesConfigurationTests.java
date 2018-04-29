@@ -7,8 +7,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
 import java.util.Properties;
@@ -35,6 +37,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.google.common.collect.ImmutableMap;
 
+import eu.slipo.workbench.common.model.poi.EnumOutputType;
 import eu.slipo.workbench.common.model.tool.LimesConfiguration;
 import eu.slipo.workbench.common.service.util.JsonBasedPropertiesConverterService;
 import eu.slipo.workbench.common.service.util.PropertiesConverterService;
@@ -289,5 +292,16 @@ public class LimesConfigurationTests
     public void test1_setInputPaths() throws Exception
     {
         setInputPaths(config1);
+    }
+
+    @Test
+    public void test1_getOutputNames() throws Exception
+    {
+        Map<EnumOutputType, List<String>> outputNamesByType = config1.getOutputNames();
+
+        assertEquals(
+            Collections.singleton(EnumOutputType.OUTPUT), outputNamesByType.keySet());
+        assertEquals(
+            Arrays.asList("accepted.nt", "review.nt"), outputNamesByType.get(EnumOutputType.OUTPUT));
     }
 }

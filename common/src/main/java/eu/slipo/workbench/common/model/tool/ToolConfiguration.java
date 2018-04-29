@@ -1,7 +1,6 @@
 package eu.slipo.workbench.common.model.tool;
 
 import java.io.Serializable;
-import java.util.Properties;
 
 import eu.slipo.workbench.common.model.poi.EnumTool;
 

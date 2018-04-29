@@ -268,9 +268,6 @@ public class DefaultProcessOperator implements ProcessOperator
                 stepRecord.addFile(fileRecord);
             }
 
-            // Todo Add configuration file(s) as file record(s) of this step
-            // Check if jobExecution contains a `configFileByName` context entry. Resolve against `workDir`.
-
             // Update record in repository
 
             try {
@@ -309,6 +306,10 @@ public class DefaultProcessOperator implements ProcessOperator
             if (stepRecord == null)
                 throw new IllegalStateException(String.format(
                     "Expected to find a step record for step #%d", step.key()));
+
+            // Todo Add configuration file(s) as file record(s) of this step
+            // Check if jobExecution contains a `configFileByName` context entry. Resolve against `workDir`.
+            // Move under workflow data directory (e.g. under stage/<NODE-NAME>/config)
 
             // Update step record
 

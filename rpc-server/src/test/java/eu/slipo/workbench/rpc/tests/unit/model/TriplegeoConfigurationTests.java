@@ -9,6 +9,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Map;
@@ -30,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
+import eu.slipo.workbench.common.model.poi.EnumOutputType;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.service.util.JsonBasedPropertiesConverterService;
 import eu.slipo.workbench.common.service.util.PropertiesConverterService;
@@ -74,7 +76,7 @@ public class TriplegeoConfigurationTests
             config.setMode(TriplegeoConfiguration.Mode.STREAM);
             config.setInputFormat("CSV");
             config.setInputFromString("/tmp/triplegeo/input/p1.csv:/tmp/triplegeo/input/p2.csv");
-            config.setSerializationFormat("N-TRIPLES");
+            config.setOutputFormat(EnumDataFormat.N_TRIPLES);
             config.setOutputDir("/tmp/triplegeo/output");
             config.setMappingSpec("/tmp/triplegeo/mappings.yml");
             config.setClassificationSpec("/tmp/triplegeo/classification.yml");
@@ -101,7 +103,7 @@ public class TriplegeoConfigurationTests
             config.setInput(Arrays.asList(
                 "/tmp/triplegeo/input/p1.csv",
                 "/tmp/triplegeo/input/p2.csv"));
-            config.setSerializationFormat("TTL");
+            config.setOutputFormat(EnumDataFormat.TURTLE);;
             config.setOutputDir("/tmp/triplegeo/output");
             config.setMappingSpec("/tmp/triplegeo/mappings.yml");
             config.setClassificationSpec("/tmp/triplegeo/classification.yml");
@@ -296,5 +298,45 @@ public class TriplegeoConfigurationTests
     public void test2_validate() throws Exception
     {
         validate(config2);
+    }
+
+    @Test
+    public void test1_getSerializationFormat() throws Exception
+    {
+        assertEquals("N-TRIPLES", config1.getSerializationFormat());
+    }
+
+    @Test
+    public void test2_getSerializationFormat() throws Exception
+    {
+        assertEquals("TURTLE", config2.getSerializationFormat());
+    }
+
+    @Test
+    public void test1_getOutputNames() throws Exception
+    {
+        Map<EnumOutputType, List<String>> outputNamesByType = config1.getOutputNames();
+
+        assertEquals(
+            Arrays.asList("p1.nt", "p2.nt", "classification.nt"),
+            outputNamesByType.get(EnumOutputType.OUTPUT));
+
+        assertEquals(
+            Arrays.asList("p1_metadata.nt", "p2_metadata.nt", "classification_metadata.nt"),
+            outputNamesByType.get(EnumOutputType.KPI));
+    }
+
+    @Test
+    public void test2_getOutputNames() throws Exception
+    {
+        Map<EnumOutputType, List<String>> outputNamesByType = config2.getOutputNames();
+
+        assertEquals(
+            Arrays.asList("p1.ttl", "p2.ttl", "classification.ttl"),
+            outputNamesByType.get(EnumOutputType.OUTPUT));
+
+        assertEquals(
+            Arrays.asList("p1_metadata.ttl", "p2_metadata.ttl", "classification_metadata.ttl"),
+            outputNamesByType.get(EnumOutputType.KPI));
     }
 }

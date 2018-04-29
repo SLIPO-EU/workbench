@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -20,13 +21,13 @@ import javax.validation.constraints.AssertTrue;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 
-import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.hibernate.validator.constraints.Range;
 import org.hibernate.validator.constraints.URL;
 import org.springframework.expression.ParseException;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -39,6 +40,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
+import eu.slipo.workbench.common.model.poi.EnumOutputType;
 import eu.slipo.workbench.common.model.poi.EnumTool;
 
 /**
@@ -453,7 +455,7 @@ public class LimesConfiguration extends InterlinkConfiguration
         {
             this.threshold = threshold;
             this.path = path;
-            this.relation = relation;
+            this.relation = StringUtils.isEmpty(relation)? DEFAULT_RELATION : relation;
         }
         
         Output(double threshold, Path path, String relation)
@@ -666,7 +668,7 @@ public class LimesConfiguration extends InterlinkConfiguration
     @JsonProperty("source")
     @JacksonXmlProperty(localName = "SOURCE")
     @JsonInclude(Include.NON_NULL)
-    public void setSource(Input source)
+    protected void setSource(Input source)
     {
         Assert.notNull(source, "Expected a non-null source input");
         this.sourceSpec = source.spec;
@@ -681,6 +683,20 @@ public class LimesConfiguration extends InterlinkConfiguration
     public EnumDataFormat getInputFormat()
     {
         return this.inputFormat;
+    }
+    
+    @JsonIgnore
+    @AssertTrue
+    protected boolean isValidInputFormat()
+    {
+        return inputFormat == null || inputFormat == sourceSpec.dataFormat;
+    }
+    
+    @JsonIgnore
+    @Override
+    public void setInputFormat(EnumDataFormat inputFormat)
+    {
+        this.inputFormat = inputFormat;
     }
     
     @JsonIgnore
@@ -708,7 +724,7 @@ public class LimesConfiguration extends InterlinkConfiguration
     @JsonProperty("target")
     @JacksonXmlProperty(localName = "TARGET")
     @JsonInclude(Include.NON_NULL)
-    public void setTarget(Input target)
+    protected void setTarget(Input target)
     {
         Assert.notNull(target, "Expected a non-null source input");
         this.targetSpec = target.spec;
@@ -772,6 +788,11 @@ public class LimesConfiguration extends InterlinkConfiguration
             if (inputMap.containsKey("target")) {
                 setTargetPath(inputMap.get("target").toString());
             }
+        } else if (input instanceof List) {
+            List<?> inputList = (List<?>) input;
+            Assert.isTrue(inputList.size() == 2, "Expected a pair of input files");
+            setSourcePath(inputList.get(0).toString());
+            setTargetPath(inputList.get(1).toString());
         } else {
             // Treat as a colon-separated list of paths
             String[] inputPaths = input.toString().split(File.pathSeparator);
@@ -780,7 +801,44 @@ public class LimesConfiguration extends InterlinkConfiguration
             setTargetPath(inputPaths[1]);
         }
     }
-        
+   
+    @JsonIgnore
+    @Override
+    public List<String> getInput()
+    {
+        return input;
+    }
+    
+    @JsonIgnore
+    @Override
+    public void setInput(String input)
+    {
+        throw new UnsupportedOperationException("A pair of inputs is expected");
+    }
+    
+    @JsonIgnore
+    @Override
+    public void setInput(List<String> input)
+    {
+        Assert.notNull(input, "A non-null input is required");
+        Assert.isTrue(input.size() == 2, "Expected a pair of input files");
+        setSourcePath(input.get(0).toString());
+        setTargetPath(input.get(1).toString());
+    }
+    
+    @Override
+    public LimesConfiguration withInput(List<String> input)
+    {
+        return (LimesConfiguration) super.withInput(input);
+    }
+    
+    @Override
+    public void clearInput()
+    {
+        setSourcePath(null);
+        setTargetPath(null);
+    }
+    
     @JsonProperty("metric")
     @JacksonXmlProperty(localName = "METRIC")
     @NotEmpty
@@ -799,7 +857,7 @@ public class LimesConfiguration extends InterlinkConfiguration
     }
     
     @AssertTrue(message = "The metric expression cannot be parsed")
-    boolean isMetricExpressionValid()
+    protected boolean isValidMetricExpression()
     {
         boolean b = true;
         try {
@@ -827,7 +885,7 @@ public class LimesConfiguration extends InterlinkConfiguration
     
     @JsonIgnore
     @AssertTrue
-    public boolean isOutputDirAbsolute()
+    protected boolean isOutputDirAbsolute()
     {
         return outputDir == null || Paths.get(outputDir).isAbsolute();
     }
@@ -846,36 +904,77 @@ public class LimesConfiguration extends InterlinkConfiguration
         this.outputFormat = format;
     }
     
+    @JsonIgnore
+    @AssertTrue
+    protected boolean isOutputFormatParWithExtensions()
+    {
+        if (outputFormat != null) {
+            String extension = outputFormat.getFilenameExtension();
+            if (accepted != null) {
+                if (!extension.equals(StringUtils.getFilenameExtension(accepted.path)))
+                    return false;
+            }
+            if (review != null) {
+                if (!extension.equals(StringUtils.getFilenameExtension(review.path)))
+                    return false;
+            }
+        }
+        return true;
+    }
+    
+    @JsonIgnore
+    @Override
+    public Map<EnumOutputType, List<String>> getOutputNames()
+    {
+        Assert.state(accepted != null, "The output spec for `accepted` is null");
+        Assert.state(accepted.path != null, "The path for `accepted` is null");
+        Assert.state(review != null, "The output spec for `review` is null");
+        Assert.state(review.path != null, "The path for `review` is null");
+        
+        String acceptedFileName = Paths.get(accepted.path).getFileName().toString();
+        String reviewFileName = Paths.get(review.path).getFileName().toString();
+        
+        return Collections.singletonMap(
+            EnumOutputType.OUTPUT, Arrays.asList(acceptedFileName, reviewFileName));
+    }
+    
     @JsonProperty("acceptance")
     @JacksonXmlProperty(localName = "ACCEPTANCE")
     @NotNull
     @Valid
     public Output getAccepted()
     {
-        return outputDir == null? accepted : accepted.withAbsolutePath(outputDir);
+        return (outputDir == null || accepted == null)? accepted : accepted.withAbsolutePath(outputDir);
+    }
+    
+    @JsonIgnore
+    public String getAcceptedPath()
+    {
+        Output a = this.getAccepted();
+        return a == null? null : a.path;
     }
     
     @JsonProperty("acceptance")
     @JacksonXmlProperty(localName = "ACCEPTANCE")
     @JsonInclude(Include.NON_NULL)
-    public void setAccepted(Output accepted)
+    protected void setAccepted(Output accepted)
     {
         Assert.notNull(accepted, "Expected a specification for output of accepted pairs");
         this.accepted = accepted;
     }
     
     @JsonIgnore
-    public void setAccepted(double threshold, String path, String relation)
+    public void setAccepted(double threshold, String fileName, String relation)
     {
-        if (outputDir != null)
-            path = Paths.get(outputDir).resolve(path).toString();
-        this.accepted = new Output(threshold, path, relation);
+        Assert.isTrue(fileName != null && Paths.get(fileName).getNameCount() == 1, 
+            "A non-null plain file name is expected");
+        this.accepted = new Output(threshold, fileName, relation);
     }
     
     @JsonIgnore
     public void setAccepted(double threshold, String path)
     {
-        setAccepted(threshold, path, Output.DEFAULT_RELATION);
+        setAccepted(threshold, path, null);
     }
     
     @JsonProperty("review")
@@ -884,24 +983,31 @@ public class LimesConfiguration extends InterlinkConfiguration
     @Valid
     public Output getReview()
     {
-        return outputDir == null? review : review.withAbsolutePath(outputDir);
+        return (outputDir == null || review == null)? review : review.withAbsolutePath(outputDir);
+    }
+    
+    @JsonIgnore
+    public String getReviewPath()
+    {
+        Output r = this.getReview();
+        return r == null? null : r.path;
     }
     
     @JsonProperty("review")
     @JacksonXmlProperty(localName = "REVIEW")
     @JsonInclude(Include.NON_NULL)
-    public void setReview(Output review)
+    protected void setReview(Output review)
     {
         Assert.notNull(review, "Expected a specification for output of pairs to be reviewed");
         this.review = review;
     }
     
     @JsonIgnore
-    public void setReview(double threshold, String path, String relation)
+    public void setReview(double threshold, String fileName, String relation)
     {
-        if (outputDir != null)
-            path = Paths.get(outputDir).resolve(path).toString();
-        this.review = new Output(threshold, path, relation);
+        Assert.isTrue(fileName != null && Paths.get(fileName).getNameCount() == 1, 
+            "A non-null plain file name is expected");
+        this.review = new Output(threshold, fileName, relation);
     }
     
     @JsonIgnore
@@ -937,8 +1043,14 @@ public class LimesConfiguration extends InterlinkConfiguration
     
     @JsonProperty("execution")
     @JacksonXmlProperty(localName = "EXECUTION")
-    public void setExecutionParams(Execution p)
+    protected void setExecutionParams(Execution p)
     {
         this.execution = p;
+    }
+    
+    @JsonIgnore
+    public void setExecutionParams(String rewriterName, String plannerName, String engineName)
+    {
+        this.execution = new Execution(rewriterName, plannerName, engineName);
     }
 }

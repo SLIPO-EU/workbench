@@ -1,9 +1,11 @@
 package eu.slipo.workbench.common.model.tool;
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -28,6 +30,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
+import eu.slipo.workbench.common.model.poi.EnumOutputType;
 import eu.slipo.workbench.common.model.poi.EnumSpatialOntology;
 import eu.slipo.workbench.common.model.poi.EnumTool;
 
@@ -309,12 +312,6 @@ public class TriplegeoConfiguration extends TransformConfiguration
         this.outputFormat = EnumDataFormat.N_TRIPLES;
     }
 
-    @Override
-    public TriplegeoConfiguration cloneAsBean() throws ReflectiveOperationException
-    {
-        return (TriplegeoConfiguration) super.cloneAsBean();
-    }
-
     @JsonIgnore
     @Override
     public EnumTool getTool()
@@ -380,6 +377,7 @@ public class TriplegeoConfiguration extends TransformConfiguration
     }
 
     @JsonIgnore
+    @Override
     public void setInputFormat(EnumDataFormat inputFormat)
     {
         this.inputFormat = inputFormat;
@@ -402,24 +400,33 @@ public class TriplegeoConfiguration extends TransformConfiguration
     }
 
     @JsonIgnore
+    @Override
     public void setInput(List<String> input)
     {
-        this.input = Collections.unmodifiableList(new ArrayList<>(input));
+        super.setInput(input);
+    }
+    
+    @Override
+    public TriplegeoConfiguration withInput(List<String> input)
+    {
+        return (TriplegeoConfiguration) super.withInput(input);
     }
     
     @JsonIgnore
+    @Override
     public void setInput(String input)
     {
-        this.input = Collections.singletonList(input);
+        super.setInput(input);
     }
     
     public void clearInput()
     {
-        this.input = Collections.emptyList();
+        super.clearInput();
     }
 
     @JsonIgnore
     @NotNull
+    @Override
     public List<String> getInput()
     {
         return this.input;
@@ -468,7 +475,7 @@ public class TriplegeoConfiguration extends TransformConfiguration
     }
 
     @JsonProperty("serialization")
-    public void setSerializationFormat(String serializationFormat)
+    protected void setSerializationFormat(String serializationFormat)
     {
         DataFormat f = DataFormat.from(serializationFormat);
         Assert.notNull(f,
@@ -500,6 +507,39 @@ public class TriplegeoConfiguration extends TransformConfiguration
         return tmpDir;
     }
 
+    @JsonIgnore
+    @Override
+    public Map<EnumOutputType, List<String>> getOutputNames()
+    {
+        Assert.state(outputFormat != null, "The output format is not specified");
+        String extension = outputFormat.getFilenameExtension();
+        
+        Map<EnumOutputType, List<String>> outputMap = new EnumMap<>(EnumOutputType.class);
+        
+        outputMap.put(EnumOutputType.OUTPUT, new ArrayList<>());
+        outputMap.put(EnumOutputType.KPI, new ArrayList<>());
+        
+        // Each input file yields an RDF output and a JSON metadata file 
+        
+        for (String inputPath: input) {
+            String inputName = StringUtils.stripFilenameExtension(
+                Paths.get(inputPath).getFileName().toString());
+            outputMap.get(EnumOutputType.OUTPUT)
+                .add(inputName + "." + extension);
+            outputMap.get(EnumOutputType.KPI)
+                .add(inputName + "_metadata" + "." + extension);
+        }
+        
+        // An output file with classification in an RDF format is always produced
+        
+        outputMap.get(EnumOutputType.OUTPUT)
+            .add("classification" + "." + extension);
+        outputMap.get(EnumOutputType.KPI)
+            .add("classification_metadata" + "." + extension);
+        
+        return outputMap;
+    }
+    
     @JsonProperty("mode")
     public void setMode(Mode mode)
     {

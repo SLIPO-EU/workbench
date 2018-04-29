@@ -57,12 +57,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 
-import eu.slipo.workbench.common.config.ProcessDefinitionBuilderFactory;
 import eu.slipo.workbench.common.domain.AccountEntity;
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.process.EnumProcessExecutionStatus;
 import eu.slipo.workbench.common.model.process.EnumStepFile;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
+import eu.slipo.workbench.common.model.process.ProcessDefinitionBuilderFactory;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepFileRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepRecord;

@@ -40,7 +40,7 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 
-import eu.slipo.workbench.common.config.ProcessDefinitionBuilderFactory;
+import eu.slipo.workbench.common.config.ProcessDefinitionBuilderFactoryConfiguration;
 import eu.slipo.workbench.common.domain.AccountEntity;
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumSpatialOntology;
@@ -51,6 +51,7 @@ import eu.slipo.workbench.common.model.process.EnumProcessExecutionStatus;
 import eu.slipo.workbench.common.model.process.EnumStepFile;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.ProcessDefinitionBuilder;
+import eu.slipo.workbench.common.model.process.ProcessDefinitionBuilderFactory;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepFileRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepRecord;
@@ -76,7 +77,7 @@ import eu.slipo.workbench.common.repository.ResourceRepository;
 @EnableJpaRepositories(basePackageClasses = { eu.slipo.workbench.common.repository._Marker.class })
 @SpringBootTest(
     classes = {
-        ProcessDefinitionBuilderFactory.class,
+        ProcessDefinitionBuilderFactoryConfiguration.class,
         DefaultResourceRepository.class,
         DefaultProcessRepository.class },
     webEnvironment = WebEnvironment.NONE

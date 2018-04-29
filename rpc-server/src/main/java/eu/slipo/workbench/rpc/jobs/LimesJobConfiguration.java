@@ -1,4 +1,4 @@
-package eu.slipo.workbench.rpc.jobs;
+    package eu.slipo.workbench.rpc.jobs;
 
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
@@ -29,6 +29,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import com.spotify.docker.client.DockerClient;
 
@@ -39,7 +40,6 @@ import eu.slipo.workbench.rpc.jobs.listener.ExecutionContextPromotionListeners;
 import eu.slipo.workbench.rpc.jobs.listener.LoggingJobExecutionListener;
 import eu.slipo.workbench.rpc.jobs.tasklet.PrepareWorkingDirectoryTasklet;
 import eu.slipo.workbench.rpc.jobs.tasklet.ReadConfigurationTasklet;
-import eu.slipo.workbench.rpc.jobs.tasklet.ValidateConfigurationTasklet;
 import eu.slipo.workbench.rpc.jobs.tasklet.docker.CreateContainerTasklet;
 import eu.slipo.workbench.rpc.jobs.tasklet.docker.RunContainerTasklet;
 import eu.slipo.workbench.rpc.service.ConfigurationGeneratorService;
@@ -184,6 +184,11 @@ public class LimesJobConfiguration
         Path targetFileName = Paths.get(config.getTargetPath()).getFileName();
         Path configPath = Paths.get(workDir, configFileByName.get("config"));
 
+        String acceptedName = StringUtils.stripFilenameExtension(
+            Paths.get(config.getAcceptedPath()).getFileName().toString());
+        String reviewName = StringUtils.stripFilenameExtension(
+            Paths.get(config.getReviewPath()).getFileName().toString());
+
         return CreateContainerTasklet.builder()
             .client(docker)
             .name(containerName)
@@ -192,10 +197,12 @@ public class LimesJobConfiguration
                 .volume(Paths.get(inputDir), containerInputDir, true)
                 .volume(Paths.get(outputDir), containerOutputDir)
                 .volume(configPath, containerConfigDir.resolve("config.xml"), true)
-                .env("SOURCE_FILE", containerInputDir.resolve(sourceFileName).toString())
-                .env("TARGET_FILE", containerInputDir.resolve(targetFileName).toString())
-                .env("CONFIG_FILE", containerConfigDir.resolve("config.xml").toString())
-                .env("OUTPUT_DIR", containerOutputDir.toString()))
+                .env("SOURCE_FILE", containerInputDir.resolve(sourceFileName))
+                .env("TARGET_FILE", containerInputDir.resolve(targetFileName))
+                .env("CONFIG_FILE", containerConfigDir.resolve("config.xml"))
+                .env("OUTPUT_DIR", containerOutputDir)
+                .env("ACCEPTED_NAME", acceptedName)
+                .env("REVIEW_NAME", reviewName))
             .build();
     }
 
