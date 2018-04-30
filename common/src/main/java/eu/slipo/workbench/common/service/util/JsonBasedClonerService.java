@@ -20,6 +20,8 @@ public class JsonBasedClonerService implements ClonerService
     @Override
     public <B extends Serializable> B cloneAsBean(B source) throws IOException
     {   
+        Validate.notNull(source);
+        
         byte[] sourceData = objectMapper.writeValueAsBytes(source);
         Object resultObject = objectMapper.readValue(sourceData, source.getClass());
         

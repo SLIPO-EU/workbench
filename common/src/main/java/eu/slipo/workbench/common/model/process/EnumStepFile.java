@@ -40,7 +40,7 @@ public enum EnumStepFile
     QA,
     ;
 
-    public EnumStepFile from(EnumOutputType outputType)
+    public static EnumStepFile from(EnumOutputType outputType)
     {
         Assert.notNull(outputType, "A non-null outputType is expected");
         

@@ -827,12 +827,6 @@ public class LimesConfiguration extends InterlinkConfiguration
     }
     
     @Override
-    public LimesConfiguration withInput(List<String> input)
-    {
-        return (LimesConfiguration) super.withInput(input);
-    }
-    
-    @Override
     public void clearInput()
     {
         setSourcePath(null);
@@ -869,6 +863,7 @@ public class LimesConfiguration extends InterlinkConfiguration
     }
     
     @JsonIgnore
+    @Override
     public String getOutputDir()
     {
         return outputDir;

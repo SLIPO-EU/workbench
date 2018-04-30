@@ -3,6 +3,7 @@ package eu.slipo.workbench.rpc.service;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +23,12 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
+import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumOperation;
+import eu.slipo.workbench.common.model.poi.EnumOutputType;
 import eu.slipo.workbench.common.model.process.EnumProcessExecutionStatus;
 import eu.slipo.workbench.common.model.process.EnumStepFile;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
@@ -36,6 +42,7 @@ import eu.slipo.workbench.common.model.process.ProcessIdentifier;
 import eu.slipo.workbench.common.model.process.ProcessNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
 import eu.slipo.workbench.common.model.process.Step;
+import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.repository.AccountRepository;
 import eu.slipo.workbench.common.repository.ProcessRepository;
 import eu.slipo.workbench.common.repository.ProcessRepository.ProcessExecutionNotActiveException;
@@ -43,6 +50,7 @@ import eu.slipo.workbench.common.repository.ProcessRepository.ProcessHasActiveEx
 import eu.slipo.workbench.common.repository.ResourceRepository;
 import eu.slipo.workbench.common.service.FileNamingStrategy;
 import eu.slipo.workbench.common.service.ProcessOperator;
+import eu.slipo.workbench.common.service.util.ClonerService;
 import eu.slipo.workflows.Workflow;
 import eu.slipo.workflows.WorkflowExecutionEventListener;
 import eu.slipo.workflows.WorkflowExecutionEventListenerSupport;
@@ -89,6 +97,9 @@ public class DefaultProcessOperator implements ProcessOperator
 
     @Autowired
     private ProcessToWorkflowMapper processToWorkflowMapper;
+
+    @Autowired
+    private ClonerService cloner;
 
     /**
      * Fix status of interrupted executions.
@@ -254,18 +265,33 @@ public class DefaultProcessOperator implements ProcessOperator
             stepRecord.setOperation(step.operation());
             stepRecord.setTool(step.tool());
 
-            // Add the expected output file into stepRecord
+            // Add the expected output files into stepRecord
 
+            final List<Path> inputPaths = node.input();
             final List<Path> outputPaths = node.output();
-            Assert.state(outputPaths.size() < 2, "Expected at most 1 output file");
-            if (!outputPaths.isEmpty()) {
-                final Path outputPath = outputPaths.get(0);
-                Assert.state(outputPath.isAbsolute() && outputPath.startsWith(workflowDataDir),
-                    "Expected output as an absolute path under workflow data directory");
-                ProcessExecutionStepFileRecord fileRecord = new ProcessExecutionStepFileRecord(
-                    EnumStepFile.OUTPUT, workflowDataDir.relativize(outputPath));
-                fileRecord.setDataFormat(step.outputFormat());
-                stepRecord.addFile(fileRecord);
+            Assert.state(outputPaths.stream().allMatch(Path::isAbsolute),
+                "An output path is expected as absolute path");
+            Assert.state(outputPaths.stream().allMatch(path -> path.startsWith(workflowDataDir)),
+                "An output path is expected to be under workflow data directory");
+
+            final Map<EnumOutputType, List<String>> outputMap =
+                determineOutputNames(step.configuration(), inputPaths);
+            Assert.state(outputPaths.size() == outputMap.values().stream().mapToInt(List::size).sum(),
+                "The number of output paths differs from the one determined by step configuration");
+
+            for (EnumOutputType outputType: outputMap.keySet()) {
+                EnumDataFormat outputFormat = outputType == EnumOutputType.OUTPUT?
+                    step.outputFormat() : null; // output format is relevant only to actual output results
+                for (String outputName: outputMap.get(outputType)) {
+                    // Find corresponding item from node's output paths (must exist!)
+                    Path outputPath = Iterables.find(outputPaths, path -> path.endsWith(outputName));
+                    ProcessExecutionStepFileRecord fileRecord = new ProcessExecutionStepFileRecord(
+                        EnumStepFile.from(outputType),
+                        workflowDataDir.relativize(outputPath),
+                        null,
+                        outputFormat);
+                    stepRecord.addFile(fileRecord);
+                }
             }
 
             // Update record in repository
@@ -318,23 +344,20 @@ public class DefaultProcessOperator implements ProcessOperator
                 {
                     stepRecord.setStatus(EnumProcessExecutionStatus.COMPLETED);
                     stepRecord.setCompletedOn(now);
-                    final List<Path> outputPaths = node.output();
-                    // Update file record for output (with size or other computed metadata)
-                    if (!outputPaths.isEmpty()) {
-                        final Path outputPath = outputPaths.get(0);
-                        ProcessExecutionStepFileRecord fileRecord = IterableUtils.find(
-                            stepRecord.getFiles(), f -> f.getType() == EnumStepFile.OUTPUT);
-                        if (fileRecord == null)
-                            throw new IllegalStateException(String.format(
-                                "Expected a file record for the output of step #%d of execution #%d",
-                                step.key(), executionId));
+                    // Update file records for outputs (with size or other computed metadata)
+                    for (ProcessExecutionStepFileRecord fileRecord: stepRecord.getFiles()) {
+                        EnumStepFile type = fileRecord.getType();
+                        if (type == EnumStepFile.INPUT || type == EnumStepFile.CONFIGURATION)
+                            continue; // nothing to update
+                        Path path = Paths.get(fileRecord.getFilePath());
+                        path = workflowDataDir.resolve(path);
                         try {
-                            fileRecord.setFileSize(Files.size(outputPath));
+                            fileRecord.setFileSize(Files.size(path));
                         } catch (IOException ex) {
-                            String errMessage = String.format(
+                            String message = String.format(
                                 "The output of step#{} of execution #{} is not readable",
                                 step.key(), executionId);
-                            throw new IllegalStateException(errMessage, ex);
+                            throw new IllegalStateException(message, ex);
                         }
                     }
                 }
@@ -368,6 +391,21 @@ public class DefaultProcessOperator implements ProcessOperator
             } catch (ProcessExecutionNotActiveException ex) {
                 throw new IllegalStateException("The execution entity is not active!", ex);
             }
+        }
+
+        private Map<EnumOutputType, List<String>> determineOutputNames(
+            ToolConfiguration configuration, List<Path> inputPaths)
+        {
+            try {
+                configuration = cloner.cloneAsBean(configuration);
+            } catch (IOException ex) {
+                throw new IllegalStateException("Cannot clone configuration", ex);
+            }
+
+            configuration = configuration
+                .withInput(Lists.transform(inputPaths, Path::toString));
+
+            return configuration.getOutputNames();
         }
     }
 

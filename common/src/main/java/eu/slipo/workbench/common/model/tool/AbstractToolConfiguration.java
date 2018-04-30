@@ -76,36 +76,28 @@ public abstract class AbstractToolConfiguration implements ToolConfiguration
     // a specific method).
     //
     
-    /**
-     * Get the (expected) data format for our input
-     */
+    @Override
     public EnumDataFormat getInputFormat()
     {
         return inputFormat;
     }
     
+    @Override
     public void setInputFormat(EnumDataFormat inputFormat)
     {
         this.inputFormat = inputFormat;
     }
     
-    /**
-     * Get a list of our input files
-     */
+    @Override
     public List<String> getInput()
     {
         return input;
     }
     
+    @Override
     public void setInput(List<String> input)
     {
         this.input = Collections.unmodifiableList(new ArrayList<>(input));
-    }
-    
-    public AbstractToolConfiguration withInput(List<String> input)
-    {
-        this.setInput(input);
-        return this;
     }
     
     public void setInput(String input)
@@ -118,27 +110,29 @@ public abstract class AbstractToolConfiguration implements ToolConfiguration
         this.input = Collections.emptyList();
     }
     
-    /**
-     * Get the directory where our expected output will be created.
-     */
+    @Override
     public String getOutputDir()
     {
         return outputDir;
     }
+    
+    @Override
+    public void setOutputDir(String dir)
+    {
+       this.outputDir = dir;
+    }
 
-    /**
-     * Get the expected data format for our basic output.
-     */
+    @Override
     public EnumDataFormat getOutputFormat()
     {
         return outputFormat;
     }
     
-    /**
-     * Get the list of expected output names (as plain file names) categorized by their 
-     * output type.
-     */
-    public abstract Map<EnumOutputType, List<String>> getOutputNames();
+    @Override
+    public void setOutputFormat(EnumDataFormat dataFormat)
+    {
+        this.outputFormat = dataFormat;
+    }
     
     public String getVersion() 
     {

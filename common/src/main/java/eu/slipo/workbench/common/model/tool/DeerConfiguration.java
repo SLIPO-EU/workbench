@@ -78,6 +78,20 @@ public class DeerConfiguration extends EnrichConfiguration
 
     @JsonIgnore
     @Override
+    public void setOutputDir(String dir)
+    {
+        super.setOutputDir(dir);
+    }
+    
+    @JsonIgnore
+    @Override
+    public void setOutputFormat(EnumDataFormat dataFormat)
+    {
+        super.setOutputFormat(dataFormat);
+    }
+    
+    @JsonIgnore
+    @Override
     public EnumDataFormat getOutputFormat()
     {
         return super.getOutputFormat();
@@ -102,5 +116,5 @@ public class DeerConfiguration extends EnrichConfiguration
     public void setVersion(String version)
     {
         super.setVersion(version);
-    }    
+    } 
 }

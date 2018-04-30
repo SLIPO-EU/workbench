@@ -177,6 +177,7 @@ public class Step implements Serializable
     @JsonProperty("configuration")
     public ToolConfiguration configuration()
     {
+        // Todo The configuration should be returned as an immutable bean (?)
         return configuration;
     }
 

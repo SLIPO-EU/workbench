@@ -1,5 +1,6 @@
 package eu.slipo.workbench.rpc.service;
 
+import java.io.IOException;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
@@ -25,9 +26,12 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.spotify.docker.client.LogMessage.Stream;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumOperation;
+import eu.slipo.workbench.common.model.poi.EnumOutputType;
 import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.Step;
@@ -45,6 +49,7 @@ import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.repository.ResourceRepository;
 import eu.slipo.workbench.common.service.FileNamingStrategy;
+import eu.slipo.workbench.common.service.util.ClonerService;
 import eu.slipo.workbench.common.service.util.PropertiesConverterService;
 import eu.slipo.workflows.Workflow;
 import eu.slipo.workflows.Workflow.JobDefinitionBuilder;
@@ -61,6 +66,9 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
 
     @Autowired
     private PropertiesConverterService propertiesConverter;
+
+    @Autowired
+    private ClonerService cloner;
 
     @Autowired
     @Qualifier("userDataDirectory")
@@ -153,26 +161,6 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
         return UUID.nameUUIDFromBytes(data);
     }
 
-    /**
-     * Extract an output name for data downloaded from a URL. This name will be suitable to be
-     * used as the file name (under which data will be saved).
-     *
-     * @param url A downloadable public URL
-     * @param useFragment If the URL reference (i.e. fragment) should be used as part of the output
-     *   name
-     */
-    private String extractOutputName(URL url, boolean useFragment)
-    {
-        String fileName = Paths.get(url.getPath()).getFileName().toString();
-        String fragment = url.getRef();
-        if (!useFragment || fragment == null)
-            return fileName;
-
-        String name = StringUtils.stripFilenameExtension(fileName);
-        String extension = fileName.substring(1 + name.length());
-        return String.format("%s-%s.%s", name, fragment, extension);
-     }
-
     private Workflow buildWorkflow(Workflow.Builder workflowBuilder, ProcessDefinition definition, int createdBy)
         throws CycleDetected
     {
@@ -203,12 +191,16 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
             nodeNameToOutputName.put(nodeName, outputName);
         }
 
+        //
         // Map each processing step to a job node inside the workflow
+        //
 
         final ProcessDefinitionDependencyAnalyzer dependencyAnalyzedDefinition =
             new ProcessDefinitionDependencyAnalyzer(definition);
         for (Step step: dependencyAnalyzedDefinition.stepsInTopologicalOrder()) {
-            EnumTool tool = step.tool();
+            final EnumTool tool = step.tool();
+            final ToolConfiguration configuration = step.configuration();
+
             List<Integer> inputKeys = step.inputKeys();
             JobDefinitionBuilder jobDefinitionBuilder = JobDefinitionBuilder.create(step.nodeName());
 
@@ -257,47 +249,51 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
                 }
             }
 
-            // Define flow, parameters, and output name
+            // Define outputs
 
-            String outputName = null;
+            Map<EnumOutputType, List<String>> outputMap = determineOutputNames(configuration, inputNames);
+            if (!outputMap.isEmpty()) {
+                List<String> results = outputMap.get(EnumOutputType.OUTPUT);
+                Assert.state(results != null && !results.isEmpty(),
+                    "An output-producing step must declare at least 1 result as OUTPUT");
+
+                String[] outputArray = Arrays.stream(EnumOutputType.values())
+                    .filter(outputMap::containsKey)
+                    .flatMap(t -> outputMap.get(t).stream())
+                    .toArray(String[]::new);
+                jobDefinitionBuilder.output(outputArray);
+
+                // The 1st result of OUTPUT group is considered as node's output
+                String outputName = results.get(0);
+                nodeNameToOutputName.put(step.nodeName(), outputName);
+            }
+
+            // Define flow and parameters
+
             switch (tool) {
             case REGISTER:
                 {
                     Assert.state(inputKeys.size() == 1, "A registration step expects a single input");
                     Step producer = definition.stepByResourceKey(inputKeys.get(0));
-                    MetadataRegistrationConfiguration configuration =
-                        (MetadataRegistrationConfiguration) step.configuration();
-                    Properties parametersMap =
-                        buildParameters(definition, configuration, producer, createdBy);
-                    jobDefinitionBuilder
-                        .flow(registerResourceFlow)
-                        .parameters(parametersMap);
+                    Properties parametersMap = buildParameters(
+                        definition, (MetadataRegistrationConfiguration) configuration, producer, createdBy);
+                    jobDefinitionBuilder.flow(registerResourceFlow).parameters(parametersMap);
                 }
                 break;
             case TRIPLEGEO:
                 {
                     Assert.state(inputNames.size() == 1, "A transformation step expects a single input");
-                    TriplegeoConfiguration configuration = (TriplegeoConfiguration) step.configuration();
-                    EnumDataFormat outputFormat = configuration.getOutputFormat();
-                    outputName = StringUtils.stripFilenameExtension(inputNames.get(0)) + "."
-                        + outputFormat.getFilenameExtension();
-                    Properties parametersMap = buildParameters(definition, configuration, createdBy);
-                    jobDefinitionBuilder
-                        .flow(triplegeoFlow)
-                        .parameters(parametersMap)
-                        .output(outputName);
+                    Properties parametersMap = buildParameters(
+                        definition, (TriplegeoConfiguration) configuration, createdBy);
+                    jobDefinitionBuilder.flow(triplegeoFlow).parameters(parametersMap);
                 }
                 break;
             case LIMES:
                 {
                     Assert.state(inputNames.size() == 2, "A interlinking step expects a pair of inputs");
-                    LimesConfiguration configuration = (LimesConfiguration) step.configuration();
-                    Properties parametersMap = buildParameters(definition, configuration, createdBy);
-                    outputName = "accepted.nt";
-                    jobDefinitionBuilder
-                        .flow(limesFlow)
-                        .parameters(parametersMap)
-                        .output(outputName);
+                    Properties parametersMap = buildParameters(
+                        definition, (LimesConfiguration) configuration, createdBy);
+                    jobDefinitionBuilder.flow(limesFlow).parameters(parametersMap);
                 }
                 break;
             case DEER:
@@ -307,15 +303,51 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
                 Assert.state(false, "Did not expect a tool of type [" + tool + "]");
             }
 
-            // Set output name for this job node
-            if (outputName != null)
-                nodeNameToOutputName.put(step.nodeName(), outputName);
+            // Add the job node (mapped from this processing step)
 
-            // Add the job node mapping to this processing step
             workflowBuilder.job(jobDefinitionBuilder.build());
         }
 
         return workflowBuilder.build();
+    }
+
+    /**
+     * Determine names of expected outputs for a certain tool configuration.
+     *
+     * @param configuration A (possibly input-agnostic) tool configuration
+     * @param inputNames The list of input names
+     * @return a map of output names (categorized by output type)
+     */
+    private Map<EnumOutputType, List<String>> determineOutputNames(
+        ToolConfiguration configuration, List<String> inputNames)
+    {
+        try {
+            configuration = cloner.cloneAsBean(configuration);
+        } catch (IOException ex) {
+            throw new IllegalStateException("Cannot clone configuration", ex);
+        }
+
+        return configuration.withInput(inputNames).getOutputNames();
+    }
+
+    /**
+     * Extract an output name for data downloaded from a URL. This name will be suitable to be
+     * used as the file name (under which data will be saved).
+     *
+     * @param url A downloadable public URL
+     * @param useFragment If the URL reference (i.e. fragment) should be used as part of the output
+     *   name
+     */
+    private String extractOutputName(URL url, boolean useFragment)
+    {
+        String fileName = Paths.get(url.getPath()).getFileName().toString();
+        String fragment = url.getRef();
+        if (!useFragment || fragment == null)
+            return fileName;
+
+        String name = StringUtils.stripFilenameExtension(fileName);
+        String extension = fileName.substring(1 + name.length());
+        return String.format("%s-%s.%s", name, fragment, extension);
     }
 
     private Properties buildParameters(

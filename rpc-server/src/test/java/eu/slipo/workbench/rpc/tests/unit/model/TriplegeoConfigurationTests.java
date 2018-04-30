@@ -322,7 +322,7 @@ public class TriplegeoConfigurationTests
             outputNamesByType.get(EnumOutputType.OUTPUT));
 
         assertEquals(
-            Arrays.asList("p1_metadata.nt", "p2_metadata.nt", "classification_metadata.nt"),
+            Arrays.asList("p1_metadata.json", "p2_metadata.json", "classification_metadata.json"),
             outputNamesByType.get(EnumOutputType.KPI));
     }
 
@@ -336,7 +336,7 @@ public class TriplegeoConfigurationTests
             outputNamesByType.get(EnumOutputType.OUTPUT));
 
         assertEquals(
-            Arrays.asList("p1_metadata.ttl", "p2_metadata.ttl", "classification_metadata.ttl"),
+            Arrays.asList("p1_metadata.json", "p2_metadata.json", "classification_metadata.json"),
             outputNamesByType.get(EnumOutputType.KPI));
     }
 }

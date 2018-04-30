@@ -406,12 +406,6 @@ public class TriplegeoConfiguration extends TransformConfiguration
         super.setInput(input);
     }
     
-    @Override
-    public TriplegeoConfiguration withInput(List<String> input)
-    {
-        return (TriplegeoConfiguration) super.withInput(input);
-    }
-    
     @JsonIgnore
     @Override
     public void setInput(String input)
@@ -527,7 +521,7 @@ public class TriplegeoConfiguration extends TransformConfiguration
             outputMap.get(EnumOutputType.OUTPUT)
                 .add(inputName + "." + extension);
             outputMap.get(EnumOutputType.KPI)
-                .add(inputName + "_metadata" + "." + extension);
+                .add(inputName + "_metadata" + ".json");
         }
         
         // An output file with classification in an RDF format is always produced
@@ -535,7 +529,7 @@ public class TriplegeoConfiguration extends TransformConfiguration
         outputMap.get(EnumOutputType.OUTPUT)
             .add("classification" + "." + extension);
         outputMap.get(EnumOutputType.KPI)
-            .add("classification_metadata" + "." + extension);
+            .add("classification_metadata" + ".json");
         
         return outputMap;
     }

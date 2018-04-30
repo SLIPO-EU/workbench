@@ -83,6 +83,13 @@ public class FagiConfiguration extends FuseConfiguration
     {
         return super.getOutputDir();
     }
+    
+    @JsonIgnore
+    @Override
+    public void setOutputDir(String dir)
+    {
+        super.setOutputDir(dir);
+    }
 
     @JsonIgnore
     @Override
