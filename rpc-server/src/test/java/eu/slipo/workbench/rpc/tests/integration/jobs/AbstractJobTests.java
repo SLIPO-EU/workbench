@@ -198,6 +198,7 @@ public abstract class AbstractJobTests
         assertTrue(Files.isDirectory(outputDir) && outputDir.startsWith(jobDataDirectory));
 
         final List<Path> expectedResults = Files.list(fixture.resultsDir)
+            .filter(Files::isRegularFile)
             .collect(Collectors.toList());
         for (Path expectedResult: expectedResults) {
             Path fileName = expectedResult.getFileName();

@@ -143,6 +143,7 @@ public class LimesJobConfiguration
             .workingDirectory(workDir)
             .input(config.getSourcePath(), config.getTargetPath())
             .inputFormat(config.getInputFormat())
+            .outputFormat(config.getOutputFormat())
             .configurationGeneratorService(configurationGeneratorService)
             .config("config", "config.xml", config, EnumConfigurationFormat.XML)
             .build();
@@ -154,7 +155,7 @@ public class LimesJobConfiguration
         throws Exception
     {
         String[] keys = new String[] {
-            "workDir", "inputDir", "inputFormat", "outputDir", "configFileByName"
+            "workDir", "inputDir", "inputFormat", "outputDir", "outputFormat", "configFileByName"
         };
         return stepBuilderFactory.get("limes.prepareWorkingDirectory")
             .tasklet(tasklet)

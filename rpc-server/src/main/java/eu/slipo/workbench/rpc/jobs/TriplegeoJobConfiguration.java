@@ -2,10 +2,13 @@ package eu.slipo.workbench.rpc.jobs;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.List;
@@ -16,6 +19,7 @@ import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
+import javax.validation.constraints.AssertTrue;
 
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
@@ -162,6 +166,12 @@ public class TriplegeoJobConfiguration
                 throw InvalidConfigurationException.fromErrors(errors);
             }
 
+            // Check if output format is supported
+            // The only supported output format is NT: this is a limitation applied by workbench
+            // (i.e. not by Triplegeo tool) in order to easily concatenate output results.
+            Assert.state(config.getOutputFormat() == EnumDataFormat.N_TRIPLES,
+                "The given output format is not supported (inside SLIPO workbench)");
+
             // Update execution context
 
             executionContext.put("options", config);
@@ -209,6 +219,7 @@ public class TriplegeoJobConfiguration
             .workingDirectory(workDir)
             .input(Lists.transform(input, Paths::get))
             .inputFormat(options.getInputFormat())
+            .outputFormat(options.getOutputFormat())
             .configurationGeneratorService(configurationGenerator)
             .config("options", "options.conf", options, EnumConfigurationFormat.PROPERTIES)
             .config("mappings", "mappings.yml", mappingsResource)
@@ -222,7 +233,8 @@ public class TriplegeoJobConfiguration
         throws Exception
     {
         String[] keys = new String[] {
-            "workDir", "inputDir", "inputFiles", "inputFormat", "outputDir", "configFileByName"
+            "workDir", "inputDir", "inputFiles", "inputFormat", "outputDir", "outputFormat",
+            "configFileByName"
         };
 
         return stepBuilderFactory.get("triplegeo.prepareWorkingDirectory")
@@ -314,6 +326,62 @@ public class TriplegeoJobConfiguration
     }
 
     /**
+     * A tasklet to concatenate transformation result with classification output
+     */
+    @Bean("triplegeo.concatenateOutputTasklet")
+    @JobScope
+    public Tasklet concatenateOutputTasklet(
+        @Value("#{jobExecutionContext['input']}") List<String> inputAsList,
+        @Value("#{jobExecutionContext['outputFormat']}") String outputFormatName,
+        @Value("#{jobExecutionContext['outputDir']}") String outputDir)
+    {
+        final EnumDataFormat outputFormat = EnumDataFormat.valueOf(outputFormatName);
+        Assert.state(outputFormat == EnumDataFormat.N_TRIPLES,
+            "The given output format does not support concatenation of results!");
+
+        final List<String> inputNames = inputAsList.stream()
+            .map(p -> Paths.get(p).getFileName().toString())
+            .collect(Collectors.toList());
+        final Path classificationFile = Paths.get(outputDir, "classification.nt");
+        final Path tmpDir = Paths.get(outputDir);
+
+        return new Tasklet()
+        {
+            @Override
+            public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext)
+                throws Exception
+            {
+                // Concatenate each result with classification output
+
+                for (String inputName: inputNames) {
+                    Path outputFile = Paths.get(outputDir,
+                        StringUtils.stripFilenameExtension(inputName) + ".nt");
+                    Path resultFile = Files.createTempFile(tmpDir, null, null);
+                    // Concatenate
+                    try (OutputStream out = Files.newOutputStream(resultFile)) {
+                        out.write("# Classification\n".getBytes());
+                        Files.copy(classificationFile, out);
+                        out.write("# Transformed\n".getBytes());
+                        Files.copy(outputFile, out);
+                    }
+                    // Replace original result
+                    Files.move(resultFile, outputFile, StandardCopyOption.REPLACE_EXISTING);
+                }
+
+                return null;
+            }
+        };
+    }
+
+    @Bean("triplegeo.concatenateOutputStep")
+    public Step concatenateOutputStep(@Qualifier("triplegeo.concatenateOutputTasklet") Tasklet tasklet)
+        throws Exception
+    {
+        return stepBuilderFactory.get("triplegeo.concatenateOutput")
+            .tasklet(tasklet).build();
+    }
+
+    /**
      * Create flow for a job expecting and reading configuration via normal {@link JobParameters}.
      */
     @Bean("triplegeo.flow")
@@ -321,13 +389,15 @@ public class TriplegeoJobConfiguration
         @Qualifier("triplegeo.configureStep") Step configureStep,
         @Qualifier("triplegeo.prepareWorkingDirectoryStep") Step prepareWorkingDirectoryStep,
         @Qualifier("triplegeo.createContainerStep") Step createContainerStep,
-        @Qualifier("triplegeo.runContainerStep") Step runContainerStep)
+        @Qualifier("triplegeo.runContainerStep") Step runContainerStep,
+        @Qualifier("triplegeo.concatenateOutputStep") Step concatenateOutputStep)
     {
         return new FlowBuilder<Flow>("triplegeo.flow")
             .start(configureStep)
             .next(prepareWorkingDirectoryStep)
             .next(createContainerStep)
             .next(runContainerStep)
+            .next(concatenateOutputStep)
             .build();
     }
 

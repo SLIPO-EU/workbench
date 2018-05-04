@@ -145,6 +145,8 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
 
         private EnumDataFormat inputFormat;
 
+        private EnumDataFormat outputFormat;
+
         private Map<String, ConfigurationSpec> config = new LinkedHashMap<>();
 
         private Boolean unzip;
@@ -206,6 +208,12 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
         public Builder inputFormat(EnumDataFormat format)
         {
             this.inputFormat = format;
+            return this;
+        }
+
+        public Builder outputFormat(EnumDataFormat format)
+        {
+            this.outputFormat = format;
             return this;
         }
 
@@ -301,6 +309,9 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
             if (inputFormat != null)
                 tasklet.setInputFormat(inputFormat);
 
+            if (outputFormat != null)
+                tasklet.setOutputFormat(outputFormat);
+
             if (unzip != null)
                 tasklet.setUnzip(unzip);
 
@@ -328,6 +339,8 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
 
         public static final String OUTPUT_DIR = "outputDir";
 
+        public static final String OUTPUT_FORMAT = "outputFormat";
+
         public static final String CONFIG_FILE_BY_NAME = "configFileByName";
     }
 
@@ -344,6 +357,8 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
     private final Map<String, ConfigurationSpec> config;
 
     private EnumDataFormat inputFormat;
+
+    private EnumDataFormat outputFormat;
 
     private FileAttribute<?> directoryAttribute = DIRECTORY_ATTRIBUTE;
 
@@ -364,6 +379,11 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
     private void setInputFormat(EnumDataFormat format)
     {
         this.inputFormat = format;
+    }
+
+    private void setOutputFormat(EnumDataFormat format)
+    {
+        this.outputFormat = format;
     }
 
     private void setUnzip(boolean flag)
@@ -467,6 +487,7 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
         executionContext.put(Keys.INPUT_FILES, inputFiles);
 
         executionContext.putString(Keys.OUTPUT_DIR, outputDir.toString());
+        executionContext.putString(Keys.OUTPUT_FORMAT, outputFormat.name());
 
         Map<String, String> configFileByName = new HashMap<>(
             Maps.transformValues(config, u -> u.path().toString()));
