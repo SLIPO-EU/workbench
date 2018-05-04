@@ -167,8 +167,8 @@ public class TriplegeoJobConfiguration
             }
 
             // Check if output format is supported
-            // The only supported output format is NT: this is a limitation applied by workbench
-            // (i.e. not by Triplegeo tool) in order to easily concatenate output results.
+            // The only supported output format is N-TRIPLES: this is a limitation applied by
+            // workbench (i.e. not by Triplegeo) in order to easily concatenate output results.
             Assert.state(config.getOutputFormat() == EnumDataFormat.N_TRIPLES,
                 "The given output format is not supported (inside SLIPO workbench)");
 

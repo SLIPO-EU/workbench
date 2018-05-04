@@ -90,6 +90,10 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
     private Flow triplegeoFlow;
 
     @Autowired
+    @Qualifier("triplegeo.configurationProfiles")
+    private Map<String, TriplegeoConfiguration> triplegeoConfigurationProfiles;
+
+    @Autowired
     @Qualifier("limes.flow")
     private Flow limesFlow;
 
@@ -389,7 +393,26 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
     {
         final Properties parametersMap = propertiesConverter.valueToProperties(config);
 
-        // Todo Load and override a configuration profile (if such a thing is given)
+        // If originates from a configuration profile, draw missing parts from profile
+
+        final String profileName = parametersMap.getProperty("profile");
+        if (!StringUtils.isEmpty(profileName)) {
+            TriplegeoConfiguration profile = triplegeoConfigurationProfiles.get(profileName);
+            if (profile == null)
+                throw new NoSuchElementException(
+                    "No such profile for Triplegeo configuration: [" + profileName + "]");
+
+            // Use profile defaults to draw (missing) properties
+
+            if (StringUtils.isEmpty(parametersMap.getProperty("mappingSpec")))
+                parametersMap.put("mappingSpec", profile.getMappingSpec());
+
+            if (StringUtils.isEmpty(parametersMap.getProperty("classificationSpec")))
+                parametersMap.put("classificationSpec", profile.getClassificationSpec());
+
+            // Clear profile (everything useful is expanded into parameters)
+            parametersMap.remove("profile");
+        }
 
         // This configuration contains references to files (mappingSpec, classificationSpec)
         // that may need to be resolved to absolute file paths.
@@ -398,11 +421,17 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
             String location = parametersMap.getProperty(key);
             if (StringUtils.isEmpty(location))
                 continue;
-            if (location.startsWith("/")
-                    || location.startsWith("classpath:") || location.startsWith("file:"))
-                continue; // do not touch if given as a URI or as an absolute path
-            // Assume this is a file resource into user's data directory
-            Path path = userDataNamingStrategy.resolvePath(userId, location);
+            // If location is given as a URI, don't touch it
+            if (location.startsWith("classpath:") || location.startsWith("file:"))
+                continue;
+            Path path = null;
+            if (location.startsWith("/")) {
+                // Treat as an absolute path
+                path = Paths.get(location);
+            } else {
+                // Treat as a file resource into user's data directory
+                path = userDataNamingStrategy.resolvePath(userId, location);
+            }
             parametersMap.put(key, path.toUri().toString());
         }
 
