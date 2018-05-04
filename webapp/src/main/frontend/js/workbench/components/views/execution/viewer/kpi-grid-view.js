@@ -66,6 +66,7 @@ class KpiGridView extends React.Component {
             <Table
               data={this.props.data}
               columns={KpiGridColumns}
+              showPagination={true}
             />
           </Col>
         </Row>
