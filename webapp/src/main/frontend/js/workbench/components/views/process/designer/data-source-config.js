@@ -54,7 +54,7 @@ class DataSourceConfig extends React.Component {
     }
   }
 
-  createForm(Component, validator, props) {
+  createForm(Component, validator, extraComponentProps = {}) {
     return (
       <Form
         title={this.props.step.name}
@@ -72,7 +72,7 @@ class DataSourceConfig extends React.Component {
           React.isValidElement(Component) ?
             Component
             :
-            <Component {...props} />
+            <Component {...extraComponentProps} />
         }
       </Form>
     );

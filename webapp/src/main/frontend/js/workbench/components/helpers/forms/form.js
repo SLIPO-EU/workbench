@@ -1,11 +1,19 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Button, Row, Col, } from 'reactstrap';
+import _ from 'lodash';
 
 export default class Form extends React.Component {
 
   constructor(props) {
     super(props);
+
+    this.state = {
+      initialValues: {
+        ...this.props.values,
+      },
+      modified: false,
+    };
 
     this._setValue = this._setValue.bind(this);
   }
@@ -33,6 +41,14 @@ export default class Form extends React.Component {
 
   componentDidMount() {
     this._validate(this.props.values);
+  }
+
+  // TODO : Replace with getDerivedStateFromProps after react package is upgraded
+
+  componentWillReceiveProps(nextProps) {
+    this.setState({
+      modified: !_.isEqual(this.state.initialValues, nextProps.values),
+    });
   }
 
   _validate(values) {
@@ -79,7 +95,7 @@ export default class Form extends React.Component {
                 }
                 {!this._isReadOnly() &&
                   <div style={{ float: 'left' }}>
-                    <Button color="primary" onClick={this.props.save} className="float-left">{this.props.acceptButtonText || 'Save'}</Button>
+                    <Button color="primary" onClick={this.props.save} className="float-left" disabled={!this.state.modified}>{this.props.acceptButtonText || 'Save'}</Button>
                   </div>
                 }
                 {this._isReadOnly() &&
@@ -94,7 +110,7 @@ export default class Form extends React.Component {
         <Row>
           <Col>
             <div
-              style={{ maxHeight: '70vh', overflowY: 'auto', paddingRight: 12, paddingBottom: 50 }}
+              style={{ maxHeight: '70vh', overflowY: 'auto', paddingRight: 16, paddingBottom: 50 }}
             >
               {
                 React.Children.map(children, (child, index) => {
@@ -103,7 +119,6 @@ export default class Form extends React.Component {
                     value: this.props.values,
                     errors: this.props.errors,
                     readOnly: this.props.readOnly,
-                    appConfiguration: this.props.appConfiguration,
                   });
                 })
               }

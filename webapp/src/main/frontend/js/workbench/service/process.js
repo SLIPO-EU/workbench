@@ -23,6 +23,10 @@ import {
   ToolInputRequirements,
 } from '../model/process-designer';
 
+import {
+  readConfigurationTripleGeo,
+} from './triplegeo';
+
 function buildProcessRequest(action, designer) {
   const allInputOutputResources = designer.steps.reduce((result, step) => {
     return (step.outputKey ? result.concat(step.resources, [step.outputKey]) : result.concat(step.resources));
@@ -87,10 +91,18 @@ function buildProcessRequest(action, designer) {
 
 function buildConfiguration(step) {
   const config = step.configuration || null;
+  const { prefixes, mappingSpec, classificationSpec, ...rest } = config;
 
   switch (step.tool) {
     case EnumTool.TripleGeo:
-      return config;
+
+      return {
+        ...rest,
+        prefixes: prefixes.map(v => v.prefix).join(','),
+        namespaces: prefixes.map(v => v.namespace).join(','),
+        mappingSpec: mappingSpec ? typeof mappingSpec === 'object' ? mappingSpec.path : mappingSpec : null,
+        classificationSpec: classificationSpec ? typeof classificationSpec === 'object' ? classificationSpec.path : classificationSpec : null,
+      };
 
     case EnumTool.CATALOG:
       return {
@@ -202,9 +214,11 @@ function readConfiguration(step) {
   }
   switch (step.tool) {
     case EnumTool.TripleGeo:
-      return config;
+      return readConfigurationTripleGeo(config);
+
     case EnumTool.CATALOG:
       return config.metadata;
+
     default:
       return {};
   }

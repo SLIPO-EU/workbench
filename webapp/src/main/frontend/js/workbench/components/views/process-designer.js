@@ -433,6 +433,7 @@ class ProcessDesigner extends React.Component {
     return (
       <StepConfig
         appConfiguration={this.props.appConfiguration}
+        filesystem={this.props.filesystem}
         step={this.props.view.step}
         stepConfiguration={this.props.view.configuration}
         errors={this.props.view.errors}
@@ -440,6 +441,9 @@ class ProcessDesigner extends React.Component {
         configureStepUpdate={this.props.configureStepUpdate}
         configureStepEnd={this.props.configureStepEnd}
         readOnly={this.props.readOnly}
+        createFolder={this.props.createFolder}
+        uploadFile={this.props.uploadFile}
+        deletePath={this.props.deletePath}
       />
     );
   }
