@@ -333,6 +333,9 @@ public class DefaultImportService implements ImportService, InitializingBean {
 
     private void registerGeoServerLayer(String tableName, String title) throws Exception {
         GeoServerConfiguration config = this.mapConfiguration.getGeoServer();
+        if (!config.isEnabled()) {
+            return;
+        }
 
         HttpClient httpClient = HttpClients.createDefault();
 
