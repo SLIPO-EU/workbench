@@ -1,15 +1,30 @@
 package eu.slipo.workbench.web.model.configuration;
 
+import java.util.Map;
+
+import eu.slipo.workbench.common.model.poi.EnumTool;
+import eu.slipo.workbench.common.model.tool.ToolConfiguration;
+
 /**
  * Application configuration settings
  */
 public class ClientConfiguration {
+
+    private Map<EnumTool, Map<String, ToolConfiguration>> profiles;
 
     private OsmConfiguration osm;
 
     private BingMapsConfiguration bingMaps;
 
     private TripleGeoConfiguration tripleGeo;
+
+    public Map<EnumTool, Map<String, ToolConfiguration>> getProfiles() {
+        return profiles;
+    }
+
+    public void setProfiles(Map<EnumTool, Map<String, ToolConfiguration>> profiles) {
+        this.profiles = profiles;
+    }
 
     public OsmConfiguration getOsm() {
         return osm;
