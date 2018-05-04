@@ -27,6 +27,7 @@ import {
 
 import {
   EnumErrorLevel,
+  UPDATE_INTERVAL_SECONDS,
 } from '../../model';
 
 import {
@@ -66,6 +67,8 @@ class ProcessExecutionExplorer extends React.Component {
     this.stopExecution = this.stopExecution.bind(this);
     this.viewExecution = this.viewExecution.bind(this);
     this.viewMap = this.viewMap.bind(this);
+
+    this.refreshIntervalId = null;
   }
 
   /**
@@ -75,7 +78,18 @@ class ProcessExecutionExplorer extends React.Component {
    * @memberof ProcessExplorer
    */
   componentWillMount() {
+    this.refreshIntervalId = setInterval(() => {
+      this.search();
+    }, UPDATE_INTERVAL_SECONDS * 1000);
+
     this.search();
+  }
+
+  componentWillUnmount() {
+    if (this.refreshIntervalId) {
+      clearInterval(this.refreshIntervalId);
+      this.refreshIntervalId = null;
+    }
   }
 
   search() {

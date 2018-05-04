@@ -31,3 +31,7 @@ export {
   ToolInputRequirements,
   ToolTitles,
 } from './constants';
+
+export {
+  defaultTripleGeoValues
+} from './configuration/triplegeo';

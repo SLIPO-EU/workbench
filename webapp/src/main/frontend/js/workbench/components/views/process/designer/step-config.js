@@ -32,6 +32,7 @@ class StepConfig extends React.Component {
 
   static propTypes = {
     appConfiguration: PropTypes.object,
+    filesystem: PropTypes.object,
     step: PropTypes.object.isRequired,
     stepConfiguration: PropTypes.object,
     errors: PropTypes.object,
@@ -51,7 +52,7 @@ class StepConfig extends React.Component {
     }
   }
 
-  createForm(Component, validator) {
+  createForm(Component, validator, extraComponentProps = {}) {
     return (
       <Form
         title={this.props.step.name}
@@ -70,7 +71,7 @@ class StepConfig extends React.Component {
           React.isValidElement(Component) ?
             Component
             :
-            <Component />
+            <Component {...extraComponentProps} />
         }
       </Form>
     );
@@ -89,7 +90,16 @@ class StepConfig extends React.Component {
       <Card>
         <CardBody className="card-body">
           {this.props.step.tool === EnumTool.TripleGeo &&
-            this.createForm(triplegeo.Component, triplegeo.validator)
+            this.createForm(triplegeo.Component, triplegeo.validator, {
+              appConfiguration: this.props.appConfiguration,
+              filesystem: this.props.filesystem,
+              allowUpload: true,
+              allowNewFolder: true,
+              allowDelete: true,
+              createFolder: this.props.createFolder,
+              uploadFile: this.props.uploadFile,
+              deletePath: this.props.deletePath,
+            })
           }
           {this.props.step.tool === EnumTool.LIMES &&
             this.createForm(<Placeholder style={{ height: '100%' }} label="Context" iconClass="fa fa-magic" />, null)

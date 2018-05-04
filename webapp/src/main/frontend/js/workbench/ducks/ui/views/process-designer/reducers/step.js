@@ -1,6 +1,7 @@
 import * as Types from '../types';
 
 import {
+  defaultTripleGeoValues,
   EnumDataFormat,
   EnumInputType,
   EnumResourceType,
@@ -17,17 +18,7 @@ import {
 function createTripleGeoDefaultConfiguration(appConfiguration, effectiveVersion) {
   // TODO : Create enumerations
   const configuration = {
-    mode: 'GRAPH',
-    encoding: 'UTF-8',
-    delimiter: '|',
-    quote: '"',
-    serialization: EnumDataFormat.N_TRIPLES,
-    targetOntology: 'GEOSPARQL',
-    nsFeatureURI: 'http://slipo.eu/geodata#',
-    nsGeometryURI: 'http://www.opengis.net/ont/geosparql#',
-    sourceCRS: 'EPSG:4326',
-    targetCRS: 'EPSG:4326',
-    defaultLang: 'en',
+    ...defaultTripleGeoValues,
     version: effectiveVersion || appConfiguration.tripleGeo.version,
   };
 

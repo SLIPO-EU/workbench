@@ -6,6 +6,7 @@ import ToastTemplate from '../../../helpers/toast-template';
 import { MultiStep } from '../../../helpers/forms/';
 import { EnumErrorLevel } from '../../../../model/error';
 import { StaticRoutes } from '../../../../model/routes';
+import { defaultTripleGeoValues } from '../../../../model/process-designer/configuration/triplegeo';
 
 import * as type from './type';
 import * as externalUrl from './url-select';
@@ -127,7 +128,7 @@ export default function ResourceWizard(props) {
         <triplegeo.Component
           id="triplegeo"
           title="TripleGeo"
-          initialValue={props.initialValues.triplegeo || triplegeo.initialValue}
+          initialValue={props.initialValues.triplegeo || defaultTripleGeoValues}
           validate={triplegeo.validator}
           next={() => 'confirm'}
         />

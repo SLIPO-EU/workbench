@@ -24,6 +24,7 @@ import moment from 'moment';
 
 import {
   Roles,
+  UPDATE_INTERVAL_SECONDS,
 } from '../../model';
 
 import {
@@ -45,8 +46,6 @@ import * as CardConfig from '../helpers/card-config';
 import * as TableConfig from '../helpers/table-config';
 import * as ChartConfig from '../helpers/chart-config';
 import * as DashboardCardConfig from '../helpers/dashboardCard-config';
-
-const UPDATE_INTERVAL_SECONDS = 300;
 
 class Dashboard extends React.Component {
 
@@ -154,8 +153,8 @@ class Dashboard extends React.Component {
                   SubComponent={
                     row => {
                       if (this.props.selectedEvent &&
-                          this.props.selectedEvent.index === row.viewIndex &&
-                          this.props.selectedEvent.event.message) {
+                        this.props.selectedEvent.index === row.viewIndex &&
+                        this.props.selectedEvent.event.message) {
                         return (
                           <CardBody>
                             <div className="font-weight-bold mb-2">Message:</div>

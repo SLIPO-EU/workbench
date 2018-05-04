@@ -16,6 +16,8 @@ public class GeoServerConfiguration {
 
     }
 
+    private boolean enabled;
+
     private String host;
 
     private int port;
@@ -29,6 +31,14 @@ public class GeoServerConfiguration {
     private String store;
 
     private Services services;
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
 
     public String getHost() {
         return host;

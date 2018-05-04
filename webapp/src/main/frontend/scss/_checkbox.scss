@@ -1,0 +1,70 @@
+.checkbox {
+  margin: 0;
+}
+
+.c-checkbox input {
+  opacity: 0;
+}
+
+.c-checkbox span:before,
+.c-radio span:before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 0;
+  text-align: center !important;
+  font-size: 12px;
+  line-height: 18px;
+  margin-top: -1px;
+}
+
+.c-checkbox span,
+.c-radio span {
+  position: relative;
+  display: inline-block;
+  vertical-align: top;
+  width: 18px;
+  height: 18px;
+  border-radius: 2px;
+  text-align: center;
+}
+
+.c-checkbox input[type="checkbox"]+span,
+.c-checkbox input[type="radio"]+span,
+.c-radio input[type="checkbox"]+span,
+.c-radio input[type="radio"]+span {
+  border: 1px solid #337ab7;
+}
+
+.c-checkbox input[type="checkbox"]:checked+span,
+.c-checkbox input[type="radio"]:checked+span,
+.c-radio input[type="checkbox"]:checked+span,
+.c-radio input[type="radio"]:checked+span {
+  background-color: #337ab7;
+}
+
+.c-checkbox-warning input[type="checkbox"]+span {
+  border: 2px solid #f0ad4e;
+}
+
+.c-checkbox-warning input[type="checkbox"]:checked+span {
+  background-color: #f0ad4e;
+}
+
+.c-checkbox-disabled input[type="checkbox"]+span {
+  border: 1px solid #999999;
+}
+
+.c-checkbox-disabled input[type="checkbox"]:checked+span {
+  background-color: #999999;
+}
+
+.c-checkbox input[type=checkbox]:checked+span:before,
+.c-checkbox input[type=radio]:checked+span:before,
+.c-radio input[type=checkbox]:checked+span:before,
+.c-radio input[type=radio]:checked+span:before {
+  color: #fff;
+  opacity: 1;
+}

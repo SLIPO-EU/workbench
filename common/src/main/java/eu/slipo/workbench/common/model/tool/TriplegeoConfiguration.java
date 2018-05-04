@@ -38,25 +38,25 @@ import eu.slipo.workbench.common.model.poi.EnumTool;
 
 /**
  * Configuration for the Triplegeo tool.
- * 
+ *
  * @see https://github.com/SLIPO-EU/TripleGeo/blob/master/config/file_options.conf.template
  */
 public class TriplegeoConfiguration extends TransformConfiguration
 {
     private static final long serialVersionUID = 2L;
-    
+
     /**
      * This class represents the configuration of a specific version
      */
     public static final String VERSION = "1.4";
-    
+
     /**
      * The set of available processing modes (see Triplegeo documentation)
      */
     public enum Mode {
         STREAM,
         GRAPH,
-        RML; 
+        RML;
     }
 
     /**
@@ -83,7 +83,7 @@ public class TriplegeoConfiguration extends TransformConfiguration
         {
             Assert.notNull(dataFormat, "Expected an enum constant for data format");
             this.dataFormat = dataFormat;
-            
+
             Assert.notNull(key0, "Expected a non-null key for data format " + dataFormat);
             LinkedList<String> keys = new LinkedList<>(Arrays.asList(aliases));
             keys.addFirst(key0);
@@ -131,21 +131,21 @@ public class TriplegeoConfiguration extends TransformConfiguration
     public static class Prefix
     {
         String label;
-        
+
         String uri;
-        
+
         public Prefix(String label, String uri)
         {
             this.label = label;
             this.uri = uri;
         }
-        
+
         @NotEmpty
         public String getLabel()
         {
             return label;
         }
-        
+
         @NotEmpty
         @URL
         public String getUri()
@@ -159,7 +159,7 @@ public class TriplegeoConfiguration extends TransformConfiguration
             return String.format("Prefix [label=%s, uri=%s]", label, uri);
         }
     }
-    
+
     //
     // Member data
     //
@@ -215,45 +215,50 @@ public class TriplegeoConfiguration extends TransformConfiguration
     private String attrY = "lat";
 
     /**
-     * A resource location of a YML file containing mappings from input schema to RDF according to a 
-     * custom ontology.  
+     * A profile for setting default configuration values
+     */
+    private String profile;
+
+    /**
+     * A resource location of a YML file containing mappings from input schema to RDF according to a
+     * custom ontology.
      */
     private String mappingSpec;
-    
+
     /**
      * A resource location of a YML/CSV file describing a classification scheme.
      */
     private String classificationSpec;
-    
+
     /**
      * Indicate whether the data features specify their category based on its identifier in the classification scheme (false)
-     * or the actual name of the category (true). By default, transformation uses identifiers of categories in the 
+     * or the actual name of the category (true). By default, transformation uses identifiers of categories in the
      * classification scheme.
      */
     private Boolean classifyByName = true;
-    
+
     /**
      * A name for the data source provider of input features
      */
     private String featureSource;
 
-    /** 
+    /**
      * The namespace of the underlying ontology (used in creating properties for RDF triples)
      */
     private String ontologyNamespaceUri = SLIPO_ONTOLOGY_NAMESPACE_URI;
-    
+
     /**
      * The namespace of underlying geospatial ontology
      */
     private String geometryNamespaceUri = GEOSPARQL_NAMESPACE_URI;
-    
+
     /**
      * The namespace for all generated resources
      */
     private String featureNamespaceUri = SLIPO_FEATURE_NAMESPACE_URI;
-  
+
     /**
-     * The namespace for the classification scheme 
+     * The namespace for the classification scheme
      */
     private String classificationNamespaceUri = SLIPO_CLASSIFICATION_NAMESPACE_URI;
 
@@ -261,28 +266,28 @@ public class TriplegeoConfiguration extends TransformConfiguration
      * The namespace for categories under the classification scheme
      */
     private String classNamespaceUri = SLIPO_CLASS_NAMESPACE_URI;
-    
+
     /**
      * The namespace for the data source provider
      */
     private String datasourceNamespaceUri = SLIPO_DATASOURCE_NAMESPACE_URI;
-    
-    // Note: 
+
+    // Note:
     // The namespace prefixes are defined in a bit awkward way: 2 separate lists where i-th
     // item of 1st list (aliases) is the corresponds to the i-th item of 2nd list (URIs).
     // They should be probably stored as a map or a list of Prefix objects; but until the target
-    // configuration format changes, we will keep the 2 lists just to enable simpler deserialization 
-    
+    // configuration format changes, we will keep the 2 lists just to enable simpler deserialization
+
     /**
      * The list of aliases for namespace URIs (must correspond to listed namespaces!)
      */
     private List<String> prefixKeys = new ArrayList<>();
-    
+
     /**
      * The list of namespaces for which a prefix (an alias) is defined
      */
     private List<String> prefixedNamespaces = new ArrayList<>();
-    
+
     /**
      * The coordinate reference system (CRS) for input data (eg "EPSG:4326")
      */
@@ -319,14 +324,14 @@ public class TriplegeoConfiguration extends TransformConfiguration
     {
         return EnumTool.TRIPLEGEO;
     }
-    
+
     @Override
     @JsonIgnore
     public String getVersion()
     {
         return _version;
     }
-    
+
     //
     // Helpers
     //
@@ -365,7 +370,7 @@ public class TriplegeoConfiguration extends TransformConfiguration
         this.addPrefix("rdfs", RDFS_NAMESPACE_URI);
         this.addPrefix("wgs84_pos", WGS84POS_NAMESPACE_URI);
     }
-    
+
     //
     // Getters / Setters
     //
@@ -406,14 +411,15 @@ public class TriplegeoConfiguration extends TransformConfiguration
     {
         super.setInput(input);
     }
-    
+
     @JsonIgnore
     @Override
     public void setInput(String input)
     {
         super.setInput(input);
     }
-    
+
+    @Override
     public void clearInput()
     {
         super.clearInput();
@@ -455,6 +461,7 @@ public class TriplegeoConfiguration extends TransformConfiguration
         return outputFormat;
     }
 
+    @Override
     @JsonIgnore
     public void setOutputFormat(EnumDataFormat outputFormat)
     {
@@ -478,12 +485,14 @@ public class TriplegeoConfiguration extends TransformConfiguration
         setOutputFormat(f.dataFormat());
     }
 
+    @Override
     @JsonProperty("outputDir")
     public void setOutputDir(String outputDir)
     {
         this.outputDir = outputDir;
     }
 
+    @Override
     @JsonProperty("outputDir")
     public String getOutputDir()
     {
@@ -508,14 +517,14 @@ public class TriplegeoConfiguration extends TransformConfiguration
     {
         Assert.state(outputFormat != null, "The output format is not specified");
         String extension = outputFormat.getFilenameExtension();
-        
+
         Map<EnumOutputType, List<String>> outputMap = new EnumMap<>(EnumOutputType.class);
-        
+
         outputMap.put(EnumOutputType.OUTPUT, new ArrayList<>());
         outputMap.put(EnumOutputType.KPI, new ArrayList<>());
-        
-        // Each input file yields an RDF output and a JSON metadata file 
-        
+
+        // Each input file yields an RDF output and a JSON metadata file
+
         for (String inputPath: input) {
             String inputName = StringUtils.stripFilenameExtension(
                 Paths.get(inputPath).getFileName().toString());
@@ -524,17 +533,17 @@ public class TriplegeoConfiguration extends TransformConfiguration
             outputMap.get(EnumOutputType.KPI)
                 .add(inputName + "_metadata" + ".json");
         }
-        
+
         // An output file with classification in an RDF format is always produced
-        
+
         outputMap.get(EnumOutputType.OUTPUT)
             .add("classification" + "." + extension);
         outputMap.get(EnumOutputType.KPI)
             .add("classification_metadata" + ".json");
-        
+
         return outputMap;
     }
-    
+
     @JsonProperty("mode")
     public void setMode(Mode mode)
     {
@@ -548,12 +557,24 @@ public class TriplegeoConfiguration extends TransformConfiguration
         return mode;
     }
 
+    @JsonProperty("profile")
+    public void setProfile(String profile)
+    {
+        this.profile = profile;
+    }
+
+    @JsonProperty("profile")
+    public String getProfile()
+    {
+        return profile;
+    }
+
     @JsonProperty("mappingSpec")
     public void setMappingSpec(String mappingSpec)
     {
         this.mappingSpec = mappingSpec;
     }
-    
+
     @JsonProperty("mappingSpec")
     @NotNull
     public String getMappingSpec()
@@ -566,26 +587,26 @@ public class TriplegeoConfiguration extends TransformConfiguration
     {
         this.classificationSpec = classificationSpec;
     }
-    
+
     @JsonProperty("classificationSpec")
     public String getClassificationSpec()
     {
         return classificationSpec;
     }
-    
+
     @JsonProperty("classifyByName")
     @JsonInclude(Include.NON_NULL)
     public void setClassifyByName(boolean classifyByName)
     {
         this.classifyByName = classifyByName;
     }
-    
+
     @JsonProperty("classifyByName")
     public boolean getClassifyByName()
     {
         return classifyByName;
     }
-    
+
     @JsonIgnore
     public void setTargetGeoOntology(EnumSpatialOntology targetOntology)
     {
@@ -628,7 +649,7 @@ public class TriplegeoConfiguration extends TransformConfiguration
     {
         this.ontologyNamespaceUri = ontologyNamespaceUri;
     }
-    
+
     @JsonProperty("nsOntology")
     @NotEmpty
     @URL
@@ -636,7 +657,7 @@ public class TriplegeoConfiguration extends TransformConfiguration
     {
         return ontologyNamespaceUri;
     }
-    
+
     @JsonProperty("nsFeatureURI")
     public void setFeatureNamespaceUri(String uri)
     {
@@ -670,7 +691,7 @@ public class TriplegeoConfiguration extends TransformConfiguration
     {
         this.classificationNamespaceUri = classificationNamespaceUri;
     }
-    
+
     @JsonProperty("nsClassificationURI")
     @NotEmpty
     @URL
@@ -678,13 +699,13 @@ public class TriplegeoConfiguration extends TransformConfiguration
     {
         return classificationNamespaceUri;
     }
-    
+
     @JsonProperty("nsClassURI")
     public void setClassNamespaceUri(String classNamespaceUri)
     {
         this.classNamespaceUri = classNamespaceUri;
     }
-    
+
     @JsonProperty("nsClassURI")
     @NotEmpty
     @URL
@@ -692,20 +713,20 @@ public class TriplegeoConfiguration extends TransformConfiguration
     {
         return classNamespaceUri;
     }
-    
+
     @JsonProperty("nsDataSourceURI")
     public void setDatasourceNamespaceUri(String datasourceNamespaceUri)
     {
         this.datasourceNamespaceUri = datasourceNamespaceUri;
     }
-    
+
     @JsonProperty("nsDataSourceURI")
     @URL
     public String getDatasourceNamespaceUri()
     {
         return datasourceNamespaceUri;
     }
-    
+
     public void addPrefix(String prefix, String uri)
     {
         Assert.isTrue(!StringUtils.isEmpty(prefix), "A non-empty prefix is required");
@@ -713,44 +734,44 @@ public class TriplegeoConfiguration extends TransformConfiguration
         this.prefixKeys.add(prefix);
         this.prefixedNamespaces.add(uri);
     }
-    
+
     @JsonIgnore
     public void setPrefixes(Map<String, String> prefixes)
     {
         Assert.notNull(prefixes, "Expected a non-null map of prefixes");
-        prefixes.forEach(this::addPrefix); 
+        prefixes.forEach(this::addPrefix);
     }
-    
+
     @JsonIgnore
     public Map<String, String> getPrefixes()
     {
         final List<String> keys = this.prefixKeys;
         final List<String> values = this.prefixedNamespaces;
-        
+
         final int n = keys.size();
         if (n != values.size()) {
             return null; // lists are expected to have same size
         }
-        
+
         return IntStream.range(0, n).boxed()
             .collect(Collectors.toMap(keys::get, values::get));
     }
-    
+
     @JsonIgnore
     @NotNull
     @Valid
     protected List<Prefix> getPrefixList()
-    {        
+    {
         final Map<String, String> prefixes = getPrefixes();
         if (prefixes == null) {
             return null; // A map could not be constructed
         }
-        
+
         final Set<String> namespaceUris = new HashSet<>(prefixes.values());
         if (namespaceUris.size() < prefixes.size()) {
             return null; // namespace URIs contain duplicates!
         }
-        
+
         return prefixes.entrySet().stream()
             .map(e -> new Prefix(e.getKey(), e.getValue()))
             .collect(Collectors.toList());
@@ -762,31 +783,31 @@ public class TriplegeoConfiguration extends TransformConfiguration
     {
         return Collections.unmodifiableList(this.prefixKeys);
     }
-    
+
     public void setPrefixKeys(List<String> keys)
     {
         this.prefixKeys = new ArrayList<>(keys);
     }
-    
+
     @JsonProperty("prefixes")
     public String getPrefixKeysAsString()
     {
         return this.prefixKeys.stream().collect(Collectors.joining(", "));
     }
-    
+
     @JsonProperty("prefixes")
     public void setPrefixKeysFromString(String s)
     {
         if (StringUtils.isEmpty(s)) {
             this.prefixKeys = Collections.emptyList();
             return;
-        } 
-        
+        }
+
         this.prefixKeys = Arrays.stream(s.split(",[ ]*"))
             .map(String::trim)
             .collect(Collectors.toCollection(ArrayList::new));
     }
-    
+
     @JsonIgnore
     @NotNull
     public List<String> getNamespaceUris()
@@ -798,26 +819,26 @@ public class TriplegeoConfiguration extends TransformConfiguration
     {
         this.prefixedNamespaces = new ArrayList<>(uris);
     }
-    
+
     @JsonProperty("namespaces")
     public String getNamespaceUrisAsString()
     {
         return this.prefixedNamespaces.stream().collect(Collectors.joining(", "));
     }
-    
+
     @JsonProperty("namespaces")
     public void setNamespaceUrisFromString(String s)
     {
         if (StringUtils.isEmpty(s)) {
             this.prefixedNamespaces = Collections.emptyList();
             return;
-        } 
-        
+        }
+
         this.prefixedNamespaces = Arrays.stream(s.split(",[ ]*"))
             .map(String::trim)
             .collect(Collectors.toCollection(ArrayList::new));
     }
-    
+
     @JsonProperty("attrKey")
     public void setAttrKey(String attrKey)
     {
