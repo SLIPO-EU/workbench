@@ -66,7 +66,7 @@ public class LimesJobTests extends AbstractJobTests
 
             // Add fixtures from src/test/resources
 
-            for (String fixtureName: Arrays.asList("csv-1")) {
+            for (String fixtureName: Arrays.asList("1")) {
                 final Resource dir = root.createRelative(fixtureName + "/");
                 Resource inputDir = dir.createRelative("input");
                 Resource resultsDir = dir.createRelative("output");
@@ -147,7 +147,7 @@ public class LimesJobTests extends AbstractJobTests
     }
 
     @Test(timeout = 10 * 1000L)
-    public void test1_single() throws Exception
+    public void test1_singleInputParameter() throws Exception
     {
         testWithFixture(fixtures.get(0), this::extractInputParametersAsSingletonMap);
     }

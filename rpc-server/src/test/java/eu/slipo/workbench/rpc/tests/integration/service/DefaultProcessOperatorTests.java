@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.springframework.util.StringUtils.stripFilenameExtension;
+import static org.springframework.util.StringUtils.getFilenameExtension;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,6 +22,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
@@ -317,10 +319,14 @@ public class DefaultProcessOperatorTests
          * @return the path to created file
          */
         private Path copyTempIntoDirectory(Path source, String prefix, String suffix, Path targetDir)
-            throws IOException
         {
-            Path path = Files.createTempFile(targetDir, prefix, suffix);
-            Files.copy(source, path, StandardCopyOption.REPLACE_EXISTING);
+            Path path = null;
+            try {
+                path = Files.createTempFile(targetDir, prefix, suffix);
+                Files.copy(source, path, StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException ex) {
+                throw new IllegalStateException(ex);
+            }
             return path;
         }
 
@@ -335,7 +341,7 @@ public class DefaultProcessOperatorTests
 
         private void setupTransformFixtures(Path userDir) throws Exception
         {
-            for (String dirPath: Arrays.asList("triplegeo/csv-1")) {
+            for (String dirPath: Arrays.asList("triplegeo/1", "triplegeo/2", "triplegeo/2a")) {
                 final Resource dir = baseResource.createRelative(dirPath + "/");
                 final String dirName = Paths.get(dirPath).getFileName().toString();
 
@@ -344,35 +350,43 @@ public class DefaultProcessOperatorTests
                 final Path inputDir = Paths.get(dir.createRelative("input").getURI());
                 final Path resultsDir = Paths.get(dir.createRelative("output").getURI());
 
+                final List<String> inputNames = Files.list(inputDir)
+                    .filter(Files::isRegularFile)
+                    .map(p -> p.getFileName().toString())
+                    .collect(Collectors.toList());
+                final String sampleInputName = inputNames.get(0);
+                final String inputExtension = getFilenameExtension(sampleInputName);
+
                 final Properties options = readProperties(dir.createRelative("options.conf"));
 
-                final URI mappingsUri = dir.createRelative("mappings.yml").getURI();
-                final Path mappingsPath = Paths.get(mappingsUri);
+                final Resource mappingsResource = dir.createRelative("mappings.yml");
+                final Optional<Path> mappingsPath = mappingsResource.exists()?
+                    Optional.of(Paths.get(mappingsResource.getURI())) : Optional.empty();
 
-                final URI classificationUri = dir.createRelative("classification.csv").getURI();
-                final Path classificationPath = Paths.get(classificationUri);
+                final Resource classificationResource = dir.createRelative("classification.csv");
+                final Optional<Path> classificationPath = classificationResource.exists()?
+                    Optional.of(Paths.get(classificationResource.getURI())) : Optional.empty();
 
                 // Copy mapping/classification files into user's data directory
 
-                Path mappingsTempPath =
-                    copyTempIntoDirectory(mappingsPath, "mappings-", ".yml", userDir);
-                Path classificationTempPath =
-                    copyTempIntoDirectory(classificationPath, "classification-", ".csv", userDir);
+                Optional<Path> mappingsTempPath = mappingsPath
+                    .map(p -> copyTempIntoDirectory(p, "mappings-", ".yml", userDir));
+                Optional<Path> classificationTempPath = classificationPath
+                    .map(p -> copyTempIntoDirectory(p, "classification-", ".csv", userDir));
 
                 // Copy inputs into user's data directory
 
-                final List<String> inputNames = Files.list(inputDir)
-                    .collect(Collectors.mapping(p -> p.getFileName().toString(), Collectors.toList()));
                 final BiMap<String, String> inputNameToTempName = HashBiMap.create();
                 final BiMap<String, Path> inputNameToTempPath = HashBiMap.create();
                 for (String inputName: inputNames) {
-                    Path path = copyTempIntoDirectory(inputDir.resolve(inputName), null, ".csv", userDir);
+                    Path path = copyTempIntoDirectory(
+                        inputDir.resolve(inputName), null, "." + inputExtension, userDir);
                     inputNameToTempPath.put(inputName, path);
                     inputNameToTempName.put(inputName,
                         stripFilenameExtension(userDir.relativize(path).toString()));
                 }
 
-                // Add fixtures for input as a local file (specs given as user-relative paths)
+                // Add fixtures for input as a local file, specs given as user-relative paths
 
                 for (int index = 0; index < inputNames.size(); ++index) {
                     String inputName = inputNames.get(index);
@@ -383,30 +397,32 @@ public class DefaultProcessOperatorTests
                         userDir,
                         resultsDir.resolve(stripFilenameExtension(inputName) + ".nt"),
                         options,
-                        userDir.relativize(mappingsTempPath).toString(),
-                        userDir.relativize(classificationTempPath).toString());
+                        mappingsTempPath.map(p -> userDir.relativize(p).toString()),
+                        classificationTempPath.map(p -> userDir.relativize(p).toString()));
                     String key = String.format("file-%s-%d-a", dirName, index + 1);
                     transformFixtures.put(key, fixture);
                 }
 
-                // Add fixtures for input as a local file (specs given as file URIs)
+                // Add fixtures for input as a local file, specs given as file URIs
 
                 for (int index = 0; index < inputNames.size(); ++index) {
                     String inputName = inputNames.get(index);
                     Path inputPath = inputNameToTempPath.get(inputName);
+                    if (!mappingsPath.isPresent() || !classificationPath.isPresent())
+                        continue;
                     TransformFixture fixture = createTransformFixture(
                         "file-" + inputNameToTempName.get(inputName) + "-b",
                         inputPath.toUri(),
                         userDir,
                         resultsDir.resolve(stripFilenameExtension(inputName) + ".nt"),
                         options,
-                        mappingsUri.toString(),
-                        classificationUri.toString());
+                        mappingsPath.map(p -> p.toUri().toString()).get(),
+                        classificationPath.map(p -> p.toUri().toString()).get());
                     String key = String.format("file-%s-%d-b", dirName, index + 1);
                     transformFixtures.put(key, fixture);
                 }
 
-                // Add fixtures for input as URLs (specs given as user-relative paths)
+                // Add fixtures for input as URLs, specs given as user-relative paths
 
                 for (int index = 0; index < inputNames.size(); ++index) {
                     String inputName = inputNames.get(index);
@@ -417,25 +433,27 @@ public class DefaultProcessOperatorTests
                         new URL(url, "#" + fixtureName.substring(1 + inputName.length())),
                         resultsDir.resolve(stripFilenameExtension(inputName) + ".nt"),
                         options,
-                        userDir.relativize(mappingsTempPath).toString(),
-                        userDir.relativize(classificationTempPath).toString());
+                        mappingsTempPath.map(p -> userDir.relativize(p).toString()),
+                        classificationTempPath.map(p -> userDir.relativize(p).toString()));
                     String key = String.format("url-%s-%d-a", dirName, index + 1);
                     transformFixtures.put(key, fixture);
                 }
 
-                // Add fixtures for input as URLs (specs given as file URIs)
+                // Add fixtures for input as URLs, specs given as file URIs
 
                 for (int index = 0; index < inputNames.size(); ++index) {
                     String inputName = inputNames.get(index);
                     String fixtureName = "url-" + inputNameToTempName.get(inputName) + "-b";
                     URL url = new URL(resourcesUrl, inputName);
+                    if (!mappingsPath.isPresent() || !classificationPath.isPresent())
+                        continue;
                     TransformFixture fixture = createTransformFixture(
                         fixtureName,
                         new URL(url, "#" + fixtureName.substring(1 + inputName.length())),
                         resultsDir.resolve(stripFilenameExtension(inputName) + ".nt"),
                         options,
-                        mappingsUri.toString(),
-                        classificationUri.toString());
+                        mappingsPath.map(p -> p.toUri().toString()).get(),
+                        classificationPath.map(p -> p.toUri().toString()).get());
                     String key = String.format("url-%s-%d-b", dirName, index + 1);
                     transformFixtures.put(key, fixture);
                 }
@@ -468,12 +486,30 @@ public class DefaultProcessOperatorTests
         }
 
         private TransformFixture createTransformFixture(
-            String name, URL input, Path expectedResultPath,
-            Properties options, String mappingSpec, String classificationSpec)
-            throws URISyntaxException, ConversionFailedException
+            String name, URI input, Path stagingDir, Path expectedResultPath,
+            Properties options, Optional<String> mappingSpec, Optional<String> classificationSpec)
+            throws ConversionFailedException
+        {
+            return createTransformFixture(
+                name, input, stagingDir, expectedResultPath, options, mappingSpec.orElse(null), classificationSpec.orElse(null));
+        }
+
+        private TransformFixture createTransformFixture(
+            String name, URL input, Path expectedResultPath, Properties options,
+            String mappingSpec, String classificationSpec)
+            throws ConversionFailedException, URISyntaxException
         {
             return createTransformFixture(
                 name, input.toURI(), null, expectedResultPath, options, mappingSpec, classificationSpec);
+        }
+
+        private TransformFixture createTransformFixture(
+            String name, URL input, Path expectedResultPath, Properties options,
+            Optional<String> mappingSpec, Optional<String> classificationSpec)
+            throws ConversionFailedException, URISyntaxException
+        {
+            return createTransformFixture(
+                name, input.toURI(), null, expectedResultPath, options, mappingSpec.orElse(null), classificationSpec.orElse(null));
         }
 
         @Bean
@@ -484,7 +520,7 @@ public class DefaultProcessOperatorTests
 
         private void setupInterlinkFixtures(Path userDir) throws Exception
         {
-            for (String dirPath: Arrays.asList("limes/csv-1")) {
+            for (String dirPath: Arrays.asList("limes/1")) {
                 final Resource dir = baseResource.createRelative(dirPath + "/");
                 final String dirName = Paths.get(dirPath).getFileName().toString();
 
@@ -513,10 +549,9 @@ public class DefaultProcessOperatorTests
 
                 // Copy inputs into user's data directory
 
-                final List<String> inputNames = Arrays.asList("a.csv", "b.csv");
                 final BiMap<String, String> inputNameToTempName = HashBiMap.create();
                 final BiMap<String, Path> inputNameToTempPath = HashBiMap.create();
-                for (String inputName: inputNames) {
+                for (String inputName: Arrays.asList("a.csv", "b.csv")) {
                     Path path = copyTempIntoDirectory(inputDir.resolve(inputName), null, ".csv", userDir);
                     inputNameToTempPath.put(inputName, path);
                     inputNameToTempName.put(inputName,
@@ -901,113 +936,126 @@ public class DefaultProcessOperatorTests
     public void test1_transformAndRegister1a() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
-        transformAndRegister(
-            "register-file-csv-1-1-a", transformFixtures.get("file-csv-1-1-a"), user.toDto());
+        transformAndRegister("register-file-1-1-a", transformFixtures.get("file-1-1-a"), user.toDto());
     }
 
     @Test(timeout = 35 * 1000L)
     public void test1_transformAndRegister1b() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
-        transformAndRegister(
-            "register-file-csv-1-1-b", transformFixtures.get("file-csv-1-1-b"), user.toDto());
+        transformAndRegister("register-file-1-1-b", transformFixtures.get("file-1-1-b"), user.toDto());
     }
 
     @Test(timeout = 35 * 1000L)
     public void test1_transformAndRegister2a() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
-        transformAndRegister(
-            "register-file-csv-1-2-a", transformFixtures.get("file-csv-1-2-a"), user.toDto());
+        transformAndRegister("register-file-1-2-a", transformFixtures.get("file-1-2-a"), user.toDto());
     }
 
     @Test(timeout = 35 * 1000L)
     public void test1_transformAndRegister2b() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
-        transformAndRegister(
-            "register-file-csv-1-2-b", transformFixtures.get("file-csv-1-2-b"), user.toDto());
+        transformAndRegister("register-file-1-2-b", transformFixtures.get("file-1-2-b"), user.toDto());
     }
 
     @Test(timeout = 35 * 1000L)
     public void test1_transformAndRegister3a() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
-        transformAndRegister(
-            "register-file-csv-1-3-a", transformFixtures.get("file-csv-1-3-a"), user.toDto());
+        transformAndRegister("register-file-1-3-a", transformFixtures.get("file-1-3-a"), user.toDto());
     }
 
     @Test(timeout = 35 * 1000L)
     public void test1_transformAndRegister3b() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
-        transformAndRegister(
-            "register-file-csv-1-3-b", transformFixtures.get("file-csv-1-3-b"), user.toDto());
+        transformAndRegister("register-file-1-3-b", transformFixtures.get("file-1-3-b"), user.toDto());
+    }
+
+    @Test(timeout = 35 * 1000L)
+    public void test2_transformAndRegister1a() throws Exception
+    {
+        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
+        transformAndRegister("register-file-2-1-a", transformFixtures.get("file-2-1-a"), user.toDto());
+    }
+
+    @Test(timeout = 35 * 1000L)
+    public void test2_transformAndRegister1b() throws Exception
+    {
+        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
+        transformAndRegister("register-file-2-1-b", transformFixtures.get("file-2-1-b"), user.toDto());
+    }
+
+    @Test(timeout = 35 * 1000L)
+    public void test2a_transformAndRegister1a() throws Exception
+    {
+        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
+        transformAndRegister("register-file-2a-1-a", transformFixtures.get("file-2a-1-a"), user.toDto());
     }
 
     @Test(timeout = 35 * 1000L)
     public void test1_downloadAndTransformAndRegister1a() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
-        transformAndRegister(
-            "register-url-csv-1-1-a", transformFixtures.get("url-csv-1-1-a"), user.toDto());
+        transformAndRegister("register-url-1-1-a", transformFixtures.get("url-1-1-a"), user.toDto());
     }
 
     @Test(timeout = 35 * 1000L)
     public void test1_downloadAndTransformAndRegister1b() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
-        transformAndRegister(
-            "register-url-csv-1-1-b", transformFixtures.get("url-csv-1-1-b"), user.toDto());
+        transformAndRegister("register-url-1-1-b", transformFixtures.get("url-1-1-b"), user.toDto());
     }
 
     @Test(timeout = 35 * 1000L)
     public void test1_downloadAndTransformAndRegister2a() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
-        transformAndRegister(
-            "register-url-csv-1-2-a", transformFixtures.get("url-csv-1-2-a"), user.toDto());
+        transformAndRegister("register-url-1-2-a", transformFixtures.get("url-1-2-a"), user.toDto());
     }
 
     @Test(timeout = 35 * 1000L)
     public void test1_downloadAndTransformAndRegister2b() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
-        transformAndRegister(
-            "register-url-csv-1-2-b", transformFixtures.get("url-csv-1-2-b"), user.toDto());
+        transformAndRegister("register-url-1-2-b", transformFixtures.get("url-1-2-b"), user.toDto());
     }
-
 
     @Test(timeout = 35 * 1000L)
     public void test1_downloadAndTransformAndRegister3a() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
-        transformAndRegister(
-            "register-url-csv-1-3-a", transformFixtures.get("url-csv-1-3-a"), user.toDto());
+        transformAndRegister("register-url-1-3-a", transformFixtures.get("url-1-3-a"), user.toDto());
     }
 
     @Test(timeout = 35 * 1000L)
     public void test1_downloadAndTransformAndRegister3b() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
-        transformAndRegister(
-            "register-url-csv-1-3-b", transformFixtures.get("url-csv-1-3-b"), user.toDto());
+        transformAndRegister("register-url-1-3-b", transformFixtures.get("url-1-3-b"), user.toDto());
+    }
+
+    @Test(timeout = 35 * 1000L)
+    public void test2a_downloadAndTransformAndRegister1b() throws Exception
+    {
+        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
+        transformAndRegister("register-url-2a-1-b", transformFixtures.get("url-2a-1-a"), user.toDto());
     }
 
     @Test(timeout = 35 * 1000L)
     public void test1_transformAndLinkAndRegister1a() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
-        transformAndLinkAndRegister(
-            "register-linked-csv-1-a", interlinkFixtures.get("file-csv-1-a"), user.toDto());
+        transformAndLinkAndRegister("register-links-1-a", interlinkFixtures.get("file-1-a"), user.toDto());
     }
 
     @Test(timeout = 35 * 1000L)
     public void test1_transformAndLinkAndRegister1b() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
-        transformAndLinkAndRegister(
-            "register-linked-csv-1-b", interlinkFixtures.get("file-csv-1-b"), user.toDto());
+        transformAndLinkAndRegister("register-links-1-b", interlinkFixtures.get("file-1-b"), user.toDto());
     }
 
     @Test(timeout = 120 * 1000L)
@@ -1016,22 +1064,22 @@ public class DefaultProcessOperatorTests
         final Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
 
         Future<?> f1 = taskExecutor.submit(
-            new TransformRunnable("register-csv-1-1-a-p6", transformFixtures.get("file-csv-1-1-a"), user));
+            new TransformRunnable("register-1-1-a-p6", transformFixtures.get("file-1-1-a"), user));
 
         Future<?> f2 = taskExecutor.submit(
-            new TransformRunnable("register-csv-1-2-a-p6", transformFixtures.get("file-csv-1-2-a"), user));
+            new TransformRunnable("register-1-2-a-p6", transformFixtures.get("file-1-2-a"), user));
 
         Future<?> f3 = taskExecutor.submit(
-            new TransformRunnable("register-csv-1-3-a-p6", transformFixtures.get("file-csv-1-3-a"), user));
+            new TransformRunnable("register-1-3-a-p6", transformFixtures.get("file-1-3-a"), user));
 
         Future<?> f4 = taskExecutor.submit(
-            new TransformRunnable("register-csv-1-4-a-p6", transformFixtures.get("url-csv-1-1-a"), user));
+            new TransformRunnable("register-1-4-a-p6", transformFixtures.get("url-1-1-a"), user));
 
         Future<?> f5 = taskExecutor.submit(
-            new TransformRunnable("register-csv-1-5-a-p6", transformFixtures.get("url-csv-1-2-a"), user));
+            new TransformRunnable("register-1-5-a-p6", transformFixtures.get("url-1-2-a"), user));
 
         Future<?> f6 = taskExecutor.submit(
-            new TransformRunnable("register-csv-1-6-a-p6", transformFixtures.get("url-csv-1-3-a"), user));
+            new TransformRunnable("register-1-6-a-p6", transformFixtures.get("url-1-3-a"), user));
 
         // Wait for all tasks to complete
 

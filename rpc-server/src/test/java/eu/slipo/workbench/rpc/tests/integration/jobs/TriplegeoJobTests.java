@@ -70,7 +70,7 @@ public class TriplegeoJobTests extends AbstractJobTests
 
             // Add fixtures from src/test/resources
 
-            for (String fixtureName: Arrays.asList("csv-1")) {
+            for (String fixtureName: Arrays.asList("1", "2")) {
                 final Resource dir = root.createRelative(fixtureName + "/");
                 Resource inputDir = dir.createRelative("input");
                 Resource resultsDir = dir.createRelative("output");
@@ -139,6 +139,7 @@ public class TriplegeoJobTests extends AbstractJobTests
 
         try (Stream<Path> inputPaths = Files.list(f.inputDir)) {
             inputPathsAsString = inputPaths
+                .filter(Files::isRegularFile)
                 .sorted()
                 .map(p -> p.toAbsolutePath().toString())
                 .collect(Collectors.joining(File.pathSeparator));
@@ -157,5 +158,11 @@ public class TriplegeoJobTests extends AbstractJobTests
     public void test1() throws Exception
     {
         testWithFixture(fixtures.get(0), this::extractInputParameters);
+    }
+
+    @Test(timeout = 10 * 1000L)
+    public void test2() throws Exception
+    {
+        testWithFixture(fixtures.get(1), this::extractInputParameters);
     }
 }

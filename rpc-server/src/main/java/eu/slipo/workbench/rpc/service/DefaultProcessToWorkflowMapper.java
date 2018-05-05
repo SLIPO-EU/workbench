@@ -397,7 +397,7 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
 
         final String profileName = parametersMap.getProperty("profile");
         if (!StringUtils.isEmpty(profileName)) {
-            TriplegeoConfiguration profile = triplegeoConfigurationProfiles.get(profileName);
+            TriplegeoConfiguration profile = triplegeoConfigurationProfiles.get(profileName.toLowerCase());
             if (profile == null)
                 throw new NoSuchElementException(
                     "No such profile for Triplegeo configuration: [" + profileName + "]");
