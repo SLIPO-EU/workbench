@@ -41,8 +41,7 @@ import {
 } from '../../process/designer';
 
 import {
-  KpiChartView,
-  KpiGridView,
+  KpiTripleGeoView,
 } from './';
 
 function isMapSupported(tool, type, table) {
@@ -232,14 +231,12 @@ export default class ExecutionStepDetails extends React.Component {
         {this.props.selectedKpi &&
           <Row className="mb-4">
             <Col>
-              <Card>
-                <CardBody>
-                  <KpiGridView
-                    data={data}
-                    file={file}
-                  />
-                </CardBody>
-              </Card>
+              {this.props.step.tool === EnumTool.TripleGeo &&
+                <KpiTripleGeoView
+                  data={data}
+                  file={file}
+                />
+              }
             </Col>
           </Row>
         }

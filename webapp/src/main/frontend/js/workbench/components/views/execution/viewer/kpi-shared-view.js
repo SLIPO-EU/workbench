@@ -25,14 +25,13 @@ export const KpiGridColumns = [{
   show: false,
 }];
 
-class KpiGridView extends React.Component {
+class KpiSharedView extends React.Component {
 
   constructor(props) {
     super(props);
   }
 
   static propTypes = {
-    hide: PropTypes.func,
     data: PropTypes.arrayOf(PropTypes.shape({
       key: PropTypes.string.isRequired,
       value: PropTypes.oneOfType([PropTypes.string, PropTypes.number, PropTypes.bool]).isRequired,
@@ -51,15 +50,8 @@ class KpiGridView extends React.Component {
         <Row className="mb-4">
           <Col>
             <i className="fa fa-th"></i>
-            <span>{` KPI Data - ${this.props.file.filePath}`}</span>
+            <span>{` KPI File : ${this.props.file.filePath.split('/').reverse()[0]}`}</span>
           </Col>
-          {this.props.hide &&
-            <Col>
-              <div className="float-right">
-                <i className="slipo-action-icon fa fa-times" onClick={() => { this.props.hide(); }}></i>
-              </div>
-            </Col>
-          }
         </Row>
         <Row>
           <Col>
@@ -67,6 +59,8 @@ class KpiGridView extends React.Component {
               data={this.props.data}
               columns={KpiGridColumns}
               showPagination={true}
+              defaultPageSize={10}
+              minRows={10}
             />
           </Col>
         </Row>
@@ -76,4 +70,4 @@ class KpiGridView extends React.Component {
 
 }
 
-export default KpiGridView;
+export default KpiSharedView;

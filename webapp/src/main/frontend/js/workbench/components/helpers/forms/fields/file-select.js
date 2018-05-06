@@ -293,10 +293,12 @@ export class FileSelect extends React.Component {
     return (
       <div className="input-group">
         <input type="text" className="form-control" readOnly value={this.selectedPath || this.props.placeHolder || ''} />
-        <span className="input-group-btn">
-          {this.selectedPath && <button className="btn btn-danger" type="button" onClick={(e) => this.props.onChange(null)}><i className="fa fa-trash" /></button>}
-          <button className="btn btn-default" type="button" onClick={(e) => this.setMode(EnumFileSelectMode.BROWSER)}><i className="fa fa-pencil" /></button>
-        </span>
+        {!this.props.readOnly &&
+          <span className="input-group-btn">
+            {this.selectedPath && <button className="btn btn-danger" type="button" onClick={(e) => this.props.onChange(null)}><i className="fa fa-trash" /></button>}
+            <button className="btn btn-default" type="button" onClick={(e) => this.setMode(EnumFileSelectMode.BROWSER)}><i className="fa fa-pencil" /></button>
+          </span>
+        }
       </div>
     );
   }

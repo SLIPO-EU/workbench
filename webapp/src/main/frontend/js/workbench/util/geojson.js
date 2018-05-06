@@ -1,10 +1,10 @@
-export function toFeatureCollection(features) {
+export function toFeatureCollection(features, crs = 'EPSG:4326') {
   return {
     type: 'FeatureCollection',
     crs: {
       type: 'name',
       properties: {
-        name: 'EPSG:4326'
+        name: crs
       }
     },
     features: features || [],

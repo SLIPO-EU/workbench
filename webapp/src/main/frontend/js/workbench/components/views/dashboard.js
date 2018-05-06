@@ -28,7 +28,6 @@ import {
 } from '../../model';
 
 import {
-  BarChart,
   Card,
   DashboardCard,
   SecureContent,
