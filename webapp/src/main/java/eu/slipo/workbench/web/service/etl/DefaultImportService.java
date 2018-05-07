@@ -49,7 +49,7 @@ import eu.slipo.workbench.common.model.process.ProcessExecutionStepFileRecord;
 import eu.slipo.workbench.common.model.process.Step;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.repository.ProcessRepository;
-import eu.slipo.workbench.common.service.FileNamingStrategy;
+import eu.slipo.workbench.common.service.UserFileNamingStrategy;
 import eu.slipo.workbench.web.config.MapConfiguration;
 import eu.slipo.workbench.web.model.configuration.GeoServerConfiguration;
 
@@ -71,7 +71,7 @@ public class DefaultImportService implements ImportService, InitializingBean {
 
     @Autowired
     @Qualifier("defaultWebFileNamingStrategry")
-    private FileNamingStrategy fileNamingStrategy;
+    private UserFileNamingStrategy fileNamingStrategy;
 
     @Autowired
     private ProcessRepository processRepository;

@@ -26,8 +26,6 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.spotify.docker.client.LogMessage.Stream;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumOperation;
@@ -48,7 +46,7 @@ import eu.slipo.workbench.common.model.tool.MetadataRegistrationConfiguration;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.repository.ResourceRepository;
-import eu.slipo.workbench.common.service.FileNamingStrategy;
+import eu.slipo.workbench.common.service.UserFileNamingStrategy;
 import eu.slipo.workbench.common.service.util.ClonerService;
 import eu.slipo.workbench.common.service.util.PropertiesConverterService;
 import eu.slipo.workflows.Workflow;
@@ -71,12 +69,8 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
     private ClonerService cloner;
 
     @Autowired
-    @Qualifier("userDataDirectory")
-    private Path userDataDir;
-
-    @Autowired
-    @Qualifier("defaultFileNamingStrategy")
-    private FileNamingStrategy userDataNamingStrategy;
+    @Qualifier("defaultUserFileNamingStrategy")
+    private UserFileNamingStrategy userFileNamingStrategy;
 
     @Autowired
     @Qualifier("catalogDataDirectory")
@@ -430,7 +424,7 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
                 path = Paths.get(location);
             } else {
                 // Treat as a file resource into user's data directory
-                path = userDataNamingStrategy.resolvePath(userId, location);
+                path = userFileNamingStrategy.resolvePath(userId, location);
             }
             parametersMap.put(key, path.toUri().toString());
         }
@@ -497,13 +491,13 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
         case UPLOAD:
             {
                 path = Paths.get(((UploadDataSource) source).getPath());
-                path = userDataNamingStrategy.resolvePath(userId, path);
+                path = userFileNamingStrategy.resolvePath(userId, path);
             }
             break;
         case FILESYSTEM:
             {
                 path = Paths.get(((FileSystemDataSource) source).getPath());
-                path = userDataNamingStrategy.resolvePath(userId, path);
+                path = userFileNamingStrategy.resolvePath(userId, path);
             }
             break;
         case URL:

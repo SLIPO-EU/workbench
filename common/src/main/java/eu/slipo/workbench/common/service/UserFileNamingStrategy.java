@@ -1,12 +1,17 @@
 package eu.slipo.workbench.common.service;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Path;
 
 import eu.slipo.workbench.common.model.DirectoryInfo;
 
-public interface FileNamingStrategy 
+public interface UserFileNamingStrategy 
 {
+    public static final String SCHEME = "user-data";
+    
+    public static final String URI_PREFIX = SCHEME + ":";
+    
     /**
      * Get detailed info on a user's home directory.
      * 
@@ -49,7 +54,37 @@ public interface FileNamingStrategy
     
     /**
      * Resolve a path against a user's home directory
-     * @see FileNamingStrategy#resolvePath(int, String)  
+     * @see UserFileNamingStrategy#resolvePath(int, String)  
      */
     Path resolvePath(int userId, Path relativePath);
+    
+    /**
+     * Convert a relative path (under a user's data directory) to a <tt>user-data</tt> pseudo-URI
+     * 
+     * @param userId
+     * @param relativePath
+     * @return a URI representing the given location
+     */
+    URI convertToUri(int userId, Path relativePath);
+    
+    /**
+     * Convert an absolute path to a <tt>user-data</tt> pseudo-URI. 
+     * 
+     * @param path A path to be converted
+     * @return a URI representing the given location
+     * 
+     * @throws IllegalArgumentException if given path cannot be represented as a URI (e.g. when
+     *   not inside central data directory)
+     */
+    URI convertToUri(Path path);
+    
+    /**
+     * Resolve a <tt>user-data</tt> URI to an absolute path
+     * 
+     * @param uri
+     * @return
+     * 
+     * @throws IllegalArgumentException if given URI does not represent a user-scoped file.
+     */
+    Path resolveUri(URI uri);
 }

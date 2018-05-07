@@ -13,6 +13,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
+import javax.swing.event.ListSelectionEvent;
 
 import org.apache.commons.collections4.IterableUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -36,6 +37,7 @@ import eu.slipo.workbench.common.domain.WorkflowEntity;
 import eu.slipo.workbench.common.model.QueryResultPage;
 import eu.slipo.workbench.common.model.process.EnumProcessExecutionStatus;
 import eu.slipo.workbench.common.model.process.EnumProcessTaskType;
+import eu.slipo.workbench.common.model.process.EnumStepFile;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.ProcessExecutionNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessExecutionQuery;
@@ -634,17 +636,18 @@ public class DefaultProcessRepository implements ProcessRepository
 
         // Add file entities associated with this step
 
-        final boolean verified = record.getStatus() == EnumProcessExecutionStatus.COMPLETED;
+        final boolean completed = record.getStatus() == EnumProcessExecutionStatus.COMPLETED;
 
         for (ProcessExecutionStepFileRecord fileRecord: record.getFiles()) {
-            Assert.state(fileRecord.getId() < 0,
-                "Did not expect an id for a record of a new file entity");
+            Assert.state(fileRecord.getId() < 0, "Did not expect an id for a record of a new file entity");
+            Assert.state(fileRecord.getType() != null, "A type (of EnumStepFile) is required for a new file entity");
             ProcessExecutionStepFileEntity fileEntity =
                 new ProcessExecutionStepFileEntity(executionStepEntity, fileRecord);
             ResourceIdentifier resourceIdentifier = fileRecord.getResource();
             if (resourceIdentifier != null) {
                 fileEntity.setResource(findResourceEntity(resourceIdentifier, true));
             }
+            final boolean verified = completed || !fileRecord.getType().isOfOutputType();
             fileEntity.setVerified(verified);
             executionStepEntity.addFile(fileEntity);
         }
@@ -690,7 +693,7 @@ public class DefaultProcessRepository implements ProcessRepository
         // Due to the nature of a processing step, a file record can never be removed; it can
         // only be added or updated (on specific updatable fields).
 
-        final boolean verified = record.getStatus() == EnumProcessExecutionStatus.COMPLETED;
+        final boolean completed = record.getStatus() == EnumProcessExecutionStatus.COMPLETED;
 
         // Update existing file records
 
@@ -701,6 +704,7 @@ public class DefaultProcessRepository implements ProcessRepository
                 IterableUtils.find(fileRecords, r -> r.getId() == fid);
             Assert.state(fileRecord != null && IterableUtils.frequency(fids, fid) == 1,
                 "Expected a single file record to match to a given id!");
+            final boolean verified = completed || !fileRecord.getType().isOfOutputType();
             // Set updatable metadata from current file record
             fileEntity.setSize(fileRecord.getFileSize());
             fileEntity.setBoundingBox(fileRecord.getBoundingBox());
@@ -713,7 +717,7 @@ public class DefaultProcessRepository implements ProcessRepository
 
         // Add file records (if any)
         // A file record is considered as a new one if carrying an invalid (negative) id
-
+        
         for (ProcessExecutionStepFileRecord fileRecord:
                 IterableUtils.filteredIterable(fileRecords, f -> f.getId() < 0))
         {
@@ -723,6 +727,7 @@ public class DefaultProcessRepository implements ProcessRepository
             if (resourceIdentifier != null) {
                 fileEntity.setResource(findResourceEntity(resourceIdentifier, true));
             }
+            final boolean verified = completed || !fileRecord.getType().isOfOutputType();
             fileEntity.setVerified(verified);
             executionStepEntity.addFile(fileEntity);
         }
@@ -737,8 +742,7 @@ public class DefaultProcessRepository implements ProcessRepository
         throws ProcessExecutionNotFoundException, ProcessExecutionNotActiveException
     {
         Assert.notNull(fileRecord, "A non-empty record is required");
-        Assert.state(fileRecord.getId() < 0,
-            "Did not expect an id for a record of a new file entity");
+        Assert.state(fileRecord.getId() < 0, "Did not expect an id for a record of a new file entity");
 
         final ProcessExecutionEntity executionEntity =
             entityManager.find(ProcessExecutionEntity.class, executionId);
@@ -759,6 +763,8 @@ public class DefaultProcessRepository implements ProcessRepository
         ProcessExecutionStepFileEntity fileEntity = new ProcessExecutionStepFileEntity(
             executionStepEntity,
             fileRecord.getType(), fileRecord.getFilePath(), fileRecord.getFileSize());
+        fileEntity.setVerified(true);
+        
         ResourceIdentifier resourceIdentifier = fileRecord.getResource();
         if (resourceIdentifier != null) {
             fileEntity.setResource(findResourceEntity(resourceIdentifier, true));

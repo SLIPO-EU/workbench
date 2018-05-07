@@ -1,6 +1,7 @@
 package eu.slipo.workbench.common.model.process;
 
 import java.io.Serializable;
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.UUID;
 
@@ -44,6 +45,12 @@ public class ProcessExecutionStepFileRecord implements Serializable
     public ProcessExecutionStepFileRecord(EnumStepFile type, Path path)
     {
         this(type, path.toString(), null, null);
+    }
+    
+    public ProcessExecutionStepFileRecord(
+        EnumStepFile type, URI uri, Long size, EnumDataFormat format)
+    {
+        this(type, uri.toString(), size, format);
     }
     
     public ProcessExecutionStepFileRecord(

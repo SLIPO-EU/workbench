@@ -32,14 +32,48 @@ public enum EnumStepFile
     /**
      * Tool specific or aggregated KPI data
      */
-    
     KPI,
+    
     /**
      * Tool specific QA data
      */
     QA,
     ;
 
+    public boolean isOfOutputType()
+    {
+        return (
+            this == EnumStepFile.OUTPUT || 
+            this == EnumStepFile.KPI ||
+            this == EnumStepFile.QA || 
+            this == EnumStepFile.SAMPLE);
+    }
+    
+    public EnumOutputType toOutputType()
+    {
+        EnumOutputType outputType = null;
+        
+        switch (this)
+        {
+        case OUTPUT:
+            outputType = EnumOutputType.OUTPUT;
+            break;
+        case KPI:
+            outputType = EnumOutputType.KPI;
+            break;
+        case QA:
+            outputType = EnumOutputType.QA;
+            break;
+        case SAMPLE:
+            outputType = EnumOutputType.SAMPLE;
+            break;
+        default:
+            break;
+        }
+        
+        return outputType;
+    }
+    
     public static EnumStepFile from(EnumOutputType outputType)
     {
         Assert.notNull(outputType, "A non-null outputType is expected");

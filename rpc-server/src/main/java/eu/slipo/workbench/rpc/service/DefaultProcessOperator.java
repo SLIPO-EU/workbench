@@ -1,6 +1,8 @@
 package eu.slipo.workbench.rpc.service;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -12,7 +14,6 @@ import java.util.UUID;
 
 import javax.annotation.PostConstruct;
 
-import org.apache.commons.collections4.IterableUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.BatchStatus;
@@ -48,7 +49,7 @@ import eu.slipo.workbench.common.repository.ProcessRepository;
 import eu.slipo.workbench.common.repository.ProcessRepository.ProcessExecutionNotActiveException;
 import eu.slipo.workbench.common.repository.ProcessRepository.ProcessHasActiveExecutionException;
 import eu.slipo.workbench.common.repository.ResourceRepository;
-import eu.slipo.workbench.common.service.FileNamingStrategy;
+import eu.slipo.workbench.common.service.UserFileNamingStrategy;
 import eu.slipo.workbench.common.service.ProcessOperator;
 import eu.slipo.workbench.common.service.util.ClonerService;
 import eu.slipo.workflows.Workflow;
@@ -72,8 +73,8 @@ public class DefaultProcessOperator implements ProcessOperator
     private Path userDataDir;
 
     @Autowired
-    @Qualifier("defaultFileNamingStrategy")
-    private FileNamingStrategy userDataNamingStrategy;
+    @Qualifier("defaultUserFileNamingStrategy")
+    private UserFileNamingStrategy userFileNamingStrategy;
 
     @Autowired
     @Qualifier("catalogDataDirectory")
@@ -252,9 +253,13 @@ public class DefaultProcessOperator implements ProcessOperator
         {
             final Workflow workflow = workflowExecutionSnapshot.workflow();
             final Workflow.JobNode node = workflow.node(step.nodeName());
+            final List<Path> inputPaths = node.input();
+
+            final ToolConfiguration config = step.configuration();
+
             final ZonedDateTime now = ZonedDateTime.now();
 
-            // Create a record to represent this processing step
+            // Create a record for this processing step
 
             ProcessExecutionStepRecord stepRecord = new ProcessExecutionStepRecord(step.key());
             stepRecord.setName(step.name());
@@ -265,31 +270,47 @@ public class DefaultProcessOperator implements ProcessOperator
             stepRecord.setOperation(step.operation());
             stepRecord.setTool(step.tool());
 
-            // Add the expected output files into stepRecord
+            // Add input files under step record
 
-            final List<Path> inputPaths = node.input();
+            final EnumDataFormat inputFormat = config.getInputFormat();
+            for (Path inputPath: inputPaths) {
+                URI inputUri = convertPathToUri(inputPath);
+                Long size = null;
+                try {
+                    size = Files.size(inputPath);
+                } catch (IOException ioex) {
+                    String message = String.format(
+                        "An input file of step #%d of execution #%d is not readable: %s",
+                        step.key(), executionId, inputPath);
+                    throw new IllegalStateException(message, ioex);
+                }
+                ProcessExecutionStepFileRecord fileRecord =
+                    new ProcessExecutionStepFileRecord(EnumStepFile.INPUT, inputUri, size, inputFormat);
+                stepRecord.addFile(fileRecord);
+            }
+
+            // Add the expected output files under step record
+
             final List<Path> outputPaths = node.output();
             Assert.state(outputPaths.stream().allMatch(Path::isAbsolute),
                 "An output path is expected as absolute path");
             Assert.state(outputPaths.stream().allMatch(path -> path.startsWith(workflowDataDir)),
                 "An output path is expected to be under workflow data directory");
 
-            final Map<EnumOutputType, List<String>> outputMap =
-                determineOutputNames(step.configuration(), inputPaths);
+            final Map<EnumOutputType, List<String>> outputMap = determineOutputNames(config, inputPaths);
             Assert.state(outputPaths.size() == outputMap.values().stream().mapToInt(List::size).sum(),
                 "The number of output paths differs from the one determined by step configuration");
 
             for (EnumOutputType outputType: outputMap.keySet()) {
-                EnumDataFormat outputFormat = outputType == EnumOutputType.OUTPUT?
-                    step.outputFormat() : null; // output format is relevant only to actual output results
+                final EnumDataFormat outputFormat = outputType == EnumOutputType.OUTPUT?
+                    config.getOutputFormat() : null; // format is relevant only to actual output results
+                final EnumStepFile type = EnumStepFile.from(outputType);
                 for (String outputName: outputMap.get(outputType)) {
                     // Find corresponding item from node's output paths (must exist!)
                     Path outputPath = Iterables.find(outputPaths, path -> path.endsWith(outputName));
-                    ProcessExecutionStepFileRecord fileRecord = new ProcessExecutionStepFileRecord(
-                        EnumStepFile.from(outputType),
-                        workflowDataDir.relativize(outputPath),
-                        null,
-                        outputFormat);
+                    URI outputUri = convertPathToUri(outputPath);
+                    ProcessExecutionStepFileRecord fileRecord =
+                        new ProcessExecutionStepFileRecord(type, outputUri, null, outputFormat);
                     stepRecord.addFile(fileRecord);
                 }
             }
@@ -330,14 +351,13 @@ public class DefaultProcessOperator implements ProcessOperator
             ProcessExecutionRecord executionRecord = processRepository.findExecution(executionId, true);
             ProcessExecutionStepRecord stepRecord = executionRecord.getStep(step.key());
             if (stepRecord == null)
-                throw new IllegalStateException(String.format(
-                    "Expected to find a step record for step #%d", step.key()));
+                throw new IllegalStateException("Expected a step record for step #" + step.key());
+
+            // Update step record
 
             // Todo Add configuration file(s) as file record(s) of this step
             // Check if jobExecution contains a `configFileByName` context entry. Resolve against `workDir`.
             // Move under workflow data directory (e.g. under stage/<NODE-NAME>/config)
-
-            // Update step record
 
             switch (batchStatus) {
             case COMPLETED:
@@ -346,18 +366,18 @@ public class DefaultProcessOperator implements ProcessOperator
                     stepRecord.setCompletedOn(now);
                     // Update file records for outputs (with size or other computed metadata)
                     for (ProcessExecutionStepFileRecord fileRecord: stepRecord.getFiles()) {
-                        EnumStepFile type = fileRecord.getType();
-                        if (type == EnumStepFile.INPUT || type == EnumStepFile.CONFIGURATION)
-                            continue; // nothing to update
+                        if (!fileRecord.getType().isOfOutputType())
+                            continue; // nothing to be updated
+                        // A path for an output result is always relative to workflow data directory
                         Path path = Paths.get(fileRecord.getFilePath());
                         path = workflowDataDir.resolve(path);
                         try {
                             fileRecord.setFileSize(Files.size(path));
-                        } catch (IOException ex) {
+                        } catch (IOException ioex) {
                             String message = String.format(
-                                "The output of step#{} of execution #{} is not readable",
-                                step.key(), executionId);
-                            throw new IllegalStateException(message, ex);
+                                "An output of step #%d of execution #%d is not readable: %s",
+                                step.key(), executionId, path);
+                            throw new IllegalStateException(message, ioex);
                         }
                     }
                 }
@@ -377,9 +397,8 @@ public class DefaultProcessOperator implements ProcessOperator
                 }
                 break;
             default:
-                Assert.state(false,
+                throw new IllegalStateException(
                     "Did not expect a batch status of ["+ batchStatus + "] in a afterNode callback");
-                break;
             }
 
             // Update record in repository
@@ -393,19 +412,58 @@ public class DefaultProcessOperator implements ProcessOperator
             }
         }
 
+        /**
+         * Convert a path to a URI (representing the same resource) as it should be reported to a
+         * repository. This URI should (ideally) not expose server-side directory information, but
+         * it should be able to be reconstruct the original path (inside, of course, the same
+         * application context).
+         *
+         * @param path An absolute path
+         * @return a URI representing the given path
+         */
+        private URI convertPathToUri(Path path)
+        {
+            Assert.state(path != null && path.isAbsolute(), "Expected a non-null absolute path");
+
+            URI uri = null;
+
+            if (path.startsWith(workflowDataDir)) {
+                // Convert to a relative URI with a relative path
+                Path relativePath = workflowDataDir.relativize(path);
+                try {
+                    uri = new URI(null, null, relativePath.toString(), null);
+                } catch (URISyntaxException ex) {
+                    throw new IllegalArgumentException(ex);
+                }
+            } else if (path.startsWith(userDataDir)) {
+                // Convert to an absolute user-data:// URI
+                uri = userFileNamingStrategy.convertToUri(path);
+            } else {
+                // The path doesn't reside into any of the expected locations
+                throw new IllegalStateException(
+                    "The path is outside of expected directory hierarchy: " + path);
+            }
+
+            return uri;
+        }
+
+        /**
+         * Determine the output names (i.e. names of output files) based on a given {@link ToolConfiguration}.
+         *
+         * @param config The configuration for a tool invocation
+         * @param inputPaths The input paths feeding a tool's invocation
+         */
         private Map<EnumOutputType, List<String>> determineOutputNames(
-            ToolConfiguration configuration, List<Path> inputPaths)
+            ToolConfiguration config, List<Path> inputPaths)
         {
             try {
-                configuration = cloner.cloneAsBean(configuration);
+                config = cloner.cloneAsBean(config);
             } catch (IOException ex) {
                 throw new IllegalStateException("Cannot clone configuration", ex);
             }
 
-            configuration = configuration
-                .withInput(Lists.transform(inputPaths, Path::toString));
-
-            return configuration.getOutputNames();
+            config = config.withInput(Lists.transform(inputPaths, Path::toString));
+            return config.getOutputNames();
         }
     }
 

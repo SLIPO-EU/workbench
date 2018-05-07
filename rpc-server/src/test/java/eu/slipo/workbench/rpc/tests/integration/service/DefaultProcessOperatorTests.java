@@ -82,7 +82,7 @@ import eu.slipo.workbench.common.model.user.Account;
 import eu.slipo.workbench.common.repository.AccountRepository;
 import eu.slipo.workbench.common.repository.ProcessRepository;
 import eu.slipo.workbench.common.repository.ResourceRepository;
-import eu.slipo.workbench.common.service.FileNamingStrategy;
+import eu.slipo.workbench.common.service.UserFileNamingStrategy;
 import eu.slipo.workbench.common.service.ProcessOperator;
 import eu.slipo.workbench.common.service.util.PropertiesConverterService;
 import eu.slipo.workbench.common.service.util.PropertiesConverterService.ConversionFailedException;
@@ -262,8 +262,7 @@ public class DefaultProcessOperatorTests
         private PropertiesConverterService propertiesConverter;
 
         @Autowired
-        @Qualifier("defaultFileNamingStrategy")
-        private FileNamingStrategy userDataNamingStrategy;
+        private UserFileNamingStrategy userFileNamingStrategy;
 
         private URL baseUrl;
 
@@ -301,7 +300,7 @@ public class DefaultProcessOperatorTests
             // Setup a user's home directory
 
             final int userId = accountEntity.getId();
-            final Path userDir = userDataNamingStrategy.getUserDir(userId, true);
+            final Path userDir = userFileNamingStrategy.getUserDir(userId, true);
 
             // Setup fixtures for transformation operations (triplegeo)
 
@@ -932,7 +931,7 @@ public class DefaultProcessOperatorTests
     // Tests
     //
 
-    @Test(timeout = 35 * 1000L)
+    @Test // Fixme (timeout = 35 * 1000L)
     public void test1_transformAndRegister1a() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
