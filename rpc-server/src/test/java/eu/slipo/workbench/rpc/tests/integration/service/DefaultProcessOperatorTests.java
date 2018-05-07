@@ -931,133 +931,133 @@ public class DefaultProcessOperatorTests
     // Tests
     //
 
-    @Test // Fixme (timeout = 35 * 1000L)
+    @Test(timeout = 40 * 1000L)
     public void test1_transformAndRegister1a() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
         transformAndRegister("register-file-1-1-a", transformFixtures.get("file-1-1-a"), user.toDto());
     }
 
-    @Test(timeout = 35 * 1000L)
+    @Test(timeout = 40 * 1000L)
     public void test1_transformAndRegister1b() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
         transformAndRegister("register-file-1-1-b", transformFixtures.get("file-1-1-b"), user.toDto());
     }
 
-    @Test(timeout = 35 * 1000L)
+    @Test(timeout = 40 * 1000L)
     public void test1_transformAndRegister2a() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
         transformAndRegister("register-file-1-2-a", transformFixtures.get("file-1-2-a"), user.toDto());
     }
 
-    @Test(timeout = 35 * 1000L)
+    @Test(timeout = 40 * 1000L)
     public void test1_transformAndRegister2b() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
         transformAndRegister("register-file-1-2-b", transformFixtures.get("file-1-2-b"), user.toDto());
     }
 
-    @Test(timeout = 35 * 1000L)
+    @Test(timeout = 40 * 1000L)
     public void test1_transformAndRegister3a() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
         transformAndRegister("register-file-1-3-a", transformFixtures.get("file-1-3-a"), user.toDto());
     }
 
-    @Test(timeout = 35 * 1000L)
+    @Test(timeout = 40 * 1000L)
     public void test1_transformAndRegister3b() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
         transformAndRegister("register-file-1-3-b", transformFixtures.get("file-1-3-b"), user.toDto());
     }
 
-    @Test(timeout = 35 * 1000L)
+    @Test(timeout = 40 * 1000L)
     public void test2_transformAndRegister1a() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
         transformAndRegister("register-file-2-1-a", transformFixtures.get("file-2-1-a"), user.toDto());
     }
 
-    @Test(timeout = 35 * 1000L)
+    @Test(timeout = 40 * 1000L)
     public void test2_transformAndRegister1b() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
         transformAndRegister("register-file-2-1-b", transformFixtures.get("file-2-1-b"), user.toDto());
     }
 
-    @Test(timeout = 35 * 1000L)
+    @Test(timeout = 40 * 1000L)
     public void test2a_transformAndRegister1a() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
         transformAndRegister("register-file-2a-1-a", transformFixtures.get("file-2a-1-a"), user.toDto());
     }
 
-    @Test(timeout = 35 * 1000L)
+    @Test(timeout = 40 * 1000L)
     public void test1_downloadAndTransformAndRegister1a() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
         transformAndRegister("register-url-1-1-a", transformFixtures.get("url-1-1-a"), user.toDto());
     }
 
-    @Test(timeout = 35 * 1000L)
+    @Test(timeout = 40 * 1000L)
     public void test1_downloadAndTransformAndRegister1b() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
         transformAndRegister("register-url-1-1-b", transformFixtures.get("url-1-1-b"), user.toDto());
     }
 
-    @Test(timeout = 35 * 1000L)
+    @Test(timeout = 40 * 1000L)
     public void test1_downloadAndTransformAndRegister2a() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
         transformAndRegister("register-url-1-2-a", transformFixtures.get("url-1-2-a"), user.toDto());
     }
 
-    @Test(timeout = 35 * 1000L)
+    @Test(timeout = 40 * 1000L)
     public void test1_downloadAndTransformAndRegister2b() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
         transformAndRegister("register-url-1-2-b", transformFixtures.get("url-1-2-b"), user.toDto());
     }
 
-    @Test(timeout = 35 * 1000L)
+    @Test(timeout = 40 * 1000L)
     public void test1_downloadAndTransformAndRegister3a() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
         transformAndRegister("register-url-1-3-a", transformFixtures.get("url-1-3-a"), user.toDto());
     }
 
-    @Test(timeout = 35 * 1000L)
+    @Test(timeout = 40 * 1000L)
     public void test1_downloadAndTransformAndRegister3b() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
         transformAndRegister("register-url-1-3-b", transformFixtures.get("url-1-3-b"), user.toDto());
     }
 
-    @Test(timeout = 35 * 1000L)
+    @Test(timeout = 40 * 1000L)
     public void test2a_downloadAndTransformAndRegister1b() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
         transformAndRegister("register-url-2a-1-b", transformFixtures.get("url-2a-1-a"), user.toDto());
     }
 
-    @Test(timeout = 35 * 1000L)
+    @Test(timeout = 40 * 1000L)
     public void test1_transformAndLinkAndRegister1a() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
         transformAndLinkAndRegister("register-links-1-a", interlinkFixtures.get("file-1-a"), user.toDto());
     }
 
-    @Test(timeout = 35 * 1000L)
+    @Test(timeout = 40 * 1000L)
     public void test1_transformAndLinkAndRegister1b() throws Exception
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
         transformAndLinkAndRegister("register-links-1-b", interlinkFixtures.get("file-1-b"), user.toDto());
     }
 
-    @Test(timeout = 120 * 1000L)
+    @Test(timeout = 150 * 1000L)
     public void test1p_transformAndRegisterP6() throws Exception
     {
         final Account user = accountRepository.findOneByUsername(USER_NAME).toDto();

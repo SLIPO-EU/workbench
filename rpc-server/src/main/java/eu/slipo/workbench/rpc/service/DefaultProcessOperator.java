@@ -3,11 +3,13 @@ package eu.slipo.workbench.rpc.service;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -26,6 +28,7 @@ import org.springframework.util.Assert;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumOperation;
@@ -278,11 +281,10 @@ public class DefaultProcessOperator implements ProcessOperator
                 Long size = null;
                 try {
                     size = Files.size(inputPath);
-                } catch (IOException ioex) {
+                } catch (IOException ex) {
                     String message = String.format(
-                        "An input file of step #%d of execution #%d is not readable: %s",
-                        step.key(), executionId, inputPath);
-                    throw new IllegalStateException(message, ioex);
+                        "Cannot stat input of execution:%d/step:%d: %s", executionId, step.key(), inputPath);
+                    throw new IllegalStateException(message, ex);
                 }
                 ProcessExecutionStepFileRecord fileRecord =
                     new ProcessExecutionStepFileRecord(EnumStepFile.INPUT, inputUri, size, inputFormat);
@@ -345,19 +347,63 @@ public class DefaultProcessOperator implements ProcessOperator
         {
             final Workflow workflow = workflowExecutionSnapshot.workflow();
             final Workflow.JobNode node = workflow.node(step.nodeName());
+            final Path stagingDir = workflow.stagingDirectory(step.nodeName());
             final BatchStatus batchStatus = jobExecution.getStatus();
-            final ZonedDateTime now = ZonedDateTime.now();
+            final ExecutionContext jobExecutionContext = jobExecution.getExecutionContext();
 
             ProcessExecutionRecord executionRecord = processRepository.findExecution(executionId, true);
             ProcessExecutionStepRecord stepRecord = executionRecord.getStep(step.key());
             if (stepRecord == null)
-                throw new IllegalStateException("Expected a step record for step #" + step.key());
+                throw new IllegalStateException(String.format(
+                    "Expected a step record for execution:%d/step:%d", executionId, step.key()));
 
+            //
             // Update step record
+            //
 
-            // Todo Add configuration file(s) as file record(s) of this step
-            // Check if jobExecution contains a `configFileByName` context entry. Resolve against `workDir`.
-            // Move under workflow data directory (e.g. under stage/<NODE-NAME>/config)
+            // Add configuration file(s) as file record(s) of this step.
+            // Check if jobExecution context contains `configFileByName` and `workDir` entries.
+            // Copy under workflow data directory (under stage/<NODE-NAME>/config-<EXECUTION-ID>)
+
+            if (jobExecutionContext.containsKey("workDir") && jobExecutionContext.containsKey("configFileByName")) {
+                Path workDir = Paths.get(jobExecutionContext.getString("workDir"));
+                Assert.state(workDir != null && workDir.isAbsolute() && Files.isDirectory(workDir),
+                    "Expected a directory path under `workDir` context entry");
+                Map<?,?> configFileByName = (Map<?,?>) jobExecutionContext.get("configFileByName");
+                Iterable<String> configNames = Iterables.filter(configFileByName.values(), String.class);
+                // Create a per-execution directory to hold configuration files
+                Path targetDir = stagingDir.resolve(Paths.get("config", String.format("%05x", executionId)));
+                try {
+                    Files.createDirectories(targetDir);
+                } catch (IOException ex) {
+                    throw new IllegalStateException("Cannot create directory for configuration data", ex);
+                }
+                // Copy under target directory, add as file records
+                for (String configName: configNames) {
+                    Path path = null;
+                    try {
+                        path = copyToTargetDirectory(workDir.resolve(configName), targetDir);
+                    } catch (IOException ex) {
+                        throw new IllegalStateException(ex);
+                    }
+                    Long size = null;
+                    try {
+                        size = Files.size(path);
+                    } catch (IOException ex) {
+                        String message = String.format(
+                            "Cannot stat configuration of execution:%d/step:%d: %s",
+                            executionId, step.key(), path);
+                        throw new IllegalStateException(message, ex);
+                    }
+                    ProcessExecutionStepFileRecord fileRecord = new ProcessExecutionStepFileRecord(
+                        EnumStepFile.CONFIGURATION, convertPathToUri(path), size, null);
+                    stepRecord.addFile(fileRecord);
+                }
+            }
+
+            // Update status, compute metadata on completed results
+
+            final ZonedDateTime now = ZonedDateTime.now();
 
             switch (batchStatus) {
             case COMPLETED:
@@ -373,11 +419,10 @@ public class DefaultProcessOperator implements ProcessOperator
                         path = workflowDataDir.resolve(path);
                         try {
                             fileRecord.setFileSize(Files.size(path));
-                        } catch (IOException ioex) {
+                        } catch (IOException ex) {
                             String message = String.format(
-                                "An output of step #%d of execution #%d is not readable: %s",
-                                step.key(), executionId, path);
-                            throw new IllegalStateException(message, ioex);
+                                "Cannot stat output of execution:%d/step:%d: %s", executionId, step.key(), path);
+                            throw new IllegalStateException(message, ex);
                         }
                     }
                 }
@@ -401,7 +446,9 @@ public class DefaultProcessOperator implements ProcessOperator
                     "Did not expect a batch status of ["+ batchStatus + "] in a afterNode callback");
             }
 
-            // Update record in repository
+            //
+            // Update step entity in repository
+            //
 
             try {
                 processRepository.updateExecutionStep(executionId, step.key(), stepRecord);
@@ -410,6 +457,26 @@ public class DefaultProcessOperator implements ProcessOperator
             } catch (ProcessExecutionNotActiveException ex) {
                 throw new IllegalStateException("The execution entity is not active!", ex);
             }
+        }
+
+        private Path copyToTargetDirectory(Path source, Path targetDir) throws IOException
+        {
+            Path target = targetDir.resolve(source.getFileName());
+
+            Path link = null;
+            try {
+                link = Files.createLink(target, source);
+            } catch (FileSystemException ex) {
+                link = null;
+            }
+
+            // If linking has failed, fallback to copying
+
+            if (link == null) {
+                Files.copy(source, target);
+            }
+
+            return target;
         }
 
         /**

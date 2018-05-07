@@ -7,14 +7,19 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.PostConstruct;
+import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.Step;
+import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.JobFactory;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.JobScope;
@@ -22,7 +27,11 @@ import org.springframework.batch.core.configuration.annotation.StepBuilderFactor
 import org.springframework.batch.core.job.builder.FlowBuilder;
 import org.springframework.batch.core.job.flow.Flow;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.scope.context.ChunkContext;
+import org.springframework.batch.core.scope.context.StepContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
+import org.springframework.batch.item.ExecutionContext;
+import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,6 +43,7 @@ import org.springframework.util.StringUtils;
 import com.spotify.docker.client.DockerClient;
 
 import eu.slipo.workbench.common.model.tool.EnumConfigurationFormat;
+import eu.slipo.workbench.common.model.tool.InvalidConfigurationException;
 import eu.slipo.workbench.common.model.tool.LimesConfiguration;
 import eu.slipo.workbench.common.service.util.PropertiesConverterService;
 import eu.slipo.workbench.rpc.jobs.listener.ExecutionContextPromotionListeners;
@@ -43,6 +53,7 @@ import eu.slipo.workbench.rpc.jobs.tasklet.ReadConfigurationTasklet;
 import eu.slipo.workbench.rpc.jobs.tasklet.docker.CreateContainerTasklet;
 import eu.slipo.workbench.rpc.jobs.tasklet.docker.RunContainerTasklet;
 import eu.slipo.workbench.rpc.service.ConfigurationGeneratorService;
+import jersey.repackaged.com.google.common.collect.Lists;
 
 @Component
 public class LimesJobConfiguration
@@ -72,10 +83,10 @@ public class LimesJobConfiguration
     private DockerClient docker;
 
     @Autowired
-    private PropertiesConverterService propertiesConverterService;
+    private PropertiesConverterService propertiesConverter;
 
     @Autowired
-    private ConfigurationGeneratorService configurationGeneratorService;
+    private ConfigurationGeneratorService configurationGenerator;
 
     @Autowired
     private Validator validator;
@@ -112,22 +123,64 @@ public class LimesJobConfiguration
         } catch (FileAlreadyExistsException e) {}
     }
 
+    public class ConfigureTasklet implements Tasklet
+    {
+        @Override
+        public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext)
+            throws Exception
+        {
+            StepContext stepContext = chunkContext.getStepContext();
+            ExecutionContext executionContext = stepContext.getStepExecution().getExecutionContext();
+            Map<String, ?> parameters = stepContext.getJobParameters();
+
+            // Read given parameters
+
+            LimesConfiguration config =
+                propertiesConverter.propertiesToValue(parameters, LimesConfiguration.class);
+
+            String sourcePath = config.getSourcePath();
+            Assert.isTrue(!StringUtils.isEmpty(sourcePath), "A source path is required");
+            Assert.isTrue(Paths.get(sourcePath).isAbsolute(), "The source is expected as an absolute path");
+
+            String targetPath = config.getTargetPath();
+            Assert.isTrue(!StringUtils.isEmpty(targetPath), "A target path is required");
+            Assert.isTrue(Paths.get(targetPath).isAbsolute(), "The target is expected as an absolute path");
+
+            config.clearInput();
+
+            // Validate
+
+            Set<ConstraintViolation<LimesConfiguration>> errors = validator.validate(config);
+            if (!errors.isEmpty()) {
+                throw InvalidConfigurationException.fromErrors(errors);
+            }
+
+            // Update execution context
+
+            executionContext.put("config", config);
+            executionContext.put("input", Arrays.asList(sourcePath, targetPath));
+
+            return null;
+        }
+    }
+
     /**
      * A tasklet that reads job parameters to a configuration bean into execution-context.
      */
     @Bean("limes.configureTasklet")
     public Tasklet configureTasklet()
     {
-        return new ReadConfigurationTasklet<>(
-            LimesConfiguration.class, propertiesConverterService, validator);
+        return new ConfigureTasklet();
     }
 
     @Bean("limes.configureStep")
     public Step configureStep(@Qualifier("limes.configureTasklet") Tasklet tasklet)
     {
+        String[] keys = new String[] { "config", "input" };
+
         return stepBuilderFactory.get("limes.configure")
             .tasklet(tasklet)
-            .listener(ExecutionContextPromotionListeners.fromKeys("config"))
+            .listener(ExecutionContextPromotionListeners.fromKeys(keys))
             .build();
     }
 
@@ -135,16 +188,22 @@ public class LimesJobConfiguration
     @JobScope
     public PrepareWorkingDirectoryTasklet prepareWorkingDirectoryTasklet(
         @Value("#{jobExecutionContext['config']}") LimesConfiguration config,
+        @Value("#{jobExecutionContext['input']}") List<String> inputPaths,
         @Value("#{jobExecution.jobInstance.id}") Long jobId)
     {
+        Assert.notNull(inputPaths, "A list of input paths is required");
+        Assert.isTrue(inputPaths.size() == 2, "Expected exactly 2 inputs to interlink");
+
         Path workDir = dataDir.resolve(String.format("%05x", jobId));
+        String sourcePath = inputPaths.get(0);
+        String targetPath = inputPaths.get(1);
 
         return PrepareWorkingDirectoryTasklet.builder()
             .workingDirectory(workDir)
-            .input(config.getSourcePath(), config.getTargetPath())
+            .input(sourcePath, targetPath)
             .inputFormat(config.getInputFormat())
             .outputFormat(config.getOutputFormat())
-            .configurationGeneratorService(configurationGeneratorService)
+            .configurationGeneratorService(configurationGenerator)
             .config("config", "config.xml", config, EnumConfigurationFormat.XML)
             .build();
     }
@@ -155,7 +214,8 @@ public class LimesJobConfiguration
         throws Exception
     {
         String[] keys = new String[] {
-            "workDir", "inputDir", "inputFormat", "outputDir", "outputFormat", "configFileByName"
+            "workDir", "inputDir", "inputFormat", "inputFiles", "outputDir", "outputFormat",
+            "configFileByName"
         };
         return stepBuilderFactory.get("limes.prepareWorkingDirectory")
             .tasklet(tasklet)
@@ -171,6 +231,7 @@ public class LimesJobConfiguration
         @Value("#{jobExecutionContext['workDir']}") String workDir,
         @Value("#{jobExecutionContext['inputDir']}") String inputDir,
         @Value("#{jobExecutionContext['inputFormat']}") String inputFormatName,
+        @Value("#{jobExecutionContext['inputFiles']}") List<String> inputFiles,
         @Value("#{jobExecutionContext['outputDir']}") String outputDir,
         @Value("#{jobExecutionContext['configFileByName']}") Map<String, String> configFileByName,
         @Value("#{jobExecutionContext['config']}") LimesConfiguration config)
@@ -181,8 +242,9 @@ public class LimesJobConfiguration
         Path containerOutputDir = containerDataDir.resolve("output");
         Path containerConfigDir = containerDataDir;
 
-        Path sourceFileName = Paths.get(config.getSourcePath()).getFileName();
-        Path targetFileName = Paths.get(config.getTargetPath()).getFileName();
+        Assert.isTrue(inputFiles.size() == 2, "Expected exactly 2 input files");
+        Path sourceFileName = Paths.get(inputFiles.get(0)).getFileName();
+        Path targetFileName = Paths.get(inputFiles.get(1)).getFileName();
         Path configPath = Paths.get(workDir, configFileByName.get("config"));
 
         String acceptedName = StringUtils.stripFilenameExtension(
@@ -213,6 +275,7 @@ public class LimesJobConfiguration
         throws Exception
     {
         String[] keys = new String[] { "containerId", "containerName" };
+
         return stepBuilderFactory.get("limes.createContainer")
             .tasklet(tasklet)
             .listener(ExecutionContextPromotionListeners.fromKeys(keys))

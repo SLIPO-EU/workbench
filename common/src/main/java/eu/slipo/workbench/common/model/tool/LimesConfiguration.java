@@ -308,7 +308,6 @@ public class LimesConfiguration extends InterlinkConfiguration
         
         @JsonProperty("endpoint")
         @JacksonXmlProperty(localName = "ENDPOINT")
-        @NotEmpty
         public String getPath()
         {
             return path;
@@ -418,17 +417,6 @@ public class LimesConfiguration extends InterlinkConfiguration
         public EnumDataFormat getDataFormat()
         {
             return spec.dataFormat;
-        }
-        
-        /**
-         * Check that the given endpoint is given as an absolute path. 
-         * Note: This is a limitation applied by SLIPO workbench (not the tool itself).
-         */
-        @JsonIgnore
-        @AssertTrue
-        boolean isEndpointGivenAsAbsolutePath()
-        {
-            return !StringUtils.isEmpty(path) && Paths.get(path).isAbsolute();
         }
     }
     

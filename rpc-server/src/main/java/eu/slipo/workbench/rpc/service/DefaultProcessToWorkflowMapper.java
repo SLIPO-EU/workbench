@@ -17,6 +17,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.job.flow.Flow;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -59,6 +61,8 @@ import eu.slipo.workflows.util.digraph.TopologicalSort.CycleDetected;
 @Service
 public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
 {
+    private static final Logger logger = LoggerFactory.getLogger(DefaultProcessToWorkflowMapper.class);
+
     @Autowired
     private WorkflowBuilderFactory workflowBuilderFactory;
 
