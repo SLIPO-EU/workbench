@@ -40,6 +40,7 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 
+import eu.slipo.workbench.common.config.ClonerServiceConfiguration;
 import eu.slipo.workbench.common.config.ProcessDefinitionBuilderFactoryConfiguration;
 import eu.slipo.workbench.common.domain.AccountEntity;
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
@@ -78,6 +79,7 @@ import eu.slipo.workbench.common.repository.ResourceRepository;
 @SpringBootTest(
     classes = {
         ProcessDefinitionBuilderFactoryConfiguration.class,
+        ClonerServiceConfiguration.class,
         DefaultResourceRepository.class,
         DefaultProcessRepository.class },
     webEnvironment = WebEnvironment.NONE
