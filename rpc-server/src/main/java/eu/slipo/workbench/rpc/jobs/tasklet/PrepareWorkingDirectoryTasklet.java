@@ -82,20 +82,6 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
     private static final boolean UNPACK_ZIP_ARCHIVE = true;
 
     /**
-     * A set of file extensions to be recognized as ZIP archives
-     */
-    private static final List<String> ZIP_FILE_EXTENSIONS = Arrays.asList("zip", "z", "ZIP", "Z");
-
-    /**
-     * Check if a given path matches one expected for a ZIP archive
-     */
-    private static boolean matchesNameOfZipArchive(Path path)
-    {
-        return ZIP_FILE_EXTENSIONS.contains(
-            StringUtils.getFilenameExtension(path.getFileName().toString()));
-    }
-
-    /**
      * Describe a configuration entry.
      */
     private static class ConfigurationSpec
@@ -434,7 +420,9 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
 
         List<String> inputFiles = new ArrayList<>();
         if (!input.isEmpty()) {
-            if (unzip && (input.size() == 1) && matchesNameOfZipArchive(input.get(0))) {
+            if (unzip && (input.size() == 1) &&
+                    "application/zip".equals(Files.probeContentType(input.get(0))))
+            {
                 // The input archive should be extracted to input directory
                 try (ZipFile zipfile = new ZipFile(input.get(0).toString())) {
                     List<String> entryNames = zipfile.stream()

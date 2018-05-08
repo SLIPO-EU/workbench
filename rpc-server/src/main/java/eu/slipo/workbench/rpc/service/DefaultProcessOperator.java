@@ -349,7 +349,7 @@ public class DefaultProcessOperator implements ProcessOperator
             final Workflow.JobNode node = workflow.node(step.nodeName());
             final Path stagingDir = workflow.stagingDirectory(step.nodeName());
             final BatchStatus batchStatus = jobExecution.getStatus();
-            final ExecutionContext jobExecutionContext = jobExecution.getExecutionContext();
+            final ExecutionContext executionContext = jobExecution.getExecutionContext();
 
             ProcessExecutionRecord executionRecord = processRepository.findExecution(executionId, true);
             ProcessExecutionStepRecord stepRecord = executionRecord.getStep(step.key());
@@ -365,11 +365,11 @@ public class DefaultProcessOperator implements ProcessOperator
             // Check if jobExecution context contains `configFileByName` and `workDir` entries.
             // Copy under workflow data directory (under stage/<NODE-NAME>/config-<EXECUTION-ID>)
 
-            if (jobExecutionContext.containsKey("workDir") && jobExecutionContext.containsKey("configFileByName")) {
-                Path workDir = Paths.get(jobExecutionContext.getString("workDir"));
+            if (executionContext.containsKey("workDir") && executionContext.containsKey("configFileByName")) {
+                Path workDir = Paths.get(executionContext.getString("workDir"));
                 Assert.state(workDir != null && workDir.isAbsolute() && Files.isDirectory(workDir),
                     "Expected a directory path under `workDir` context entry");
-                Map<?,?> configFileByName = (Map<?,?>) jobExecutionContext.get("configFileByName");
+                Map<?,?> configFileByName = (Map<?,?>) executionContext.get("configFileByName");
                 Iterable<String> configNames = Iterables.filter(configFileByName.values(), String.class);
                 // Create a per-execution directory to hold configuration files
                 Path targetDir = stagingDir.resolve(Paths.get("config", String.format("%05x", executionId)));

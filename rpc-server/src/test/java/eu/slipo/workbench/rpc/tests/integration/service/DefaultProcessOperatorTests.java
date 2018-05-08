@@ -340,7 +340,11 @@ public class DefaultProcessOperatorTests
 
         private void setupTransformFixtures(Path userDir) throws Exception
         {
-            for (String dirPath: Arrays.asList("triplegeo/1", "triplegeo/2", "triplegeo/2a")) {
+            List<String> dirPaths = Arrays.asList(
+                "triplegeo/1", "triplegeo/2", "triplegeo/2a", "triplegeo/3"
+            );
+
+            for (String dirPath: dirPaths) {
                 final Resource dir = baseResource.createRelative(dirPath + "/");
                 final String dirName = Paths.get(dirPath).getFileName().toString();
 
@@ -752,7 +756,7 @@ public class DefaultProcessOperatorTests
             assertNotNull(executionRecord.getStartedOn());
         } while (!executionRecord.getStatus().isTerminated());
 
-        Thread.sleep(2000L);
+        Thread.sleep(3200L);
 
         final ProcessRecord processRecord1 = processRepository.findOne(id, version, true);
         assertNotNull(processRecord1);
@@ -992,6 +996,20 @@ public class DefaultProcessOperatorTests
     {
         AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
         transformAndRegister("register-file-2a-1-a", transformFixtures.get("file-2a-1-a"), user.toDto());
+    }
+
+    @Test(timeout = 40 * 1000L)
+    public void test3_transformAndRegister1a() throws Exception
+    {
+        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
+        transformAndRegister("register-file-3-1-a", transformFixtures.get("file-3-1-a"), user.toDto());
+    }
+
+    @Test(timeout = 40 * 1000L)
+    public void test3_transformAndRegister1b() throws Exception
+    {
+        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
+        transformAndRegister("register-file-3-1-b", transformFixtures.get("file-3-1-b"), user.toDto());
     }
 
     @Test(timeout = 40 * 1000L)

@@ -331,17 +331,23 @@ public class TriplegeoJobConfiguration
     @Bean("triplegeo.concatenateOutputTasklet")
     @JobScope
     public Tasklet concatenateOutputTasklet(
-        @Value("#{jobExecutionContext['input']}") List<String> inputAsList,
+        @Value("#{jobExecutionContext['inputFormat']}") String inputFormatName,
+        @Value("#{jobExecutionContext['inputFiles']}") List<String> inputFiles,
         @Value("#{jobExecutionContext['outputFormat']}") String outputFormatName,
         @Value("#{jobExecutionContext['outputDir']}") String outputDir)
     {
+        final EnumDataFormat inputFormat = EnumDataFormat.valueOf(inputFormatName);
+        final String inputNameExtension = inputFormat.getFilenameExtension();
+
         final EnumDataFormat outputFormat = EnumDataFormat.valueOf(outputFormatName);
         Assert.state(outputFormat == EnumDataFormat.N_TRIPLES,
             "The given output format does not support concatenation of results!");
 
-        final List<String> inputNames = inputAsList.stream()
-            .map(p -> Paths.get(p).getFileName().toString())
+        final List<String> inputNames = inputFiles.stream()
+            .filter(name -> StringUtils.getFilenameExtension(name).equals(inputNameExtension))
+            .map(StringUtils::stripFilenameExtension)
             .collect(Collectors.toList());
+
         final Path classificationFile = Paths.get(outputDir, "classification.nt");
         final Path tmpDir = Paths.get(outputDir);
 
@@ -354,8 +360,7 @@ public class TriplegeoJobConfiguration
                 // Concatenate each result with classification output
 
                 for (String inputName: inputNames) {
-                    Path outputFile = Paths.get(outputDir,
-                        StringUtils.stripFilenameExtension(inputName) + ".nt");
+                    Path outputFile = Paths.get(outputDir, inputName + ".nt");
                     Path resultFile = Files.createTempFile(tmpDir, null, null);
                     // Concatenate
                     try (OutputStream out = Files.newOutputStream(resultFile)) {
@@ -365,7 +370,8 @@ public class TriplegeoJobConfiguration
                         Files.copy(outputFile, out);
                     }
                     // Replace original result
-                    Files.move(resultFile, outputFile, StandardCopyOption.REPLACE_EXISTING);
+                    Files.move(outputFile, Paths.get(outputDir, inputName + ".nt.orig"));
+                    Files.move(resultFile, outputFile);
                 }
 
                 return null;
@@ -382,6 +388,67 @@ public class TriplegeoJobConfiguration
     }
 
     /**
+     * A tasklet to fix output names (i.e to make them consistent with provided input name).
+     */
+    @Bean("triplegeo.fixOutputNamesTasklet")
+    @JobScope
+    public Tasklet fixOutputNamesTasklet(
+        @Value("#{jobExecutionContext['input']}") List<String> input,
+        @Value("#{jobExecutionContext['inputFiles']}") List<String> inputFiles,
+        @Value("#{jobExecutionContext['outputFormat']}") String outputFormatName,
+        @Value("#{jobExecutionContext['outputDir']}") String outputDir)
+    {
+        final EnumDataFormat outputFormat = EnumDataFormat.valueOf(outputFormatName);
+        final String outputNameExtension = outputFormat.getFilenameExtension();
+
+        return new Tasklet()
+        {
+            @Override
+            public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext)
+                throws Exception
+            {
+                // If a single ZIP archive is provided as input, the input name may differ from
+                // the name of a contained entry (supplied as an actual input to Triplegeo).
+
+                if (input.size() > 1) {
+                    // If an archive is provided as input, it is always expected as a single input
+                    return null; // no-op
+                }
+
+                // Examine our input
+
+                Path inputPath = Paths.get(input.get(0));
+                if ("application/zip".equals(Files.probeContentType(inputPath))) {
+                    String expectedName =
+                        StringUtils.stripFilenameExtension(inputPath.getFileName().toString());
+                    String actualName =
+                        StringUtils.stripFilenameExtension(inputFiles.get(0));
+                    if (!expectedName.equals(actualName)) {
+                        // Link result under expected name
+                        Files.createSymbolicLink(
+                            Paths.get(outputDir, expectedName + "." + outputNameExtension),
+                            Paths.get(actualName + "." + outputNameExtension));
+                        // Link execution metadata under expected name
+                        Files.createSymbolicLink(
+                            Paths.get(outputDir, expectedName + "_metadata.json"),
+                            Paths.get(actualName + "_metadata.json"));
+                    }
+                }
+
+                return null;
+            }
+        };
+    }
+
+    @Bean("triplegeo.fixOutputNamesStep")
+    public Step fixOutputNamesStep(@Qualifier("triplegeo.fixOutputNamesTasklet") Tasklet tasklet)
+        throws Exception
+    {
+        return stepBuilderFactory.get("triplegeo.fixOutputNames")
+            .tasklet(tasklet).build();
+    }
+
+    /**
      * Create flow for a job expecting and reading configuration via normal {@link JobParameters}.
      */
     @Bean("triplegeo.flow")
@@ -390,7 +457,8 @@ public class TriplegeoJobConfiguration
         @Qualifier("triplegeo.prepareWorkingDirectoryStep") Step prepareWorkingDirectoryStep,
         @Qualifier("triplegeo.createContainerStep") Step createContainerStep,
         @Qualifier("triplegeo.runContainerStep") Step runContainerStep,
-        @Qualifier("triplegeo.concatenateOutputStep") Step concatenateOutputStep)
+        @Qualifier("triplegeo.concatenateOutputStep") Step concatenateOutputStep,
+        @Qualifier("triplegeo.fixOutputNamesStep") Step fixOutputNamesStep)
     {
         return new FlowBuilder<Flow>("triplegeo.flow")
             .start(configureStep)
@@ -398,6 +466,7 @@ public class TriplegeoJobConfiguration
             .next(createContainerStep)
             .next(runContainerStep)
             .next(concatenateOutputStep)
+            .next(fixOutputNamesStep)
             .build();
     }
 
