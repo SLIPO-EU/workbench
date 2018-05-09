@@ -388,11 +388,12 @@ public class TriplegeoJobConfiguration
     }
 
     /**
-     * A tasklet to fix output names (i.e to make them consistent with provided input name).
+     * A tasklet to link actual results to expected output names (i.e to make them consistent with
+     * provided input name).
      */
-    @Bean("triplegeo.fixOutputNamesTasklet")
+    @Bean("triplegeo.linkToOutputTasklet")
     @JobScope
-    public Tasklet fixOutputNamesTasklet(
+    public Tasklet linkToOutputTasklet(
         @Value("#{jobExecutionContext['input']}") List<String> input,
         @Value("#{jobExecutionContext['inputFiles']}") List<String> inputFiles,
         @Value("#{jobExecutionContext['outputFormat']}") String outputFormatName,
@@ -440,11 +441,11 @@ public class TriplegeoJobConfiguration
         };
     }
 
-    @Bean("triplegeo.fixOutputNamesStep")
-    public Step fixOutputNamesStep(@Qualifier("triplegeo.fixOutputNamesTasklet") Tasklet tasklet)
+    @Bean("triplegeo.linkToOutputStep")
+    public Step linkToOutputStep(@Qualifier("triplegeo.linkToOutputTasklet") Tasklet tasklet)
         throws Exception
     {
-        return stepBuilderFactory.get("triplegeo.fixOutputNames")
+        return stepBuilderFactory.get("triplegeo.linkToOutput")
             .tasklet(tasklet).build();
     }
 
@@ -458,7 +459,7 @@ public class TriplegeoJobConfiguration
         @Qualifier("triplegeo.createContainerStep") Step createContainerStep,
         @Qualifier("triplegeo.runContainerStep") Step runContainerStep,
         @Qualifier("triplegeo.concatenateOutputStep") Step concatenateOutputStep,
-        @Qualifier("triplegeo.fixOutputNamesStep") Step fixOutputNamesStep)
+        @Qualifier("triplegeo.linkToOutputStep") Step linkToOutputStep)
     {
         return new FlowBuilder<Flow>("triplegeo.flow")
             .start(configureStep)
@@ -466,7 +467,7 @@ public class TriplegeoJobConfiguration
             .next(createContainerStep)
             .next(runContainerStep)
             .next(concatenateOutputStep)
-            .next(fixOutputNamesStep)
+            .next(linkToOutputStep)
             .build();
     }
 

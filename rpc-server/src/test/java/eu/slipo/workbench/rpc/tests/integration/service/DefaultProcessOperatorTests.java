@@ -756,7 +756,7 @@ public class DefaultProcessOperatorTests
             assertNotNull(executionRecord.getStartedOn());
         } while (!executionRecord.getStatus().isTerminated());
 
-        Thread.sleep(3200L);
+        Thread.sleep(2500L);
 
         final ProcessRecord processRecord1 = processRepository.findOne(id, version, true);
         assertNotNull(processRecord1);
@@ -764,7 +764,7 @@ public class DefaultProcessOperatorTests
         assertNotNull(processRecord1.getExecutions());
         assertEquals(1, processRecord1.getExecutions().size());
 
-        return executionRecord;
+        return processRepository.findExecution(executionId);
     }
 
     private void transformAndRegister(String procName, TransformFixture fixture, Account creator)
