@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.EnumMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +37,7 @@ import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.google.common.collect.Lists;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumOutputType;
@@ -64,9 +64,9 @@ public class LimesConfiguration extends InterlinkConfiguration
     
     public static final String VERSION = "1.3";
     
-    public static final int SOURCE = 0;
+    private static final int SOURCE_INDEX = 0;
     
-    public static final int TARGET = 1;
+    private static final int TARGET_INDEX = 1;
     
     public static final String VAR_NAME_REGEXP = "^[?]\\w[0-9\\w]*$";
     
@@ -215,7 +215,7 @@ public class LimesConfiguration extends InterlinkConfiguration
         }
     }
    
-    public static class InputSpec implements Serializable
+    protected static class InputSpec implements Serializable
     {
         static final long serialVersionUID = 1L;
         
@@ -650,7 +650,7 @@ public class LimesConfiguration extends InterlinkConfiguration
     @Valid
     public Input getSource()
     {
-        return new Input(input.get(SOURCE), sourceSpec);
+        return new Input(input.get(SOURCE_INDEX), sourceSpec);
     }
     
     @JsonProperty("source")
@@ -663,7 +663,7 @@ public class LimesConfiguration extends InterlinkConfiguration
         this.inputFormat = source.spec.dataFormat;
         
         if (!StringUtils.isEmpty(source.path))
-            this.input.set(SOURCE, source.path);
+            this.input.set(SOURCE_INDEX, source.path);
     }
     
     @JsonIgnore
@@ -691,7 +691,7 @@ public class LimesConfiguration extends InterlinkConfiguration
     public void setSource(String id, String path, String varName, String propertyExpr, EnumDataFormat dataFormat)
     {
        this.sourceSpec = new InputSpec(id, varName, Collections.singletonList(propertyExpr), dataFormat);
-       this.input.set(SOURCE, path);
+       this.input.set(SOURCE_INDEX, path);
     }
     
     @JsonIgnore
@@ -706,7 +706,7 @@ public class LimesConfiguration extends InterlinkConfiguration
     @Valid
     public Input getTarget()
     {
-        return new Input(input.get(TARGET), targetSpec);
+        return new Input(input.get(TARGET_INDEX), targetSpec);
     }
     
     @JsonProperty("target")
@@ -718,14 +718,14 @@ public class LimesConfiguration extends InterlinkConfiguration
         this.targetSpec = target.spec;
         
         if (!StringUtils.isEmpty(target.path))
-            this.input.set(TARGET, target.path);
+            this.input.set(TARGET_INDEX, target.path);
     }
     
     @JsonIgnore
     public void setTarget(String id, String path, String varName, String propertyExpr, EnumDataFormat dataFormat)
     {
         this.targetSpec = new InputSpec(id, varName, Collections.singletonList(propertyExpr), dataFormat);
-        this.input.set(TARGET, path);
+        this.input.set(TARGET_INDEX, path);
     }
     
     @JsonIgnore
@@ -738,55 +738,43 @@ public class LimesConfiguration extends InterlinkConfiguration
     @JsonSetter
     public void setSourcePath(String path)
     {
-        this.input.set(SOURCE, path);
+        this.input.set(SOURCE_INDEX, path);
     }
     
     @JsonIgnore
     public String getSourcePath()
     {
-        return this.input.get(SOURCE);
+        return this.input.get(SOURCE_INDEX);
     }
     
     @JsonIgnore
     public String getTargetPath()
     {
-        return this.input.get(TARGET);
+        return this.input.get(TARGET_INDEX);
     }
     
     @JsonProperty("input.target")
     @JsonSetter
     public void setTargetPath(String path)
     {
-        this.input.set(TARGET, path);
+        this.input.set(TARGET_INDEX, path);
     }
     
     @JsonProperty("input")
     @JsonSetter
     @JsonInclude(Include.NON_NULL)
-    public void setInput(Object input)
+    protected void setInput(Object input)
     {
         Assert.notNull(input, "A non-null object is expected");
-        
         if (input instanceof Map) {
             // Treat as an input map
-            Map<?,?> inputMap = (Map<?,?>) input;
-            if (inputMap.containsKey("source")) {
-                setSourcePath(inputMap.get("source").toString());
-            }
-            if (inputMap.containsKey("target")) {
-                setTargetPath(inputMap.get("target").toString());
-            }
+            this.setInput((Map<?, ?>) input);
         } else if (input instanceof List) {
-            List<?> inputList = (List<?>) input;
-            Assert.isTrue(inputList.size() == 2, "Expected a pair of input files");
-            setSourcePath(inputList.get(0).toString());
-            setTargetPath(inputList.get(1).toString());
+            // Treat as an input list
+            this.setInput(Lists.transform((List<?>) input, Object::toString));
         } else {
-            // Treat as a colon-separated list of paths
-            String[] inputPaths = input.toString().split(File.pathSeparator);
-            Assert.isTrue(inputPaths.length == 2, "Expected a pair of input files");
-            setSourcePath(inputPaths[0]);
-            setTargetPath(inputPaths[1]);
+            // Treat as a joined list of inputs
+            this.setInput(input.toString());
         }
     }
    
@@ -794,24 +782,39 @@ public class LimesConfiguration extends InterlinkConfiguration
     @Override
     public List<String> getInput()
     {
-        return input;
+        return Collections.unmodifiableList(input);
+    }
+    
+    @JsonIgnore
+    public void setInput(Map<?, ?> inputMap)
+    {
+        if (inputMap.containsKey("source")) {
+            setSourcePath(inputMap.get("source").toString());
+        }
+        if (inputMap.containsKey("target")) {
+            setTargetPath(inputMap.get("target").toString());
+        }
     }
     
     @JsonIgnore
     @Override
-    public void setInput(String input)
+    public void setInput(String inputAsString)
     {
-        throw new UnsupportedOperationException("A pair of inputs is expected");
+        // Treat as a colon-separated list of paths
+        String[] inputPaths = inputAsString.toString().split(File.pathSeparator);
+        Assert.isTrue(inputPaths.length == 2, "Expected a pair of input files");
+        setSourcePath(inputPaths[0]);
+        setTargetPath(inputPaths[1]);
     }
     
     @JsonIgnore
     @Override
-    public void setInput(List<String> input)
+    public void setInput(List<String> inputList)
     {
-        Assert.notNull(input, "A non-null input is required");
-        Assert.isTrue(input.size() == 2, "Expected a pair of input files");
-        setSourcePath(input.get(0).toString());
-        setTargetPath(input.get(1).toString());
+        Assert.notNull(inputList, "A non-null list of inputs is required");
+        Assert.isTrue(inputList.size() == 2, "Expected a pair of input files");
+        setSourcePath(inputList.get(0).toString());
+        setTargetPath(inputList.get(1).toString());
     }
     
     @Override
@@ -949,8 +952,8 @@ public class LimesConfiguration extends InterlinkConfiguration
     @JsonIgnore
     public void setAccepted(double threshold, String fileName, String relation)
     {
-        Assert.isTrue(fileName != null && Paths.get(fileName).getNameCount() == 1, 
-            "A non-null plain file name is expected");
+        Assert.isTrue(!StringUtils.isEmpty(fileName), "A non-empty file name is expected");
+        Assert.isTrue(Paths.get(fileName).getNameCount() == 1, "A plain file name is expected");
         this.accepted = new Output(threshold, fileName, relation);
     }
     
