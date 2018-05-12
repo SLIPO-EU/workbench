@@ -226,16 +226,17 @@ public class LimesConfigurationTests
         assertEquals(Collections.emptySet(), violations);
     }
 
-    private void setInputPaths(LimesConfiguration configuration) throws Exception
+    private void setInputMap(LimesConfiguration configuration) throws Exception
     {
         String s1 = objectMapper.writeValueAsString(configuration);
         LimesConfiguration config1a = objectMapper.readValue(s1, LimesConfiguration.class);
 
-        final String sourcePath = "/tmp/a-1.nt";
-        final String targetPath = "/tmp/b-1.nt";
+        final String sourcePath = "/tmp/a.nt";
+        final String targetPath = "/tmp/b.nt";
         final Map<String, String> inputMap = ImmutableMap.of("source", sourcePath, "target", targetPath);
 
         config1a.setInput(inputMap);
+
         String s1a = objectMapper.writeValueAsString(config1a);
         LimesConfiguration config1b = objectMapper.readValue(s1a, LimesConfiguration.class);
 
@@ -244,8 +245,39 @@ public class LimesConfigurationTests
 
         assertEquals(sourcePath, sourceInput.getPath());
         assertEquals(sourcePath, config1b.getSourcePath());
+        assertEquals(configuration.getSource().getId(), config1b.getSource().getId());
+
         assertEquals(targetPath, targetInput.getPath());
         assertEquals(targetPath, config1b.getTargetPath());
+        assertEquals(configuration.getTarget().getId(), config1b.getTarget().getId());
+
+        checkEquals(configuration.getAccepted(), config1b.getAccepted());
+        checkEquals(configuration.getReview(), config1b.getReview());
+    }
+
+    private void setInputList(LimesConfiguration configuration) throws Exception
+    {
+        String s1 = objectMapper.writeValueAsString(configuration);
+        LimesConfiguration config1a = objectMapper.readValue(s1, LimesConfiguration.class);
+
+        final String sourcePath = "/tmp/a.nt";
+        final String targetPath = "/tmp/b.nt";
+
+        config1a.setInput(Arrays.asList(sourcePath, targetPath));
+
+        String s1a = objectMapper.writeValueAsString(config1a);
+        LimesConfiguration config1b = objectMapper.readValue(s1a, LimesConfiguration.class);
+
+        final LimesConfiguration.Input sourceInput = config1b.getSource();
+        final LimesConfiguration.Input targetInput = config1b.getTarget();
+
+        assertEquals(sourcePath, sourceInput.getPath());
+        assertEquals(sourcePath, config1b.getSourcePath());
+        assertEquals(configuration.getSource().getId(), config1b.getSource().getId());
+
+        assertEquals(targetPath, targetInput.getPath());
+        assertEquals(targetPath, config1b.getTargetPath());
+        assertEquals(configuration.getTarget().getId(), config1b.getTarget().getId());
 
         checkEquals(configuration.getAccepted(), config1b.getAccepted());
         checkEquals(configuration.getReview(), config1b.getReview());
@@ -286,9 +318,15 @@ public class LimesConfigurationTests
     }
 
     @Test
-    public void test1_setInputPaths() throws Exception
+    public void test1_setInputMap() throws Exception
     {
-        setInputPaths(config1);
+        setInputMap(config1);
+    }
+
+    @Test
+    public void test1_setInputList() throws Exception
+    {
+        setInputList(config1);
     }
 
     @Test

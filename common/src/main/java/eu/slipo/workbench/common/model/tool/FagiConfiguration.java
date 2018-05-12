@@ -30,6 +30,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import com.google.common.collect.Lists;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
@@ -43,6 +44,7 @@ import eu.slipo.workbench.common.model.poi.EnumTool;
     "inputFormat", "outputFormat", "locale", "similarity", "rulesLocation",
     "left", "right", "links", "target"
 })
+@JacksonXmlRootElement(localName = "specification")
 public class FagiConfiguration extends FuseConfiguration 
 {
     private static final long serialVersionUID = 1L;
@@ -104,7 +106,7 @@ public class FagiConfiguration extends FuseConfiguration
         public static Mode fromKey(String key)
         {
             for (Mode s: Mode.values())
-                if (s.key.equals(key) || s.name().equals(key))
+                if (s.key.equalsIgnoreCase(key) || s.name().equalsIgnoreCase(key))
                     return s;
             return null;
         }
@@ -366,27 +368,39 @@ public class FagiConfiguration extends FuseConfiguration
             this.id = id;
         }
 
-        @JsonProperty("mode")
+        @JsonIgnore
         @NotNull
         public Mode getMode()
         {
             return mode;
         }
         
-        @JsonProperty("mode")
+        @JsonIgnore
         public void setMode(Mode mode)
         {
             this.mode = mode;
         }
         
+        @JsonProperty("mode")
+        public String getModeAsString()
+        {
+            return mode == null? null : mode.key;
+        }
+        
+        @JsonProperty("mode")
+        public void setMode(String key)
+        {
+            this.mode = Mode.fromKey(key);
+        }
+        
         @JsonProperty("outputDir")
-        public String getDir()
+        public String getOutputDir()
         {
             return outputDir;
         }
         
         @JsonProperty("outputDir")
-        public void setDir(String dir)
+        public void setOutputDir(String dir)
         {
             this.outputDir = dir;
         }
@@ -876,11 +890,9 @@ public class FagiConfiguration extends FuseConfiguration
     
     @JsonIgnore
     public void setTarget(
-        String id, Mode mode,
-        String fusedName, String remainingName, String reviewName, String statsName)
+        String id, String fusedName, String remainingName, String reviewName, String statsName)
     {
         Assert.isTrue(!StringUtils.isEmpty(id), "A non-empty id is expected");
-        Assert.notNull(mode, "A fusion mode is required");
         Assert.isTrue(!StringUtils.isEmpty(fusedName), "A non-empty file name is expected");
         Assert.isTrue(Paths.get(fusedName).getNameCount() == 1, "A plain file name is expected");
         Assert.isTrue(!StringUtils.isEmpty(remainingName), "A non-empty file name is expected");
@@ -889,7 +901,7 @@ public class FagiConfiguration extends FuseConfiguration
         Assert.isTrue(Paths.get(reviewName).getNameCount() == 1, "A plain file name is expected");
         
         this.target.id = id;
-        this.target.mode = mode;
+        
         this.target.fusedPath = fusedName;
         this.target.remainingPath = remainingName;
         this.target.reviewPath = reviewName;
@@ -899,10 +911,16 @@ public class FagiConfiguration extends FuseConfiguration
     }
     
     @JsonIgnore
-    public void setTarget(
-        String id, String mode,
-        String fusedName, String remainingName, String reviewName, String statsName)
+    public void setTargetMode(Mode mode)
     {
-        setTarget(id, Mode.fromKey(mode), fusedName, remainingName, reviewName, statsName);
+        Assert.notNull(mode, "A fusion mode is required");
+        this.target.mode = mode;
+    }
+    
+    @JsonIgnore
+    public void setTargetMode(String key)
+    {
+        Assert.notNull(key, "A key (for fusion mode) is required");
+        this.target.mode = Mode.fromKey(key);
     }
 }
