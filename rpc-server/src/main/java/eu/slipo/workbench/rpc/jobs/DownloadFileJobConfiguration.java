@@ -10,28 +10,21 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
-import java.nio.file.attribute.FileAttribute;
-import java.nio.file.attribute.PosixFilePermissions;
 
 import javax.annotation.PostConstruct;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.StepExecution;
-import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.core.configuration.annotation.JobScope;
-import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.job.builder.FlowBuilder;
 import org.springframework.batch.core.job.flow.Flow;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.repeat.RepeatStatus;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -40,37 +33,18 @@ import org.springframework.util.Assert;
 
 import eu.slipo.workbench.rpc.jobs.listener.ExecutionContextPromotionListeners;
 
-
 @Component
-public class DownloadFileJobConfiguration
+public class DownloadFileJobConfiguration extends BaseJobConfiguration
 {
-    private static final FileAttribute<?> DIRECTORY_ATTRIBUTE =
-        PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x"));
-
-    private static Logger logger = LoggerFactory.getLogger(DownloadFileJobConfiguration.class);
-
-    @Autowired
-    private StepBuilderFactory stepBuilderFactory;
-
-    @Autowired
-    private Path jobDataDirectory;
-
-    private Path dataDir;
-
     @PostConstruct
     private void setupDataDirectory() throws IOException
     {
-        this.dataDir = jobDataDirectory.resolve("downloadFile");
-        try {
-            Files.createDirectory(dataDir, DIRECTORY_ATTRIBUTE);
-        } catch (FileAlreadyExistsException e) {}
+        super.setupDataDirectory("downloadFile");
     }
 
     /**
      * A simple tasklet that downloads a URL to a local output file.
-     *
-     * <p>The download is not resumable, and if failed or interrupted will start from
-     * the beginning.
+     * <p>The download is not resumable (if failed or interrupted will start from the beginning).
      */
     public class DownloadFileTasklet implements Tasklet
     {

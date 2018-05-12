@@ -9,28 +9,22 @@ import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.nio.file.attribute.FileAttribute;
-import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.configuration.annotation.JobScope;
-import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.job.builder.FlowBuilder;
 import org.springframework.batch.core.job.flow.Flow;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.repeat.RepeatStatus;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -40,28 +34,12 @@ import org.springframework.util.Assert;
 import eu.slipo.workbench.rpc.jobs.listener.ExecutionContextPromotionListeners;
 
 @Component
-public class ConcatenateFilesJobConfiguration
+public class ConcatenateFilesJobConfiguration extends BaseJobConfiguration
 {
-    private static final FileAttribute<?> DIRECTORY_ATTRIBUTE =
-        PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x"));
-
-    private static Logger logger = LoggerFactory.getLogger(ConcatenateFilesJobConfiguration.class);
-
-    @Autowired
-    private StepBuilderFactory stepBuilderFactory;
-
-    @Autowired
-    private Path jobDataDirectory;
-
-    private Path dataDir;
-
     @PostConstruct
     private void setupDataDirectory() throws IOException
     {
-        this.dataDir = jobDataDirectory.resolve("concatenateFiles");
-        try {
-            Files.createDirectory(dataDir, DIRECTORY_ATTRIBUTE);
-        } catch (FileAlreadyExistsException e) {}
+        super.setupDataDirectory("concatenateFiles");
     }
 
     public class ConcatenateFilesTasklet implements Tasklet

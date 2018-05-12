@@ -3,14 +3,9 @@ package eu.slipo.workbench.rpc.jobs;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
-import java.nio.file.attribute.FileAttribute;
-import java.nio.file.attribute.PosixFilePermissions;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,17 +13,13 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.validation.ConstraintViolation;
-import javax.validation.Validator;
-import javax.validation.constraints.AssertTrue;
 
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.JobFactory;
-import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.JobScope;
-import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.job.builder.FlowBuilder;
 import org.springframework.batch.core.job.flow.Flow;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
@@ -53,21 +44,16 @@ import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.tool.EnumConfigurationFormat;
 import eu.slipo.workbench.common.model.tool.InvalidConfigurationException;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
-import eu.slipo.workbench.common.service.util.PropertiesConverterService;
 import eu.slipo.workbench.rpc.jobs.listener.ExecutionContextPromotionListeners;
 import eu.slipo.workbench.rpc.jobs.listener.LoggingJobExecutionListener;
 import eu.slipo.workbench.rpc.jobs.tasklet.PrepareWorkingDirectoryTasklet;
 import eu.slipo.workbench.rpc.jobs.tasklet.docker.CreateContainerTasklet;
 import eu.slipo.workbench.rpc.jobs.tasklet.docker.RunContainerTasklet;
-import eu.slipo.workbench.rpc.service.ConfigurationGeneratorService;
 
 @Component
-public class TriplegeoJobConfiguration
+public class TriplegeoJobConfiguration extends BaseJobConfiguration
 {
     private static final String JOB_NAME = "triplegeo";
-
-    private static final FileAttribute<?> DIRECTORY_ATTRIBUTE =
-        PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x"));
 
     /**
      * The default timeout (milliseconds) for a container run
@@ -80,30 +66,7 @@ public class TriplegeoJobConfiguration
     public static final long DEFAULT_CHECK_INTERVAL = 1000L;
 
     @Autowired
-    private JobBuilderFactory jobBuilderFactory;
-
-    @Autowired
-    private StepBuilderFactory stepBuilderFactory;
-
-    @Autowired
     private DockerClient docker;
-
-    @Autowired
-    private PropertiesConverterService propertiesConverter;
-
-    @Autowired
-    private ConfigurationGeneratorService configurationGenerator;
-
-    @Autowired
-    private Validator validator;
-
-    @Autowired
-    private Path jobDataDirectory;
-
-    /**
-     * The root directory on the docker host, under which we bind-mount volumes.
-     */
-    private Path dataDir;
 
     /**
      * The root directory on a container, under which directories/files will be bind-mounted
@@ -123,10 +86,7 @@ public class TriplegeoJobConfiguration
     @PostConstruct
     private void setupDataDirectory() throws IOException
     {
-        this.dataDir = jobDataDirectory.resolve("triplegeo");
-        try {
-            Files.createDirectory(dataDir, DIRECTORY_ATTRIBUTE);
-        } catch (FileAlreadyExistsException e) {}
+        super.setupDataDirectory("triplegeo");
     }
 
     public class ConfigureTasklet implements Tasklet

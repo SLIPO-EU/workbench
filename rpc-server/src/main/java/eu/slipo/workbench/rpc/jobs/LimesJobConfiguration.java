@@ -1,12 +1,8 @@
-    package eu.slipo.workbench.rpc.jobs;
+package eu.slipo.workbench.rpc.jobs;
 
 import java.io.IOException;
-import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.FileAttribute;
-import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -14,16 +10,13 @@ import java.util.Set;
 
 import javax.annotation.PostConstruct;
 import javax.validation.ConstraintViolation;
-import javax.validation.Validator;
 
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.JobFactory;
-import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.JobScope;
-import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.job.builder.FlowBuilder;
 import org.springframework.batch.core.job.flow.Flow;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
@@ -45,23 +38,16 @@ import com.spotify.docker.client.DockerClient;
 import eu.slipo.workbench.common.model.tool.EnumConfigurationFormat;
 import eu.slipo.workbench.common.model.tool.InvalidConfigurationException;
 import eu.slipo.workbench.common.model.tool.LimesConfiguration;
-import eu.slipo.workbench.common.service.util.PropertiesConverterService;
 import eu.slipo.workbench.rpc.jobs.listener.ExecutionContextPromotionListeners;
 import eu.slipo.workbench.rpc.jobs.listener.LoggingJobExecutionListener;
 import eu.slipo.workbench.rpc.jobs.tasklet.PrepareWorkingDirectoryTasklet;
-import eu.slipo.workbench.rpc.jobs.tasklet.ReadConfigurationTasklet;
 import eu.slipo.workbench.rpc.jobs.tasklet.docker.CreateContainerTasklet;
 import eu.slipo.workbench.rpc.jobs.tasklet.docker.RunContainerTasklet;
-import eu.slipo.workbench.rpc.service.ConfigurationGeneratorService;
-import jersey.repackaged.com.google.common.collect.Lists;
 
 @Component
-public class LimesJobConfiguration
+public class LimesJobConfiguration extends BaseJobConfiguration
 {
     private static final String JOB_NAME = "limes";
-
-    private static final FileAttribute<?> DIRECTORY_ATTRIBUTE =
-        PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x"));
 
     /**
      * The default timeout (milliseconds) for a container run
@@ -74,34 +60,11 @@ public class LimesJobConfiguration
     public static final long DEFAULT_CHECK_INTERVAL = 1000L;
 
     @Autowired
-    private JobBuilderFactory jobBuilderFactory;
-
-    @Autowired
-    private StepBuilderFactory stepBuilderFactory;
-
-    @Autowired
     private DockerClient docker;
-
-    @Autowired
-    private PropertiesConverterService propertiesConverter;
-
-    @Autowired
-    private ConfigurationGeneratorService configurationGenerator;
-
-    @Autowired
-    private Validator validator;
-
-    @Autowired
-    private Path jobDataDirectory;
-
-    /**
-     * The root directory on the docker host, under which we bind-mount volumes.
-     */
-    private Path dataDir;
 
     /**
      * The root directory on a container, under which directories/files will be bind-mounted
-     * (eg. <tt>/var/local/foo</tt>).
+     * (eg. <tt>/var/local/limes</tt>).
      */
     private Path containerDataDir;
 
@@ -117,10 +80,7 @@ public class LimesJobConfiguration
     @PostConstruct
     private void setupDataDirectory() throws IOException
     {
-        this.dataDir = jobDataDirectory.resolve("limes");
-        try {
-            Files.createDirectory(dataDir, DIRECTORY_ATTRIBUTE);
-        } catch (FileAlreadyExistsException e) {}
+        super.setupDataDirectory("limes");
     }
 
     public class ConfigureTasklet implements Tasklet
