@@ -1,23 +1,16 @@
 package eu.slipo.workbench.rpc.tests.integration.jobs;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,25 +21,24 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import com.google.common.collect.ImmutableMap;
-
 import eu.slipo.workbench.rpc.Application;
+import eu.slipo.workbench.rpc.tests.integration.jobs.AbstractJobTests.Fixture;
 
 @RunWith(SpringRunner.class)
 @ActiveProfiles({ "testing" })
 @EnableAutoConfiguration
 @SpringBootTest(classes = { Application.class }, webEnvironment = WebEnvironment.NONE)
-public class LimesJobTests extends AbstractJobTests
+public class FagiJobTests extends AbstractJobTests
 {
-    private static Logger logger = LoggerFactory.getLogger(LimesJobTests.class);
+    private static Logger logger = LoggerFactory.getLogger(FagiJobTests.class);
 
     private static final String JOB_NAME = "limes";
 
@@ -59,21 +51,23 @@ public class LimesJobTests extends AbstractJobTests
         @Bean
         public List<Fixture> fixtures() throws IOException
         {
-            final Resource root = resourceLoader.getResource("classpath:testcases/limes/");
+            final Resource root = resourceLoader.getResource("classpath:testcases/fagi/");
 
             final List<Fixture> fixtures = new ArrayList<>();
 
-            // Add fixtures from src/test/resources
+            //  Add fixtures from src/test/resources
 
             for (String fixtureName: Arrays.asList("1")) {
                 final Resource dir = root.createRelative(fixtureName + "/");
                 Resource inputDir = dir.createRelative("input");
                 Resource resultsDir = dir.createRelative("output");
-                Resource configRes = dir.createRelative("config.properties");
+                Resource specResource = dir.createRelative("spec.properties");
                 Properties parametersMap = new Properties();
-                try (InputStream in = configRes.getInputStream()) {
+                try (InputStream in = specResource.getInputStream()) {
                     parametersMap.load(in);
                 }
+                Resource rulesResource = dir.createRelative("rules.xml");
+                parametersMap.put("rulesSpec", rulesResource.getURI());
                 fixtures.add(Fixture.create(inputDir, resultsDir, parametersMap));
             }
 
@@ -82,8 +76,8 @@ public class LimesJobTests extends AbstractJobTests
     }
 
     @Autowired
-    @Qualifier("limes.flow")
-    private Flow limesFlow;
+    @Qualifier("fagi.flow")
+    private Flow fagiFlow;
 
     @Autowired
     private List<Fixture> fixtures;
@@ -91,13 +85,13 @@ public class LimesJobTests extends AbstractJobTests
     @Override
     protected String configKey()
     {
-        return "config";
+        return "rules";
     }
 
     @Override
     protected Flow jobFlow()
     {
-        return limesFlow;
+        return fagiFlow;
     }
 
     @Override
@@ -120,19 +114,11 @@ public class LimesJobTests extends AbstractJobTests
 
     protected Map<String, String> extractInputParameters(Fixture f)
     {
-        return ImmutableMap.of(
-            "input.source", f.inputDir.resolve("a.nt").toString(),
-            "input.target", f.inputDir.resolve("b.nt").toString());
-    }
+        String inputAsString = Stream.of("a.nt", "b.nt", "links.nt")
+            .map(name -> f.inputDir.resolve(name).toString())
+            .collect(Collectors.joining(File.pathSeparator));
 
-    protected Map<String, String> extractInputParametersAsSingletonMap(Fixture f)
-    {
-        String[] inputFiles = new String[] {
-            f.inputDir.resolve("a.nt").toString(), // source
-            f.inputDir.resolve("b.nt").toString()  // target
-        };
-        return Collections.singletonMap(
-            "input", String.join(File.pathSeparator, inputFiles));
+        return Collections.singletonMap("input", inputAsString);
     }
 
     //
@@ -143,11 +129,5 @@ public class LimesJobTests extends AbstractJobTests
     public void test1() throws Exception
     {
         testWithFixture(fixtures.get(0), this::extractInputParameters);
-    }
-
-    @Test(timeout = 10 * 1000L)
-    public void test1_singleInputParameter() throws Exception
-    {
-        testWithFixture(fixtures.get(0), this::extractInputParametersAsSingletonMap);
     }
 }

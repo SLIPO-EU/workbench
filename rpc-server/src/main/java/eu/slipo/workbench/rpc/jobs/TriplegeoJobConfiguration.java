@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -49,6 +50,7 @@ import eu.slipo.workbench.rpc.jobs.listener.LoggingJobExecutionListener;
 import eu.slipo.workbench.rpc.jobs.tasklet.PrepareWorkingDirectoryTasklet;
 import eu.slipo.workbench.rpc.jobs.tasklet.docker.CreateContainerTasklet;
 import eu.slipo.workbench.rpc.jobs.tasklet.docker.RunContainerTasklet;
+import jersey.repackaged.com.google.common.collect.Iterables;
 
 @Component
 public class TriplegeoJobConfiguration extends BaseJobConfiguration
@@ -114,9 +116,11 @@ public class TriplegeoJobConfiguration extends BaseJobConfiguration
                 "The classification is expected as a file-based resource location");
             config.setClassificationSpec("classification.csv"); // a dummy name
 
-            List<String> inputPaths = config.getInput();
-            Assert.isTrue(inputPaths != null && !inputPaths.isEmpty(),
+            List<String> inputPaths = new ArrayList<>(config.getInput());
+            Assert.isTrue(!inputPaths.isEmpty() && !Iterables.any(inputPaths, StringUtils::isEmpty),
                 "The input is expected as a non-empty list of paths");
+            Assert.isTrue(Iterables.all(inputPaths, p -> Paths.get(p).isAbsolute()),
+                "The input is expected as a list of absolute paths");
             config.clearInput();
 
             // Validate options

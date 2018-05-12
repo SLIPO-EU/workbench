@@ -56,6 +56,7 @@ import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.tool.EnumConfigurationFormat;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.rpc.service.ConfigurationGeneratorService;
+import jersey.repackaged.com.google.common.collect.Iterables;
 
 /**
  * A tasklet that prepares a working directory.
@@ -123,7 +124,7 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
      */
     public static class Builder
     {
-        private ConfigurationGeneratorService configurationGeneratorService;
+        private ConfigurationGeneratorService configurationGenerator;
 
         private Path workDir;
 
@@ -144,7 +145,7 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
         public Builder configurationGeneratorService(ConfigurationGeneratorService service)
         {
             Assert.notNull(service, "Expected an non-null service instance");
-            this.configurationGeneratorService = service;
+            this.configurationGenerator = service;
             return this;
         }
 
@@ -284,13 +285,15 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
 
         public PrepareWorkingDirectoryTasklet build()
         {
-            Assert.state(configurationGeneratorService != null,
-                "A configuration-generator service is needed to generate textual representation " +
-                "for several tool-specific configuration sources");
             Assert.state(workDir != null, "A working directory is required");
 
+            Assert.state(configurationGenerator != null ||
+                    (Iterables.all(config.values(), s -> s.source instanceof Resource)),
+                "A configuration-generator service is needed to generate a textual representation " +
+                "for several tool-specific configuration sources");
+
             PrepareWorkingDirectoryTasklet tasklet = new PrepareWorkingDirectoryTasklet(
-                workDir, input, config, configurationGeneratorService);
+                workDir, input, config, configurationGenerator);
 
             if (inputFormat != null)
                 tasklet.setInputFormat(inputFormat);
@@ -330,7 +333,7 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
         public static final String CONFIG_FILE_BY_NAME = "configFileByName";
     }
 
-    private final ConfigurationGeneratorService configurationGeneratorService;
+    private final ConfigurationGeneratorService configurationGenerator;
 
     private final Path workDir;
 
@@ -354,7 +357,7 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
         Path workDir, List<Path> input, Map<String, ConfigurationSpec> config,
         ConfigurationGeneratorService configurationGeneratorService)
     {
-        this.configurationGeneratorService = configurationGeneratorService;
+        this.configurationGenerator = configurationGeneratorService;
         this.workDir = workDir.toAbsolutePath();
         this.input = input;
         this.config = config;
@@ -459,8 +462,8 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
                 }
             } else {
                 // Generate configuration from source, then write to destination
-                String data = configurationGeneratorService.generate(source, u.format());
-                Files.write(path, data.getBytes(StandardCharsets.UTF_8),
+                String configData = configurationGenerator.generate(source, u.format());
+                Files.write(path, configData.getBytes(StandardCharsets.UTF_8),
                     StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
             }
         }

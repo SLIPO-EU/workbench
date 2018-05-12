@@ -446,6 +446,7 @@ public class FagiConfiguration extends FuseConfiguration
 
         @JsonProperty("statistics")
         @NotEmpty
+        @Pattern(regexp = ".*[.]json")
         public String getStatsPath()
         {
             return statsPath;
@@ -455,21 +456,36 @@ public class FagiConfiguration extends FuseConfiguration
         public void setStatsPath(String statsPath)
         {
             this.statsPath = statsPath;
-        }
+        }        
     }
   
     private String lang = "en";
     
     private Similarity similarity;
   
-    private String rulesLocation;
+    /**
+     * The resource location for the XML file holding the ruleset for fusion
+     */
+    private String rulesSpec;
     
+    /**
+     * The left-side input specification
+     */
     private InputSpec leftSpec;
     
+    /**
+     * The right-side input specification
+     */
     private InputSpec rightSpec;
     
+    /**
+     * The sameAs links specification 
+     */
     private LinksSpec linksSpec;
     
+    /**
+     * The target (i.e output) specification
+     */
     private Output target;
     
     public FagiConfiguration() 
@@ -729,17 +745,17 @@ public class FagiConfiguration extends FuseConfiguration
         this.similarity = Similarity.fromKey(key);
     }
     
-    @JsonProperty("rulesLocation")
+    @JsonProperty("rulesSpec")
     @NotNull
-    public String getRulesLocation()
+    public String getRulesSpec()
     {
-        return rulesLocation;
+        return rulesSpec;
     }
     
-    @JsonProperty("rulesLocation")
-    public void setRulesLocation(String rulesLocation)
+    @JsonProperty("rulesSpec")
+    public void setRulesSpec(String resourceLocation)
     {
-        this.rulesLocation = rulesLocation;
+        this.rulesSpec = resourceLocation;
     }
     
     //// Left ////
@@ -757,9 +773,11 @@ public class FagiConfiguration extends FuseConfiguration
     protected void setLeft(Input r)
     {
         Assert.notNull(r, "An input descriptor is required");
-        this.input.set(LEFT_INDEX, r.path);
         this.leftSpec.id = r.spec.id;
         this.leftSpec.categoriesLocation = r.spec.categoriesLocation;
+        
+        if (!StringUtils.isEmpty(r.path))
+            this.input.set(LEFT_INDEX, r.path);
     }
     
     @JsonIgnore
@@ -783,6 +801,12 @@ public class FagiConfiguration extends FuseConfiguration
         return input.get(LEFT_INDEX);
     }
     
+    @JsonIgnore
+    public String getLeftId()
+    {
+        return leftSpec.id;
+    }
+    
     //// Right ////
     
     @JsonProperty("right")
@@ -798,9 +822,11 @@ public class FagiConfiguration extends FuseConfiguration
     protected void setRight(Input r)
     {
         Assert.notNull(r, "An input descriptor is required");
-        this.input.set(RIGHT_INDEX, r.path);
         this.rightSpec.id = r.spec.id;
         this.rightSpec.categoriesLocation = r.spec.categoriesLocation;
+        
+        if (!StringUtils.isEmpty(r.path))
+            this.input.set(RIGHT_INDEX, r.path);
     }
     
     @JsonIgnore
@@ -824,6 +850,12 @@ public class FagiConfiguration extends FuseConfiguration
         return input.get(RIGHT_INDEX);
     }
     
+    @JsonIgnore
+    public String getRightId()
+    {
+        return rightSpec.id;
+    }
+    
     //// Links ////
     
     @JsonProperty("links")
@@ -839,8 +871,10 @@ public class FagiConfiguration extends FuseConfiguration
     protected void setLinks(Links r)
     {
         Assert.notNull(r, "An input descriptor is required");
-        this.input.set(LINKS_INDEX, r.path);
         this.linksSpec.id = r.spec.id;
+        
+        if (!StringUtils.isEmpty(r.path))
+            this.input.set(LINKS_INDEX, r.path);
     }
     
     @JsonIgnore
@@ -861,6 +895,12 @@ public class FagiConfiguration extends FuseConfiguration
     public String getLinksPath()
     {
         return input.get(LINKS_INDEX);
+    }
+    
+    @JsonIgnore
+    public String getLinksId()
+    {
+        return linksSpec.id;
     }
     
     //// Target ////

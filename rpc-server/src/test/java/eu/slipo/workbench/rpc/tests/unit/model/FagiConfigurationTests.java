@@ -82,7 +82,7 @@ public class FagiConfigurationTests
 
             config.setLang("el-GR");
             config.setSimilarity("jarowinkler");
-            config.setRulesLocation("rules-1.xml");
+            config.setRulesSpec("rules-1.xml");
 
             config.setLeft("a", "input/a.nt", "classpath:tools/defaults/fagi/classification.csv");
             config.setRight("b", "input/b.nt", "classpath:tools/defaults/fagi/classification.csv");
@@ -141,7 +141,7 @@ public class FagiConfigurationTests
         assertEquals(expected.getOutputFormat(), actual.getOutputFormat());
 
         assertEquals(expected.getSimilarity(), actual.getSimilarity());
-        assertEquals(expected.getRulesLocation(), actual.getRulesLocation());
+        assertEquals(expected.getRulesSpec(), actual.getRulesSpec());
 
         assertEquals(expected.getLang(), actual.getLang());
 
