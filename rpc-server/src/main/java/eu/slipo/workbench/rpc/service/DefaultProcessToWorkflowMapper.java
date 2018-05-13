@@ -1,6 +1,7 @@
 package eu.slipo.workbench.rpc.service;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
@@ -43,6 +44,7 @@ import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
 import eu.slipo.workbench.common.model.resource.ResourceRecord;
 import eu.slipo.workbench.common.model.resource.UploadDataSource;
 import eu.slipo.workbench.common.model.resource.UrlDataSource;
+import eu.slipo.workbench.common.model.tool.FagiConfiguration;
 import eu.slipo.workbench.common.model.tool.LimesConfiguration;
 import eu.slipo.workbench.common.model.tool.MetadataRegistrationConfiguration;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
@@ -94,6 +96,10 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
     @Autowired
     @Qualifier("limes.flow")
     private Flow limesFlow;
+
+    @Autowired
+    @Qualifier("fagi.flow")
+    private Flow fagiFlow;
 
     @Autowired
     @Qualifier("registerResource.flow")
@@ -172,6 +178,11 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
         // Examine referenced sources.
         // A data source of URL is handled by adding a job node that will download the
         // resource (to make it available to other workflow nodes).
+
+        // Todo Map all external sources to importer (preparation) nodes.
+        // A no-op step should simply link (nodeNameToOutputName) the output of an importer
+        // node to its own. This will enable us to design processes where an external source
+        // is imported once (and used throughout the entire process).
 
         final Set<DataSource> sourcesToDownload = definition.steps().stream()
             .flatMap(step -> step.sources().stream())
@@ -298,9 +309,17 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
                     jobDefinitionBuilder.flow(limesFlow).parameters(parametersMap);
                 }
                 break;
-            case DEER:
             case FAGI:
+                {
+                    Assert.state(inputNames.size() == 3, "A fusion step expects a triplet (L, R, links) of inputs");
+                    Properties parametersMap = buildParameters(
+                        definition, (FagiConfiguration) configuration, createdBy);
+                    jobDefinitionBuilder.flow(fagiFlow).parameters(parametersMap);
+                }
+                break;
+            case DEER:
                 throw new NotImplementedException("Α Batch flow for a tool of type [" + tool + "]");
+
             default:
                 Assert.state(false, "Did not expect a tool of type [" + tool + "]");
             }
@@ -412,34 +431,38 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
             parametersMap.remove("profile");
         }
 
-        // This configuration contains references to files (mappingSpec, classificationSpec)
-        // that may need to be resolved to absolute file paths.
+        // This configuration contains references to files (`mappingSpec`, `classificationSpec`)
+        // that may need to be resolved to absolute URIs.
 
         for (String key: Arrays.asList("mappingSpec", "classificationSpec")) {
-            String location = parametersMap.getProperty(key);
+            final String location = parametersMap.getProperty(key);
             if (StringUtils.isEmpty(location))
                 continue;
-            // If location is given as a URI, don't touch it
-            if (location.startsWith("classpath:") || location.startsWith("file:"))
-                continue;
-            Path path = null;
-            if (location.startsWith("/")) {
-                // Treat as an absolute path
-                path = Paths.get(location);
-            } else {
-                // Treat as a file resource into user's data directory
-                path = userFileNamingStrategy.resolvePath(userId, location);
-            }
-            parametersMap.put(key, path.toUri().toString());
+            URI uri = resolveToAbsoluteUri(location, userId);
+            parametersMap.put(key, uri.toString());
         }
 
         return parametersMap;
     }
 
-    private Properties buildParameters(
-        ProcessDefinition def, LimesConfiguration config, int userId)
+    private Properties buildParameters(ProcessDefinition def, LimesConfiguration config, int userId)
     {
         return propertiesConverter.valueToProperties(config);
+    }
+
+    private Properties buildParameters(ProcessDefinition def, FagiConfiguration config, int userId)
+    {
+        final Properties parametersMap = propertiesConverter.valueToProperties(config);
+
+        // If this configuration contains a reference to `rulesSpec` file, then this may need to
+        // be resolved to an absolute URI
+
+        String rulesLocation = parametersMap.getProperty("rulesSpec");
+        Assert.state(!StringUtils.isEmpty(rulesLocation), "Expected a location for rules specification file");
+        URI rulesUri = resolveToAbsoluteUri(rulesLocation, userId);
+        parametersMap.put("rulesSpec", rulesUri.toString());
+
+        return parametersMap;
     }
 
     /**
@@ -466,6 +489,28 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
                 String.format("The resource does not exist (id=%d, version=%d)", id, version));
 
         return record;
+    }
+
+    private URI resolveToAbsoluteUri(String uri, int userId)
+    {
+        Assert.isTrue(!StringUtils.isEmpty(uri), "A non-empty URI is required");
+        return resolveToAbsoluteUri(URI.create(uri), userId);
+    }
+
+    private URI resolveToAbsoluteUri(URI uri, int userId)
+    {
+        Assert.notNull(uri, "A non-empty URI is required");
+        if (!uri.isAbsolute()) {
+            Path path = Paths.get(uri.getPath());
+            Assert.notNull(path, "The input URI is expected to have a non-empty path");
+            if (!path.isAbsolute()) {
+                // Treat as a file resource into user's data directory
+                path = userFileNamingStrategy.resolvePath(userId, path);
+            }
+            // Convert to a file URI
+            uri = path.toUri();
+        }
+        return uri;
     }
 
     private Path resolveToPath(ResourceIdentifier resourceIdentifier)
