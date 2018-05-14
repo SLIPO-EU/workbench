@@ -14,7 +14,6 @@ $slipo-pd-step-color: #616161 !default;
 $slipo-pd-step-group-odd: #E1F5FE !default;
 $slipo-pd-step-group-even: #ECEFF1 !default;
 $slipo-invalid-color:#E74856 !default;
-
 /*
  * Misc
  */
@@ -22,7 +21,6 @@ $slipo-invalid-color:#E74856 !default;
 .slipo-pd-tip {
   font-size: 0.7rem;
 }
-
 
 /*
  * Designer
@@ -36,7 +34,6 @@ $slipo-invalid-color:#E74856 !default;
   overflow-x: scroll;
   padding-bottom: 20px;
 }
-
 
 /*
  * Designer items
@@ -61,7 +58,6 @@ $slipo-invalid-color:#E74856 !default;
   padding: 0px 5px;
 }
 
-
 /*
  * Data Source
  */
@@ -78,7 +74,6 @@ $slipo-invalid-color:#E74856 !default;
   text-align: center;
   font-size: 2rem;
 }
-
 
 /*
  * Operation
@@ -103,7 +98,6 @@ $slipo-invalid-color:#E74856 !default;
   font-size: 2rem;
 }
 
-
 /*
  * Harvester
  */
@@ -121,7 +115,6 @@ $slipo-invalid-color:#E74856 !default;
   text-align: center;
   font-size: 2rem;
 }
-
 
 /*
  * Sidebar
@@ -162,7 +155,6 @@ $slipo-invalid-color:#E74856 !default;
 .slipo-re-sidebar-resource-list-empty {
   border: none;
 }
-
 
 /*
  * Resource
@@ -242,7 +234,6 @@ $slipo-invalid-color:#E74856 !default;
   text-align: justify;
 }
 
-
 /*
  * Step Group
  */
@@ -304,7 +295,6 @@ $slipo-invalid-color:#E74856 !default;
   text-align: center;
   color: $slipo-pd-step-color;
 }
-
 
 /*
  * Step
@@ -393,7 +383,6 @@ $slipo-invalid-color:#E74856 !default;
   font-size: 0.7rem;
 }
 
-
 /*
  * Step input container
  */
@@ -417,7 +406,6 @@ $slipo-invalid-color:#E74856 !default;
 .slipo-pd-step-input-container-full {
   border: none;
 }
-
 
 /*
  * Step input
@@ -457,8 +445,11 @@ $slipo-invalid-color:#E74856 !default;
 
 .slipo-pd-step-input-label {
   text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 200px;
+  overflow: hidden;
 }
-
 
 /*
  * Step input resource
@@ -490,7 +481,6 @@ $slipo-invalid-color:#E74856 !default;
   display: block;
 }
 
-
 /*
  * Step input data source
  */
@@ -520,7 +510,6 @@ $slipo-invalid-color:#E74856 !default;
   display: block;
 }
 
-
 /*
  * Table
  */
@@ -528,7 +517,6 @@ $slipo-invalid-color:#E74856 !default;
 .slipo-table-row-action {
   cursor: pointer;
 }
-
 
 /*
  * Errors

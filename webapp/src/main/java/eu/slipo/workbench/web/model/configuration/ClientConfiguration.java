@@ -18,6 +18,8 @@ public class ClientConfiguration {
 
     private TripleGeoConfiguration tripleGeo;
 
+    private LimesConfiguration limes;
+
     public Map<EnumTool, Map<String, ToolConfiguration>> getProfiles() {
         return profiles;
     }
@@ -48,6 +50,14 @@ public class ClientConfiguration {
 
     public void setTripleGeo(TripleGeoConfiguration tripleGeo) {
         this.tripleGeo = tripleGeo;
+    }
+
+    public LimesConfiguration getLimes() {
+        return limes;
+    }
+
+    public void setLimes(LimesConfiguration limes) {
+        this.limes = limes;
     }
 
 }

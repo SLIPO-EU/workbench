@@ -87,9 +87,9 @@ class StepDataSource extends React.Component {
         <div className="slipo-pd-step-input-icon">
           <i className={this.props.dataSource.iconClass}></i>
         </div>
-        <div className="slipo-pd-step-input-label">
+        <p className="slipo-pd-step-input-label">
           {this.props.dataSource.name}
-        </div>
+        </p>
       </div>
     );
   }

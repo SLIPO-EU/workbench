@@ -38,7 +38,7 @@ class KpiTripleGeoView extends React.Component {
   static propTypes = {
     data: PropTypes.arrayOf(PropTypes.shape({
       key: PropTypes.string.isRequired,
-      value: PropTypes.number.isRequired,
+      value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
       description: PropTypes.string,
     })),
     file: PropTypes.object.isRequired,

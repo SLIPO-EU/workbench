@@ -16,7 +16,6 @@ import {
 } from '../../../../../service/triplegeo';
 
 function createTripleGeoDefaultConfiguration(appConfiguration, effectiveVersion) {
-  // TODO : Create enumerations
   const configuration = {
     ...defaultTripleGeoValues,
     version: effectiveVersion || appConfiguration.tripleGeo.version,
@@ -37,12 +36,79 @@ function createTripleGeoDefaultConfiguration(appConfiguration, effectiveVersion)
   };
 }
 
+function createLimesDefaultConfiguration(appConfiguration, effectiveVersion) {
+  const configuration = {
+    prefixes: [
+      {
+        namespace: 'http://slipo.eu/def#',
+        label: 'slipo'
+      },
+      {
+        namespace: 'http://www.w3.org/2002/07/owl#',
+        label: 'owl'
+      }
+    ],
+    source: {
+      id: 'a',
+      endpoint: '/var/local/limes/input/a.nt',
+      var: '?x',
+      pageSize: -1,
+      restrictions: [
+        ''
+      ],
+      properties: [
+        'slipo:name/slipo:nameType RENAME label'
+      ],
+      dataFormat: EnumDataFormat.N_TRIPLES,
+    },
+    target: {
+      id: 'b',
+      endpoint: '/var/local/limes/input/b.nt',
+      var: '?y',
+      pageSize: -1,
+      restrictions: [
+        ''
+      ],
+      properties: [
+        'slipo:name/slipo:nameType RENAME label'
+      ],
+      dataFormat: EnumDataFormat.N_TRIPLES,
+    },
+    metric: 'trigrams(a.level, b.level)',
+    acceptance: {
+      threshold: 0.98,
+      file: '/var/local/limes/output/accepted.nt',
+      relation: 'owl:sameAs'
+    },
+    review: {
+      threshold: 0.90,
+      file: '/var/local/limes/output/review.nt',
+      relation: 'owl:sameAs'
+    },
+    execution: {
+      rewriter: 'default',
+      planner: 'default',
+      engine: 'default'
+    },
+    outputFormat: EnumDataFormat.N_TRIPLES,
+    version: effectiveVersion || appConfiguration.limes.version,
+  };
+
+  return {
+    configuration,
+    errors: {},
+  };
+}
+
 function createDefaultConfiguration(steps, tool, appConfiguration) {
   const effectiveVersion = steps.reduce((version, step) => version ? version : step.configuration ? step.configuration.version : null, null) || null;
 
   switch (tool) {
     case EnumTool.TripleGeo:
       return createTripleGeoDefaultConfiguration(appConfiguration, effectiveVersion);
+
+    case EnumTool.LIMES:
+      return createLimesDefaultConfiguration(appConfiguration, effectiveVersion);
 
     default:
       return {

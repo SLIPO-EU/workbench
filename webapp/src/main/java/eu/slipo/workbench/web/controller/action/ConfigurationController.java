@@ -64,6 +64,7 @@ public class ConfigurationController extends BaseController {
         config.setOsm(this.mapConfiguration.getOsm());
         config.setBingMaps(this.mapConfiguration.getBingMaps());
         config.setTripleGeo(toolkitConfiguration.getTriplegeo());
+        config.setLimes(toolkitConfiguration.getLimes());
 
         return config;
     }
