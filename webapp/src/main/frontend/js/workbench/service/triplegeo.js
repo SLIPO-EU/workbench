@@ -89,3 +89,15 @@ export function readConfigurationTripleGeo(config) {
   };
 }
 
+export function writeConfigurationTripleGeo(config) {
+  const { prefixes, mappingSpec, classificationSpec, ...rest } = config;
+
+  return {
+    ...rest,
+    prefixes: prefixes.map(v => v.prefix).join(','),
+    namespaces: prefixes.map(v => v.namespace).join(','),
+    mappingSpec: mappingSpec ? typeof mappingSpec === 'object' ? mappingSpec.path : mappingSpec : null,
+    classificationSpec: classificationSpec ? typeof classificationSpec === 'object' ? classificationSpec.path : classificationSpec : null,
+  };
+}
+

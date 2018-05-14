@@ -20,11 +20,12 @@ import {
   DataSourceTitles,
   ResourceTypeIcons,
   ToolIcons,
-  ToolInputRequirements,
+  ToolConfigurationSettings,
 } from '../model/process-designer';
 
 import {
   readConfigurationTripleGeo,
+  writeConfigurationTripleGeo,
 } from './triplegeo';
 
 function buildProcessRequest(action, designer) {
@@ -91,18 +92,10 @@ function buildProcessRequest(action, designer) {
 
 function buildConfiguration(step) {
   const config = step.configuration || null;
-  const { prefixes, mappingSpec, classificationSpec, ...rest } = config;
 
   switch (step.tool) {
     case EnumTool.TripleGeo:
-
-      return {
-        ...rest,
-        prefixes: prefixes.map(v => v.prefix).join(','),
-        namespaces: prefixes.map(v => v.namespace).join(','),
-        mappingSpec: mappingSpec ? typeof mappingSpec === 'object' ? mappingSpec.path : mappingSpec : null,
-        classificationSpec: classificationSpec ? typeof classificationSpec === 'object' ? classificationSpec.path : classificationSpec : null,
-      };
+      return writeConfigurationTripleGeo(config);
 
     case EnumTool.CATALOG:
       return {
@@ -215,6 +208,9 @@ function readConfiguration(step) {
   switch (step.tool) {
     case EnumTool.TripleGeo:
       return readConfigurationTripleGeo(config);
+
+    case EnumTool.LIMES:
+      return config;
 
     case EnumTool.CATALOG:
       return config.metadata;
@@ -332,7 +328,7 @@ export function fetchExecutionKpiData(process, version, execution, file, token) 
 }
 
 export function getStepDataSourceRequirements(step) {
-  let { source } = ToolInputRequirements[step.tool];
+  let { source } = ToolConfigurationSettings[step.tool];
 
   return {
     source: source - step.dataSources.length,
@@ -340,7 +336,7 @@ export function getStepDataSourceRequirements(step) {
 }
 
 export function getStepInputRequirements(step, resources) {
-  let { poi, linked, any } = ToolInputRequirements[step.tool];
+  let { poi, linked, any } = ToolConfigurationSettings[step.tool];
 
   let counters = resources.reduce((counters, resource) => {
     switch (resource.resourceType) {

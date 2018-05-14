@@ -9,7 +9,7 @@ import {
   EnumResourceType,
   EnumSelection,
   EnumTool,
-  ToolInputRequirements,
+  ToolConfigurationSettings,
 } from '../../../../model/process-designer';
 
 import {
@@ -193,7 +193,7 @@ class Step extends React.Component {
    */
   isInputMissing() {
     const step = this.props.step;
-    const { source, poi, linked, any } = ToolInputRequirements[step.tool];
+    const { source, poi, linked, any } = ToolConfigurationSettings[step.tool];
 
     const counters = this.props.resources.reduce((counters, resource) => {
       switch (resource.resourceType) {
@@ -379,7 +379,9 @@ class Step extends React.Component {
               </div>
               :
               <div className="slipo-pd-step-actions">
-                <i className="slipo-pd-step-action slipo-pd-step-config fa fa-wrench" onClick={(e) => { this.configure(e); }}></i>
+                {ToolConfigurationSettings[this.props.step.tool].editable &&
+                  <i className="slipo-pd-step-action slipo-pd-step-config fa fa-wrench" onClick={(e) => { this.configure(e); }}></i>
+                }
                 <i className="slipo-pd-step-action slipo-pd-step-delete fa fa-trash" onClick={(e) => { this.remove(e); }}></i>
               </div>
             }

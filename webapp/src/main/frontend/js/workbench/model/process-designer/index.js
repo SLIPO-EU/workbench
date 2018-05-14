@@ -12,6 +12,7 @@ export {
   EnumResourceType,
   EnumSelection,
   EnumStepFileType,
+  EnumStepFileTypeValue,
   EnumStepProperty,
   EnumTool,
   EnumToolboxItem,
@@ -28,7 +29,7 @@ export {
   ResourceTypeIcons,
   ToolDefaultOperation,
   ToolIcons,
-  ToolInputRequirements,
+  ToolConfigurationSettings,
   ToolTitles,
 } from './constants';
 
