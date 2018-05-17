@@ -21,6 +21,7 @@ import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.resource.DataSource;
 import eu.slipo.workbench.common.model.tool.DeerConfiguration;
 import eu.slipo.workbench.common.model.tool.FagiConfiguration;
+import eu.slipo.workbench.common.model.tool.ImportDataConfiguration;
 import eu.slipo.workbench.common.model.tool.LimesConfiguration;
 import eu.slipo.workbench.common.model.tool.MetadataRegistrationConfiguration;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
@@ -92,6 +93,7 @@ public class Step implements Serializable
         @Type(name = "LIMES", value = LimesConfiguration.class),
         @Type(name = "FAGI", value = FagiConfiguration.class),
         @Type(name = "DEER", value = DeerConfiguration.class),
+        @Type(name = "IMPORTER", value = ImportDataConfiguration.class),
         @Type(name = "REGISTER", value = MetadataRegistrationConfiguration.class)
     })
     protected ToolConfiguration configuration;

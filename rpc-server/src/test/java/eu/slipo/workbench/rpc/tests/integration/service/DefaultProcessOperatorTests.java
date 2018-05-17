@@ -196,6 +196,11 @@ public class DefaultProcessOperatorTests
         {
             return convertInputAsDataSource(input);
         }
+
+        public URL getInputAsUrl() throws MalformedURLException
+        {
+            return input.toURL();
+        }
     }
 
     private static class InterlinkFixture extends BaseFixture
@@ -234,6 +239,11 @@ public class DefaultProcessOperatorTests
             return Pair.of(
                 convertInputAsDataSource(inputPair.getFirst()),
                 convertInputAsDataSource(inputPair.getSecond()));
+        }
+
+        public Pair<URL, URL> getInputAsUrl() throws MalformedURLException
+        {
+            return Pair.of(inputPair.getFirst().toURL(), inputPair.getSecond().toURL());
         }
 
         @Override
@@ -756,7 +766,7 @@ public class DefaultProcessOperatorTests
             assertNotNull(executionRecord.getStartedOn());
         } while (!executionRecord.getStatus().isTerminated());
 
-        Thread.sleep(2500L);
+        Thread.sleep(3500L);
 
         final ProcessRecord processRecord1 = processRepository.findOne(id, version, true);
         assertNotNull(processRecord1);
@@ -767,7 +777,72 @@ public class DefaultProcessOperatorTests
         return processRepository.findExecution(executionId);
     }
 
+    @FunctionalInterface
+    interface TransformToDefinition
+    {
+        ProcessDefinition buildDefinition(
+                String procName, TransformFixture fixture, String resourceName)
+            throws Exception;
+    }
+
+    @FunctionalInterface
+    interface InterlinkToDefinition
+    {
+        ProcessDefinition buildDefinition(
+                String procName, InterlinkFixture fixture,
+                String resourceName, String output1Name, String output2Name)
+            throws Exception;
+    }
+
+    private ProcessDefinition buildDefinition(
+            String procName, TransformFixture fixture, String resourceName)
+        throws MalformedURLException
+    {
+        final int resourceKey = 1;
+        final DataSource source = fixture.getInputAsDataSource();
+        final TriplegeoConfiguration configuration = fixture.getConfiguration();
+
+        return processDefinitionBuilderFactory.create(procName)
+            .transform("Triplegeo 1", builder -> builder
+                .source(source)
+                .outputFormat(EnumDataFormat.N_TRIPLES)
+                .outputKey(resourceKey)
+                .configuration(configuration))
+            .register("Register 1", resourceKey,
+                new ResourceMetadataCreate(resourceName, "A sample input file"))
+            .build();
+    }
+
+    private ProcessDefinition buildDefinitionWithImportSteps(
+            String procName, TransformFixture fixture, String resourceName)
+        throws MalformedURLException
+    {
+        final int resourceKey = 1, key1 = 101;
+        final URL sourceUrl = fixture.getInputAsUrl();
+        final TriplegeoConfiguration configuration = fixture.getConfiguration();
+        final EnumDataFormat inputFormat1 = configuration.getInputFormat();
+
+        return processDefinitionBuilderFactory.create(procName)
+            .resource(resourceName, key1, sourceUrl, inputFormat1)
+            .transform("Triplegeo 1", builder -> builder
+                .input(key1)
+                .outputFormat(EnumDataFormat.N_TRIPLES)
+                .outputKey(resourceKey)
+                .configuration(configuration))
+            .register("Register 1", resourceKey,
+                new ResourceMetadataCreate(resourceName, "A sample input file"))
+            .build();
+    }
+
     private void transformAndRegister(String procName, TransformFixture fixture, Account creator)
+        throws Exception
+    {
+        transformAndRegister(procName, fixture, creator, this::buildDefinition);
+    }
+
+    private void transformAndRegister(
+            String procName, TransformFixture fixture, Account creator,
+            TransformToDefinition transformToDefinition)
         throws Exception
     {
         logger.debug("tranformAndRegister: procName={} fixture={}", procName, fixture);
@@ -777,18 +852,8 @@ public class DefaultProcessOperatorTests
         // Define the process
 
         final String resourceName = procName + "." + fixture.getName();
-
-        final int resourceKey = 1;
-        final DataSource source = fixture.getInputAsDataSource();
-        final ProcessDefinition definition = processDefinitionBuilderFactory.create(procName)
-            .transform("Triplegeo 1", builder -> builder
-                .source(source)
-                .outputFormat(EnumDataFormat.N_TRIPLES)
-                .outputKey(resourceKey)
-                .configuration(fixture.getConfiguration()))
-            .register("Register 1", resourceKey,
-                new ResourceMetadataCreate(resourceName, "A sample input file"))
-            .build();
+        final ProcessDefinition definition =
+            transformToDefinition.buildDefinition(procName, fixture, resourceName);
 
         final ProcessExecutionRecord executionRecord = executeDefinition(definition, creator);
         final long executionId = executionRecord.getId();
@@ -834,24 +899,15 @@ public class DefaultProcessOperatorTests
         AssertFile.assertFileEquals(fixture.getExpectedResultPath().toFile(), resourcePath.toFile());
     }
 
-    private void transformAndLinkAndRegister(String procName, InterlinkFixture fixture, Account creator)
+    private ProcessDefinition buildDefinition(
+            String procName, InterlinkFixture fixture,
+            String resourceName, String output1Name, String output2Name)
         throws Exception
     {
-        logger.debug("linkAndRegister: procName={} fixture={}", procName, fixture);
-
-        final int creatorId = creator.getId();
-
-        final String fixtureName = fixture.getName();
-
-        // Define the process
-
-        final String resourceName = procName + "." + fixtureName + ".links";
-        final String output1Name = procName + "." + fixtureName + ".input-1";
-        final String output2Name = procName + "." + fixtureName + ".input-2";
-
         final int resourceKey = 1, outputKey1 = 2, outputKey2 = 3;
         final Pair<DataSource, DataSource> sourcePair = fixture.getInputAsDataSource();
-        final ProcessDefinition definition = processDefinitionBuilderFactory.create(procName)
+
+        return processDefinitionBuilderFactory.create(procName)
             .transform("Transform 1", builder -> builder
                 .source(sourcePair.getFirst())
                 .outputFormat(EnumDataFormat.N_TRIPLES)
@@ -874,6 +930,41 @@ public class DefaultProcessOperatorTests
             .register("Register links", resourceKey,
                 new ResourceMetadataCreate(resourceName, "The links on pair of inputs"))
             .build();
+    }
+
+    private ProcessDefinition buildDefinitionWithImportSteps(
+            String procName, InterlinkFixture fixture,
+            String resourceName, String output1Name, String output2Name)
+        throws Exception
+    {
+        // Todo buildDefinitionWithImportSteps
+        return null;
+    }
+
+    private void transformAndLinkAndRegister(String procName, InterlinkFixture fixture, Account creator)
+        throws Exception
+    {
+        transformAndLinkAndRegister(procName, fixture, creator, this::buildDefinition);
+    }
+
+    private void transformAndLinkAndRegister(
+            String procName, InterlinkFixture fixture, Account creator,
+            InterlinkToDefinition interlinkToDefinition)
+        throws Exception
+    {
+        logger.debug("linkAndRegister: procName={} fixture={}", procName, fixture);
+
+        final int creatorId = creator.getId();
+        final String fixtureName = fixture.getName();
+
+        // Define the process
+
+        final String resourceName = procName + "." + fixtureName + ".links";
+        final String output1Name = procName + "." + fixtureName + ".input-1";
+        final String output2Name = procName + "." + fixtureName + ".input-2";
+
+        final ProcessDefinition definition =
+            interlinkToDefinition.buildDefinition(procName, fixture, resourceName, output1Name, output2Name);
 
         final ProcessExecutionRecord executionRecord = executeDefinition(definition, creator);
         final long executionId = executionRecord.getId();
@@ -938,141 +1029,181 @@ public class DefaultProcessOperatorTests
     @Test(timeout = 40 * 1000L)
     public void test1_transformAndRegister1a() throws Exception
     {
-        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
-        transformAndRegister("register-file-1-1-a", transformFixtures.get("file-1-1-a"), user.toDto());
+        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
+        transformAndRegister("register-file-1-1-a", transformFixtures.get("file-1-1-a"), user);
+    }
+
+    @Test(timeout = 40 * 1000L)
+    public void test1_transformAndRegister1a_withImportSteps() throws Exception
+    {
+        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
+        transformAndRegister("register-file-1-1-a-imported", transformFixtures.get("file-1-1-a"), user,
+            this::buildDefinitionWithImportSteps);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test1_transformAndRegister1b() throws Exception
     {
-        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
-        transformAndRegister("register-file-1-1-b", transformFixtures.get("file-1-1-b"), user.toDto());
+        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
+        transformAndRegister("register-file-1-1-b", transformFixtures.get("file-1-1-b"), user);
+    }
+
+    @Test(timeout = 40 * 1000L)
+    public void test1_transformAndRegister1b_withImportSteps() throws Exception
+    {
+        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
+        transformAndRegister("register-file-1-1-b-imported", transformFixtures.get("file-1-1-b"), user,
+            this::buildDefinitionWithImportSteps);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test1_transformAndRegister2a() throws Exception
     {
-        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
-        transformAndRegister("register-file-1-2-a", transformFixtures.get("file-1-2-a"), user.toDto());
+        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
+        transformAndRegister("register-file-1-2-a", transformFixtures.get("file-1-2-a"), user);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test1_transformAndRegister2b() throws Exception
     {
-        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
-        transformAndRegister("register-file-1-2-b", transformFixtures.get("file-1-2-b"), user.toDto());
+        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
+        transformAndRegister("register-file-1-2-b", transformFixtures.get("file-1-2-b"), user);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test1_transformAndRegister3a() throws Exception
     {
-        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
-        transformAndRegister("register-file-1-3-a", transformFixtures.get("file-1-3-a"), user.toDto());
+        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
+        transformAndRegister("register-file-1-3-a", transformFixtures.get("file-1-3-a"), user);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test1_transformAndRegister3b() throws Exception
     {
-        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
-        transformAndRegister("register-file-1-3-b", transformFixtures.get("file-1-3-b"), user.toDto());
+        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
+        transformAndRegister("register-file-1-3-b", transformFixtures.get("file-1-3-b"), user);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test2_transformAndRegister1a() throws Exception
     {
-        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
-        transformAndRegister("register-file-2-1-a", transformFixtures.get("file-2-1-a"), user.toDto());
+        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
+        transformAndRegister("register-file-2-1-a", transformFixtures.get("file-2-1-a"), user);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test2_transformAndRegister1b() throws Exception
     {
-        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
-        transformAndRegister("register-file-2-1-b", transformFixtures.get("file-2-1-b"), user.toDto());
+        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
+        transformAndRegister("register-file-2-1-b", transformFixtures.get("file-2-1-b"), user);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test2a_transformAndRegister1a() throws Exception
     {
-        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
-        transformAndRegister("register-file-2a-1-a", transformFixtures.get("file-2a-1-a"), user.toDto());
+        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
+        transformAndRegister("register-file-2a-1-a", transformFixtures.get("file-2a-1-a"), user);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test3_transformAndRegister1a() throws Exception
     {
-        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
-        transformAndRegister("register-file-3-1-a", transformFixtures.get("file-3-1-a"), user.toDto());
+        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
+        transformAndRegister("register-file-3-1-a", transformFixtures.get("file-3-1-a"), user);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test3_transformAndRegister1b() throws Exception
     {
-        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
-        transformAndRegister("register-file-3-1-b", transformFixtures.get("file-3-1-b"), user.toDto());
+        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
+        transformAndRegister("register-file-3-1-b", transformFixtures.get("file-3-1-b"), user);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test1_downloadAndTransformAndRegister1a() throws Exception
     {
-        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
-        transformAndRegister("register-url-1-1-a", transformFixtures.get("url-1-1-a"), user.toDto());
+        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
+        transformAndRegister("register-url-1-1-a", transformFixtures.get("url-1-1-a"), user);
+    }
+
+    @Test // Fixme (timeout = 40 * 1000L)
+    public void test1_downloadAndTransformAndRegister1a_withImportSteps() throws Exception
+    {
+        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
+        transformAndRegister("register-url-1-1-a-imported", transformFixtures.get("url-1-1-a"), user,
+            this::buildDefinitionWithImportSteps);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test1_downloadAndTransformAndRegister1b() throws Exception
     {
-        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
-        transformAndRegister("register-url-1-1-b", transformFixtures.get("url-1-1-b"), user.toDto());
+        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
+        transformAndRegister("register-url-1-1-b", transformFixtures.get("url-1-1-b"), user);
+    }
+
+    @Test(timeout = 40 * 1000L)
+    public void test1_downloadAndTransformAndRegister1b_withImportSteps() throws Exception
+    {
+        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
+        transformAndRegister("register-url-1-1-b-imported", transformFixtures.get("url-1-1-b"), user,
+            this::buildDefinitionWithImportSteps);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test1_downloadAndTransformAndRegister2a() throws Exception
     {
-        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
-        transformAndRegister("register-url-1-2-a", transformFixtures.get("url-1-2-a"), user.toDto());
+        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
+        transformAndRegister("register-url-1-2-a", transformFixtures.get("url-1-2-a"), user);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test1_downloadAndTransformAndRegister2b() throws Exception
     {
-        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
-        transformAndRegister("register-url-1-2-b", transformFixtures.get("url-1-2-b"), user.toDto());
+        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
+        transformAndRegister("register-url-1-2-b", transformFixtures.get("url-1-2-b"), user);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test1_downloadAndTransformAndRegister3a() throws Exception
     {
-        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
-        transformAndRegister("register-url-1-3-a", transformFixtures.get("url-1-3-a"), user.toDto());
+        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
+        transformAndRegister("register-url-1-3-a", transformFixtures.get("url-1-3-a"), user);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test1_downloadAndTransformAndRegister3b() throws Exception
     {
-        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
-        transformAndRegister("register-url-1-3-b", transformFixtures.get("url-1-3-b"), user.toDto());
+        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
+        transformAndRegister("register-url-1-3-b", transformFixtures.get("url-1-3-b"), user);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test2a_downloadAndTransformAndRegister1b() throws Exception
     {
-        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
-        transformAndRegister("register-url-2a-1-b", transformFixtures.get("url-2a-1-a"), user.toDto());
+        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
+        transformAndRegister("register-url-2a-1-b", transformFixtures.get("url-2a-1-a"), user);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test1_transformAndLinkAndRegister1a() throws Exception
     {
-        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
-        transformAndLinkAndRegister("register-links-1-a", interlinkFixtures.get("file-1-a"), user.toDto());
+        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
+        transformAndLinkAndRegister("register-links-1-a", interlinkFixtures.get("file-1-a"), user);
+    }
+
+    @Test(timeout = 40 * 1000L)
+    public void test1_transformAndLinkAndRegister1a_withImportSteps() throws Exception
+    {
+        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
+        transformAndLinkAndRegister("register-links-1-a-imported", interlinkFixtures.get("file-1-a"), user,
+            this::buildDefinitionWithImportSteps);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test1_transformAndLinkAndRegister1b() throws Exception
     {
-        AccountEntity user = accountRepository.findOneByUsername(USER_NAME);
-        transformAndLinkAndRegister("register-links-1-b", interlinkFixtures.get("file-1-b"), user.toDto());
+        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
+        transformAndLinkAndRegister("register-links-1-b", interlinkFixtures.get("file-1-b"), user);
     }
 
     @Test(timeout = 150 * 1000L)

@@ -55,7 +55,7 @@ public interface ToolConfiguration extends Serializable
      * Set input (fluent setter) 
      * 
      * @param input input A list of paths
-     * @returnan an instance of {@link ToolConfiguration} (may be <tt>this</tt>) bound to given input
+     * @return an instance of {@link ToolConfiguration} (may be <tt>this</tt>) bound to given input
      */
     default ToolConfiguration withInput(List<String> input)
     {

@@ -16,27 +16,36 @@ public enum EnumOperation
      * Invalid operation
      */
     UNDEFINED(0),
+    
     /**
      * Register resource to catalog
      */
     REGISTER(1),
+    
     /**
      * Data transformation
      */
     TRANSFORM(2),
+    
     /**
      * POI RDF dataset interlinking
      */
     INTERLINK(3),
+    
     /**
      * POI RDF dataset and linked data fusion
      */
     FUSION(4),
+    
     /**
      * POI RDF dataset enrichment
      */
     ENRICHMENT(5),
-    ;
+    
+    /**
+     * Import external data sources into a process
+     */
+    IMPORT(6);
 
     private final int value;
 

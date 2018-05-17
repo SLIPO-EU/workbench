@@ -44,6 +44,11 @@ public enum EnumTool
      * POI RDF dataset enrichment component
      */
     DEER(5, EnumOperation.ENRICHMENT),
+    
+    /**
+     * An internal component for importing external data sources into a process
+     */
+    IMPORTER(6, EnumOperation.IMPORT)
     ;
 
     /**

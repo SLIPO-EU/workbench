@@ -16,6 +16,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
@@ -45,6 +46,7 @@ import eu.slipo.workbench.common.model.resource.ResourceRecord;
 import eu.slipo.workbench.common.model.resource.UploadDataSource;
 import eu.slipo.workbench.common.model.resource.UrlDataSource;
 import eu.slipo.workbench.common.model.tool.FagiConfiguration;
+import eu.slipo.workbench.common.model.tool.ImportDataConfiguration;
 import eu.slipo.workbench.common.model.tool.LimesConfiguration;
 import eu.slipo.workbench.common.model.tool.MetadataRegistrationConfiguration;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
@@ -172,17 +174,18 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
     private Workflow buildWorkflow(Workflow.Builder workflowBuilder, ProcessDefinition definition, int createdBy)
         throws CycleDetected
     {
+        // Map external sources to the node assigned to carry out downloading
         final Map<DataSource, String> sourceToNodeName = new HashMap<>();
+
+        // Map a node's (real) name to the output it produces (if any)
         final Map<String, String> nodeNameToOutputName = new HashMap<>();
 
-        // Examine referenced sources.
-        // A data source of URL is handled by adding a job node that will download the
-        // resource (to make it available to other workflow nodes).
+        // Map a node's alias to a real name (ie. to the one know to the workflow level)
+        final Map<String, String> nodeAliasToNodeName = new HashMap<>();
 
-        // Todo Map all external sources to importer (preparation) nodes.
-        // A no-op step should simply link (nodeNameToOutputName) the output of an importer
-        // node to its own. This will enable us to design processes where an external source
-        // is imported once (and used throughout the entire process).
+        // Examine referenced sources.
+        // A data source of URL is handled by adding an importer node that will download the
+        // resource (to make it available to other workflow nodes).
 
         final Set<DataSource> sourcesToDownload = definition.steps().stream()
             .flatMap(step -> step.sources().stream())
@@ -192,7 +195,7 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
         for (DataSource source: sourcesToDownload) {
             final URL url = ((UrlDataSource) source).getUrl();
             final String nodeName = "download-" + Integer.toHexString(source.hashCode());
-            final String outputName = extractOutputName(url, true);
+            final String outputName = (new ImportDataConfiguration(url)).getOutputName();
             // Add a job node into workflow
             workflowBuilder.job(b -> b.name(nodeName)
                 .flow(downloadFileFlow)
@@ -210,18 +213,19 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
 
         final ProcessDefinitionDependencyAnalyzer dependencyAnalyzedDefinition =
             new ProcessDefinitionDependencyAnalyzer(definition);
+
         for (Step step: dependencyAnalyzedDefinition.stepsInTopologicalOrder()) {
             final EnumTool tool = step.tool();
             final ToolConfiguration configuration = step.configuration();
+            final List<Integer> inputKeys = step.inputKeys();
 
-            List<Integer> inputKeys = step.inputKeys();
-            JobDefinitionBuilder jobDefinitionBuilder = JobDefinitionBuilder.create(step.nodeName());
+            final JobDefinitionBuilder jobDefinitionBuilder = JobDefinitionBuilder.create(step.nodeName());
 
             // Define inputs for this job node
 
             List<String> inputNames = new ArrayList<>();
             if (!step.sources().isEmpty()) {
-                // This step imports data from a data source (external to the application)
+                // This step expects input from an imported data source (external to the application)
                 Assert.state(inputKeys.isEmpty(), "Expected no input keys for this step");
                 for (DataSource source: step.sources()) {
                     String dependencyName = sourceToNodeName.get(source);
@@ -253,10 +257,12 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
                         Step dependency = definition.stepByResourceKey(inputKey);
                         Assert.state(dependency != null,
                             "A step is expected to produce the input we depend on!");
-                        String inputName = nodeNameToOutputName.get(dependency.nodeName());
+                        String dependencyName = dependency.nodeName();
+                        dependencyName = nodeAliasToNodeName.getOrDefault(dependencyName, dependencyName);
+                        String inputName = nodeNameToOutputName.get(dependencyName);
                         Assert.state(inputName != null,
                             "No output is known to be produced by the step we depend on!");
-                        jobDefinitionBuilder.input(dependency.nodeName(), inputName);
+                        jobDefinitionBuilder.input(dependencyName, inputName);
                         inputNames.add(inputName);
                     }
                 }
@@ -269,12 +275,10 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
                 List<String> results = outputMap.get(EnumOutputType.OUTPUT);
                 Assert.state(results != null && !results.isEmpty(),
                     "An output-producing step must declare at least 1 result as OUTPUT");
-
-                String[] outputArray = Arrays.stream(EnumOutputType.values())
+                Stream<String> outputNames = Arrays.stream(EnumOutputType.values())
                     .filter(outputMap::containsKey)
-                    .flatMap(t -> outputMap.get(t).stream())
-                    .toArray(String[]::new);
-                jobDefinitionBuilder.output(outputArray);
+                    .flatMap(t -> outputMap.get(t).stream());
+                jobDefinitionBuilder.output(outputNames.toArray(String[]::new));
 
                 // The 1st result of OUTPUT group is considered as node's output
                 String outputName = results.get(0);
@@ -282,39 +286,55 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
             }
 
             // Define flow and parameters
+            // Note that a flow may be null (in such a case it represents a no-op step)
+
+            Flow flow = null;
+            Properties parametersMap = null;
 
             switch (tool) {
+            case IMPORTER:
+                {
+                    // This is a no-op: an importer step only exists to link to downloader node
+                    Assert.state(inputNames.size() == 1, "An import step expects a single input");
+                    parametersMap = null;
+                    flow = null;
+                    // Link to the downloader node responsible for our source URL
+                    final URL url = ((ImportDataConfiguration) configuration).getUrl();
+                    Assert.state(url != null, "An importer node should target a non-empty URL");
+                    final DataSource source = sourcesToDownload.stream()
+                        .filter(s -> url.equals(((UrlDataSource) s).getUrl()))
+                        .findFirst().get();
+                    nodeAliasToNodeName.put(step.nodeName(), sourceToNodeName.get(source));
+                }
+                break;
             case REGISTER:
                 {
                     Assert.state(inputKeys.size() == 1, "A registration step expects a single input");
                     Step producer = definition.stepByResourceKey(inputKeys.get(0));
-                    Properties parametersMap = buildParameters(
+                    parametersMap = buildParameters(
                         definition, (MetadataRegistrationConfiguration) configuration, producer, createdBy);
-                    jobDefinitionBuilder.flow(registerResourceFlow).parameters(parametersMap);
+                    flow = registerResourceFlow;
                 }
                 break;
             case TRIPLEGEO:
                 {
                     Assert.state(inputNames.size() == 1, "A transformation step expects a single input");
-                    Properties parametersMap = buildParameters(
-                        definition, (TriplegeoConfiguration) configuration, createdBy);
-                    jobDefinitionBuilder.flow(triplegeoFlow).parameters(parametersMap);
+                    parametersMap = buildParameters(definition, (TriplegeoConfiguration) configuration, createdBy);
+                    flow = triplegeoFlow;
                 }
                 break;
             case LIMES:
                 {
                     Assert.state(inputNames.size() == 2, "A interlinking step expects a pair of inputs");
-                    Properties parametersMap = buildParameters(
-                        definition, (LimesConfiguration) configuration, createdBy);
-                    jobDefinitionBuilder.flow(limesFlow).parameters(parametersMap);
+                    parametersMap = buildParameters(definition, configuration, createdBy);
+                    flow = limesFlow;
                 }
                 break;
             case FAGI:
                 {
                     Assert.state(inputNames.size() == 3, "A fusion step expects a triplet (L, R, links) of inputs");
-                    Properties parametersMap = buildParameters(
-                        definition, (FagiConfiguration) configuration, createdBy);
-                    jobDefinitionBuilder.flow(fagiFlow).parameters(parametersMap);
+                    parametersMap = buildParameters(definition, (FagiConfiguration) configuration, createdBy);
+                    flow = fagiFlow;
                 }
                 break;
             case DEER:
@@ -324,51 +344,41 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
                 Assert.state(false, "Did not expect a tool of type [" + tool + "]");
             }
 
-            // Add the job node (mapped from this processing step)
+            // Add the job node (mapped from this processing step) into workflow
 
-            workflowBuilder.job(jobDefinitionBuilder.build());
+            if (flow != null) {
+                jobDefinitionBuilder.flow(flow).parameters(parametersMap);
+                workflowBuilder.job(jobDefinitionBuilder.build());
+            }
         }
 
         return workflowBuilder.build();
     }
 
     /**
-     * Determine names of expected outputs for a certain tool configuration.
+     * Determine the names of expected outputs for a given tool configuration.
      *
-     * @param configuration A (possibly input-agnostic) tool configuration
+     * @param configuration An input-agnostic tool configuration
      * @param inputNames The list of input names
-     * @return a map of output names (categorized by output type)
+     * @return a map of output names categorized by output type
      */
     private Map<EnumOutputType, List<String>> determineOutputNames(
         ToolConfiguration configuration, List<String> inputNames)
     {
-        try {
-            configuration = cloner.cloneAsBean(configuration);
-        } catch (IOException ex) {
-            throw new IllegalStateException("Cannot clone configuration", ex);
+        if (!inputNames.isEmpty()) {
+            // Clone this configuration and reset input
+            try {
+                configuration = cloner.cloneAsBean(configuration).withInput(inputNames);
+            } catch (IOException ex) {
+                throw new IllegalStateException("Cannot clone configuration", ex);
+            }
         }
-
-        return configuration.withInput(inputNames).getOutputNames();
+        return configuration.getOutputNames();
     }
 
-    /**
-     * Extract an output name for data downloaded from a URL. This name will be suitable to be
-     * used as the file name (under which data will be saved).
-     *
-     * @param url A downloadable public URL
-     * @param useFragment If the URL reference (i.e. fragment) should be used as part of the output
-     *   name
-     */
-    private String extractOutputName(URL url, boolean useFragment)
+    private Properties buildParameters(ProcessDefinition def, ToolConfiguration config, int userId)
     {
-        String fileName = Paths.get(url.getPath()).getFileName().toString();
-        String fragment = url.getRef();
-        if (!useFragment || fragment == null)
-            return fileName;
-
-        String name = StringUtils.stripFilenameExtension(fileName);
-        String extension = fileName.substring(1 + name.length());
-        return String.format("%s-%s.%s", name, fragment, extension);
+        return propertiesConverter.valueToProperties(config);
     }
 
     private Properties buildParameters(
@@ -377,14 +387,8 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
         final Properties parametersMap = new Properties();
 
         EnumDataFormat format = producer.outputFormat();
-        ToolConfiguration producerConfiguration = producer.configuration();
-
-        EnumDataFormat inputFormat = EnumDataFormat.N_TRIPLES;
-        if (producer.operation() == EnumOperation.TRANSFORM
-                && (producerConfiguration instanceof TriplegeoConfiguration))
-        {
-            inputFormat = ((TriplegeoConfiguration) producerConfiguration).getInputFormat();
-        }
+        ToolConfiguration producerConfig = producer.configuration();
+        EnumDataFormat inputFormat = producerConfig.getInputFormat();
 
         parametersMap.put("createdBy", Integer.valueOf(userId).longValue());
         parametersMap.put("format", format.toString());
@@ -405,8 +409,7 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
         return parametersMap;
     }
 
-    private Properties buildParameters(
-        ProcessDefinition def, TriplegeoConfiguration config, int userId)
+    private Properties buildParameters(ProcessDefinition def, TriplegeoConfiguration config, int userId)
     {
         final Properties parametersMap = propertiesConverter.valueToProperties(config);
 
@@ -443,11 +446,6 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
         }
 
         return parametersMap;
-    }
-
-    private Properties buildParameters(ProcessDefinition def, LimesConfiguration config, int userId)
-    {
-        return propertiesConverter.valueToProperties(config);
     }
 
     private Properties buildParameters(ProcessDefinition def, FagiConfiguration config, int userId)

@@ -87,6 +87,8 @@ public class ProcessDefinitionTests
             config.setOutputFormat(EnumDataFormat.N_TRIPLES);
             config.setOutputDir("/var/local/triplegeo/1");
             config.setTmpDir("/tmp/triplegeo/1");
+            config.setMappingSpec("classpath:config/triplegeo/profiles/1/mappings.yml");
+            config.setClassificationSpec("classpath:config/triplegeo/profiles/1/classification.yml");
             config.setAttrX("lon");
             config.setAttrX("lat");
             config.setFeatureSource("points");
@@ -100,13 +102,17 @@ public class ProcessDefinitionTests
         @Bean
         public DeerConfiguration sampleDeerConfiguration1()
         {
-            return new DeerConfiguration();
+            DeerConfiguration config = new DeerConfiguration();
+            config.setInputFormat(EnumDataFormat.N_TRIPLES);
+            config.setOutputFormat(EnumDataFormat.N_TRIPLES);
+            return config;
         }
 
         @Bean
         public FagiConfiguration sampleFagiConfiguration1()
         {
-            return new FagiConfiguration();
+            FagiConfiguration config = new FagiConfiguration();
+            return config;
         }
 
         @Bean
@@ -115,16 +121,10 @@ public class ProcessDefinitionTests
             LimesConfiguration config = new LimesConfiguration();
 
             config.setMetric("trigrams(a.level, b.level)");
-
-            config.setSource("a",
-                "/tmp/limes/input/a.nt",
-                "?x",
+            config.setSource("a", "/tmp/limes/input/a.nt", "?x",
                 "slipo:name/slipo:nameType RENAME label");
-            config.setTarget("b",
-                "/tmp/limes/input/b.nt",
-                "?y",
+            config.setTarget("b", "/tmp/limes/input/b.nt", "?y",
                 "slipo:name/slipo:nameType RENAME label");
-
             config.setOutputDir("/tmp/limes/output");
             config.setOutputFormatFromString("N-TRIPLES");
             config.setAccepted(0.98, "accepted.nt");
@@ -172,7 +172,7 @@ public class ProcessDefinitionTests
 
     private ProcessDefinition buildDefinition1()
     {
-        final int resourceKey1 = 1, resourceKey2 = 2;
+        final int resultKey1 = 1, resultKey2 = 2, key1 = 101, key2 = 102;
 
         ResourceMetadataCreate metadata1 =
             new ResourceMetadataCreate("out-1", "A sample output file");
@@ -180,23 +180,24 @@ public class ProcessDefinitionTests
             new ResourceMetadataCreate("out-2", "Another sample output file");
 
         ProcessDefinition definition1 = processDefinitionBuilderFactory.create("proc-a-1")
-            .resource("resource-a-1.1", 101, ResourceIdentifier.of(1L, 5L))
-            .resource("resource-a-1.2", 102, ResourceIdentifier.of(3L, 17L))
+            .resource("resource-a-1.1", key1, ResourceIdentifier.of(1L, 5L))
+            .resource("resource-a-1.2", key2, ResourceIdentifier.of(3L, 17L))
             .transform("triplegeo-1", b -> b
                 .group(1)
-                .outputKey(resourceKey1)
+                .outputKey(resultKey1)
                 .source(dataSource1)
+                .outputFormat(EnumDataFormat.N_TRIPLES)
                 .configuration(sampleTriplegeoConfiguration1))
             .step("enrich-with-deer-1", b -> b
                 .group(2)
                 .operation(EnumOperation.ENRICHMENT)
                 .tool(EnumTool.DEER)
+                .outputFormat(EnumDataFormat.N_TRIPLES)
                 .configuration(sampleDeerConfiguration1)
-                .input(resourceKey1)
-                .outputKey(resourceKey2)
-                .outputFormat(EnumDataFormat.N_TRIPLES))
-            .register("register-1", resourceKey1, metadata1)
-            .register("register-2", resourceKey2, metadata2)
+                .input(resultKey1)
+                .outputKey(resultKey2))
+            .register("register-1", resultKey1, metadata1)
+            .register("register-2", resultKey2, metadata2)
             .build();
 
         return definition1;

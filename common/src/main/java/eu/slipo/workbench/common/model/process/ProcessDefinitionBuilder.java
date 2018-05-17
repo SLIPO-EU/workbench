@@ -1,5 +1,6 @@
 package eu.slipo.workbench.common.model.process;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -10,7 +11,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -21,7 +21,9 @@ import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.resource.DataSource;
 import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
+import eu.slipo.workbench.common.model.resource.UrlDataSource;
 import eu.slipo.workbench.common.model.tool.FuseConfiguration;
+import eu.slipo.workbench.common.model.tool.ImportDataConfiguration;
 import eu.slipo.workbench.common.model.tool.InterlinkConfiguration;
 import eu.slipo.workbench.common.model.tool.MetadataRegistrationConfiguration;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
@@ -250,8 +252,8 @@ public class ProcessDefinitionBuilder
          */
         public GenericStepBuilder source(DataSource s1, DataSource s2)
         {
-            Assert.notNull(s1, "Expected a non-null data source");
-            Assert.notNull(s2, "Expected a non-null data source");
+            Assert.notNull(s1, "Expected a non-null data source (s1)");
+            Assert.notNull(s2, "Expected a non-null data source (s2)");
             this.sources.add(s1);
             this.sources.add(s2);
             return this;
@@ -270,15 +272,15 @@ public class ProcessDefinitionBuilder
             Assert.state(this.operation != null, "The operation must be specified");
             Assert.state(this.tool != null, "The tool must be specified");
             Assert.state(this.configuration != null, "The tool configuration must be provided");
-            Assert.state(operation == EnumOperation.REGISTER || 
+            Assert.state(this.operation == EnumOperation.REGISTER || 
                     (this.outputKey != null && this.outputFormat != null),
                 "An output key and format is required for a non-registration step");
             Assert.state(this.tool.supportsOperation(operation), 
                 "The operation is not supported by given tool");
             Assert.state(!this.inputKeys.isEmpty() || !this.sources.isEmpty(),
                 "The list of data sources and list of input keys cannot be both empty!");
-            Assert.isTrue(outputFormat == null || configuration.getOutputFormat() == null || 
-                    outputFormat == configuration.getOutputFormat(), 
+            Assert.isTrue(this.outputFormat == null || this.configuration.getOutputFormat() == null || 
+                    this.outputFormat == this.configuration.getOutputFormat(), 
                 "The output format must agree with the one reported by step configuration");
             
             Step step = this.stepFactory.get();
@@ -584,6 +586,46 @@ public class ProcessDefinitionBuilder
         }
     }
     
+    public class ImportStepBuilder extends StepBuilder
+    {
+        private final GenericStepBuilder stepBuilder;
+        
+        private final URL url;
+        
+        private EnumDataFormat dataFormat;
+        
+        protected ImportStepBuilder(int key, String name, URL url) 
+        {
+            this.url = url;
+            this.stepBuilder = 
+                ProcessDefinitionBuilder.this.new GenericStepBuilder(key, name, Step::new);
+            this.stepBuilder.operation(EnumOperation.IMPORT);
+            this.stepBuilder.tool(EnumTool.IMPORTER);
+            this.stepBuilder.source(new UrlDataSource(url));
+        }
+        
+        public ImportStepBuilder outputKey(int outputKey)
+        {
+            this.stepBuilder.outputKey(outputKey);
+            return this;
+        }
+        
+        public ImportStepBuilder outputFormat(EnumDataFormat format)
+        {
+            Assert.notNull(format, "A data format is required");
+            this.dataFormat = format;
+            this.stepBuilder.outputFormat(format);
+            return this;
+        }
+        
+        @Override
+        protected Step build()
+        {
+            this.stepBuilder.configuration(new ImportDataConfiguration(this.url, this.dataFormat));
+            return stepBuilder.build();
+        }
+    }
+    
     private final ClonerService cloner;
     
     private final String name;
@@ -622,10 +664,8 @@ public class ProcessDefinitionBuilder
     public ProcessDefinitionBuilder resource(
         String name, int key, ResourceIdentifier resourceIdentifier, EnumResourceType resourceType)
     {
-        Assert.isTrue(!StringUtils.isEmpty(name), 
-            "Expected a non-empty name for this resource");
-        Assert.notNull(resourceIdentifier, 
-            "A resource identifier (pair of id and version) is required");
+        Assert.isTrue(!StringUtils.isEmpty(name), "Expected a non-empty name for this resource");
+        Assert.notNull(resourceIdentifier, "A resource identifier of (id, version) is required");
         
         CatalogResource resource = 
             new CatalogResource(key, name, resourceType, resourceIdentifier); 
@@ -638,10 +678,28 @@ public class ProcessDefinitionBuilder
         return this.resource(name, key, resourceIdentifier, EnumResourceType.POI_DATA);
     }
     
-    public ProcessDefinitionBuilder resource(String name, int key, DataSource source)
+    /**
+     * Designate an external source, a URL, as a input available to this process. 
+     * 
+     * <p>Note: This will actually add a preliminary importing step to this process, since
+     * the resource is not directly available to other steps. This will happen regardless of
+     * the URL (i.e even for URLs pointing to local resources (as a <tt>file:///a/b/c</tt>))
+     * 
+     * @param name A user-friendly name for this input resource
+     * @param key A resource key (unique across this process) for this resource to
+     *   be referenced as an input (from other processing steps)
+     * @param url The source URL
+     * @param The data format for this resource
+     * @return
+     */
+    public ProcessDefinitionBuilder resource(String name, int key, URL url, EnumDataFormat dataFormat)
     {
-        // Todo import a DataSource as a no-op step
-        throw new NotImplementedException("not implemented: importing a DataSource");
+        Assert.isTrue(!StringUtils.isEmpty(name), "Expected a non-empty name for this resource");
+        Assert.notNull(url, "A source URL is required");
+        Assert.notNull(dataFormat, "A data format is required");
+        final IntFunction<ImportStepBuilder> stepBuilder =
+            k -> this.new ImportStepBuilder(k, String.format("Import: %s", name), url);
+        return this.addStep(b -> b.outputKey(key).outputFormat(dataFormat), stepBuilder);
     }
     
     /**
@@ -655,7 +713,7 @@ public class ProcessDefinitionBuilder
     {
         Assert.isTrue(!StringUtils.isEmpty(name), "Expected a non-empty name");
         Assert.notNull(configurer, "Expected a non-null configurer for a step");
-        return this.addStep(configurer, key -> this.new GenericStepBuilder(key, name));
+        return this.addStep(configurer, k -> this.new GenericStepBuilder(k, name));
     }
     
     /**
@@ -673,7 +731,7 @@ public class ProcessDefinitionBuilder
     {
         Assert.isTrue(!StringUtils.isEmpty(name), "Expected a non-empty name");
         Assert.notNull(configurer, "Expected a non-null configurer for a step");
-        return this.addStep(configurer, key -> this.new TransformStepBuilder(key, name));
+        return this.addStep(configurer, k -> this.new TransformStepBuilder(k, name));
     }
     
     /**
@@ -687,7 +745,7 @@ public class ProcessDefinitionBuilder
     {
         Assert.isTrue(!StringUtils.isEmpty(name), "Expected a non-empty name");
         Assert.notNull(configurer, "Expected a non-null configurer for a step");
-        return this.addStep(configurer, key -> this.new InterlinkStepBuilder(key, name));
+        return this.addStep(configurer, k -> this.new InterlinkStepBuilder(k, name));
     }
     
     /**
@@ -701,7 +759,7 @@ public class ProcessDefinitionBuilder
     {
         Assert.isTrue(!StringUtils.isEmpty(name), "Expected a non-empty name");
         Assert.notNull(configurer, "Expected a non-null configurer for a step");
-        return this.addStep(configurer, key -> this.new FuseStepBuilder(key, name));
+        return this.addStep(configurer, k -> this.new FuseStepBuilder(k, name));
     }
     
     /**
@@ -747,8 +805,7 @@ public class ProcessDefinitionBuilder
     {
         Assert.notNull(metadata, "The resource metadata are required");
         Assert.notNull(target, "A target resource is required");
-        return this.register(
-            name, b -> b.resource(resourceKey).metadata(metadata).revisionOf(target));
+        return this.register(name, b -> b.resource(resourceKey).metadata(metadata).revisionOf(target));
     }
     
     public ProcessDefinition build()
