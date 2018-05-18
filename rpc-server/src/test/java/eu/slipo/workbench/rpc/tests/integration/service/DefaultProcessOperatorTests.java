@@ -918,15 +918,15 @@ public class DefaultProcessOperatorTests
                 .outputFormat(EnumDataFormat.N_TRIPLES)
                 .outputKey(outputKey2)
                 .configuration(fixture.getTransformConfiguration().getSecond()))
-            .interlink("Link 1-2", builder -> builder
+            .interlink("Link 1 with 2", builder -> builder
                 .link(outputKey1, outputKey2)
                 .outputFormat(EnumDataFormat.N_TRIPLES)
                 .outputKey(resourceKey)
                 .configuration(fixture.getConfiguration()))
             .register("Register 1", outputKey1,
-                new ResourceMetadataCreate(output1Name, "The first input file"))
+                new ResourceMetadataCreate(output1Name, "The first (transformed) input file"))
             .register("Register 2", outputKey2,
-                new ResourceMetadataCreate(output2Name, "The second input file"))
+                new ResourceMetadataCreate(output2Name, "The second (transformed) input file"))
             .register("Register links", resourceKey,
                 new ResourceMetadataCreate(resourceName, "The links on pair of inputs"))
             .build();
@@ -937,8 +937,39 @@ public class DefaultProcessOperatorTests
             String resourceName, String output1Name, String output2Name)
         throws Exception
     {
-        // Todo buildDefinitionWithImportSteps
-        return null;
+        final int resourceKey = 1, outputKey1 = 2, outputKey2 = 3, inputKey1 = 101, inputKey2 = 102;
+        final Pair<URL, URL> sourcePair = fixture.getInputAsUrl();
+        final Pair<TriplegeoConfiguration, TriplegeoConfiguration> transformConfiguration =
+            fixture.getTransformConfiguration();
+        final URL url1 = sourcePair.getFirst(), url2 = sourcePair.getSecond();
+        final TriplegeoConfiguration transformConfiguration1 = transformConfiguration.getFirst();
+        final TriplegeoConfiguration transformConfiguration2 = transformConfiguration.getSecond();
+
+        return processDefinitionBuilderFactory.create(procName)
+            .resource("input 1", inputKey1, url1, transformConfiguration1.getInputFormat())
+            .resource("input 2", inputKey2, url2, transformConfiguration2.getInputFormat())
+            .transform("Transform 1", builder -> builder
+                .input(inputKey1)
+                .outputFormat(EnumDataFormat.N_TRIPLES)
+                .outputKey(outputKey1)
+                .configuration(transformConfiguration1))
+            .transform("Transform 2", builder -> builder
+                .input(inputKey2)
+                .outputFormat(EnumDataFormat.N_TRIPLES)
+                .outputKey(outputKey2)
+                .configuration(transformConfiguration2))
+            .interlink("Link 1 with 2", builder -> builder
+                .link(outputKey1, outputKey2)
+                .outputFormat(EnumDataFormat.N_TRIPLES)
+                .outputKey(resourceKey)
+                .configuration(fixture.getConfiguration()))
+            .register("Register 1", outputKey1,
+                new ResourceMetadataCreate(output1Name, "The first (transformed) input file"))
+            .register("Register 2", outputKey2,
+                new ResourceMetadataCreate(output2Name, "The second (transformed) input file"))
+            .register("Register links", resourceKey,
+                new ResourceMetadataCreate(resourceName, "The links on pair of inputs"))
+            .build();
     }
 
     private void transformAndLinkAndRegister(String procName, InterlinkFixture fixture, Account creator)
@@ -978,7 +1009,7 @@ public class DefaultProcessOperatorTests
         assertNotNull(stepRecords);
         assertEquals(6, stepRecords.size());
 
-        for (String name: Arrays.asList("Transform 1", "Transform 2", "Link 1-2")) {
+        for (String name: Arrays.asList("Transform 1", "Transform 2", "Link 1 with 2")) {
             ProcessExecutionStepRecord stepRecord = executionRecord.getStepByName(name);
             assertNotNull(stepRecord);
             assertEquals(EnumProcessExecutionStatus.COMPLETED, stepRecord.getStatus());
@@ -1000,7 +1031,7 @@ public class DefaultProcessOperatorTests
         }
 
         ProcessExecutionStepFileRecord resourceStepFileRecord = executionRecord
-            .getStepByName("Link 1-2")
+            .getStepByName("Link 1 with 2")
             .getFiles().stream()
             .filter(f -> f.getType() == EnumStepFile.OUTPUT)
             .findFirst().get();
@@ -1126,7 +1157,7 @@ public class DefaultProcessOperatorTests
         transformAndRegister("register-url-1-1-a", transformFixtures.get("url-1-1-a"), user);
     }
 
-    @Test // Fixme (timeout = 40 * 1000L)
+    @Test(timeout = 40 * 1000L)
     public void test1_downloadAndTransformAndRegister1a_withImportSteps() throws Exception
     {
         Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
