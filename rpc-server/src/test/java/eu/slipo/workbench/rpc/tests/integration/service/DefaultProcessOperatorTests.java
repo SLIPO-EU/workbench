@@ -76,6 +76,7 @@ import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
 import eu.slipo.workbench.common.model.resource.ResourceRecord;
 import eu.slipo.workbench.common.model.resource.UrlDataSource;
+import eu.slipo.workbench.common.model.tool.FagiConfiguration;
 import eu.slipo.workbench.common.model.tool.LimesConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.model.user.Account;
@@ -203,12 +204,24 @@ public class DefaultProcessOperatorTests
         }
     }
 
+    /**
+     * A test fixture that represents a transformation+interlinking operation (using Triplegeo+Limes).
+     */
     private static class InterlinkFixture extends BaseFixture
     {
+        /**
+         * A pair of tabular inputs (to be transformed to RDF)
+         */
         final Pair<URI, URI> inputPair;
 
+        /**
+         * A pair of transform configurations (to transform respective input)
+         */
         final Pair<TriplegeoConfiguration, TriplegeoConfiguration> transformConfigurationPair;
 
+        /**
+         * The configuration for interlinking operation
+         */
         final LimesConfiguration configuration;
 
         InterlinkFixture(
@@ -250,6 +263,68 @@ public class DefaultProcessOperatorTests
         public String toString()
         {
             return String.format("InterlinkFixture [name=%s, input=%s]", name, inputPair);
+        }
+    }
+
+    /**
+     * A test fixture that represents a basic fusion operation (using Limes+Fagi).
+     */
+    private static class FuseFixture extends BaseFixture
+    {
+        /**
+         * A pair of RDF inputs (no transformation takes place)
+         */
+        final Pair<URI, URI> inputPair;
+
+        /**
+         * The configuration for interlinking operation
+         */
+        final LimesConfiguration linkConfiguration;
+
+        /**
+         * The configuration for fusion operation
+         */
+        final FagiConfiguration configuration;
+
+        FuseFixture(
+            String name,
+            Path stagingDir,
+            Pair<URI, URI> inputPair,
+            LimesConfiguration linkConfiguration,
+            Path expectedResultPath, FagiConfiguration configuration)
+        {
+            super(name, stagingDir, expectedResultPath);
+            this.inputPair = inputPair;
+            this.linkConfiguration = linkConfiguration;
+            this.configuration = configuration;
+        }
+
+        public FagiConfiguration getConfiguration()
+        {
+            return configuration;
+        }
+
+        public LimesConfiguration getLinkConfiguration()
+        {
+            return linkConfiguration;
+        }
+
+        public Pair<DataSource, DataSource> getInputAsDataSource() throws MalformedURLException
+        {
+            return Pair.of(
+                convertInputAsDataSource(inputPair.getFirst()),
+                convertInputAsDataSource(inputPair.getSecond()));
+        }
+
+        public Pair<URL, URL> getInputAsUrl() throws MalformedURLException
+        {
+            return Pair.of(inputPair.getFirst().toURL(), inputPair.getSecond().toURL());
+        }
+
+        @Override
+        public String toString()
+        {
+            return String.format("FuseFixture [name=%s, input=%s]", name, inputPair);
         }
     }
 
@@ -296,6 +371,8 @@ public class DefaultProcessOperatorTests
 
         private Map<String, InterlinkFixture> interlinkFixtures = new HashMap<>();
 
+        private Map<String, FuseFixture> fuseFixtures = new HashMap<>();
+
         @PostConstruct
         public void initialize() throws Exception
         {
@@ -320,7 +397,29 @@ public class DefaultProcessOperatorTests
 
             setupInterlinkFixtures(userDir);
 
+            // Setup fixtures for fusion operations (limes+fagi)
+
+            setupFuseFixtures(userDir);
+
             // Setup other fixtures ...
+        }
+
+        @Bean
+        public Map<String, TransformFixture> transformFixtures()
+        {
+            return Collections.unmodifiableMap(transformFixtures);
+        }
+
+        @Bean
+        public Map<String, InterlinkFixture> interlinkFixtures()
+        {
+            return Collections.unmodifiableMap(interlinkFixtures);
+        }
+
+        @Bean
+        public Map<String, FuseFixture> fuseFixtures()
+        {
+            return Collections.unmodifiableMap(fuseFixtures);
         }
 
         /**
@@ -525,12 +624,6 @@ public class DefaultProcessOperatorTests
                 name, input.toURI(), null, expectedResultPath, options, mappingSpec.orElse(null), classificationSpec.orElse(null));
         }
 
-        @Bean
-        public Map<String, TransformFixture> transformFixtures()
-        {
-            return Collections.unmodifiableMap(transformFixtures);
-        }
-
         private void setupInterlinkFixtures(Path userDir) throws Exception
         {
             for (String dirPath: Arrays.asList("limes/1")) {
@@ -571,7 +664,7 @@ public class DefaultProcessOperatorTests
                         stripFilenameExtension(userDir.relativize(path).toString()));
                 }
 
-                // Add fixture for input as a local file (specs given as user-relative paths)
+                // Add fixture for input as a local file, specs given as user-relative paths
 
                 InterlinkFixture fixtureA = createInterlinkFixture(
                     "file-" + inputNameToTempName.get("a.csv") + "-a",
@@ -587,7 +680,7 @@ public class DefaultProcessOperatorTests
                 String keyA = String.format("file-%s-a", dirName);
                 interlinkFixtures.put(keyA, fixtureA);
 
-                // Add fixture for input as a local file (specs given as file URIs)
+                // Add fixture for input as a local file, specs given as file URIs
 
                 InterlinkFixture fixtureB = createInterlinkFixture(
                     "file-" + inputNameToTempName.get("a.csv") + "-b",
@@ -639,8 +732,7 @@ public class DefaultProcessOperatorTests
                         stagingDir != null && stagingDir.isAbsolute()
                         && Files.isDirectory(stagingDir) && Files.isReadable(stagingDir)),
                     "The stagingDir should be an absolute path for an existing readable directory");
-                Assert.isTrue(!inputUri.getScheme().equals("file") ||
-                        Paths.get(inputUri).startsWith(stagingDir),
+                Assert.isTrue(!inputUri.getScheme().equals("file") || Paths.get(inputUri).startsWith(stagingDir),
                     "If input is a local file, must be located under staging directory");
             }
 
@@ -663,10 +755,119 @@ public class DefaultProcessOperatorTests
                 propertiesConverter.propertiesToValue(configuration, LimesConfiguration.class));
         }
 
-        @Bean
-        public Map<String, InterlinkFixture> interlinkFixtures()
+        private void setupFuseFixtures(Path userDir) throws Exception
         {
-            return Collections.unmodifiableMap(interlinkFixtures);
+            for (String dirPath: Arrays.asList("fagi/1")) {
+                final Resource dir = baseResource.createRelative(dirPath + "/");
+                final String dirName = Paths.get(dirPath).getFileName().toString();
+
+                final Path inputDir = Paths.get(dir.createRelative("input").getURI());
+                final Path resultsDir = Paths.get(dir.createRelative("output").getURI());
+
+                final URI rulesUri = dir.createRelative("rules.xml").getURI();
+                final Path rulesPath = Paths.get(rulesUri);
+
+                final Properties linkProps = readProperties(dir.createRelative("link.properties"));
+                final Properties fuseProps = readProperties(dir.createRelative("spec.properties"));
+
+                // Copy rules.xml into user's data directory
+
+                Path rulesTempPath = copyTempIntoDirectory(rulesPath, "rules-", ".xml", userDir);
+
+                // Copy inputs into user's data directory
+
+                final BiMap<String, String> inputNameToTempName = HashBiMap.create();
+                final BiMap<String, Path> inputNameToTempPath = HashBiMap.create();
+                for (String inputName: Arrays.asList("a.nt", "b.nt")) {
+                    Path path = copyTempIntoDirectory(inputDir.resolve(inputName), null, ".nt", userDir);
+                    inputNameToTempPath.put(inputName, path);
+                    inputNameToTempName.put(inputName,
+                        stripFilenameExtension(userDir.relativize(path).toString()));
+                }
+
+                FuseFixture fixture = null;
+                String fixtureKey = null;
+
+                // Add fixture for input as a local file, rules given as user-relative paths
+
+                fixture = createFuseFixture(
+                    "file-" + inputNameToTempName.get("a.nt") + "-a",
+                    userDir,
+                    Pair.of(
+                        inputNameToTempPath.get("a.nt").toUri(),
+                        inputNameToTempPath.get("b.nt").toUri()),
+                    linkProps,
+                    resultsDir.resolve("fused.nt"),
+                    userDir.relativize(rulesTempPath).toString(),
+                    fuseProps);
+                fixtureKey = String.format("file-%s-a", dirName);
+                fuseFixtures.put(fixtureKey, fixture);
+
+                // Add fixture for input as a local file, rules given as file URIs
+
+                fixture = createFuseFixture(
+                    "file-" + inputNameToTempName.get("a.nt") + "-b",
+                    userDir,
+                    Pair.of(
+                        inputNameToTempPath.get("a.nt").toUri(),
+                        inputNameToTempPath.get("b.nt").toUri()),
+                    linkProps,
+                    resultsDir.resolve("fused.nt"),
+                    rulesUri.toString(),
+                    fuseProps);
+                fixtureKey = String.format("file-%s-b", dirName);
+                fuseFixtures.put(fixtureKey, fixture);
+            }
+        }
+
+        private FuseFixture createFuseFixture(
+            String name,
+            Path stagingDir,
+            Pair<URI, URI> inputPair,
+            Properties linkProps,
+            Path expectedResultPath,
+            String rulesSpec,
+            Properties fuseProps)
+            throws ConversionFailedException
+        {
+            Assert.notNull(!StringUtils.isEmpty(name), "A non-empty name is required");
+            Assert.isTrue(expectedResultPath != null && expectedResultPath.isAbsolute()
+                    && Files.isReadable(expectedResultPath),
+                "The expected result should be given as an absolute file path");
+
+            Assert.notNull(inputPair, "Expected an input pair");
+            final URI input1 = inputPair.getFirst();
+            Assert.notNull(input1, "Expected a non-null input URI");
+            final URI input2 = inputPair.getSecond();
+            Assert.notNull(input2, "Expected a non-null input URI");
+
+            for (URI inputUri: Arrays.asList(input1, input2)) {
+                Assert.isTrue(!inputUri.getScheme().equals("file") || (
+                        stagingDir != null && stagingDir.isAbsolute()
+                        && Files.isDirectory(stagingDir) && Files.isReadable(stagingDir)),
+                    "The stagingDir should be an absolute path for an existing readable directory");
+                Assert.isTrue(!inputUri.getScheme().equals("file") || Paths.get(inputUri).startsWith(stagingDir),
+                    "If input is a local file, must be located under staging directory");
+            }
+
+            Assert.notNull(linkProps, "Expected configuration properties for Limes");
+            Assert.notNull(fuseProps, "Expected configuration properties for Fagi");
+            Assert.isTrue(!StringUtils.isEmpty(rulesSpec),
+                "Expected a non-empty location for Fagi rules cpnfiguration file");
+
+            LimesConfiguration linkConfiguration =
+                propertiesConverter.propertiesToValue(linkProps, LimesConfiguration.class);
+            FagiConfiguration configuration =
+                propertiesConverter.propertiesToValue(fuseProps, FagiConfiguration.class);
+            configuration.setRulesSpec(rulesSpec);
+
+            return new FuseFixture(
+                name,
+                stagingDir,
+                inputPair,
+                linkConfiguration,
+                expectedResultPath,
+                configuration);
         }
     }
 
@@ -699,6 +900,9 @@ public class DefaultProcessOperatorTests
 
     @Autowired
     private Map<String, InterlinkFixture> interlinkFixtures;
+
+    @Autowired
+    private Map<String, FuseFixture> fuseFixtures;
 
     @Autowired
     private ThreadPoolTaskExecutor taskExecutor;
@@ -794,6 +998,15 @@ public class DefaultProcessOperatorTests
             throws Exception;
     }
 
+    @FunctionalInterface
+    interface FuseToDefinition
+    {
+        ProcessDefinition buildDefinition(
+                String procName, FuseFixture fixture, String resourceName)
+            throws Exception;
+    }
+
+
     private ProcessDefinition buildDefinition(
             String procName, TransformFixture fixture, String resourceName)
         throws MalformedURLException
@@ -870,11 +1083,13 @@ public class DefaultProcessOperatorTests
         ProcessExecutionStepRecord step1Record = executionRecord.getStepByName("Triplegeo 1");
         assertNotNull(step1Record);
         assertEquals(EnumProcessExecutionStatus.COMPLETED, step1Record.getStatus());
+        // Fixme maybe more than 1 OUTPUT files (choose primary output)
         ProcessExecutionStepFileRecord outfile1Record = step1Record.getFiles().stream()
-            .filter(f -> f.getType() == EnumStepFile.OUTPUT).findFirst()
-            .orElse(null);
+            .filter(f -> f.getType() == EnumStepFile.OUTPUT)
+            .findFirst().orElse(null);
         assertNotNull(outfile1Record);
         assertNotNull(outfile1Record.getFileSize());
+
         ResourceIdentifier resourceIdentifier = outfile1Record.getResource();
         assertNotNull(resourceIdentifier);
         ResourceRecord resourceRecord = resourceRepository.findOne(resourceIdentifier);
@@ -1013,6 +1228,7 @@ public class DefaultProcessOperatorTests
             ProcessExecutionStepRecord stepRecord = executionRecord.getStepByName(name);
             assertNotNull(stepRecord);
             assertEquals(EnumProcessExecutionStatus.COMPLETED, stepRecord.getStatus());
+            // Fixme maybe more than 1 OUTPUT files
             ProcessExecutionStepFileRecord outfileRecord = stepRecord.getFiles().stream()
                 .filter(f -> f.getType() == EnumStepFile.OUTPUT)
                 .findFirst().orElse(null);
@@ -1031,8 +1247,8 @@ public class DefaultProcessOperatorTests
         }
 
         ProcessExecutionStepFileRecord resourceStepFileRecord = executionRecord
-            .getStepByName("Link 1 with 2")
-            .getFiles().stream()
+            .getStepByName("Link 1 with 2").getFiles()
+            .stream()
             .filter(f -> f.getType() == EnumStepFile.OUTPUT)
             .findFirst().get();
         ResourceIdentifier resourceIdentifier = resourceStepFileRecord.getResource();
@@ -1051,6 +1267,117 @@ public class DefaultProcessOperatorTests
         Path resourcePath = catalogDataDir.resolve(resourceRecord.getFilePath());
         assertTrue(Files.isRegularFile(resourcePath) && Files.isReadable(resourcePath));
         AssertFile.assertFileEquals(fixture.getExpectedResultPath().toFile(), resourcePath.toFile());
+    }
+
+    private ProcessDefinition buildDefinition(
+            String procName, FuseFixture fixture, String resourceName)
+        throws Exception
+    {
+        final int inputKey1 = 1, inputKey2 = 2, linksKey = 3, fusedKey = 4;
+        final Pair<URL, URL> sourcePair = fixture.getInputAsUrl();
+
+        return processDefinitionBuilderFactory.create(procName)
+            .resource("input 1", inputKey1, sourcePair.getFirst(), EnumDataFormat.N_TRIPLES)
+            .resource("input 2", inputKey2, sourcePair.getSecond(), EnumDataFormat.N_TRIPLES)
+            .interlink("Link 1 with 2", builder -> builder
+                .group(1)
+                .link(inputKey1, inputKey2)
+                .configuration(fixture.getLinkConfiguration())
+                .outputFormat(EnumDataFormat.N_TRIPLES)
+                .outputKey(linksKey))
+            .fuse("Fuse 1 with 2", builder -> builder
+                .group(2)
+                .fuse(inputKey1, inputKey2, linksKey)
+                .configuration(fixture.getConfiguration())
+                .outputFormat(EnumDataFormat.N_TRIPLES)
+                .outputKey(fusedKey))
+            .register("Register links", linksKey,
+                new ResourceMetadataCreate(resourceName + "-links", "The links from a pair of inputs"))
+            .register("Register fused", fusedKey,
+                new ResourceMetadataCreate(resourceName, "The fusion of a pair of inputs"))
+            .build();
+    }
+
+    private void linkAndFuseAndRegister(
+            String procName, FuseFixture fixture, Account creator,
+            FuseToDefinition fuseToDefinition)
+        throws Exception
+    {
+        logger.debug("linkAndFuseAndRegister: procName={} fixture={}", procName, fixture);
+
+        final int creatorId = creator.getId();
+        final String fixtureName = fixture.getName();
+
+        // Define the process
+
+        final String resourceName = procName + "." + fixtureName;
+
+        final ProcessDefinition definition =
+            fuseToDefinition.buildDefinition(procName, fixture, resourceName);
+
+        final ProcessExecutionRecord executionRecord = executeDefinition(definition, creator);
+        final long executionId = executionRecord.getId();
+
+        // Check overall/step statuses and step files
+
+        assertEquals(EnumProcessExecutionStatus.COMPLETED, executionRecord.getStatus());
+        assertNotNull(executionRecord.getCompletedOn());
+
+        List<ProcessExecutionStepRecord> stepRecords = executionRecord.getSteps();
+        assertNotNull(stepRecords);
+        assertEquals(4, stepRecords.size());
+
+        for (String name: Arrays.asList("Link 1 with 2", "Fuse 1 with 2")) {
+            ProcessExecutionStepRecord stepRecord = executionRecord.getStepByName(name);
+            assertNotNull(stepRecord);
+            assertEquals(EnumProcessExecutionStatus.COMPLETED, stepRecord.getStatus());
+            // Fixme maybe more than 1 OUTPUT files
+            ProcessExecutionStepFileRecord outfileRecord = stepRecord.getFiles().stream()
+                .filter(f -> f.getType() == EnumStepFile.OUTPUT)
+                .findFirst().orElse(null);
+            assertNotNull(outfileRecord);
+            ResourceIdentifier outfileResourceIdentifier = outfileRecord.getResource();
+            assertNotNull(outfileResourceIdentifier);
+            ResourceRecord outfileResourceRecord = resourceRepository.findOne(outfileResourceIdentifier);
+            assertNotNull(outfileResourceRecord);
+            assertEquals(Long.valueOf(executionId), outfileResourceRecord.getProcessExecutionId());
+        }
+
+        for (String name: Arrays.asList("Register links", "Register fused")) {
+            ProcessExecutionStepRecord stepRecord = executionRecord.getStepByName(name);
+            assertNotNull(stepRecord);
+            assertEquals(EnumProcessExecutionStatus.COMPLETED, stepRecord.getStatus());
+        }
+
+        // Check output against expected result
+
+        ProcessExecutionStepFileRecord resourceStepFileRecord = executionRecord
+            .getStepByName("Fuse 1 with 2").getFiles()
+            .stream()
+            .filter(f -> f.getType() == EnumStepFile.OUTPUT)
+            .findFirst().get();
+        ResourceIdentifier resourceIdentifier = resourceStepFileRecord.getResource();
+        assertNotNull(resourceIdentifier);
+        ResourceRecord resourceRecord = resourceRepository.findOne(resourceIdentifier);
+
+        // Find and check resource by (name, user)
+
+        ResourceRecord resourceRecord1 = resourceRepository.findOne(resourceName, creatorId);
+        assertNotNull(resourceRecord1);
+        assertEquals(resourceRecord.getId(), resourceRecord1.getId());
+        assertEquals(resourceRecord.getVersion(), resourceRecord1.getVersion());
+
+        // Check output against expected result
+
+        Path resourcePath = catalogDataDir.resolve(resourceRecord.getFilePath());
+        assertTrue(Files.isRegularFile(resourcePath) && Files.isReadable(resourcePath));
+        AssertFile.assertFileEquals(fixture.getExpectedResultPath().toFile(), resourcePath.toFile());
+    }
+
+    private void linkAndFuseAndRegister(String procName, FuseFixture fixture, Account creator)
+        throws Exception
+    {
+        linkAndFuseAndRegister(procName, fixture, creator, this::buildDefinition);
     }
 
     //
@@ -1235,6 +1562,20 @@ public class DefaultProcessOperatorTests
     {
         Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
         transformAndLinkAndRegister("register-links-1-b", interlinkFixtures.get("file-1-b"), user);
+    }
+
+    @Test(timeout = 40 * 1000L)
+    public void test1_linkAndFuseAndRegister1a() throws Exception
+    {
+        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
+        linkAndFuseAndRegister("register-fused-1-a", fuseFixtures.get("file-1-a"), user);
+    }
+
+    @Test(timeout = 40 * 1000L)
+    public void test1_linkAndFuseAndRegister1b() throws Exception
+    {
+        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
+        linkAndFuseAndRegister("register-fused-1-b", fuseFixtures.get("file-1-b"), user);
     }
 
     @Test(timeout = 150 * 1000L)

@@ -476,14 +476,14 @@ public class ProcessDefinitionBuilder
          * 
          * @param leftKey The key of the first (left) input resource 
          * @param rightKey The key of the second (right) input resource
-         * @param linkskey The key of the third (links) resource
+         * @param linksKey The key of the third (links) resource
          * @return this builder
          */
-        public FuseStepBuilder fuse(int leftKey, int rightKey, int linkskey)
+        public FuseStepBuilder fuse(int leftKey, int rightKey, int linksKey)
         {
             Assert.isTrue(this.stepBuilder.sources.isEmpty() && this.stepBuilder.inputKeys.isEmpty(), 
                 "An input of (left, right, links) is already specified for this step");
-            this.stepBuilder.input(leftKey, rightKey, linkskey);
+            this.stepBuilder.input(leftKey, rightKey, linksKey);
             return this;
         }
         

@@ -647,7 +647,8 @@ public class FagiConfiguration extends FuseConfiguration
         
         names = Stream.of(target.statsPath)
             .collect(Collectors.mapping(getFileName, Collectors.toList()));
-        namesByType.put(EnumOutputType.KPI, names);
+        // Fixme: The current version of Fagi doesn't produce statistics (uncomment when fixed)
+        //namesByType.put(EnumOutputType.KPI, names);
         
         return namesByType;
     }
