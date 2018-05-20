@@ -3,7 +3,7 @@ package eu.slipo.workbench.common.service.util;
 import java.io.IOException;
 import java.io.Serializable;
 
-import org.apache.commons.lang3.Validate;
+import org.springframework.util.Assert;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -13,22 +13,26 @@ public class JsonBasedClonerService implements ClonerService
     
     public JsonBasedClonerService(ObjectMapper objectMapper)
     {
-        Validate.notNull(objectMapper, "An object mapper is required");
+        Assert.notNull(objectMapper, "An object mapper is required");
         this.objectMapper = objectMapper;
     }
 
     @Override
-    public <B extends Serializable> B cloneAsBean(B source) throws IOException
+    public Object cloneAsBean(Object source) throws IOException
     {   
-        Validate.notNull(source);
+        Assert.notNull(source, "A source object is required");
         
         byte[] sourceData = objectMapper.writeValueAsBytes(source);
-        Object resultObject = objectMapper.readValue(sourceData, source.getClass());
-        
-        @SuppressWarnings("unchecked")
-        B result = (B) resultObject;
-        
-        return result;
+        return objectMapper.readValue(sourceData, source.getClass());
     }
-
+    
+    @Override
+    public <T> T cloneAsBean(Object source, Class<T> targetType) throws IOException
+    {
+        Assert.notNull(source, "A source object is required");
+        Assert.notNull(targetType, "A target type is required");
+        
+        byte[] sourceData = objectMapper.writeValueAsBytes(source);
+        return objectMapper.readValue(sourceData, targetType);
+    }
 }

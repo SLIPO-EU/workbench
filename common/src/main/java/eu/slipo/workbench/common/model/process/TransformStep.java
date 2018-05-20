@@ -9,6 +9,6 @@ public class TransformStep extends Step
     @Override
     public TransformConfiguration configuration()
     {
-        return (TransformConfiguration) this.configuration;
+        return (TransformConfiguration) super.configuration();
     }
 }

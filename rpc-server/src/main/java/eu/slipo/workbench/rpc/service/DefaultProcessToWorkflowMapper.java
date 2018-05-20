@@ -217,6 +217,7 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
         for (Step step: dependencyAnalyzedDefinition.stepsInTopologicalOrder()) {
             final EnumTool tool = step.tool();
             final ToolConfiguration configuration = step.configuration();
+            final Class<? extends ToolConfiguration> configurationType = step.configurationType();
             final List<Integer> inputKeys = step.inputKeys();
 
             final JobDefinitionBuilder jobDefinitionBuilder = JobDefinitionBuilder.create(step.nodeName());
@@ -270,7 +271,8 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
 
             // Define outputs
 
-            Map<EnumOutputType, List<String>> outputMap = determineOutputNames(configuration, inputNames);
+            Map<EnumOutputType, List<String>> outputMap =
+                determineOutputNames(configuration, configurationType, inputNames);
             if (!outputMap.isEmpty()) {
                 List<String> results = outputMap.get(EnumOutputType.OUTPUT);
                 Assert.state(results != null && !results.isEmpty(),
@@ -363,16 +365,19 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
      * @return a map of output names categorized by output type
      */
     private Map<EnumOutputType, List<String>> determineOutputNames(
-        ToolConfiguration configuration, List<String> inputNames)
+        ToolConfiguration configuration, Class<? extends ToolConfiguration> configurationType,
+        List<String> inputNames)
     {
         if (!inputNames.isEmpty()) {
             // Clone this configuration and reset input
             try {
-                configuration = cloner.cloneAsBean(configuration).withInput(inputNames);
+                configuration = cloner.cloneAsBean(configuration, configurationType)
+                    .withInput(inputNames);
             } catch (IOException ex) {
                 throw new IllegalStateException("Cannot clone configuration", ex);
             }
         }
+
         return configuration.getOutputNames();
     }
 

@@ -5,5 +5,7 @@ import java.io.Serializable;
 
 public interface ClonerService
 {
-    <B extends Serializable> B cloneAsBean(B source) throws IOException;
+    Object cloneAsBean(Object source) throws IOException;
+    
+    <T> T cloneAsBean(Object source, Class<T> targetType) throws IOException;
 }

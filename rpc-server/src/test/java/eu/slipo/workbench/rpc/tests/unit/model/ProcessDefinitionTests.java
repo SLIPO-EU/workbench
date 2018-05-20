@@ -184,12 +184,14 @@ public class ProcessDefinitionTests
             .resource("resource-a-1.2", key2, ResourceIdentifier.of(3L, 17L))
             .transform("triplegeo-1", b -> b
                 .group(1)
+                .nodeName("triplegeo-1")
                 .outputKey(resultKey1)
                 .source(dataSource1)
                 .outputFormat(EnumDataFormat.N_TRIPLES)
                 .configuration(sampleTriplegeoConfiguration1))
             .step("enrich-with-deer-1", b -> b
                 .group(2)
+                .nodeName("enrich-with-deer-1")
                 .operation(EnumOperation.ENRICHMENT)
                 .tool(EnumTool.DEER)
                 .outputFormat(EnumDataFormat.N_TRIPLES)
@@ -353,6 +355,29 @@ public class ProcessDefinitionTests
         List<ProcessInput> resources = definition1.resources();
         ProcessInput res1 = resources.get(0);
         resources.add(res1);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void test2_checkDefinition1UnmodifiableConfiguration()
+    {
+        ProcessDefinition definition1 = buildDefinition1();
+        assertNotNull(definition1);
+
+        Step step11 = definition1.stepByNodeName("triplegeo-1");
+
+        TriplegeoConfiguration configuration = (TriplegeoConfiguration) step11.configuration();
+        configuration.setAttrKey("koukou");
+    }
+
+    @Test
+    public void test2_checkDefinition1ConfigurationType()
+    {
+        ProcessDefinition definition1 = buildDefinition1();
+        assertNotNull(definition1);
+
+        Step step11 = definition1.stepByNodeName("triplegeo-1");
+        Class<?> configurationType = step11.configurationType();
+        assertEquals(TriplegeoConfiguration.class, configurationType);
     }
 
     @Test(expected = IllegalStateException.class)

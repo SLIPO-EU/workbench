@@ -145,7 +145,7 @@ public class ProcessDefinitionBuilder
             // Hold a copy of this configuration
             try {
                 
-                this.configuration = cloner.cloneAsBean(configuration);
+                this.configuration = (ToolConfiguration) cloner.cloneAsBean(configuration);
             } catch (Exception ex) {
                 throw new IllegalStateException("Cannot clone the configuration bean", ex);
             }

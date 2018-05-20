@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.springframework.cglib.beans.ImmutableBean;
 import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -46,6 +47,7 @@ public class Step implements Serializable
         {
             // Sanitize step in-place
             
+            // If nodeName is absent, compute it from name
             if (StringUtils.isEmpty(step.nodeName) && !StringUtils.isEmpty(step.name))
                 step.nodeName = Step.slugifyName(step.name);
             
@@ -179,8 +181,21 @@ public class Step implements Serializable
     @JsonProperty("configuration")
     public ToolConfiguration configuration()
     {
-        // Todo The configuration should be returned as an immutable bean (?)
-        return configuration;
+        return (ToolConfiguration) ImmutableBean.create(configuration);
+    }
+    
+    /**
+     * The tool-specific type of configuration.
+     * 
+     * <p>Note: This piece of information is needed for cloning a configuration bean
+     * (since the actual bean returned by {@link Step#configuration} may return a runtime-enhanced
+     * type (e.g. by CGLIB))
+     *  
+     * @return a class object
+     */
+    public Class<? extends ToolConfiguration> configurationType()
+    {
+        return configuration.getClass();
     }
 
     /**

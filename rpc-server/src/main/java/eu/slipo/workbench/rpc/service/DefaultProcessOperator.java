@@ -259,6 +259,7 @@ public class DefaultProcessOperator implements ProcessOperator
             final List<Path> inputPaths = node.input();
 
             final ToolConfiguration config = step.configuration();
+            final Class<? extends ToolConfiguration> configType = step.configurationType();
 
             final ZonedDateTime now = ZonedDateTime.now();
 
@@ -299,7 +300,8 @@ public class DefaultProcessOperator implements ProcessOperator
             Assert.state(outputPaths.stream().allMatch(path -> path.startsWith(workflowDataDir)),
                 "An output path is expected to be under workflow data directory");
 
-            final Map<EnumOutputType, List<String>> outputMap = determineOutputNames(config, inputPaths);
+            final Map<EnumOutputType, List<String>> outputMap =
+                determineOutputNames(config, configType, inputPaths);
             Assert.state(outputPaths.size() == outputMap.values().stream().mapToInt(List::size).sum(),
                 "The number of output paths differs from the one determined by step configuration");
 
@@ -525,10 +527,10 @@ public class DefaultProcessOperator implements ProcessOperator
          * @param inputPaths The input paths feeding a tool's invocation
          */
         private Map<EnumOutputType, List<String>> determineOutputNames(
-            ToolConfiguration config, List<Path> inputPaths)
+            ToolConfiguration config, Class<? extends ToolConfiguration> configType, List<Path> inputPaths)
         {
             try {
-                config = cloner.cloneAsBean(config);
+                config = cloner.cloneAsBean(config, configType);
             } catch (IOException ex) {
                 throw new IllegalStateException("Cannot clone configuration", ex);
             }

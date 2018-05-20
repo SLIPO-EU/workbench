@@ -10,6 +10,6 @@ public class RegisterStep extends Step
     @Override
     public MetadataRegistrationConfiguration configuration()
     {
-        return (MetadataRegistrationConfiguration) this.configuration;
+        return (MetadataRegistrationConfiguration) super.configuration();
     }
 }
