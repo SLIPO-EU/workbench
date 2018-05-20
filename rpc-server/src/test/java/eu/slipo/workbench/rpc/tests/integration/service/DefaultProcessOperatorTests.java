@@ -1083,9 +1083,8 @@ public class DefaultProcessOperatorTests
         ProcessExecutionStepRecord step1Record = executionRecord.getStepByName("Triplegeo 1");
         assertNotNull(step1Record);
         assertEquals(EnumProcessExecutionStatus.COMPLETED, step1Record.getStatus());
-        // Fixme maybe more than 1 OUTPUT files (choose primary output)
         ProcessExecutionStepFileRecord outfile1Record = step1Record.getFiles().stream()
-            .filter(f -> f.getType() == EnumStepFile.OUTPUT)
+            .filter(f -> f.getType() == EnumStepFile.OUTPUT && f.isPrimary())
             .findFirst().orElse(null);
         assertNotNull(outfile1Record);
         assertNotNull(outfile1Record.getFileSize());
@@ -1228,9 +1227,8 @@ public class DefaultProcessOperatorTests
             ProcessExecutionStepRecord stepRecord = executionRecord.getStepByName(name);
             assertNotNull(stepRecord);
             assertEquals(EnumProcessExecutionStatus.COMPLETED, stepRecord.getStatus());
-            // Fixme maybe more than 1 OUTPUT files
             ProcessExecutionStepFileRecord outfileRecord = stepRecord.getFiles().stream()
-                .filter(f -> f.getType() == EnumStepFile.OUTPUT)
+                .filter(f -> f.getType() == EnumStepFile.OUTPUT && f.isPrimary())
                 .findFirst().orElse(null);
             assertNotNull(outfileRecord);
             ResourceIdentifier outfileResourceIdentifier = outfileRecord.getResource();
@@ -1331,9 +1329,8 @@ public class DefaultProcessOperatorTests
             ProcessExecutionStepRecord stepRecord = executionRecord.getStepByName(name);
             assertNotNull(stepRecord);
             assertEquals(EnumProcessExecutionStatus.COMPLETED, stepRecord.getStatus());
-            // Fixme maybe more than 1 OUTPUT files
             ProcessExecutionStepFileRecord outfileRecord = stepRecord.getFiles().stream()
-                .filter(f -> f.getType() == EnumStepFile.OUTPUT)
+                .filter(f -> f.getType() == EnumStepFile.OUTPUT && f.isPrimary())
                 .findFirst().orElse(null);
             assertNotNull(outfileRecord);
             ResourceIdentifier outfileResourceIdentifier = outfileRecord.getResource();

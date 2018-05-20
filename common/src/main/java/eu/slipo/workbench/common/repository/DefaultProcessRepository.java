@@ -760,9 +760,8 @@ public class DefaultProcessRepository implements ProcessRepository
 
         // Add file record
 
-        ProcessExecutionStepFileEntity fileEntity = new ProcessExecutionStepFileEntity(
-            executionStepEntity,
-            fileRecord.getType(), fileRecord.getFilePath(), fileRecord.getFileSize());
+        ProcessExecutionStepFileEntity fileEntity = 
+            new ProcessExecutionStepFileEntity(executionStepEntity, fileRecord);
         fileEntity.setVerified(true);
         
         ResourceIdentifier resourceIdentifier = fileRecord.getResource();

@@ -118,7 +118,7 @@ export const EnumStepFileTypeValue = {
   [EnumStepFileType.SAMPLE]: 3,
   [EnumStepFileType.KPI]: 4,
   [EnumStepFileType.QA]: 5,
-}
+};
 
 /**
  * Drag sources

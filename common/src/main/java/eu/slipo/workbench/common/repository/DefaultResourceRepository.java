@@ -354,7 +354,7 @@ public class DefaultResourceRepository implements ResourceRepository
                     stepKey, executionId));
             }
             ProcessExecutionStepFileEntity fileEntity = stepEntity.getFiles().stream()
-                .filter(f -> f.getType() == EnumStepFile.OUTPUT)
+                .filter(f -> f.getType() == EnumStepFile.OUTPUT && f.isPrimary())
                 .findFirst()
                 .orElse(null);
             if (fileEntity != null) {

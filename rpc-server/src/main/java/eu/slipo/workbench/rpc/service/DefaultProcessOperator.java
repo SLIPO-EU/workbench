@@ -304,15 +304,19 @@ public class DefaultProcessOperator implements ProcessOperator
                 "The number of output paths differs from the one determined by step configuration");
 
             for (EnumOutputType outputType: outputMap.keySet()) {
-                final EnumDataFormat outputFormat = outputType == EnumOutputType.OUTPUT?
+                final boolean isPrimaryType = outputType == EnumOutputType.OUTPUT;
+                final EnumDataFormat outputFormat = isPrimaryType?
                     config.getOutputFormat() : null; // format is relevant only to actual output results
                 final EnumStepFile type = EnumStepFile.from(outputType);
-                for (String outputName: outputMap.get(outputType)) {
+                final List<String> outputNames = outputMap.get(outputType);
+                for (int i = 0, n = outputNames.size(); i < n; ++i) {
+                    String outputName = outputNames.get(i);
                     // Find corresponding item from node's output paths (must exist!)
                     Path outputPath = Iterables.find(outputPaths, path -> path.endsWith(outputName));
                     URI outputUri = convertPathToUri(outputPath);
                     ProcessExecutionStepFileRecord fileRecord =
                         new ProcessExecutionStepFileRecord(type, outputUri, null, outputFormat);
+                    fileRecord.setPrimary(!isPrimaryType? null : (i == 0));
                     stepRecord.addFile(fileRecord);
                 }
             }

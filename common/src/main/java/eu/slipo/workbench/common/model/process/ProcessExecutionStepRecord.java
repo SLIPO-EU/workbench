@@ -204,7 +204,8 @@ public class ProcessExecutionStepRecord implements Serializable
     {
         return String.format(
             "ProcessExecutionStepRecord " +
-                "[id=%s, key=%s, name=%s, jobExecutionId=%s, status=%s, tool=%s, operation=%s, startedOn=%s, completedOn=%s, errorMessage=%s, files=%s]",
+                "[id=%s, key=%s, name=%s, jobExecutionId=%s, status=%s," +
+                " tool=%s, operation=%s, startedOn=%s, completedOn=%s, errorMessage=%s, files=%s]",
             id, key, name, jobExecutionId, status, tool, operation, startedOn, completedOn,
             errorMessage, files);
     }
