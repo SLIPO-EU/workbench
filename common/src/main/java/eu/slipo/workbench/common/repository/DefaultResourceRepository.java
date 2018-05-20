@@ -23,6 +23,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
+import com.google.common.collect.MoreCollectors;
 import com.vividsolutions.jts.geom.Geometry;
 
 import eu.slipo.workbench.common.domain.AccountEntity;
@@ -355,7 +356,7 @@ public class DefaultResourceRepository implements ResourceRepository
             }
             ProcessExecutionStepFileEntity fileEntity = stepEntity.getFiles().stream()
                 .filter(f -> f.getType() == EnumStepFile.OUTPUT && f.isPrimary())
-                .findFirst()
+                .collect(MoreCollectors.toOptional())
                 .orElse(null);
             if (fileEntity != null) {
                 fileEntity.setResource(resourceRevisionEntity);

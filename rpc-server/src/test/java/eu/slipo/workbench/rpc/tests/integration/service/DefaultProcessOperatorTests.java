@@ -58,6 +58,7 @@ import org.springframework.util.StringUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.google.common.collect.MoreCollectors;
 
 import eu.slipo.workbench.common.domain.AccountEntity;
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
@@ -1085,7 +1086,8 @@ public class DefaultProcessOperatorTests
         assertEquals(EnumProcessExecutionStatus.COMPLETED, step1Record.getStatus());
         ProcessExecutionStepFileRecord outfile1Record = step1Record.getFiles().stream()
             .filter(f -> f.getType() == EnumStepFile.OUTPUT && f.isPrimary())
-            .findFirst().orElse(null);
+            .collect(MoreCollectors.toOptional())
+            .orElse(null);
         assertNotNull(outfile1Record);
         assertNotNull(outfile1Record.getFileSize());
 
@@ -1229,7 +1231,8 @@ public class DefaultProcessOperatorTests
             assertEquals(EnumProcessExecutionStatus.COMPLETED, stepRecord.getStatus());
             ProcessExecutionStepFileRecord outfileRecord = stepRecord.getFiles().stream()
                 .filter(f -> f.getType() == EnumStepFile.OUTPUT && f.isPrimary())
-                .findFirst().orElse(null);
+                .collect(MoreCollectors.toOptional())
+                .orElse(null);
             assertNotNull(outfileRecord);
             ResourceIdentifier outfileResourceIdentifier = outfileRecord.getResource();
             assertNotNull(outfileResourceIdentifier);
@@ -1331,7 +1334,8 @@ public class DefaultProcessOperatorTests
             assertEquals(EnumProcessExecutionStatus.COMPLETED, stepRecord.getStatus());
             ProcessExecutionStepFileRecord outfileRecord = stepRecord.getFiles().stream()
                 .filter(f -> f.getType() == EnumStepFile.OUTPUT && f.isPrimary())
-                .findFirst().orElse(null);
+                .collect(MoreCollectors.toOptional())
+                .orElse(null);
             assertNotNull(outfileRecord);
             ResourceIdentifier outfileResourceIdentifier = outfileRecord.getResource();
             assertNotNull(outfileResourceIdentifier);
@@ -1348,11 +1352,10 @@ public class DefaultProcessOperatorTests
 
         // Check output against expected result
 
-        ProcessExecutionStepFileRecord resourceStepFileRecord = executionRecord
-            .getStepByName("Fuse 1 with 2").getFiles()
-            .stream()
-            .filter(f -> f.getType() == EnumStepFile.OUTPUT)
-            .findFirst().get();
+        ProcessExecutionStepFileRecord resourceStepFileRecord = executionRecord.getStepByName("Fuse 1 with 2")
+            .getFiles().stream()
+            .filter(f -> f.getType() == EnumStepFile.OUTPUT && f.isPrimary())
+            .collect(MoreCollectors.onlyElement());
         ResourceIdentifier resourceIdentifier = resourceStepFileRecord.getResource();
         assertNotNull(resourceIdentifier);
         ResourceRecord resourceRecord = resourceRepository.findOne(resourceIdentifier);
