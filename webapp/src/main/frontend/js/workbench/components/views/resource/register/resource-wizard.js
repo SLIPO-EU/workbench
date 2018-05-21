@@ -18,6 +18,7 @@ import * as triplegeo from './triplegeo';
 import * as filesystem from './filesystem';
 import * as confirmation from './confirmation';
 
+import { writeConfigurationTripleGeo } from '../../../../service/triplegeo';
 
 export default function ResourceWizard(props) {
   return (
@@ -27,7 +28,7 @@ export default function ResourceWizard(props) {
         onComplete={(values) => {
           if (values.type.path === 'UPLOAD' || values.type.path === 'FILESYSTEM') {
             const data = {
-              settings: values.triplegeo || null,
+              settings: values.triplegeo ? writeConfigurationTripleGeo(values.triplegeo) : null,
               metadata: values.metadata,
             };
             switch (values.type.path) {
@@ -128,9 +129,15 @@ export default function ResourceWizard(props) {
         <triplegeo.Component
           id="triplegeo"
           title="TripleGeo"
-          initialValue={props.initialValues.triplegeo || defaultTripleGeoValues}
+          initialValue={props.initialValues.triplegeo || { ...defaultTripleGeoValues, version: props.appConfiguration.tripleGeo.version }}
           validate={triplegeo.validator}
           next={() => 'confirm'}
+          appConfiguration={props.appConfiguration}
+          filesystem={props.filesystem}
+          createFolder={props.createFolder}
+          uploadFile={props.uploadFile}
+          deletePath={props.deletePath}
+          readOnly={false}
         />
 
         <confirmation.Component
