@@ -30,6 +30,7 @@ ScratchController.java
 /config/*.properties
 /config/*.xml
 /config/*.yml
+/.config-data/
 
 bower_components
 jspm_packages
