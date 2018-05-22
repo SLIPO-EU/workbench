@@ -48,7 +48,6 @@ services:
       DB_NAME: "slipo-workbench" 
       DB_USERNAME: "slipo" 
       DB_PASSWORD_FILE: "/etc/secrets/db-password"
-      #RPC_SERVER: "rpc-server"
 
     volumes:
     - /mnt/nfs-1/app-data/slipo-workbench/:/mnt/nfs-1/app-data/slipo-workbench/:rw

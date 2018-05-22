@@ -39,6 +39,7 @@ Run a container based on the newly created image:
         --volume "$(pwd)/.secrets/db-password:/etc/secrets/db-password" \
         --volume "/mnt/nfs-1/app-data/slipo-workbench:/mnt/nfs-1/app-data/slipo-workbench" \
         -e DB_HOST=postgres-1 -e DB_USERNAME=slipo -e DB_PASSWORD_FILE=/etc/secrets/db-password \
+        --add-host docker-n1-server:10.0.4.5 \
         local/slipo-workbench-rpc-server:0.1
 
 
