@@ -2,6 +2,10 @@ import _ from 'lodash';
 import actions from './api/fetch-actions';
 
 import {
+  flatten,
+} from 'flat';
+
+import {
   EnumDesignerSaveAction,
 } from '../model/process-designer';
 
@@ -16,8 +20,13 @@ import {
   DataSourceTitles,
   ResourceTypeIcons,
   ToolIcons,
-  ToolInputRequirements,
+  ToolConfigurationSettings,
 } from '../model/process-designer';
+
+import {
+  readConfigurationTripleGeo,
+  writeConfigurationTripleGeo,
+} from './triplegeo';
 
 function buildProcessRequest(action, designer) {
   const allInputOutputResources = designer.steps.reduce((result, step) => {
@@ -86,7 +95,7 @@ function buildConfiguration(step) {
 
   switch (step.tool) {
     case EnumTool.TripleGeo:
-      return config;
+      return writeConfigurationTripleGeo(config);
 
     case EnumTool.CATALOG:
       return {
@@ -131,11 +140,12 @@ function buildDataSource(step) {
 }
 
 function readProcessResponse(result) {
-  const { id, version, definition } = result;
+  const { id, version, template, definition } = result;
   return {
     ...definition,
     id,
     version,
+    template,
     resources: definition.resources
       .map((r) => {
         switch (r.inputType) {
@@ -197,9 +207,14 @@ function readConfiguration(step) {
   }
   switch (step.tool) {
     case EnumTool.TripleGeo:
+      return readConfigurationTripleGeo(config);
+
+    case EnumTool.LIMES:
       return config;
+
     case EnumTool.CATALOG:
       return config.metadata;
+
     default:
       return {};
   }
@@ -266,6 +281,10 @@ export function fetchProcessRevision(id, version, token) {
     });
 }
 
+export function fetchTemplates(query, token) {
+  return actions.post('/action/process/template/query', token, query);
+}
+
 export function fetchProcesses(query, token) {
   return actions.post('/action/process/query', token, query);
 }
@@ -290,27 +309,26 @@ export function fetchExecutionDetails(process, version, execution, token) {
 }
 
 export function fetchExecutionKpiData(process, version, execution, file, token) {
-  //return actions.get(`/action/process/${process}/${version}/execution/${execution}/kpi/${file}`, token);
-  return Promise.resolve({
-    values: [{
-      key: 'Key 1',
-      value: 100,
-    }, {
-      key: 'Key 2',
-      value: 200,
-      description: 'Value 2 description',
-    }, {
-      key: 'Key 3',
-      value: 15,
-    }, {
-      key: 'Key 4',
-      value: 50,
-    }],
-  });
+  return actions.get(`/action/process/${process}/${version}/execution/${execution}/kpi/${file}`, token)
+    .then(data => {
+      // Flatten data
+      data = flatten(data);
+      // Remove empty objects
+      return Object.keys(data).reduce((result, key) => {
+        if (!_.isObject(data[key])) {
+          result.values.push({
+            key,
+            value: data[key],
+            description: null,
+          });
+        }
+        return result;
+      }, { values: [] });
+    });
 }
 
 export function getStepDataSourceRequirements(step) {
-  let { source } = ToolInputRequirements[step.tool];
+  let { source } = ToolConfigurationSettings[step.tool];
 
   return {
     source: source - step.dataSources.length,
@@ -318,7 +336,7 @@ export function getStepDataSourceRequirements(step) {
 }
 
 export function getStepInputRequirements(step, resources) {
-  let { poi, linked, any } = ToolInputRequirements[step.tool];
+  let { poi, linked, any } = ToolConfigurationSettings[step.tool];
 
   let counters = resources.reduce((counters, resource) => {
     switch (resource.resourceType) {
@@ -340,8 +358,39 @@ export function getStepInputRequirements(step, resources) {
   };
 }
 
-function validateProcess(action, model, errors) {
+function validateProcess(action, model, isTemplate, errors) {
   const { process, steps, resources, ...rest } = model;
+
+  if ((!process.properties.name) || (!process.properties.description)) {
+    errors.push({ code: 1, text: 'One or more workflow property values are missing' });
+  }
+}
+
+function validateSteps(action, model, isTemplate, errors) {
+  const { process, steps, resources, ...rest } = model;
+
+  if (steps.length === 0) {
+    errors.push({ code: 1, text: 'At least a single step is required' });
+  }
+
+  const countStepWithoutName = steps.reduce((count, step) => {
+    return (step.name ? count : ++count);
+  }, 0);
+  if (countStepWithoutName > 0) {
+    errors.push({ code: 1, text: `The name of one or more steps is not set` });
+  }
+
+  _(steps)
+    .groupBy('name')
+    .map(function (steps, name) {
+      return { name, count: steps.length };
+    })
+    .value()
+    .forEach((r) => {
+      if (r.count > 1) {
+        errors.push({ code: 1, text: `Step name ${r.name} is not unique.` });
+      }
+    });
 
   // All input resources (exclude registered step output)
   const allInputResources = steps.reduce((agg, value) =>
@@ -350,20 +399,12 @@ function validateProcess(action, model, errors) {
   const stepOutputResources = steps.reduce((agg, value) =>
     (((value.outputKey) && (allInputResources.indexOf(value.outputKey) === -1)) ? agg.concat([value.outputKey]) : agg), []);
 
-  if ((!process.properties.name) || (!process.properties.description)) {
-    errors.push({ code: 1, text: 'One or more workflow property values are missing' });
-  }
-
   if (stepOutputResources.length !== 1) {
     errors.push({ code: 1, text: 'A workflow must generate a single output' });
   }
-}
 
-function validateSteps(action, model, errors) {
-  const { process, steps, resources, ...rest } = model;
-
-  if (steps.length === 0) {
-    errors.push({ code: 1, text: 'At least a single step is required' });
+  if (isTemplate) {
+    return;
   }
 
   steps.forEach((s) => {
@@ -381,29 +422,14 @@ function validateSteps(action, model, errors) {
       }
     });
   });
-
-  const countStepWithoutName = steps.reduce((count, step) => {
-    return (step.name ? count : ++count);
-  }, 0);
-  if (countStepWithoutName > 0) {
-    errors.push({ code: 1, text: `The name of one or more steps is not set` });
-  }
-
-  _(steps)
-    .groupBy('name')
-    .map(function (steps, name) {
-      return { name, count: steps.length };
-    })
-    .value()
-    .forEach((r) => {
-      if (r.count > 1) {
-        errors.push({ code: 1, text: `Name ${r.name} is not unique.` });
-      }
-    });
 }
 
-function validateResources(action, model, errors) {
+function validateResources(action, model, isTemplate, errors) {
   const { process, steps, resources, ...rest } = model;
+
+  if (isTemplate) {
+    return;
+  }
 
   steps.forEach((s) => {
     // Resources
@@ -419,14 +445,14 @@ function validateResources(action, model, errors) {
     }
 
     if ((requiredResources.linked > 0) && (requiredResources.any <= 0)) {
-      if (requiredResources.poi === 1) {
+      if (requiredResources.linked === 1) {
         errors.push({ code: 1, text: `Step ${s.name} requires a single Links dataset` });
       } else {
         errors.push({ code: 1, text: `Step ${s.name} requires ${requiredResources.linked} Links datasets` });
       }
     }
     if (requiredResources.any > 0) {
-      if (requiredResources.poi === 1) {
+      if (requiredResources.any === 1) {
         errors.push({ code: 1, text: `Step ${s.name} requires a single POI or Links dataset` });
       } else {
         errors.push({ code: 1, text: `Step ${s.name} requires ${requiredResources.linked} POI or Links datasets` });
@@ -443,21 +469,20 @@ function validateResources(action, model, errors) {
         errors.push({ code: 1, text: `Step ${s.name} requires ${requiredDataSources.source} data sources or harvesters` });
       }
     }
-
   });
 }
 
-export function validate(action, model) {
+export function validate(action, model, isTemplate) {
   const errors = [];
 
   // Properties
-  validateProcess(action, model, errors);
+  validateProcess(action, model, isTemplate, errors);
 
   // Steps
-  validateSteps(action, model, errors);
+  validateSteps(action, model, isTemplate, errors);
 
   // Resources
-  validateResources(action, model, errors);
+  validateResources(action, model, isTemplate, errors);
 
   return errors;
 }
@@ -471,4 +496,12 @@ export function save(action, designer, token) {
   } else {
     return actions.post('/action/process', token, data);
   }
+}
+
+export function start(id, version, token) {
+  return actions.post(`/action/process/${id}/${version}/start`, token);
+}
+
+export function stop(id, version, token) {
+  return actions.post(`/action/process/${id}/${version}/stop`, token);
 }

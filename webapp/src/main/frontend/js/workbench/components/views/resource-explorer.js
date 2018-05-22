@@ -155,7 +155,7 @@ class ResourceExplorer extends React.Component {
               <CardBody className="card-body">
                 <Row>
                   <Col xs="6" className="slipo-map-container">
-                    <OpenLayers.Map minZoom={5} maxZoom={15} zoom={9}>
+                    <OpenLayers.Map minZoom={5} maxZoom={11} zoom={8}>
                       <OpenLayers.Layers>
                         <OpenLayers.Layer.OSM
                           url="http://tile.stamen.com/terrain/{z}/{x}/{y}.jpg"

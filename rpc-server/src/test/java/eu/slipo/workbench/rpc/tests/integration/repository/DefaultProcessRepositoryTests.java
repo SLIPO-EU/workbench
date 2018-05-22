@@ -40,9 +40,11 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 
+import eu.slipo.workbench.common.config.ClonerServiceConfiguration;
+import eu.slipo.workbench.common.config.ProcessDefinitionBuilderFactoryConfiguration;
 import eu.slipo.workbench.common.domain.AccountEntity;
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
-import eu.slipo.workbench.common.model.poi.EnumOntology;
+import eu.slipo.workbench.common.model.poi.EnumSpatialOntology;
 import eu.slipo.workbench.common.model.poi.EnumOperation;
 import eu.slipo.workbench.common.model.poi.EnumResourceType;
 import eu.slipo.workbench.common.model.poi.EnumTool;
@@ -50,9 +52,11 @@ import eu.slipo.workbench.common.model.process.EnumProcessExecutionStatus;
 import eu.slipo.workbench.common.model.process.EnumStepFile;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.ProcessDefinitionBuilder;
+import eu.slipo.workbench.common.model.process.ProcessDefinitionBuilderFactory;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepFileRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepRecord;
+import eu.slipo.workbench.common.model.process.ProcessIdentifier;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
 import eu.slipo.workbench.common.model.resource.DataSource;
 import eu.slipo.workbench.common.model.resource.EnumDataSourceType;
@@ -73,7 +77,11 @@ import eu.slipo.workbench.common.repository.ResourceRepository;
 @EntityScan(basePackageClasses = { eu.slipo.workbench.common.domain._Marker.class })
 @EnableJpaRepositories(basePackageClasses = { eu.slipo.workbench.common.repository._Marker.class })
 @SpringBootTest(
-    classes = { DefaultResourceRepository.class, DefaultProcessRepository.class },
+    classes = {
+        ProcessDefinitionBuilderFactoryConfiguration.class,
+        ClonerServiceConfiguration.class,
+        DefaultResourceRepository.class,
+        DefaultProcessRepository.class },
     webEnvironment = WebEnvironment.NONE
 )
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -107,6 +115,9 @@ public class DefaultProcessRepositoryTests
     public static class Configuration
     {
         @Autowired
+        private ProcessDefinitionBuilderFactory processDefinitionBuilderFactory;
+
+        @Autowired
         private AccountRepository accountRepository;
 
         @Autowired
@@ -121,18 +132,18 @@ public class DefaultProcessRepositoryTests
             configuration.setAttrX("lon");
             configuration.setAttrX("lat");
             configuration.setDelimiter(";");
-            configuration.setFeatureName("points");
+            configuration.setFeatureSource("points");
             configuration.setAttrKey("id");
             configuration.setAttrName("name");
             configuration.setAttrCategory("type");
-            configuration.setTargetOntology(EnumOntology.GEOSPARQL);
+            configuration.setTargetGeoOntology(EnumSpatialOntology.GEOSPARQL);
 
             final ResourceMetadataCreate metadata =
                 new ResourceMetadataCreate("sample-1", "A sample CSV file");
             final int resourceKey = 1;
             final DataSource source = new FileSystemDataSource("/tmp/1.csv");
 
-            ProcessDefinition definition = ProcessDefinitionBuilder.create("register-1")
+            ProcessDefinition definition = processDefinitionBuilderFactory.create("register-1")
                 .transform("triplegeo", b -> b
                     .group(1)
                     .outputKey(resourceKey)
@@ -150,18 +161,18 @@ public class DefaultProcessRepositoryTests
             final TriplegeoConfiguration configuration = new TriplegeoConfiguration();
             configuration.setInputFormat(EnumDataFormat.SHAPEFILE);
             configuration.setOutputFormat(EnumDataFormat.N_TRIPLES);
-            configuration.setFeatureName("points");
+            configuration.setFeatureSource("points");
             configuration.setAttrKey("id");
             configuration.setAttrName("name");
             configuration.setAttrCategory("type");
-            configuration.setTargetOntology(EnumOntology.GEOSPARQL);
+            configuration.setTargetGeoOntology(EnumSpatialOntology.GEOSPARQL);
 
             final ResourceMetadataCreate metadata =
                 new ResourceMetadataCreate("sample-2", "A sample SHP file");
             final int resourceKey = 1;
             final DataSource source = new FileSystemDataSource("/tmp/1.zip");
 
-            ProcessDefinition definition = ProcessDefinitionBuilder.create("register-2")
+            ProcessDefinition definition = processDefinitionBuilderFactory.create("register-2")
                 .transform("triplegeo", b -> b
                     .group(1)
                     .outputKey(resourceKey)
@@ -235,7 +246,7 @@ public class DefaultProcessRepositoryTests
         assertNotNull(createdBy);
 
         ProcessRecord record1 =
-            processRepository.create(sampleProcessDefinition1, createdBy.getId());
+            processRepository.create(sampleProcessDefinition1, createdBy.getId(), false);
         assertNotNull(record1);
         assertTrue(record1.getId() > 0 && record1.getVersion() > 0);
 
@@ -287,6 +298,8 @@ public class DefaultProcessRepositoryTests
     @Test
     public void test2_createAndUpdateExecution() throws Exception
     {
+        UUID workflowId = UUID.randomUUID();
+
         AccountEntity createdBy = accountRepository.findOneByUsername("baz");
         assertNotNull(createdBy);
         AccountEntity submittedBy = createdBy;
@@ -298,18 +311,19 @@ public class DefaultProcessRepositoryTests
             inputResourceRecord1.getId(), inputResourceRecord1.getVersion());
 
         ProcessRecord record1 =
-            processRepository.create(sampleProcessDefinition1, createdBy.getId());
+            processRepository.create(sampleProcessDefinition1, createdBy.getId(), false);
         assertNotNull(record1);
 
         final long id = record1.getId();
         final long version = record1.getVersion();
+        final ProcessIdentifier processIdentifier = ProcessIdentifier.of(id, version);
 
         //
         // Create an execution on this process revision
         //
 
         ProcessExecutionRecord executionRecord1 =
-            processRepository.createExecution(id, version, submittedBy.getId());
+            processRepository.createExecution(id, version, submittedBy.getId(), workflowId);
         assertNotNull(executionRecord1);
 
         final long executionId = executionRecord1.getId();
@@ -319,6 +333,9 @@ public class DefaultProcessRepositoryTests
         assertNull(executionRecord1.getStartedOn());
         assertNull(executionRecord1.getCompletedOn());
         assertEquals(Collections.emptyList(), executionRecord1.getSteps());
+
+        assertEquals(processRepository.mapToWorkflowIdentifier(id, version), workflowId);
+        assertEquals(processRepository.mapToProcessIdentifier(workflowId), processIdentifier);
 
         ProcessRecord record1a = processRepository.findOne(id, version, true);
         assertNotNull(record1a);
@@ -372,7 +389,9 @@ public class DefaultProcessRepositoryTests
         fileRecord1p2 = new ProcessExecutionStepFileRecord(
             EnumStepFile.INPUT, "/tmp/1-2.csv", fileSize1p2, EnumDataFormat.CSV);
 
-        stepRecord1 = new ProcessExecutionStepRecord(-1, step1Key, "triplegeo-1");
+        stepRecord1 = new ProcessExecutionStepRecord(-1, step1Key);
+        stepRecord1.setName("Triplegeo 1");
+        stepRecord1.setNodeName("triplegeo-1");
         stepRecord1.setOperation(EnumOperation.TRANSFORM);
         stepRecord1.setTool(EnumTool.TRIPLEGEO);
         stepRecord1.setJobExecutionId(step1JobExecutionId);
@@ -390,7 +409,8 @@ public class DefaultProcessRepositoryTests
 
         ProcessExecutionStepRecord stepRecord1d1 = executionRecord1dSteps.get(0);
         assertEquals(step1Key, stepRecord1d1.getKey());
-        assertEquals("triplegeo-1", stepRecord1d1.getName());
+        assertEquals("Triplegeo 1", stepRecord1d1.getName());
+        assertEquals("triplegeo-1", stepRecord1d1.getNodeName());
         assertEquals(EnumProcessExecutionStatus.RUNNING, stepRecord1d1.getStatus());
         assertEquals(EnumOperation.TRANSFORM, stepRecord1d1.getOperation());
         assertEquals(EnumTool.TRIPLEGEO, stepRecord1d1.getTool());
@@ -442,7 +462,8 @@ public class DefaultProcessRepositoryTests
 
         ProcessExecutionStepRecord stepRecord1e1 = executionRecord1eSteps.get(0);
         assertEquals(step1Key, stepRecord1e1.getKey());
-        assertEquals("triplegeo-1", stepRecord1e1.getName());
+        assertEquals("Triplegeo 1", stepRecord1e1.getName());
+        assertEquals("triplegeo-1", stepRecord1e1.getNodeName());
         assertEquals(EnumProcessExecutionStatus.COMPLETED, stepRecord1e1.getStatus());
         assertEquals(EnumOperation.TRANSFORM, stepRecord1e1.getOperation());
         assertEquals(EnumTool.TRIPLEGEO, stepRecord1e1.getTool());
@@ -524,12 +545,14 @@ public class DefaultProcessRepositoryTests
     @Test(expected = ProcessRepository.ProcessHasActiveExecutionException.class)
     public void test1_createMultipleRunningExecutions() throws Exception
     {
+        UUID workflowId = UUID.randomUUID();
+
         AccountEntity createdBy = accountRepository.findOneByUsername("baz");
         assertNotNull(createdBy);
         AccountEntity submittedBy = createdBy;
 
         ProcessRecord processRecord =
-            processRepository.create(sampleProcessDefinition1, createdBy.getId());
+            processRepository.create(sampleProcessDefinition1, createdBy.getId(), false);
         assertNotNull(processRecord);
 
         final long id = processRecord.getId(), version = processRecord.getVersion();
@@ -537,7 +560,7 @@ public class DefaultProcessRepositoryTests
         // Create a running execution
 
         ProcessExecutionRecord executionRecord1 =
-            processRepository.createExecution(id, version, submittedBy.getId());
+            processRepository.createExecution(id, version, submittedBy.getId(), workflowId);
         assertNotNull(executionRecord1);
         final long executionId1 = executionRecord1.getId();
         final ZonedDateTime startedOn = ZonedDateTime.now();
@@ -548,17 +571,6 @@ public class DefaultProcessRepositoryTests
 
         // Now, attempt to create another execution
 
-        ProcessExecutionRecord executionRecord2 =
-            processRepository.createExecution(id, version, submittedBy.getId());
-    }
-
-    ////////////////////////////////////////////////////////////////////////////
-    //                       Fixme Scratch                                    //
-    ////////////////////////////////////////////////////////////////////////////
-
-    @Test
-    public void test99_scratch1()
-    {
-        System.err.println("Hello");
+        processRepository.createExecution(id, version, submittedBy.getId(), workflowId);
     }
 }

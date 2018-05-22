@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE LIMES SYSTEM "https://raw.githubusercontent.com/dice-group/LIMES/1.3.0/limes-core/src/main/resources/limes.dtd">
+<LIMES>
+	<PREFIX>
+		<NAMESPACE>http://slipo.eu/def#</NAMESPACE>
+		<LABEL>slipo</LABEL>
+	</PREFIX>
+	<PREFIX>
+		<NAMESPACE>http://www.w3.org/2002/07/owl#</NAMESPACE>
+		<LABEL>owl</LABEL>
+	</PREFIX>	
+	<SOURCE>
+		<ID>a</ID>
+		<ENDPOINT>/var/local/limes/input/a.nt</ENDPOINT>
+		<VAR>?x</VAR>
+		<PAGESIZE>-1</PAGESIZE>
+		<RESTRICTION></RESTRICTION>
+		<PROPERTY>slipo:name/slipo:nameValue RENAME label</PROPERTY>
+		<TYPE>N-TRIPLES</TYPE>
+	</SOURCE>
+	<TARGET>
+		<ID>b</ID>
+		<ENDPOINT>/var/local/limes/input/b.nt</ENDPOINT>
+		<VAR>?y</VAR>
+		<PAGESIZE>-1</PAGESIZE>
+		<RESTRICTION></RESTRICTION>
+		<PROPERTY>slipo:name/slipo:nameValue RENAME label</PROPERTY>
+		<TYPE>N-TRIPLES</TYPE>
+	</TARGET>
+	<METRIC>trigrams(x.label, y.label)</METRIC>	
+	<ACCEPTANCE>
+		<THRESHOLD>0.9</THRESHOLD>
+		<FILE>/var/local/limes/output/accepted.nt</FILE>
+		<RELATION>owl:sameAs</RELATION>
+	</ACCEPTANCE>
+	<REVIEW>
+		<THRESHOLD>0.8</THRESHOLD>
+		<FILE>/var/local/limes/output/review.nt</FILE>
+		<RELATION>owl:sameAs</RELATION>
+	</REVIEW>
+	<EXECUTION>
+		<REWRITER>default</REWRITER>
+		<PLANNER>default</PLANNER>
+		<ENGINE>default</ENGINE>
+	</EXECUTION>
+	<OUTPUT>N-TRIPLES</OUTPUT>
+</LIMES>

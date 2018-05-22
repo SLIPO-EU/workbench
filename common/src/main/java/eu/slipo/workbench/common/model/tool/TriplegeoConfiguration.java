@@ -1,14 +1,21 @@
 package eu.slipo.workbench.common.model.tool;
 
 import java.io.File;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+import javax.validation.Valid;
+import javax.validation.constraints.AssertTrue;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 
@@ -19,24 +26,37 @@ import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
-import eu.slipo.workbench.common.model.poi.EnumOntology;
+import eu.slipo.workbench.common.model.poi.EnumOutputType;
+import eu.slipo.workbench.common.model.poi.EnumSpatialOntology;
+import eu.slipo.workbench.common.model.poi.EnumTool;
 
 
 /**
- * Configuration for the Triplegeo tool
+ * Configuration for the Triplegeo tool.
+ *
+ * @see https://github.com/SLIPO-EU/TripleGeo/blob/master/config/file_options.conf.template
  */
-@SuppressWarnings("serial")
-public class TriplegeoConfiguration extends AbstractToolConfiguration
+public class TriplegeoConfiguration extends TransformConfiguration
 {
+    private static final long serialVersionUID = 2L;
+
     /**
-     * The set of available processing modes
+     * This class represents the configuration of a specific version
+     */
+    public static final String VERSION = "1.4";
+
+    /**
+     * The set of available processing modes (see Triplegeo documentation)
      */
     public enum Mode {
         STREAM,
-        GRAPH;
+        GRAPH,
+        RML;
     }
 
     /**
@@ -55,18 +75,18 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
         RDF_XML_ABBREV(EnumDataFormat.RDF_XML_ABBREV, "RDF/XML-ABBREV"),
         SHAPEFILE(EnumDataFormat.SHAPEFILE, "SHAPEFILE", "SHP");
 
-        private EnumDataFormat dataFormat;
+        private final EnumDataFormat dataFormat;
 
         private final List<String> keys;
 
         private DataFormat(EnumDataFormat dataFormat, String key0, String ...aliases)
         {
+            Assert.notNull(dataFormat, "Expected an enum constant for data format");
             this.dataFormat = dataFormat;
 
             Assert.notNull(key0, "Expected a non-null key for data format " + dataFormat);
-            List<String> keys = new ArrayList<>();
-            keys.add(key0);
-            keys.addAll(Arrays.asList(aliases));
+            LinkedList<String> keys = new LinkedList<>(Arrays.asList(aliases));
+            keys.addFirst(key0);
             this.keys = Collections.unmodifiableList(keys);
         }
 
@@ -106,7 +126,38 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
             }
             return null;
         }
+    }
 
+    public static class Prefix
+    {
+        String label;
+
+        String uri;
+
+        public Prefix(String label, String uri)
+        {
+            this.label = label;
+            this.uri = uri;
+        }
+
+        @NotEmpty
+        public String getLabel()
+        {
+            return label;
+        }
+
+        @NotEmpty
+        @URL
+        public String getUri()
+        {
+            return uri;
+        }
+
+        @Override
+        public String toString()
+        {
+            return String.format("Prefix [label=%s, uri=%s]", label, uri);
+        }
     }
 
     //
@@ -115,7 +166,7 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
 
     private Mode mode = Mode.STREAM;
 
-    private EnumOntology targetOntology = EnumOntology.GEOSPARQL;
+    private EnumSpatialOntology targetGeoOntology = EnumSpatialOntology.GEOSPARQL;
 
     /**
      * The name of the field holding a unique identifier for each input record
@@ -134,10 +185,11 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
     private String attrCategory = "type";
 
     /**
-     * A string literal representing an unknown (i.e. null) value. A field with an unknown value
-     * will not be extracted.
+     * Parameter that specifies the name of the geometry column in the input dataset. Omit
+     * this parameter if geometry representation is available with columns specifying X,Y
+     * coordinates for points; otherwise, this parameter is MANDATORY.
      */
-    private String nullValue = "UNK";
+    private String attrGeometry;
 
     /**
      * A field delimiter for records (meaningful only for CSV input).
@@ -163,30 +215,78 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
     private String attrY = "lat";
 
     /**
-     * A user-defined name for the resources that will be created. This is required for
-     * constructing the resource URI.
+     * A profile for setting default configuration values
      */
-    private String featureName = "points";
+    private String profile;
 
     /**
-     * The common URI namespace for all generated resources
+     * A resource location of a YML file containing mappings from input schema to RDF according to a
+     * custom ontology.
      */
-    private String featureNamespaceUri = "http://slipo.eu/geodata#";
+    private String mappingSpec;
 
     /**
-     * A prefix name for the utilized URI namespace (i.e. the one declared with nsFeatureURI)
+     * A resource location of a YML/CSV file describing a classification scheme.
      */
-    private String featureUriPrefix = "georesource";
+    private String classificationSpec;
 
     /**
-     * The namespace for the underlying geospatial ontology
+     * Indicate whether the data features specify their category based on its identifier in the classification scheme (false)
+     * or the actual name of the category (true). By default, transformation uses identifiers of categories in the
+     * classification scheme.
      */
-    private String geometryNamespaceUri = "http://www.opengis.net/ont/geosparql#";
+    private Boolean classifyByName = true;
 
     /**
-     * A prefix name for the geospatial ontology (i.e., the one declared with nsGeometryURI)
+     * A name for the data source provider of input features
      */
-    private String geometryUriPrefix = "geo";
+    private String featureSource;
+
+    /**
+     * The namespace of the underlying ontology (used in creating properties for RDF triples)
+     */
+    private String ontologyNamespaceUri = SLIPO_ONTOLOGY_NAMESPACE_URI;
+
+    /**
+     * The namespace of underlying geospatial ontology
+     */
+    private String geometryNamespaceUri = GEOSPARQL_NAMESPACE_URI;
+
+    /**
+     * The namespace for all generated resources
+     */
+    private String featureNamespaceUri = SLIPO_FEATURE_NAMESPACE_URI;
+
+    /**
+     * The namespace for the classification scheme
+     */
+    private String classificationNamespaceUri = SLIPO_CLASSIFICATION_NAMESPACE_URI;
+
+    /**
+     * The namespace for categories under the classification scheme
+     */
+    private String classNamespaceUri = SLIPO_CLASS_NAMESPACE_URI;
+
+    /**
+     * The namespace for the data source provider
+     */
+    private String datasourceNamespaceUri = SLIPO_DATASOURCE_NAMESPACE_URI;
+
+    // Note:
+    // The namespace prefixes are defined in a bit awkward way: 2 separate lists where i-th
+    // item of 1st list (aliases) is the corresponds to the i-th item of 2nd list (URIs).
+    // They should be probably stored as a map or a list of Prefix objects; but until the target
+    // configuration format changes, we will keep the 2 lists just to enable simpler deserialization
+
+    /**
+     * The list of aliases for namespace URIs (must correspond to listed namespaces!)
+     */
+    private List<String> prefixKeys = new ArrayList<>();
+
+    /**
+     * The list of namespaces for which a prefix (an alias) is defined
+     */
+    private List<String> prefixedNamespaces = new ArrayList<>();
 
     /**
      * The coordinate reference system (CRS) for input data (eg "EPSG:4326")
@@ -214,14 +314,22 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
      */
     public TriplegeoConfiguration()
     {
+        this._version = VERSION;
         this.outputFormat = EnumDataFormat.N_TRIPLES;
-        this.tmpDir = "/tmp";
+    }
+
+    @JsonIgnore
+    @Override
+    public EnumTool getTool()
+    {
+        return EnumTool.TRIPLEGEO;
     }
 
     @Override
-    public TriplegeoConfiguration cloneAsBean() throws ReflectiveOperationException
+    @JsonIgnore
+    public String getVersion()
     {
-        return (TriplegeoConfiguration) super.cloneAsBean();
+        return _version;
     }
 
     //
@@ -231,7 +339,7 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
     /**
      * Set defaults that can be deduced from input format.
      */
-    public void useDefaultsForInputFormat()
+    public void setDefaultsForInputFormat()
     {
         Assert.state(inputFormat != null, "The input format must be set before");
 
@@ -239,30 +347,28 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
         {
         case CSV:
             mode = Mode.STREAM;
-            attrKey = "id";
-            attrName = "name";
-            attrCategory = "type";
             break;
         case SHAPEFILE:
             mode = Mode.GRAPH;
-            attrKey = "id";
-            attrName = "name";
-            attrCategory = "type";
             break;
         case GEOJSON:
             mode = Mode.STREAM;
-            attrKey = "id";
-            attrName = "name";
-            attrCategory = "type";
             break;
         case GPX:
             mode = Mode.STREAM;
-            attrKey = "name";
-            attrName = "name";
             break;
         default:
             break;
         }
+    }
+
+    public void setDefaultsForPrefixes()
+    {
+        this.addPrefix("slipo", SLIPO_ONTOLOGY_NAMESPACE_URI);
+        this.addPrefix("geo", GEOSPARQL_NAMESPACE_URI);
+        this.addPrefix("xsd", XSD_NAMESPACE_URI);
+        this.addPrefix("rdfs", RDFS_NAMESPACE_URI);
+        this.addPrefix("wgs84_pos", WGS84POS_NAMESPACE_URI);
     }
 
     //
@@ -270,12 +376,14 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
     //
 
     @JsonIgnore
+    @Override
     public EnumDataFormat getInputFormat()
     {
         return inputFormat;
     }
 
     @JsonIgnore
+    @Override
     public void setInputFormat(EnumDataFormat inputFormat)
     {
         this.inputFormat = inputFormat;
@@ -298,21 +406,31 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
     }
 
     @JsonIgnore
-    public void setInput(List<Path> input)
+    @Override
+    public void setInput(List<String> input)
     {
-        this.input = Collections.unmodifiableList(
-            input.stream()
-                .map(Path::toString)
-                .collect(Collectors.toList()));
+        super.setInput(input);
     }
 
-    @NotEmpty
     @JsonIgnore
-    public List<Path> getInput()
+    @Override
+    public void setInput(String input)
     {
-        return this.input.stream()
-            .map(Paths::get)
-            .collect(Collectors.toList());
+        super.setInput(input);
+    }
+
+    @Override
+    public void clearInput()
+    {
+        super.clearInput();
+    }
+
+    @JsonIgnore
+    @NotNull
+    @Override
+    public List<String> getInput()
+    {
+        return this.input;
     }
 
     @JsonAlias({ "inputFiles", "input" })
@@ -321,6 +439,8 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
         if (!StringUtils.isEmpty(inputFiles)) {
             this.input = Collections.unmodifiableList(
                 Arrays.asList(inputFiles.split(File.pathSeparator)));
+        } else {
+            this.input = Collections.emptyList();
         }
     }
 
@@ -331,16 +451,17 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
             return null;
         }
 
-        return input.stream()
-            .collect(Collectors.joining(File.pathSeparator));
+        return input.stream().collect(Collectors.joining(File.pathSeparator));
     }
 
     @JsonIgnore
+    @Override
     public EnumDataFormat getOutputFormat()
     {
         return outputFormat;
     }
 
+    @Override
     @JsonIgnore
     public void setOutputFormat(EnumDataFormat outputFormat)
     {
@@ -356,49 +477,26 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
     }
 
     @JsonProperty("serialization")
-    public void setSerializationFormat(String serializationFormat)
+    protected void setSerializationFormat(String serializationFormat)
     {
         DataFormat f = DataFormat.from(serializationFormat);
         Assert.notNull(f,
             "The key [" + serializationFormat + "] does not map to a data format");
         setOutputFormat(f.dataFormat());
-
     }
 
-    @JsonIgnore
-    public void setOutputDir(Path outputDir)
-    {
-        this.outputDir = outputDir == null? null : outputDir.toString();
-    }
-
-    @JsonIgnore
-    public Path getOutputDir()
-    {
-        return outputDir == null? null : Paths.get(outputDir);
-    }
-
+    @Override
     @JsonProperty("outputDir")
     public void setOutputDir(String outputDir)
     {
         this.outputDir = outputDir;
     }
 
+    @Override
     @JsonProperty("outputDir")
-    public String getOutputDirAsString()
+    public String getOutputDir()
     {
         return outputDir;
-    }
-
-    @JsonIgnore
-    public void setTmpDir(Path tmpDir)
-    {
-        this.tmpDir = tmpDir == null? null : tmpDir.toString();
-    }
-
-    @JsonIgnore
-    public Path getTmpDir()
-    {
-        return tmpDir == null? null : Paths.get(tmpDir);
     }
 
     @JsonProperty("tmpDir")
@@ -408,9 +506,42 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
     }
 
     @JsonProperty("tmpDir")
-    public String getTmpDirAsString()
+    public String getTmpDir()
     {
         return tmpDir;
+    }
+
+    @JsonIgnore
+    @Override
+    public Map<EnumOutputType, List<String>> getOutputNames()
+    {
+        Assert.state(outputFormat != null, "The output format is not specified");
+        String extension = outputFormat.getFilenameExtension();
+
+        Map<EnumOutputType, List<String>> outputMap = new EnumMap<>(EnumOutputType.class);
+
+        outputMap.put(EnumOutputType.OUTPUT, new ArrayList<>());
+        outputMap.put(EnumOutputType.KPI, new ArrayList<>());
+
+        // Each input file yields an RDF output and a JSON metadata file
+
+        for (String inputPath: input) {
+            String inputName = StringUtils.stripFilenameExtension(
+                Paths.get(inputPath).getFileName().toString());
+            outputMap.get(EnumOutputType.OUTPUT)
+                .add(inputName + "." + extension);
+            outputMap.get(EnumOutputType.KPI)
+                .add(inputName + "_metadata" + ".json");
+        }
+
+        // An output file with classification in an RDF format is always produced
+
+        outputMap.get(EnumOutputType.OUTPUT)
+            .add("classification" + "." + extension);
+        outputMap.get(EnumOutputType.KPI)
+            .add("classification_metadata" + ".json");
+
+        return outputMap;
     }
 
     @JsonProperty("mode")
@@ -426,41 +557,105 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
         return mode;
     }
 
-    @JsonIgnore
-    public void setTargetOntology(EnumOntology targetOntology)
+    @JsonProperty("profile")
+    public void setProfile(String profile)
     {
-        this.targetOntology = targetOntology;
+        this.profile = profile;
+    }
+
+    @JsonProperty("profile")
+    public String getProfile()
+    {
+        return profile;
+    }
+
+    @JsonProperty("mappingSpec")
+    public void setMappingSpec(String mappingSpec)
+    {
+        this.mappingSpec = mappingSpec;
+    }
+
+    @JsonProperty("mappingSpec")
+    @NotNull
+    public String getMappingSpec()
+    {
+        return mappingSpec;
+    }
+
+    @JsonProperty("classificationSpec")
+    public void setClassificationSpec(String classificationSpec)
+    {
+        this.classificationSpec = classificationSpec;
+    }
+
+    @JsonProperty("classificationSpec")
+    public String getClassificationSpec()
+    {
+        return classificationSpec;
+    }
+
+    @JsonProperty("classifyByName")
+    @JsonInclude(Include.NON_NULL)
+    public void setClassifyByName(boolean classifyByName)
+    {
+        this.classifyByName = classifyByName;
+    }
+
+    @JsonProperty("classifyByName")
+    public boolean getClassifyByName()
+    {
+        return classifyByName;
     }
 
     @JsonIgnore
-    public EnumOntology getTargetOntology()
+    public void setTargetGeoOntology(EnumSpatialOntology targetOntology)
     {
-        return targetOntology;
+        this.targetGeoOntology = targetOntology;
     }
 
-    @JsonProperty("targetOntology")
-    public void setTargetOntology(String key)
+    @JsonIgnore
+    public EnumSpatialOntology getTargetGeoOntology()
     {
-        this.targetOntology = EnumOntology.fromKey(key);
+        return targetGeoOntology;
     }
 
-    @JsonProperty("targetOntology")
-    public String getTargetOntologyKey()
+    @JsonProperty("targetGeoOntology")
+    public void setTargetGeoOntology(String key)
     {
-        return targetOntology.key();
+        this.targetGeoOntology = EnumSpatialOntology.fromKey(key);
     }
 
-    @JsonProperty("featureName")
-    public void setFeatureName(String featureName)
+    @JsonProperty("targetGeoOntology")
+    public String getTargetGeoOntologyAsString()
     {
-        this.featureName = featureName;
+        return targetGeoOntology.key();
     }
 
-    @JsonProperty("featureName")
+    @JsonProperty("featureSource")
+    public void setFeatureSource(String featureSource)
+    {
+        this.featureSource = featureSource;
+    }
+
+    @JsonProperty("featureSource")
     @NotEmpty
-    public String getFeatureName()
+    public String getFeatureSource()
     {
-        return featureName;
+        return featureSource;
+    }
+
+    @JsonProperty("nsOntology")
+    public void setOntologyNamespaceUri(String ontologyNamespaceUri)
+    {
+        this.ontologyNamespaceUri = ontologyNamespaceUri;
+    }
+
+    @JsonProperty("nsOntology")
+    @NotEmpty
+    @URL
+    public String getOntologyNamespaceUri()
+    {
+        return ontologyNamespaceUri;
     }
 
     @JsonProperty("nsFeatureURI")
@@ -470,47 +665,178 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
     }
 
     @JsonProperty("nsFeatureURI")
+    @NotEmpty
     @URL
     public String getFeatureNamespaceUri()
     {
         return featureNamespaceUri;
     }
 
-    @JsonProperty("prefixFeatureNS")
-    public void setFeatureUriPrefix(String prefix)
-    {
-        this.featureUriPrefix = prefix;
-    }
-
-    @JsonProperty("prefixFeatureNS")
-    public String getFeatureUriPrefix()
-    {
-        return featureUriPrefix;
-    }
-
-    @JsonProperty("nsGeometryURI")
+    @JsonProperty("nsGeometry")
     public void setGeometryNamespaceUri(String uri)
     {
         this.geometryNamespaceUri = uri;
     }
 
-    @JsonProperty("nsGeometryURI")
+    @JsonProperty("nsGeometry")
+    @NotEmpty
     @URL
     public String getGeometryNamespaceUri()
     {
         return geometryNamespaceUri;
     }
 
-    @JsonProperty("prefixGeometryNS")
-    public void setGeometryUriPrefix(String prefix)
+    @JsonProperty("nsClassificationURI")
+    public void setClassificationNamespaceUri(String classificationNamespaceUri)
     {
-        this.geometryUriPrefix = prefix;
+        this.classificationNamespaceUri = classificationNamespaceUri;
     }
 
-    @JsonProperty("prefixGeometryNS")
-    public String getGeometryUriPrefix()
+    @JsonProperty("nsClassificationURI")
+    @NotEmpty
+    @URL
+    public String getClassificationNamespaceUri()
     {
-        return geometryUriPrefix;
+        return classificationNamespaceUri;
+    }
+
+    @JsonProperty("nsClassURI")
+    public void setClassNamespaceUri(String classNamespaceUri)
+    {
+        this.classNamespaceUri = classNamespaceUri;
+    }
+
+    @JsonProperty("nsClassURI")
+    @NotEmpty
+    @URL
+    public String getClassNamespaceUri()
+    {
+        return classNamespaceUri;
+    }
+
+    @JsonProperty("nsDataSourceURI")
+    public void setDatasourceNamespaceUri(String datasourceNamespaceUri)
+    {
+        this.datasourceNamespaceUri = datasourceNamespaceUri;
+    }
+
+    @JsonProperty("nsDataSourceURI")
+    @URL
+    public String getDatasourceNamespaceUri()
+    {
+        return datasourceNamespaceUri;
+    }
+
+    public void addPrefix(String prefix, String uri)
+    {
+        Assert.isTrue(!StringUtils.isEmpty(prefix), "A non-empty prefix is required");
+        Assert.isTrue(!StringUtils.isEmpty(uri), "A non-empty namespace URI is required");
+        this.prefixKeys.add(prefix);
+        this.prefixedNamespaces.add(uri);
+    }
+
+    @JsonIgnore
+    public void setPrefixes(Map<String, String> prefixes)
+    {
+        Assert.notNull(prefixes, "Expected a non-null map of prefixes");
+        prefixes.forEach(this::addPrefix);
+    }
+
+    @JsonIgnore
+    public Map<String, String> getPrefixes()
+    {
+        final List<String> keys = this.prefixKeys;
+        final List<String> values = this.prefixedNamespaces;
+
+        final int n = keys.size();
+        if (n != values.size()) {
+            return null; // lists are expected to have same size
+        }
+
+        return IntStream.range(0, n).boxed()
+            .collect(Collectors.toMap(keys::get, values::get));
+    }
+
+    @JsonIgnore
+    @NotNull
+    @Valid
+    protected List<Prefix> getPrefixList()
+    {
+        final Map<String, String> prefixes = getPrefixes();
+        if (prefixes == null) {
+            return null; // A map could not be constructed
+        }
+
+        final Set<String> namespaceUris = new HashSet<>(prefixes.values());
+        if (namespaceUris.size() < prefixes.size()) {
+            return null; // namespace URIs contain duplicates!
+        }
+
+        return prefixes.entrySet().stream()
+            .map(e -> new Prefix(e.getKey(), e.getValue()))
+            .collect(Collectors.toList());
+    }
+
+    @JsonIgnore
+    @NotNull
+    public List<String> getPrefixKeys()
+    {
+        return Collections.unmodifiableList(this.prefixKeys);
+    }
+
+    public void setPrefixKeys(List<String> keys)
+    {
+        this.prefixKeys = new ArrayList<>(keys);
+    }
+
+    @JsonProperty("prefixes")
+    public String getPrefixKeysAsString()
+    {
+        return this.prefixKeys.stream().collect(Collectors.joining(", "));
+    }
+
+    @JsonProperty("prefixes")
+    public void setPrefixKeysFromString(String s)
+    {
+        if (StringUtils.isEmpty(s)) {
+            this.prefixKeys = Collections.emptyList();
+            return;
+        }
+
+        this.prefixKeys = Arrays.stream(s.split(",[ ]*"))
+            .map(String::trim)
+            .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    @JsonIgnore
+    @NotNull
+    public List<String> getNamespaceUris()
+    {
+        return Collections.unmodifiableList(this.prefixedNamespaces);
+    }
+
+    public void setNamespaceUris(List<String> uris)
+    {
+        this.prefixedNamespaces = new ArrayList<>(uris);
+    }
+
+    @JsonProperty("namespaces")
+    public String getNamespaceUrisAsString()
+    {
+        return this.prefixedNamespaces.stream().collect(Collectors.joining(", "));
+    }
+
+    @JsonProperty("namespaces")
+    public void setNamespaceUrisFromString(String s)
+    {
+        if (StringUtils.isEmpty(s)) {
+            this.prefixedNamespaces = Collections.emptyList();
+            return;
+        }
+
+        this.prefixedNamespaces = Arrays.stream(s.split(",[ ]*"))
+            .map(String::trim)
+            .collect(Collectors.toCollection(ArrayList::new));
     }
 
     @JsonProperty("attrKey")
@@ -551,16 +877,16 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
         return attrCategory;
     }
 
-    @JsonProperty("valIgnore")
-    public void setNullValue(String nullValue)
+    @JsonProperty("attrGeometry")
+    public void setAttrGeometry(String attrGeometry)
     {
-        this.nullValue = nullValue;
+        this.attrGeometry = attrGeometry;
     }
 
-    @JsonProperty("valIgnore")
-    public String getNullValue()
+    @JsonProperty("attrGeometry")
+    public String getAttrGeometry()
     {
-        return nullValue;
+        return attrGeometry;
     }
 
     @JsonProperty("attrX")
@@ -661,5 +987,4 @@ public class TriplegeoConfiguration extends AbstractToolConfiguration
     {
         this.quote = quote;
     }
-
 }

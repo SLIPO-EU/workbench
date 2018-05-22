@@ -81,36 +81,41 @@ export const ToolDefaultOperation = {
 /**
  * Static configuration of tool input requirements
  */
-export const ToolInputRequirements = {
+export const ToolConfigurationSettings = {
   [EnumTool.TripleGeo]: {
     source: 1,
     poi: 0,
     linked: 0,
     any: 0,
+    editable: true,
   },
   [EnumTool.LIMES]: {
     source: 0,
     poi: 2,
     linked: 0,
     any: 0,
+    editable: false,
   },
   [EnumTool.FAGI]: {
     source: 0,
     poi: 0,
     linked: 1,
     any: 0,
+    editable: false,
   },
   [EnumTool.DEER]: {
     source: 0,
     poi: 1,
     linked: 0,
     any: 0,
+    editable: false,
   },
   [EnumTool.CATALOG]: {
     source: 0,
     poi: 0,
     linked: 0,
     any: 1,
+    editable: true,
   }
 };
 

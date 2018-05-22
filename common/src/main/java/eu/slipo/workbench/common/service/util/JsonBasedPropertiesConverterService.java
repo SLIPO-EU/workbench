@@ -1,5 +1,7 @@
 package eu.slipo.workbench.common.service.util;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Iterator;
@@ -12,10 +14,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Validate;
+import org.springframework.core.io.Resource;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -25,7 +26,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import static org.apache.commons.collections4.IterableUtils.chainedIterable;
 
-@Service
 public class JsonBasedPropertiesConverterService implements PropertiesConverterService
 {
     private static enum FieldType { LEAF, OBJECT, ARRAY };
@@ -161,7 +161,7 @@ public class JsonBasedPropertiesConverterService implements PropertiesConverterS
         private JsonNode buildTree()
         {
             TreeSet<String> keys = properties.keySet().stream()
-                .map(k -> (String) k)
+                .map(Object::toString)
                 .collect(Collectors.toCollection(TreeSet::new));
             return propertiesToObject(0, keys);
         }
@@ -175,14 +175,20 @@ public class JsonBasedPropertiesConverterService implements PropertiesConverterS
             for (String key: chainedIterable(keys, Collections.singleton(SENTINEL_KEY))) {
                 FieldToken token = null;
                 // Parse field token for this key
-                if (!key.equals(SENTINEL_KEY)) { 
-                    int p = key.indexOf('[', prefixLen);
-                    if (p >= 0)
-                        token = FieldToken.of(FieldType.ARRAY, key.substring(prefixLen, p));
-                    else if ((p = key.indexOf('.', prefixLen)) >= 0)
-                        token = FieldToken.of(FieldType.OBJECT, key.substring(prefixLen, p));
-                    else 
+                if (!key.equals(SENTINEL_KEY)) {
+                    int i1 = key.indexOf('[', prefixLen); 
+                    int i2 = key.indexOf('.', prefixLen);
+                    if (i1 < 0 && i2 < 0) {
                         token = FieldToken.of(FieldType.LEAF, key.substring(prefixLen));
+                    } else if (i1 < 0) {
+                        token = FieldToken.of(FieldType.OBJECT, key.substring(prefixLen, i2));
+                    } else if (i2 < 0) {
+                        token = FieldToken.of(FieldType.ARRAY, key.substring(prefixLen, i1));
+                    } else if (i1 < i2) { // 0 <= i1 < i2
+                        token = FieldToken.of(FieldType.ARRAY, key.substring(prefixLen, i1));
+                    } else { // 0 <= i2 < i1 
+                        token = FieldToken.of(FieldType.OBJECT, key.substring(prefixLen, i2));
+                    }
                 }
                 // Check if field token has changed
                 if (token == null || !token.equals(token1)) {
@@ -312,8 +318,13 @@ public class JsonBasedPropertiesConverterService implements PropertiesConverterS
         }
     }
     
-    @Autowired
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
+    
+    public JsonBasedPropertiesConverterService( ObjectMapper objectMapper)
+    {
+        Validate.notNull(objectMapper, "An object mapper is required");
+        this.objectMapper = objectMapper;
+    }
     
     /**
      * Convert a bean to a map of properties by using an intermediate JSON serialization.
@@ -341,7 +352,7 @@ public class JsonBasedPropertiesConverterService implements PropertiesConverterS
     }
 
     @Override
-    public <T extends Serializable> T propertiesToValue(Map<String, Object> map, Class<T> valueType)
+    public <T extends Serializable> T propertiesToValue(Map<String, ?> map, Class<T> valueType)
         throws ConversionFailedException
     {
         Properties props = new Properties();
@@ -354,7 +365,7 @@ public class JsonBasedPropertiesConverterService implements PropertiesConverterS
             Properties props, String rootPropertyName, Class<T> valueType) 
         throws ConversionFailedException
     {
-        Assert.isTrue(!StringUtils.isEmpty(rootPropertyName), 
+        Validate.isTrue(!StringUtils.isEmpty(rootPropertyName), 
             "Expected a non-empty root property name");
 
         final String prefix = rootPropertyName + '.';
@@ -375,9 +386,9 @@ public class JsonBasedPropertiesConverterService implements PropertiesConverterS
             Map<String, Object> map, String rootPropertyName, Class<T> valueType) 
         throws ConversionFailedException
     {
-        Assert.isTrue(!StringUtils.isEmpty(rootPropertyName), 
+        Validate.isTrue(!StringUtils.isEmpty(rootPropertyName), 
             "Expected a non-empty root property name");
-
+        
         final String prefix = rootPropertyName + '.';
         final int prefixLen = prefix.length();
         
@@ -394,7 +405,7 @@ public class JsonBasedPropertiesConverterService implements PropertiesConverterS
             SortedMap<String, Object> map, String rootPropertyName, Class<T> valueType) 
         throws ConversionFailedException
     {
-        Assert.isTrue(!StringUtils.isEmpty(rootPropertyName), 
+        Validate.isTrue(!StringUtils.isEmpty(rootPropertyName), 
             "Expected a non-empty root property name");
 
         final String prefix = rootPropertyName + '.';
@@ -408,5 +419,27 @@ public class JsonBasedPropertiesConverterService implements PropertiesConverterS
         
         return propertiesToValue(p1, valueType);
     }
-
+    
+    @Override
+    public <T extends Serializable> T propertiesToValue(Resource resource, Class<T> valueType)
+        throws ConversionFailedException, IOException
+    {   
+        Properties props = new Properties();
+        try (InputStream in = resource.getInputStream()) {
+            props.load(in);
+        }
+        return propertiesToValue(props, valueType);
+    }
+    
+    @Override
+    public <T extends Serializable> T propertiesToValue(
+            Resource resource, String rootPropertyName, Class<T> valueType) 
+        throws ConversionFailedException, IOException
+    {
+        Properties props = new Properties();
+        try (InputStream in = resource.getInputStream()) {
+            props.load(in);
+        }
+        return propertiesToValue(props, rootPropertyName, valueType);
+    }
 }

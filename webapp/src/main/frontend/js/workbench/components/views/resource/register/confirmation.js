@@ -2,19 +2,19 @@ import React from 'react';
 import formatFileSize from '../../../../util/file-size';
 
 export const Component = (props) => {
-  const { type, upload, filesystem, external, metadata, harvester, harvesterConfig } = props.values;
+  const { type, triplegeo, upload, filesystem, external, metadata, harvester, harvesterConfig } = props.values;
   return (
     <div>
       <div>
         <ul>
           <li>Input method: {type.path}</li>
         </ul>
-        { 
+        {
           type.path === 'UPLOAD' ?
             <ul>
               <li>Name: {metadata.name}</li>
               <li>Description: {metadata.description}</li>
-              <li>Format: {metadata.format}</li>
+              <li>Format: {triplegeo.inputFormat}</li>
               <li>File: {upload.file.name + ', ' + formatFileSize(upload.file.size)}</li>
               <li>File alias: {upload.name}</li>
             </ul>
@@ -26,7 +26,7 @@ export const Component = (props) => {
               <li>Resource: {filesystem.resource.path}</li>
               <li>Name: {metadata.name}</li>
               <li>Description: {metadata.description}</li>
-              <li>Format: {metadata.format}</li>
+              <li>Format: {triplegeo.inputFormat}</li>
             </ul>
             : null
         }

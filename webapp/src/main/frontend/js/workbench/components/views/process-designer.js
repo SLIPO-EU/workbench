@@ -23,9 +23,10 @@ import {
 } from 'reactstrap';
 
 import {
-  DynamicRoutes,
-  StaticRoutes,
   buildPath,
+  DynamicRoutes,
+  EnumErrorLevel,
+  StaticRoutes,
 } from '../../model';
 
 import {
@@ -55,7 +56,14 @@ import {
 } from './execution/viewer';
 
 import {
+  createFolder,
+  uploadFile,
+  deletePath,
+} from '../../ducks/config';
+
+import {
   reset,
+  downloadFile,
   fetchProcess,
   fetchProcessRevision,
   fetchExecutionDetails,
@@ -150,7 +158,6 @@ class ProcessDesigner extends React.Component {
 
   componentDidMount() {
     const { id, version, execution, ...rest } = this.props.match.params;
-
     const action = this.resolveMode();
 
     switch (action) {
@@ -194,18 +201,25 @@ class ProcessDesigner extends React.Component {
     id = id || null;
     version = version || null;
 
+    if (this.props.process.clone) {
+      return false;
+    }
+
     return ((this.props.process.id !== id) || (this.props.process.version !== version));
   }
 
-  error(message, goBack) {
-    toast.dismiss();
+  error(message, redirect) {
+    const isTemplate = this.props.process.template;
 
+    toast.dismiss();
     toast.error(
       <ToastTemplate iconClass='fa-warning' text={message} />
     );
 
-    if ((typeof goBack === 'undefined') || (goBack)) {
-      setTimeout(() => this.props.history.goBack(), 500);
+    if ((typeof redirect === 'undefined') || (redirect)) {
+      setTimeout(() => {
+        this.props.history.push(isTemplate ? StaticRoutes.RecipeExplorer : StaticRoutes.ProcessExplorer);
+      }, 500);
     }
   }
 
@@ -261,39 +275,66 @@ class ProcessDesigner extends React.Component {
   }
 
   cancelDialogHandler(action) {
+    const isTemplate = this.props.process.template;
+
     switch (action.key) {
       case EnumComponentAction.Discard:
         this.reset();
-        this.props.history.push(StaticRoutes.ProcessExplorer);
+        this.props.history.push(isTemplate ? StaticRoutes.RecipeExplorer : StaticRoutes.ProcessExplorer);
         break;
+
       default:
         this.toggleCancelDialog();
         break;
+
     }
   }
 
   save(action) {
-    toast.dismiss();
+    const isTemplate = this.props.process.template || action === EnumComponentAction.SaveAsTemplate;
 
-    this.props.save(this.mapToSaveAction(action), this.props.designer)
+    toast.dismiss();
+    this.props.save(this.mapToSaveAction(action), this.props.designer, isTemplate)
       .then((result) => {
+        const text = `${isTemplate ? "Template" : "Process"} has been saved successfully!`;
         toast.success(
-          <ToastTemplate iconClass='fa-save' text='Process has been saved successfully!' />
+          <ToastTemplate iconClass='fa-save' text={text} />
         );
         this.reset();
-        this.props.history.push(StaticRoutes.ProcessExplorer);
+        this.props.history.push(isTemplate ? StaticRoutes.RecipeExplorer : StaticRoutes.ProcessExplorer);
       })
       .catch((err) => {
-        toast.error(
-          <ToastTemplate iconClass='fa-warning' text={err.message} />
-        );
+        switch (err.level) {
+          case EnumErrorLevel.INFO:
+            toast.info(
+              <ToastTemplate iconClass='fa-warning' text={err.message} />
+            );
+            this.props.history.push(StaticRoutes.ProcessExplorer);
+            break;
+          case EnumErrorLevel.WARN:
+            toast.warn(
+              <ToastTemplate iconClass='fa-warning' text={err.message} />
+            );
+            this.props.history.push(StaticRoutes.ProcessExplorer);
+            break;
+          default:
+            toast.error(
+              <ToastTemplate iconClass='fa-warning' text={err.message} />
+            );
+            break;
+        }
       });
   }
 
   selectKpi(file, mode) {
     const { id, version, execution } = this.props.match.params;
 
-    this.props.fetchExecutionKpiData(Number.parseInt(id), Number.parseInt(version), Number.parseInt(execution), file, mode);
+    this.props.fetchExecutionKpiData(Number.parseInt(id), Number.parseInt(version), Number.parseInt(execution), file, mode)
+      .catch(err => {
+        toast.error(
+          <ToastTemplate iconClass='fa-warning' text={`Failed to load KPI data. ${err.message}`} />
+        );
+      });
   }
 
   viewMap() {
@@ -335,15 +376,19 @@ class ProcessDesigner extends React.Component {
                   <Button color="default" onClick={this.props.redoAction} className="float-left ml-3" disabled={this.props.redo.length === 0}>Redo</Button>
                   <ButtonGroup className="float-right">
                     <Button color="primary" onClick={this.save.bind(this, EnumComponentAction.Save)}>Save</Button>
-                    <ButtonDropdown isOpen={this.state.saveDropdownOpen} toggle={this.toggleSaveButtonDropdown}>
-                      <DropdownToggle caret>
-                        More ...
+                    {!this.props.process.template &&
+                      <ButtonDropdown isOpen={this.state.saveDropdownOpen} toggle={this.toggleSaveButtonDropdown}>
+                        <DropdownToggle caret>
+                          More ...
                       </DropdownToggle>
-                      <DropdownMenu>
-                        <DropdownItem onClick={this.save.bind(this, EnumComponentAction.SaveAndExecute)}>Save & Execute</DropdownItem>
-                        <DropdownItem onClick={this.save.bind(this, EnumComponentAction.SaveAsTemplate)}>Save Recipe </DropdownItem>
-                      </DropdownMenu>
-                    </ButtonDropdown>
+                        <DropdownMenu>
+                          <DropdownItem onClick={this.save.bind(this, EnumComponentAction.SaveAndExecute)}>Save & Execute</DropdownItem>
+                          {!this.props.process.id &&
+                            <DropdownItem onClick={this.save.bind(this, EnumComponentAction.SaveAsTemplate)}>Save Recipe </DropdownItem>
+                          }
+                        </DropdownMenu>
+                      </ButtonDropdown>
+                    }
                   </ButtonGroup>
                 </Col>
               </Row>
@@ -353,6 +398,7 @@ class ProcessDesigner extends React.Component {
             <Row className="mb-2">
               <Col style={{ padding: '9px' }}>
                 <Designer
+                  appConfiguration={this.props.appConfiguration}
                   active={this.props.active}
                   execution={this.props.execution}
                   groups={this.props.groups}
@@ -386,13 +432,18 @@ class ProcessDesigner extends React.Component {
   renderStepConfiguration() {
     return (
       <StepConfig
+        appConfiguration={this.props.appConfiguration}
+        filesystem={this.props.filesystem}
         step={this.props.view.step}
-        configuration={this.props.view.configuration}
+        stepConfiguration={this.props.view.configuration}
         errors={this.props.view.errors}
         configureStepValidate={this.props.configureStepValidate}
         configureStepUpdate={this.props.configureStepUpdate}
         configureStepEnd={this.props.configureStepEnd}
         readOnly={this.props.readOnly}
+        createFolder={this.props.createFolder}
+        uploadFile={this.props.uploadFile}
+        deletePath={this.props.deletePath}
       />
     );
   }
@@ -409,6 +460,9 @@ class ProcessDesigner extends React.Component {
         configureStepDataSourceEnd={this.props.configureStepDataSourceEnd}
         filesystem={this.props.filesystem}
         readOnly={this.props.readOnly}
+        createFolder={this.props.createFolder}
+        uploadFile={this.props.uploadFile}
+        deletePath={this.props.deletePath}
       />
     );
   }
@@ -425,8 +479,11 @@ class ProcessDesigner extends React.Component {
 
     return (
       <ExecutionStepDetails
-        hideStepExecutionDetails={this.props.hideStepExecutionDetails}
+        downloadFile={this.props.downloadFile}
+        execution={this.props.execution}
         files={files}
+        process={this.props.process}
+        hideStepExecutionDetails={this.props.hideStepExecutionDetails}
         resetSelectedFile={this.props.resetSelectedFile}
         resetSelectedKpi={this.props.resetSelectedKpi}
         selectedFile={this.props.selectedExecutionFile}
@@ -494,7 +551,6 @@ const mapStateToProps = (state) => ({
   // Workflow designer
   active: state.ui.views.process.designer.active,
   designer: state.ui.views.process.designer,
-  filesystem: state.config.filesystem,
   groups: state.ui.views.process.designer.groups,
   process: state.ui.views.process.designer.process,
   readOnly: state.ui.views.process.designer.readOnly,
@@ -507,11 +563,16 @@ const mapStateToProps = (state) => ({
   execution: state.ui.views.process.designer.execution.data,
   selectedExecutionFile: state.ui.views.process.designer.execution.selectedFile,
   selectedKpi: state.ui.views.process.designer.execution.selectedKpi,
+  // File system
+  filesystem: state.config.filesystem,
+  // Application configuration
+  appConfiguration: state.config,
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
   // Workflow designer
   reset,
+  downloadFile,
   fetchProcess,
   fetchProcessRevision,
   save,
@@ -541,12 +602,15 @@ const mapDispatchToProps = (dispatch) => bindActionCreators({
   redoAction: redo,
   showStepExecutionDetails,
   hideStepExecutionDetails,
-  // Execution viewer
   fetchExecutionDetails,
   fetchExecutionKpiData,
   resetSelectedFile,
   resetSelectedKpi,
   selectFile,
+  // File system
+  createFolder,
+  uploadFile,
+  deletePath,
 }, dispatch);
 
 const mergeProps = (stateProps, dispatchProps, ownProps) => {

@@ -48,7 +48,7 @@ public class UrlDataSource extends DataSource
     @Override
     public int hashCode()
     {
-        return url == null? 0 : url.hashCode();
+        return url == null? 0 : url.toString().hashCode();
     }
 
     @Override

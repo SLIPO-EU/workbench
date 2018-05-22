@@ -128,8 +128,8 @@ const mapStateToProps = null;
 const mapDispatchToProps = (dispatch) => ({
   submit: (username, password) => (
     dispatch(login(username, password))
-      .then(() => dispatch(refreshProfile()))
       .then(() => dispatch(getConfiguration()))
+      .then(() => dispatch(refreshProfile()))
       .then(() => toast.dismiss(),
         () => {
           toast.dismiss();

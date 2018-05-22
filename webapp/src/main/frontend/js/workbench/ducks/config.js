@@ -11,8 +11,6 @@ const RECEIVE_FILESYSTEM = 'config/RECEIVE_FILESYSTEM';
 
 
 const initialState = {
-  configuration: {
-  },
   filesystem: {
     files: [],
   },
@@ -78,15 +76,42 @@ export const getConfiguration = () => (dispatch, getState) => {
     });
 };
 
-export const getFilesystem = (path) => (dispatch, getState) => {
+export const getFilesystem = () => (dispatch, getState) => {
   const { meta: { csrfToken: token } } = getState();
 
   dispatch(requestFilesystem());
-  return filesystemService.fetch(path, token)
+  return filesystemService.fetch(token)
     .then((fs) => {
       dispatch(receiveFilesystem(fs));
     })
     .catch((err) => {
       console.error('Error receiving filesystem', err);
+    });
+};
+
+export const createFolder = (path) => (dispatch, getState) => {
+  const { meta: { csrfToken: token } } = getState();
+
+  return filesystemService.createFolder(path, token)
+    .then((fs) => {
+      dispatch(receiveFilesystem(fs));
+    });
+};
+
+export const uploadFile = (data, file) => (dispatch, getState) => {
+  const { meta: { csrfToken: token } } = getState();
+
+  return filesystemService.upload(data, file, token)
+    .then((fs) => {
+      dispatch(receiveFilesystem(fs));
+    });
+};
+
+export const deletePath = (path) => (dispatch, getState) => {
+  const { meta: { csrfToken: token } } = getState();
+
+  return filesystemService.deletePath(path, token)
+    .then((fs) => {
+      dispatch(receiveFilesystem(fs));
     });
 };

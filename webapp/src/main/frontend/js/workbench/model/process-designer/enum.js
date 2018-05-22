@@ -111,6 +111,15 @@ export const EnumStepFileType = {
   QA: 'QA',
 };
 
+export const EnumStepFileTypeValue = {
+  [EnumStepFileType.CONFIGURATION]: 0,
+  [EnumStepFileType.INPUT]: 1,
+  [EnumStepFileType.OUTPUT]: 2,
+  [EnumStepFileType.SAMPLE]: 3,
+  [EnumStepFileType.KPI]: 4,
+  [EnumStepFileType.QA]: 5,
+};
+
 /**
  * Drag sources
  */

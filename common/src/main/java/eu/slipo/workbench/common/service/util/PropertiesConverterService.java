@@ -1,11 +1,12 @@
 package eu.slipo.workbench.common.service.util;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Properties;
 import java.util.SortedMap;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import org.springframework.core.io.Resource;
 
 /**
  * A service interface converting properties ({@link Properties}) to/from beans. 
@@ -40,7 +41,18 @@ public interface PropertiesConverterService
      */
     <T extends Serializable> T propertiesToValue(Properties props, Class<T> valueType)
         throws ConversionFailedException;
-
+    
+    /**
+     * Load properties from resource and convert to a bean
+     * 
+     * @param resource The resource to read properties from
+     * @param valueType The target type
+     * @return
+     * @throws ConversionFailedException
+     */
+    <T extends Serializable> T propertiesToValue(Resource resource, Class<T> valueType)
+        throws ConversionFailedException, IOException;
+    
     /**
      * Create a bean from a map of properties.
      * <p>
@@ -52,7 +64,7 @@ public interface PropertiesConverterService
      * @param valueType The target type
      * @throws ConversionFailedException
      */
-    <T extends Serializable> T propertiesToValue(Map<String, Object> map, Class<T> valueType)
+    <T extends Serializable> T propertiesToValue(Map<String, ?> map, Class<T> valueType)
         throws ConversionFailedException;
 
     /**
@@ -68,6 +80,20 @@ public interface PropertiesConverterService
             Properties props, String rootPropertyName, Class<T> valueType) 
         throws ConversionFailedException;
 
+    /**
+     * Load properties from resource and convert to a bean
+     * 
+     * @param resource The resource to read properties from
+     * @param rootPropertyName The name of the root property (without the trailing dot) for
+     *   properties we are interested into.
+     * @param valueType The target type
+     * @return
+     * @throws ConversionFailedException
+     */
+    <T extends Serializable> T propertiesToValue(
+        Resource resource, String rootPropertyName, Class<T> valueType) 
+    throws ConversionFailedException, IOException;
+    
     /**
      * @see PropertiesConverterService#propertiesToValue(Properties, String, Class)
      */

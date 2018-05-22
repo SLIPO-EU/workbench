@@ -14,8 +14,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.remoting.RemoteConnectFailureException;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -35,7 +35,7 @@ import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.process.EnumProcessTaskType;
 import eu.slipo.workbench.common.model.process.InvalidProcessDefinitionException;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
-import eu.slipo.workbench.common.model.process.ProcessDefinitionBuilder;
+import eu.slipo.workbench.common.model.process.ProcessDefinitionBuilderFactory;
 import eu.slipo.workbench.common.model.process.ProcessErrorCode;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStartException;
@@ -47,7 +47,6 @@ import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataUpdate;
 import eu.slipo.workbench.common.model.resource.ResourceQuery;
 import eu.slipo.workbench.common.model.resource.ResourceRecord;
-import eu.slipo.workbench.common.model.resource.UploadDataSource;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.repository.ProcessRepository;
 import eu.slipo.workbench.common.repository.ResourceRepository;
@@ -57,7 +56,6 @@ import eu.slipo.workbench.web.model.resource.ResourceErrorCode;
 import eu.slipo.workbench.web.model.resource.ResourceQueryRequest;
 import eu.slipo.workbench.web.model.resource.ResourceRegistrationRequest;
 import eu.slipo.workbench.web.model.resource.ResourceResult;
-import eu.slipo.workbench.web.service.AuthenticationFacade;
 import eu.slipo.workbench.web.service.IResourceValidationService;
 import eu.slipo.workbench.web.service.ProcessService;
 
@@ -67,20 +65,9 @@ import eu.slipo.workbench.web.service.ProcessService;
 @RestController
 @Secured({ "ROLE_USER", "ROLE_ADMIN" })
 @RequestMapping(produces = "application/json")
-public class ResourceController {
+public class ResourceController extends BaseController {
 
     private static final Logger logger = LoggerFactory.getLogger(ResourceController.class);
-
-    @Autowired
-    @Qualifier("tempDataDirectory")
-    private Path tempDir;
-
-    @Autowired
-    @Qualifier("catalogDataDirectory")
-    private Path catalogDataDir;
-
-    @Autowired
-    private AuthenticationFacade authenticationFacade;
 
     @Autowired
     private ResourceRepository resourceRepository;
@@ -94,9 +81,8 @@ public class ResourceController {
     @Autowired
     private ProcessService processService;
 
-    private int currentUserId() {
-        return authenticationFacade.getCurrentUserId();
-    }
+    @Autowired
+    private ProcessDefinitionBuilderFactory processDefinitionBuilderFactory;
 
     /**
      * Register a resource from a generic data source (i.e. {@link DataSource})
@@ -106,44 +92,45 @@ public class ResourceController {
      * the internally recognized data formats (see {@link EnumDataFormat}).
      * @param metadata The metadata that should accompany the catalog resource
      * @return
-     *
-     * @throws InvalidProcessDefinitionException if validation has failed
-     * @throws ProcessNotFoundException if no matching revision entity is found
-     * @throws ProcessExecutionStartException if the execution failed to start
-     * @throws IOException if an I/O error has occurred
      */
-    private ProcessRecord register(
-        DataSource source, TriplegeoConfiguration configuration, ResourceMetadataCreate metadata
-    ) throws InvalidProcessDefinitionException, ProcessNotFoundException, ProcessExecutionStartException, IOException {
+    private RestResponse<?> register(DataSource source, TriplegeoConfiguration configuration, ResourceMetadataCreate metadata) {
+        ProcessRecord record = null;
 
-        Assert.notNull(source, "A data source is required");
-        Assert.notNull(configuration, "Expected configuration for Triplegeo transformation");
-        Assert.notNull(metadata, "Expected metadata for resource registration");
-        Assert.isTrue(!StringUtils.isEmpty(metadata.getName()), "A non-empty name is required");
+        try {
+            Assert.notNull(source, "A data source is required");
+            Assert.notNull(configuration, "Expected configuration for Triplegeo transformation");
+            Assert.notNull(metadata, "Expected metadata for resource registration");
+            Assert.isTrue(!StringUtils.isEmpty(metadata.getName()), "A non-empty name is required");
 
-        final int resourceKey = 1;
-        final String procName = String.format("Resource registration: %s", metadata.getName());
+            final int resourceKey = 1;
+            final String procName = String.format("Resource registration: %s", metadata.getName());
 
-        ProcessDefinition definition = ProcessDefinitionBuilder.create(procName)
-            .transform("transform", stepBuilder -> stepBuilder
-                .group(0)
-                .source(source)
-                .outputKey(resourceKey)
-                .configuration(configuration))
-            .register("register", stepBuilder -> stepBuilder
-                .group(1)
-                .resource(resourceKey)
-                .metadata(metadata))
-            .build();
-        
-        ProcessRecord record = processService.create(definition, EnumProcessTaskType.REGISTRATION);
-        
-        ProcessExecutionRecord executionRecord = processService.start(record.getId(), record.getVersion());
-        logger.info(
-            "A request for registration is submitted as execution #{}: metadata = {}", 
-            executionRecord.getId(), metadata);
-        
-        return record;
+            ProcessDefinition definition = processDefinitionBuilderFactory.create(procName)
+                .description("Resource registration")
+                .transform("transform", stepBuilder -> stepBuilder
+                    .group(0)
+                    .source(source)
+                    .outputKey(resourceKey)
+                    .configuration(configuration))
+                .register("register", stepBuilder -> stepBuilder
+                    .group(1)
+                    .resource(resourceKey)
+                    .metadata(metadata))
+                .build();
+
+            record = processService.create(definition, EnumProcessTaskType.REGISTRATION);
+        } catch (Exception ex) {
+            return this.exceptionToResponse(ex);
+        }
+
+        try {
+            ProcessExecutionRecord executionRecord = processService.start(record.getId(), record.getVersion());
+            logger.info("A request for registration is submitted as execution #{}: metadata = {}", executionRecord.getId(), metadata);
+        } catch (Exception ex) {
+            return this.exceptionToResponse(ex, Error.EnumLevel.WARN);
+        }
+
+        return RestResponse.result(record);
     }
 
     /**
@@ -153,8 +140,8 @@ public class ResourceController {
      * @return a list of resources
      */
     @RequestMapping(value = "/action/resource/query", method = RequestMethod.POST)
-    public RestResponse<QueryResult<ResourceRecord>> find(@RequestBody ResourceQueryRequest request) {
-
+    public RestResponse<QueryResult<ResourceRecord>> find(@RequestBody ResourceQueryRequest request)
+    {
         if (request == null || request.getQuery() == null) {
             return RestResponse.error(ResourceErrorCode.QUERY_IS_EMPTY, "The query is empty");
         }
@@ -175,32 +162,17 @@ public class ResourceController {
      * @throws InvalidProcessDefinitionException
      */
     @RequestMapping(value = "/action/resource/register", method = RequestMethod.POST)
-    public RestResponse<?> registerResource(@RequestBody ResourceRegistrationRequest request) {
-
+    public RestResponse<?> registerResource(@RequestBody ResourceRegistrationRequest request)
+    {
         try {
             List<Error> errors = resourceValidationService.validate(request, currentUserId());
             if (!errors.isEmpty()) {
                 return RestResponse.error(errors);
             }
 
-            final ProcessRecord record = register(request.getDataSource(), request.getConfiguration(), request.getMetadata());
-
-            return RestResponse.result(record);
-
-            // TODO : Add single error handler
-        } catch (ProcessNotFoundException e) {
-            return RestResponse.error(ProcessErrorCode.NOT_FOUND, "Process was not found");
-        } catch (ProcessExecutionStartException e) {
-            return RestResponse.error(ProcessErrorCode.FAILED_TO_START, "Process execution has failed to start");
-        } catch (IOException e) {
-            return RestResponse.error(BasicErrorCode.IO_ERROR, "An unknown error has occurred");
-        } catch (InvalidProcessDefinitionException ex) {
-            return RestResponse.error(ex.getErrors());
-        } catch (ApplicationException ex) {
-            return RestResponse.error(ex.toError());
+            return register(request.getDataSource(), request.getConfiguration(), request.getMetadata());
         } catch (Exception ex) {
-            logger.error(ex.getMessage(), ex);
-            return RestResponse.error(BasicErrorCode.UNKNOWN, "An unknown error has occurred");
+            return this.exceptionToResponse(ex);
         }
     }
 
@@ -212,38 +184,26 @@ public class ResourceController {
      * @throws InvalidProcessDefinitionException
      */
     @RequestMapping(value = "/action/resource/upload", method = RequestMethod.POST)
-    public RestResponse<?> uploadResource(@RequestPart("file") MultipartFile file, @RequestPart("data") RegistrationRequest request) {
+    public RestResponse<?> uploadResource(
+        @RequestPart("file") MultipartFile file, @RequestPart("data") RegistrationRequest request)
+    {
 
         try {
-            final Path inputPath = createTemporaryFile(
-                file.getBytes(), FilenameUtils.getExtension(file.getOriginalFilename()));
+            final Path userDir = fileNamingStrategy.getUserDir(currentUserId(), true);
+            final String extension = FilenameUtils.getExtension(file.getOriginalFilename());
+            final Path inputPath = createTemporaryFile(file.getBytes(), userDir, null, extension);
 
-            List<Error> errors = resourceValidationService
-                .validate(request, currentUserId(), tempDir.resolve(inputPath));
+            List<Error> errors = resourceValidationService.validate(request, currentUserId(), userDir.resolve(inputPath));
             if (!errors.isEmpty()) {
                 FileUtils.deleteQuietly(inputPath.toFile());
                 return RestResponse.error(errors);
             }
 
             final DataSource source = new FileSystemDataSource(inputPath);
-            final ProcessRecord record = register(source, request.getConfiguration(), request.getMetadata());
 
-            return RestResponse.result(record);
-
-            // TODO : Add single error handler
-        } catch (ProcessNotFoundException e) {
-            return RestResponse.error(ProcessErrorCode.NOT_FOUND, "Process was not found");
-        } catch (ProcessExecutionStartException e) {
-            return RestResponse.error(ProcessErrorCode.FAILED_TO_START, "Process execution has failed to start");
-        } catch (IOException e) {
-            return RestResponse.error(BasicErrorCode.IO_ERROR, "An unknown error has occurred");
-        } catch (InvalidProcessDefinitionException ex) {
-            return RestResponse.error(ex.getErrors());
-        } catch (ApplicationException ex) {
-            return RestResponse.error(ex.toError());
+            return register(source, request.getConfiguration(), request.getMetadata());
         } catch (Exception ex) {
-            logger.error(ex.getMessage(), ex);
-            return RestResponse.error(BasicErrorCode.UNKNOWN, "An unknown error has occurred");
+            return this.exceptionToResponse(ex);
         }
     }
 
@@ -269,7 +229,7 @@ public class ResourceController {
      * @return the resource metadata
      */
     @RequestMapping(value = "/action/resource/{id}/{version}", method = RequestMethod.GET)
-    public RestResponse<ResourceResult> getResource(@PathVariable long id, @PathVariable long version) 
+    public RestResponse<ResourceResult> getResource(@PathVariable long id, @PathVariable long version)
     {
         final ResourceRecord resource = resourceRepository.findOne(id, version);
         final ProcessExecutionRecord execution = this.getExecution(resource);
@@ -283,7 +243,7 @@ public class ResourceController {
      * @return the updated resource metadata
      */
     @RequestMapping(value = "/action/resource/{id}", method = RequestMethod.POST)
-    public RestResponse<?> updateResource(@PathVariable long id, @RequestBody ResourceMetadataUpdate data) 
+    public RestResponse<?> updateResource(@PathVariable long id, @RequestBody ResourceMetadataUpdate data)
     {
         return RestResponse.result(resourceRepository.findOne(id));
     }
@@ -295,7 +255,7 @@ public class ResourceController {
      * @return
      */
     @RequestMapping(value = "/action/resource/{id}", method = RequestMethod.DELETE)
-    public RestResponse<?> deleteResource(@PathVariable long id) 
+    public RestResponse<?> deleteResource(@PathVariable long id)
     {
         return RestResponse.result(null);
     }
@@ -308,7 +268,7 @@ public class ResourceController {
      * @return an instance {@link
      */
     @RequestMapping(value = "/action/resource/{id}/{version}", method = RequestMethod.DELETE)
-    public RestResponse<?> deleteResource(@PathVariable long id, @PathVariable int version) 
+    public RestResponse<?> deleteResource(@PathVariable long id, @PathVariable int version)
     {
         return RestResponse.result(null);
     }
@@ -316,27 +276,32 @@ public class ResourceController {
     /**
      * Creates a new temporary file and stores the given array of bytes.
      *
-     * @param data the content to write to the file
+     * @param data The contents to write to the file
+     * @param dir A directory to create the file under
+     * @param prefix An optional prefix to use; may be <tt>null</tt>
+     * @param extension An optional extension to use for the file; may be <tt>null</tt>, and in
+     *   such a case a ".dat" extension will be used.
+     *
      * @throws IOException in case of an I/O error
      *
      * @return the file path under which data is written (the path will always be relative to
-     *   server-side staging directory)
+     *   given directory <tt>dir</tt>)
      */
-    private Path createTemporaryFile(byte[] data, String extension) 
-        throws IOException 
+    private Path createTemporaryFile(byte[] data, Path dir, String prefix, String extension)
+        throws IOException
     {
         Path path = null;
-        
+
         try {
-            path = Files.createTempFile(tempDir, null, "." + (extension == null ? "dat" : extension));
+            path = Files.createTempFile(dir, prefix, "." + (extension == null ? "dat" : extension));
             InputStream in = new ByteArrayInputStream(data);
             Files.copy(in, path, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException ex) {
             logger.error("Failed to create temporary file", ex);
             throw ex;
         }
-        
-        return tempDir.relativize(path);
+
+        return dir.relativize(path);
     }
 
     /**
@@ -350,4 +315,37 @@ public class ResourceController {
         final Long id = (resource != null ? resource.getProcessExecutionId() : null);
         return (id != null ? processRepository.findExecution(id) : null);
     }
+
+    private RestResponse<?> exceptionToResponse(Exception ex) {
+        return exceptionToResponse(ex, Error.EnumLevel.ERROR);
+    }
+
+    private RestResponse<?> exceptionToResponse(Exception ex, Error.EnumLevel level) {
+        if (ex instanceof IOException) {
+            return RestResponse.error(BasicErrorCode.IO_ERROR, "An unknown error has occurred", level);
+        }
+
+        if (ex instanceof ProcessNotFoundException) {
+            return RestResponse.error(ProcessErrorCode.NOT_FOUND, "Process was not found", level);
+        }
+        if (ex instanceof ProcessExecutionStartException) {
+            return RestResponse.error(ProcessErrorCode.FAILED_TO_START, "Process execution has failed to start", level);
+        }
+
+        if (ex instanceof InvalidProcessDefinitionException) {
+            InvalidProcessDefinitionException typedEx = (InvalidProcessDefinitionException) ex;
+            return RestResponse.error(typedEx.getErrors());
+        }
+        if (ex instanceof ApplicationException) {
+            ApplicationException typedEx = (ApplicationException) ex;
+            return RestResponse.error(typedEx.toError());
+        }
+        if (ex instanceof RemoteConnectFailureException) {
+            return RestResponse.error(ProcessErrorCode.RPC_SERVER_UNREACHABLE, "Process execution has failed to start. RPC server is unreachable", level);
+        }
+
+        logger.error(ex.getMessage(), ex);
+        return RestResponse.error(BasicErrorCode.UNKNOWN, "An unknown error has occurred", level);
+    }
+
 }

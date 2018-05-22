@@ -11,6 +11,3 @@ docker-compose.yml
 
 **/*.*~
 **/*.~
-*.tar.gz
-*.zip
-*.rar

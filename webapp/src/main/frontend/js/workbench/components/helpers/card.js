@@ -86,8 +86,9 @@ Card.propTypes = {
   items: PropTypes.arrayOf(
     PropTypes.shape({
       value: PropTypes.oneOfType([
+        PropTypes.string,
         PropTypes.number,
-        PropTypes.arrayOf(PropTypes.number)
+        PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.number, PropTypes.string]))
       ]).isRequired,
       label: PropTypes.string.isRequired,
     })

@@ -4,7 +4,9 @@ import { toast } from 'react-toastify';
 import ToastTemplate from '../../../helpers/toast-template';
 
 import { MultiStep } from '../../../helpers/forms/';
+import { EnumErrorLevel } from '../../../../model/error';
 import { StaticRoutes } from '../../../../model/routes';
+import { defaultTripleGeoValues } from '../../../../model/process-designer/configuration/triplegeo';
 
 import * as type from './type';
 import * as externalUrl from './url-select';
@@ -16,6 +18,7 @@ import * as triplegeo from './triplegeo';
 import * as filesystem from './filesystem';
 import * as confirmation from './confirmation';
 
+import { writeConfigurationTripleGeo } from '../../../../service/triplegeo';
 
 export default function ResourceWizard(props) {
   return (
@@ -25,7 +28,7 @@ export default function ResourceWizard(props) {
         onComplete={(values) => {
           if (values.type.path === 'UPLOAD' || values.type.path === 'FILESYSTEM') {
             const data = {
-              settings: values.triplegeo || null,
+              settings: values.triplegeo ? writeConfigurationTripleGeo(values.triplegeo) : null,
               metadata: values.metadata,
             };
             switch (values.type.path) {
@@ -47,9 +50,19 @@ export default function ResourceWizard(props) {
                 props.goTo(StaticRoutes.ResourceExplorer);
               })
               .catch((err) => {
-                toast.error(
-                  <ToastTemplate iconClass='fa-warning' text={err.message} />
-                );
+                switch (err.level) {
+                  case EnumErrorLevel.WARN:
+                    toast.warn(
+                      <ToastTemplate iconClass='fa-warning' text={err.message} />
+                    );
+                    props.goTo(StaticRoutes.ResourceExplorer);
+                    break;
+                  default:
+                    toast.error(
+                      <ToastTemplate iconClass='fa-warning' text={err.message} />
+                    );
+                    break;
+                }
               });
           }
         }}
@@ -116,9 +129,15 @@ export default function ResourceWizard(props) {
         <triplegeo.Component
           id="triplegeo"
           title="TripleGeo"
-          initialValue={props.initialValues.triplegeo || triplegeo.initialValue}
+          initialValue={props.initialValues.triplegeo || { ...defaultTripleGeoValues, version: props.appConfiguration.tripleGeo.version }}
           validate={triplegeo.validator}
           next={() => 'confirm'}
+          appConfiguration={props.appConfiguration}
+          filesystem={props.filesystem}
+          createFolder={props.createFolder}
+          uploadFile={props.uploadFile}
+          deletePath={props.deletePath}
+          readOnly={false}
         />
 
         <confirmation.Component

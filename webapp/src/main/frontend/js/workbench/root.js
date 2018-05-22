@@ -1,9 +1,9 @@
-const React = require('react');
-const ReactRedux = require('react-redux');
-const ReactDOM = require('react-dom');
+import * as React from 'react';
+import * as ReactRedux from 'react-redux';
+import * as ReactDOM from 'react-dom';
 
-const store = require('./store');
-const Root = require('./components/root.js');
+import store from './store';
+import Root from './components/root.js';
 
 var renderRoot = function (placeholder) {
   ReactDOM.render(
@@ -13,4 +13,4 @@ var renderRoot = function (placeholder) {
     placeholder);
 };
 
-module.exports = { renderRoot };
+export default renderRoot;

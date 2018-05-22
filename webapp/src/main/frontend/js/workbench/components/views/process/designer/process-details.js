@@ -29,7 +29,7 @@ class ProcessDetails extends React.Component {
     errors: PropTypes.object,
     processValidate: PropTypes.func.isRequired,
     processUpdate: PropTypes.func.isRequired,
-    readOnly: PropTypes.bool.isRequired,
+    readOnly: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]).isRequired,
   };
 
   _setError(errors) {

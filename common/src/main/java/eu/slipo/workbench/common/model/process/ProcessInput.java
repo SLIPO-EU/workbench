@@ -32,7 +32,7 @@ public abstract class ProcessInput implements Serializable
     @JsonDeserialize(using = EnumResourceType.Deserializer.class)
     protected EnumResourceType resourceType;
 
-    private String name;
+    protected String name;
 
     protected ProcessInput() {}
 

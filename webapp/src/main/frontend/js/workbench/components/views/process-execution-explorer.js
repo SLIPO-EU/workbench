@@ -17,14 +17,31 @@ import {
 } from 'react-intl';
 
 import {
+  toast
+} from 'react-toastify';
+
+import {
   DynamicRoutes,
   buildPath
 } from '../../model/routes';
 
 import {
+  EnumErrorLevel,
+  UPDATE_INTERVAL_SECONDS,
+} from '../../model';
+
+import {
+  ToastTemplate,
+} from '../helpers';
+
+import {
   Filters,
   ProcessExecutions,
 } from "./execution/explorer";
+
+import {
+  stop,
+} from '../../ducks/ui/views/process-explorer';
 
 import {
   fetchExecutions,
@@ -47,8 +64,11 @@ class ProcessExecutionExplorer extends React.Component {
     super(props);
 
     this.editProcess = this.editProcess.bind(this);
+    this.stopExecution = this.stopExecution.bind(this);
     this.viewExecution = this.viewExecution.bind(this);
     this.viewMap = this.viewMap.bind(this);
+
+    this.refreshIntervalId = null;
   }
 
   /**
@@ -58,6 +78,21 @@ class ProcessExecutionExplorer extends React.Component {
    * @memberof ProcessExplorer
    */
   componentWillMount() {
+    this.refreshIntervalId = setInterval(() => {
+      this.search();
+    }, UPDATE_INTERVAL_SECONDS * 1000);
+
+    this.search();
+  }
+
+  componentWillUnmount() {
+    if (this.refreshIntervalId) {
+      clearInterval(this.refreshIntervalId);
+      this.refreshIntervalId = null;
+    }
+  }
+
+  search() {
     this.props.fetchExecutions({
       query: { ...this.props.filters },
     });
@@ -87,6 +122,45 @@ class ProcessExecutionExplorer extends React.Component {
     const path = buildPath(DynamicRoutes.ProcessExecutionViewer, [id, version, execution]);
 
     this.props.history.push(path);
+  }
+
+  /**
+   * Attempts to stop the execution of the selected process revision
+   *
+   * @param {any} id
+   * @param {any} version
+   * @memberof ProcessExplorer
+   */
+  stopExecution(id, version) {
+    this.props.stop(id, version)
+      .catch((err) => {
+        this.displayMessage(err.message);
+      })
+      .finally(() => {
+        this.search();
+      });
+  }
+
+  displayMessage(message, level = EnumErrorLevel.ERROR) {
+    toast.dismiss();
+
+    switch (level) {
+      case EnumErrorLevel.WARN:
+        toast.warn(
+          <ToastTemplate iconClass='fa-warning' text={message} />
+        );
+        break;
+      case EnumErrorLevel.INFO:
+        toast.info(
+          <ToastTemplate iconClass='fa-info-circle' text={message} />
+        );
+        break;
+      default:
+        toast.error(
+          <ToastTemplate iconClass='fa-exclamation-circle' text={message} />
+        );
+        break;
+    }
   }
 
   /**
@@ -142,6 +216,7 @@ class ProcessExecutionExplorer extends React.Component {
                       setExpanded={this.props.setExpanded}
                       setPager={this.props.setPager}
                       setSelected={this.props.setSelected}
+                      stopExecution={this.stopExecution}
                       viewExecution={this.viewExecution}
                       viewMap={this.viewMap}
                     />
@@ -173,6 +248,7 @@ const mapDispatchToProps = (dispatch) => bindActionCreators({
   setFilter,
   setPager,
   setSelected,
+  stop,
 }, dispatch);
 
 export default ReactRedux.connect(mapStateToProps, mapDispatchToProps)(ProcessExecutionExplorer);

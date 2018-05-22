@@ -1,11 +1,13 @@
 package eu.slipo.workbench.web.repository;
 
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,9 +15,10 @@ import org.springframework.transaction.annotation.Transactional;
 import eu.slipo.workbench.common.domain.ProcessExecutionEntity;
 import eu.slipo.workbench.common.domain.ResourceEntity;
 import eu.slipo.workbench.common.model.process.EnumProcessExecutionStatus;
+import eu.slipo.workbench.common.service.ProcessOperator;
 import eu.slipo.workbench.web.domain.EventEntity;
 import eu.slipo.workbench.web.model.Dashboard;
-import eu.slipo.workbench.web.model.EnumEventLevel;
+import eu.slipo.workbench.web.model.EventCounter;
 
 @Repository()
 @Transactional(readOnly = true)
@@ -29,6 +32,9 @@ public class DefaultDashboardRepository implements DashboardRepository {
 
     @PersistenceContext(unitName = "default")
     EntityManager entityManager;
+
+    @Autowired
+    private ProcessOperator processOperator;
 
     @Override
     public Dashboard load() throws Exception {
@@ -117,42 +123,58 @@ public class DefaultDashboardRepository implements DashboardRepository {
         final String eventQuery =
                 "select     e " +
                 "from       Event e " +
-                "where      e.generated >= :date " +
                 "order by   e.generated desc, e.id desc";
 
         entityManager
-                .createQuery(eventQuery, EventEntity.class)
-                .setParameter("date", ZonedDateTime.now().minusDays(1))
-                .setMaxResults(this.maxResult)
-                .getResultList()
-                .stream()
-                .map(EventEntity::toEventRecord)
-                .collect(Collectors.toList())
-                .forEach(result::addEvent);
+            .createQuery(eventQuery, EventEntity.class)
+            .setMaxResults(this.maxResult)
+            .getResultList()
+            .stream()
+            .map(EventEntity::toEventRecord)
+            .collect(Collectors.toList())
+            .forEach(result::addEvent);
 
+        final String countEventQuery =
+                "select     new eu.slipo.workbench.web.model.EventCounter(e.level, count(e)) " +
+                "from       Event e " +
+                "where      e.generated >= :date " +
+                "group by   e.level";
 
-            final long error = result
-                .getEvents()
-                .stream()
-                .filter(e-> e.getLevel() == EnumEventLevel.ERROR)
-                .count();
-            final long warning = result
-                .getEvents()
-                .stream()
-                .filter(e-> e.getLevel() == EnumEventLevel.WARN)
-                .count();
-            final long info = result
-                .getEvents()
-                .stream()
-                .filter(e-> e.getLevel() == EnumEventLevel.INFO)
-                .count();
+        long error = 0, warning = 0, info = 0;
+
+        List<EventCounter> counters = entityManager
+            .createQuery(countEventQuery, EventCounter.class)
+            .setParameter("date", ZonedDateTime.now().minusDays(1))
+            .getResultList();
+
+        for (EventCounter c : counters) {
+            switch (c.getLevel()) {
+                case ERROR:
+                    error = c.getValue();
+                    break;
+                case WARN:
+                    warning = c.getValue();
+                    break;
+                case INFO:
+                    info = c.getValue();
+                    break;
+                default:
+                    break;
+            }
+        }
 
         result.getStatistics().events = new Dashboard.EventStatistics(error, warning, info);
 
         // System status
-
-        // TODO: Get system information from rpc-server
+        try {
+            this.processOperator.list().size();
+            // TODO: Compute cluster resources
+            result.getStatistics().system = new Dashboard.SystemStatistics(null, null, null, null, null, null);
+        } catch(Exception ex) {
+            result.getStatistics().system = new Dashboard.SystemStatistics(false);
+        }
 
         return result;
     }
+
 }

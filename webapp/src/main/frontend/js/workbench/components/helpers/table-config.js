@@ -15,9 +15,9 @@ import {
 } from './';
 
 /**
- * Job grid data
+ * Process data mapper
  */
-export const JobGridData = (processes) => processes.map(proc => ({
+export const processDataMapper = (processes) => processes.map(proc => ({
   process: proc.process,
   executionId: proc.id,
   name: proc.name,
@@ -28,9 +28,9 @@ export const JobGridData = (processes) => processes.map(proc => ({
 }));
 
 /**
- * Job grid column configuration
+ * Process execution grid column configuration
  */
-export const JobGridColumns = [{
+export const ProcessExecutionGridColumns = [{
   Header: 'Actions',
   accessor: 'process',
   Cell: props => {
@@ -93,9 +93,9 @@ export const JobGridColumns = [{
 }];
 
 /**
- * Event grid data maper
+ * Event data mapper
  */
-export const EventGridData = (events) => events.map(event => ({
+export const eventDataMapper = (events) => events.map(event => ({
   level: event.level,
   category: event.category,
   code: event.code,
@@ -106,7 +106,7 @@ export const EventGridData = (events) => events.map(event => ({
 }));
 
 /**
- * Event grid sample column configuration
+ * Event grid column configuration
  */
 export const EventGridColumns = [{
   Header: 'Level',
@@ -149,9 +149,9 @@ export const EventGridColumns = [{
 }];
 
 /**
- * Resource grid data
+ * Resource data mapper
  */
-export const ResourceGridData = (resources) => resources.map(resource => ({
+export const resourceDataMapper = (resources) => resources.map(resource => ({
   id: resource.id,
   name: resource.metadata.name,
   version: resource.version,
@@ -161,7 +161,7 @@ export const ResourceGridData = (resources) => resources.map(resource => ({
 }));
 
 /**
- * Resource grid sample column configuration
+ * Resource grid column configuration
  */
 export const ResourceGridColumns = [{
   Header: 'Id',

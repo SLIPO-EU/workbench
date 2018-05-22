@@ -36,6 +36,8 @@ const Dashboard = '/dashboard';
 const Profile = '/profile';
 const Settings = '/settings';
 
+const HarvesterDataExplorer = '/harvester/data/explore';
+
 const ResourceExplorer = '/resource/explore';
 const ResourceRegistration = '/resource/register';
 
@@ -51,6 +53,7 @@ const EventViewer = '/admin/event-viewer';
 
 export const StaticRoutes = {
   Dashboard,
+  HarvesterDataExplorer,
   Profile,
   Settings,
   ResourceExplorer,
@@ -73,6 +76,8 @@ const ProcessDesignerCreate = '/workflow/designer';
 const ProcessDesignerEdit = '/workflow/designer/:id';
 const ProcessDesignerView = '/workflow/designer/:id/:version';
 
+const ProcessDesignerEditTemplate = '/workflow/template/designer/:id';
+
 const ProcessExecutionViewer = '/workflow/designer/:id/:version/execution/:execution';
 const ProcessExecutionMapViewer = '/workflow/designer/:id/:version/execution/:execution/map';
 
@@ -83,6 +88,7 @@ export const DynamicRoutes = {
   ResourceViewer,
   ProcessDesignerCreate,
   ProcessDesignerEdit,
+  ProcessDesignerEditTemplate,
   ProcessDesignerView,
   ProcessExecutionMapViewer,
   ProcessExecutionViewer,
@@ -123,6 +129,12 @@ const routes = {
     title: 'links.dashboard',
     defaultTitle: 'Dashboard',
     links: [ResourceExplorer, ProcessExplorer]
+  },
+  [HarvesterDataExplorer]: {
+    description: 'Explore Harvester Data',
+    title: 'links.harvester.data.explore',
+    defaultTitle: 'Explore Harvester Data',
+    links: [Dashboard],
   },
   [Profile]: {
     description: 'Profile',
@@ -205,6 +217,13 @@ const routes = {
     description: 'Update a data integration workflow',
     title: 'links.process.designer.edit',
     defaultTitle: 'Edit',
+    links: defaultLinks,
+    contextComponent: ProcessDesignerSidebar,
+  },
+  [ProcessDesignerEditTemplate]: {
+    description: 'Update a template integration workflow',
+    title: 'links.process.designer.edit-template',
+    defaultTitle: 'Edit Template',
     links: defaultLinks,
     contextComponent: ProcessDesignerSidebar,
   },

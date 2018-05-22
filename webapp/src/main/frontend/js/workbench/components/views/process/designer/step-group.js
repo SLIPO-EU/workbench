@@ -56,7 +56,7 @@ const groupTarget = {
       const step = {
         ...monitor.getItem(),
       };
-      props.addStep(group, step);
+      props.addStep(group, step, props.appConfiguration);
     }
   },
 
@@ -117,6 +117,7 @@ class StepGroup extends React.Component {
 
     // Top-level designer properties
     readOnly: PropTypes.bool.isRequired,
+    appConfiguration: PropTypes.object.isRequired,
 
     // Injected by React DnD
     connectDropTarget: PropTypes.func.isRequired,

@@ -1,5 +1,6 @@
 import ContextSidebar from './context-sidebar';
 import Dashboard from './dashboard';
+import HarvesterDataExplorer from './harvester-data-explorer';
 import EventViewer from './event-viewer';
 import ProcessDesigner from './process-designer';
 import ProcessExplorer from './process-explorer';
@@ -17,6 +18,7 @@ import UserManager from './user-manager';
 
 export {
   Dashboard,
+  HarvesterDataExplorer,
   Profile,
   Settings,
   ResourceExplorer,

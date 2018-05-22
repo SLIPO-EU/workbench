@@ -1,11 +1,11 @@
-const store = require('./store');
-const { renderRoot } = require('./root');
+import store from './store';
+import renderRoot from './root';
+import * as api from './service/api/index';
 
 import { setCsrfToken } from './ducks/meta';
 import { changeLocale } from './ducks/i18n';
 import { refreshProfile } from './ducks/user';
 import { getConfiguration } from './ducks/config';
-
 
 var rootSelector = document.currentScript.getAttribute('data-root') || '#root';
 
@@ -25,20 +25,19 @@ document.addEventListener("DOMContentLoaded", function () {
   Promise.resolve()
     .then(() => store.dispatch(setCsrfToken(token)))
     .then(() => store.dispatch(changeLocale(language)))
+    .then(() => store.dispatch(getConfiguration()))
     .then(() => store.dispatch(refreshProfile())
       // recover from an "Unauthorized" error
       .catch(() => console.error('Cannot refresh user profile')))
-    .then(() => store.dispatch(getConfiguration()))
     .then(() => renderRoot(rootEl));
 });
-
 
 // Provide development shortcuts
 
 /* global process */
 if (process.env.NODE_ENV != 'production') {
   global.$a = {
-    store: store,
-    api: require('./service/api/index'),
+    store,
+    api,
   };
 }

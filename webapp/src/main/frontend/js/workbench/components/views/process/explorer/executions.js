@@ -97,7 +97,7 @@ export default class ProcessExecutions extends React.Component {
         this.props.viewMap(this.props.selected.id, this.props.selected.version, rowInfo.row.id);
         break;
       case 'stop':
-        this.props.stopExecution(rowInfo.row.id);
+        this.props.stopExecution(this.props.selected.id, this.props.selected.version);
         break;
       default:
         if (handleOriginal) {

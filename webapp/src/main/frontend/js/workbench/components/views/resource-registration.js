@@ -13,6 +13,12 @@ import { ResourceWizard } from './resource/register/';
 import { createResource } from '../../ducks/ui/views/resource-explorer';
 import { saveTempResource, clearTempResource } from '../../ducks/ui/views/resource-registration';
 
+import {
+  createFolder,
+  uploadFile,
+  deletePath,
+} from '../../ducks/config';
+
 /**
  * Register a new resource
  *
@@ -24,7 +30,7 @@ class ResourceRegistration extends React.Component {
   render() {
     return (
       <Row>
-        <Col sm="12" md="12" lg="6">
+        <Col>
           <Card>
             <CardBody className="card-body">
               <ResourceWizard
@@ -35,6 +41,10 @@ class ResourceRegistration extends React.Component {
                 createResource={this.props.createResource}
                 goTo={this.props.history.push}
                 filesystem={this.props.filesystem}
+                appConfiguration={this.props.appConfiguration}
+                createFolder={this.props.createFolder}
+                uploadFile={this.props.uploadFile}
+                deletePath={this.props.deletePath}
               />
             </CardBody>
           </Card>
@@ -49,12 +59,16 @@ const mapStateToProps = (state) => ({
   values: state.ui.views.resources.registration.values,
   step: state.ui.views.resources.registration.step,
   filesystem: state.config.filesystem,
+  appConfiguration: state.config,
 
 });
 const mapDispatchToProps = (dispatch) => bindActionCreators({
   createResource,
   saveTempResource,
   clearTempResource,
+  createFolder,
+  uploadFile,
+  deletePath,
 }, dispatch);
 
 const mergeProps = (stateProps, dispatchProps, ownProps) => {

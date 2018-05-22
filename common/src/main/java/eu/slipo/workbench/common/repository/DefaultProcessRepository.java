@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -12,6 +13,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
+import javax.swing.event.ListSelectionEvent;
 
 import org.apache.commons.collections4.IterableUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -31,9 +33,11 @@ import eu.slipo.workbench.common.domain.ProcessExecutionStepEntity;
 import eu.slipo.workbench.common.domain.ProcessExecutionStepFileEntity;
 import eu.slipo.workbench.common.domain.ProcessRevisionEntity;
 import eu.slipo.workbench.common.domain.ResourceRevisionEntity;
+import eu.slipo.workbench.common.domain.WorkflowEntity;
 import eu.slipo.workbench.common.model.QueryResultPage;
 import eu.slipo.workbench.common.model.process.EnumProcessExecutionStatus;
 import eu.slipo.workbench.common.model.process.EnumProcessTaskType;
+import eu.slipo.workbench.common.model.process.EnumStepFile;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.ProcessExecutionNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessExecutionQuery;
@@ -142,7 +146,7 @@ public class DefaultProcessRepository implements ProcessRepository
         if (!filters.isEmpty()) {
             qlString += " where " + StringUtils.join(filters, " and ");
         }
-        qlString += " order by p.name, p.updatedOn ";
+        qlString += " order by p.updatedOn desc, p.name ";
 
         TypedQuery<ProcessEntity> selectQuery = entityManager.createQuery(qlString, ProcessEntity.class);
         if (query != null) {
@@ -276,21 +280,63 @@ public class DefaultProcessRepository implements ProcessRepository
 
     @Transactional(readOnly = true)
     @Override
-    public ProcessRecord findOne(String name)
+    public ProcessRecord findOne(String name, int createdBy)
     {
         String queryString =
-            "select p from ProcessRevision p where p.parent.name = :name " +
+            "select p from ProcessRevision p where p.parent.name = :name and p.parent.createdBy.id = :createdBy " +
             "order by p.version desc";
 
         List<ProcessRevisionEntity> result = entityManager
             .createQuery(queryString, ProcessRevisionEntity.class)
             .setParameter("name", name)
+            .setParameter("createdBy", createdBy)
             .setMaxResults(1)
             .getResultList();
 
         return (result.isEmpty() ? null : result.get(0).toProcessRecord(false, false));
     }
-
+    
+    @Transactional(readOnly = true)
+    @Override
+    public ProcessIdentifier mapToProcessIdentifier(UUID workflowId)
+    {
+        Assert.notNull(workflowId, "A workflow id is required");
+        WorkflowEntity workflowEntity = entityManager.find(WorkflowEntity.class, workflowId);
+        if (workflowEntity == null)
+            return null;
+        
+        ProcessRevisionEntity revisionEntity = workflowEntity.getProcess(); 
+        return revisionEntity.getProcessIdentifier();
+    }
+    
+    @Transactional(readOnly = true)
+    @Override
+    public UUID mapToWorkflowIdentifier(long id, long version)
+    {
+        ProcessRevisionEntity revisionEntity = findRevision(id, version);
+        if (revisionEntity == null)
+            return null;
+        
+        TypedQuery<WorkflowEntity> query = entityManager
+            .createQuery("FROM Workflow w WHERE w.process.id = :rid", WorkflowEntity.class)
+            .setParameter("rid", revisionEntity.getId());
+        
+        WorkflowEntity workflowEntity = null;
+        try {
+            workflowEntity = query.getSingleResult();
+        } catch (NoResultException ex) {
+            workflowEntity = null;
+        }
+        return workflowEntity == null? null : workflowEntity.getId();
+    }
+    
+    @Transactional(readOnly = true)
+    @Override
+    public UUID mapToWorkflowIdentifier(ProcessIdentifier processIdentifier)
+    {
+        return ProcessRepository.super.mapToWorkflowIdentifier(processIdentifier);
+    }
+    
     @Transactional(readOnly = true)
     @Override
     public ProcessExecutionRecord findExecution(long executionId, boolean includeNonVerifiedFiles)
@@ -298,14 +344,14 @@ public class DefaultProcessRepository implements ProcessRepository
         ProcessExecutionEntity e = entityManager.find(ProcessExecutionEntity.class, executionId);
         return e == null? null : e.toProcessExecutionRecord(true, includeNonVerifiedFiles);
     }
-    
+
     @Transactional(readOnly = true)
     @Override
     public ProcessExecutionRecord findExecution(long executionId)
     {
         return ProcessRepository.super.findExecution(executionId);
     }
-    
+
     @Transactional(readOnly = true)
     @Override
     public ProcessExecutionRecord findLatestExecution(long id, long version)
@@ -348,13 +394,24 @@ public class DefaultProcessRepository implements ProcessRepository
     }
 
     @Override
-    public ProcessRecord create(ProcessDefinition definition, int userId) {
-        return this.create(definition, userId, EnumProcessTaskType.DATA_INTEGRATION);
+    public ProcessRecord create(ProcessDefinition definition, int createdBy, boolean isTemplate) 
+    {
+        return create(definition, createdBy, EnumProcessTaskType.DATA_INTEGRATION, isTemplate);
     }
 
     @Override
-    public ProcessRecord create(ProcessDefinition definition, int userId, EnumProcessTaskType taskType)
+    public ProcessRecord create(ProcessDefinition definition, int createdBy)
     {
+        return create(definition, createdBy, EnumProcessTaskType.DATA_INTEGRATION, false);
+    }
+    
+    @Override
+    public ProcessRecord create(ProcessDefinition definition, int userId, EnumProcessTaskType taskType, boolean isTemplate)
+    {
+        Assert.isTrue((taskType == EnumProcessTaskType.REGISTRATION && !isTemplate) ||
+                      (taskType == EnumProcessTaskType.DATA_INTEGRATION),
+                      "Registration process definition cannot be a template");
+
         AccountEntity createdBy = entityManager.find(AccountEntity.class, userId);
         Assert.notNull(createdBy, "The userId does not correspond to a user entity");
 
@@ -369,6 +426,7 @@ public class DefaultProcessRepository implements ProcessRepository
         entity.setUpdatedBy(createdBy);
         entity.setCreatedOn(now);
         entity.setUpdatedOn(now);
+        entity.setTemplate(isTemplate);
 
         // Create an associated process revision, update reference
 
@@ -422,7 +480,7 @@ public class DefaultProcessRepository implements ProcessRepository
     }
 
     @Override
-    public ProcessExecutionRecord createExecution(long id, long version, int userId)
+    public ProcessExecutionRecord createExecution(long id, long version, int userId, UUID workflowId)
         throws ProcessNotFoundException, ProcessHasActiveExecutionException
     {
         final AccountEntity submittedBy = userId < 0? null : entityManager.find(AccountEntity.class, userId);
@@ -440,7 +498,18 @@ public class DefaultProcessRepository implements ProcessRepository
         if (executionEntities.stream().anyMatch(e -> !e.isTerminated())) {
             throw new ProcessHasActiveExecutionException(id, version);
         }
-
+        
+        // Associate with a workflow (if not already associated by a previous execution)
+        
+        WorkflowEntity workflowEntity = entityManager.find(WorkflowEntity.class, workflowId);
+        if (workflowEntity == null) {
+            workflowEntity = new WorkflowEntity(workflowId, revisionEntity);
+            entityManager.persist(workflowEntity);
+        } else {
+            Assert.state(workflowEntity.getProcess() == revisionEntity,
+                "A workflow entity is expected to map to a single process revision");
+        }
+        
         // Create an execution entity
 
         final ZonedDateTime now = ZonedDateTime.now();
@@ -555,26 +624,30 @@ public class DefaultProcessRepository implements ProcessRepository
 
         // Set step metadata
 
-        ProcessExecutionStepEntity executionStepEntity = new ProcessExecutionStepEntity(
-            executionEntity, record.getKey(), record.getName(), record.getJobExecutionId());
+        ProcessExecutionStepEntity executionStepEntity = 
+            new ProcessExecutionStepEntity(executionEntity, record.getKey());
+        executionStepEntity.setName(record.getName());
+        executionStepEntity.setNodeName(record.getNodeName());
         executionStepEntity.setStatus(record.getStatus());
         executionStepEntity.setOperation(record.getOperation());
         executionStepEntity.setTool(record.getTool());
         executionStepEntity.setStartedOn(record.getStartedOn());
+        executionStepEntity.setJobExecutionId(record.getJobExecutionId());
 
         // Add file entities associated with this step
 
-        final boolean verified = record.getStatus() == EnumProcessExecutionStatus.COMPLETED;
-        
+        final boolean completed = record.getStatus() == EnumProcessExecutionStatus.COMPLETED;
+
         for (ProcessExecutionStepFileRecord fileRecord: record.getFiles()) {
-            Assert.state(fileRecord.getId() < 0,
-                "Did not expect an id for a record of a new file entity");
+            Assert.state(fileRecord.getId() < 0, "Did not expect an id for a record of a new file entity");
+            Assert.state(fileRecord.getType() != null, "A type (of EnumStepFile) is required for a new file entity");
             ProcessExecutionStepFileEntity fileEntity =
                 new ProcessExecutionStepFileEntity(executionStepEntity, fileRecord);
             ResourceIdentifier resourceIdentifier = fileRecord.getResource();
             if (resourceIdentifier != null) {
                 fileEntity.setResource(findResourceEntity(resourceIdentifier, true));
             }
+            final boolean verified = completed || !fileRecord.getType().isOfOutputType();
             fileEntity.setVerified(verified);
             executionStepEntity.addFile(fileEntity);
         }
@@ -591,7 +664,7 @@ public class DefaultProcessRepository implements ProcessRepository
         throws ProcessExecutionNotFoundException, ProcessExecutionNotActiveException
     {
         Assert.notNull(record, "A non-empty record is required");
-        
+
         final ProcessExecutionEntity executionEntity =
             entityManager.find(ProcessExecutionEntity.class, executionId);
         if (executionEntity == null) {
@@ -605,7 +678,7 @@ public class DefaultProcessRepository implements ProcessRepository
         if (executionStepEntity == null) {
             throw ProcessExecutionNotFoundException.forExecutionStep(executionId, stepKey);
         }
-        
+
         final List<ProcessExecutionStepFileRecord> fileRecords = record.getFiles();
         final List<Long> fids = fileRecords.stream()
             .collect(Collectors.mapping(r -> r.getId(), Collectors.toList()));
@@ -620,8 +693,8 @@ public class DefaultProcessRepository implements ProcessRepository
         // Due to the nature of a processing step, a file record can never be removed; it can
         // only be added or updated (on specific updatable fields).
 
-        final boolean verified = record.getStatus() == EnumProcessExecutionStatus.COMPLETED;
-        
+        final boolean completed = record.getStatus() == EnumProcessExecutionStatus.COMPLETED;
+
         // Update existing file records
 
         for (ProcessExecutionStepFileEntity fileEntity: executionStepEntity.getFiles()) {
@@ -631,6 +704,7 @@ public class DefaultProcessRepository implements ProcessRepository
                 IterableUtils.find(fileRecords, r -> r.getId() == fid);
             Assert.state(fileRecord != null && IterableUtils.frequency(fids, fid) == 1,
                 "Expected a single file record to match to a given id!");
+            final boolean verified = completed || !fileRecord.getType().isOfOutputType();
             // Set updatable metadata from current file record
             fileEntity.setSize(fileRecord.getFileSize());
             fileEntity.setBoundingBox(fileRecord.getBoundingBox());
@@ -643,7 +717,7 @@ public class DefaultProcessRepository implements ProcessRepository
 
         // Add file records (if any)
         // A file record is considered as a new one if carrying an invalid (negative) id
-
+        
         for (ProcessExecutionStepFileRecord fileRecord:
                 IterableUtils.filteredIterable(fileRecords, f -> f.getId() < 0))
         {
@@ -653,6 +727,7 @@ public class DefaultProcessRepository implements ProcessRepository
             if (resourceIdentifier != null) {
                 fileEntity.setResource(findResourceEntity(resourceIdentifier, true));
             }
+            final boolean verified = completed || !fileRecord.getType().isOfOutputType();
             fileEntity.setVerified(verified);
             executionStepEntity.addFile(fileEntity);
         }
@@ -667,8 +742,7 @@ public class DefaultProcessRepository implements ProcessRepository
         throws ProcessExecutionNotFoundException, ProcessExecutionNotActiveException
     {
         Assert.notNull(fileRecord, "A non-empty record is required");
-        Assert.state(fileRecord.getId() < 0,
-            "Did not expect an id for a record of a new file entity");
+        Assert.state(fileRecord.getId() < 0, "Did not expect an id for a record of a new file entity");
 
         final ProcessExecutionEntity executionEntity =
             entityManager.find(ProcessExecutionEntity.class, executionId);
@@ -686,9 +760,10 @@ public class DefaultProcessRepository implements ProcessRepository
 
         // Add file record
 
-        ProcessExecutionStepFileEntity fileEntity = new ProcessExecutionStepFileEntity(
-            executionStepEntity,
-            fileRecord.getType(), fileRecord.getFilePath(), fileRecord.getFileSize());
+        ProcessExecutionStepFileEntity fileEntity = 
+            new ProcessExecutionStepFileEntity(executionStepEntity, fileRecord);
+        fileEntity.setVerified(true);
+        
         ResourceIdentifier resourceIdentifier = fileRecord.getResource();
         if (resourceIdentifier != null) {
             fileEntity.setResource(findResourceEntity(resourceIdentifier, true));

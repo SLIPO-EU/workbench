@@ -11,7 +11,7 @@ export function Select(props) {
       name={props.id}
       id={props.id}
       value={options.find(opt => opt.value === props.value)}
-      clearable={false}
+      clearable={props.clearable || false}
       onChange={(val) => {
         if (typeof props.onChange === 'function') {
           if (val && val.value) {
@@ -35,5 +35,6 @@ Select.propTypes = {
   options: PropTypes.array.isRequired,
   value: PropTypes.any,
   onChange: PropTypes.func.isRequired,
+  readOnly: PropTypes.bool,
 };
 

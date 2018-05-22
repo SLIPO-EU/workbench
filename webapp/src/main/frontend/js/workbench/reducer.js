@@ -14,14 +14,16 @@ import {
 
 import {
   dashboardReducer,
+  harvesterDataExplorerReducer,
   processDesignerReducer,
   processExecutionReducer,
   processExplorerReducer,
+  processTemplateExplorerReducer,
   resourceExplorerReducer,
   resourceRegistrationReducer,
 } from './ducks/ui/views';
 
-module.exports = Redux.combineReducers({
+export default Redux.combineReducers({
   config,
   i18n,
   meta,
@@ -30,6 +32,7 @@ module.exports = Redux.combineReducers({
     viewport,
     views: Redux.combineReducers({
       dashboard: dashboardReducer,
+      harvester: harvesterDataExplorerReducer,
       resources: Redux.combineReducers({
         explorer: resourceExplorerReducer,
         registration: resourceRegistrationReducer,
@@ -37,6 +40,9 @@ module.exports = Redux.combineReducers({
       process: Redux.combineReducers({
         designer: processDesignerReducer,
         explorer: processExplorerReducer,
+      }),
+      template: Redux.combineReducers({
+        explorer: processTemplateExplorerReducer,
       }),
       execution: Redux.combineReducers({
         explorer: processExecutionReducer,

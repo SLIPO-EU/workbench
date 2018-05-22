@@ -17,27 +17,32 @@ public class JobRegistrar
 {
     @Autowired
     JobRegistry registry;
-    
+
     @Autowired
-    @Qualifier("greeting.jobFactory") 
+    @Qualifier("greeting.jobFactory")
     JobFactory greetingJobFactory;
-    
+
     @Autowired
-    @Qualifier("triplegeo.jobFactory") 
+    @Qualifier("triplegeo.jobFactory")
     JobFactory triplegeoJobFactory;
-    
+
+    @Autowired
+    @Qualifier("limes.jobFactory")
+    JobFactory limesJobFactory;
+
     /**
      * Register basic job factories ({@link JobFactory}).
      * <p>
      * Note that only those jobs created from factories registered here can be later
      * retrieved by name (i.e. are the only ones known to {@link JobRegistry} bean).
-     * 
-     * @throws DuplicateJobException 
+     *
+     * @throws DuplicateJobException
      */
     @PostConstruct
     private void registerFactories() throws DuplicateJobException
     {
         registry.register(greetingJobFactory);
         registry.register(triplegeoJobFactory);
+        registry.register(limesJobFactory);
     }
 }

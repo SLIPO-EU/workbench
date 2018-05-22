@@ -22,6 +22,8 @@ public class ProcessExecutionStepRecord implements Serializable
 
     private String name;
 
+    private String nodeName;
+    
     private long jobExecutionId = -1L;
     
     private EnumProcessExecutionStatus status = EnumProcessExecutionStatus.UNKNOWN;
@@ -40,17 +42,16 @@ public class ProcessExecutionStepRecord implements Serializable
 
     protected ProcessExecutionStepRecord() {}
     
-    public ProcessExecutionStepRecord(long id, int key, String name) 
+    public ProcessExecutionStepRecord(long id, int key) 
     {
         this.id = id;
         this.key = key;
-        this.name = name;
         this.files = new ArrayList<>();
     }
     
-    public ProcessExecutionStepRecord(int key, String name)
+    public ProcessExecutionStepRecord(int key)
     {
-        this(-1L, key, name); 
+        this(-1L, key); 
     }
     
     public ProcessExecutionStepRecord(ProcessExecutionStepRecord record)
@@ -63,6 +64,7 @@ public class ProcessExecutionStepRecord implements Serializable
         this.id = record.id;
         this.key = record.key;
         this.name = record.name;
+        this.nodeName = record.nodeName;
         this.jobExecutionId = record.jobExecutionId;
         this.status = record.status;
         this.tool = record.tool;
@@ -77,18 +79,36 @@ public class ProcessExecutionStepRecord implements Serializable
             (new ArrayList<>(record.files));
     }
     
-    public long getId() {
+    public long getId() 
+    {
         return id;
     }
 
-    public int getKey() {
+    public int getKey() 
+    {
         return key;
     }
 
-    public String getName() {
+    public String getName() 
+    {
         return name;
     }
+    
+    public void setName(String name)
+    {
+        this.name = name;
+    }
+    
+    public String getNodeName()
+    {
+        return nodeName;
+    }
 
+    public void setNodeName(String nodeName)
+    {
+        this.nodeName = nodeName;
+    }
+    
     public long getJobExecutionId()
     {
         return jobExecutionId;
@@ -184,7 +204,8 @@ public class ProcessExecutionStepRecord implements Serializable
     {
         return String.format(
             "ProcessExecutionStepRecord " +
-                "[id=%s, key=%s, name=%s, jobExecutionId=%s, status=%s, tool=%s, operation=%s, startedOn=%s, completedOn=%s, errorMessage=%s, files=%s]",
+                "[id=%s, key=%s, name=%s, jobExecutionId=%s, status=%s," +
+                " tool=%s, operation=%s, startedOn=%s, completedOn=%s, errorMessage=%s, files=%s]",
             id, key, name, jobExecutionId, status, tool, operation, startedOn, completedOn,
             errorMessage, files);
     }

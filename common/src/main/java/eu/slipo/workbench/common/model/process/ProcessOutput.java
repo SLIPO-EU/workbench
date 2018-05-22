@@ -10,16 +10,16 @@ import eu.slipo.workbench.common.model.poi.EnumTool;
 /**
  * Output of a process step used as an input resource
  */
-public class ProcessOutput extends ProcessInput 
+public class ProcessOutput extends ProcessInput
 {
     private static final long serialVersionUID = 1L;
 
     @JsonDeserialize(using = EnumTool.Deserializer.class)
     protected EnumTool tool;
 
-    private int stepKey;
+    protected int stepKey;
 
-    protected ProcessOutput() 
+    protected ProcessOutput()
     {
         super(-1, EnumInputType.OUTPUT, null);
     }
@@ -29,6 +29,13 @@ public class ProcessOutput extends ProcessInput
         super(step.outputKey, EnumInputType.OUTPUT, step.name, resourceType);
         this.stepKey = step.key;
         this.tool = step.tool;
+    }
+
+    protected ProcessOutput(ProcessOutput other)
+    {
+        super(other.key, other.inputType, other.name, other.resourceType);
+        this.stepKey = other.stepKey;
+        this.tool = other.tool;
     }
     
     protected static ProcessOutput fromStep(Step step)
@@ -52,7 +59,7 @@ public class ProcessOutput extends ProcessInput
     public int getStepKey() {
         return stepKey;
     }
-    
+
     @JsonIgnore
     public int stepKey()
     {

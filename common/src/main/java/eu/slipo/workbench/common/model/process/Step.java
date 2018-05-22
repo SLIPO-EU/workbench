@@ -5,11 +5,16 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.springframework.cglib.beans.ImmutableBean;
+import org.springframework.util.StringUtils;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.util.StdConverter;
+import com.github.slugify.Slugify;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumOperation;
@@ -17,15 +22,39 @@ import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.resource.DataSource;
 import eu.slipo.workbench.common.model.tool.DeerConfiguration;
 import eu.slipo.workbench.common.model.tool.FagiConfiguration;
+import eu.slipo.workbench.common.model.tool.ImportDataConfiguration;
 import eu.slipo.workbench.common.model.tool.LimesConfiguration;
 import eu.slipo.workbench.common.model.tool.MetadataRegistrationConfiguration;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 
+@JsonDeserialize(converter = Step.DeserializeSanitizer.class)
 public class Step implements Serializable
 {
     private static final long serialVersionUID = 1L;
 
+    protected static final Slugify slugify = new Slugify();
+    
+    protected static String slugifyName(String name)
+    {
+        return slugify.slugify(name);
+    }
+    
+    protected static class DeserializeSanitizer extends StdConverter<Step,Step>
+    {
+        @Override
+        public Step convert(Step step)
+        {
+            // Sanitize step in-place
+            
+            // If nodeName is absent, compute it from name
+            if (StringUtils.isEmpty(step.nodeName) && !StringUtils.isEmpty(step.name))
+                step.nodeName = Step.slugifyName(step.name);
+            
+            return step;
+        }   
+    }
+    
     @JsonProperty("key")
     protected int key;
 
@@ -34,6 +63,9 @@ public class Step implements Serializable
 
     @JsonProperty("name")
     protected String name;
+    
+    @JsonProperty("nodeName")
+    protected String nodeName;
 
     @JsonProperty("operation")
     @JsonDeserialize(using = EnumOperation.Deserializer.class)
@@ -63,12 +95,28 @@ public class Step implements Serializable
         @Type(name = "LIMES", value = LimesConfiguration.class),
         @Type(name = "FAGI", value = FagiConfiguration.class),
         @Type(name = "DEER", value = DeerConfiguration.class),
+        @Type(name = "IMPORTER", value = ImportDataConfiguration.class),
         @Type(name = "REGISTER", value = MetadataRegistrationConfiguration.class)
     })
     protected ToolConfiguration configuration;
 
     protected Step() {}
 
+    protected Step(Step other)
+    {
+        this.key = other.key;
+        this.name = other.name;
+        this.nodeName = other.nodeName;
+        this.group = other.group;
+        this.operation = other.operation;
+        this.tool = other.tool;
+        this.inputKeys = other.inputKeys;
+        this.sources = other.sources;
+        this.configuration = other.configuration;
+        this.outputFormat = other.outputFormat;
+        this.outputKey = other.outputKey;
+    }
+    
     /**
      * The unique key for this step
      */
@@ -77,14 +125,23 @@ public class Step implements Serializable
     {
         return key;
     }
-
+    
     /**
-     * The name of this step
+     * The human-friendly name of this step
      */
     @JsonProperty("name")
     public String name()
     {
         return name;
+    }
+    
+    /**
+     * The workflow-friendly name of this step
+     */
+    @JsonProperty("nodeName")
+    public String nodeName()
+    {
+        return nodeName;
     }
 
     /**
@@ -124,7 +181,21 @@ public class Step implements Serializable
     @JsonProperty("configuration")
     public ToolConfiguration configuration()
     {
-        return configuration;
+        return (ToolConfiguration) ImmutableBean.create(configuration);
+    }
+    
+    /**
+     * The tool-specific type of configuration.
+     * 
+     * <p>Note: This piece of information is needed for cloning a configuration bean
+     * (since the actual bean returned by {@link Step#configuration} may return a runtime-enhanced
+     * type (e.g. by CGLIB))
+     *  
+     * @return a class object
+     */
+    public Class<? extends ToolConfiguration> configurationType()
+    {
+        return configuration.getClass();
     }
 
     /**

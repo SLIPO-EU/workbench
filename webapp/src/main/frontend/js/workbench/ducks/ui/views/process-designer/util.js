@@ -12,8 +12,8 @@ export function resourceToLayers(steps, resources, execution) {
   const allInputResources = steps.reduce((agg, value) =>
     (value.tool === EnumTool.CATALOG ? agg : agg.concat(value.resources)), []);
   // All output resources created either by TripleGeo or the workflow final step
-  const stepsWithOutput = steps.reduce((agg, value) =>
-    (((value.outputKey) && ((value.tool === EnumTool.TripleGeo) || (allInputResources.indexOf(value.outputKey) === -1))) ? agg.concat([value.key]) : agg), []);
+  const stepsWithOutput = steps.reduce((keys, step) =>
+    (((step.outputKey) && ((step.tool === EnumTool.TripleGeo) || (allInputResources.indexOf(step.outputKey) === -1))) ? keys.concat([step.key]) : keys), []);
   // All catalog resources used by any step
   const catalogInputResources = resources.filter((r) =>
     ((r.inputType === EnumInputType.CATALOG) && (allInputResources.indexOf(r.key !== -1))));
@@ -25,7 +25,7 @@ export function resourceToLayers(steps, resources, execution) {
       layers.push({
         title: r.name,
         hidden: false,
-        icon: '\uf041',
+        icon: '\uf08d',
         iconClass: 'fa fa-map-marker',
         color: Colors[layers.length % Colors.length],
         tableName: r.tableName,
@@ -44,23 +44,25 @@ export function resourceToLayers(steps, resources, execution) {
     const step = steps.find((s) => s.key === key);
     const runtime = execution.steps.find((s) => s.key === key);
 
-    runtime.files
-      .filter((f) => f.type === EnumStepFileType.OUTPUT && !!f.tableName)
-      .forEach((f) => {
-        layers.push({
-          title: step.name,
-          hidden: false,
-          icon: '\uf041',
-          iconClass: 'fa fa-map-marker',
-          color: Colors[layers.length % Colors.length],
-          tableName: f.tableName,
-          boundingBox: f.boundingBox,
-          inputType: EnumInputType.OUTPUT,
-          step: key,
-          resource: null,
-          file: f.id,
+    if (runtime) {
+      runtime.files
+        .filter((f) => f.type === EnumStepFileType.OUTPUT && !!f.tableName)
+        .forEach((f) => {
+          layers.push({
+            title: step.name,
+            hidden: false,
+            icon: '\uf08d',
+            iconClass: 'fa fa-map-marker',
+            color: Colors[layers.length % Colors.length],
+            tableName: f.tableName,
+            boundingBox: f.boundingBox,
+            inputType: EnumInputType.OUTPUT,
+            step: key,
+            resource: null,
+            file: f.id,
+          });
         });
-      });
+    }
   });
 
   return layers;

@@ -1,6 +1,7 @@
 import * as Types from '../types';
 
 import {
+  defaultTripleGeoValues,
   EnumDataFormat,
   EnumInputType,
   EnumResourceType,
@@ -14,20 +15,10 @@ import {
   validator as tripleGeoValidator,
 } from '../../../../../service/triplegeo';
 
-function createTripleGeoDefaultConfiguration() {
-  // TODO : Create enumerations
+function createTripleGeoDefaultConfiguration(appConfiguration, effectiveVersion) {
   const configuration = {
-    mode: 'GRAPH',
-    encoding: 'UTF-8',
-    delimiter: '|',
-    quote: '"',
-    serialization: EnumDataFormat.N_TRIPLES,
-    targetOntology: 'GEOSPARQL',
-    nsFeatureURI: 'http://slipo.eu/geodata#',
-    nsGeometryURI: 'http://www.opengis.net/ont/geosparql#',
-    sourceCRS: 'EPSG:4326',
-    targetCRS: 'EPSG:4326',
-    defaultLang: 'en',
+    ...defaultTripleGeoValues,
+    version: effectiveVersion || appConfiguration.tripleGeo.version,
   };
 
   try {
@@ -45,10 +36,79 @@ function createTripleGeoDefaultConfiguration() {
   };
 }
 
-function createDefaultConfiguration(tool) {
+function createLimesDefaultConfiguration(appConfiguration, effectiveVersion) {
+  const configuration = {
+    prefixes: [
+      {
+        namespace: 'http://slipo.eu/def#',
+        label: 'slipo'
+      },
+      {
+        namespace: 'http://www.w3.org/2002/07/owl#',
+        label: 'owl'
+      }
+    ],
+    source: {
+      id: 'a',
+      endpoint: '/var/local/limes/input/a.nt',
+      var: '?x',
+      pageSize: -1,
+      restrictions: [
+        ''
+      ],
+      properties: [
+        'slipo:name/slipo:nameType RENAME label'
+      ],
+      dataFormat: EnumDataFormat.N_TRIPLES,
+    },
+    target: {
+      id: 'b',
+      endpoint: '/var/local/limes/input/b.nt',
+      var: '?y',
+      pageSize: -1,
+      restrictions: [
+        ''
+      ],
+      properties: [
+        'slipo:name/slipo:nameType RENAME label'
+      ],
+      dataFormat: EnumDataFormat.N_TRIPLES,
+    },
+    metric: 'trigrams(a.level, b.level)',
+    acceptance: {
+      threshold: 0.98,
+      file: '/var/local/limes/output/accepted.nt',
+      relation: 'owl:sameAs'
+    },
+    review: {
+      threshold: 0.90,
+      file: '/var/local/limes/output/review.nt',
+      relation: 'owl:sameAs'
+    },
+    execution: {
+      rewriter: 'default',
+      planner: 'default',
+      engine: 'default'
+    },
+    outputFormat: EnumDataFormat.N_TRIPLES,
+    version: effectiveVersion || appConfiguration.limes.version,
+  };
+
+  return {
+    configuration,
+    errors: {},
+  };
+}
+
+function createDefaultConfiguration(steps, tool, appConfiguration) {
+  const effectiveVersion = steps.reduce((version, step) => version ? version : step.configuration ? step.configuration.version : null, null) || null;
+
   switch (tool) {
     case EnumTool.TripleGeo:
-      return createTripleGeoDefaultConfiguration();
+      return createTripleGeoDefaultConfiguration(appConfiguration, effectiveVersion);
+
+    case EnumTool.LIMES:
+      return createLimesDefaultConfiguration(appConfiguration, effectiveVersion);
 
     default:
       return {
@@ -81,7 +141,7 @@ export function addStepReducer(state, action) {
       resources: [],
       dataSources: [],
       key: stepKey,
-      ...createDefaultConfiguration(action.step.tool),
+      ...createDefaultConfiguration(state.steps.filter(s => s.tool === action.step.tool), action.step.tool, action.appConfiguration),
     };
     if (step.tool !== EnumTool.CATALOG) {
       step.outputKey = resourceKey;

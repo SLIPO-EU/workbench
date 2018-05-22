@@ -1,6 +1,9 @@
 package eu.slipo.workbench.common.model.poi;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.Set;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -10,39 +13,72 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 /**
  * Enumerate SLIPO toolkit components
  */
-public enum EnumTool {
+public enum EnumTool 
+{
     /**
      * Unknown tool
      */
     UNDEFINED(0),
+    
     /**
      * Catalog registration component
      */
-    REGISTER(1),
+    REGISTER(1, EnumOperation.REGISTER),
+    
     /**
      * Data transformation component
      */
-    TRIPLEGEO(2),
+    TRIPLEGEO(2, EnumOperation.TRANSFORM),
+    
     /**
      * POI RDF dataset interlinking component
      */
-    LIMES(3),
+    LIMES(3, EnumOperation.INTERLINK),
+    
     /**
      * POI RDF dataset and linked data fusion component
      */
-    FAGI(4),
+    FAGI(4, EnumOperation.FUSION),
+    
     /**
      * POI RDF dataset enrichment component
      */
-    DEER(5),
+    DEER(5, EnumOperation.ENRICHMENT),
+    
+    /**
+     * An internal component for importing external data sources into a process
+     */
+    IMPORTER(6, EnumOperation.IMPORT)
     ;
 
+    /**
+     * An integer code
+     */
     private final int value;
 
-    private EnumTool(int value) {
+    /**
+     * The set of operations supported by this tool
+     */
+    private final Set<EnumOperation> operations;
+    
+    private EnumTool(int value) 
+    {
         this.value = value;
+        this.operations = Collections.emptySet();
     }
 
+    private EnumTool(int value, EnumOperation op1) 
+    {
+        this.value = value;
+        this.operations = Collections.singleton(op1);
+    }
+    
+    private EnumTool(int value, EnumOperation op1, EnumOperation op2) 
+    {
+        this.value = value;
+        this.operations = Collections.unmodifiableSet(EnumSet.of(op1, op2));
+    }
+    
     public int getValue() {
         return value;
     }
@@ -65,11 +101,20 @@ public enum EnumTool {
         }
     }
     
+    public boolean supportsOperation(EnumOperation op)
+    {
+        return op != null && this.operations.contains(op);
+    }
+    
+    public Set<EnumOperation> getSupportedOperations()
+    {
+        return operations;
+    }
+        
     public static EnumTool fromString(String value) {
         for (EnumTool item : EnumTool.values()) {
-            if (item.name().equalsIgnoreCase(value)) {
+            if (item.name().equalsIgnoreCase(value))
                 return item;
-            }
         }
         return EnumTool.UNDEFINED;
     }

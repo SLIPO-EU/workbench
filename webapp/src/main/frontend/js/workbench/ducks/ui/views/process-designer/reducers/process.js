@@ -1,21 +1,50 @@
 import {
   EnumInputType,
   EnumSelection,
+  EnumTool,
 } from '../../../../../model/process-designer';
+
+function resolveVersion(tool, version, appConfiguration) {
+  if (version) {
+    return version;
+  }
+  switch (tool) {
+    case EnumTool.TripleGeo:
+      return appConfiguration.tripleGeo.baselineVersion;
+    case EnumTool.LIMES:
+      return appConfiguration.limes.baselineVersion;
+    default:
+      return null;
+  }
+}
 
 export function processReducer(state, action) {
   const data = action.process;
 
   // Create process
-  const process = {
-    id: data.id,
-    version: data.version,
-    properties: {
-      name: data.name,
-      description: data.description,
-    },
-    errors: {},
-  };
+  const process = action.clone ?
+    {
+      id: null,
+      version: null,
+      template: false,
+      clone: true,
+      properties: {
+        name: '',
+        description: '',
+      },
+      errors: {},
+    } : {
+      id: data.id,
+      version: data.version,
+      template: data.template,
+      clone: false,
+      properties: {
+        name: data.name,
+        description: data.description,
+      },
+      errors: {},
+    };
+
 
   // Create groups
   const groupCounter = data.steps.reduce((result, current) => {
@@ -33,6 +62,11 @@ export function processReducer(state, action) {
   const steps = data.steps.map((step, index) => {
     return {
       ...step,
+      // Add baseline version if not set
+      configuration: {
+        ...step.configuration,
+        version: resolveVersion(step.tool, step.configuration.version, action.appConfiguration),
+      }
     };
   });
   // Create resources

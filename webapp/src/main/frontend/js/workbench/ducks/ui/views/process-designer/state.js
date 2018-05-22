@@ -1,6 +1,8 @@
 export const initializeProcess = () => ({
   id: null,
   version: null,
+  template: false,
+  clone: false,
   properties: {
     name: '',
     description: '',

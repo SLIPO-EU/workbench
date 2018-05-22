@@ -1,6 +1,7 @@
 package eu.slipo.workbench.common.model.process;
 
 import java.io.Serializable;
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.UUID;
 
@@ -28,6 +29,8 @@ public class ProcessExecutionStepFileRecord implements Serializable
     private Geometry boundingBox;
     
     private UUID tableName;
+    
+    private Boolean primary;
 
     protected ProcessExecutionStepFileRecord() {}
     
@@ -44,6 +47,12 @@ public class ProcessExecutionStepFileRecord implements Serializable
     public ProcessExecutionStepFileRecord(EnumStepFile type, Path path)
     {
         this(type, path.toString(), null, null);
+    }
+    
+    public ProcessExecutionStepFileRecord(
+        EnumStepFile type, URI uri, Long size, EnumDataFormat format)
+    {
+        this(type, uri.toString(), size, format);
     }
     
     public ProcessExecutionStepFileRecord(
@@ -71,6 +80,7 @@ public class ProcessExecutionStepFileRecord implements Serializable
         this.dataFormat = record.dataFormat;
         this.boundingBox = record.boundingBox;
         this.tableName = record.tableName;
+        this.primary = record.primary;
     }
     
     public long getId() 
@@ -157,15 +167,29 @@ public class ProcessExecutionStepFileRecord implements Serializable
     {
         return tableName;
     }
-
+    
+    public Boolean getPrimary()
+    {
+        return primary;
+    }
+    
+    public boolean isPrimary()
+    {
+        return primary != null && primary.booleanValue();
+    }
+    
+    public void setPrimary(Boolean primary)
+    {
+        this.primary = primary;
+    }
+    
     @Override
     public String toString()
     {
         return String.format(
             "ProcessExecutionStepFileRecord " +
-                "[id=%s, type=%s, filePath=%s, fileSize=%s, resource=%s, dataFormat=%s, boundingBox=%s, tableName=%s]",
-            id, type, filePath, fileSize, resource, dataFormat, boundingBox, tableName);
+                "[id=%s, type=%s, filePath=%s, primary=%s, fileSize=%s, resource=%s, dataFormat=%s," +
+                " boundingBox=%s, tableName=%s]",
+            id, type, filePath, primary, fileSize, resource, dataFormat, boundingBox, tableName);
     }
-    
-    
 }

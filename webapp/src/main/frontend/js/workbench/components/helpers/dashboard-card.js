@@ -17,7 +17,7 @@ const DashboardCard = (props) => (
       <Row>
         <Col sm="5">
           <CardTitle className="mb-0">{props.name}</CardTitle>
-          <div className="small text-muted">Last Update: <FormattedTime value={moment(props.changedOn).toDate()} day='numeric' month='numeric' year='numeric' /></div>
+          <div className="small text-muted">Last Update: <FormattedTime value={moment(props.updatedOn).toDate()} day='numeric' month='numeric' year='numeric' /></div>
         </Col>
         <Col sm="7" className="d-none d-sm-inline-block">
           <ButtonToolbar className="float-right" aria-label="Toolbar with button groups">

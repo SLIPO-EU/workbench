@@ -84,6 +84,7 @@ class Sidebar extends React.Component {
     super(props);
 
     this.toggle = this.toggle.bind(this);
+    this.isFieldReadOnly = this.isFieldReadOnly.bind(this);
 
     this.state = {
       activeTab: '2',
@@ -134,6 +135,19 @@ class Sidebar extends React.Component {
     }
   }
 
+  isFieldReadOnly(id) {
+    switch (id) {
+      case 'name':
+        if (this.props.process.id) {
+          return true;
+        }
+        return this.props.readOnly;
+
+      default:
+        return this.props.readOnly;
+    }
+  }
+
   /**
    * Renders a single {@link ProcessInput}.
    *
@@ -149,6 +163,7 @@ class Sidebar extends React.Component {
         remove={this.props.removeResourceFromBag}
         setActiveResource={this.props.setActiveResource}
         active={this.props.active.type === EnumSelection.Resource && this.props.active.item === resource.key}
+        readOnly={this.props.readOnly}
       />
     );
   }
@@ -184,7 +199,7 @@ class Sidebar extends React.Component {
                 style={{ position: 'relative' }}
               >
                 <i className="icon-bell"></i>
-                {this.props.errors.length > 0 &&
+                {this.state.activeTab !== '3' && this.props.errors.length > 0 &&
                   <span className="badge badge-pill badge-danger slipo-pd-error-badge">{this.props.errors.length}</span>
                 }
               </NavLink>
@@ -243,13 +258,13 @@ class Sidebar extends React.Component {
                   </div>
                   {this.selectedItem ?
                     <div className="slipo-pd-properties">
-                      {this.props.active.type === EnumSelection.Process && !this.props.readOnly &&
+                      {this.props.active.type === EnumSelection.Process &&
                         <ProcessDetails
                           values={this.props.process.properties}
                           errors={this.props.process.errors}
                           processValidate={this.props.processValidate}
                           processUpdate={this.props.processUpdate}
-                          readOnly={this.props.readOnly}
+                          readOnly={this.isFieldReadOnly}
                         />
                       }
                       {this.props.readOnly &&
@@ -260,7 +275,9 @@ class Sidebar extends React.Component {
                       }
                     </div>
                     :
-                    <div className="text-muted slipo-pd-tip" style={{ paddingLeft: 11 }}>No item selected</div>
+                    <div className="slipo-pd-properties">
+                      <div className="text-muted slipo-pd-tip" style={{ paddingLeft: 11 }}>No item selected</div>
+                    </div>
                   }
                 </div>
               </Col>

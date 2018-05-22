@@ -16,6 +16,8 @@ import eu.slipo.workbench.common.service.UserService;
  * Actions for querying and updating user data
  */
 @RestController
+@Secured({ "ROLE_USER", "ROLE_ADMIN" })
+@RequestMapping(produces = "application/json")
 public class UserController {
 
     @Autowired
@@ -27,8 +29,7 @@ public class UserController {
      * @param authentication the authenticated principal
      * @return user profile data
      */
-    @Secured({ "ROLE_USER", "ROLE_ADMIN" })
-    @RequestMapping(value = "/action/user/profile", method = RequestMethod.GET, produces = "application/json")
+    @RequestMapping(value = "/action/user/profile", method = RequestMethod.GET)
     public RestResponse<Account> getProfile(Authentication authentication) {
         String username = authentication.getName();
 

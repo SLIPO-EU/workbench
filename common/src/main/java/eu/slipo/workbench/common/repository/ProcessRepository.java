@@ -2,6 +2,7 @@ package eu.slipo.workbench.common.repository;
 
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.data.domain.PageRequest;
 
@@ -113,34 +114,72 @@ public interface ProcessRepository
     /**
      * Find a single process by name
      *
-     * Todo: Lookup by pair of (name, createdBy)
-     *
      * @param name The process unique name
-     * @return an instance of {@link ProcessRecord} if the process exists or null
+     * @param createdBy The id of the user who created this entity
+     * @return an instance of {@link ProcessRecord} if the process exists or <tt>null</tt>
      */
-    ProcessRecord findOne(String name);
+    ProcessRecord findOne(String name, int createdBy);
 
+    /**
+     * Map a workflow identifier to a process identifier (i.e. a pair of (id, version) 
+     * identifying a process revision entity).
+     * 
+     * @param workflowId
+     * @return a process identifier, or <tt>null</tt> if given workflow id is not mapped to
+     *   a process revision entity.
+     */
+    ProcessIdentifier mapToProcessIdentifier(UUID workflowId);
+    
+    /**
+     * Map a process identifier to a workflow identifier (if any).
+     * 
+     * @param id The process id
+     * @param version The process version
+     * @return a workflow identifier, or <tt>null</tt> if no workflow is associated with
+     *   given process revision entity.
+     */
+    UUID mapToWorkflowIdentifier(long id, long version);
+    
+    /**
+     * @see ProcessRepository#mapToWorkflowIdentifier(long, long)
+     */
+    default UUID mapToWorkflowIdentifier(ProcessIdentifier processIdentifier)
+    {
+        return mapToWorkflowIdentifier(processIdentifier.getId(), processIdentifier.getVersion());
+    }
+    
     /**
      * Create a new process entity
      *
      * @param definition the process definition
      * @param createdBy The id of the user creating this entity
      * @param taskType the process task type
+     * @param isTemplate {@code true} if process definition should be saved as a template
      *
      * @return a record for the newly created entity
      */
-    ProcessRecord create(ProcessDefinition definition, int createdBy, EnumProcessTaskType taskType);
+    ProcessRecord create(ProcessDefinition definition, int createdBy, EnumProcessTaskType taskType, boolean isTemplate);
 
     /**
      * Create a new process entity
      *
      * @param definition the process definition
      * @param createdBy The id of the user creating this entity
+     * @param isTemplate {@code true} if process definition should be saved as a template
      *
      * @return a record for the newly created entity
      */
-    ProcessRecord create(ProcessDefinition definition, int createdBy);
+    ProcessRecord create(ProcessDefinition definition, int createdBy, boolean isTemplate);
 
+    /**
+     * Create a new process entity
+     * @see ProcessRepository#create(ProcessDefinition, int, EnumProcessTaskType, boolean)
+     */
+    default ProcessRecord create(ProcessDefinition definition, int createdBy)
+    {
+        return create(definition, createdBy, EnumProcessTaskType.DATA_INTEGRATION, false);
+    }
+    
     /**
      * Update an existing process entity
      *
@@ -151,8 +190,7 @@ public interface ProcessRepository
      * @return a record for updated entity
      * @throws ProcessNotFoundException if given id does not correspond to a process entity
      */
-    ProcessRecord update(long id, ProcessDefinition definition, int updatedBy)
-        throws ProcessNotFoundException;
+    ProcessRecord update(long id, ProcessDefinition definition, int updatedBy) throws ProcessNotFoundException;
 
     /**
      * Find process execution record
@@ -167,14 +205,14 @@ public interface ProcessRepository
 
     /**
      * Find process execution record
-     * 
+     *
      * @see ProcessRepository#findExecution(long, boolean)
      */
     default ProcessExecutionRecord findExecution(long executionId)
     {
         return findExecution(executionId, false);
     }
-    
+
     /**
      * Find executions for a process of given id and version
      *
@@ -209,6 +247,7 @@ public interface ProcessRepository
      * @param id The process id
      * @param version
      * @param submittedBy The id of the user that submitted this execution
+     * @param workflowId The id of the workflow that will carry out the actual execution
      * @return A record representing the the new execution entity
      *
      * @throws ProcessNotFoundException if given pair of (id, version) does not correspond to
@@ -217,7 +256,7 @@ public interface ProcessRepository
      *   associated with target process (at any time, only a single a process may be associated
      *   to at most 1 active execution).
      */
-    ProcessExecutionRecord createExecution(long id, long version, int submittedBy)
+    ProcessExecutionRecord createExecution(long id, long version, int submittedBy, UUID workflowId)
         throws ProcessNotFoundException, ProcessHasActiveExecutionException;
 
     /**
@@ -301,7 +340,7 @@ public interface ProcessRepository
      */
     ProcessExecutionRecord updateExecutionStepAddingFile(long executionId, int stepKey, ProcessExecutionStepFileRecord record)
         throws ProcessExecutionNotFoundException, ProcessExecutionNotActiveException;
-
+    
     /**
      * Discard (i.e delete) an execution entity.
      *

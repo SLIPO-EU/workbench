@@ -1,25 +1,24 @@
 package eu.slipo.workbench.rpc.tests.unit.model;
 
-import org.apache.commons.collections4.IterableUtils;
-import org.apache.commons.collections4.set.UnmodifiableSet;
-import org.junit.Before;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.MethodSorters;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections4.IterableUtils;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -27,32 +26,31 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumOperation;
-import eu.slipo.workbench.common.model.poi.EnumResourceType;
 import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.process.CatalogResource;
 import eu.slipo.workbench.common.model.process.EnumInputType;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.ProcessDefinitionBuilder;
+import eu.slipo.workbench.common.model.process.ProcessDefinitionBuilderFactory;
 import eu.slipo.workbench.common.model.process.ProcessInput;
 import eu.slipo.workbench.common.model.process.ProcessOutput;
 import eu.slipo.workbench.common.model.process.RegisterStep;
 import eu.slipo.workbench.common.model.process.Step;
 import eu.slipo.workbench.common.model.process.TransformStep;
-import eu.slipo.workbench.common.model.resource.DataSource;
 import eu.slipo.workbench.common.model.resource.FileSystemDataSource;
 import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
 import eu.slipo.workbench.common.model.tool.DeerConfiguration;
+import eu.slipo.workbench.common.model.tool.FagiConfiguration;
 import eu.slipo.workbench.common.model.tool.LimesConfiguration;
 import eu.slipo.workbench.common.model.tool.MetadataRegistrationConfiguration;
-import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workflows.util.digraph.DependencyGraph;
 import eu.slipo.workflows.util.digraph.DependencyGraphs;
-import eu.slipo.workflows.util.digraph.ExportDependencyGraph;
 
 @RunWith(SpringRunner.class)
 @ActiveProfiles({ "testing" })
@@ -64,43 +62,75 @@ public class ProcessDefinitionTests
     private static final String DATASOURCE_2_PATH = "uploads/2.csv";
 
     @TestConfiguration
-    public static class Configuration
+    public static class Setup
     {
         @Bean
         public ObjectMapper jsonMapper()
         {
-            return new ObjectMapper();
+            ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+            return objectMapper;
+        }
+
+        @Bean
+        public ProcessDefinitionBuilderFactory processDefinitionBuilderFactory(ObjectMapper objectMapper)
+        {
+            return new ProcessDefinitionBuilderFactory(objectMapper);
         }
 
         @Bean
         public TriplegeoConfiguration sampleTriplegeoConfiguration1()
         {
-            TriplegeoConfiguration configuration = new TriplegeoConfiguration();
+            TriplegeoConfiguration config = new TriplegeoConfiguration();
 
-            configuration.setInputFormat(EnumDataFormat.CSV);
-            configuration.setOutputFormat(EnumDataFormat.N_TRIPLES);
-            configuration.setOutputDir(Paths.get("/var/local/triplegeo/1"));
-            configuration.setTmpDir(Paths.get("/tmp/triplegeo/1"));
-            configuration.setAttrX("lon");
-            configuration.setAttrX("lat");
-            configuration.setFeatureName("points");
-            configuration.setAttrKey("id");
-            configuration.setAttrName("name");
-            configuration.setAttrCategory("type");
+            config.setInputFormat(EnumDataFormat.CSV);
+            config.setOutputFormat(EnumDataFormat.N_TRIPLES);
+            config.setOutputDir("/var/local/triplegeo/1");
+            config.setTmpDir("/tmp/triplegeo/1");
+            config.setMappingSpec("classpath:config/triplegeo/profiles/1/mappings.yml");
+            config.setClassificationSpec("classpath:config/triplegeo/profiles/1/classification.yml");
+            config.setAttrX("lon");
+            config.setAttrX("lat");
+            config.setFeatureSource("points");
+            config.setAttrKey("id");
+            config.setAttrName("name");
+            config.setAttrCategory("type");
 
-            return configuration;
+            return config;
         }
 
         @Bean
         public DeerConfiguration sampleDeerConfiguration1()
         {
-            return new DeerConfiguration();
+            DeerConfiguration config = new DeerConfiguration();
+            config.setInputFormat(EnumDataFormat.N_TRIPLES);
+            config.setOutputFormat(EnumDataFormat.N_TRIPLES);
+            return config;
+        }
+
+        @Bean
+        public FagiConfiguration sampleFagiConfiguration1()
+        {
+            FagiConfiguration config = new FagiConfiguration();
+            return config;
         }
 
         @Bean
         public LimesConfiguration sampleLimesConfiguration1()
         {
-            return new LimesConfiguration();
+            LimesConfiguration config = new LimesConfiguration();
+
+            config.setMetric("trigrams(a.level, b.level)");
+            config.setSource("a", "/tmp/limes/input/a.nt", "?x",
+                "slipo:name/slipo:nameType RENAME label");
+            config.setTarget("b", "/tmp/limes/input/b.nt", "?y",
+                "slipo:name/slipo:nameType RENAME label");
+            config.setOutputDir("/tmp/limes/output");
+            config.setOutputFormatFromString("N-TRIPLES");
+            config.setAccepted(0.98, "accepted.nt");
+            config.setReview(0.95, "review.nt");
+
+            return config;
         }
 
         @Bean
@@ -120,6 +150,9 @@ public class ProcessDefinitionTests
     private ObjectMapper jsonMapper;
 
     @Autowired
+    private ProcessDefinitionBuilderFactory processDefinitionBuilderFactory;
+
+    @Autowired
     private FileSystemDataSource dataSource1;
 
     @Autowired
@@ -134,33 +167,39 @@ public class ProcessDefinitionTests
     @Autowired
     private LimesConfiguration sampleLimesConfiguration1;
 
+    @Autowired
+    private FagiConfiguration sampleFagiConfiguration1;
+
     private ProcessDefinition buildDefinition1()
     {
-        final int resourceKey1 = 1, resourceKey2 = 2;
+        final int resultKey1 = 1, resultKey2 = 2, key1 = 101, key2 = 102;
 
         ResourceMetadataCreate metadata1 =
             new ResourceMetadataCreate("out-1", "A sample output file");
         ResourceMetadataCreate metadata2 =
             new ResourceMetadataCreate("out-2", "Another sample output file");
 
-        ProcessDefinition definition1 = ProcessDefinitionBuilder.create("proc-a-1")
-            .resource("resource-a-1.1", 101, ResourceIdentifier.of(1L, 5L))
-            .resource("resource-a-1.2", 102, ResourceIdentifier.of(3L, 17L))
+        ProcessDefinition definition1 = processDefinitionBuilderFactory.create("proc-a-1")
+            .resource("resource-a-1.1", key1, ResourceIdentifier.of(1L, 5L))
+            .resource("resource-a-1.2", key2, ResourceIdentifier.of(3L, 17L))
             .transform("triplegeo-1", b -> b
                 .group(1)
-                .outputKey(resourceKey1)
+                .nodeName("triplegeo-1")
+                .outputKey(resultKey1)
                 .source(dataSource1)
+                .outputFormat(EnumDataFormat.N_TRIPLES)
                 .configuration(sampleTriplegeoConfiguration1))
             .step("enrich-with-deer-1", b -> b
                 .group(2)
+                .nodeName("enrich-with-deer-1")
                 .operation(EnumOperation.ENRICHMENT)
                 .tool(EnumTool.DEER)
+                .outputFormat(EnumDataFormat.N_TRIPLES)
                 .configuration(sampleDeerConfiguration1)
-                .input(resourceKey1)
-                .outputKey(resourceKey2)
-                .outputFormat(EnumDataFormat.N_TRIPLES))
-            .register("register-1", resourceKey1, metadata1)
-            .register("register-2", resourceKey2, metadata2)
+                .input(resultKey1)
+                .outputKey(resultKey2))
+            .register("register-1", resultKey1, metadata1)
+            .register("register-2", resultKey2, metadata2)
             .build();
 
         return definition1;
@@ -272,8 +311,6 @@ public class ProcessDefinitionTests
         assertNotNull(definition1);
 
         String s1 = jsonMapper.writeValueAsString(definition1);
-        //System.err.println(s1);
-
         ProcessDefinition definition1a = jsonMapper.readValue(s1, ProcessDefinition.class);
         assertEquals(s1, jsonMapper.writeValueAsString(definition1a));
     }
@@ -321,10 +358,33 @@ public class ProcessDefinitionTests
     }
 
     @Test(expected = IllegalStateException.class)
+    public void test2_checkDefinition1UnmodifiableConfiguration()
+    {
+        ProcessDefinition definition1 = buildDefinition1();
+        assertNotNull(definition1);
+
+        Step step11 = definition1.stepByNodeName("triplegeo-1");
+
+        TriplegeoConfiguration configuration = (TriplegeoConfiguration) step11.configuration();
+        configuration.setAttrKey("koukou");
+    }
+
+    @Test
+    public void test2_checkDefinition1ConfigurationType()
+    {
+        ProcessDefinition definition1 = buildDefinition1();
+        assertNotNull(definition1);
+
+        Step step11 = definition1.stepByNodeName("triplegeo-1");
+        Class<?> configurationType = step11.configurationType();
+        assertEquals(TriplegeoConfiguration.class, configurationType);
+    }
+
+    @Test(expected = IllegalStateException.class)
     public void test3_checkRegisterUndefinedResource1()
     {
         final int resourceKey = 1; // not a catalog resource, neither is an output from another step
-        ProcessDefinition definition = ProcessDefinitionBuilder.create("register-1")
+        ProcessDefinition definition = processDefinitionBuilderFactory.create("register-1")
             .register("register-1", resourceKey, new ResourceMetadataCreate("sample", "Another sample"))
             .build();
         System.err.println(definition);
@@ -336,7 +396,7 @@ public class ProcessDefinitionTests
         final int inputKey1 = 1;
         final int inputKey2 = 2; // not a catalog resource, neither is an output from another step
         final int outputKey = 10;
-        ProcessDefinition definition = ProcessDefinitionBuilder.create("register-1")
+        ProcessDefinition definition = processDefinitionBuilderFactory.create("register-1")
             .resource("res-1", inputKey1, ResourceIdentifier.of(5L, 27L))
             .transform("triplegeo-1", builder -> builder
                 .input(inputKey2)
@@ -347,13 +407,8 @@ public class ProcessDefinitionTests
         System.err.println(definition);
     }
 
-
-    ////////////////////////////////////////////////////////////////////////////////////
-    //                          Fixme Scratch                                         //
-    ////////////////////////////////////////////////////////////////////////////////////
-
     @Test
-    public void test99_scratch1() throws Exception
+    public void test99() throws Exception
     {
         final int resourceKey1 = 1, resourceKey2 = 2, resourceKey3 = 3;
 
@@ -365,7 +420,7 @@ public class ProcessDefinitionTests
             new ResourceMetadataCreate("out-3", "Yet another sample output file");
 
 
-        ProcessDefinition definition1 = ProcessDefinitionBuilder.create("proc-a-1")
+        ProcessDefinition definition1 = processDefinitionBuilderFactory.create("proc-a-1")
             .resource("resource-a-1.1", 101, ResourceIdentifier.of(1L, 5L))
             .resource("resource-a-1.2", 102, ResourceIdentifier.of(3L, 17L))
             .resource("resource-a-1.3", 103, ResourceIdentifier.of(8L, 2L))
@@ -415,10 +470,6 @@ public class ProcessDefinitionTests
         Iterable<Step> sortedSteps =
             IterableUtils.transformedIterable(
                 DependencyGraphs.topologicalSort(dependencyGraph), k -> definition1.stepByKey(k));
-        for (Step step: sortedSteps) {
-            System.err.println(step);
-        }
-
 
         String s1 = jsonMapper.writeValueAsString(definition1);
         //System.err.println(s1);

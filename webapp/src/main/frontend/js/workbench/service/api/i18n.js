@@ -1,17 +1,17 @@
-const fetch = require('fetch');
+import fetch from 'fetch';
 
-const checkStatus = require('../util/check-fetch-status');
+import {
+  checkStatus,
+} from '../util/check-fetch-status';
 
 const credentials = 'same-origin';
 
-var api = {
-
-  getMessages: (locale) => {
-    return fetch(`/i18n/${locale}/messages.json`, { credentials })
-      .then(checkStatus)
-      .then(res => res.json());
-  },
-
+export const getMessages = (locale) => {
+  return fetch(`/i18n/${locale}/messages.json`, { credentials })
+    .then(checkStatus)
+    .then(res => res.json());
 };
 
-module.exports = api;
+export default {
+  getMessages,
+};

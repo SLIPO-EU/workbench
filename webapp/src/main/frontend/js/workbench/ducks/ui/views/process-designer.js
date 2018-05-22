@@ -464,7 +464,7 @@ export default (state = initialState, action) => {
   }
 
   if (requireValidation) {
-    newState.errors = processService.validate(EnumDesignerSaveAction.None, newState);
+    newState.errors = processService.validate(EnumDesignerSaveAction.None, newState, false);
   }
   if (supportUndo) {
     return {
@@ -532,6 +532,8 @@ export {
  */
 
 export {
+  cloneTemplate,
+  downloadFile,
   fetchExecutionDetails,
   fetchExecutionKpiData,
   fetchProcess,

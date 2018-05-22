@@ -13,11 +13,14 @@ public class ProcessRecordView implements Serializable {
 
     private final Long version;
 
+    private final boolean template;
+
     private final ProcessDefinition definition;
 
     public ProcessRecordView(ProcessRecord processRecord) {
         this.id = processRecord.getId();
         this.version = processRecord.getVersion();
+        this.template = processRecord.isTemplate();
         this.definition = processRecord.getDefinition();
     }
 
@@ -27,6 +30,10 @@ public class ProcessRecordView implements Serializable {
 
     public Long getVersion() {
         return version;
+    }
+
+    public boolean isTemplate() {
+        return template;
     }
 
     public ProcessDefinition getDefinition() {

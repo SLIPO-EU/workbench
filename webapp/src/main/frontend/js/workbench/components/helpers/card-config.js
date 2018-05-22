@@ -46,14 +46,14 @@ export const ResourceCardConfig = (props, intl) => ({
 
 export const SystemCardConfig = (props) => ({
   title: 'dashboard.card.system',
-  items: props ? [{
-    value: [props.usedCores, props.totalCores],
+  items: props && props.online ? [{
+    value: [props.usedCores || '-', props.totalCores || '-'],
     label: 'dashboard.card.fields.system.cores',
   }, {
-    value: [props.usedMemory, props.totalMemory],
+    value: [props.usedMemory || '-', props.totalMemory || '-'],
     label: 'dashboard.card.fields.system.memory',
   }, {
-    value: [props.usedDisk, props.totalDisk],
+    value: [props.usedDisk || '-', props.totalDisk || '-'],
     label: 'dashboard.card.fields.system.disk-space',
   }] : null,
   color: '#ffffff',

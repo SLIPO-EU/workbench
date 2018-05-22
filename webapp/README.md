@@ -97,6 +97,7 @@ Run a container based on the newly created image:
        --link postgres-1:postgres-1 \
        --link slipo-workbench-rpc-server-1:rpc-server \
        --volume "$(pwd)/.secrets/db-password:/etc/secrets/db-password" \
+       --volume "/mnt/nfs-1/app-data/slipo-workbench:/mnt/nfs-1/app-data/slipo-workbench" \
        -e RPC_SERVER=http://rpc-server:8080/ \
        -e DB_HOST=postgres-1 -e DB_USERNAME=slipo -e DB_PASSWORD_FILE=/etc/secrets/db-password \
        local/slipo-workbench-webapp:0.1

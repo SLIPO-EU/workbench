@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rules>
+  <validationRule>
+    <defaultAction>accept</defaultAction>
+    <actionRuleSet>
+      <actionRule>
+        <action>accept</action>
+        <condition>
+          <function>isPhoneNumberParsable(a0)</function>
+        </condition>
+      </actionRule>
+    </actionRuleSet>
+    <externalProperty id="a0">http://slipo.eu/def#phone http://slipo.eu/def#contactValue</externalProperty>
+    <externalProperty id="b0">http://slipo.eu/def#name http://slipo.eu/def#nameValue</externalProperty>
+  </validationRule>
+  <rule>
+    <propertyA>http://slipo.eu/def#name http://slipo.eu/def#nameValue</propertyA>
+    <propertyB>http://slipo.eu/def#name http://slipo.eu/def#nameValue</propertyB>
+    <defaultAction>concatenate</defaultAction>
+    <actionRuleSet>
+      <actionRule>
+        <!--<action>keep-left</action>-->
+        <action>concatenate</action>
+        <condition>
+          <function>isSameSimpleNormalize(a1, b1, 0.8)</function>
+        </condition>
+      </actionRule>
+    </actionRuleSet>
+    <externalProperty id="a1">http://slipo.eu/def#name http://slipo.eu/def#nameValue</externalProperty>
+    <externalProperty id="b1">http://slipo.eu/def#name http://slipo.eu/def#nameValue</externalProperty>
+  </rule>
+  <defaultDatasetAction>keep-left</defaultDatasetAction>
+</rules>

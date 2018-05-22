@@ -20,6 +20,7 @@
       "designer": {
         "default": "Workflow Designer",
         "edit": "Edit",
+        "edit-template": "Edit Template",
         "view": "View"
       },
       "viewer": "Workflow Execution Viewer"
@@ -60,8 +61,8 @@
           "failed": "Failed"
         },
         "events": {
-          "error": "Error",
-          "warn": "Warning",
+          "error": "Errors",
+          "warn": "Warnings",
           "info": "Information"
         },
         "resources": {

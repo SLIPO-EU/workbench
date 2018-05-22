@@ -1,7 +1,15 @@
 package eu.slipo.workbench.common.model.tool;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import eu.slipo.workbench.common.model.poi.EnumDataFormat;
+import eu.slipo.workbench.common.model.poi.EnumOutputType;
+import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
 
@@ -59,5 +67,66 @@ public class MetadataRegistrationConfiguration implements ToolConfiguration
     public void setTarget(ResourceIdentifier target)
     {
         this.target = target;
+    }
+    
+    @JsonIgnore
+    @Override
+    public EnumTool getTool()
+    {
+        return EnumTool.REGISTER;
+    }
+
+    @Override
+    public EnumDataFormat getInputFormat()
+    {
+        return null;
+    }
+
+    @Override
+    public void setInputFormat(EnumDataFormat inputFormat)
+    {
+        // no-op
+    }
+
+    @Override
+    public List<String> getInput()
+    {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public void setInput(List<String> input)
+    {
+        // no-op
+    }
+
+    @Override
+    public String getOutputDir()
+    {
+        return null; // no output
+    }
+
+    @Override
+    public void setOutputDir(String dir)
+    {
+        // no-op
+    }
+
+    @Override
+    public EnumDataFormat getOutputFormat()
+    {
+        return null; // no output is produced
+    }
+
+    @Override
+    public void setOutputFormat(EnumDataFormat dataFormat)
+    {
+        // no-op
+    }
+
+    @Override
+    public Map<EnumOutputType, List<String>> getOutputNames()
+    {
+        return Collections.emptyMap(); // no output is produced
     }
 }

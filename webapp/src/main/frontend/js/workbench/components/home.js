@@ -29,6 +29,7 @@ import SecureRoute from './helpers/secure-route';
 
 import {
   Dashboard,
+  HarvesterDataExplorer,
   Profile,
   Settings,
   ResourceExplorer,
@@ -81,6 +82,7 @@ class Home extends React.Component {
     this._styleAsideMenu = this._styleAsideMenu.bind(this);
 
     this.state = {
+      sidebarOpen: true,
       sidebarStyle: 'fixed', // fixed, compact, minimized, off-canvas
       asideOpen: false,
       asideStyle: 'fixed', // fixed, off-canvas
@@ -88,7 +90,7 @@ class Home extends React.Component {
   }
 
   _toggleSidebar() {
-    this.props.toggleSidebar();
+    this.setState({ sidebarOpen: !this.state.sidebarOpen });
   }
 
   _styleSidebar(style) {
@@ -123,7 +125,7 @@ class Home extends React.Component {
       /* header-* */
       'header-fixed',
       /* sidebar-* */
-      this.props.sidebarOpen ? null : 'sidebar-hidden',
+      this.state.sidebarOpen ? null : 'sidebar-hidden',
       'sidebar-' + (this.state.sidebarStyle || 'fixed'),
       /* aside-menu-* */
       this.state.asideOpen ? null : 'aside-menu-hidden',
@@ -150,6 +152,7 @@ class Home extends React.Component {
                 {/* Dynamic */}
                 <Route path={DynamicRoutes.ResourceViewer} component={ResourceViewer} />
                 <Route path={DynamicRoutes.ProcessDesignerView} component={ProcessDesigner} exact />
+                <Route path={DynamicRoutes.ProcessDesignerEditTemplate} component={ProcessDesigner} exact />
                 <Route path={DynamicRoutes.ProcessDesignerEdit} component={ProcessDesigner} exact />
                 <Route path={DynamicRoutes.ProcessDesignerCreate} component={ProcessDesigner} exact />
                 <Route path={DynamicRoutes.ProcessExecutionViewer} component={ProcessDesigner} exact />
@@ -157,6 +160,7 @@ class Home extends React.Component {
                 <Route path={DynamicRoutes.SchemaDesigner} component={SchemaDesigner} />
                 {/* Static */}
                 <Route path={StaticRoutes.Dashboard} component={Dashboard} />
+                <Route path={StaticRoutes.HarvesterDataExplorer} component={HarvesterDataExplorer} />
                 <Route path={StaticRoutes.Profile} component={Profile} />
                 <Route path={StaticRoutes.Settings} component={Settings} />
                 <Route path={StaticRoutes.ResourceExplorer} component={ResourceExplorer} />

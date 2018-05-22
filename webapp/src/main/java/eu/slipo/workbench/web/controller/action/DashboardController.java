@@ -17,7 +17,7 @@ import eu.slipo.workbench.web.repository.DashboardRepository;
 @RestController
 @Secured({ "ROLE_USER", "ROLE_ADMIN" })
 @RequestMapping(produces = "application/json")
-public class DashboardController {
+public class DashboardController extends BaseController {
 
     @Autowired
     DashboardRepository dashboardRepository;

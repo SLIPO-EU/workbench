@@ -25,6 +25,7 @@ import javax.validation.constraints.NotNull;
 import eu.slipo.workbench.common.domain.attributeconverter.ProcessDefinitionConverter;
 import eu.slipo.workbench.common.model.process.EnumProcessTaskType;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
+import eu.slipo.workbench.common.model.process.ProcessIdentifier;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
 
 /**
@@ -79,7 +80,7 @@ public class ProcessEntity {
     AccountEntity updatedBy;
 
     @NotNull
-    @Column(name = "definition", nullable = false, length = 4096)
+    @Column(name = "definition", nullable = false, length = 8192)
     @Convert(converter = ProcessDefinitionConverter.class)
     ProcessDefinition definition;
 
@@ -204,6 +205,11 @@ public class ProcessEntity {
         revisions.add(revisionEntity);
     }
 
+    public ProcessIdentifier getProcessIdentifier()
+    {
+        return ProcessIdentifier.of(id, version);
+    }
+    
     public ProcessRecord toProcessRecord()
     {
         return toProcessRecord(true, false, false);
@@ -234,5 +240,4 @@ public class ProcessEntity {
 
         return p;
     }
-
 }

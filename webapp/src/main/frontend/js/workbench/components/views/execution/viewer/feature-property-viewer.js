@@ -9,6 +9,10 @@ import {
   Row,
 } from 'reactstrap';
 
+function isNotEmpty(value) {
+  return ((value !== null) && (value !== ''));
+}
+
 class FeaturePropertyViewer extends React.Component {
 
   constructor(props) {
@@ -21,28 +25,29 @@ class FeaturePropertyViewer extends React.Component {
 
   renderFeature(feature, index) {
     const properties = feature.getProperties();
-    const keys = Object.keys(properties).filter((k) => k !== feature.getGeometryName() && !k.startsWith('__'));
+    const keys = Object.keys(properties)
+      .filter((k) => k !== feature.getGeometryName() && !k.startsWith('__') && isNotEmpty(properties[k]));
 
     return (
       <Card key={index}>
         <CardHeader>
           <i className="fa fa-map-marker"></i>
-          <span>{`Feature ${index + 1}`}</span>
+          <span>{`Feature ${index + 1} - ${keys.length} Properties`}</span>
         </CardHeader>
         <CardBody>
-          <Row>
-            {
-              keys.map((key) => {
+          {
+            keys
+              .map((key) => {
                 return (
-
-                  <Col key={key}>
-                    <div className="font-weight-bold mb-2">{key}</div>
-                    <div className="font-weight-italic">{properties[key]}</div>
-                  </Col>
+                  <Row key={key}>
+                    <Col>
+                      <div className="font-weight-bold mb-2">{key}</div>
+                      <div className="font-weight-italic">{properties[key]}</div>
+                    </Col>
+                  </Row>
                 );
               })
-            }
-          </Row>
+          }
         </CardBody>
       </Card>
     );

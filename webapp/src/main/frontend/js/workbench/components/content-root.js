@@ -8,7 +8,6 @@ import { ToastContainer } from 'react-toastify';
 
 import { Pages, StaticRoutes, DynamicRoutes, ErrorPages } from '../model/routes';
 import { userPropType } from '../model/prop-types/user';
-import { toggleSidebar } from '../ducks/ui/menu';
 import { resize } from '../ducks/ui/viewport';
 import { getFilesystem } from '../ducks/config';
 
@@ -51,7 +50,7 @@ class ContentRoot extends React.Component {
   }
 
   _getFileSystem() {
-    this.props.getFilesystem('');
+    this.props.getFilesystem();
   }
 
   _setViewport() {
@@ -93,7 +92,6 @@ class ContentRoot extends React.Component {
               <Home
                 user={this.props.user}
                 sidebarOpen={this.props.sidebarOpen}
-                toggleSidebar={this.props.toggleSidebar}
               />
             )}
           />
@@ -135,9 +133,6 @@ const mapStateToProps = (state) => ({
 const mapDispatchToProps = (dispatch) => bindActionCreators({
   getFilesystem,
   resize,
-  toggleSidebar,
 }, dispatch);
 
-ContentRoot = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(ContentRoot);
-
-module.exports = ContentRoot;
+export default ReactRedux.connect(mapStateToProps, mapDispatchToProps)(ContentRoot);

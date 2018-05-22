@@ -1,23 +1,120 @@
 package eu.slipo.workbench.common.model.tool;
 
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang3.NotImplementedException;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import eu.slipo.workbench.common.model.poi.EnumDataFormat;
+import eu.slipo.workbench.common.model.poi.EnumOutputType;
+import eu.slipo.workbench.common.model.poi.EnumTool;
+
 /**
  * Configuration for DEER
  */
-@SuppressWarnings("serial")
-public class DeerConfiguration extends AbstractToolConfiguration {
+public class DeerConfiguration extends EnrichConfiguration 
+{
+    private static final long serialVersionUID = 1L;
 
-    public DeerConfiguration() {
+    public DeerConfiguration() {}
+
+    @JsonIgnore
+    @Override
+    public EnumTool getTool()
+    {
+        return EnumTool.DEER;
     }
 
-    // TODO: Remove
-    private String temp;
-
-    public String getTemp() {
-        return temp;
+    @JsonIgnore
+    @Override
+    public EnumDataFormat getInputFormat()
+    {
+        return super.getInputFormat();
     }
 
-    public void setTemp(String temp) {
-        this.temp = temp;
+    @JsonIgnore
+    @Override
+    public void setInputFormat(EnumDataFormat inputFormat)
+    {
+        super.setInputFormat(inputFormat);
     }
 
+    @JsonIgnore
+    @Override
+    public List<String> getInput()
+    {
+        return super.getInput();
+    }
+
+    @JsonIgnore
+    @Override
+    public void setInput(List<String> input)
+    {
+        super.setInput(input);
+    }
+
+    @JsonIgnore
+    @Override
+    public void setInput(String input)
+    {
+        super.setInput(input);
+    }
+
+    @JsonIgnore
+    @Override
+    public void clearInput()
+    {
+        super.clearInput();
+    }
+
+    @JsonIgnore
+    @Override
+    public String getOutputDir()
+    {
+        return super.getOutputDir();
+    }
+
+    @JsonIgnore
+    @Override
+    public void setOutputDir(String dir)
+    {
+        super.setOutputDir(dir);
+    }
+    
+    @JsonIgnore
+    @Override
+    public void setOutputFormat(EnumDataFormat dataFormat)
+    {
+        super.setOutputFormat(dataFormat);
+    }
+    
+    @JsonIgnore
+    @Override
+    public EnumDataFormat getOutputFormat()
+    {
+        return super.getOutputFormat();
+    }
+
+    @JsonIgnore
+    @Override
+    public Map<EnumOutputType, List<String>> getOutputNames()
+    {
+        throw new NotImplementedException("not implemented yet");
+    }
+    
+    @JsonIgnore
+    @Override
+    public String getVersion()
+    {
+        return super.getVersion();
+    }
+
+    @JsonIgnore
+    @Override
+    public void setVersion(String version)
+    {
+        super.setVersion(version);
+    } 
 }

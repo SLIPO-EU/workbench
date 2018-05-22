@@ -68,9 +68,9 @@ class StepInput extends React.Component {
         <div className="slipo-pd-step-input-icon">
           <i className={this.props.resource.iconClass}></i>
         </div>
-        <div className="slipo-pd-step-input-label">
+        <p className="slipo-pd-step-input-label">
           {this.props.resource.name}
-        </div>
+        </p>
       </div>
     );
   }

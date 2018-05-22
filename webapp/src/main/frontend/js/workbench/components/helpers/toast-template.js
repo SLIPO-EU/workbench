@@ -1,7 +1,13 @@
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
 
-import { FormattedMessage } from 'react-intl';
+import {
+  FormattedMessage,
+} from 'react-intl';
+
+import {
+  EnumErrorLevel,
+} from '../../model/error';
 
 /**
  * A toast template
@@ -41,10 +47,12 @@ ToastTemplate.propTypes = {
   text: PropTypes.string.isRequired,
   iconClass: PropTypes.string,
   padding: PropTypes.number,
+  level: PropTypes.string.isRequired,
 };
 
 ToastTemplate.defaultProps = {
-  padding: 4
+  padding: 4,
+  level: EnumErrorLevel.ERROR,
 };
 
 export default ToastTemplate;

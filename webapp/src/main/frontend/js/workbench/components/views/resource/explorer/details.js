@@ -81,7 +81,7 @@ class ResourceDetails extends React.Component {
             <TextField
               id="createdOn"
               label="Created On"
-              value={intl.formatDate(r.createdOn)}
+              value={intl.formatTime(r.createdOn, { day: 'numeric', month: 'numeric', year: 'numeric' })}
               readOnly={true}
             />
           </Col>
@@ -99,7 +99,7 @@ class ResourceDetails extends React.Component {
             <TextField
               id="updatedOn"
               label="Updated On"
-              value={intl.formatDate(r.updatedOn)}
+              value={intl.formatTime(r.updatedOn, { day: 'numeric', month: 'numeric', year: 'numeric' })}
               readOnly={true}
             />
           </Col>

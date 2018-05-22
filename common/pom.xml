@@ -76,7 +76,7 @@
             <artifactId>hibernate-spatial</artifactId>
         </dependency>
 
-        <!-- Jackson serializers -->
+        <!-- Jackson JSON extra serializers -->
 
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
@@ -86,6 +86,19 @@
         <dependency>
             <groupId>com.bedatadriven</groupId>
             <artifactId>jackson-datatype-jts</artifactId>
+        </dependency>
+       
+        <!-- Jackson (XML parser/generator) -->
+    
+        <dependency>
+            <groupId>org.codehaus.woodstox</groupId>
+            <artifactId>woodstox-core-asl</artifactId>
+            <version>4.4.1</version>
+        </dependency>
+    
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-xml</artifactId>
         </dependency>
        
         <!-- ICU4J text utilities -->
@@ -122,5 +135,54 @@
             <artifactId>commons-beanutils</artifactId>
         </dependency> 
 
+        <!-- slugify -->
+
+        <dependency>
+            <groupId>com.github.slugify</groupId>
+            <artifactId>slugify</artifactId>
+            <version>2.2</version>
+        </dependency>
+
+        <!-- Guava -->
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>21.0</version>
+        </dependency>
+
     </dependencies>
+
+	<build>
+
+		<plugins>
+
+			<!-- Copy vendor data under target directory -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>3.0.1</version>
+				<executions>
+					<execution>
+						<id>copy-vendor-data</id>
+						<phase>process-resources</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}/classes/common/vendor</outputDirectory>
+							<resources>
+								<resource>
+									<directory>./vendor</directory>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+		</plugins>
+    
+    </build>
+    
 </project>

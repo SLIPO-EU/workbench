@@ -102,8 +102,17 @@ public class ProcessExecutionStepFileEntity {
     @Column(name = "table_name", columnDefinition = "uuid")
     UUID tableName;
     
+    /**
+     * A flag that indicates that a step file is verified to exist.
+     */
     @Column(name = "verified")
     boolean verified;
+    
+    /**
+     * A flag that indicates that a step file is the primary output of the step it belongs.
+     */
+    @Column(name = "primary_output", updatable = false)
+    Boolean primary;
     
     protected ProcessExecutionStepFileEntity() {}
    
@@ -117,7 +126,9 @@ public class ProcessExecutionStepFileEntity {
         this.dataFormat = record.getDataFormat();
         this.boundingBox = record.getBoundingBox();
         this.tableName = record.getTableName();
+        this.primary = record.getPrimary();
         this.verified = false;
+        
     }
     
     public ProcessExecutionStepFileEntity(
@@ -243,7 +254,22 @@ public class ProcessExecutionStepFileEntity {
     {
         return verified;
     }
+   
+    public void setPrimary(Boolean primary)
+    {
+        this.primary = primary;
+    }
     
+    public Boolean getPrimary()
+    {
+        return primary;
+    }
+    
+    public boolean isPrimary()
+    {
+        return primary != null && primary.booleanValue();
+    }
+   
     public ProcessExecutionStepFileRecord toProcessExecutionStepFileRecord() 
     {
         ProcessExecutionStepFileRecord fileRecord = 
@@ -256,6 +282,8 @@ public class ProcessExecutionStepFileEntity {
 
         fileRecord.setBoundingBox(boundingBox);
         fileRecord.setTableName(tableName);
+        
+        fileRecord.setPrimary(primary);
         
         return fileRecord;
     }

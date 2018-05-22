@@ -9,6 +9,16 @@ import {
  */
 import * as Types from './types';
 
+import {
+  EnumErrorLevel,
+  ServerError,
+} from '../../../../model';
+
+import {
+  dom,
+  file,
+} from '../../../../service/api';
+
 /*
  * Thunk actions
  */
@@ -27,7 +37,7 @@ export const fetchExecutionDetails = (process, version, execution) => (dispatch,
 
   return processService.fetchExecutionDetails(process, version, execution, token)
     .then((data) => {
-      dispatch(processLoaded(data.process, true));
+      dispatch(processLoaded(data.process, true, false, getState().config));
       dispatch(receiveExecutionData(data.execution));
     });
 };
@@ -47,17 +57,19 @@ export const fetchExecutionKpiData = (process, version, execution, file, mode) =
   const { meta: { csrfToken: token } } = getState();
   dispatch(requestExecutionKpiData(file, mode));
 
-  return processService.fetchExecutionKpiData(process, version, execution, file, mode, token)
+  return processService.fetchExecutionKpiData(process, version, execution, file, token)
     .then((data) => {
       dispatch(receiveExecutionKpiData(data));
     });
 };
 
-const processLoaded = function (process, readOnly) {
+const processLoaded = function (process, readOnly, clone, appConfiguration) {
   return {
     type: Types.LOAD_RECEIVE_RESPONSE,
     process,
     readOnly,
+    clone,
+    appConfiguration,
   };
 };
 
@@ -69,7 +81,7 @@ export function fetchProcess(id) {
 
     const { meta: { csrfToken: token } } = getState();
     return processService.fetchProcess(id, token).then((process) => {
-      dispatch(processLoaded(process, false));
+      dispatch(processLoaded(process, false, false, getState().config));
     });
   };
 }
@@ -85,18 +97,14 @@ export function fetchProcessRevision(id, version) {
 
     const { meta: { csrfToken: token } } = getState();
     return processService.fetchProcessRevision(id, version, token).then((process) => {
-      dispatch(processLoaded(process, true));
+      dispatch(processLoaded(process, true, false, getState().config));
     });
   };
 }
 
-export function save(action, process) {
+export function save(action, process, isTemplate) {
   return (dispatch, getState) => {
-    if (action === EnumDesignerSaveAction.SaveAsTemplate) {
-      return Promise.reject(new Error('Not Implemented!'));
-    }
-
-    const errors = processService.validate(action, process);
+    const errors = processService.validate(action, process, isTemplate);
     if (errors.length !== 0) {
       return Promise.reject(new Error('Validation has failed'));
     }
@@ -105,3 +113,41 @@ export function save(action, process) {
     return processService.save(action, process, token);
   };
 }
+
+export function cloneTemplate(id, version) {
+  return (dispatch, getState) => {
+    if (Number.isNaN(id)) {
+      return Promise.reject(new Error('Invalid id. Failed to load template instance'));
+    }
+    if (Number.isNaN(version)) {
+      return Promise.reject(new Error('Invalid version. Failed to load template instance'));
+    }
+
+    const { meta: { csrfToken: token } } = getState();
+    return processService.fetchProcessRevision(id, version, token).then((process) => {
+      dispatch(processLoaded(process, false, true, getState().config));
+    });
+  };
+}
+
+const filedDownloaded = function (fileId, fileName) {
+  return {
+    type: Types.FILE_DOWNLOAD_REQUEST,
+    fileId,
+    fileName,
+  };
+};
+
+export const downloadFile = (id, version, executionId, fileId, fileName) => {
+  return (dispatch, getState) => {
+    const { meta: { csrfToken: token } } = getState();
+    const url = `/action/process/${id}/${version}/execution/${executionId}/file/${fileId}`;
+
+    return file.download(url, token)
+      .then(data => {
+        dom.downloadLink(data, fileName);
+
+        dispatch(filedDownloaded(fileId, fileName));
+      });
+  };
+};

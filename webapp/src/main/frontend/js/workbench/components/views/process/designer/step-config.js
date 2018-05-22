@@ -31,8 +31,10 @@ class StepConfig extends React.Component {
   }
 
   static propTypes = {
+    appConfiguration: PropTypes.object,
+    filesystem: PropTypes.object,
     step: PropTypes.object.isRequired,
-    configuration: PropTypes.object,
+    stepConfiguration: PropTypes.object,
     errors: PropTypes.object,
     configureStepValidate: PropTypes.func.isRequired,
     configureStepUpdate: PropTypes.func.isRequired,
@@ -50,7 +52,7 @@ class StepConfig extends React.Component {
     }
   }
 
-  createForm(Component, validator) {
+  createForm(Component, validator, extraComponentProps = {}) {
     return (
       <Form
         title={this.props.step.name}
@@ -60,22 +62,23 @@ class StepConfig extends React.Component {
         setValue={this.setValue}
         cancel={this.cancel}
         save={this.save}
-        values={this.props.configuration}
+        values={this.props.stepConfiguration}
         errors={this.props.errors}
         readOnly={this.props.readOnly}
+        appConfiguration={this.props.appConfiguration}
       >
         {
           React.isValidElement(Component) ?
             Component
             :
-            <Component />
+            <Component {...extraComponentProps} />
         }
       </Form>
     );
   }
 
   save() {
-    this.props.configureStepEnd(this.props.step, this.props.configuration || {}, this.props.errors);
+    this.props.configureStepEnd(this.props.step, this.props.stepConfiguration || {}, this.props.errors);
   }
 
   cancel() {
@@ -87,7 +90,16 @@ class StepConfig extends React.Component {
       <Card>
         <CardBody className="card-body">
           {this.props.step.tool === EnumTool.TripleGeo &&
-            this.createForm(triplegeo.Component, triplegeo.validator)
+            this.createForm(triplegeo.Component, triplegeo.validator, {
+              appConfiguration: this.props.appConfiguration,
+              filesystem: this.props.filesystem,
+              allowUpload: true,
+              allowNewFolder: true,
+              allowDelete: true,
+              createFolder: this.props.createFolder,
+              uploadFile: this.props.uploadFile,
+              deletePath: this.props.deletePath,
+            })
           }
           {this.props.step.tool === EnumTool.LIMES &&
             this.createForm(<Placeholder style={{ height: '100%' }} label="Context" iconClass="fa fa-magic" />, null)

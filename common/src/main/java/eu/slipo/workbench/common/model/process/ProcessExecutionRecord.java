@@ -10,6 +10,9 @@ import java.util.stream.Collectors;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import eu.slipo.workbench.common.model.user.AccountInfo;
 
 public class ProcessExecutionRecord implements Serializable
@@ -35,6 +38,9 @@ public class ProcessExecutionRecord implements Serializable
     private EnumProcessTaskType taskType;
 
     private String errorMessage;
+
+    @JsonIgnore()
+    private boolean isRunning;
 
     private List<ProcessExecutionStepRecord> steps;
 
@@ -151,6 +157,16 @@ public class ProcessExecutionRecord implements Serializable
         this.errorMessage = errorMessage;
     }
 
+    @JsonProperty()
+    public boolean isRunning() {
+        return isRunning;
+    }
+
+    @JsonIgnore()
+    public void setRunning(boolean isRunning) {
+        this.isRunning = isRunning;
+    }
+
     public long getId() {
         return id;
     }
@@ -186,15 +202,30 @@ public class ProcessExecutionRecord implements Serializable
         return null;
     }
 
-    public ProcessExecutionStepRecord getStep(String stepName)
+    public ProcessExecutionStepRecord getStepByName(String name)
     {
-        Assert.isTrue(!StringUtils.isEmpty(stepName), "A non-empty name is required");
+        Assert.isTrue(!StringUtils.isEmpty(name), "A non-empty name is required");
 
         if (this.steps == null) {
             return null;
         }
         for (ProcessExecutionStepRecord r: this.steps) {
-            if (r.getName().equals(stepName)) {
+            if (r.getName().equals(name)) {
+                return r;
+            }
+        }
+        return null;
+    }
+
+    public ProcessExecutionStepRecord getStepByNodeName(String nodeName)
+    {
+        Assert.isTrue(!StringUtils.isEmpty(nodeName), "A non-empty name is required");
+
+        if (this.steps == null) {
+            return null;
+        }
+        for (ProcessExecutionStepRecord r: this.steps) {
+            if (r.getNodeName().equals(nodeName)) {
                 return r;
             }
         }

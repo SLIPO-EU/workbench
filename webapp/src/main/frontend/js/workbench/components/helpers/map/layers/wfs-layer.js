@@ -93,12 +93,36 @@ class WfsLayer extends React.Component {
     });
 
     const styles = {
-      'Point': new Style({
-        image: image
-      }),
-      'MultiPoint': new Style({
-        image: image
-      }),
+      'Point': (
+        this.props.icon ?
+          new Style({
+            text: new Text({
+              text: this.props.icon,
+              font: 'normal 32px FontAwesome',
+              fill: new Fill({
+                color: this.props.color,
+              }),
+            }),
+          })
+          :
+          new Style({
+            image: image,
+          })),
+      'MultiPoint': (
+        this.props.icon ?
+          new Style({
+            text: new Text({
+              text: this.props.icon,
+              font: 'normal 32px FontAwesome',
+              fill: new Fill({
+                color: this.props.color,
+              }),
+            }),
+          })
+          :
+          new Style({
+            image: image,
+          })),
       'LineString': style,
       'MultiLineString': style,
       'Polygon': style,
