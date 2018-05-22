@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,6 +31,8 @@ import eu.slipo.workbench.web.service.etl.ImportService;
 @Secured({ "ROLE_ADMIN" })
 @RequestMapping(produces = "application/json")
 public class ImportController extends BaseController {
+
+    private static final Logger logger = LoggerFactory.getLogger(ImportController.class);
 
     @Autowired
     ProcessRepository processRepository;
@@ -68,6 +72,7 @@ public class ImportController extends BaseController {
 
             return RestResponse.result(result);
         } catch (Exception ex) {
+            logger.error(ex.getMessage(), ex);
             return RestResponse.error(BasicErrorCode.UNKNOWN, "An unknown error has occurred");
         }
     }
