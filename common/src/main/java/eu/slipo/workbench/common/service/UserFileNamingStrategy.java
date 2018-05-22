@@ -4,25 +4,15 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 
-import eu.slipo.workbench.common.model.DirectoryInfo;
-
 public interface UserFileNamingStrategy 
 {
-    public static final String SCHEME = "user-data";
-    
-    public static final String URI_PREFIX = SCHEME + ":";
-    
     /**
-     * Get detailed info on a user's home directory.
+     * Get the URI scheme used for representing (as URIs) paths under this hierarchy. 
      * 
-     * <p>Note that the home directory is created, if not already present. 
-     * 
-     * @param userId
-     * @return
-     * @throws IOException
+     * @return a URI scheme
      */
-    DirectoryInfo getUserDirectoryInfo(int userId) throws IOException;
-
+    String getScheme();
+    
     /**
      * Resolve a user's home directory as an absolute path. 
      * 
@@ -59,7 +49,9 @@ public interface UserFileNamingStrategy
     Path resolvePath(int userId, Path relativePath);
     
     /**
-     * Convert a relative path (under a user's data directory) to a <tt>user-data</tt> pseudo-URI
+     * Convert a relative path (under a user's data directory) to a pseudo-URI.
+     * 
+     * <p>The result URI will have the scheme returned by {@link UserFileNamingStrategy#getScheme()}.
      * 
      * @param userId
      * @param relativePath
@@ -68,7 +60,9 @@ public interface UserFileNamingStrategy
     URI convertToUri(int userId, Path relativePath);
     
     /**
-     * Convert an absolute path to a <tt>user-data</tt> pseudo-URI. 
+     * Convert an absolute path to a pseudo-URI. 
+     * 
+     * <p>The result URI will have the scheme returned by {@link UserFileNamingStrategy#getScheme()}.
      * 
      * @param path A path to be converted
      * @return a URI representing the given location
@@ -79,12 +73,13 @@ public interface UserFileNamingStrategy
     URI convertToUri(Path path);
     
     /**
-     * Resolve a <tt>user-data</tt> URI to an absolute path
+     * Resolve a URI to an absolute path
      * 
-     * @param uri
-     * @return
+     * @param uri A URI under the scheme returned by {@link UserFileNamingStrategy#getScheme()}
+     * @return an absolute path
      * 
-     * @throws IllegalArgumentException if given URI does not represent a user-scoped file.
+     * @throws IllegalArgumentException if given URI does not represent a user-scoped file (e.g 
+     * having an unknown scheme).
      */
     Path resolveUri(URI uri);
 }

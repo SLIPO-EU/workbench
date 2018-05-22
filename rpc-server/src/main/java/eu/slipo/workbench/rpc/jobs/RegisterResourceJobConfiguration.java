@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.StepContribution;
-import org.springframework.batch.core.StepExecutionListener;
 import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.job.builder.FlowBuilder;
@@ -38,6 +37,7 @@ import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
 import eu.slipo.workbench.common.model.resource.ResourceRecord;
 import eu.slipo.workbench.common.repository.ResourceRepository;
+import eu.slipo.workbench.common.service.UserFileNamingStrategy;
 import eu.slipo.workbench.rpc.jobs.listener.ExecutionContextPromotionListeners;
 
 @Component
@@ -53,6 +53,10 @@ public class RegisterResourceJobConfiguration
     @Autowired
     @Qualifier("catalogDataDirectory")
     private Path catalogDataDir;
+
+    @Autowired
+    @Qualifier("catalogUserFileNamingStrategy")
+    private UserFileNamingStrategy catalogUserFileNamingStrategy;
 
     @Autowired
     private ResourceRepository resourceRepository;
@@ -109,12 +113,13 @@ public class RegisterResourceJobConfiguration
                 return RepeatStatus.FINISHED;
             }
 
-            // Resolve target path under catalog root directory
+            // Compose name and resolve target path under catalog root directory
 
-            String targetName = slugify.slugify(metadata.getName()) +
-                "." + format.getFilenameExtension();
-            Path targetPath = Paths.get(Integer.toString(createdBy), targetName);
-            targetPath = catalogDataDir.resolve(targetPath);
+            String targetName = slugify.slugify(metadata.getName()) + "." +
+                format.getFilenameExtension();
+            Path targetPath = catalogUserFileNamingStrategy.resolvePath(createdBy, targetName);
+            Assert.state(targetPath.startsWith(catalogDataDir),
+                "The target path is expected to be under catalog data directory");
 
             // Create parent directories if needed
 
@@ -188,11 +193,11 @@ public class RegisterResourceJobConfiguration
 
         Assert.isTrue(!StringUtils.isEmpty(input), "Expected an non-empty input path");
         String[] inputs = input.split(File.pathSeparator);
-        Assert.isTrue(inputs.length == 1,
-            "A registration step expects a single input path");
+        Assert.isTrue(inputs.length == 1, "A registration step expects a single input path");
+
         Path inputPath = Paths.get(inputs[0]);
-        Assert.isTrue(inputPath != null && inputPath.isAbsolute(),
-            "An absolute file path is required for a resource");
+        Assert.notNull(inputPath, "A path is required!");
+        Assert.isTrue(inputPath.isAbsolute(), "An absolute file path is required for a resource");
 
         return new RegisterResourceTasklet(
             processName,

@@ -62,6 +62,7 @@ import com.google.common.collect.MoreCollectors;
 
 import eu.slipo.workbench.common.domain.AccountEntity;
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
+import eu.slipo.workbench.common.model.poi.EnumResourceType;
 import eu.slipo.workbench.common.model.process.EnumProcessExecutionStatus;
 import eu.slipo.workbench.common.model.process.EnumStepFile;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
@@ -115,220 +116,6 @@ public class DefaultProcessOperatorTests
 
     private static final String USER_EMAIL = USER_NAME + "@example.com";
 
-    private static class BaseFixture
-    {
-        final String name;
-
-        /**
-         * The application user directory (where input sources are staged)
-         */
-        final Path stagingDir;
-
-        /**
-         * The absolute path for the expected result of the transformation applied on given input
-         */
-        final Path expectedResultPath;
-
-        BaseFixture(String name, Path stagingDir, Path expectedResultPath)
-        {
-            this.name = name;
-            this.stagingDir = stagingDir;
-            this.expectedResultPath = expectedResultPath;
-        }
-
-        public String getName()
-        {
-            return name;
-        }
-
-        public Path getExpectedResultPath()
-        {
-            return expectedResultPath;
-        }
-
-        DataSource convertInputAsDataSource(URI inputUri) throws MalformedURLException
-        {
-            final String scheme = inputUri.getScheme();
-            if (scheme.equals("file")) {
-                return new FileSystemDataSource(stagingDir.relativize(Paths.get(inputUri)));
-            } else if (scheme.equals("http") || scheme.equals("https") || scheme.equals("ftp")) {
-                return new UrlDataSource(inputUri.toURL());
-            } else {
-                 throw new IllegalStateException(
-                     "Did not expect input with scheme of  [" + scheme + "]");
-            }
-        }
-
-        Path convertInputToAbsolutePath(URI inputUri)
-        {
-            return inputUri.getScheme().equals("file")? Paths.get(inputUri) : null;
-        }
-    }
-
-    /**
-     * A test fixture that represents a basic to-RDF operation (using Triplegeo).
-     */
-    private static class TransformFixture extends BaseFixture
-    {
-        final URI input;
-
-        final TriplegeoConfiguration configuration;
-
-        TransformFixture(
-            String name, URI input, Path stagingDir, Path expectedResultPath,
-            TriplegeoConfiguration configuration)
-        {
-            super(name, stagingDir, expectedResultPath);
-            this.input = input;
-            this.configuration = configuration;
-        }
-
-        public TriplegeoConfiguration getConfiguration()
-        {
-            return configuration;
-        }
-
-        @Override
-        public String toString()
-        {
-            return String.format("TransformFixture [name=%s, input=%s]", name, input);
-        }
-
-        public DataSource getInputAsDataSource() throws MalformedURLException
-        {
-            return convertInputAsDataSource(input);
-        }
-
-        public URL getInputAsUrl() throws MalformedURLException
-        {
-            return input.toURL();
-        }
-    }
-
-    /**
-     * A test fixture that represents a transformation+interlinking operation (using Triplegeo+Limes).
-     */
-    private static class InterlinkFixture extends BaseFixture
-    {
-        /**
-         * A pair of tabular inputs (to be transformed to RDF)
-         */
-        final Pair<URI, URI> inputPair;
-
-        /**
-         * A pair of transform configurations (to transform respective input)
-         */
-        final Pair<TriplegeoConfiguration, TriplegeoConfiguration> transformConfigurationPair;
-
-        /**
-         * The configuration for interlinking operation
-         */
-        final LimesConfiguration configuration;
-
-        InterlinkFixture(
-            String name,
-            Path stagingDir,
-            Pair<URI, URI> inputPair,
-            Pair<TriplegeoConfiguration, TriplegeoConfiguration> transformConfigurationPair,
-            Path expectedResultPath, LimesConfiguration configuration)
-        {
-            super(name, stagingDir, expectedResultPath);
-            this.inputPair = inputPair;
-            this.transformConfigurationPair = transformConfigurationPair;
-            this.configuration = configuration;
-        }
-
-        public LimesConfiguration getConfiguration()
-        {
-            return configuration;
-        }
-
-        public Pair<TriplegeoConfiguration, TriplegeoConfiguration> getTransformConfiguration()
-        {
-            return transformConfigurationPair;
-        }
-
-        public Pair<DataSource, DataSource> getInputAsDataSource() throws MalformedURLException
-        {
-            return Pair.of(
-                convertInputAsDataSource(inputPair.getFirst()),
-                convertInputAsDataSource(inputPair.getSecond()));
-        }
-
-        public Pair<URL, URL> getInputAsUrl() throws MalformedURLException
-        {
-            return Pair.of(inputPair.getFirst().toURL(), inputPair.getSecond().toURL());
-        }
-
-        @Override
-        public String toString()
-        {
-            return String.format("InterlinkFixture [name=%s, input=%s]", name, inputPair);
-        }
-    }
-
-    /**
-     * A test fixture that represents a basic fusion operation (using Limes+Fagi).
-     */
-    private static class FuseFixture extends BaseFixture
-    {
-        /**
-         * A pair of RDF inputs (no transformation takes place)
-         */
-        final Pair<URI, URI> inputPair;
-
-        /**
-         * The configuration for interlinking operation
-         */
-        final LimesConfiguration linkConfiguration;
-
-        /**
-         * The configuration for fusion operation
-         */
-        final FagiConfiguration configuration;
-
-        FuseFixture(
-            String name,
-            Path stagingDir,
-            Pair<URI, URI> inputPair,
-            LimesConfiguration linkConfiguration,
-            Path expectedResultPath, FagiConfiguration configuration)
-        {
-            super(name, stagingDir, expectedResultPath);
-            this.inputPair = inputPair;
-            this.linkConfiguration = linkConfiguration;
-            this.configuration = configuration;
-        }
-
-        public FagiConfiguration getConfiguration()
-        {
-            return configuration;
-        }
-
-        public LimesConfiguration getLinkConfiguration()
-        {
-            return linkConfiguration;
-        }
-
-        public Pair<DataSource, DataSource> getInputAsDataSource() throws MalformedURLException
-        {
-            return Pair.of(
-                convertInputAsDataSource(inputPair.getFirst()),
-                convertInputAsDataSource(inputPair.getSecond()));
-        }
-
-        public Pair<URL, URL> getInputAsUrl() throws MalformedURLException
-        {
-            return Pair.of(inputPair.getFirst().toURL(), inputPair.getSecond().toURL());
-        }
-
-        @Override
-        public String toString()
-        {
-            return String.format("FuseFixture [name=%s, input=%s]", name, inputPair);
-        }
-    }
-
     @TestConfiguration
     public static class Setup
     {
@@ -342,13 +129,10 @@ public class DefaultProcessOperatorTests
         private AccountRepository accountRepository;
 
         @Autowired
-        private ObjectMapper jsonMapper;
-
-        @Autowired
         private PropertiesConverterService propertiesConverter;
 
         @Autowired
-        private UserFileNamingStrategy userFileNamingStrategy;
+        private UserFileNamingStrategy defaultUserFileNamingStrategy;
 
         private URL baseUrl;
 
@@ -388,7 +172,7 @@ public class DefaultProcessOperatorTests
             // Setup a user's home directory
 
             final int userId = accountEntity.getId();
-            final Path userDir = userFileNamingStrategy.getUserDir(userId, true);
+            final Path userDir = defaultUserFileNamingStrategy.getUserDir(userId, true);
 
             // Setup fixtures for transformation operations (triplegeo)
 
@@ -510,8 +294,8 @@ public class DefaultProcessOperatorTests
                         userDir,
                         resultsDir.resolve(stripFilenameExtension(inputName) + ".nt"),
                         options,
-                        mappingsTempPath.map(p -> userDir.relativize(p).toString()),
-                        classificationTempPath.map(p -> userDir.relativize(p).toString()));
+                        mappingsTempPath.map(p -> userDir.relativize(p).toString()).orElse(null),
+                        classificationTempPath.map(p -> userDir.relativize(p).toString()).orElse(null));
                     String key = String.format("file-%s-%d-a", dirName, index + 1);
                     transformFixtures.put(key, fixture);
                 }
@@ -546,8 +330,8 @@ public class DefaultProcessOperatorTests
                         new URL(url, "#" + fixtureName.substring(1 + inputName.length())),
                         resultsDir.resolve(stripFilenameExtension(inputName) + ".nt"),
                         options,
-                        mappingsTempPath.map(p -> userDir.relativize(p).toString()),
-                        classificationTempPath.map(p -> userDir.relativize(p).toString()));
+                        mappingsTempPath.map(p -> userDir.relativize(p).toString()).orElse(null),
+                        classificationTempPath.map(p -> userDir.relativize(p).toString()).orElse(null));
                     String key = String.format("url-%s-%d-a", dirName, index + 1);
                     transformFixtures.put(key, fixture);
                 }
@@ -574,13 +358,13 @@ public class DefaultProcessOperatorTests
         }
 
         private TransformFixture createTransformFixture(
-            String name, URI input, Path stagingDir, Path expectedResultPath,
+            String name, URI input, Path stagingDir, Path expectedResult,
             Properties options, String mappingSpec, String classificationSpec)
-            throws ConversionFailedException
+            throws Exception
         {
             Assert.notNull(!StringUtils.isEmpty(name), "A non-empty name is required");
-            Assert.isTrue(expectedResultPath != null && expectedResultPath.isAbsolute()
-                    && Files.isReadable(expectedResultPath),
+            Assert.isTrue(expectedResult != null && expectedResult.isAbsolute()
+                    && Files.isReadable(expectedResult),
                 "The expected result should be given as an absolute file path");
             Assert.notNull(options, "A map of options is required");
             Assert.isTrue(!input.getScheme().equals("file") || (
@@ -595,34 +379,16 @@ public class DefaultProcessOperatorTests
             configuration.setMappingSpec(mappingSpec);
             configuration.setClassificationSpec(classificationSpec);
 
-            return new TransformFixture(name, input, stagingDir, expectedResultPath, configuration);
+            return new TransformFixture(name, input, stagingDir, expectedResult, configuration);
         }
 
         private TransformFixture createTransformFixture(
-            String name, URI input, Path stagingDir, Path expectedResultPath,
-            Properties options, Optional<String> mappingSpec, Optional<String> classificationSpec)
-            throws ConversionFailedException
-        {
-            return createTransformFixture(
-                name, input, stagingDir, expectedResultPath, options, mappingSpec.orElse(null), classificationSpec.orElse(null));
-        }
-
-        private TransformFixture createTransformFixture(
-            String name, URL input, Path expectedResultPath, Properties options,
+            String name, URL input, Path expectedResult, Properties options,
             String mappingSpec, String classificationSpec)
-            throws ConversionFailedException, URISyntaxException
+            throws Exception
         {
             return createTransformFixture(
-                name, input.toURI(), null, expectedResultPath, options, mappingSpec, classificationSpec);
-        }
-
-        private TransformFixture createTransformFixture(
-            String name, URL input, Path expectedResultPath, Properties options,
-            Optional<String> mappingSpec, Optional<String> classificationSpec)
-            throws ConversionFailedException, URISyntaxException
-        {
-            return createTransformFixture(
-                name, input.toURI(), null, expectedResultPath, options, mappingSpec.orElse(null), classificationSpec.orElse(null));
+                name, input.toURI(), null, expectedResult, options, mappingSpec, classificationSpec);
         }
 
         private void setupInterlinkFixtures(Path userDir) throws Exception
@@ -633,6 +399,7 @@ public class DefaultProcessOperatorTests
 
                 final Path inputDir = Paths.get(dir.createRelative("input").getURI());
                 final Path resultsDir = Paths.get(dir.createRelative("output").getURI());
+                final Path expectedResult = resultsDir.resolve("accepted.nt");
 
                 final URI mappingsUri = dir.createRelative("mappings.yml").getURI();
                 final Path mappingsPath = Paths.get(mappingsUri);
@@ -646,6 +413,9 @@ public class DefaultProcessOperatorTests
                     readProperties(dir.createRelative("transform-b.properties"));
                 final Properties configuration =
                     readProperties(dir.createRelative("config.properties"));
+
+                final Pair<Path, Path> expectedTransformedPair = Pair.of(
+                    inputDir.resolve("a-merged.nt"), inputDir.resolve("b-merged.nt"));
 
                 // Copy mapping/classification files into user's data directory
 
@@ -676,7 +446,8 @@ public class DefaultProcessOperatorTests
                     Pair.of(transformOptions1, transformOptions2),
                     userDir.relativize(mappingsTempPath).toString(),
                     userDir.relativize(classificationTempPath).toString(),
-                    resultsDir.resolve("accepted.nt"),
+                    expectedTransformedPair,
+                    expectedResult,
                     configuration);
                 String keyA = String.format("file-%s-a", dirName);
                 interlinkFixtures.put(keyA, fixtureA);
@@ -692,7 +463,8 @@ public class DefaultProcessOperatorTests
                     Pair.of(transformOptions1, transformOptions2),
                     mappingsUri.toString(),
                     classificationUri.toString(),
-                    resultsDir.resolve("accepted.nt"),
+                    expectedTransformedPair,
+                    expectedResult,
                     configuration);
                 String keyB = String.format("file-%s-b", dirName);
                 interlinkFixtures.put(keyB, fixtureB);
@@ -706,18 +478,21 @@ public class DefaultProcessOperatorTests
             Pair<Properties, Properties> transformOptionsPair,
             String mappingSpec,
             String classificationSpec,
-            Path expectedResultPath,
+            Pair<Path, Path> expectedTransformedPair,
+            Path expectedResult,
             Properties configuration)
-            throws ConversionFailedException
+            throws Exception
         {
             Assert.notNull(!StringUtils.isEmpty(name), "A non-empty name is required");
-            Assert.isTrue(expectedResultPath != null && expectedResultPath.isAbsolute()
-                    && Files.isReadable(expectedResultPath),
+            Assert.isTrue(expectedResult != null && expectedResult.isAbsolute()
+                    && Files.isReadable(expectedResult),
                 "The expected result should be given as an absolute file path");
             Assert.notNull(configuration, "The triplegeo configuration is required");
             Assert.notNull(inputPair, "Expected an a pair of input URIs");
             Assert.notNull(transformOptionsPair,
                 "Expected an a pair of transform options (for inputs to transform to RDF)");
+            Assert.notNull(expectedTransformedPair,
+                "Expected a pair of expected transformed results");
 
             final URI input1 = inputPair.getFirst();
             Assert.notNull(input1, "Expected a non-null input URI");
@@ -752,7 +527,8 @@ public class DefaultProcessOperatorTests
                 stagingDir,
                 inputPair,
                 Pair.of(transformConfiguration1, transformConfiguration2),
-                expectedResultPath,
+                expectedTransformedPair,
+                expectedResult,
                 propertiesConverter.propertiesToValue(configuration, LimesConfiguration.class));
         }
 
@@ -764,6 +540,8 @@ public class DefaultProcessOperatorTests
 
                 final Path inputDir = Paths.get(dir.createRelative("input").getURI());
                 final Path resultsDir = Paths.get(dir.createRelative("output").getURI());
+                final Path expectedResult = resultsDir.resolve("fused.nt");
+                final Path expectedLinkResult = inputDir.resolve("links.nt");
 
                 final URI rulesUri = dir.createRelative("rules.xml").getURI();
                 final Path rulesPath = Paths.get(rulesUri);
@@ -798,7 +576,8 @@ public class DefaultProcessOperatorTests
                         inputNameToTempPath.get("a.nt").toUri(),
                         inputNameToTempPath.get("b.nt").toUri()),
                     linkProps,
-                    resultsDir.resolve("fused.nt"),
+                    expectedLinkResult,
+                    expectedResult,
                     userDir.relativize(rulesTempPath).toString(),
                     fuseProps);
                 fixtureKey = String.format("file-%s-a", dirName);
@@ -813,7 +592,8 @@ public class DefaultProcessOperatorTests
                         inputNameToTempPath.get("a.nt").toUri(),
                         inputNameToTempPath.get("b.nt").toUri()),
                     linkProps,
-                    resultsDir.resolve("fused.nt"),
+                    expectedLinkResult,
+                    expectedResult,
                     rulesUri.toString(),
                     fuseProps);
                 fixtureKey = String.format("file-%s-b", dirName);
@@ -826,15 +606,17 @@ public class DefaultProcessOperatorTests
             Path stagingDir,
             Pair<URI, URI> inputPair,
             Properties linkProps,
-            Path expectedResultPath,
+            Path expectedLinkResult,
+            Path expectedResult,
             String rulesSpec,
             Properties fuseProps)
-            throws ConversionFailedException
+            throws Exception
         {
             Assert.notNull(!StringUtils.isEmpty(name), "A non-empty name is required");
-            Assert.isTrue(expectedResultPath != null && expectedResultPath.isAbsolute()
-                    && Files.isReadable(expectedResultPath),
-                "The expected result should be given as an absolute file path");
+            for (Path p: Arrays.asList(expectedLinkResult, expectedResult)) {
+                Assert.isTrue(p != null && p.isAbsolute() && Files.isReadable(p),
+                    "The expected result should be given as an absolute file path");
+            }
 
             Assert.notNull(inputPair, "Expected an input pair");
             final URI input1 = inputPair.getFirst();
@@ -867,7 +649,8 @@ public class DefaultProcessOperatorTests
                 stagingDir,
                 inputPair,
                 linkConfiguration,
-                expectedResultPath,
+                expectedLinkResult,
+                expectedResult,
                 configuration);
         }
     }
@@ -971,7 +754,7 @@ public class DefaultProcessOperatorTests
             assertNotNull(executionRecord.getStartedOn());
         } while (!executionRecord.getStatus().isTerminated());
 
-        Thread.sleep(3500L);
+        Thread.sleep(500L);
 
         final ProcessRecord processRecord1 = processRepository.findOne(id, version, true);
         assertNotNull(processRecord1);
@@ -1048,13 +831,13 @@ public class DefaultProcessOperatorTests
             .build();
     }
 
-    private void transformAndRegister(String procName, TransformFixture fixture, Account creator)
+    private ResourceRecord transformAndRegister(String procName, TransformFixture fixture, Account creator)
         throws Exception
     {
-        transformAndRegister(procName, fixture, creator, this::buildDefinition);
+        return transformAndRegister(procName, fixture, creator, this::buildDefinition);
     }
 
-    private void transformAndRegister(
+    private ResourceRecord transformAndRegister(
             String procName, TransformFixture fixture, Account creator,
             TransformToDefinition transformToDefinition)
         throws Exception
@@ -1113,6 +896,8 @@ public class DefaultProcessOperatorTests
         Path resourcePath = catalogDataDir.resolve(resourceRecord.getFilePath());
         assertTrue(Files.isRegularFile(resourcePath) && Files.isReadable(resourcePath));
         AssertFile.assertFileEquals(fixture.getExpectedResultPath().toFile(), resourcePath.toFile());
+
+        return resourceRecord1;
     }
 
     private ProcessDefinition buildDefinition(
@@ -1188,13 +973,13 @@ public class DefaultProcessOperatorTests
             .build();
     }
 
-    private void transformAndLinkAndRegister(String procName, InterlinkFixture fixture, Account creator)
+    private ResourceRecord transformAndLinkAndRegister(String procName, InterlinkFixture fixture, Account creator)
         throws Exception
     {
-        transformAndLinkAndRegister(procName, fixture, creator, this::buildDefinition);
+        return transformAndLinkAndRegister(procName, fixture, creator, this::buildDefinition);
     }
 
-    private void transformAndLinkAndRegister(
+    private ResourceRecord transformAndLinkAndRegister(
             String procName, InterlinkFixture fixture, Account creator,
             InterlinkToDefinition interlinkToDefinition)
         throws Exception
@@ -1250,7 +1035,7 @@ public class DefaultProcessOperatorTests
         ProcessExecutionStepFileRecord resourceStepFileRecord = executionRecord
             .getStepByName("Link 1 with 2").getFiles()
             .stream()
-            .filter(f -> f.getType() == EnumStepFile.OUTPUT)
+            .filter(f -> f.getType() == EnumStepFile.OUTPUT && f.isPrimary())
             .findFirst().get();
         ResourceIdentifier resourceIdentifier = resourceStepFileRecord.getResource();
         assertNotNull(resourceIdentifier);
@@ -1268,6 +1053,8 @@ public class DefaultProcessOperatorTests
         Path resourcePath = catalogDataDir.resolve(resourceRecord.getFilePath());
         assertTrue(Files.isRegularFile(resourcePath) && Files.isReadable(resourcePath));
         AssertFile.assertFileEquals(fixture.getExpectedResultPath().toFile(), resourcePath.toFile());
+
+        return resourceRecord1;
     }
 
     private ProcessDefinition buildDefinition(
@@ -1299,7 +1086,7 @@ public class DefaultProcessOperatorTests
             .build();
     }
 
-    private void linkAndFuseAndRegister(
+    private ResourceRecord linkAndFuseAndRegister(
             String procName, FuseFixture fixture, Account creator,
             FuseToDefinition fuseToDefinition)
         throws Exception
@@ -1372,12 +1159,98 @@ public class DefaultProcessOperatorTests
         Path resourcePath = catalogDataDir.resolve(resourceRecord.getFilePath());
         assertTrue(Files.isRegularFile(resourcePath) && Files.isReadable(resourcePath));
         AssertFile.assertFileEquals(fixture.getExpectedResultPath().toFile(), resourcePath.toFile());
+
+        return resourceRecord1;
     }
 
-    private void linkAndFuseAndRegister(String procName, FuseFixture fixture, Account creator)
+    private ResourceRecord linkAndFuseAndRegister(String procName, FuseFixture fixture, Account creator)
         throws Exception
     {
-        linkAndFuseAndRegister(procName, fixture, creator, this::buildDefinition);
+        return linkAndFuseAndRegister(procName, fixture, creator, this::buildDefinition);
+    }
+
+    private ResourceRecord transformAndRegisterThenLink(String procName, InterlinkFixture fixture, Account creator)
+        throws Exception
+    {
+        final int creatorId = creator.getId();
+        final String fixtureName = fixture.getName();
+
+        final Pair<TransformFixture, TransformFixture> transformFixtures = fixture.getTransformFixtures();
+
+        final ResourceRecord resourceRecord1 =
+            transformAndRegister(procName + ".tr-1", transformFixtures.getFirst(), creator);
+        final ResourceIdentifier resourceIdentifier1 =
+            ResourceIdentifier.of(resourceRecord1.getId(), resourceRecord1.getVersion());
+        final int inputKey1 = 1;
+
+        final ResourceRecord resourceRecord2 =
+            transformAndRegister(procName + ".tr-2", transformFixtures.getSecond(), creator);
+        final ResourceIdentifier resourceIdentifier2 =
+            ResourceIdentifier.of(resourceRecord2.getId(), resourceRecord2.getVersion());
+        final int inputKey2 = 2;
+
+        // Build a process that uses on the 2 previously registered resources
+
+        final String resourceName = procName + "." + fixtureName;
+
+        final int linksKey = 3;
+
+        ProcessDefinition definition = processDefinitionBuilderFactory.create(procName)
+            .resource("tr-1", inputKey1, resourceIdentifier1, EnumResourceType.POI_DATA)
+            .resource("tr-2", inputKey2, resourceIdentifier2, EnumResourceType.POI_DATA)
+            .interlink("Link 1 with 2", builder -> builder
+                .link(inputKey1, inputKey2)
+                .outputFormat(EnumDataFormat.N_TRIPLES)
+                .outputKey(linksKey)
+                .configuration(fixture.getConfiguration()))
+            .register("Register links", linksKey,
+                new ResourceMetadataCreate(resourceName, "The links from a pair of inputs"))
+            .build();
+
+        final ProcessExecutionRecord executionRecord = executeDefinition(definition, creator);
+        final long executionId = executionRecord.getId();
+
+        // Check overall/step statuses and step files
+
+        assertEquals(EnumProcessExecutionStatus.COMPLETED, executionRecord.getStatus());
+        assertNotNull(executionRecord.getCompletedOn());
+
+        List<ProcessExecutionStepRecord> stepRecords = executionRecord.getSteps();
+        assertNotNull(stepRecords);
+        assertEquals(2, stepRecords.size());
+
+        ProcessExecutionStepRecord outputStepRecord = executionRecord.getStepByName("Link 1 with 2");
+        assertNotNull(outputStepRecord);
+        assertEquals(EnumProcessExecutionStatus.COMPLETED, outputStepRecord.getStatus());
+        ProcessExecutionStepFileRecord outfileRecord = outputStepRecord.getFiles().stream()
+            .filter(f -> f.getType() == EnumStepFile.OUTPUT && f.isPrimary())
+            .collect(MoreCollectors.toOptional())
+            .orElse(null);
+        assertNotNull(outfileRecord);
+        ResourceIdentifier outfileResourceIdentifier = outfileRecord.getResource();
+        assertNotNull(outfileResourceIdentifier);
+        ResourceRecord outfileResourceRecord = resourceRepository.findOne(outfileResourceIdentifier);
+        assertNotNull(outfileResourceRecord);
+        assertEquals(Long.valueOf(executionId), outfileResourceRecord.getProcessExecutionId());
+
+        ProcessExecutionStepRecord registerStepRecord = executionRecord.getStepByName("Register links");
+        assertNotNull(registerStepRecord);
+        assertEquals(EnumProcessExecutionStatus.COMPLETED, registerStepRecord.getStatus());
+
+        // Find and check resource by (name, user)
+
+        ResourceRecord resourceRecord = resourceRepository.findOne(resourceName, creatorId);
+        assertNotNull(resourceRecord);
+        assertEquals(outfileResourceRecord.getId(), resourceRecord.getId());
+        assertEquals(outfileResourceRecord.getVersion(), resourceRecord.getVersion());
+
+        // Check output against expected result
+
+        Path resourcePath = catalogDataDir.resolve(resourceRecord.getFilePath());
+        assertTrue(Files.isRegularFile(resourcePath) && Files.isReadable(resourcePath));
+        AssertFile.assertFileEquals(fixture.getExpectedResultPath().toFile(), resourcePath.toFile());
+
+        return resourceRecord;
     }
 
     //
@@ -1385,221 +1258,221 @@ public class DefaultProcessOperatorTests
     //
 
     @Test(timeout = 40 * 1000L)
-    public void test1_transformAndRegister1a() throws Exception
+    public void test1T_transformAndRegister1a() throws Exception
     {
         Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
-        transformAndRegister("register-file-1-1-a", transformFixtures.get("file-1-1-a"), user);
+        transformAndRegister("file-1-1-a", transformFixtures.get("file-1-1-a"), user);
     }
 
     @Test(timeout = 40 * 1000L)
-    public void test1_transformAndRegister1a_withImportSteps() throws Exception
+    public void test1T_transformAndRegister1a_withImportSteps() throws Exception
     {
         Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
-        transformAndRegister("register-file-1-1-a-imported", transformFixtures.get("file-1-1-a"), user,
+        transformAndRegister("file-1-1-a-imported", transformFixtures.get("file-1-1-a"), user,
             this::buildDefinitionWithImportSteps);
     }
 
     @Test(timeout = 40 * 1000L)
-    public void test1_transformAndRegister1b() throws Exception
+    public void test1T_transformAndRegister1b() throws Exception
     {
         Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
-        transformAndRegister("register-file-1-1-b", transformFixtures.get("file-1-1-b"), user);
+        transformAndRegister("file-1-1-b", transformFixtures.get("file-1-1-b"), user);
     }
 
     @Test(timeout = 40 * 1000L)
-    public void test1_transformAndRegister1b_withImportSteps() throws Exception
+    public void test1T_transformAndRegister1b_withImportSteps() throws Exception
     {
         Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
-        transformAndRegister("register-file-1-1-b-imported", transformFixtures.get("file-1-1-b"), user,
+        transformAndRegister("file-1-1-b-imported", transformFixtures.get("file-1-1-b"), user,
             this::buildDefinitionWithImportSteps);
     }
 
     @Test(timeout = 40 * 1000L)
-    public void test1_transformAndRegister2a() throws Exception
+    public void test1T_transformAndRegister2a() throws Exception
     {
         Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
-        transformAndRegister("register-file-1-2-a", transformFixtures.get("file-1-2-a"), user);
+        transformAndRegister("file-1-2-a", transformFixtures.get("file-1-2-a"), user);
     }
 
     @Test(timeout = 40 * 1000L)
-    public void test1_transformAndRegister2b() throws Exception
+    public void test1T_transformAndRegister2b() throws Exception
     {
         Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
-        transformAndRegister("register-file-1-2-b", transformFixtures.get("file-1-2-b"), user);
+        transformAndRegister("file-1-2-b", transformFixtures.get("file-1-2-b"), user);
     }
 
     @Test(timeout = 40 * 1000L)
-    public void test1_transformAndRegister3a() throws Exception
+    public void test1T_transformAndRegister3a() throws Exception
     {
         Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
-        transformAndRegister("register-file-1-3-a", transformFixtures.get("file-1-3-a"), user);
+        transformAndRegister("file-1-3-a", transformFixtures.get("file-1-3-a"), user);
     }
 
     @Test(timeout = 40 * 1000L)
-    public void test1_transformAndRegister3b() throws Exception
+    public void test1T_transformAndRegister3b() throws Exception
     {
         Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
-        transformAndRegister("register-file-1-3-b", transformFixtures.get("file-1-3-b"), user);
+        transformAndRegister("file-1-3-b", transformFixtures.get("file-1-3-b"), user);
     }
 
     @Test(timeout = 40 * 1000L)
-    public void test2_transformAndRegister1a() throws Exception
+    public void test2T_transformAndRegister1a() throws Exception
     {
         Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
-        transformAndRegister("register-file-2-1-a", transformFixtures.get("file-2-1-a"), user);
+        transformAndRegister("file-2-1-a", transformFixtures.get("file-2-1-a"), user);
     }
 
     @Test(timeout = 40 * 1000L)
-    public void test2_transformAndRegister1b() throws Exception
+    public void test2T_transformAndRegister1b() throws Exception
     {
         Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
-        transformAndRegister("register-file-2-1-b", transformFixtures.get("file-2-1-b"), user);
+        transformAndRegister("file-2-1-b", transformFixtures.get("file-2-1-b"), user);
     }
 
     @Test(timeout = 40 * 1000L)
-    public void test2a_transformAndRegister1a() throws Exception
+    public void test2aT_transformAndRegister1a() throws Exception
     {
         Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
-        transformAndRegister("register-file-2a-1-a", transformFixtures.get("file-2a-1-a"), user);
+        transformAndRegister("file-2a-1-a", transformFixtures.get("file-2a-1-a"), user);
     }
 
     @Test(timeout = 40 * 1000L)
-    public void test3_transformAndRegister1a() throws Exception
+    public void test3T_transformAndRegister1a() throws Exception
     {
         Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
-        transformAndRegister("register-file-3-1-a", transformFixtures.get("file-3-1-a"), user);
+        transformAndRegister("file-3-1-a", transformFixtures.get("file-3-1-a"), user);
     }
 
     @Test(timeout = 40 * 1000L)
-    public void test3_transformAndRegister1b() throws Exception
+    public void test3T_transformAndRegister1b() throws Exception
     {
         Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
-        transformAndRegister("register-file-3-1-b", transformFixtures.get("file-3-1-b"), user);
+        transformAndRegister("file-3-1-b", transformFixtures.get("file-3-1-b"), user);
     }
 
     @Test(timeout = 40 * 1000L)
-    public void test1_downloadAndTransformAndRegister1a() throws Exception
+    public void test1T_downloadAndTransformAndRegister1a() throws Exception
     {
         Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
-        transformAndRegister("register-url-1-1-a", transformFixtures.get("url-1-1-a"), user);
+        transformAndRegister("url-1-1-a", transformFixtures.get("url-1-1-a"), user);
     }
 
     @Test(timeout = 40 * 1000L)
-    public void test1_downloadAndTransformAndRegister1a_withImportSteps() throws Exception
+    public void test1T_downloadAndTransformAndRegister1a_withImportSteps() throws Exception
     {
         Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
-        transformAndRegister("register-url-1-1-a-imported", transformFixtures.get("url-1-1-a"), user,
+        transformAndRegister("url-1-1-a-imported", transformFixtures.get("url-1-1-a"), user,
             this::buildDefinitionWithImportSteps);
     }
 
     @Test(timeout = 40 * 1000L)
-    public void test1_downloadAndTransformAndRegister1b() throws Exception
+    public void test1T_downloadAndTransformAndRegister1b() throws Exception
     {
         Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
-        transformAndRegister("register-url-1-1-b", transformFixtures.get("url-1-1-b"), user);
+        transformAndRegister("url-1-1-b", transformFixtures.get("url-1-1-b"), user);
     }
 
     @Test(timeout = 40 * 1000L)
-    public void test1_downloadAndTransformAndRegister1b_withImportSteps() throws Exception
+    public void test1T_downloadAndTransformAndRegister1b_withImportSteps() throws Exception
     {
         Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
-        transformAndRegister("register-url-1-1-b-imported", transformFixtures.get("url-1-1-b"), user,
+        transformAndRegister("url-1-1-b-imported", transformFixtures.get("url-1-1-b"), user,
             this::buildDefinitionWithImportSteps);
     }
 
     @Test(timeout = 40 * 1000L)
-    public void test1_downloadAndTransformAndRegister2a() throws Exception
+    public void test1T_downloadAndTransformAndRegister2a() throws Exception
     {
         Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
-        transformAndRegister("register-url-1-2-a", transformFixtures.get("url-1-2-a"), user);
+        transformAndRegister("url-1-2-a", transformFixtures.get("url-1-2-a"), user);
     }
 
     @Test(timeout = 40 * 1000L)
-    public void test1_downloadAndTransformAndRegister2b() throws Exception
+    public void test1T_downloadAndTransformAndRegister2b() throws Exception
     {
         Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
-        transformAndRegister("register-url-1-2-b", transformFixtures.get("url-1-2-b"), user);
+        transformAndRegister("url-1-2-b", transformFixtures.get("url-1-2-b"), user);
     }
 
     @Test(timeout = 40 * 1000L)
-    public void test1_downloadAndTransformAndRegister3a() throws Exception
+    public void test1T_downloadAndTransformAndRegister3a() throws Exception
     {
         Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
-        transformAndRegister("register-url-1-3-a", transformFixtures.get("url-1-3-a"), user);
+        transformAndRegister("url-1-3-a", transformFixtures.get("url-1-3-a"), user);
     }
 
     @Test(timeout = 40 * 1000L)
-    public void test1_downloadAndTransformAndRegister3b() throws Exception
+    public void test1T_downloadAndTransformAndRegister3b() throws Exception
     {
         Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
-        transformAndRegister("register-url-1-3-b", transformFixtures.get("url-1-3-b"), user);
+        transformAndRegister("url-1-3-b", transformFixtures.get("url-1-3-b"), user);
     }
 
     @Test(timeout = 40 * 1000L)
-    public void test2a_downloadAndTransformAndRegister1b() throws Exception
+    public void test2aT_downloadAndTransformAndRegister1b() throws Exception
     {
         Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
-        transformAndRegister("register-url-2a-1-b", transformFixtures.get("url-2a-1-a"), user);
+        transformAndRegister("url-2a-1-b", transformFixtures.get("url-2a-1-a"), user);
     }
 
     @Test(timeout = 40 * 1000L)
-    public void test1_transformAndLinkAndRegister1a() throws Exception
+    public void test1L_transformAndLinkAndRegister1a() throws Exception
     {
         Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
-        transformAndLinkAndRegister("register-links-1-a", interlinkFixtures.get("file-1-a"), user);
+        transformAndLinkAndRegister("links-1-a", interlinkFixtures.get("file-1-a"), user);
     }
 
     @Test(timeout = 40 * 1000L)
-    public void test1_transformAndLinkAndRegister1a_withImportSteps() throws Exception
+    public void test1L_transformAndLinkAndRegister1a_withImportSteps() throws Exception
     {
         Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
-        transformAndLinkAndRegister("register-links-1-a-imported", interlinkFixtures.get("file-1-a"), user,
+        transformAndLinkAndRegister("links-1-a-imported", interlinkFixtures.get("file-1-a"), user,
             this::buildDefinitionWithImportSteps);
     }
 
     @Test(timeout = 40 * 1000L)
-    public void test1_transformAndLinkAndRegister1b() throws Exception
+    public void test1L_transformAndLinkAndRegister1b() throws Exception
     {
         Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
-        transformAndLinkAndRegister("register-links-1-b", interlinkFixtures.get("file-1-b"), user);
+        transformAndLinkAndRegister("links-1-b", interlinkFixtures.get("file-1-b"), user);
     }
 
     @Test(timeout = 40 * 1000L)
-    public void test1_linkAndFuseAndRegister1a() throws Exception
+    public void test1F_linkAndFuseAndRegister1a() throws Exception
     {
         Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
-        linkAndFuseAndRegister("register-fused-1-a", fuseFixtures.get("file-1-a"), user);
+        linkAndFuseAndRegister("fused-1-a", fuseFixtures.get("file-1-a"), user);
     }
 
     @Test(timeout = 40 * 1000L)
-    public void test1_linkAndFuseAndRegister1b() throws Exception
+    public void test1F_linkAndFuseAndRegister1b() throws Exception
     {
         Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
-        linkAndFuseAndRegister("register-fused-1-b", fuseFixtures.get("file-1-b"), user);
+        linkAndFuseAndRegister("fused-1-b", fuseFixtures.get("file-1-b"), user);
     }
 
     @Test(timeout = 150 * 1000L)
-    public void test1p_transformAndRegisterP6() throws Exception
+    public void test1Tp_transformAndRegisterP6() throws Exception
     {
         final Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
 
         Future<?> f1 = taskExecutor.submit(
-            new TransformRunnable("register-1-1-a-p6", transformFixtures.get("file-1-1-a"), user));
+            new TransformRunnable("file-1-1-a-p6", transformFixtures.get("file-1-1-a"), user));
 
         Future<?> f2 = taskExecutor.submit(
-            new TransformRunnable("register-1-2-a-p6", transformFixtures.get("file-1-2-a"), user));
+            new TransformRunnable("file-1-2-a-p6", transformFixtures.get("file-1-2-a"), user));
 
         Future<?> f3 = taskExecutor.submit(
-            new TransformRunnable("register-1-3-a-p6", transformFixtures.get("file-1-3-a"), user));
+            new TransformRunnable("file-1-3-a-p6", transformFixtures.get("file-1-3-a"), user));
 
         Future<?> f4 = taskExecutor.submit(
-            new TransformRunnable("register-1-4-a-p6", transformFixtures.get("url-1-1-a"), user));
+            new TransformRunnable("file-1-4-a-p6", transformFixtures.get("url-1-1-a"), user));
 
         Future<?> f5 = taskExecutor.submit(
-            new TransformRunnable("register-1-5-a-p6", transformFixtures.get("url-1-2-a"), user));
+            new TransformRunnable("file-1-5-a-p6", transformFixtures.get("url-1-2-a"), user));
 
         Future<?> f6 = taskExecutor.submit(
-            new TransformRunnable("register-1-6-a-p6", transformFixtures.get("url-1-3-a"), user));
+            new TransformRunnable("file-1-6-a-p6", transformFixtures.get("url-1-3-a"), user));
 
         // Wait for all tasks to complete
 
@@ -1620,5 +1493,12 @@ public class DefaultProcessOperatorTests
                 }
             }
         }
+    }
+
+    @Test // Fixme (timeout = 40 * 1000L)
+    public void test1L_transformAndRegisterThenLink() throws Exception
+    {
+        final Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
+        transformAndRegisterThenLink("links-1-a", interlinkFixtures.get("file-1-a"), user);
     }
 }
