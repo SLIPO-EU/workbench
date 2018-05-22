@@ -1,5 +1,7 @@
 package eu.slipo.workbench.common.model;
 
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
 /**
@@ -13,29 +15,44 @@ public abstract class FileSystemEntry {
 
     private String name;
 
-    private ZonedDateTime createdOn;
+    private ZonedDateTime modifiedOn;
 
-    protected FileSystemEntry(long size, String name, String path, ZonedDateTime createdOn) {
+    protected FileSystemEntry(long size, String name, String path, ZonedDateTime modifiedOn) 
+    {
         this.size = size;
         this.name = name;
         this.path = path;
-        this.createdOn = createdOn;
+        this.modifiedOn = modifiedOn;
+    }
+    
+    protected FileSystemEntry(long size, String name, String path, long modifiedOn) 
+    {
+        this.size = size;
+        this.name = name;
+        this.path = path;
+        
+        Instant t = Instant.ofEpochMilli(modifiedOn);
+        this.modifiedOn = ZonedDateTime.ofInstant(t, ZoneOffset.UTC);
     }
 
-    public long getSize() {
+    public long getSize() 
+    {
         return size;
     }
 
-    public String getPath() {
+    public String getPath() 
+    {
         return path;
     }
 
-    public String getName() {
+    public String getName() 
+    {
         return name;
     }
 
-    public ZonedDateTime getCreatedOn() {
-        return createdOn;
+    public ZonedDateTime getModified() 
+    {
+        return modifiedOn;
     }
 
 }

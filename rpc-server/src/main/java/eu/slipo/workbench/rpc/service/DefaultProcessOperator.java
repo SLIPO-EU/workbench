@@ -77,11 +77,15 @@ public class DefaultProcessOperator implements ProcessOperator
 
     @Autowired
     @Qualifier("defaultUserFileNamingStrategy")
-    private UserFileNamingStrategy userFileNamingStrategy;
+    private UserFileNamingStrategy defaultUserFileNamingStrategy;
 
     @Autowired
     @Qualifier("catalogDataDirectory")
     private Path catalogDataDir;
+
+    @Autowired
+    @Qualifier("catalogUserFileNamingStrategy")
+    private UserFileNamingStrategy catalogUserFileNamingStrategy;
 
     @Autowired
     private ProcessRepository processRepository;
@@ -311,14 +315,14 @@ public class DefaultProcessOperator implements ProcessOperator
                     config.getOutputFormat() : null; // format is relevant only to actual output results
                 final EnumStepFile type = EnumStepFile.from(outputType);
                 final List<String> outputNames = outputMap.get(outputType);
-                for (int i = 0, n = outputNames.size(); i < n; ++i) {
-                    String outputName = outputNames.get(i);
+                for (int index = 0, n = outputNames.size(); index < n; ++index) {
+                    String outputName = outputNames.get(index);
                     // Find corresponding item from node's output paths (must exist!)
                     Path outputPath = Iterables.find(outputPaths, path -> path.endsWith(outputName));
                     URI outputUri = convertPathToUri(outputPath);
                     ProcessExecutionStepFileRecord fileRecord =
                         new ProcessExecutionStepFileRecord(type, outputUri, null, outputFormat);
-                    fileRecord.setPrimary(!isPrimaryType? null : (i == 0));
+                    fileRecord.setPrimary(!isPrimaryType? null : (index == 0));
                     stepRecord.addFile(fileRecord);
                 }
             }
@@ -488,8 +492,7 @@ public class DefaultProcessOperator implements ProcessOperator
         /**
          * Convert a path to a URI (representing the same resource) as it should be reported to a
          * repository. This URI should (ideally) not expose server-side directory information, but
-         * it should be able to be reconstruct the original path (inside, of course, the same
-         * application context).
+         * it should be able to be reconstruct the original path (inside the same application context).
          *
          * @param path An absolute path
          * @return a URI representing the given path
@@ -509,8 +512,11 @@ public class DefaultProcessOperator implements ProcessOperator
                     throw new IllegalArgumentException(ex);
                 }
             } else if (path.startsWith(userDataDir)) {
-                // Convert to an absolute user-data:// URI
-                uri = userFileNamingStrategy.convertToUri(path);
+                // Convert to an absolute user-data URI
+                uri = defaultUserFileNamingStrategy.convertToUri(path);
+            } else if (path.startsWith(catalogDataDir)) {
+                // Convert to an absolute catalog-data URI
+                uri = catalogUserFileNamingStrategy.convertToUri(path);
             } else {
                 // The path doesn't reside into any of the expected locations
                 throw new IllegalStateException(

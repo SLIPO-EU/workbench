@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import eu.slipo.workbench.common.model.BasicErrorCode;
+import eu.slipo.workbench.common.model.DirectoryInfo;
 import eu.slipo.workbench.common.model.FileSystemErrorCode;
 import eu.slipo.workbench.common.model.RestResponse;
 import eu.slipo.workbench.common.model.process.InvalidProcessDefinitionException;
@@ -41,19 +42,17 @@ public class FileSytemController extends BaseController {
     public void setDefaultLocale(String maxUserSpace) {
         this.maxUserSpace = this.parseSize(maxUserSpace);
     }
-
-
+  
     /**
-     * Enumerates files and folders for the specified path
-     *
-     * @param authentication the authenticated principal
-     * @param path the path to search
-     * @return all files and folders
+     * List (recursively) files and folders for user's directory
+     * 
+     * @return information on all files and folders
      */
     @RequestMapping(value = "/action/file-system",  method = RequestMethod.GET)
-    public RestResponse<?> browserDirectory() {
+    public RestResponse<?> browseDirectory() {
         try {
-            return RestResponse.result(fileNamingStrategy.getUserDirectoryInfo(currentUserId()));
+            Path userDir = fileNamingStrategy.getUserDir(currentUserId(), true);
+            return RestResponse.result(directoryTraverse.getDirectoryInfo(userDir));
         } catch (IOException ex) {
             return RestResponse.error(BasicErrorCode.IO_ERROR, "An unknown error has occurred");
         }
@@ -73,8 +72,9 @@ public class FileSytemController extends BaseController {
             }
 
             final int userId = currentUserId();
-            final Path dir = fileNamingStrategy.resolvePath(userId, request.getPath());
-
+            final Path userDir = fileNamingStrategy.getUserDir(userId);
+            
+            final Path dir = userDir.resolve(request.getPath());
             if (Files.exists(dir)) {
                 return RestResponse.error(
                     FileSystemErrorCode.PATH_ALREADY_EXISTS,
@@ -83,7 +83,7 @@ public class FileSytemController extends BaseController {
 
             Files.createDirectories(dir);
 
-            return RestResponse.result(fileNamingStrategy.getUserDirectoryInfo(userId));
+            return RestResponse.result(directoryTraverse.getDirectoryInfo(userDir));
         } catch (IOException ex) {
             return RestResponse.error(BasicErrorCode.IO_ERROR, "An unknown error has occurred");
         }
@@ -103,7 +103,9 @@ public class FileSytemController extends BaseController {
             }
 
             final int userId = currentUserId();
-            final Path absolutePath = fileNamingStrategy.resolvePath(userId, relativePath);
+            final Path userDir = fileNamingStrategy.getUserDir(userId);
+            
+            final Path absolutePath = userDir.resolve(relativePath);
             final File file = absolutePath.toFile();
 
             if (!file.exists()) {
@@ -114,7 +116,7 @@ public class FileSytemController extends BaseController {
             }
             Files.delete(absolutePath);
 
-            return RestResponse.result(fileNamingStrategy.getUserDirectoryInfo(userId));
+            return RestResponse.result(directoryTraverse.getDirectoryInfo(userDir));
         } catch (IOException ex) {
             return RestResponse.error(BasicErrorCode.IO_ERROR, "Failed to delete path");
         } catch (Exception ex) {
@@ -134,7 +136,11 @@ public class FileSytemController extends BaseController {
 
         try {
             final int userId = currentUserId();
-            long size = fileNamingStrategy.getUserDirectoryInfo(userId).getSize();
+            final Path userDir = fileNamingStrategy.getUserDir(userId);
+            
+            final DirectoryInfo userDirInfo = directoryTraverse.getDirectoryInfo(userDir);
+            
+            final long size = userDirInfo.getSize();
             if (size + file.getSize() > maxUserSpace) {
                 return RestResponse.error(FileSystemErrorCode.NOT_ENOUGH_SPACE, "Insufficient storage space");
             }
@@ -156,7 +162,7 @@ public class FileSytemController extends BaseController {
             InputStream in = new ByteArrayInputStream(file.getBytes());
             Files.copy(in, absolutePath, StandardCopyOption.REPLACE_EXISTING);
 
-            return RestResponse.result(fileNamingStrategy.getUserDirectoryInfo(currentUserId()));
+            return RestResponse.result(directoryTraverse.getDirectoryInfo(userDir));
         } catch (IOException ex) {
             return RestResponse.error(BasicErrorCode.IO_ERROR, "Failed to create file");
         } catch (Exception ex) {

@@ -15,17 +15,32 @@ public class DirectoryInfo extends FileSystemEntry {
 
     private List<DirectoryInfo> folders = new ArrayList<DirectoryInfo>();
 
-    public DirectoryInfo(String name, String path, ZonedDateTime createdOn) {
-        super(0, name, path, createdOn);
+    public DirectoryInfo(String name, String path, ZonedDateTime modifiedOn) 
+    {
+        super(0, name, path, modifiedOn);
+    }
+    
+    public DirectoryInfo(String name, String path, long modifiedOn) 
+    {
+        super(0, name, path, modifiedOn);
     }
 
-    public DirectoryInfo(String name, String path, ZonedDateTime createdOn, List<FileInfo> files, List<DirectoryInfo> folders) {
-        super(0, name, path, createdOn);
-
+    public DirectoryInfo(
+        String name, String path, ZonedDateTime modifiedOn, List<FileInfo> files, List<DirectoryInfo> folders)
+    {
+        super(0, name, path, modifiedOn);
         this.files.addAll(files);
         this.folders.addAll(folders);
     }
 
+    public DirectoryInfo(
+        String name, String path, long modifiedOn, List<FileInfo> files, List<DirectoryInfo> folders)
+    {
+        super(0, name, path, modifiedOn);
+        this.files.addAll(files);
+        this.folders.addAll(folders);
+    }
+    
     public List<FileInfo> getFiles() {
         files.sort((f1, f2) -> f1.getName().compareTo(f2.getName()));
         return Collections.unmodifiableList(files);
@@ -42,19 +57,24 @@ public class DirectoryInfo extends FileSystemEntry {
 
     @Override
     public long getSize() {
-        return files.stream().mapToLong(f -> f.getSize()).sum() + folders.stream().mapToLong(f -> f.getSize()).sum();
+        return files.stream().mapToLong(f -> f.getSize()).sum() + 
+            folders.stream().mapToLong(f -> f.getSize()).sum();
     }
 
     public void addFile(FileInfo fi) {
-        Optional<FileInfo> existing = files.stream().filter(f -> f.getName().equalsIgnoreCase(fi.getName())).findFirst();
+        Optional<FileInfo> existing = files.stream()
+            .filter(f -> f.getName().equalsIgnoreCase(fi.getName()))
+            .findFirst();
         if (existing.isPresent()) {
             this.files.remove(existing.get());
         }
         this.files.add(fi);
     }
 
-    public void addFolder(DirectoryInfo di) {
-        Optional<DirectoryInfo> existing = folders.stream().filter(d -> d.getName().equalsIgnoreCase(di.getName())).findFirst();
+    public void addDirectory(DirectoryInfo di) {
+        Optional<DirectoryInfo> existing = folders.stream()
+            .filter(d -> d.getName().equalsIgnoreCase(di.getName()))
+            .findFirst();
         if (existing.isPresent()) {
             this.folders.remove(existing.get());
         }
