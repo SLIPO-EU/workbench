@@ -22,6 +22,7 @@ import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Triple;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -43,14 +44,20 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 import org.springframework.stereotype.Service;
 
+import eu.slipo.workbench.common.model.poi.EnumDataFormat;
+import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.process.EnumStepFile;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepFileRecord;
+import eu.slipo.workbench.common.model.process.ProcessRecord;
 import eu.slipo.workbench.common.model.process.Step;
+import eu.slipo.workbench.common.model.resource.EnumDataSourceType;
+import eu.slipo.workbench.common.model.resource.FileSystemDataSource;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.repository.ProcessRepository;
 import eu.slipo.workbench.common.service.UserFileNamingStrategy;
 import eu.slipo.workbench.web.config.MapConfiguration;
+import eu.slipo.workbench.web.controller.action.ImportController.ImportResult;
 import eu.slipo.workbench.web.model.configuration.GeoServerConfiguration;
 
 @Service
@@ -88,52 +95,79 @@ public class DefaultImportService implements ImportService, InitializingBean {
     }
 
     @Override
-    public DatabaseImportResult exportWfsLayer(int userId, long executionId, Step step, String title) {
-        return this.exportWfsLayer(userId, executionId, this.defaultSchema, this.defaultGeometryColumn, step, title);
+    public ImportResult publiseExecutionLayers(int userId, long executionId) {
+        return this.publiseExecutionLayers(userId, executionId, this.defaultSchema, this.defaultGeometryColumn);
     }
 
     @Override
-    public DatabaseImportResult exportWfsLayer(int userId, long executionId, String schema, String geometryColumn, Step step, String title) {
-        try {
-            final String tableName = UUID.randomUUID().toString();
-            final Path path;
+    public ImportResult publiseExecutionLayers(int userId, long executionId, String schema, String geometryColumn) {
 
-            TriplegeoConfiguration config = (TriplegeoConfiguration) step.configuration();
+        final ProcessExecutionRecord execution = processRepository.findExecution(executionId);
+        final ProcessRecord process = processRepository.findOne(execution.getProcess().getId(), execution.getProcess().getVersion());
 
-            if (config.getInput().size() != 1) {
-                throw new Exception(String.format(
-                    "Only a single input file is supported. Multiple files found [%s]", config.getInputAsString()));
-            }
+        final ImportResult result = new ImportResult();
+        result.process = process;
+        result.execution = execution;
 
-            switch (config.getInputFormat()) {
-                case CSV:
-                    path = fileNamingStrategy.resolvePath(userId, config.getInput().get(0).toString());
-                    this.importCsvFile(schema, tableName, path.toString(), geometryColumn, config);
-                    break;
+        process.getDefinition()
+            .steps()
+            .stream()
+            .filter(s -> s.tool() == EnumTool.TRIPLEGEO &&
+                         s.sources().size() == 1 &&
+                         s.sources().get(0).getType() == EnumDataSourceType.FILESYSTEM)
+            .map(s-> {
+                FileSystemDataSource dataSource = (FileSystemDataSource) s.sources().get(0);
+                TriplegeoConfiguration config = (TriplegeoConfiguration) s.configuration();
+                return Triple.<Step, FileSystemDataSource, TriplegeoConfiguration>of(s, dataSource, config);
+             })
+            .filter(p -> p.getRight().getInputFormat() == EnumDataFormat.CSV || p.getRight().getInputFormat() == EnumDataFormat.SHAPEFILE)
+            .forEach(p-> {
+                try {
+                    DatabaseImportResult importResult = this.publishTripleGeoInput(
+                        userId, executionId, schema, geometryColumn,
+                        p.getLeft(), p.getMiddle(), p.getRight(), process.getName() + " : " + p.getLeft().name()
+                    );
 
-                case SHAPEFILE:
-                    path = fileNamingStrategy.resolvePath(userId, config.getInput().get(0).toString());
-                    this.importShapeFile(schema, tableName, path.toString(), geometryColumn, config, DEFAULT_TIMEOUT);
-                    break;
+                    result.imports.add(importResult);
+                } catch (Exception ex) {
+                    result.imports.add(new DatabaseImportResult(ex));
+                }
+            });
 
-                default:
-                    throw new Exception(String.format("Input format [%s] is not supported", config.getInputFormat()));
-            }
-
-            this.registerGeoServerLayer(tableName, title);
-            this.updateStepFile(executionId, step, schema, tableName, geometryColumn);
-
-            return new DatabaseImportResult(defaultSchema, tableName, defaultGeometryColumn);
-        } catch (Exception ex) {
-            logger.error("Import operation has failed", ex);
-            return new DatabaseImportResult(ex);
-        }
-
+        return result;
     }
 
-    private void importShapeFile(
-        String schema, String tableName, String fileName, String geomColumn, TriplegeoConfiguration config, int timeout
+    private DatabaseImportResult publishTripleGeoInput(
+        int userId, long executionId, String schema, String geometryColumn,
+        Step step, FileSystemDataSource dataSource, TriplegeoConfiguration config,
+        String title
     ) throws Exception {
+        final String tableName = UUID.randomUUID().toString();
+        final Path path;
+
+        switch (config.getInputFormat()) {
+            case CSV:
+                path = fileNamingStrategy.resolvePath(userId, dataSource.getPath());
+                this.importCsvFile(schema, tableName, path.toString(), geometryColumn, config);
+                break;
+
+            case SHAPEFILE:
+                path = fileNamingStrategy.resolvePath(userId, dataSource.getPath());
+                this.importShapeFile(schema, tableName, path.toString(), geometryColumn, config, DEFAULT_TIMEOUT);
+                break;
+
+            default:
+                throw new Exception(String.format("Input format [%s] is not supported", config.getInputFormat()));
+        }
+
+        this.registerGeoServerLayer(tableName, title);
+        this.updateStepFile(executionId, step, schema, tableName, geometryColumn);
+
+        return new DatabaseImportResult(defaultSchema, tableName, defaultGeometryColumn);
+    }
+
+    private void importShapeFile(String schema, String tableName, String fileName, String geomColumn,
+            TriplegeoConfiguration config, int timeout) throws Exception {
 
         String outputFileName = null;
         File outputFile = null;
@@ -146,21 +180,10 @@ public class DefaultImportService implements ImportService, InitializingBean {
             }
 
             outputFileName = FilenameUtils.removeExtension(fileName) + ".sql";
-            outputFile  = new File(outputFileName);
+            outputFile = new File(outputFileName);
 
-            String[] command = {
-                "shp2pgsql",
-                "-s",
-                srid,
-                "-t",
-                "2D",
-                "-g",
-                config.getAttrGeometry(),
-                "-W",
-                config.getEncoding(),
-                fileName,
-                schema + "." + tableName
-            };
+            String[] command = { "shp2pgsql", "-s", srid, "-t", "2D", "-g", config.getAttrGeometry(), "-W",
+                    config.getEncoding(), fileName, schema + "." + tableName };
 
             CommandExecutor commandExecutor = new CommandExecutor(command, timeout, outputFileName);
             int result = commandExecutor.execute();
@@ -194,13 +217,14 @@ public class DefaultImportService implements ImportService, InitializingBean {
 
         // Import data
         String copySql = String.format(
-            "COPY \"%s\".\"%s\" FROM '%s' CSV HEADER DELIMITER '%s' QUOTE '%s' NULL '' ENCODING '%s';", schema,
-            tableName, fileName, config.getDelimiter(), config.getQuote(), config.getEncoding());
+                "COPY \"%s\".\"%s\" FROM '%s' CSV HEADER DELIMITER '%s' QUOTE '%s' NULL '' ENCODING '%s';", schema,
+                tableName, fileName, config.getDelimiter(), config.getQuote(), config.getEncoding());
 
         jdbcTemplate.execute(copySql);
 
         // Create, populate and index geometry column
-        String createColumnSql = this.generateCreateGeometryColumnScript(schema, tableName, fileName, geomColumn, config);
+        String createColumnSql = this.generateCreateGeometryColumnScript(schema, tableName, fileName, geomColumn,
+                config);
         jdbcTemplate.execute(createColumnSql);
     }
 
@@ -224,7 +248,7 @@ public class DefaultImportService implements ImportService, InitializingBean {
         // contain the column names) and to compute the maximum length for all string
         // values per field
         try (Reader reader = Files.newBufferedReader(Paths.get(fileName), Charset.forName(config.getEncoding()));
-             CSVParser parser = new CSVParser(reader, format);) {
+                CSVParser parser = new CSVParser(reader, format);) {
 
             String[] fields = parser.getHeaderMap().keySet().toArray(new String[] {});
             Map<String, Integer> width = new HashMap<String, Integer>();
@@ -246,7 +270,8 @@ public class DefaultImportService implements ImportService, InitializingBean {
 
             // Handle primary keys either as string values or integers
             if (width.containsKey(config.getAttrKey())) {
-                script.append(String.format("%s varchar(%d) PRIMARY KEY,\n", config.getAttrKey(), width.get(config.getAttrKey())));
+                script.append(String.format("%s varchar(%d) PRIMARY KEY,\n", config.getAttrKey(),
+                        width.get(config.getAttrKey())));
             } else {
                 script.append(String.format("%s bigint PRIMARY KEY,\n", config.getAttrKey()));
             }
@@ -311,10 +336,9 @@ public class DefaultImportService implements ImportService, InitializingBean {
         );
         // Populate column (optionally transform source data CRS to target CRS 4326)
         script.append(String.format("UPDATE \"%s\".\"%s\"\n", schema, tableName));
-        if (config.getSourceCRS().equalsIgnoreCase("EPSG:4326")) {
+        if ((StringUtils.isBlank(config.getSourceCRS())) || (config.getSourceCRS().equalsIgnoreCase("EPSG:4326"))) {
             script.append(
-                String.format("SET \"%s\" = ST_SetSRID(ST_Point(%s, %s),4326);\n",
-                              geomColumn, config.getAttrX(), config.getAttrY())
+                String.format("SET \"%s\" = ST_SetSRID(ST_Point(%s, %s),4326);\n", geomColumn, config.getAttrX(), config.getAttrY())
             );
         } else {
             script.append(
@@ -323,10 +347,8 @@ public class DefaultImportService implements ImportService, InitializingBean {
             );
         }
         // Build a spatial index for fast retrieval
-        script.append(
-            String.format("CREATE INDEX \"%2$s_%3$s_idx\" ON \"%1$s\".\"%2$s\" USING gist (%3$s);\n",
-                          schema, tableName, geomColumn)
-        );
+        script.append(String.format("CREATE INDEX \"%2$s_%3$s_idx\" ON \"%1$s\".\"%2$s\" USING gist (%3$s);\n",
+                                    schema, tableName, geomColumn));
 
         return script.toString();
     }
@@ -368,20 +390,19 @@ public class DefaultImportService implements ImportService, InitializingBean {
 
         Optional<ProcessExecutionStepFileRecord> file = record.getSteps().stream()
             .filter(s -> s.getKey() == step.key())
-            .flatMap(s -> s.getFiles().stream())
-            .filter(f -> f.getType() == EnumStepFile.OUTPUT)
+            .flatMap(s -> s.getFiles().stream()).filter(f -> f.getType() == EnumStepFile.OUTPUT)
             .findFirst();
 
-        if(!file.isPresent()) {
+        if (!file.isPresent()) {
             return;
         }
 
         String bboxSql = String.format(
-            "update   process_execution_step_file " +
-            "set      bbox = (select ST_SetSRID(ST_Extent(\"%3$s\"), 4326) from \"%1$s\".\"%2$s\"), " +
-            "         table_name = '%2$s' " +
-            "where    process_execution_step_file.id = %4$d;",
-            schema, tableName, geometryColumn, file.get().getId());
+                "update   process_execution_step_file " +
+                "set      bbox = (select ST_SetSRID(ST_Extent(\"%3$s\"), 4326) from \"%1$s\".\"%2$s\"), " +
+                "         table_name = '%2$s' " +
+                "where    process_execution_step_file.id = %4$d;",
+                schema, tableName, geometryColumn, file.get().getId());
 
         jdbcTemplate.execute(bboxSql);
     }
