@@ -90,10 +90,11 @@ public class TriplegeoConfigurationTests
             config.setFeatureSource("points");
             config.addPrefix("foo", "http://example.com/foo#");
 
+            config.setRegisterFeatures(false);
+
             return config;
         }
 
-        @Bean
         public TriplegeoConfiguration config2()
         {
             TriplegeoConfiguration config = new TriplegeoConfiguration();
@@ -119,6 +120,22 @@ public class TriplegeoConfigurationTests
 
             return config;
         }
+
+        @Bean
+        public TriplegeoConfiguration config2a()
+        {
+            TriplegeoConfiguration config = config2();
+            config.setRegisterFeatures(false);
+            return config;
+        }
+
+        @Bean
+        public TriplegeoConfiguration config2b()
+        {
+            TriplegeoConfiguration config = config2();
+            config.setRegisterFeatures(true);
+            return config;
+        }
     }
 
     @Autowired
@@ -137,7 +154,10 @@ public class TriplegeoConfigurationTests
     TriplegeoConfiguration config1;
 
     @Autowired
-    TriplegeoConfiguration config2;
+    TriplegeoConfiguration config2a;
+
+    @Autowired
+    TriplegeoConfiguration config2b;
 
     void checkEquals(TriplegeoConfiguration expected, TriplegeoConfiguration actual)
     {
@@ -247,9 +267,9 @@ public class TriplegeoConfigurationTests
     }
 
     @Test
-    public void test2_serializeAsJson() throws Exception
+    public void test2a_serializeAsJson() throws Exception
     {
-        serializeAsJson(config2);
+        serializeAsJson(config2a);
     }
 
     @Test
@@ -259,9 +279,9 @@ public class TriplegeoConfigurationTests
     }
 
     @Test
-    public void test2_serializeAsXml() throws Exception
+    public void test2a_serializeAsXml() throws Exception
     {
-        serializeAsXml(config2);
+        serializeAsXml(config2a);
     }
 
     @Test
@@ -271,9 +291,9 @@ public class TriplegeoConfigurationTests
     }
 
     @Test
-    public void test2_serializeAsProperties() throws Exception
+    public void test2a_serializeAsProperties() throws Exception
     {
-        serializeAsProperties(config2);
+        serializeAsProperties(config2a);
     }
 
     @Test
@@ -283,9 +303,9 @@ public class TriplegeoConfigurationTests
     }
 
     @Test
-    public void test2_serializeDefault() throws Exception
+    public void test2a_serializeDefault() throws Exception
     {
-        serializeDefault(config2);
+        serializeDefault(config2a);
     }
 
     @Test
@@ -295,9 +315,9 @@ public class TriplegeoConfigurationTests
     }
 
     @Test
-    public void test2_validate() throws Exception
+    public void test2a_validate() throws Exception
     {
-        validate(config2);
+        validate(config2a);
     }
 
     @Test
@@ -307,9 +327,9 @@ public class TriplegeoConfigurationTests
     }
 
     @Test
-    public void test2_getSerializationFormat() throws Exception
+    public void test2a_getSerializationFormat() throws Exception
     {
-        assertEquals("TURTLE", config2.getSerializationFormat());
+        assertEquals("TURTLE", config2a.getSerializationFormat());
     }
 
     @Test
@@ -327,12 +347,26 @@ public class TriplegeoConfigurationTests
     }
 
     @Test
-    public void test2_getOutputNames() throws Exception
+    public void test2a_getOutputNames() throws Exception
     {
-        Map<EnumOutputType, List<String>> outputNamesByType = config2.getOutputNames();
+        Map<EnumOutputType, List<String>> outputNamesByType = config2a.getOutputNames();
 
         assertEquals(
             Arrays.asList("p1.ttl", "p2.ttl", "classification.ttl"),
+            outputNamesByType.get(EnumOutputType.OUTPUT));
+
+        assertEquals(
+            Arrays.asList("p1_metadata.json", "p2_metadata.json", "classification_metadata.json"),
+            outputNamesByType.get(EnumOutputType.KPI));
+    }
+
+    @Test
+    public void test2b_getOutputNames() throws Exception
+    {
+        Map<EnumOutputType, List<String>> outputNamesByType = config2b.getOutputNames();
+
+        assertEquals(
+            Arrays.asList("p1.ttl", "p1.csv", "p2.ttl", "p2.csv", "classification.ttl"),
             outputNamesByType.get(EnumOutputType.OUTPUT));
 
         assertEquals(

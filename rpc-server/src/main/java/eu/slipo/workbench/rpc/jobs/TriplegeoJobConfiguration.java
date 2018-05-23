@@ -76,6 +76,10 @@ public class TriplegeoJobConfiguration extends BaseJobConfiguration
      */
     private Path containerDataDir;
 
+    private long runTimeout = -1L;
+
+    private long checkInterval = -1L;
+
     @Autowired
     private void setContainerDataDirectory(
         @Value("${slipo.rpc-server.tools.triplegeo.docker.container-data-dir}") String dir)
@@ -83,6 +87,20 @@ public class TriplegeoJobConfiguration extends BaseJobConfiguration
         Path dirPath = Paths.get(dir);
         Assert.isTrue(dirPath.isAbsolute(), "Expected an absolute path (inside a container)");
         this.containerDataDir = dirPath;
+    }
+
+    @Autowired
+    private void setTimeout(
+        @Value("${slipo.rpc-server.tools.triplegeo.timeout-seconds:}") Integer timeoutSeconds)
+    {
+        this.runTimeout = timeoutSeconds == null? DEFAULT_RUN_TIMEOUT : (timeoutSeconds.longValue() * 1000L);
+    }
+
+    @Autowired
+    private void setCheckInterval(
+        @Value("${slipo.rpc-server.tools.triplegeo.check-interval-millis:}") Integer checkInterval)
+    {
+        this.checkInterval = checkInterval == null? DEFAULT_CHECK_INTERVAL : checkInterval.longValue();
     }
 
     @PostConstruct
@@ -272,8 +290,8 @@ public class TriplegeoJobConfiguration extends BaseJobConfiguration
     {
         return RunContainerTasklet.builder()
             .client(docker)
-            .checkInterval(DEFAULT_CHECK_INTERVAL)
-            .timeout(DEFAULT_RUN_TIMEOUT)
+            .checkInterval(checkInterval)
+            .timeout(runTimeout)
             .container(containerName)
             .removeOnFinished(false)
             .build();
@@ -393,10 +411,16 @@ public class TriplegeoJobConfiguration extends BaseJobConfiguration
                         Files.createSymbolicLink(
                             Paths.get(outputDir, expectedName + "." + outputNameExtension),
                             Paths.get(actualName + "." + outputNameExtension));
-                        // Link execution metadata under expected name
+                        // Link execution KPI metadata under expected name
                         Files.createSymbolicLink(
                             Paths.get(outputDir, expectedName + "_metadata.json"),
                             Paths.get(actualName + "_metadata.json"));
+                        // Link registration output (if it exists) under expected name
+                        if (Files.exists(Paths.get(outputDir, actualName + ".csv"))) {
+                            Files.createSymbolicLink(
+                                Paths.get(outputDir, expectedName + ".csv"),
+                                Paths.get(actualName + ".csv"));
+                        }
                     }
                 }
 

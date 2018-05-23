@@ -1,7 +1,7 @@
 package eu.slipo.workbench.web.service.etl;
 
 import eu.slipo.workbench.common.model.process.EnumStepFile;
-import eu.slipo.workbench.common.model.process.Step;
+import eu.slipo.workbench.web.controller.action.ImportController.ImportResult;
 
 /**
  *
@@ -22,13 +22,10 @@ public interface ImportService {
      * @param executionId the process execution id
      * @param schema the database schema for the new table
      * @param geometryColumn the geometry column for the new table
-     * @param step the TripleGeo step
-     * @param title the title for the new layer
      *
-     * @return an instance of {@link DatabaseImportResult}
+     * @return an instance of {@link ImportResult}
      */
-    DatabaseImportResult exportWfsLayer(int userId, long executionId, String schema, String geometryColumn, Step step,
-            String title);
+    ImportResult publiseExecutionLayers(int userId, long executionId, String schema, String geometryColumn);
 
     /**
      * Imports a TripleGeo input file to database and publishes the data as a GeoServer
@@ -36,11 +33,9 @@ public interface ImportService {
      *
      * @param userId the current user id
      * @param executionId the process execution id
-     * @param step the TripleGeo step
-     * @param title the title for the new layer
      *
-     * @return an instance of {@link DatabaseImportResult}
+     * @return an instance of {@link ImportResult}
      */
-    DatabaseImportResult exportWfsLayer(int userId, long executionId, Step step, String title);
+    ImportResult publiseExecutionLayers(int userId, long executionId);
 
 }

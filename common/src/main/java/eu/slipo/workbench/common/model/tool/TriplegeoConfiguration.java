@@ -310,6 +310,11 @@ public class TriplegeoConfiguration extends TransformConfiguration
     private String encoding = "UTF-8";
 
     /**
+     * Indicates whether to export a CSV file with records for the SLIPO Registry
+     */
+    private boolean registerFeatures = true;
+    
+    /**
      * A default constructor
      */
     public TriplegeoConfiguration()
@@ -528,10 +533,17 @@ public class TriplegeoConfiguration extends TransformConfiguration
         for (String inputPath: input) {
             String inputName = StringUtils.stripFilenameExtension(
                 Paths.get(inputPath).getFileName().toString());
+            // The primary output (per input) is the transformed file
             outputMap.get(EnumOutputType.OUTPUT)
                 .add(inputName + "." + extension);
+            // For each transformed file, relevant KPI metadata are generated
             outputMap.get(EnumOutputType.KPI)
                 .add(inputName + "_metadata" + ".json");
+            if (registerFeatures) {
+                // An additional CSV is generated as a registration payload
+                outputMap.get(EnumOutputType.OUTPUT)
+                    .add(inputName + ".csv");
+            }
         }
 
         // An output file with classification in an RDF format is always produced
@@ -986,5 +998,17 @@ public class TriplegeoConfiguration extends TransformConfiguration
     public void setQuote(String quote)
     {
         this.quote = quote;
+    }
+    
+    @JsonProperty("registerFeatures")
+    public boolean getRegisterFeatures()
+    {
+        return registerFeatures;
+    }
+    
+    @JsonProperty("registerFeatures")
+    public void setRegisterFeatures(boolean registerFeatures)
+    {
+        this.registerFeatures = registerFeatures;
     }
 }

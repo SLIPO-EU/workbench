@@ -62,6 +62,10 @@ public class LimesJobConfiguration extends BaseJobConfiguration
     @Autowired
     private DockerClient docker;
 
+    private long runTimeout = -1L;
+
+    private long checkInterval = -1L;
+
     /**
      * The root directory on a container, under which directories/files will be bind-mounted
      * (eg. <tt>/var/local/limes</tt>).
@@ -75,6 +79,20 @@ public class LimesJobConfiguration extends BaseJobConfiguration
         Path dirPath = Paths.get(dir);
         Assert.isTrue(dirPath.isAbsolute(), "Expected an absolute path (inside a container)");
         this.containerDataDir = dirPath;
+    }
+
+    @Autowired
+    private void setTimeout(
+        @Value("${slipo.rpc-server.tools.limes.timeout-seconds:}") Integer timeoutSeconds)
+    {
+        this.runTimeout = timeoutSeconds == null? DEFAULT_RUN_TIMEOUT : (timeoutSeconds.longValue() * 1000L);
+    }
+
+    @Autowired
+    private void setCheckInterval(
+        @Value("${slipo.rpc-server.tools.limes.check-interval-millis:}") Integer checkInterval)
+    {
+        this.checkInterval = checkInterval == null? DEFAULT_CHECK_INTERVAL : checkInterval.longValue();
     }
 
     @PostConstruct
@@ -249,8 +267,8 @@ public class LimesJobConfiguration extends BaseJobConfiguration
     {
         return RunContainerTasklet.builder()
             .client(docker)
-            .checkInterval(DEFAULT_CHECK_INTERVAL)
-            .timeout(DEFAULT_RUN_TIMEOUT)
+            .checkInterval(checkInterval)
+            .timeout(runTimeout)
             .container(containerName)
             .removeOnFinished(false)
             .build();
