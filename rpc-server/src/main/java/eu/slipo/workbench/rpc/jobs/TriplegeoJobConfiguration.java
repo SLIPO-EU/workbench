@@ -393,10 +393,16 @@ public class TriplegeoJobConfiguration extends BaseJobConfiguration
                         Files.createSymbolicLink(
                             Paths.get(outputDir, expectedName + "." + outputNameExtension),
                             Paths.get(actualName + "." + outputNameExtension));
-                        // Link execution metadata under expected name
+                        // Link execution KPI metadata under expected name
                         Files.createSymbolicLink(
                             Paths.get(outputDir, expectedName + "_metadata.json"),
                             Paths.get(actualName + "_metadata.json"));
+                        // Link registration output (if it exists) under expected name
+                        if (Files.exists(Paths.get(outputDir, actualName + ".csv"))) {
+                            Files.createSymbolicLink(
+                                Paths.get(outputDir, expectedName + ".csv"),
+                                Paths.get(actualName + ".csv"));
+                        }
                     }
                 }
 

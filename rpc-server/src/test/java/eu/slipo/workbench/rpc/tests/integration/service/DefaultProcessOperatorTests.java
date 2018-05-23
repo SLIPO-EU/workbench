@@ -1495,7 +1495,7 @@ public class DefaultProcessOperatorTests
         }
     }
 
-    @Test // Fixme (timeout = 40 * 1000L)
+    @Test(timeout = 40 * 1000L)
     public void test1L_transformAndRegisterThenLink() throws Exception
     {
         final Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
