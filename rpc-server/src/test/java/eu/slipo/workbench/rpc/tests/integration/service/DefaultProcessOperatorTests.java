@@ -1352,6 +1352,34 @@ public class DefaultProcessOperatorTests
     }
 
     @Test(timeout = 40 * 1000L)
+    public void test4T_transformAndRegister1a() throws Exception
+    {
+        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
+        transformAndRegister("file-4-1-a", transformFixtures.get("file-4-1-a"), user);
+    }
+
+    @Test(timeout = 40 * 1000L)
+    public void test4T_transformAndRegister1b() throws Exception
+    {
+        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
+        transformAndRegister("file-4-1-b", transformFixtures.get("file-4-1-b"), user);
+    }
+
+    @Test(timeout = 40 * 1000L)
+    public void test5T_transformAndRegister1a() throws Exception
+    {
+        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
+        transformAndRegister("file-5-1-a", transformFixtures.get("file-5-1-a"), user);
+    }
+
+    @Test(timeout = 40 * 1000L)
+    public void test5T_transformAndRegister1b() throws Exception
+    {
+        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
+        transformAndRegister("file-5-1-b", transformFixtures.get("file-5-1-b"), user);
+    }
+
+    @Test(timeout = 40 * 1000L)
     public void test1T_downloadAndTransformAndRegister1a() throws Exception
     {
         Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
@@ -1410,10 +1438,24 @@ public class DefaultProcessOperatorTests
     }
 
     @Test(timeout = 40 * 1000L)
-    public void test2aT_downloadAndTransformAndRegister1b() throws Exception
+    public void test2aT_downloadAndTransformAndRegister1a() throws Exception
     {
         Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
-        transformAndRegister("url-2a-1-b", transformFixtures.get("url-2a-1-a"), user);
+        transformAndRegister("url-2a-1-a", transformFixtures.get("url-2a-1-a"), user);
+    }
+
+    @Test(timeout = 40 * 1000L)
+    public void test4T_downloadAndTransformAndRegister1a() throws Exception
+    {
+        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
+        transformAndRegister("url-4-1-a", transformFixtures.get("url-4-1-a"), user);
+    }
+
+    @Test(timeout = 40 * 1000L)
+    public void test5T_downloadAndTransformAndRegister1a() throws Exception
+    {
+        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
+        transformAndRegister("url-5-1-a", transformFixtures.get("url-5-1-a"), user);
     }
 
     @Test(timeout = 40 * 1000L)
