@@ -233,7 +233,8 @@ public class DefaultProcessOperatorTests
         private void setupTransformFixtures(Path userDir) throws Exception
         {
             List<String> dirPaths = Arrays.asList(
-                "triplegeo/1", "triplegeo/2", "triplegeo/2a", "triplegeo/3"
+                "triplegeo/1", "triplegeo/2", "triplegeo/2a", "triplegeo/3",
+                "triplegeo/4", "triplegeo/5"
             );
 
             for (String dirPath: dirPaths) {
