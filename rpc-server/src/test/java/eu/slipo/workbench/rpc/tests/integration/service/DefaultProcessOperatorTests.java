@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -55,9 +54,9 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.MoreCollectors;
 
 import eu.slipo.workbench.common.domain.AccountEntity;
@@ -88,7 +87,6 @@ import eu.slipo.workbench.common.repository.ResourceRepository;
 import eu.slipo.workbench.common.service.UserFileNamingStrategy;
 import eu.slipo.workbench.common.service.ProcessOperator;
 import eu.slipo.workbench.common.service.util.PropertiesConverterService;
-import eu.slipo.workbench.common.service.util.PropertiesConverterService.ConversionFailedException;
 import eu.slipo.workbench.rpc.Application;
 
 @RunWith(SpringRunner.class)
@@ -722,49 +720,6 @@ public class DefaultProcessOperatorTests
         }
     }
 
-    private ProcessExecutionRecord executeDefinition(ProcessDefinition definition, Account creator)
-        throws Exception
-    {
-        final int creatorId = creator.getId();
-
-        final ProcessRecord processRecord = processRepository.create(definition, creatorId, false);
-        assertNotNull(processRecord);
-        final long id = processRecord.getId(), version = processRecord.getVersion();
-        final ProcessIdentifier processIdentifier = ProcessIdentifier.of(id, version);
-
-        // Start process
-
-        ProcessExecutionRecord executionRecord = processOperator.start(id, version);
-        assertNotNull(executionRecord);
-        final long executionId = executionRecord.getId();
-
-        assertNotNull(executionRecord.getStatus());
-        assertNotNull(executionRecord.getSubmittedOn());
-        assertNotNull(executionRecord.getSubmittedBy());
-
-        assertTrue(processOperator.list(true).contains(processIdentifier));
-
-        // Poll execution for completion
-
-        do {
-            Thread.sleep(POLL_INTERVAL);
-            logger.debug("Polling execution status for process #{}", id);
-            executionRecord = processOperator.poll(id, version);
-            assertEquals(executionId, executionRecord.getId());
-            assertNotNull(executionRecord.getStartedOn());
-        } while (!executionRecord.getStatus().isTerminated());
-
-        Thread.sleep(500L);
-
-        final ProcessRecord processRecord1 = processRepository.findOne(id, version, true);
-        assertNotNull(processRecord1);
-        assertNotNull(processRecord1.getExecutedOn());
-        assertNotNull(processRecord1.getExecutions());
-        assertEquals(1, processRecord1.getExecutions().size());
-
-        return processRepository.findExecution(executionId);
-    }
-
     @FunctionalInterface
     interface TransformToDefinition
     {
@@ -790,6 +745,51 @@ public class DefaultProcessOperatorTests
             throws Exception;
     }
 
+    private ProcessExecutionRecord executeDefinition(ProcessDefinition definition, Account creator)
+        throws Exception
+    {
+        final int creatorId = creator.getId();
+
+        final ProcessRecord processRecord = processRepository.create(definition, creatorId, false);
+        assertNotNull(processRecord);
+        final long id = processRecord.getId(), version = processRecord.getVersion();
+        final ProcessIdentifier processIdentifier = ProcessIdentifier.of(id, version);
+
+        // Start process
+
+        ProcessExecutionRecord executionRecord = processOperator.start(id, version);
+        assertNotNull(executionRecord);
+        final long executionId = executionRecord.getId();
+
+        assertNotNull(executionRecord.getStatus());
+        assertNotNull(executionRecord.getSubmittedOn());
+        assertNotNull(executionRecord.getSubmittedBy());
+
+        assertTrue(processOperator.list(true).contains(processIdentifier));
+
+        // Poll execution for completion
+
+        boolean terminated = false;
+        do {
+            Thread.sleep(POLL_INTERVAL);
+            logger.debug("Polling execution status for process #{}", id);
+            executionRecord = processOperator.poll(id, version);
+            assertEquals(executionId, executionRecord.getId());
+            assertNotNull(executionRecord.getStartedOn());
+            terminated = executionRecord.getStatus().isTerminated() &&
+                Iterables.all(executionRecord.getSteps(), s -> s.getStatus().isTerminated());
+        } while (!terminated);
+
+        Thread.sleep(500L);
+
+        final ProcessRecord processRecord1 = processRepository.findOne(id, version, true);
+        assertNotNull(processRecord1);
+        assertNotNull(processRecord1.getExecutedOn());
+        assertNotNull(processRecord1.getExecutions());
+        assertEquals(1, processRecord1.getExecutions().size());
+
+        return processRepository.findExecution(executionId);
+    }
 
     private ProcessDefinition buildDefinition(
             String procName, TransformFixture fixture, String resourceName)
