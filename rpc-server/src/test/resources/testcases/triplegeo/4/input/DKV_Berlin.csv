@@ -1,0 +1,246 @@
+ID;lon;lat;all_tags;name;zip;address;city
+1;13.3752222;52.5370079;DKV - TOTAL Station  10115 Berlin  Chausseestr. 61;TOTAL;10115;Chausseestr. 61;Berlin
+2;13.4218919;52.5140381;DKV - ARAL Station  10179 Berlin  Holzmarktstr. 12 - 14;ARAL;10179;Holzmarktstr. 12 - 14;Berlin
+3;13.420068;52.51453;DKV - CleanCar Station  10179 Berlin  Holzmarktstr. 5;CleanCar;10179;Holzmarktstr. 5;Berlin
+4;13.419633;52.514823;DKV - HEM Station  10179 Berlin  Holzmarktstr. 4;HEM;10179;Holzmarktstr. 4;Berlin
+5;13.4283684;52.5113173;DKV - TOTAL Station  10243 Berlin  Holzmarktstr. 36 - 42;TOTAL;10243;Holzmarktstr. 36 - 42;Berlin
+6;13.5191667;52.5225;DKV - STAR Station  10315 Berlin  Rhinstr. 47;STAR;10315;Rhinstr. 47;Berlin
+7;13.5310616;52.5096825;DKV - TAMOIL Station  10315 Berlin  Alt-Friedrichsfelde 61;TAMOIL;10315;Alt-Friedrichsfelde 61;Berlin
+8;13.50219;52.4829935;DKV - TOTAL Station  10318 Berlin  Blockdammweg 6;TOTAL;10318;Blockdammweg 6;Berlin
+9;13.524618;52.494977;DKV - JET Station  10319 Berlin  Am Tierpark 126;JET;10319;Am Tierpark 126;Berlin
+10;13.4937701;52.5115921;DKV - ARAL Station  10365 Berlin  Frankfurter Allee 214;ARAL;10365;Frankfurter Allee 214;Berlin
+11;13.502498;52.531842;DKV - CleanCar Station  10365 Berlin  Siegfriedstr. 80;CleanCar;10365;Siegfriedstr. 80;Berlin
+12;13.4994444;52.5216667;DKV - JET Station  10365 Berlin  Siegfriedstr. 179;JET;10365;Siegfriedstr. 179;Berlin
+13;13.488573;52.526311;DKV - JET Station  10365 Berlin  Herzbergstr. 27;JET;10365;Herzbergstr. 27;Berlin
+14;13.4840192;52.5064773;DKV - SHELL Station  10365 Berlin  Buchberger Str. 30;SHELL;10365;Buchberger Str. 30;Berlin
+15;13.4992522;52.5243322;DKV - STAR Station  10365 Berlin  Siegfriedstr. 170;STAR;10365;Siegfriedstr. 170;Berlin
+16;13.4583039;52.5275954;DKV - TOTAL Station  10369 Berlin  Storkower Str. 174;TOTAL;10369;Storkower Str. 174;Berlin
+17;13.417837;52.528675;DKV - TOTAL Station  10405 Berlin  Prenzlauer Allee 3;TOTAL;10405;Prenzlauer Allee 3;Berlin
+18;13.4510837;52.535515;DKV - ELAN Station  10407 Berlin  Storkower Str. 116;ELAN;10407;Storkower Str. 116;Berlin
+19;13.4525763;52.5339008;DKV - JET Station  10407 Berlin  Storkower Str. 130;JET;10407;Storkower Str. 130;Berlin
+20;13.444937;52.533838;DKV - SPRINT Station  10407 Berlin  Kniprodestr. 25;SPRINT;10407;Kniprodestr. 25;Berlin
+21;13.4414088;52.5306932;DKV - TOTAL Station  10407 Berlin  Margarete-Sommer-Str. 2;TOTAL;10407;Margarete-Sommer-Str. 2;Berlin
+22;13.3284365;52.5305845;DKV - ARAL Station  10553 Berlin  Beusselstr. 55;ARAL;10553;Beusselstr. 55;Berlin
+23;13.324885;52.53551;DKV - SHELL Station  10553 Berlin  Beusselstr. 44;SHELL;10553;Beusselstr. 44;Berlin
+24;13.3343534;52.5209099;DKV - ARAL Station  10555 Berlin  Levetzowstr. 9;ARAL;10555;Levetzowstr. 9;Berlin
+25;13.341412;52.519708;DKV - ESSO Station  10555 Berlin  Lessingstraße 4;ESSO;10555;Lessingstraße 4;Berlin
+26;13.3646611;52.5343443;DKV - TOTAL Station  10557 Berlin  Heidestr. 19;TOTAL;10557;Heidestr. 19;Berlin
+27;13.3509984;52.5353376;DKV - WESTFEHLING Station  10559 Berlin  Quitzowstr. 33;WESTFEHLING;10559;Quitzowstr. 33;Berlin
+28;13.3027321;52.5189616;DKV - STAR Station  10585 Berlin  Otto-Suhr-Allee 134;STAR;10585;Otto-Suhr-Allee 134;Berlin
+29;13.3007934;52.5171824;DKV - STAR Station  10585 Berlin  Kaiser-Friedrich-Str. 102;STAR;10585;Kaiser-Friedrich-Str. 102;Berlin
+30;13.3189745;52.5125771;DKV - ARAL Station  10625 Berlin  Bismarckstr. 2;ARAL;10625;Bismarckstr. 2;Berlin
+31;13.3019147;52.5076186;DKV - ARAL Station  10627 Berlin  Kaiser-Friedrich-Str. 45 b;ARAL;10627;Kaiser-Friedrich-Str. 45 b;Berlin
+32;13.2875707;52.4959047;DKV - ARAL Station  10711 Berlin  Kurfürstendamm 128;ARAL;10711;Kurfürstendamm 128;Berlin
+33;13.3068266;52.4884006;DKV - SHELL Station  10713 Berlin  Hohenzollerndamm 41;SHELL;10713;Hohenzollerndamm 41;Berlin
+34;13.313278;52.479428;DKV - SPRINT Station  10713 Berlin  Mecklenburgische Str. 76;SPRINT;10713;Mecklenburgische Str. 76;Berlin
+35;13.331537;52.486417;DKV - ESSO Station  10715 Berlin  Bundesallee 176;ESSO;10715;Bundesallee 176;Berlin
+36;13.319361;52.499448;DKV - SPRINT Station  10719 Berlin  Lietzenburger Str. 97;SPRINT;10719;Lietzenburger Str. 97;Berlin
+37;13.34559;52.490066;DKV - ESSO Station  10779 Berlin  Martin-Luther-Str. 67;ESSO;10779;Martin-Luther-Str. 67;Berlin
+38;13.3548719;52.4786198;DKV - SHELL Station  10829 Berlin  Sachsendamm 90;SHELL;10829;Sachsendamm 90;Berlin
+39;13.390687;52.492719;DKV - ESSO Station  10961 Berlin  Gneisenaustr. 104 - 106;ESSO;10961;Gneisenaustr. 104 - 106;Berlin
+40;13.376734;52.500379;DKV - TOTAL Station  10963 Berlin  Tempelhofer Ufer 34;TOTAL;10963;Tempelhofer Ufer 34;Berlin
+41;13.3814619;52.4849241;DKV - ARAL Station  10965 Berlin  Dudenstr. 19;ARAL;10965;Dudenstr. 19;Berlin
+42;13.3740284;52.4882497;DKV - JET Station  10965 Berlin  Kreuzbergstr. 42a;JET;10965;Kreuzbergstr. 42a;Berlin
+43;13.4094085;52.5017932;DKV - ARAL Station  10969 Berlin  Prinzenstr. 29;ARAL;10969;Prinzenstr. 29;Berlin
+44;13.4497993;52.4968646;DKV - ARAL Station  10997 Berlin  Vor dem Schlesischen Tor 2;ARAL;10997;Vor dem Schlesischen Tor 2;Berlin
+45;13.4233238;52.498956;DKV - ARAL Station  10999 Berlin  Skalitzer Str. 26;ARAL;10999;Skalitzer Str. 26;Berlin
+46;13.42933;52.48461;DKV - SPRINT Station  12043 Berlin  Reuterstr. 18;SPRINT;12043;Reuterstr. 18;Berlin
+47;13.4414068;52.4812333;DKV - ARAL Station  12045 Berlin  Sonnenallee 113;ARAL;12045;Sonnenallee 113;Berlin
+48;13.42681;52.487455;DKV - ESSO Station  12047 Berlin  Sonnenallee 9;ESSO;12047;Sonnenallee 9;Berlin
+49;13.4622175;52.4692031;DKV - ARAL Station  12057 Berlin  Grenzallee 6;ARAL;12057;Grenzallee 6;Berlin
+50;13.442765;52.465619;DKV - JET Station  12057 Berlin  Karl-Marx-Str. 259;JET;12057;Karl-Marx-Str. 259;Berlin
+51;13.4428188;52.4652704;DKV - SHELL Station  12057 Berlin  Karl-Marx-Str. 267;SHELL;12057;Karl-Marx-Str. 267;Berlin
+52;13.397846;52.458519;DKV - HOYER Automatenstation  12099 Berlin  Ordensmeisterstr. 24 - 29;HOYER Automaten;12099;Ordensmeisterstr. 24 - 29;Berlin
+53;13.385317;52.481391;DKV - ESSO Station  12101 Berlin  Tempelhofer Damm 20;ESSO;12101;Tempelhofer Damm 20;Berlin
+54;13.3710394;52.4701775;DKV - ARAL Station  12103 Berlin  Schöneberger Str. 19;ARAL;12103;Schöneberger Str. 19;Berlin
+55;13.36781;52.46233;DKV - KAUFLAND Station  12103 Berlin  Bessemerstr. 57 / 79;KAUFLAND;12103;Bessemerstr. 57 / 79;Berlin
+56;13.371919;52.470124;DKV - TOTAL Station  12103 Berlin  Schöneberger Str. 17;TOTAL;12103;Schöneberger Str. 17;Berlin
+57;13.366198;52.448954;DKV - HEM Station  12105 Berlin  Attilastr. 124;HEM;12105;Attilastr. 124;Berlin
+58;13.3670874;52.4557151;DKV - TOTAL Station  12105 Berlin  Arnulfstr. 98 - 99;TOTAL;12105;Arnulfstr. 98 - 99;Berlin
+59;13.3904092;52.4340671;DKV - ARAL Station  12107 Berlin  Mariendorfer Damm 195;ARAL;12107;Mariendorfer Damm 195;Berlin
+60;13.39407;52.42591;DKV - GO Station  12107 Berlin  Mariendorfer Damm 306;GO;12107;Mariendorfer Damm 306;Berlin
+61;13.3775916;52.4337076;DKV - SHELL Station  12107 Berlin  Großbeerenstr. 82 / 88;SHELL;12107;Großbeerenstr. 82 / 88;Berlin
+62;13.384674;52.448913;DKV - ESSO Station  12109 Berlin  Mariendorfer Damm 44;ESSO;12109;Mariendorfer Damm 44;Berlin
+63;13.334591;52.464403;DKV - SPRINT Station  12157 Berlin  Körnerstr. 48a;SPRINT;12157;Körnerstr. 48a;Berlin
+64;13.3152653;52.4532246;DKV - ARAL Station  12165 Berlin  Schloßstr. 63;ARAL;12165;Schloßstr. 63;Berlin
+65;13.350191;52.450112;DKV - STAR Station  12169 Berlin  Steglitzer Damm 77;STAR;12169;Steglitzer Damm 77;Berlin
+66;13.291825;52.445174;DKV - ESSO Station  12205 Berlin  Unter den Eichen 67;ESSO;12205;Unter den Eichen 67;Berlin
+67;13.28629;52.432925;DKV - STAR Station  12205 Berlin  Finckensteinallee 133;STAR;12205;Finckensteinallee 133;Berlin
+68;13.302915;52.415424;DKV - AGIP Station  12207 Berlin  Ostpreußendamm 89;AGIP;12207;Ostpreußendamm 89;Berlin
+69;13.31205;52.429915;DKV - SPRINT Station  12207 Berlin  Barnackufer 25;SPRINT;12207;Barnackufer 25;Berlin
+70;13.3126884;52.4301086;DKV - STAR Station  12207 Berlin  Königsberger Str. 25 a;STAR;12207;Königsberger Str. 25 a;Berlin
+71;13.3192869;52.4190101;DKV - TOTAL Station  12209 Berlin  Hildburghauser Str. 222;TOTAL;12209;Hildburghauser Str. 222;Berlin
+72;13.3512042;52.4397315;DKV - ARAL Station  12247 Berlin  Kaiser-Wilhelm-Str. 117;ARAL;12247;Kaiser-Wilhelm-Str. 117;Berlin
+73;13.33814;52.432253;DKV - ESSO Station  12247 Berlin  Kaiser-Wilhelm-Str. 34;ESSO;12247;Kaiser-Wilhelm-Str. 34;Berlin
+74;13.36504;52.42745;DKV - AGIP Station  12249 Berlin  Belßstr. 51;AGIP;12249;Belßstr. 51;Berlin
+75;13.3876937;52.412063;DKV - JET Station  12277 Berlin  Buckower Chaussee 36 - 42;JET;12277;Buckower Chaussee 36 - 42;Berlin
+76;13.347337;52.412229;DKV - HEM Station  12279 Berlin  Lichterfelder Ring 96;HEM;12279;Lichterfelder Ring 96;Berlin
+77;13.355128;52.413189;DKV - SPRINT Station  12279 Berlin  Hildburghauser Str. 27;SPRINT;12279;Hildburghauser Str. 27;Berlin
+78;13.3587527;52.4128058;DKV - STAR Station  12279 Berlin  Hildburghauser Str. 7;STAR;12279;Hildburghauser Str. 7;Berlin
+79;13.40843;52.387691;DKV - ESSO Station  12305 Berlin  Lichtenrader Damm 270 / 274;ESSO;12305;Lichtenrader Damm 270 / 274;Berlin
+80;13.426262;52.456841;DKV - ESSO Station  12347 Berlin  Tempelhofer Weg 32;ESSO;12347;Tempelhofer Weg 32;Berlin
+81;13.436193;52.457108;DKV - TOTAL Station  12347 Berlin  Britzer Damm 62;TOTAL;12347;Britzer Damm 62;Berlin
+82;13.401929;52.414526;DKV - ESSO Station  12349 Berlin  Marienfelder Chaussee 171;ESSO;12349;Marienfelder Chaussee 171;Berlin
+83;13.471099;52.433153;DKV - SPRINT Station  12351 Berlin  Rudower Str. 148;SPRINT;12351;Rudower Str. 148;Berlin
+84;13.460696;52.431961;DKV - STAR Station  12351 Berlin  Johannisthaler Chaussee 263;STAR;12351;Johannisthaler Chaussee 263;Berlin
+85;13.474281;52.425434;DKV - ESSO Station  12353 Berlin  Fritz-Erler-Allee 154;ESSO;12353;Fritz-Erler-Allee 154;Berlin
+86;13.4820434;52.4264181;DKV - ARAL Station  12357 Berlin  Neukölllner Str. 250;ARAL;12357;Neukölllner Str. 250;Berlin
+87;13.4870552;52.4226676;DKV - TOTAL Station  12357 Berlin  Neuköllner Str. 294;TOTAL;12357;Neuköllner Str. 294;Berlin
+88;13.4494052;52.4563382;DKV - ARAL Station  12359 Berlin  Buschkrugallee 92;ARAL;12359;Buschkrugallee 92;Berlin
+89;13.458465;52.444457;DKV - SPRINT Station  12359 Berlin  Grüner Weg 75;SPRINT;12359;Grüner Weg 75;Berlin
+90;13.456582;52.453108;DKV - TOTAL Station  12359 Berlin  Späthstraße 158;TOTAL;12359;Späthstraße 158;Berlin
+91;13.4784764;52.4837269;DKV - TOTAL Station  12435 Berlin  Bulgarische Straße 9;TOTAL;12435;Bulgarische Straße 9;Berlin
+92;13.4960824;52.465643;DKV - ARAL Station  12437 Berlin  Köpenicker Landstr. 296;ARAL;12437;Köpenicker Landstr. 296;Berlin
+93;13.5049442;52.4596433;DKV - ARAL Station  12439 Berlin  Schnellerstr. 20;ARAL;12439;Schnellerstr. 20;Berlin
+94;13.5133668;52.4538484;DKV - FREIE Station  12439 Berlin  Michael-Brückner-Str. 26;FREIE;12439;Michael-Brückner-Str. 26;Berlin
+95;13.5149645;52.4526226;DKV - JET Station  12439 Berlin  Michael-Brückner-Str. 25;JET;12439;Michael-Brückner-Str. 25;Berlin
+96;13.526997;52.445432;DKV - STAR Station  12439 Berlin  Adlergestell 121;STAR;12439;Adlergestell 121;Berlin
+97;13.5557086;52.4552775;DKV - ARAL Station  12459 Berlin  An der Wuhlheide 240;ARAL;12459;An der Wuhlheide 240;Berlin
+98;13.502121;52.48133;DKV - SHELL Station  12459 Berlin  Rummelsburger Landstr. 16;SHELL;12459;Rummelsburger Landstr. 16;Berlin
+99;13.546866;52.4316955;DKV - AGIP Station  12489 Berlin  Adlergestell 289;AGIP;12489;Adlergestell 289;Berlin
+100;13.5329718;52.4412849;DKV - ELAN Station  12489 Berlin  Adlergestell 179;ELAN;12489;Adlergestell 179;Berlin
+101;13.549012;52.430478;DKV - HEM Station  12489 Berlin  Adlergestell 305;HEM;12489;Adlergestell 305;Berlin
+102;13.559597;52.435057;DKV - JET Station  12489 Berlin  Glienicker Weg 105-107;JET;12489;Glienicker Weg 105-107;Berlin
+103;13.552698;52.431031;DKV - CleanCar Station  12490 Berlin  Glienicker Weg 182;CleanCar;12490;Glienicker Weg 182;Berlin
+104;13.559403;52.423631;DKV - STAR Station  12527 Berlin  Adlergestell 391;STAR;12527;Adlergestell 391;Berlin
+105;13.5727939;52.4142465;DKV - TOTAL Station  12527 Berlin  Adlergestell 543;TOTAL;12527;Adlergestell 543;Berlin
+106;13.6314454;52.3872392;DKV - TOTAL Station  12527 Berlin  Adlergestell 623;TOTAL;12527;Adlergestell 623;Berlin
+107;13.5815091;52.4518776;DKV - FREIE Station  12555 Berlin  Friedrichshagener Str. 4;FREIE;12555;Friedrichshagener Str. 4;Berlin
+108;13.571344;52.471998;DKV - HEM Station  12555 Berlin  Kaulsdorfer Str. 124;HEM;12555;Kaulsdorfer Str. 124;Berlin
+109;13.5926628;52.4527665;DKV - JET Station  12555 Berlin  Bellevuestr. 14;JET;12555;Bellevuestr. 14;Berlin
+110;13.5616268;52.4460125;DKV - TOTAL Station  12555 Berlin  Oberspreestr. 138;TOTAL;12555;Oberspreestr. 138;Berlin
+111;13.666439;52.409844;DKV - SPRINT Station  12559 Berlin  Gosener Damm 15;SPRINT;12559;Gosener Damm 15;Berlin
+112;13.6211381;52.4563217;DKV - ARAL Station  12587 Berlin  Fürstenwalder Straße 445 - 447;ARAL;12587;Fürstenwalder Straße 445 - 447;Berlin
+113;13.6169401;52.4550093;DKV - ELAN Station  12587 Berlin  Fürstenwalder Damm 418;ELAN;12587;Fürstenwalder Damm 418;Berlin
+114;13.695944;52.436652;DKV - ESSO Station  12589 Berlin  Fuerstenwalder Allee 100;ESSO;12589;Fuerstenwalder Allee 100;Berlin
+115;13.5815281;52.5140516;DKV - AGIP Station  12619 Berlin  Gülzower Str. 15 a;AGIP;12619;Gülzower Str. 15 a;Berlin
+116;13.5756174;52.4901609;DKV - ESSO Station  12621 Berlin  Chemnitzer Str. 179;ESSO;12621;Chemnitzer Str. 179;Berlin
+117;13.6192233;52.5039023;DKV - AGIP Station  12623 Berlin  Alt-Mahlsdorf 93 - 94;AGIP;12623;Alt-Mahlsdorf 93 - 94;Berlin
+118;13.6169743;52.5049962;DKV - HEM Station  12623 Berlin  Alt-Mahlsdorf 40;HEM;12623;Alt-Mahlsdorf 40;Berlin
+119;13.611094;52.504464;DKV - STAR Station  12623 Berlin  Alt-Mahlsdorf 117;STAR;12623;Alt-Mahlsdorf 117;Berlin
+120;13.6241447;52.5039812;DKV - TOTAL Station  12623 Berlin  Alt-Mahlsdorf 60;TOTAL;12623;Alt-Mahlsdorf 60;Berlin
+121;13.624688;52.530118;DKV - HEM Station  12627 Berlin  Riesaer Str. 121;HEM;12627;Riesaer Str. 121;Berlin
+122;13.5514928;52.5540477;DKV - ARAL Station  12679 Berlin  Märkische Allee 248;ARAL;12679;Märkische Allee 248;Berlin
+123;13.549785;52.5518802;DKV - JET Station  12679 Berlin  Märkische Allee 246;JET;12679;Märkische Allee 246;Berlin
+124;13.5365648;52.5320112;DKV - ARAL Station  12681 Berlin  Märkische Allee 155;ARAL;12681;Märkische Allee 155;Berlin
+125;13.574106;52.546449;DKV - ARAL Station  12681 Berlin  Landsberger Allee 534;ARAL;12681;Landsberger Allee 534;Berlin
+126;13.532585;52.531024;DKV - CleanCar Station  12681 Berlin  Marzahner Chaussee 232;CleanCar;12681;Marzahner Chaussee 232;Berlin
+127;13.5408053;52.5215722;DKV - SB Station  12681 Berlin  Märkische Allee 61;SB;12681;Märkische Allee 61;Berlin
+128;13.5284805;52.5566365;DKV - FREIE Station  12681 Berlin  Bitterfelder Str. 29;FREIE;12681;Bitterfelder Str. 29;Berlin
+129;13.51958;52.5185112;DKV - TOTAL Station  12681 Berlin  Rhinstr. 52;TOTAL;12681;Rhinstr. 52;Berlin
+130;13.568946;52.545014;DKV - TOTAL Station  12681 Berlin  Landsberger Allee 526;TOTAL;12681;Landsberger Allee 526;Berlin
+131;13.5226412;52.5357281;DKV - TOTAL Station  12681 Berlin  Landsberger Allee 376;TOTAL;12681;Landsberger Allee 376;Berlin
+132;13.5386157;52.5101421;DKV - ARAL Station  12683 Berlin  Alt-Friedrichsfelde 64;ARAL;12683;Alt-Friedrichsfelde 64;Berlin
+133;13.543332;52.51273;DKV - HOYER Station  12683 Berlin  Alt-Friedrichsfelde 63 b;HOYER;12683;Alt-Friedrichsfelde 63 b;Berlin
+134;13.5612273;52.4921487;DKV - JET Station  12683 Berlin  Köpenicker Straße 108;JET;12683;Köpenicker Straße 108;Berlin
+135;13.5658333;52.535;DKV - JET Station  12683 Berlin  Elisabethstr. 111;JET;12683;Elisabethstr. 111;Berlin
+136;13.563619;52.513204;DKV - STAR Station  12683 Berlin  Altentreptower Str. 2;STAR;12683;Altentreptower Str. 2;Berlin
+137;13.5647851;52.5720616;DKV - AGIP Station  12689 Berlin  Ahrensfelder Chaussee 152;AGIP;12689;Ahrensfelder Chaussee 152;Berlin
+138;13.496511;52.56023;DKV - STAR Station  13051 Berlin  Hansastr. 220;STAR;13051;Hansastr. 220;Berlin
+139;13.492411;52.5659164;DKV - TOTAL Station  13051 Berlin  Ribnitzer Str. 42;TOTAL;13051;Ribnitzer Str. 42;Berlin
+140;13.469289;52.542891;DKV - ESSO Station  13053 Berlin  Indira-Gandhi-Str. 75;ESSO;13053;Indira-Gandhi-Str. 75;Berlin
+141;13.5136824;52.5509212;DKV - STAR Station  13053 Berlin  Gehrenseestr. 10;STAR;13053;Gehrenseestr. 10;Berlin
+142;13.51602;52.5367596;DKV - TOTAL Station  13053 Berlin  Rhinstr. 175;TOTAL;13053;Rhinstr. 175;Berlin
+143;13.4674963;52.5475625;DKV - TOTAL Station  13053 Berlin  Indira-Gandhi-Str. 108;TOTAL;13053;Indira-Gandhi-Str. 108;Berlin
+144;13.509418;52.547274;DKV - JET Station  13055 Berlin  Rhinstr. 240;JET;13055;Rhinstr. 240;Berlin
+145;13.527348;52.557019;DKV - STAR Station  13057 Berlin  Pablo-Picasso-Straße 50;STAR;13057;Pablo-Picasso-Straße 50;Berlin
+146;13.432379;52.557877;DKV - CleanCar Station  13086 Berlin  Am Steinberg 21;CleanCar;13086;Am Steinberg 21;Berlin
+147;13.471759;52.56561;DKV - HEM Station  13088 Berlin  Berliner Allee 320;HEM;13088;Berliner Allee 320;Berlin
+148;13.467049;52.560855;DKV - STAR Station  13088 Berlin  Berliner Allee 257;STAR;13088;Berliner Allee 257;Berlin
+149;13.491865;52.55885;DKV - STAR Station  13088 Berlin  Hansastr. 199;STAR;13088;Hansastr. 199;Berlin
+150;13.4714055;52.5661319;DKV - STAR Station  13088 Berlin  Malchower Chaussee 1;STAR;13088;Malchower Chaussee 1;Berlin
+151;13.4586316;52.562085;DKV - TOTAL Station  13088 Berlin  Roelckestr. 76;TOTAL;13088;Roelckestr. 76;Berlin
+152;13.4328085;52.5584736;DKV - ELAN Station  13089 Berlin  Tino-Schwierzina-Str. 37;ELAN;13089;Tino-Schwierzina-Str. 37;Berlin
+153;13.428018;52.567964;DKV - HEM Station  13089 Berlin  Prenzlauer Promenade 68;HEM;13089;Prenzlauer Promenade 68;Berlin
+154;13.448933;52.564684;DKV - HEM Station  13089 Berlin  Romain-Rolland-Str. 2;HEM;13089;Romain-Rolland-Str. 2;Berlin
+155;13.428374;52.5592073;DKV - JET Station  13089 Berlin  Prenzlauer Promenade 42 a;JET;13089;Prenzlauer Promenade 42 a;Berlin
+156;13.4296708;52.5717292;DKV - SHELL Station  13089 Berlin  Rothenbachstr. 1;SHELL;13089;Rothenbachstr. 1;Berlin
+157;13.442953;52.57141;DKV - SPRINT Station  13089 Berlin  Blankenburger Str. 99;SPRINT;13089;Blankenburger Str. 99;Berlin
+158;13.428683;52.56876;DKV - STAR Station  13089 Berlin  Prenzlauer Promenade 72;STAR;13089;Prenzlauer Promenade 72;Berlin
+159;13.5139655;52.6411088;DKV - TOTAL Station  13125 Berlin  Zepernicker Str. 9;TOTAL;13125;Zepernicker Str. 9;Berlin
+160;13.429862;52.586161;DKV - ARAL Station  13127 Berlin  Pasewalker Str. 110;ARAL;13127;Pasewalker Str. 110;Berlin
+161;13.433323;52.613208;DKV - HEM Station  13127 Berlin  Schönerlinder Str. 60;HEM;13127;Schönerlinder Str. 60;Berlin
+162;13.4332658;52.6062733;DKV - JET Station  13127 Berlin  Hauptstr. 70 A;JET;13127;Hauptstr. 70 A;Berlin
+163;13.432133;52.581867;DKV - TOTAL Station  13127 Berlin  Am Feuchten Winkel 11;TOTAL;13127;Am Feuchten Winkel 11;Berlin
+164;13.409843;52.581976;DKV - BFT Station  13156 Berlin  Blankenburger Str. 36;BFT;13156;Blankenburger Str. 36;Berlin
+165;13.403765;52.582932;DKV - TOTAL Station  13156 Berlin  Wackenbergstr. 2;TOTAL;13156;Wackenbergstr. 2;Berlin
+166;13.402666;52.594426;DKV - AGIP Station  13158 Berlin  Dietzgenstr. 127;AGIP;13158;Dietzgenstr. 127;Berlin
+167;13.3788208;52.5764503;DKV - TAMOIL Station  13158 Berlin  Straße vor Schönholz 3;TAMOIL;13158;Straße vor Schönholz 3;Berlin
+168;13.4079172;52.5639649;DKV - ARAL Station  13187 Berlin  Mühlenstr. 26;ARAL;13187;Mühlenstr. 26;Berlin
+169;13.3416193;52.5374773;DKV - AGIP Station  13353 Berlin  Westhafenstr. 1;AGIP;13353;Westhafenstr. 1;Berlin
+170;13.3449811;52.546448;DKV - ARAL Station  13353 Berlin  Seestr. 18/19;ARAL;13353;Seestr. 18/19;Berlin
+171;13.3276961;52.5382764;DKV - SB Station  13353 Berlin  Seestr. 1;SB;13353;Seestr. 1;Berlin
+172;13.365296;52.542397;DKV - HEM Station  13353 Berlin  Müllerstr. 168;HEM;13353;Müllerstr. 168;Berlin
+173;13.393469;52.540795;DKV - ARAL Station  13355 Berlin  Brunnenstr. 119;ARAL;13355;Brunnenstr. 119;Berlin
+174;13.314641;52.576322;DKV - TOTAL Station  13403 Berlin  Eichborndamm 91;TOTAL;13403;Eichborndamm 91;Berlin
+175;13.3297429;52.5632363;DKV - ARAL Station  13405 Berlin  Scharnweberstr. 12 - 13;ARAL;13405;Scharnweberstr. 12 - 13;Berlin
+176;13.32712;52.56149;DKV - JET Station  13405 Berlin  Kurt-Schumacher-Damm 36;JET;13405;Kurt-Schumacher-Damm 36;Berlin
+177;13.3464986;52.5793506;DKV - ARAL Station  13407 Berlin  Roedernallee 179;ARAL;13407;Roedernallee 179;Berlin
+178;13.335623;52.564594;DKV - ESSO Station  13407 Berlin  Holländerstr. 52;ESSO;13407;Holländerstr. 52;Berlin
+179;13.3606;52.577301;DKV - HOYER Station  13407 Berlin  Kopenhagener Straße 36 / 58;HOYER;13407;Kopenhagener Straße 36 / 58;Berlin
+180;13.3616862;52.5683989;DKV - ARAL Station  13409 Berlin  Residenzstr. 29;ARAL;13409;Residenzstr. 29;Berlin
+181;13.370558;52.558851;DKV - SPRINT Station  13409 Berlin  Residenzstr. 79;SPRINT;13409;Residenzstr. 79;Berlin
+182;13.364871;52.562303;DKV - TOTAL Station  13409 Berlin  Markstr. 43 - 44;TOTAL;13409;Markstr. 43 - 44;Berlin
+183;13.346873;52.59653;DKV - ESSO Station  13435 Berlin  Wilhelmsruher Damm 160 / 164;ESSO;13435;Wilhelmsruher Damm 160 / 164;Berlin
+184;13.332048;52.598691;DKV - SUN Station  13437 Berlin  Oranienburger Str. 181;SUN;13437;Oranienburger Str. 181;Berlin
+185;13.3467029;52.5915272;DKV - AGIP Station  13439 Berlin  Dannenwalder Weg 69;AGIP;13439;Dannenwalder Weg 69;Berlin
+186;13.3040507;52.6192636;DKV - AUTO SPREVES Station  13467 Berlin  Hermsdorfer Damm 180;AUTO SPREVES;13467;Hermsdorfer Damm 180;Berlin
+187;13.312269;52.622566;DKV - ESSO Station  13467 Berlin  Hermsdorfer Damm 221;ESSO;13467;Hermsdorfer Damm 221;Berlin
+188;13.31504;52.61329;DKV - HEM Station  13467 Berlin  Berliner Str. 140;HEM;13467;Berliner Str. 140;Berlin
+189;13.327635;52.608672;DKV - HEM Station  13469 Berlin  Zabel-Krüger-Damm 20;HEM;13469;Zabel-Krüger-Damm 20;Berlin
+190;13.3189004;52.6110484;DKV - STAR Station  13469 Berlin  Oraniendamm 28;STAR;13469;Oraniendamm 28;Berlin
+191;13.2367322;52.6205827;DKV - SHELL Station  13503 Berlin  Ruppiner Chaussee 339;SHELL;13503;Ruppiner Chaussee 339;Berlin
+192;13.2430773;52.601674;DKV - STAR Station  13503 Berlin  Heiligenseestr. 28;STAR;13503;Heiligenseestr. 28;Berlin
+193;13.2314623;52.5857246;DKV - TOTAL Station  13505 Berlin  Habichtstr. 11 - 13;TOTAL;13505;Habichtstr. 11 - 13;Berlin
+194;13.2912007;52.5812844;DKV - ARAL Station  13507 Berlin  Berliner Str. 67;ARAL;13507;Berliner Str. 67;Berlin
+195;13.306433;52.57751;DKV - HEM Station  13509 Berlin  Wittestr. 16;HEM;13509;Wittestr. 16;Berlin
+196;13.299122;52.578658;DKV - JET Station  13509 Berlin  Holzhauser Straße 34;JET;13509;Holzhauser Straße 34;Berlin
+197;13.298681;52.59829;DKV - STAR Station  13509 Berlin  Waidmannsluster Damm 54;STAR;13509;Waidmannsluster Damm 54;Berlin
+198;13.195175;52.529463;DKV - SUN Station  13581 Berlin  Klosterstr. 20;SUN;13581;Klosterstr. 20;Berlin
+199;13.1851869;52.5336593;DKV - JET Station  13581 Berlin  Brunsbütteler Damm 87-89;JET;13581;Brunsbütteler Damm 87-89;Berlin
+200;13.1839799;52.5345305;DKV - STAR Station  13581 Berlin  Brunsbütteler Damm 96;STAR;13581;Brunsbütteler Damm 96;Berlin
+201;13.183025;52.540123;DKV - SPREVES Station  13583 Berlin  Zeppelinstr. 51;SPREVES;13583;Zeppelinstr. 51;Berlin
+202;13.17897;52.549044;DKV - ESSO Station  13583 Berlin  Falkenseer Chaussee 50;ESSO;13583;Falkenseer Chaussee 50;Berlin
+203;13.191206;52.53594;DKV - SPRINT Station  13583 Berlin  Seegefelder Str. 41;SPRINT;13583;Seegefelder Str. 41;Berlin
+204;13.1999061;52.5422554;DKV - ARAL Station  13585 Berlin  Falkenseer Damm 16;ARAL;13585;Falkenseer Damm 16;Berlin
+205;13.207277;52.554486;DKV - TOTAL Station  13587 Berlin  Streitstr. 84;TOTAL;13587;Streitstr. 84;Berlin
+206;13.1753198;52.5173207;DKV - AGIP Station  13593 Berlin  Heerstr. 343;AGIP;13593;Heerstr. 343;Berlin
+207;13.1778771;52.5167918;DKV - ARAL Station  13593 Berlin  Heerstr. 325;ARAL;13593;Heerstr. 325;Berlin
+208;13.1784036;52.5168822;DKV - SHELL Station  13593 Berlin  Heerstr. 326/328;SHELL;13593;Heerstr. 326/328;Berlin
+209;13.1819091;52.5162248;DKV - TOTAL Station  13593 Berlin  Heerstr. 324;TOTAL;13593;Heerstr. 324;Berlin
+210;13.203649;52.522972;DKV - ACCESS Station  13595 Berlin  Götelstr. 132 / 140;ACCESS;13595;Götelstr. 132 / 140;Berlin
+211;13.185008;52.514924;DKV - ESSO Station  13595 Berlin  Heerstr. 285;ESSO;13595;Heerstr. 285;Berlin
+212;13.180353;52.504669;DKV - STAR Station  13595 Berlin  Gatower Str. 173;STAR;13595;Gatower Str. 173;Berlin
+213;13.210224;52.527434;DKV - ESSO Station  13597 Berlin  Ruhlebener Str. 185;ESSO;13597;Ruhlebener Str. 185;Berlin
+214;13.23381;52.5271749;DKV - JET Station  13597 Berlin  Charlottenburger Chaussee 47;JET;13597;Charlottenburger Chaussee 47;Berlin
+215;13.207237;52.529172;DKV - SPRINT Station  13597 Berlin  Ruhlebener Str. 1 a;SPRINT;13597;Ruhlebener Str. 1 a;Berlin
+216;13.232803;52.526864;DKV - CleanCar Station  13598 Berlin  Charlottenburger Ch. 53 a;CleanCar;13598;Charlottenburger Ch. 53 a;Berlin
+217;13.2434879;52.5437559;DKV - ARAL Station  13599 Berlin  Gartenfelder Str. 71;ARAL;13599;Gartenfelder Str. 71;Berlin
+218;13.2220289;52.5368477;DKV - SHELL Station  13599 Berlin  Am Juliusturm 33;SHELL;13599;Am Juliusturm 33;Berlin
+219;13.247526;52.537728;DKV - SPRINT Station  13599 Berlin  Otternbuchtstr. 37;SPRINT;13599;Otternbuchtstr. 37;Berlin
+220;13.31;52.547365;DKV - HEM Station  13627 Berlin  Saatwinkler Damm 62;HEM;13627;Saatwinkler Damm 62;Berlin
+221;13.28091;52.53157;DKV - TP24Automat  13627 Berlin  Nonnendamm 10;TP24Automat;13627;Nonnendamm 10;Berlin
+222;13.2721193;52.5193119;DKV - SHELL Station  14050 Berlin  Spandauer Damm 151;SHELL;14050;Spandauer Damm 151;Berlin
+223;13.2660979;52.5133756;DKV - ARAL Station  14052 Berlin  Reichsstr. 13;ARAL;14052;Reichsstr. 13;Berlin
+224;13.262439;52.514878;DKV - TOTAL Station  14052 Berlin  Reichsstr. 86;TOTAL;14052;Reichsstr. 86;Berlin
+225;13.278404;52.50169;DKV - AGIP Station  14055 Berlin  A 115;AGIP;14055;A 115;Berlin
+226;13.2269631;52.5072449;DKV - ARAL Station  14055 Berlin  Heerstr. 136;ARAL;14055;Heerstr. 136;Berlin
+227;13.260556;52.508415;DKV - TOTAL Station  14055 Berlin  Heerstr. 35 - 37;TOTAL;14055;Heerstr. 35 - 37;Berlin
+228;13.2806701;52.5074428;DKV - ARAL Station  14057 Berlin  Messedamm 6;ARAL;14057;Messedamm 6;Berlin
+229;13.27694;52.510023;DKV - SHELL Station  14057 Berlin  Kaiserdamm 34;SHELL;14057;Kaiserdamm 34;Berlin
+230;13.1489687;52.4572213;DKV - FREIE Station  14089 Berlin  Kladower Damm 332;FREIE;14089;Kladower Damm 332;Berlin
+231;13.1916187;52.4345696;DKV - AGIP Station  14129 Berlin  A 115;AGIP;14129;A 115;Berlin
+232;13.2227026;52.429472;DKV - SHELL Station  14129 Berlin  Potsdamer Chaussee 24;SHELL;14129;Potsdamer Chaussee 24;Berlin
+233;13.2488297;52.434496;DKV - AGIP Station  14163 Berlin  Potsdamer Str. 31;AGIP;14163;Potsdamer Str. 31;Berlin
+234;13.237895;52.433073;DKV - ARAL Station  14163 Berlin  Potsdamer Chaussee 6;ARAL;14163;Potsdamer Chaussee 6;Berlin
+235;13.2410763;52.4435079;DKV - FREIE Station  14163 Berlin  Argentinische Allee 47;FREIE;14163;Argentinische Allee 47;Berlin
+236;13.243181;52.433513;DKV - SPRINT Station  14163 Berlin  Potsdamer Str. 11 a;SPRINT;14163;Potsdamer Str. 11 a;Berlin
+237;13.2303285;52.4311847;DKV - STAR Station  14163 Berlin  Lindenthaler Allee 42;STAR;14163;Lindenthaler Allee 42;Berlin
+238;13.265461;52.4179812;DKV - ELAN Station  14167 Berlin  Teltower Damm 173;ELAN;14167;Teltower Damm 173;Berlin
+239;13.264591;52.4191205;DKV - STAR Station  14167 Berlin  Teltower Damm 164;STAR;14167;Teltower Damm 164;Berlin
+240;13.266519;52.435687;DKV - ESSO Station  14169 Berlin  Berliner Str. 20;ESSO;14169;Berliner Str. 20;Berlin
+241;13.2656562;52.4359571;DKV - TOTAL Station  14169 Berlin  Berliner Str. 15 a;TOTAL;14169;Berliner Str. 15 a;Berlin
+242;13.284873;52.494197;DKV - ESSO Station  14193 Berlin  Hubertusallee 1;ESSO;14193;Hubertusallee 1;Berlin
+243;13.275345;52.460752;DKV - ESSO Station  14195 Berlin  Clayallee 90;ESSO;14195;Clayallee 90;Berlin
+244;13.2977727;52.4575506;DKV - STAR Station  14195 Berlin  Königin-Luise-Str. 22 a;STAR;14195;Königin-Luise-Str. 22 a;Berlin
+245;13.2792565;52.4758463;DKV - ARAL Station  14199 Berlin  Hohenzollerndamm 97;ARAL;14199;Hohenzollerndamm 97;Berlin

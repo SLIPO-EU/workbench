@@ -670,9 +670,6 @@ public class DefaultProcessRepository implements ProcessRepository
         if (executionEntity == null) {
             throw ProcessExecutionNotFoundException.forExecution(executionId);
         }
-        if (executionEntity.isTerminated()) {
-            throw new ProcessExecutionNotActiveException(executionId);
-        }
 
         final ProcessExecutionStepEntity executionStepEntity = executionEntity.getStepByKey(stepKey);
         if (executionStepEntity == null) {
