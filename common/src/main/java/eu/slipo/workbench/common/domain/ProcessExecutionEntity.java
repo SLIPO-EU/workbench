@@ -171,6 +171,25 @@ public class ProcessExecutionEntity
     {
         return status.isTerminated();
     }
+    
+    public boolean isTerminated(boolean deep)
+    {
+        // An execution may report as terminated although some steps may still report as
+        // running. This is because workflow listeners that actually mark a step/execution
+        // are not synchronized (and do not have to be). The overall status will eventually
+        // be consistent, so usually this is not a problem.
+        
+        // If you want to be sure that an execution has settled down (i.e execution and steps 
+        // report as terminated) you can use deep=true to check both own status and all statuses
+        // from steps.
+        
+        if (!deep) {
+            return status.isTerminated();
+        } else {
+            return status.isTerminated() &&
+                steps.stream().allMatch(step -> step.getStatus().isTerminated());
+        }
+    }
 
     @AssertTrue
     protected boolean isStatusValid()
@@ -236,26 +255,28 @@ public class ProcessExecutionEntity
 
     public ProcessExecutionRecord toProcessExecutionRecord(boolean includeSteps, boolean includeNonVerifiedFiles)
     {
-        ProcessExecutionRecord e =
+        ProcessExecutionRecord record =
             new ProcessExecutionRecord(id, process.parent.id, process.version);
 
         if (submittedBy != null) {
-            e.setSubmittedBy(submittedBy.getId(), submittedBy.getFullName());
+            record.setSubmittedBy(submittedBy.getId(), submittedBy.getFullName());
         }
-        e.setSubmittedOn(submittedOn);
-        e.setStartedOn(startedOn);
-        e.setCompletedOn(completedOn);
-        e.setStatus(status);
-        e.setTaskType(process.getParent().getTaskType());
-        e.setName(process.getName());
-        e.setErrorMessage(errorMessage);
-
+        record.setSubmittedOn(submittedOn);
+        record.setStartedOn(startedOn);
+        record.setCompletedOn(completedOn);
+        record.setStatus(status);
+        record.setTaskType(process.getParent().getTaskType());
+        record.setName(process.getName());
+        record.setErrorMessage(errorMessage);
+        
+        record.setRunning(!isTerminated(true));
+        
         if (includeSteps) {
             for (ProcessExecutionStepEntity s: steps) {
-                e.addStep(s.toProcessExecutionStepRecord(includeNonVerifiedFiles));
+                record.addStep(s.toProcessExecutionStepRecord(includeNonVerifiedFiles));
             }
         }
 
-        return e;
+        return record;
     }
 }

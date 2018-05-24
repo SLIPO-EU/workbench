@@ -39,7 +39,7 @@ public class ProcessExecutionRecord implements Serializable
 
     private String errorMessage;
 
-    @JsonIgnore()
+    @JsonIgnore
     private boolean isRunning;
 
     private List<ProcessExecutionStepRecord> steps;
@@ -157,12 +157,12 @@ public class ProcessExecutionRecord implements Serializable
         this.errorMessage = errorMessage;
     }
 
-    @JsonProperty()
+    @JsonProperty
     public boolean isRunning() {
         return isRunning;
     }
 
-    @JsonIgnore()
+    @JsonIgnore
     public void setRunning(boolean isRunning) {
         this.isRunning = isRunning;
     }

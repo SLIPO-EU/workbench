@@ -690,6 +690,14 @@ public class DefaultProcessOperatorTests
     @Autowired
     private ThreadPoolTaskExecutor taskExecutor;
 
+    private Account user;
+
+    @PostConstruct
+    private void initialize()
+    {
+        this.user = accountRepository.findOneByUsername(USER_NAME).toDto();
+    }
+
     private class TransformRunnable implements Runnable
     {
         private final String procName;
@@ -719,31 +727,6 @@ public class DefaultProcessOperatorTests
                 throw new IllegalStateException("runnable has failed", e);
             }
         }
-    }
-
-    @FunctionalInterface
-    interface TransformToDefinition
-    {
-        ProcessDefinition buildDefinition(
-                String procName, TransformFixture fixture, String resourceName)
-            throws Exception;
-    }
-
-    @FunctionalInterface
-    interface InterlinkToDefinition
-    {
-        ProcessDefinition buildDefinition(
-                String procName, InterlinkFixture fixture,
-                String resourceName, String output1Name, String output2Name)
-            throws Exception;
-    }
-
-    @FunctionalInterface
-    interface FuseToDefinition
-    {
-        ProcessDefinition buildDefinition(
-                String procName, FuseFixture fixture, String resourceName)
-            throws Exception;
     }
 
     private ProcessExecutionRecord executeDefinition(ProcessDefinition definition, Account creator)
@@ -1261,14 +1244,12 @@ public class DefaultProcessOperatorTests
     @Test(timeout = 40 * 1000L)
     public void test1T_transformAndRegister1a() throws Exception
     {
-        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
         transformAndRegister("file-1-1-a", transformFixtures.get("file-1-1-a"), user);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test1T_transformAndRegister1a_withImportSteps() throws Exception
     {
-        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
         transformAndRegister("file-1-1-a-imported", transformFixtures.get("file-1-1-a"), user,
             this::buildDefinitionWithImportSteps);
     }
@@ -1276,14 +1257,12 @@ public class DefaultProcessOperatorTests
     @Test(timeout = 40 * 1000L)
     public void test1T_transformAndRegister1b() throws Exception
     {
-        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
         transformAndRegister("file-1-1-b", transformFixtures.get("file-1-1-b"), user);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test1T_transformAndRegister1b_withImportSteps() throws Exception
     {
-        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
         transformAndRegister("file-1-1-b-imported", transformFixtures.get("file-1-1-b"), user,
             this::buildDefinitionWithImportSteps);
     }
@@ -1291,105 +1270,90 @@ public class DefaultProcessOperatorTests
     @Test(timeout = 40 * 1000L)
     public void test1T_transformAndRegister2a() throws Exception
     {
-        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
         transformAndRegister("file-1-2-a", transformFixtures.get("file-1-2-a"), user);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test1T_transformAndRegister2b() throws Exception
     {
-        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
         transformAndRegister("file-1-2-b", transformFixtures.get("file-1-2-b"), user);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test1T_transformAndRegister3a() throws Exception
     {
-        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
         transformAndRegister("file-1-3-a", transformFixtures.get("file-1-3-a"), user);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test1T_transformAndRegister3b() throws Exception
     {
-        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
         transformAndRegister("file-1-3-b", transformFixtures.get("file-1-3-b"), user);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test2T_transformAndRegister1a() throws Exception
     {
-        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
         transformAndRegister("file-2-1-a", transformFixtures.get("file-2-1-a"), user);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test2T_transformAndRegister1b() throws Exception
     {
-        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
         transformAndRegister("file-2-1-b", transformFixtures.get("file-2-1-b"), user);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test2aT_transformAndRegister1a() throws Exception
     {
-        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
         transformAndRegister("file-2a-1-a", transformFixtures.get("file-2a-1-a"), user);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test3T_transformAndRegister1a() throws Exception
     {
-        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
         transformAndRegister("file-3-1-a", transformFixtures.get("file-3-1-a"), user);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test3T_transformAndRegister1b() throws Exception
     {
-        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
         transformAndRegister("file-3-1-b", transformFixtures.get("file-3-1-b"), user);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test4T_transformAndRegister1a() throws Exception
     {
-        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
         transformAndRegister("file-4-1-a", transformFixtures.get("file-4-1-a"), user);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test4T_transformAndRegister1b() throws Exception
     {
-        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
         transformAndRegister("file-4-1-b", transformFixtures.get("file-4-1-b"), user);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test5T_transformAndRegister1a() throws Exception
     {
-        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
         transformAndRegister("file-5-1-a", transformFixtures.get("file-5-1-a"), user);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test5T_transformAndRegister1b() throws Exception
     {
-        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
         transformAndRegister("file-5-1-b", transformFixtures.get("file-5-1-b"), user);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test1T_downloadAndTransformAndRegister1a() throws Exception
     {
-        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
         transformAndRegister("url-1-1-a", transformFixtures.get("url-1-1-a"), user);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test1T_downloadAndTransformAndRegister1a_withImportSteps() throws Exception
     {
-        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
         transformAndRegister("url-1-1-a-imported", transformFixtures.get("url-1-1-a"), user,
             this::buildDefinitionWithImportSteps);
     }
@@ -1397,7 +1361,6 @@ public class DefaultProcessOperatorTests
     @Test(timeout = 40 * 1000L)
     public void test1T_downloadAndTransformAndRegister1b() throws Exception
     {
-        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
         transformAndRegister("url-1-1-b", transformFixtures.get("url-1-1-b"), user);
     }
 
@@ -1419,14 +1382,12 @@ public class DefaultProcessOperatorTests
     @Test(timeout = 40 * 1000L)
     public void test1T_downloadAndTransformAndRegister2b() throws Exception
     {
-        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
         transformAndRegister("url-1-2-b", transformFixtures.get("url-1-2-b"), user);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test1T_downloadAndTransformAndRegister3a() throws Exception
     {
-        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
         transformAndRegister("url-1-3-a", transformFixtures.get("url-1-3-a"), user);
     }
 
@@ -1454,21 +1415,18 @@ public class DefaultProcessOperatorTests
     @Test(timeout = 40 * 1000L)
     public void test5T_downloadAndTransformAndRegister1a() throws Exception
     {
-        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
         transformAndRegister("url-5-1-a", transformFixtures.get("url-5-1-a"), user);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test1L_transformAndLinkAndRegister1a() throws Exception
     {
-        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
         transformAndLinkAndRegister("links-1-a", interlinkFixtures.get("file-1-a"), user);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test1L_transformAndLinkAndRegister1a_withImportSteps() throws Exception
     {
-        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
         transformAndLinkAndRegister("links-1-a-imported", interlinkFixtures.get("file-1-a"), user,
             this::buildDefinitionWithImportSteps);
     }
@@ -1476,29 +1434,24 @@ public class DefaultProcessOperatorTests
     @Test(timeout = 40 * 1000L)
     public void test1L_transformAndLinkAndRegister1b() throws Exception
     {
-        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
         transformAndLinkAndRegister("links-1-b", interlinkFixtures.get("file-1-b"), user);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test1F_linkAndFuseAndRegister1a() throws Exception
     {
-        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
         linkAndFuseAndRegister("fused-1-a", fuseFixtures.get("file-1-a"), user);
     }
 
     @Test(timeout = 40 * 1000L)
     public void test1F_linkAndFuseAndRegister1b() throws Exception
     {
-        Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
         linkAndFuseAndRegister("fused-1-b", fuseFixtures.get("file-1-b"), user);
     }
 
     @Test(timeout = 150 * 1000L)
     public void test1Tp_transformAndRegisterP6() throws Exception
     {
-        final Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
-
         Future<?> f1 = taskExecutor.submit(
             new TransformRunnable("file-1-1-a-p6", transformFixtures.get("file-1-1-a"), user));
 
@@ -1522,7 +1475,6 @@ public class DefaultProcessOperatorTests
         List<Future<?>> futures = Arrays.asList(f1, f2, f3, f4, f5, f6);
 
         logger.info("Submitted {} tasks. Waiting for all to complete", futures.size());
-
         for (Future<?> f: futures) {
             try {
                 f.get();
@@ -1541,7 +1493,6 @@ public class DefaultProcessOperatorTests
     @Test(timeout = 40 * 1000L)
     public void test1L_transformAndRegisterThenLink() throws Exception
     {
-        final Account user = accountRepository.findOneByUsername(USER_NAME).toDto();
         transformAndRegisterThenLink("links-1-a", interlinkFixtures.get("file-1-a"), user);
     }
 }
