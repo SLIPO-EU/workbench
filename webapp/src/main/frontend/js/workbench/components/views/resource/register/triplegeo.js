@@ -61,12 +61,12 @@ export class Component extends React.Component {
     });
 
     this.state = {
-      advancedMappings: this.isProfileModified() || this.profiles.length === 0,
+      advancedMappings: this.isProfileModified || this.profiles.length === 0,
     };
   }
 
-  isProfileModified() {
-    return this.props.value['mappingSpec'] || this.props.value['classificationSpec'];
+  get isProfileModified() {
+    return !this.props.value['profile'] || !!this.props.value['mappingSpec'] || !!this.props.value['classificationSpec'];
   }
 
   toggleAdvancedMappings(e) {
@@ -117,7 +117,7 @@ export class Component extends React.Component {
                   }
                   <a className="btn text-primary font-xs p-0" onClick={(e) => this.toggleAdvancedMappings(e)}>Advanced</a>
                   {
-                    this.isProfileModified() &&
+                    this.isProfileModified &&
                     <i className="fa fa-exclamation font-xs pl-1"></i>
                   }
                 </span>
@@ -155,7 +155,7 @@ export class Component extends React.Component {
                       createFolder={createFolder}
                       deletePath={deletePath}
                       uploadFile={uploadFile}
-                      placeHolder={'Using default mapping file...'}
+                      placeHolder={!this.props.value['profile'] ? 'Select mapping file...' : 'Using default mapping file...'}
                     />
                   </div>
                   <div className="col">
@@ -174,7 +174,7 @@ export class Component extends React.Component {
                           createFolder={createFolder}
                           deletePath={deletePath}
                           uploadFile={uploadFile}
-                          placeHolder={'Using default classification file...'}
+                          placeHolder={!this.props.value['profile'] ? 'Select classification file...' : 'Using default classification file...'}
                         />
                       </div>
                     </div>
