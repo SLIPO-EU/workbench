@@ -2,47 +2,46 @@ package eu.slipo.workbench.rpc.tests.integration.service;
 
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
+import javax.annotation.Nullable;
+
+import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import eu.slipo.workbench.common.model.resource.DataSource;
 import eu.slipo.workbench.common.model.resource.FileSystemDataSource;
 import eu.slipo.workbench.common.model.resource.UrlDataSource;
+import eu.slipo.workbench.common.service.ProcessOperator;
+import eu.slipo.workbench.common.service.util.PropertiesConverterService;
 
-class BaseFixture
+/**
+ * A basic fixture for testing {@link ProcessOperator}
+ */
+abstract class BaseFixture
 {
-    final String name;
+    /**
+     * A name for this test fixture
+     */
+    abstract String name();
 
     /**
      * The application user directory (where input sources are staged)
      */
-    final Path stagingDir;
+    abstract @Nullable Path stagingDir();
 
     /**
      * The absolute path for the expected result of the transformation applied on given input
      */
-    final Path expectedResult;
+    abstract Path expectedResult();
 
-    BaseFixture(String name, Path stagingDir, Path expectedResult)
-    {
-        this.name = name;
-        this.stagingDir = stagingDir;
-        this.expectedResult = expectedResult;
-    }
-
-    public String getName()
-    {
-        return name;
-    }
-
-    public Path getExpectedResultPath()
-    {
-        return expectedResult;
-    }
-
-    DataSource convertInputAsDataSource(URI inputUri) throws MalformedURLException
+    DataSource inputAsDataSource(URI inputUri) throws MalformedURLException
     {
         final String scheme = inputUri.getScheme();
+        final Path stagingDir = stagingDir();
+
         if (scheme.equals("file")) {
             return new FileSystemDataSource(stagingDir.relativize(Paths.get(inputUri)));
         } else if (scheme.equals("http") || scheme.equals("https") || scheme.equals("ftp")) {
@@ -53,8 +52,63 @@ class BaseFixture
         }
     }
 
-    Path convertInputToAbsolutePath(URI inputUri)
+    Path inputAsAbsolutePath(URI inputUri)
     {
         return inputUri.getScheme().equals("file")? Paths.get(inputUri) : null;
+    }
+
+    void checkState()
+    {
+        final String name = name();
+        Assert.state(!StringUtils.isEmpty(name), "A non-empty name is required");
+
+        final Path path = expectedResult();
+        Assert.isTrue(path.isAbsolute() && Files.isReadable(path),
+            "The expected result should be given as an absolute file path");
+
+        final Path stagingDir = stagingDir();
+        Assert.state(stagingDir == null ||
+                (stagingDir.isAbsolute() && Files.isDirectory(stagingDir) && Files.isReadable(stagingDir)),
+            "The staging directory (if given) should be an absolute path for an existing readable directory");
+    }
+
+    /**
+     * A base builder for fixtures
+     *
+     * @param <B> A builder which is a subclass this one
+     * @param <F> The fixture type built
+     */
+    abstract static class BaseBuilder <B extends BaseBuilder<B, ?>, F extends BaseFixture>
+    {
+        protected PropertiesConverterService propertiesConverter;
+
+        void setPropertiesConverter(PropertiesConverterService propertiesConverter)
+        {
+            this.propertiesConverter = propertiesConverter;
+        }
+
+        // Define basic getters/setters
+
+        abstract B name(String name);
+
+        abstract String name();
+
+        abstract B stagingDir(Path dir);
+
+        abstract Path stagingDir();
+
+        abstract B expectedResult(Path path);
+
+        abstract Path expectedResult();
+
+        abstract F autoBuild();
+
+        F build()
+        {
+            F f = autoBuild();
+
+            f.checkState();
+            return f;
+        }
     }
 }

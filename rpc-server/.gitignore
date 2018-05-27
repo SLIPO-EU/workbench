@@ -2,6 +2,9 @@
 /logs/
 /.secrets/
 
+/.factorypath
+/.apt_generated/
+
 # Generated from mvn ant:ant
 maven-build.properties
 maven-build.xml
