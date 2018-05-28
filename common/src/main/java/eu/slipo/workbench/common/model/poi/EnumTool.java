@@ -3,7 +3,6 @@ package eu.slipo.workbench.common.model.poi;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 

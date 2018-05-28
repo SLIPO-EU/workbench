@@ -292,7 +292,7 @@ public class ProcessDefinitionBuilder
             step.operation = this.operation;
             step.tool = this.tool;
             step.sources = new ArrayList<>(this.sources);
-            step.inputKeys = new ArrayList<>(this.inputKeys);
+            step.input = null; // Fixme new ArrayList<>(this.inputKeys);
             step.outputKey = this.outputKey;
             step.outputFormat = this.outputFormat;
             step.configuration = this.configuration;

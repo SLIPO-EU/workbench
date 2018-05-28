@@ -4,10 +4,12 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.cglib.beans.ImmutableBean;
 import org.springframework.util.StringUtils;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
@@ -15,6 +17,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.util.StdConverter;
 import com.github.slugify.Slugify;
+import com.google.common.collect.Lists;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumOperation;
@@ -40,6 +43,9 @@ public class Step implements Serializable
         return slugify.slugify(name);
     }
     
+    /**
+     * A deserialization sanitizer for a {@link Step}
+     */
     protected static class DeserializeSanitizer extends StdConverter<Step,Step>
     {
         @Override
@@ -53,6 +59,51 @@ public class Step implements Serializable
             
             return step;
         }   
+    }
+    
+    /**
+     * An input descriptor for a {@link Step}. 
+     * 
+     * <p>This is not identical to a {@link ProcessInput} because a step may be interested only in a
+     * part of an available process-scoped resource (i.e. a part of the output of another step). 
+     */
+    public static class Input implements Serializable
+    {
+        private static final long serialVersionUID = 1L;
+        
+        @JsonProperty("inputKey")
+        protected int inputKey;
+        
+        @JsonProperty("partKey")
+        protected Optional<String> partKey;
+        
+        private Input(int inputKey, Optional<String> partKey)
+        {
+            this.inputKey = inputKey;
+            this.partKey = partKey;
+        }
+        
+        @JsonProperty("inputKey")
+        public int inputKey()
+        {
+            return inputKey;
+        }
+        
+        @JsonProperty("partKey")
+        public Optional<String> partKey()
+        {
+            return partKey;
+        }
+        
+        protected static Input of(int inputKey)
+        {
+            return new Input(inputKey, Optional.empty());
+        }
+        
+        protected static Input ofPart(int inputKey, String partKey)
+        {
+            return new Input(inputKey, Optional.of(partKey));
+        }
     }
     
     @JsonProperty("key")
@@ -75,8 +126,8 @@ public class Step implements Serializable
     @JsonDeserialize(using = EnumTool.Deserializer.class)
     protected EnumTool tool;
 
-    @JsonProperty("inputKeys")
-    protected List<Integer> inputKeys = new ArrayList<Integer>();
+    @JsonProperty("input")
+    protected List<Input> input = new ArrayList<>();
 
     @JsonProperty("sources")
     protected List<DataSource> sources = new ArrayList<>();
@@ -110,7 +161,7 @@ public class Step implements Serializable
         this.group = other.group;
         this.operation = other.operation;
         this.tool = other.tool;
-        this.inputKeys = other.inputKeys;
+        this.input = other.input;
         this.sources = other.sources;
         this.configuration = other.configuration;
         this.outputFormat = other.outputFormat;
@@ -188,7 +239,7 @@ public class Step implements Serializable
      * The tool-specific type of configuration.
      * 
      * <p>Note: This piece of information is needed for cloning a configuration bean
-     * (since the actual bean returned by {@link Step#configuration} may return a runtime-enhanced
+     * (since the actual bean returned by {@link Step#configuration} may be of a runtime-enhanced
      * type (e.g. by CGLIB))
      *  
      * @return a class object
@@ -211,12 +262,21 @@ public class Step implements Serializable
     }
 
     /**
+     * The descriptor of input resources that should be provided to this step.
+     */
+    @JsonProperty("input")
+    public List<Input> input()
+    {
+        return Collections.unmodifiableList(input);
+    }
+    
+    /**
      * The keys of input resources that should be provided to this step.
      */
-    @JsonProperty("inputKeys")
+    @JsonIgnore
     public List<Integer> inputKeys()
     {
-        return Collections.unmodifiableList(inputKeys);
+        return Lists.transform(input, p -> p.inputKey);
     }
 
     /**

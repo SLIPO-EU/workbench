@@ -21,7 +21,7 @@ import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
 public class ProcessDefinition implements Serializable
 {
     private static final long serialVersionUID = 1L;
-
+    
     private final String name;
 
     private String description;
