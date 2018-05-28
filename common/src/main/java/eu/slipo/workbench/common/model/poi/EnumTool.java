@@ -3,10 +3,13 @@ package eu.slipo.workbench.common.model.poi;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -14,7 +17,14 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 
 import eu.slipo.workbench.common.model.tool.output.OutputPart;
-import eu.slipo.workbench.common.model.tool.output.EnumImportOutputPart;
+import eu.slipo.workbench.common.model.tool.output.EnumImportDataOutputPart;
+import eu.slipo.workbench.common.model.tool.AnyTool;
+import eu.slipo.workbench.common.model.tool.RegisterToCatalog;
+import eu.slipo.workbench.common.model.tool.Triplegeo;
+import eu.slipo.workbench.common.model.tool.Limes;
+import eu.slipo.workbench.common.model.tool.Fagi;
+import eu.slipo.workbench.common.model.tool.ImportData;
+import eu.slipo.workbench.common.model.tool.Deer;
 import eu.slipo.workbench.common.model.tool.output.EnumDeerOutputPart;
 import eu.slipo.workbench.common.model.tool.output.EnumFagiOutputPart;
 import eu.slipo.workbench.common.model.tool.output.EnumTriplegeoOutputPart;
@@ -25,48 +35,65 @@ import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
  * Enumerate SLIPO toolkit components
  */
 public enum EnumTool 
-{
-    /**
-     * Unknown tool
-     */
-    UNDEFINED(0),
-    
+{    
     /**
      * Catalog registration component
      */
-    REGISTER(1, EnumOperation.REGISTER),
+    REGISTER(
+        RegisterToCatalog.class, 
+        EnumOperation.REGISTER),
     
     /**
      * Data transformation component
      */
-    TRIPLEGEO(2, EnumOperation.TRANSFORM, EnumTriplegeoOutputPart.class, EnumTriplegeoOutputPart.TRANSFORMED),
+    TRIPLEGEO(
+        Triplegeo.class, 
+        EnumOperation.TRANSFORM, 
+        EnumTriplegeoOutputPart.class,
+        EnumTriplegeoOutputPart.TRANSFORMED),
     
     /**
      * POI RDF dataset interlinking component
      */
-    LIMES(3, EnumOperation.INTERLINK, EnumLimesOutputPart.class, EnumLimesOutputPart.ACCEPTED),
+    LIMES(
+        Limes.class, 
+        EnumOperation.INTERLINK, 
+        EnumLimesOutputPart.class, 
+        EnumLimesOutputPart.ACCEPTED),
     
     /**
      * POI RDF dataset and linked data fusion component
      */
-    FAGI(4, EnumOperation.FUSION, EnumFagiOutputPart.class, EnumFagiOutputPart.FUSED),
+    FAGI(
+        Fagi.class, 
+        EnumOperation.FUSION, 
+        EnumFagiOutputPart.class, 
+        EnumFagiOutputPart.FUSED),
     
     /**
      * POI RDF dataset enrichment component
      */
-    DEER(5, EnumOperation.ENRICHMENT, EnumDeerOutputPart.class, EnumDeerOutputPart.ENRICHED),
+    DEER(
+        Deer.class, 
+        EnumOperation.ENRICHMENT,
+        EnumDeerOutputPart.class, 
+        EnumDeerOutputPart.ENRICHED),
     
     /**
      * An internal component for importing external data sources into a process
      */
-    IMPORTER(6, EnumOperation.IMPORT, EnumImportOutputPart.class, EnumImportOutputPart.DOWNLOAD)
+    IMPORTER(
+        ImportData.class,
+        EnumOperation.IMPORT_DATA, 
+        EnumImportDataOutputPart.class,
+        EnumImportDataOutputPart.DOWNLOAD)
     ;
 
     /**
-     * An integer code
+     * A marker type for this tool
      */
-    private final int value;
-
+    private final Class<? extends AnyTool> type;
+    
     /**
      * The set of operations supported by this tool
      */
@@ -75,46 +102,39 @@ public enum EnumTool
     /**
      * The enumeration type that describes parts of the output of a tool invocation
      */
-    private final Class<? extends OutputPart> outputPartEnumeration;
+    private final Class<? extends OutputPart<? extends AnyTool>> outputPartEnumeration;
 
     /**
      * The list of output parts
      */
-    private final List<OutputPart> outputParts;
+    private final List<OutputPart<? extends AnyTool>> outputParts;
     
     /**
      * The default output part
      */
-    private final OutputPart defaultOutputPart;
+    private final OutputPart<? extends AnyTool> defaultOutputPart;
    
-    private EnumTool(int value) 
+    private <T extends AnyTool> EnumTool(Class<T> toolType, EnumOperation op1) 
     {
-        this.value = value;
-        this.operations = Collections.emptySet();
-        this.outputPartEnumeration = null;
-        this.outputParts = null;
-        this.defaultOutputPart = null;
-    }
-    
-    private EnumTool(int value, EnumOperation op1) 
-    {
+        Assert.notNull(toolType, "A marker type is required");
         Assert.notNull(op1, "An operation constant is required");
-        this.value = value;
+        this.type = toolType;
         this.operations = Collections.singleton(op1);
         this.outputPartEnumeration = null;
         this.outputParts = null;
         this.defaultOutputPart = null;
     }
 
-    private <T extends Enum<T> & OutputPart> EnumTool(
-        int value, EnumOperation op1, Class<T> outputPartEnumeration, T defaultOutputPart) 
+    private <T extends AnyTool, P extends Enum<P> & OutputPart<T>> EnumTool(
+        Class<T> toolType, EnumOperation op1, Class<P> outputPartEnumeration, P defaultOutputPart) 
     {
+        Assert.notNull(toolType, "A marker type is required");
         Assert.notNull(op1, "An operation constant is required");
         Assert.notNull(outputPartEnumeration, "Expected an enumeration of output parts");
         Assert.notNull(defaultOutputPart, "Expected a default part (inside given enumeration)");
         Assert.isTrue(EnumOutputType.OUTPUT.equals(defaultOutputPart.outputType()), 
             "A default output part must be of OUTPUT type");
-        this.value = value;
+        this.type = toolType;
         this.operations = Collections.singleton(op1);
         this.outputPartEnumeration = outputPartEnumeration;
         this.outputParts = Collections.unmodifiableList(
@@ -122,16 +142,16 @@ public enum EnumTool
         this.defaultOutputPart = defaultOutputPart;
     }
     
-    public int getValue() 
-    {
-        return value;
-    }
-
     public String getKey() 
     {
         return (this.getClass().getSimpleName() + '.' + name());
     }
 
+    public Class<? extends AnyTool> getType()
+    {
+        return type;
+    }
+    
     public EnumResourceType getResourceType()
     {
         switch (this) {
@@ -156,28 +176,41 @@ public enum EnumTool
         return operations;
     }
     
-    public Class<? extends OutputPart> getOutputPartEnumeration()
+    public Class<? extends OutputPart<? extends AnyTool>> getOutputPartEnumeration()
     {
         return outputPartEnumeration;
     }
 
-    public List<OutputPart> getOutputParts()
+    public List<OutputPart<? extends AnyTool>> getOutputParts()
     {
         return outputParts;
     }
     
-    public OutputPart getDefaultOutputPart()
+    public OutputPart<? extends AnyTool> getDefaultOutputPart()
     {
         return defaultOutputPart;
     }
     
     public static EnumTool fromName(String name) 
     {
-        for (EnumTool item : EnumTool.values()) {
-            if (item.name().equalsIgnoreCase(name))
-                return item;
-        }
-        return EnumTool.UNDEFINED;
+        Assert.isTrue(!StringUtils.isEmpty(name), "A non-empty name is required");
+        for (EnumTool t : EnumTool.values())
+            if (t.name().equalsIgnoreCase(name))
+                return t;
+        return null;
+    }
+    
+    public static <T extends AnyTool> EnumTool fromType(Class<T> type)
+    {
+        Assert.notNull(type, "A type is required");
+        return typeMap.get(type);
+    }
+
+    private static Map<Class<? extends AnyTool>, EnumTool> typeMap = new IdentityHashMap<>();
+
+    static {
+        for (EnumTool t: EnumTool.values())
+            typeMap.put(t.type, t);
     }
 
     public static class Deserializer extends JsonDeserializer<EnumTool> {

@@ -47,7 +47,7 @@ import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
 import eu.slipo.workbench.common.model.tool.DeerConfiguration;
 import eu.slipo.workbench.common.model.tool.FagiConfiguration;
 import eu.slipo.workbench.common.model.tool.LimesConfiguration;
-import eu.slipo.workbench.common.model.tool.MetadataRegistrationConfiguration;
+import eu.slipo.workbench.common.model.tool.RegisterToCatalogConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workflows.util.digraph.DependencyGraph;
 import eu.slipo.workflows.util.digraph.DependencyGraphs;
@@ -260,7 +260,7 @@ public class ProcessDefinitionTests
         assertEquals(Collections.singletonList(step1.outputKey()), step3.inputKeys());
         assertNull(step3.outputKey());
         assertNotNull(step3.configuration());
-        assertTrue(step3.configuration() instanceof MetadataRegistrationConfiguration);
+        assertTrue(step3.configuration() instanceof RegisterToCatalogConfiguration);
 
         Step step4 = steps.stream().filter(s -> s.name().equals("register-2"))
             .findFirst().get();
@@ -270,7 +270,7 @@ public class ProcessDefinitionTests
         assertEquals(Collections.singletonList(step2.outputKey()), step4.inputKeys());
         assertNull(step4.outputKey());
         assertNotNull(step4.configuration());
-        assertTrue(step4.configuration() instanceof MetadataRegistrationConfiguration);
+        assertTrue(step4.configuration() instanceof RegisterToCatalogConfiguration);
 
         List<CatalogResource> catalogResources = resources.stream()
             .filter(r -> r.getInputType() == EnumInputType.CATALOG)

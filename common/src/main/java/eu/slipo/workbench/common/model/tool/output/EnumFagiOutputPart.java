@@ -1,8 +1,9 @@
 package eu.slipo.workbench.common.model.tool.output;
 
 import eu.slipo.workbench.common.model.poi.EnumTool;
+import eu.slipo.workbench.common.model.tool.Fagi;
 
-public enum EnumFagiOutputPart implements OutputPart
+public enum EnumFagiOutputPart implements OutputPart<Fagi>
 {
     FUSED("fused", EnumOutputType.OUTPUT),
     

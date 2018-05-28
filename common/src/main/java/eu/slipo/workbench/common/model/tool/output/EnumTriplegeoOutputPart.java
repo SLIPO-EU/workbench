@@ -1,8 +1,9 @@
 package eu.slipo.workbench.common.model.tool.output;
 
 import eu.slipo.workbench.common.model.poi.EnumTool;
+import eu.slipo.workbench.common.model.tool.Triplegeo;
 
-public enum EnumTriplegeoOutputPart implements OutputPart
+public enum EnumTriplegeoOutputPart implements OutputPart<Triplegeo>
 {
     TRANSFORMED("transformed", EnumOutputType.OUTPUT),
     
@@ -10,7 +11,10 @@ public enum EnumTriplegeoOutputPart implements OutputPart
     
     TRANSFORMED_METADATA("transformed-metadata", EnumOutputType.KPI),
     
-    CLASSIFICATION_METADATA("classification-metadata", EnumOutputType.KPI);
+    CLASSIFICATION_METADATA("classification-metadata", EnumOutputType.KPI),
+    
+    REGISTRATION_REQUEST("registration-request", EnumOutputType.OUTPUT)
+    ;
 
     private final String key;
 

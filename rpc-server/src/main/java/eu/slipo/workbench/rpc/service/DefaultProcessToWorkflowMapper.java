@@ -47,7 +47,7 @@ import eu.slipo.workbench.common.model.resource.UrlDataSource;
 import eu.slipo.workbench.common.model.tool.FagiConfiguration;
 import eu.slipo.workbench.common.model.tool.ImportDataConfiguration;
 import eu.slipo.workbench.common.model.tool.LimesConfiguration;
-import eu.slipo.workbench.common.model.tool.MetadataRegistrationConfiguration;
+import eu.slipo.workbench.common.model.tool.RegisterToCatalogConfiguration;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
@@ -314,7 +314,7 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
                     Assert.state(inputKeys.size() == 1, "A registration step expects a single input");
                     Step producer = definition.stepByResourceKey(inputKeys.get(0));
                     parametersMap = buildParameters(
-                        definition, (MetadataRegistrationConfiguration) configuration, producer, createdBy);
+                        definition, (RegisterToCatalogConfiguration) configuration, producer, createdBy);
                     flow = registerResourceFlow;
                 }
                 break;
@@ -371,11 +371,11 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
         if (!inputNames.isEmpty()) {
             // Clone this configuration and reset input
             try {
-                configuration = cloner.cloneAsBean(configuration, configurationType)
-                    .withInput(inputNames);
+                configuration = cloner.cloneAsBean(configuration, configurationType);
             } catch (IOException ex) {
                 throw new IllegalStateException("Cannot clone configuration", ex);
             }
+            configuration.setInput(inputNames);
         }
 
         return configuration.getOutputNames();
@@ -387,7 +387,7 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
     }
 
     private Properties buildParameters(
-        ProcessDefinition def, MetadataRegistrationConfiguration config, Step producer, int userId)
+        ProcessDefinition def, RegisterToCatalogConfiguration config, Step producer, int userId)
     {
         final Properties parametersMap = new Properties();
 

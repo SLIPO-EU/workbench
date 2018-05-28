@@ -1,8 +1,9 @@
 package eu.slipo.workbench.common.model.tool.output;
 
 import eu.slipo.workbench.common.model.poi.EnumTool;
+import eu.slipo.workbench.common.model.tool.Limes;
 
-public enum EnumLimesOutputPart implements OutputPart
+public enum EnumLimesOutputPart implements OutputPart<Limes>
 {
     ACCEPTED("accepted", EnumOutputType.OUTPUT),
     

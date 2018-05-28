@@ -34,6 +34,9 @@ import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumSpatialOntology;
 import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
+import eu.slipo.workbench.common.model.tool.output.EnumTriplegeoOutputPart;
+import eu.slipo.workbench.common.model.tool.output.OutputNameMapper;
+import eu.slipo.workbench.common.model.tool.output.OutputPart;
 
 
 /**
@@ -41,7 +44,7 @@ import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
  *
  * @see https://github.com/SLIPO-EU/TripleGeo/blob/master/config/file_options.conf.template
  */
-public class TriplegeoConfiguration extends TransformConfiguration
+public class TriplegeoConfiguration extends TransformConfiguration<Triplegeo>
 {
     private static final long serialVersionUID = 2L;
 
@@ -325,9 +328,9 @@ public class TriplegeoConfiguration extends TransformConfiguration
 
     @JsonIgnore
     @Override
-    public EnumTool getTool()
+    public Class<Triplegeo> getToolType()
     {
-        return EnumTool.TRIPLEGEO;
+        return Triplegeo.class;
     }
 
     @Override
@@ -555,7 +558,58 @@ public class TriplegeoConfiguration extends TransformConfiguration
 
         return outputMap;
     }
-
+    
+    @JsonIgnore
+    @Override
+    public OutputNameMapper<Triplegeo> getOutputNameMapper()
+    {
+        Assert.state(outputFormat != null, "The output format is not specified");
+        final String extension = outputFormat.getFilenameExtension();
+        
+        return new OutputNameMapper<Triplegeo>()
+        {
+            @Override
+            public Map<? extends OutputPart<Triplegeo>, List<String>> apply(List<String> inputList)
+            {
+                final Map<EnumTriplegeoOutputPart, List<String>> outputMap = 
+                    new EnumMap<>(EnumTriplegeoOutputPart.class);
+                
+                if (inputList.isEmpty())
+                    return outputMap;
+                
+                // The input is not empty
+                
+                for (EnumTriplegeoOutputPart part: EnumTriplegeoOutputPart.values())
+                    outputMap.put(part, new ArrayList<>());
+                
+                // Each input yields an RDF output and a JSON metadata file
+                
+                for (String inputPath: inputList) {
+                    String inputName = StringUtils.stripFilenameExtension(
+                        Paths.get(inputPath).getFileName().toString());
+                    outputMap.get(EnumTriplegeoOutputPart.TRANSFORMED)
+                        .add(inputName + "." + extension);
+                    outputMap.get(EnumTriplegeoOutputPart.TRANSFORMED_METADATA)
+                        .add(inputName + "_metadata" + ".json");
+                    if (registerFeatures) {
+                        // An additional CSV is generated as a registration request payload
+                        outputMap.get(EnumTriplegeoOutputPart.REGISTRATION_REQUEST)
+                            .add(inputName + ".csv");
+                    }
+                }
+                
+                // An output file with classification (in RDF format) is always produced
+                
+                outputMap.get(EnumTriplegeoOutputPart.CLASSIFICATION)
+                    .add("classification" + "." + extension);
+                outputMap.get(EnumTriplegeoOutputPart.CLASSIFICATION_METADATA)
+                    .add("classification_metadata" + ".json");
+                
+                return outputMap;
+            }
+        };
+    }
+    
     @JsonProperty("mode")
     public void setMode(Mode mode)
     {

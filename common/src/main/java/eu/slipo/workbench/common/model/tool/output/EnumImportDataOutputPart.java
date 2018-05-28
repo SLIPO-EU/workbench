@@ -1,14 +1,15 @@
 package eu.slipo.workbench.common.model.tool.output;
 
 import eu.slipo.workbench.common.model.poi.EnumTool;
+import eu.slipo.workbench.common.model.tool.ImportData;
 
-public enum EnumImportOutputPart implements OutputPart
+public enum EnumImportDataOutputPart implements OutputPart<ImportData>
 {
     DOWNLOAD("download");
     
     private final String key;
     
-    private EnumImportOutputPart(String key)
+    private EnumImportDataOutputPart(String key)
     {
         this.key = key; 
     }
@@ -31,8 +32,8 @@ public enum EnumImportOutputPart implements OutputPart
         return EnumTool.IMPORTER;
     }
     
-    public static EnumImportOutputPart fromKey(String key)
+    public static EnumImportDataOutputPart fromKey(String key)
     {
-        return OutputPart.fromKey(key, EnumImportOutputPart.class);
+        return OutputPart.fromKey(key, EnumImportDataOutputPart.class);
     }
 }

@@ -9,11 +9,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
 import java.util.TreeSet;
+import java.util.function.Function;
 
 import javax.validation.Valid;
 import javax.validation.constraints.AssertTrue;
@@ -41,7 +43,9 @@ import com.google.common.collect.Lists;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumTool;
+import eu.slipo.workbench.common.model.tool.output.EnumLimesOutputPart;
 import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
+import eu.slipo.workbench.common.model.tool.output.OutputNameMapper;
 
 /**
  * Configuration for LIMES
@@ -58,7 +62,7 @@ import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
 })
 @JacksonXmlRootElement(localName = "LIMES")
 @eu.slipo.workbench.common.model.tool.serialization.DtdDeclaration(name = "LIMES", href = "limes.dtd")
-public class LimesConfiguration extends InterlinkConfiguration 
+public class LimesConfiguration extends InterlinkConfiguration<Limes> 
 {
     private static final long serialVersionUID = 1L;
     
@@ -605,9 +609,9 @@ public class LimesConfiguration extends InterlinkConfiguration
     
     @JsonIgnore
     @Override
-    public EnumTool getTool()
+    public Class<Limes> getToolType()
     {
-        return EnumTool.LIMES;
+        return Limes.class;
     }
     
     @Override
@@ -922,6 +926,26 @@ public class LimesConfiguration extends InterlinkConfiguration
         
         return Collections.singletonMap(
             EnumOutputType.OUTPUT, Arrays.asList(acceptedFileName, reviewFileName));
+    }
+    
+    @JsonIgnore
+    @Override
+    public OutputNameMapper<Limes> getOutputNameMapper()
+    {
+        Assert.state(accepted != null, "The output spec for `accepted` is null");
+        Assert.state(accepted.path != null, "The path for `accepted` is null");
+        Assert.state(review != null, "The output spec for `review` is null");
+        Assert.state(review.path != null, "The path for `review` is null");
+        
+        final Function<String, String> getName = p -> Paths.get(p).getFileName().toString();
+        final Map<EnumLimesOutputPart, List<String>> outputMap = new EnumMap<>(EnumLimesOutputPart.class);
+        
+        outputMap.put(EnumLimesOutputPart.ACCEPTED, 
+            Collections.singletonList(getName.apply(accepted.path)));
+        outputMap.put(EnumLimesOutputPart.REVIEW, 
+            Collections.singletonList(getName.apply(review.path)));
+        
+        return input -> outputMap;
     }
     
     @JsonProperty("acceptance")

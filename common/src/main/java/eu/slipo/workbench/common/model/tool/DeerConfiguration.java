@@ -10,11 +10,12 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
+import eu.slipo.workbench.common.model.tool.output.OutputNameMapper;
 
 /**
  * Configuration for DEER
  */
-public class DeerConfiguration extends EnrichConfiguration 
+public class DeerConfiguration extends EnrichConfiguration<Deer> 
 {
     private static final long serialVersionUID = 1L;
 
@@ -22,11 +23,11 @@ public class DeerConfiguration extends EnrichConfiguration
 
     @JsonIgnore
     @Override
-    public EnumTool getTool()
-    {
-        return EnumTool.DEER;
+    public Class<Deer> getToolType()
+    {        
+        return Deer.class;
     }
-
+    
     @JsonIgnore
     @Override
     public EnumDataFormat getInputFormat()
@@ -100,6 +101,13 @@ public class DeerConfiguration extends EnrichConfiguration
     @JsonIgnore
     @Override
     public Map<EnumOutputType, List<String>> getOutputNames()
+    {
+        throw new NotImplementedException("not implemented yet");
+    }
+    
+    @JsonIgnore
+    @Override
+    public OutputNameMapper<Deer> getOutputNameMapper()
     {
         throw new NotImplementedException("not implemented yet");
     }

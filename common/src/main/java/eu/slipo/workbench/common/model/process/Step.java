@@ -27,7 +27,7 @@ import eu.slipo.workbench.common.model.tool.DeerConfiguration;
 import eu.slipo.workbench.common.model.tool.FagiConfiguration;
 import eu.slipo.workbench.common.model.tool.ImportDataConfiguration;
 import eu.slipo.workbench.common.model.tool.LimesConfiguration;
-import eu.slipo.workbench.common.model.tool.MetadataRegistrationConfiguration;
+import eu.slipo.workbench.common.model.tool.RegisterToCatalogConfiguration;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 
@@ -147,7 +147,7 @@ public class Step implements Serializable
         @Type(name = "FAGI", value = FagiConfiguration.class),
         @Type(name = "DEER", value = DeerConfiguration.class),
         @Type(name = "IMPORTER", value = ImportDataConfiguration.class),
-        @Type(name = "REGISTER", value = MetadataRegistrationConfiguration.class)
+        @Type(name = "REGISTER", value = RegisterToCatalogConfiguration.class)
     })
     protected ToolConfiguration configuration;
 

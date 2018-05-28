@@ -95,7 +95,7 @@ public class ConfigurationController extends BaseController {
                     ToolConfiguration conf = null;
 
                     try {
-                        if (tool == EnumTool.UNDEFINED) {
+                        if (tool == null) {
                             logger.warn("[" + m.group(1) + "] is not a SLIPO toolkit component");
                             return;
                         }

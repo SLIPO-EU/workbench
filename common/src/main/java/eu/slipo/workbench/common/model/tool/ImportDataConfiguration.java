@@ -17,11 +17,12 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
-import eu.slipo.workbench.common.model.poi.EnumTool;
+import eu.slipo.workbench.common.model.tool.output.EnumImportDataOutputPart;
 import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
+import eu.slipo.workbench.common.model.tool.output.OutputNameMapper;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ImportDataConfiguration implements ToolConfiguration
+public class ImportDataConfiguration implements ToolConfiguration<ImportData>
 {
     private static final long serialVersionUID = 1L;
     
@@ -59,9 +60,9 @@ public class ImportDataConfiguration implements ToolConfiguration
     
     @JsonIgnore
     @Override
-    public EnumTool getTool()
+    public Class<ImportData> getToolType()
     {
-        return EnumTool.IMPORTER;
+        return ImportData.class;
     }
 
     @JsonProperty("dataFormat")
@@ -158,9 +159,18 @@ public class ImportDataConfiguration implements ToolConfiguration
     
     @JsonIgnore
     @Override
+    public OutputNameMapper<ImportData> getOutputNameMapper()
+    {
+        final String outputName = getOutputName();
+        return input -> Collections.singletonMap(
+            EnumImportDataOutputPart.DOWNLOAD, Collections.singletonList(outputName));
+    }
+    
+    @JsonIgnore
+    @Override
     public Map<EnumOutputType, List<String>> getOutputNames()
     {
-        String outputName = getOutputName();
+        final String outputName = getOutputName();
         return Collections.singletonMap(EnumOutputType.OUTPUT, Collections.singletonList(outputName));
     }
 }

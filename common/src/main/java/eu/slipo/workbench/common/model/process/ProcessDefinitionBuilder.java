@@ -25,7 +25,7 @@ import eu.slipo.workbench.common.model.resource.UrlDataSource;
 import eu.slipo.workbench.common.model.tool.FuseConfiguration;
 import eu.slipo.workbench.common.model.tool.ImportDataConfiguration;
 import eu.slipo.workbench.common.model.tool.InterlinkConfiguration;
-import eu.slipo.workbench.common.model.tool.MetadataRegistrationConfiguration;
+import eu.slipo.workbench.common.model.tool.RegisterToCatalogConfiguration;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.model.tool.TransformConfiguration;
 import eu.slipo.workbench.common.service.util.ClonerService;
@@ -579,8 +579,8 @@ public class ProcessDefinitionBuilder
                 "The required metadata for a resource are missing");
             Assert.state(!stepBuilder.inputKeys.isEmpty(), 
                 "No resource key is specified (as input for the registration step)");
-            MetadataRegistrationConfiguration configuration = 
-                new MetadataRegistrationConfiguration(metadata, resourceIdentifier);
+            RegisterToCatalogConfiguration configuration = 
+                new RegisterToCatalogConfiguration(metadata, resourceIdentifier);
             this.stepBuilder.configuration(configuration);
             return this.stepBuilder.build();
         }
@@ -599,7 +599,7 @@ public class ProcessDefinitionBuilder
             this.url = url;
             this.stepBuilder = 
                 ProcessDefinitionBuilder.this.new GenericStepBuilder(key, name, Step::new);
-            this.stepBuilder.operation(EnumOperation.IMPORT);
+            this.stepBuilder.operation(EnumOperation.IMPORT_DATA);
             this.stepBuilder.tool(EnumTool.IMPORTER);
             this.stepBuilder.source(new UrlDataSource(url));
         }

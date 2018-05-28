@@ -7,15 +7,20 @@ import java.util.Map;
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
+import eu.slipo.workbench.common.model.tool.output.OutputNameMapper;
 
-public interface ToolConfiguration extends Serializable
+public interface ToolConfiguration <T extends AnyTool> extends Serializable
 {
+    Class<T> getToolType();
+    
     /**
      * Get the tool this configuration is intended for
-     * 
-     * @return the constant representing a tool
+     * @return a constant that represents a tool
      */
-    EnumTool getTool();
+    default EnumTool getTool() 
+    {
+        return EnumTool.fromType(getToolType());
+    }
     
     /**
      * Get the (expected) data format for our input
@@ -24,21 +29,9 @@ public interface ToolConfiguration extends Serializable
     
     /**
      * Set input format
-     * 
      * @param inputFormat
      */
     void setInputFormat(EnumDataFormat inputFormat);
-    
-    /**
-     * Set input format (fluent setter)
-     * @param inputFormat
-     * @return
-     */
-    default ToolConfiguration withInputFormat(EnumDataFormat inputFormat)
-    {
-        this.setInputFormat(inputFormat);
-        return this;
-    }
     
     /**
      * Get a list of our input files
@@ -50,19 +43,7 @@ public interface ToolConfiguration extends Serializable
      * @param input A list of paths
      */
     void setInput(List<String> input);
-    
-    /**
-     * Set input (fluent setter) 
-     * 
-     * @param input input A list of paths
-     * @return an instance of {@link ToolConfiguration} (may be <tt>this</tt>) bound to given input
-     */
-    default ToolConfiguration withInput(List<String> input)
-    {
-        this.setInput(input);
-        return this;
-    }
-    
+        
     /**
      * Get the directory where our expected output will be created (or <tt>null</tt> if not
      * output is expected).
@@ -71,7 +52,6 @@ public interface ToolConfiguration extends Serializable
     
     /**
      * Set output directory. This may be a no-op if a tool does not produce any output.
-     * 
      * @param dir A file path
      */
     void setOutputDir(String dir);
@@ -89,8 +69,16 @@ public interface ToolConfiguration extends Serializable
     void setOutputFormat(EnumDataFormat dataFormat);
 
     /**
+     * Fixme: replace  getOutputNames method by a mapper function (input to outputMap)
+     * 
      * Get the list of expected output names (as plain file names) categorized by their 
      * output type. If no output is expected, an empty map should be returned.
      */
+    @Deprecated
     Map<EnumOutputType, List<String>> getOutputNames();
+    
+    /**
+     * Get a function to map input names to (expected) output names
+     */
+    OutputNameMapper<T> getOutputNameMapper();
 }

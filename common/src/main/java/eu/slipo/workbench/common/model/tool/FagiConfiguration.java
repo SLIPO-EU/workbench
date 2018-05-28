@@ -35,7 +35,9 @@ import com.google.common.collect.Lists;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumTool;
+import eu.slipo.workbench.common.model.tool.output.EnumFagiOutputPart;
 import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
+import eu.slipo.workbench.common.model.tool.output.OutputNameMapper;
 
 /**
  * Configuration for FAGI
@@ -45,7 +47,7 @@ import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
     "left", "right", "links", "target"
 })
 @JacksonXmlRootElement(localName = "specification")
-public class FagiConfiguration extends FuseConfiguration 
+public class FagiConfiguration extends FuseConfiguration<Fagi> 
 {
     private static final long serialVersionUID = 1L;
 
@@ -507,9 +509,9 @@ public class FagiConfiguration extends FuseConfiguration
     
     @JsonIgnore
     @Override
-    public EnumTool getTool()
+    public Class<Fagi> getToolType()
     {
-        return EnumTool.FAGI;
+        return Fagi.class;
     }
     
     @JsonIgnore
@@ -651,6 +653,32 @@ public class FagiConfiguration extends FuseConfiguration
         namesByType.put(EnumOutputType.KPI, names);
         
         return namesByType;
+    }
+    
+    @JsonIgnore
+    @Override
+    public OutputNameMapper<Fagi> getOutputNameMapper()
+    {
+        Assert.state(target.fusedPath != null, "The path (fusion) is required");
+        Assert.state(target.remainingPath != null, "The path (remaining) is required");
+        Assert.state(target.reviewPath != null, "The path (review) is required");
+        Assert.state(target.statsPath != null, "The path (stats) is required");
+        
+        final Function<String, String> getName = p -> Paths.get(p).getFileName().toString();
+        final Map<EnumFagiOutputPart, List<String>> outputMap = new EnumMap<>(EnumFagiOutputPart.class);
+        
+        outputMap.put(EnumFagiOutputPart.FUSED, 
+            Collections.singletonList(getName.apply(target.fusedPath)));
+        outputMap.put(EnumFagiOutputPart.REMAINING, 
+            Collections.singletonList(getName.apply(target.remainingPath)));
+        outputMap.put(EnumFagiOutputPart.REVIEW, 
+            Collections.singletonList(getName.apply(target.reviewPath)));
+        
+        // Fixme: The current version of Fagi doesn't produce statistics (uncomment when fixed)
+        //outputMap.put(EnumFagiOutputPart.STATS, 
+        //    Collections.singletonList(getName.apply(target.statsPath)));
+        
+        return input -> outputMap;
     }
     
     @JsonIgnore

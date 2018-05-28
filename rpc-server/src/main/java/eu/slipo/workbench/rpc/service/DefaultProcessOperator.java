@@ -529,20 +529,20 @@ public class DefaultProcessOperator implements ProcessOperator
         /**
          * Determine the output names (i.e. names of output files) based on a given {@link ToolConfiguration}.
          *
-         * @param config The configuration for a tool invocation
+         * @param configuration The configuration for a tool invocation
          * @param inputPaths The input paths feeding a tool's invocation
          */
         private Map<EnumOutputType, List<String>> determineOutputNames(
-            ToolConfiguration config, Class<? extends ToolConfiguration> configType, List<Path> inputPaths)
+            ToolConfiguration configuration, Class<? extends ToolConfiguration> configType, List<Path> inputPaths)
         {
             try {
-                config = cloner.cloneAsBean(config, configType);
+                configuration = cloner.cloneAsBean(configuration, configType);
             } catch (IOException ex) {
                 throw new IllegalStateException("Cannot clone configuration", ex);
             }
 
-            config = config.withInput(Lists.transform(inputPaths, Path::toString));
-            return config.getOutputNames();
+            configuration.setInput(Lists.transform(inputPaths, Path::toString));
+            return configuration.getOutputNames();
         }
     }
 

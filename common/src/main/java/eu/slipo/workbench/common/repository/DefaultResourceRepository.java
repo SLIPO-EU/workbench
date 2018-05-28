@@ -246,8 +246,7 @@ public class DefaultResourceRepository implements ResourceRepository
         ProcessExecutionEntity executionEntity = stepEntity.getExecution();
 
         EnumOperation operation = stepEntity.getOperation();
-        Assert.state(operation != null && operation != EnumOperation.UNDEFINED,
-            "Expected a valid operation type for this processing step");
+        Assert.state(operation != null, "Expected a valid operation type for this processing step");
 
         Map<EnumStepFile, List<ProcessExecutionStepFileEntity>> fileEntitiesByType =
             stepEntity.getFiles().stream()
@@ -533,8 +532,7 @@ public class DefaultResourceRepository implements ResourceRepository
         final ProcessExecutionStepEntity stepEntity = fileEntity.getStep();
         final int stepKey = stepEntity.getKey();
         final EnumOperation operation = stepEntity.getOperation();
-        Assert.state(operation != null
-                && operation != EnumOperation.UNDEFINED && operation != EnumOperation.REGISTER,
+        Assert.state(operation != null && operation != EnumOperation.REGISTER,
             "Encountered an invalid operation type (for the kind of processing step)");
         if (operation != EnumOperation.TRANSFORM) {
             return EnumDataSourceType.FILESYSTEM;

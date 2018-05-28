@@ -1,8 +1,9 @@
 package eu.slipo.workbench.common.model.tool.output;
 
 import eu.slipo.workbench.common.model.poi.EnumTool;
+import eu.slipo.workbench.common.model.tool.Deer;
 
-public enum EnumDeerOutputPart implements OutputPart
+public enum EnumDeerOutputPart implements OutputPart<Deer>
 {
     ENRICHED("enriched", EnumOutputType.OUTPUT);
 
