@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
-import eu.slipo.workbench.common.model.poi.EnumOutputType;
 
 
 /**

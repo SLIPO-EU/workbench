@@ -1,7 +1,7 @@
-package eu.slipo.workbench.common.model.poi;
+package eu.slipo.workbench.common.model.tool.output;
 
 /**
- * Categorize output produced by a program
+ * Categorize output produced by a tool
  */
 public enum EnumOutputType
 {

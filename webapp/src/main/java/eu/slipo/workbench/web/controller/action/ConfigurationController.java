@@ -90,7 +90,7 @@ public class ConfigurationController extends BaseController {
             .forEach(pair -> {
                 Matcher m = pattern.matcher(pair.getLeft().toString());
                 if (m.matches()) {
-                    EnumTool tool = EnumTool.fromString(m.group(1).toUpperCase());
+                    EnumTool tool = EnumTool.fromName(m.group(1).toUpperCase());
                     String profile = m.group(2);
                     ToolConfiguration conf = null;
 

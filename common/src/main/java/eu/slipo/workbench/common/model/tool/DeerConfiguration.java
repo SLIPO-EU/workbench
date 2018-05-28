@@ -8,8 +8,8 @@ import org.apache.commons.lang3.NotImplementedException;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
-import eu.slipo.workbench.common.model.poi.EnumOutputType;
 import eu.slipo.workbench.common.model.poi.EnumTool;
+import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
 
 /**
  * Configuration for DEER
