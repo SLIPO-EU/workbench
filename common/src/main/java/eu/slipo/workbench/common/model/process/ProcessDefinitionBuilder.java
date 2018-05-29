@@ -14,11 +14,11 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumOperation;
@@ -937,17 +937,17 @@ public class ProcessDefinitionBuilder
         
         final Set<Input> partialInputs = this.steps.stream()
             .flatMap(s -> s.input().stream())
-            .filter(p -> p.partKey().isPresent())
+            .filter(p -> p.partKey() != null)
             .collect(Collectors.toSet());
         
         Assert.state(partialInputs.stream().allMatch(p -> outputKeys.contains(p.inputKey())),
             "A partial input may only refer to output of another step");
         
         BiPredicate<Step, String> isPartOfOutput = (Step producer, String partKey) -> 
-            Iterables.any(producer.outputParts(), p -> p.key().equals(partKey));
+            producer.outputParts().stream().anyMatch(p -> p.key().equals(partKey));
         Assert.state(partialInputs.stream()
-                .allMatch(p -> isPartOfOutput.test(outputKeyToStep.get(p.inputKey()), p.getPartKey())),
-            "A partial input refers to a non-existing part of output");
+                .allMatch(p -> isPartOfOutput.test(outputKeyToStep.get(p.inputKey()), p.partKey())),
+            "A partial input refers to a non-existing part of output of another step");
 
         // The definition seems valid
 

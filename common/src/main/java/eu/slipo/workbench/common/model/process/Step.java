@@ -6,6 +6,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import javax.annotation.Nullable;
+
 import org.springframework.cglib.beans.ImmutableBean;
 import org.springframework.util.StringUtils;
 
@@ -76,55 +78,44 @@ public class Step implements Serializable
        
         protected int inputKey;
         
-        protected Optional<String> partKey;
+        @Nullable
+        protected String partKey;
         
-        private Input(int inputKey, Optional<String> partKey)
+        private Input(int inputKey, String partKey)
         {
             this.inputKey = inputKey;
             this.partKey = partKey;
         }
         
-        @JsonIgnore
+        @JsonProperty("inputKey")
         public int inputKey()
         {
             return inputKey;
         }
         
-        @JsonProperty("inputKey")
-        public int getInputKey()
-        {
-            return inputKey;
-        }
-        
-        @JsonIgnore
-        public Optional<String> partKey()
+        @JsonProperty("partKey")
+        public String partKey()
         {
             return partKey;
         }
         
-        @JsonProperty("partKey")
-        public String getPartKey()
-        {
-            return partKey.orElse(null);
-        }
-        
         protected static Input of(int inputKey)
         {
-            return new Input(inputKey, Optional.empty());
+            return new Input(inputKey, null);
         }
         
         @JsonCreator
         protected static Input of(
             @JsonProperty("inputKey") int inputKey, @JsonProperty("partKey") String partKey)
         {
-            return new Input(inputKey, Optional.ofNullable(partKey));
+            return new Input(inputKey, partKey);
         }
 
         @Override
         public String toString()
         {
-            return String.format("input:%d%s", 
-                inputKey, partKey.isPresent()? ("/" + partKey.get()) : (""));
+            return String.format(
+                "input:%d%s", inputKey, partKey != null? ("/" + partKey) : (""));
         }
 
         @Override
@@ -133,7 +124,7 @@ public class Step implements Serializable
             final int P = 31;
             int result = 1;
             result = P * result + inputKey;
-            result = P * result + partKey.hashCode();
+            result = P * result + (partKey == null? 0 : partKey.hashCode());
             return result;
         }
 
@@ -145,7 +136,9 @@ public class Step implements Serializable
             if (!(obj instanceof Input))
                 return false;
             Input other = (Input) obj;
-            return inputKey == other.inputKey && partKey.equals(other.partKey);
+            if (inputKey != other.inputKey)
+                return false;
+            return partKey == null? (other.partKey == null): (partKey.equals(other.partKey));
         }
     }
     

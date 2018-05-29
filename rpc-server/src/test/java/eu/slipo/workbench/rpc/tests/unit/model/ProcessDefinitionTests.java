@@ -5,7 +5,11 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
@@ -264,6 +268,24 @@ public class ProcessDefinitionTests
         assertEquals(s1, jsonMapper.writeValueAsString(definition1));
     }
 
+    private void serializeDefault(ProcessDefinition definition) throws Exception
+    {
+        String definitionAsJson = jsonMapper.writeValueAsString(definition);
+
+        byte[] serializedData = null;
+        try (ByteArrayOutputStream dataStream = new ByteArrayOutputStream()) {
+            ObjectOutputStream out = new ObjectOutputStream(dataStream);
+            out.writeObject(definition);
+            out.flush();
+            serializedData = dataStream.toByteArray();
+        }
+
+        ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(serializedData));
+        ProcessDefinition deserializedDefinition = (ProcessDefinition) in.readObject();
+
+        assertEquals(definitionAsJson, jsonMapper.writeValueAsString(deserializedDefinition));
+    }
+
     private DependencyGraph buildDependencyGraph(ProcessDefinition definition)
     {
         List<ProcessInput> inputs = definition.resources();
@@ -343,8 +365,8 @@ public class ProcessDefinitionTests
         assertEquals(2, step3.inputKeys().size());
         assertEquals(step1.outputKey(), step3.inputKeys().get(0));
         assertEquals(step2.outputKey(), step3.inputKeys().get(1));
-        assertEquals("transformed", step3.input().get(0).getPartKey());
-        assertEquals("transformed", step3.input().get(1).getPartKey());
+        assertEquals("transformed", step3.input().get(0).partKey());
+        assertEquals("transformed", step3.input().get(1).partKey());
         assertEquals(
             jsonMapper.writeValueAsString(sampleLimesConfiguration1),
             jsonMapper.writeValueAsString(step3.configuration()));
@@ -354,7 +376,7 @@ public class ProcessDefinitionTests
         assertEquals(EnumTool.REGISTER, stepR1.tool());
         assertEquals(EnumOperation.REGISTER, stepR1.operation());
         assertEquals(Collections.singletonList(step1.outputKey()), stepR1.inputKeys());
-        assertEquals("transformed", stepR1.input().get(0).getPartKey());
+        assertEquals("transformed", stepR1.input().get(0).partKey());
         assertNull(stepR1.outputKey());
         assertNotNull(stepR1.configuration());
         assertTrue(stepR1.configuration() instanceof RegisterToCatalogConfiguration);
@@ -363,7 +385,7 @@ public class ProcessDefinitionTests
         assertEquals(EnumTool.REGISTER, stepR2.tool());
         assertEquals(EnumOperation.REGISTER, stepR2.operation());
         assertEquals(Collections.singletonList(step2.outputKey()), stepR2.inputKeys());
-        assertEquals("transformed", stepR2.input().get(0).getPartKey());
+        assertEquals("transformed", stepR2.input().get(0).partKey());
         assertNull(stepR2.outputKey());
         assertNotNull(stepR2.configuration());
         assertTrue(stepR2.configuration() instanceof RegisterToCatalogConfiguration);
@@ -372,7 +394,7 @@ public class ProcessDefinitionTests
         assertEquals(EnumTool.REGISTER, stepR3.tool());
         assertEquals(EnumOperation.REGISTER, stepR3.operation());
         assertEquals(Collections.singletonList(step3.outputKey()), stepR3.inputKeys());
-        assertEquals("accepted", stepR3.input().get(0).getPartKey());
+        assertEquals("accepted", stepR3.input().get(0).partKey());
         assertNull(stepR3.outputKey());
         assertNotNull(stepR3.configuration());
         assertTrue(stepR3.configuration() instanceof RegisterToCatalogConfiguration);
@@ -422,7 +444,7 @@ public class ProcessDefinitionTests
         assertEquals(1, step1.inputKeys().size());
         assertNotNull(step1.outputKey());
         assertEquals(0, step1.sources().size());
-        assertNull(step1.input().get(0).getPartKey());
+        assertNull(step1.input().get(0).partKey());
         ProcessInput inp1 = resourcesByKey.get(step1.inputKeys().get(0));
         assertNotNull(inp1);
         assertTrue(inp1 instanceof CatalogResource);
@@ -440,7 +462,7 @@ public class ProcessDefinitionTests
         assertEquals(1, step2.inputKeys().size());
         assertNotNull(step2.outputKey());
         assertEquals(0, step2.sources().size());
-        assertNull(step2.input().get(0).getPartKey());
+        assertNull(step2.input().get(0).partKey());
         ProcessInput inp2 = resourcesByKey.get(step2.inputKeys().get(0));
         assertNotNull(inp2);
         assertTrue(inp2 instanceof CatalogResource);
@@ -458,8 +480,8 @@ public class ProcessDefinitionTests
         assertEquals(2, step3.inputKeys().size());
         assertNotNull(step3.outputKey());
         assertEquals(0, step3.sources().size());
-        assertEquals("transformed", step3.input().get(0).getPartKey());
-        assertEquals("transformed", step3.input().get(1).getPartKey());
+        assertEquals("transformed", step3.input().get(0).partKey());
+        assertEquals("transformed", step3.input().get(1).partKey());
         ProcessInput inp3a = resourcesByKey.get(step3.inputKeys().get(0));
         ProcessInput inp3b = resourcesByKey.get(step3.inputKeys().get(1));
         assertNotNull(inp3a);
@@ -478,7 +500,7 @@ public class ProcessDefinitionTests
         assertEquals(EnumTool.REGISTER, stepR1.tool());
         assertEquals(EnumOperation.REGISTER, stepR1.operation());
         assertEquals(Collections.singletonList(step1.outputKey()), stepR1.inputKeys());
-        assertEquals("transformed", stepR1.input().get(0).getPartKey());
+        assertEquals("transformed", stepR1.input().get(0).partKey());
         assertNull(stepR1.outputKey());
         assertNotNull(stepR1.configuration());
         assertTrue(stepR1.configuration() instanceof RegisterToCatalogConfiguration);
@@ -487,7 +509,7 @@ public class ProcessDefinitionTests
         assertEquals(EnumTool.REGISTER, stepR2.tool());
         assertEquals(EnumOperation.REGISTER, stepR2.operation());
         assertEquals(Collections.singletonList(step2.outputKey()), stepR2.inputKeys());
-        assertEquals("transformed", stepR2.input().get(0).getPartKey());
+        assertEquals("transformed", stepR2.input().get(0).partKey());
         assertNull(stepR2.outputKey());
         assertNotNull(stepR2.configuration());
         assertTrue(stepR2.configuration() instanceof RegisterToCatalogConfiguration);
@@ -496,7 +518,7 @@ public class ProcessDefinitionTests
         assertEquals(EnumTool.REGISTER, stepR3.tool());
         assertEquals(EnumOperation.REGISTER, stepR3.operation());
         assertEquals(Collections.singletonList(step3.outputKey()), stepR3.inputKeys());
-        assertEquals("accepted", stepR3.input().get(0).getPartKey());
+        assertEquals("accepted", stepR3.input().get(0).partKey());
         assertNull(stepR3.outputKey());
         assertNotNull(stepR3.configuration());
         assertTrue(stepR3.configuration() instanceof RegisterToCatalogConfiguration);
@@ -531,6 +553,18 @@ public class ProcessDefinitionTests
     public void test1b_serializeToJson() throws Exception
     {
         serializeToJson(buildDefinition1b());
+    }
+
+    @Test
+    public void test1a_serializeDefault() throws Exception
+    {
+        serializeDefault(buildDefinition1a());
+    }
+
+    @Test
+    public void test1b_serializeDefault() throws Exception
+    {
+        serializeDefault(buildDefinition1b());
     }
 
     @Test(expected = UnsupportedOperationException.class)
