@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.IterableUtils;
@@ -27,6 +28,9 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumOperation;
@@ -38,9 +42,7 @@ import eu.slipo.workbench.common.model.process.ProcessDefinitionBuilder;
 import eu.slipo.workbench.common.model.process.ProcessDefinitionBuilderFactory;
 import eu.slipo.workbench.common.model.process.ProcessInput;
 import eu.slipo.workbench.common.model.process.ProcessOutput;
-import eu.slipo.workbench.common.model.process.RegisterStep;
 import eu.slipo.workbench.common.model.process.Step;
-import eu.slipo.workbench.common.model.process.TransformStep;
 import eu.slipo.workbench.common.model.resource.FileSystemDataSource;
 import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
@@ -60,6 +62,14 @@ public class ProcessDefinitionTests
     private static final String DATASOURCE_1_PATH = "uploads/1.csv";
 
     private static final String DATASOURCE_2_PATH = "uploads/2.csv";
+
+    private static final ResourceIdentifier RESOURCE_1_ID = ResourceIdentifier.of(1L, 5L);
+
+    private static final String RESOURCE_1_NAME = "resource-example-1";
+
+    private static final ResourceIdentifier RESOURCE_2_ID = ResourceIdentifier.of(19L, 1L);
+
+    private static final String RESOURCE_2_NAME = "resource-example-2";
 
     @TestConfiguration
     public static class Setup
@@ -170,62 +180,135 @@ public class ProcessDefinitionTests
     @Autowired
     private FagiConfiguration sampleFagiConfiguration1;
 
-    private ProcessDefinition buildDefinition1()
+    private ProcessDefinition buildDefinition1a()
     {
-        final int resultKey1 = 1, resultKey2 = 2, key1 = 101, key2 = 102;
+        final int TRANSFORM_1_KEY = 1001, TRANSFORM_2_KEY = 1002, LINKS_KEY = 1003;
 
-        ResourceMetadataCreate metadata1 =
-            new ResourceMetadataCreate("out-1", "A sample output file");
-        ResourceMetadataCreate metadata2 =
-            new ResourceMetadataCreate("out-2", "Another sample output file");
+        ResourceMetadataCreate metadataForTransformed1 =
+            new ResourceMetadataCreate("tr-1", "The 1st RDF file");
+        ResourceMetadataCreate metadataForTransformed2 =
+            new ResourceMetadataCreate("tr-2", "The 2nd RDF file");
+        ResourceMetadataCreate metadataForLinks =
+            new ResourceMetadataCreate("links-1-2", "A set of sameAs links between 1st and 2nd RDF files");
 
-        ProcessDefinition definition1 = processDefinitionBuilderFactory.create("proc-a-1")
-            .resource("resource-a-1.1", key1, ResourceIdentifier.of(1L, 5L))
-            .resource("resource-a-1.2", key2, ResourceIdentifier.of(3L, 17L))
+        ProcessDefinition definition = processDefinitionBuilderFactory.create("proc-1-a")
             .transform("triplegeo-1", b -> b
                 .group(1)
-                .nodeName("triplegeo-1")
-                .outputKey(resultKey1)
+                .outputKey(TRANSFORM_1_KEY)
                 .source(dataSource1)
-                .outputFormat(EnumDataFormat.N_TRIPLES)
                 .configuration(sampleTriplegeoConfiguration1))
-            .step("enrich-with-deer-1", b -> b
+            .register("register-1", TRANSFORM_1_KEY, "transformed", metadataForTransformed1)
+            .transform("triplegeo-2", b -> b
+                .group(1)
+                .outputKey(TRANSFORM_2_KEY)
+                .source(dataSource2)
+                .configuration(sampleTriplegeoConfiguration1))
+            .register("register-2", TRANSFORM_2_KEY, "transformed", metadataForTransformed2)
+            .interlink("link-1-with-2", b -> b
                 .group(2)
-                .nodeName("enrich-with-deer-1")
-                .operation(EnumOperation.ENRICHMENT)
-                .tool(EnumTool.DEER)
-                .outputFormat(EnumDataFormat.N_TRIPLES)
-                .configuration(sampleDeerConfiguration1)
-                .input(resultKey1)
-                .outputKey(resultKey2))
-            .register("register-1", resultKey1, metadata1)
-            .register("register-2", resultKey2, metadata2)
+                .configuration(sampleLimesConfiguration1)
+                .left(TRANSFORM_1_KEY, "transformed")
+                .right(TRANSFORM_2_KEY, "transformed")
+                .outputKey(LINKS_KEY)
+                .outputFormat(EnumDataFormat.N_TRIPLES))
+            .register("register-links", LINKS_KEY, "accepted", metadataForLinks)
             .build();
 
-        return definition1;
+        return definition;
+    }
+
+    private ProcessDefinition buildDefinition1b()
+    {
+        final int TRANSFORM_1_KEY = 1001, TRANSFORM_2_KEY = 1002, LINKS_KEY = 1003;
+        final int RESOURCE_1_KEY = 1, RESOURCE_2_KEY = 2;
+
+        ResourceMetadataCreate metadataForTransformed1 =
+            new ResourceMetadataCreate("tr-1", "The 1st RDF file");
+        ResourceMetadataCreate metadataForTransformed2 =
+            new ResourceMetadataCreate("tr-2", "The 2nd RDF file");
+        ResourceMetadataCreate metadataForLinks =
+            new ResourceMetadataCreate("links-1-2", "A set of sameAs links between 1st and 2nd RDF files");
+
+        ProcessDefinition definition = processDefinitionBuilderFactory.create("proc-1-b")
+            .resource(RESOURCE_1_NAME, RESOURCE_1_KEY, RESOURCE_1_ID)
+            .resource(RESOURCE_2_NAME, RESOURCE_2_KEY, RESOURCE_2_ID)
+            .transform("triplegeo-1", b -> b
+                .group(1)
+                .outputKey(TRANSFORM_1_KEY)
+                .input(RESOURCE_1_KEY)
+                .configuration(sampleTriplegeoConfiguration1))
+            .register("register-1", TRANSFORM_1_KEY, "transformed", metadataForTransformed1)
+            .transform("triplegeo-2", b -> b
+                .group(1)
+                .outputKey(TRANSFORM_2_KEY)
+                .input(RESOURCE_2_KEY)
+                .configuration(sampleTriplegeoConfiguration1))
+            .register("register-2", TRANSFORM_2_KEY, "transformed", metadataForTransformed2)
+            .interlink("link-1-with-2", b -> b
+                .group(2)
+                .configuration(sampleLimesConfiguration1)
+                .left(TRANSFORM_1_KEY, "transformed")
+                .right(TRANSFORM_2_KEY, "transformed")
+                .outputKey(LINKS_KEY)
+                .outputFormat(EnumDataFormat.N_TRIPLES))
+            .register("register-links", LINKS_KEY, "accepted", metadataForLinks)
+            .build();
+
+        return definition;
+    }
+
+    private void serializeToJson(ProcessDefinition definition) throws Exception
+    {
+        String s1 = jsonMapper.writeValueAsString(definition);
+        ProcessDefinition definition1 = jsonMapper.readValue(s1, ProcessDefinition.class);
+        assertEquals(s1, jsonMapper.writeValueAsString(definition1));
+    }
+
+    private DependencyGraph buildDependencyGraph(ProcessDefinition definition)
+    {
+        List<ProcessInput> inputs = definition.resources();
+        List<Step> steps = definition.steps();
+
+        // Map each output key to the key of processing step (expected to produce it)
+        final Map<Integer, Integer> outputKeyToStepKey = inputs.stream()
+            .filter(r -> r.getInputType() == EnumInputType.OUTPUT)
+            .collect(Collectors.toMap(r -> r.key(), r -> ((ProcessOutput) r).stepKey()));
+
+        // Build dependency graph
+        final DependencyGraph graph = DependencyGraphs.create(steps.size());
+        for (Step step: steps) {
+            for (Integer k: step.inputKeys()) {
+                if (outputKeyToStepKey.containsKey(k))
+                    graph.addDependency(step.key(), outputKeyToStepKey.get(k));
+            }
+        }
+
+        System.err.println(DependencyGraphs.toString(graph, v -> definition.stepByKey(v).name()));
+
+        return graph;
     }
 
     @Test
-    public void test1_checkDefinition1() throws Exception
+    public void test1a_checkDefinition() throws Exception
     {
-        ProcessDefinition definition1 = buildDefinition1();
+        ProcessDefinition definition1 = buildDefinition1a();
         assertNotNull(definition1);
-        assertEquals("proc-a-1", definition1.name());
+        assertEquals("proc-1-a", definition1.name());
 
         List<ProcessInput> resources = definition1.resources();
-        assertEquals(4, resources.size());
-        assertEquals(4, resources.stream().mapToInt(r -> r.key()).distinct().count());
+        assertEquals(3, resources.size());
+        assertEquals(3, resources.stream().mapToInt(r -> r.key()).distinct().count());
 
         List<Step> steps = definition1.steps();
-        assertEquals(4, steps.size());
-        assertEquals(4, steps.stream().mapToInt(s -> s.key()).distinct().count());
+        assertEquals(6, steps.size());
+        assertEquals(6, steps.stream().mapToInt(s -> s.key()).distinct().count());
         assertEquals(
-            new HashSet<>(Arrays.asList("register-1", "register-2", "triplegeo-1", "enrich-with-deer-1")),
+            ImmutableSet.of(
+                "register-1", "register-2", "register-links",
+                "triplegeo-1", "triplegeo-2", "link-1-with-2"),
             steps.stream().map(r -> r.name()).collect(Collectors.toSet()));
 
-        Step step1 = steps.stream().filter(s -> s.name().equals("triplegeo-1"))
-            .findFirst().get();
-        assertTrue(step1 instanceof TransformStep);
+        Step step1 = steps.stream().filter(s -> s.name().equals("triplegeo-1")).findFirst().get();
         assertEquals(EnumTool.TRIPLEGEO, step1.tool());
         assertEquals(EnumOperation.TRANSFORM, step1.operation());
         assertEquals(EnumDataFormat.N_TRIPLES, step1.outputFormat());
@@ -237,151 +320,292 @@ public class ProcessDefinitionTests
             jsonMapper.writeValueAsString(sampleTriplegeoConfiguration1),
             jsonMapper.writeValueAsString(step1.configuration()));
         assertTrue(step1.configuration() instanceof TriplegeoConfiguration);
-        assertEquals(EnumDataFormat.N_TRIPLES,
-            ((TriplegeoConfiguration) step1.configuration()).getOutputFormat());
+        assertEquals(EnumDataFormat.N_TRIPLES, step1.configuration().getOutputFormat());
 
-        Step step2 = steps.stream().filter(s -> s.name().equals("enrich-with-deer-1"))
-            .findFirst().get();
-        assertEquals(EnumTool.DEER, step2.tool());
-        assertEquals(EnumOperation.ENRICHMENT, step2.operation());
+        Step step2 = steps.stream().filter(s -> s.name().equals("triplegeo-2")).findFirst().get();
+        assertEquals(EnumTool.TRIPLEGEO, step2.tool());
+        assertEquals(EnumOperation.TRANSFORM, step2.operation());
         assertEquals(EnumDataFormat.N_TRIPLES, step2.outputFormat());
-        assertEquals(1, step2.inputKeys().size());
-        assertEquals(step1.outputKey(), step2.inputKeys().get(0));
+        assertEquals(0, step2.inputKeys().size());
+        assertNotNull(step2.outputKey());
+        assertEquals(1, step2.sources().size());
+        assertEquals(DATASOURCE_2_PATH, ((FileSystemDataSource) step2.sources().get(0)).getPath());
         assertEquals(
-            jsonMapper.writeValueAsString(sampleDeerConfiguration1),
+            jsonMapper.writeValueAsString(sampleTriplegeoConfiguration1),
             jsonMapper.writeValueAsString(step2.configuration()));
-        assertTrue(step2.configuration() instanceof DeerConfiguration);
+        assertTrue(step2.configuration() instanceof TriplegeoConfiguration);
+        assertEquals(EnumDataFormat.N_TRIPLES, step2.configuration().getOutputFormat());
 
-        Step step3 = steps.stream().filter(s -> s.name().equals("register-1"))
-            .findFirst().get();
-        assertTrue(step3 instanceof RegisterStep);
-        assertEquals(EnumTool.REGISTER, step3.tool());
-        assertEquals(EnumOperation.REGISTER, step3.operation());
-        assertEquals(Collections.singletonList(step1.outputKey()), step3.inputKeys());
-        assertNull(step3.outputKey());
-        assertNotNull(step3.configuration());
-        assertTrue(step3.configuration() instanceof RegisterToCatalogConfiguration);
+        Step step3 = steps.stream().filter(s -> s.name().equals("link-1-with-2")).findFirst().get();
+        assertEquals(EnumTool.LIMES, step3.tool());
+        assertEquals(EnumOperation.INTERLINK, step3.operation());
+        assertEquals(EnumDataFormat.N_TRIPLES, step3.outputFormat());
+        assertEquals(2, step3.inputKeys().size());
+        assertEquals(step1.outputKey(), step3.inputKeys().get(0));
+        assertEquals(step2.outputKey(), step3.inputKeys().get(1));
+        assertEquals("transformed", step3.input().get(0).getPartKey());
+        assertEquals("transformed", step3.input().get(1).getPartKey());
+        assertEquals(
+            jsonMapper.writeValueAsString(sampleLimesConfiguration1),
+            jsonMapper.writeValueAsString(step3.configuration()));
+        assertTrue(step3.configuration() instanceof LimesConfiguration);
 
-        Step step4 = steps.stream().filter(s -> s.name().equals("register-2"))
-            .findFirst().get();
-        assertTrue(step4 instanceof RegisterStep);
-        assertEquals(EnumTool.REGISTER, step4.tool());
-        assertEquals(EnumOperation.REGISTER, step4.operation());
-        assertEquals(Collections.singletonList(step2.outputKey()), step4.inputKeys());
-        assertNull(step4.outputKey());
-        assertNotNull(step4.configuration());
-        assertTrue(step4.configuration() instanceof RegisterToCatalogConfiguration);
+        Step stepR1 = steps.stream().filter(s -> s.name().equals("register-1")).findFirst().get();
+        assertEquals(EnumTool.REGISTER, stepR1.tool());
+        assertEquals(EnumOperation.REGISTER, stepR1.operation());
+        assertEquals(Collections.singletonList(step1.outputKey()), stepR1.inputKeys());
+        assertEquals("transformed", stepR1.input().get(0).getPartKey());
+        assertNull(stepR1.outputKey());
+        assertNotNull(stepR1.configuration());
+        assertTrue(stepR1.configuration() instanceof RegisterToCatalogConfiguration);
+
+        Step stepR2 = steps.stream().filter(s -> s.name().equals("register-2")).findFirst().get();
+        assertEquals(EnumTool.REGISTER, stepR2.tool());
+        assertEquals(EnumOperation.REGISTER, stepR2.operation());
+        assertEquals(Collections.singletonList(step2.outputKey()), stepR2.inputKeys());
+        assertEquals("transformed", stepR2.input().get(0).getPartKey());
+        assertNull(stepR2.outputKey());
+        assertNotNull(stepR2.configuration());
+        assertTrue(stepR2.configuration() instanceof RegisterToCatalogConfiguration);
+
+        Step stepR3 = steps.stream().filter(s -> s.name().equals("register-links")).findFirst().get();
+        assertEquals(EnumTool.REGISTER, stepR3.tool());
+        assertEquals(EnumOperation.REGISTER, stepR3.operation());
+        assertEquals(Collections.singletonList(step3.outputKey()), stepR3.inputKeys());
+        assertEquals("accepted", stepR3.input().get(0).getPartKey());
+        assertNull(stepR3.outputKey());
+        assertNotNull(stepR3.configuration());
+        assertTrue(stepR3.configuration() instanceof RegisterToCatalogConfiguration);
 
         List<CatalogResource> catalogResources = resources.stream()
             .filter(r -> r.getInputType() == EnumInputType.CATALOG)
-            .map(r -> CatalogResource.class.cast(r))
+            .map(CatalogResource.class::cast)
             .collect(Collectors.toList());
-        assertEquals(2, catalogResources.size());
-        assertEquals(
-            new HashSet<>(Arrays.asList("resource-a-1.1", "resource-a-1.2")),
-            catalogResources.stream().map(r -> r.getName()).collect(Collectors.toSet()));
-        assertEquals(
-            new HashSet<>(Arrays.asList(ResourceIdentifier.of(1L, 5L), ResourceIdentifier.of(3L, 17L))),
-            catalogResources.stream().map(r -> r.getResource()).collect(Collectors.toSet()));
+        assertEquals(0, catalogResources.size());
 
         List<ProcessOutput> outputResources = resources.stream()
             .filter(r -> r.getInputType() == EnumInputType.OUTPUT)
-            .map(r -> ProcessOutput.class.cast(r))
+            .map(ProcessOutput.class::cast)
             .collect(Collectors.toList());
-        assertEquals(2, outputResources.size());
+        assertEquals(3, outputResources.size());
         assertEquals(
-            new HashSet<>(Arrays.asList("triplegeo-1", "enrich-with-deer-1")),
+            ImmutableSet.of("triplegeo-1", "triplegeo-2", "link-1-with-2"),
             outputResources.stream().map(r -> r.getName()).collect(Collectors.toSet()));
-
-        ProcessOutput outputResource1 = outputResources.stream()
-            .filter(r -> r.getName().equals("triplegeo-1"))
-            .findFirst().get();
-        assertEquals(EnumTool.TRIPLEGEO, outputResource1.getTool());
-
-        ProcessOutput outputResource2 = outputResources.stream()
-            .filter(r -> r.getName().equals("enrich-with-deer-1"))
-            .findFirst().get();
-        assertEquals(EnumTool.DEER, outputResource2.getTool());
     }
 
     @Test
-    public void test1_checkDefinition1ConvertsToJson() throws Exception
+    public void test1b_checkDefinition() throws Exception
     {
-        ProcessDefinition definition1 = buildDefinition1();
+        ProcessDefinition definition1 = buildDefinition1b();
         assertNotNull(definition1);
+        assertEquals("proc-1-b", definition1.name());
 
-        String s1 = jsonMapper.writeValueAsString(definition1);
-        ProcessDefinition definition1a = jsonMapper.readValue(s1, ProcessDefinition.class);
-        assertEquals(s1, jsonMapper.writeValueAsString(definition1a));
+        List<ProcessInput> resources = definition1.resources();
+        assertEquals(5, resources.size());
+        assertEquals(5, resources.stream().mapToInt(r -> r.key()).distinct().count());
+        Map<Integer, ProcessInput> resourcesByKey = resources.stream()
+            .collect(Collectors.toMap(r -> r.key(), Function.identity()));
+
+        List<Step> steps = definition1.steps();
+        assertEquals(6, steps.size());
+        assertEquals(6, steps.stream().mapToInt(s -> s.key()).distinct().count());
+        assertEquals(
+            ImmutableSet.of(
+                "register-1", "register-2", "register-links",
+                "triplegeo-1", "triplegeo-2", "link-1-with-2"),
+            steps.stream().map(r -> r.name()).collect(Collectors.toSet()));
+
+        Step step1 = steps.stream().filter(s -> s.name().equals("triplegeo-1")).findFirst().get();
+        assertEquals(EnumTool.TRIPLEGEO, step1.tool());
+        assertEquals(EnumOperation.TRANSFORM, step1.operation());
+        assertEquals(EnumDataFormat.N_TRIPLES, step1.outputFormat());
+        assertEquals(1, step1.inputKeys().size());
+        assertNotNull(step1.outputKey());
+        assertEquals(0, step1.sources().size());
+        assertNull(step1.input().get(0).getPartKey());
+        ProcessInput inp1 = resourcesByKey.get(step1.inputKeys().get(0));
+        assertNotNull(inp1);
+        assertTrue(inp1 instanceof CatalogResource);
+        assertEquals(RESOURCE_1_ID, ((CatalogResource) inp1).getResource());
+        assertEquals(
+            jsonMapper.writeValueAsString(sampleTriplegeoConfiguration1),
+            jsonMapper.writeValueAsString(step1.configuration()));
+        assertTrue(step1.configuration() instanceof TriplegeoConfiguration);
+        assertEquals(EnumDataFormat.N_TRIPLES, step1.configuration().getOutputFormat());
+
+        Step step2 = steps.stream().filter(s -> s.name().equals("triplegeo-2")).findFirst().get();
+        assertEquals(EnumTool.TRIPLEGEO, step2.tool());
+        assertEquals(EnumOperation.TRANSFORM, step2.operation());
+        assertEquals(EnumDataFormat.N_TRIPLES, step2.outputFormat());
+        assertEquals(1, step2.inputKeys().size());
+        assertNotNull(step2.outputKey());
+        assertEquals(0, step2.sources().size());
+        assertNull(step2.input().get(0).getPartKey());
+        ProcessInput inp2 = resourcesByKey.get(step2.inputKeys().get(0));
+        assertNotNull(inp2);
+        assertTrue(inp2 instanceof CatalogResource);
+        assertEquals(RESOURCE_2_ID, ((CatalogResource) inp2).getResource());
+        assertEquals(
+            jsonMapper.writeValueAsString(sampleTriplegeoConfiguration1),
+            jsonMapper.writeValueAsString(step2.configuration()));
+        assertTrue(step2.configuration() instanceof TriplegeoConfiguration);
+        assertEquals(EnumDataFormat.N_TRIPLES, step2.configuration().getOutputFormat());
+
+        Step step3 = steps.stream().filter(s -> s.name().equals("link-1-with-2")).findFirst().get();
+        assertEquals(EnumTool.LIMES, step3.tool());
+        assertEquals(EnumOperation.INTERLINK, step3.operation());
+        assertEquals(EnumDataFormat.N_TRIPLES, step3.outputFormat());
+        assertEquals(2, step3.inputKeys().size());
+        assertNotNull(step3.outputKey());
+        assertEquals(0, step3.sources().size());
+        assertEquals("transformed", step3.input().get(0).getPartKey());
+        assertEquals("transformed", step3.input().get(1).getPartKey());
+        ProcessInput inp3a = resourcesByKey.get(step3.inputKeys().get(0));
+        ProcessInput inp3b = resourcesByKey.get(step3.inputKeys().get(1));
+        assertNotNull(inp3a);
+        assertNotNull(inp3b);
+        assertTrue(inp3a instanceof ProcessOutput);
+        assertTrue(inp3b instanceof ProcessOutput);
+        assertEquals(step1.outputKey(), Integer.valueOf(inp3a.key()));
+        assertEquals(step2.outputKey(), Integer.valueOf(inp3b.key()));
+        assertEquals(
+            jsonMapper.writeValueAsString(sampleLimesConfiguration1),
+            jsonMapper.writeValueAsString(step3.configuration()));
+        assertTrue(step3.configuration() instanceof LimesConfiguration);
+        assertEquals(EnumDataFormat.N_TRIPLES, step3.configuration().getOutputFormat());
+
+        Step stepR1 = steps.stream().filter(s -> s.name().equals("register-1")).findFirst().get();
+        assertEquals(EnumTool.REGISTER, stepR1.tool());
+        assertEquals(EnumOperation.REGISTER, stepR1.operation());
+        assertEquals(Collections.singletonList(step1.outputKey()), stepR1.inputKeys());
+        assertEquals("transformed", stepR1.input().get(0).getPartKey());
+        assertNull(stepR1.outputKey());
+        assertNotNull(stepR1.configuration());
+        assertTrue(stepR1.configuration() instanceof RegisterToCatalogConfiguration);
+
+        Step stepR2 = steps.stream().filter(s -> s.name().equals("register-2")).findFirst().get();
+        assertEquals(EnumTool.REGISTER, stepR2.tool());
+        assertEquals(EnumOperation.REGISTER, stepR2.operation());
+        assertEquals(Collections.singletonList(step2.outputKey()), stepR2.inputKeys());
+        assertEquals("transformed", stepR2.input().get(0).getPartKey());
+        assertNull(stepR2.outputKey());
+        assertNotNull(stepR2.configuration());
+        assertTrue(stepR2.configuration() instanceof RegisterToCatalogConfiguration);
+
+        Step stepR3 = steps.stream().filter(s -> s.name().equals("register-links")).findFirst().get();
+        assertEquals(EnumTool.REGISTER, stepR3.tool());
+        assertEquals(EnumOperation.REGISTER, stepR3.operation());
+        assertEquals(Collections.singletonList(step3.outputKey()), stepR3.inputKeys());
+        assertEquals("accepted", stepR3.input().get(0).getPartKey());
+        assertNull(stepR3.outputKey());
+        assertNotNull(stepR3.configuration());
+        assertTrue(stepR3.configuration() instanceof RegisterToCatalogConfiguration);
+
+        List<CatalogResource> catalogResources = resources.stream()
+            .filter(r -> r.getInputType() == EnumInputType.CATALOG)
+            .map(CatalogResource.class::cast)
+            .collect(Collectors.toList());
+        assertEquals(2, catalogResources.size());
+        assertEquals(
+            ImmutableSet.of(RESOURCE_1_NAME, RESOURCE_2_NAME),
+            catalogResources.stream().map(r -> r.getName()).collect(Collectors.toSet()));
+
+        List<ProcessOutput> outputResources = resources.stream()
+            .filter(r -> r.getInputType() == EnumInputType.OUTPUT)
+            .map(ProcessOutput.class::cast)
+            .collect(Collectors.toList());
+        assertEquals(3, outputResources.size());
+        assertEquals(
+            ImmutableSet.of("triplegeo-1", "triplegeo-2", "link-1-with-2"),
+            outputResources.stream().map(r -> r.getName()).collect(Collectors.toSet()));
+
+    }
+
+    @Test
+    public void test1a_serializeToJson() throws Exception
+    {
+        serializeToJson(buildDefinition1a());
+    }
+
+    @Test
+    public void test1b_serializeToJson() throws Exception
+    {
+        serializeToJson(buildDefinition1b());
     }
 
     @Test(expected = UnsupportedOperationException.class)
-    public void test2_checkDefinition1UnmodifiableSteps1()
+    public void test1a_checkDefinitionUnmodifiableSteps1()
     {
-        ProcessDefinition definition1 = buildDefinition1();
-        assertNotNull(definition1);
-
+        ProcessDefinition definition1 = buildDefinition1a();
         List<Step> steps = definition1.steps();
         steps.remove(0); // attempt to remove a step
     }
 
     @Test(expected = UnsupportedOperationException.class)
-    public void test2_checkDefinition1UnmodifiableSteps2()
+    public void test1a_checkDefinitionUnmodifiableSteps2()
     {
-        ProcessDefinition definition1 = buildDefinition1();
-        assertNotNull(definition1);
-
+        ProcessDefinition definition1 = buildDefinition1a();
         List<Step> steps = definition1.steps();
         Step step1 = steps.get(0);
         steps.add(step1); // attempt to add a step
     }
 
     @Test(expected = UnsupportedOperationException.class)
-    public void test2_checkDefinition1UnmodifiableResources1()
+    public void test1a_checkDefinitionUnmodifiableResources1()
     {
-        ProcessDefinition definition1 = buildDefinition1();
-        assertNotNull(definition1);
-
+        ProcessDefinition definition1 = buildDefinition1a();
         List<ProcessInput> resources = definition1.resources();
         resources.remove(0); // attempt to remove a resource
     }
 
     @Test(expected = UnsupportedOperationException.class)
-    public void test2_checkDefinition1UnmodifiableResources2()
+    public void test1a_checkDefinitionUnmodifiableResources2()
     {
-        ProcessDefinition definition1 = buildDefinition1();
-        assertNotNull(definition1);
-
+        ProcessDefinition definition1 = buildDefinition1a();
         List<ProcessInput> resources = definition1.resources();
         ProcessInput res1 = resources.get(0);
         resources.add(res1);
     }
 
     @Test(expected = IllegalStateException.class)
-    public void test2_checkDefinition1UnmodifiableConfiguration()
+    public void test1a_checkDefinitionUnmodifiableConfiguration()
     {
-        ProcessDefinition definition1 = buildDefinition1();
-        assertNotNull(definition1);
-
+        ProcessDefinition definition1 = buildDefinition1a();
         Step step11 = definition1.stepByNodeName("triplegeo-1");
-
         TriplegeoConfiguration configuration = (TriplegeoConfiguration) step11.configuration();
         configuration.setAttrKey("koukou");
     }
 
     @Test
-    public void test2_checkDefinition1ConfigurationType()
+    public void test1a_checkDefinitionConfigurationType()
     {
-        ProcessDefinition definition1 = buildDefinition1();
-        assertNotNull(definition1);
-
+        ProcessDefinition definition1 = buildDefinition1a();
         Step step11 = definition1.stepByNodeName("triplegeo-1");
         Class<?> configurationType = step11.configurationType();
         assertEquals(TriplegeoConfiguration.class, configurationType);
     }
 
+    @Test
+    public void test1a_buildDependencyGraph() throws Exception
+    {
+        ProcessDefinition def1 = buildDefinition1a();
+        DependencyGraph graph = buildDependencyGraph(def1);
+
+        List<Step> stepsInTopologicalOrder = Lists.newArrayList(
+            Iterables.transform(DependencyGraphs.topologicalSort(graph), k -> def1.stepByKey(k)));
+
+        List<String> stepNames = Lists.transform(stepsInTopologicalOrder, s -> s.name());
+        System.err.println(stepNames);
+
+        assertTrue(stepNames.indexOf("triplegeo-1") < stepNames.indexOf("register-1"));
+        assertTrue(stepNames.indexOf("triplegeo-2") < stepNames.indexOf("register-2"));
+        assertTrue(stepNames.indexOf("link-1-with-2") < stepNames.indexOf("register-links"));
+        assertTrue(stepNames.indexOf("triplegeo-1") < stepNames.indexOf("link-1-with-2"));
+        assertTrue(stepNames.indexOf("triplegeo-2") < stepNames.indexOf("link-1-with-2"));
+    }
+
     @Test(expected = IllegalStateException.class)
-    public void test3_checkRegisterUndefinedResource1()
+    public void test_checkRegisterUndefinedResource1()
     {
         final int resourceKey = 1; // not a catalog resource, neither is an output from another step
         ProcessDefinition definition = processDefinitionBuilderFactory.create("register-1")
@@ -391,7 +615,7 @@ public class ProcessDefinitionTests
     }
 
     @Test(expected = IllegalStateException.class)
-    public void test3_checkInputFromUndefinedResource1()
+    public void test_checkInputFromUndefinedResource1()
     {
         final int inputKey1 = 1;
         final int inputKey2 = 2; // not a catalog resource, neither is an output from another step
@@ -407,72 +631,56 @@ public class ProcessDefinitionTests
         System.err.println(definition);
     }
 
-    @Test
-    public void test99() throws Exception
+
+    @Test(expected = IllegalStateException.class)
+    public void test_checkInputOfUnknownOutputPart1()
     {
-        final int resourceKey1 = 1, resourceKey2 = 2, resourceKey3 = 3;
+        final int RESOURCE_1_KEY = 1, TRANSFORM_1_KEY = 10;
+        final ResourceMetadataCreate metadata = new ResourceMetadataCreate("tr-1", "An RDF file");
 
-        ResourceMetadataCreate metadata1 =
-            new ResourceMetadataCreate("out-1", "A sample output file");
-        ResourceMetadataCreate metadata2 =
-            new ResourceMetadataCreate("out-2", "Another sample output file");
-        ResourceMetadataCreate metadata3 =
-            new ResourceMetadataCreate("out-3", "Yet another sample output file");
-
-
-        ProcessDefinition definition1 = processDefinitionBuilderFactory.create("proc-a-1")
-            .resource("resource-a-1.1", 101, ResourceIdentifier.of(1L, 5L))
-            .resource("resource-a-1.2", 102, ResourceIdentifier.of(3L, 17L))
-            .resource("resource-a-1.3", 103, ResourceIdentifier.of(8L, 2L))
-            .transform("triplegeo-1", b -> b
-                .group(1)
-                .outputKey(resourceKey1)
-                .source(dataSource1)
-                .configuration(sampleTriplegeoConfiguration1))
-            .transform("triplegeo-2", b -> b
-                .group(1)
-                .outputKey(resourceKey2)
-                .source(dataSource2)
-                .configuration(sampleTriplegeoConfiguration1))
-            .step("interlink-1-2", b -> b
-                .group(2)
-                .operation(EnumOperation.INTERLINK)
-                .tool(EnumTool.LIMES)
-                .configuration(sampleLimesConfiguration1)
-                .input(resourceKey1, resourceKey2)
-                .outputKey(resourceKey3)
-                .outputFormat(EnumDataFormat.N_TRIPLES))
-            .register("register-1", resourceKey1, metadata1)
-            .register("register-2", resourceKey2, metadata2)
-            .register("register-3", resourceKey3, metadata3)
+        ProcessDefinition definition = processDefinitionBuilderFactory.create("register-1")
+            .resource(RESOURCE_1_NAME, RESOURCE_1_KEY, RESOURCE_1_ID)
+            .transform("triplegeo-1", builder -> builder
+                .input(RESOURCE_1_KEY, "something") // a catalog resource has no parts!
+                .configuration(sampleTriplegeoConfiguration1)
+                .outputFormat(EnumDataFormat.N_TRIPLES)
+                .outputKey(TRANSFORM_1_KEY))
+            .register("tr-1", TRANSFORM_1_KEY, "transformed", metadata)
             .build();
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void test_checkInputOfUnknownOutputPart2()
+    {
+        final int RESOURCE_1_KEY = 1, TRANSFORM_1_KEY = 10;
+        final ResourceMetadataCreate metadata = new ResourceMetadataCreate("tr-1", "An RDF file");
+
+        ProcessDefinition definition = processDefinitionBuilderFactory.create("register-1")
+            .resource(RESOURCE_1_NAME, RESOURCE_1_KEY, RESOURCE_1_ID)
+            .transform("triplegeo-1", builder -> builder
+                .input(RESOURCE_1_KEY)
+                .configuration(sampleTriplegeoConfiguration1)
+                .outputFormat(EnumDataFormat.N_TRIPLES)
+                .outputKey(TRANSFORM_1_KEY))
+            .register("tr-1", TRANSFORM_1_KEY, "something", metadata) // a non-existing part of output
+            .build();
+    }
+
+    @Test
+    public void test1a_scratch() throws Exception
+    {
+        ProcessDefinition definition1 = buildDefinition1a();
 
         final List<ProcessInput> inputs = definition1.resources();
         final List<Step> steps = definition1.steps();
-
-        // Map each output key to the key of processing step (expected to produce it)
-        final Map<Integer, Integer> outputKeyToStepKey = inputs.stream()
-            .filter(r -> r.getInputType() == EnumInputType.OUTPUT)
-            .collect(Collectors.toMap(r -> r.key(), r -> ((ProcessOutput) r).stepKey()));
-
-        // Build dependency graph
-        final DependencyGraph dependencyGraph = DependencyGraphs.create(steps.size());
-        for (Step step: steps) {
-            for (Integer k: step.inputKeys()) {
-                if (outputKeyToStepKey.containsKey(k))
-                    dependencyGraph.addDependency(step.key(), outputKeyToStepKey.get(k));
-            }
-        }
-
-        System.err.println(
-            DependencyGraphs.toString(dependencyGraph, v -> definition1.stepByKey(v).name()));
+        final DependencyGraph dependencyGraph = buildDependencyGraph(definition1);
 
         Iterable<Step> sortedSteps =
             IterableUtils.transformedIterable(
                 DependencyGraphs.topologicalSort(dependencyGraph), k -> definition1.stepByKey(k));
 
         String s1 = jsonMapper.writeValueAsString(definition1);
-        //System.err.println(s1);
+        System.err.println(s1);
 
         ProcessDefinition definition1a = jsonMapper.readValue(s1, ProcessDefinition.class);
         String s2 = jsonMapper.writeValueAsString(definition1a);

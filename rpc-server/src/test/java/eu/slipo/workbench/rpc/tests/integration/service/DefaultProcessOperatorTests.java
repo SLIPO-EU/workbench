@@ -781,7 +781,8 @@ public class DefaultProcessOperatorTests
                 .outputKey(outputKey2)
                 .configuration(fixture.configurationForTransformation().getSecond()))
             .interlink("Link 1 with 2", builder -> builder
-                .link(outputKey1, outputKey2)
+                .left(outputKey1)
+                .right(outputKey2)
                 .outputFormat(EnumDataFormat.N_TRIPLES)
                 .outputKey(resourceKey)
                 .configuration(fixture.configuration()))
@@ -821,7 +822,8 @@ public class DefaultProcessOperatorTests
                 .outputKey(outputKey2)
                 .configuration(transformConfiguration2))
             .interlink("Link 1 with 2", builder -> builder
-                .link(outputKey1, outputKey2)
+                .left(outputKey1)
+                .right(outputKey2)
                 .outputFormat(EnumDataFormat.N_TRIPLES)
                 .outputKey(resourceKey)
                 .configuration(fixture.configuration()))
@@ -932,13 +934,16 @@ public class DefaultProcessOperatorTests
                 inputKey2, inputPair.getSecond().toURL(), EnumDataFormat.N_TRIPLES)
             .interlink("Link 1 with 2", builder -> builder
                 .group(1)
-                .link(inputKey1, inputKey2)
+                .left(inputKey1)
+                .right(inputKey2)
                 .configuration(fixture.configurationForLinking())
                 .outputFormat(EnumDataFormat.N_TRIPLES)
                 .outputKey(linksKey))
             .fuse("Fuse 1 with 2", builder -> builder
                 .group(2)
-                .fuse(inputKey1, inputKey2, linksKey)
+                .left(inputKey1)
+                .right(inputKey2)
+                .link(linksKey)
                 .configuration(fixture.configuration())
                 .outputFormat(EnumDataFormat.N_TRIPLES)
                 .outputKey(fusedKey))
@@ -1062,7 +1067,8 @@ public class DefaultProcessOperatorTests
             .resource("tr-1", inputKey1, resourceIdentifier1, EnumResourceType.POI_DATA)
             .resource("tr-2", inputKey2, resourceIdentifier2, EnumResourceType.POI_DATA)
             .interlink("Link 1 with 2", builder -> builder
-                .link(inputKey1, inputKey2)
+                .left(inputKey1)
+                .right(inputKey2)
                 .outputFormat(EnumDataFormat.N_TRIPLES)
                 .outputKey(linksKey)
                 .configuration(fixture.configuration()))

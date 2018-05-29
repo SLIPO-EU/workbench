@@ -76,6 +76,13 @@ public class RegisterToCatalogConfiguration implements ToolConfiguration<Registe
     {
         return RegisterToCatalog.class;
     }
+    
+    @JsonIgnore
+    @Override
+    public EnumTool getTool()
+    {
+        return ToolConfiguration.super.getTool();
+    }
 
     @Override
     public EnumDataFormat getInputFormat()

@@ -17,6 +17,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
+import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.tool.output.EnumImportDataOutputPart;
 import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
 import eu.slipo.workbench.common.model.tool.output.OutputNameMapper;
@@ -63,6 +64,13 @@ public class ImportDataConfiguration implements ToolConfiguration<ImportData>
     public Class<ImportData> getToolType()
     {
         return ImportData.class;
+    }
+    
+    @JsonIgnore
+    @Override
+    public EnumTool getTool()
+    {
+        return ToolConfiguration.super.getTool();
     }
 
     @JsonProperty("dataFormat")

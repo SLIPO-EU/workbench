@@ -45,6 +45,7 @@ import eu.slipo.workbench.common.model.process.ProcessIdentifier;
 import eu.slipo.workbench.common.model.process.ProcessNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
 import eu.slipo.workbench.common.model.process.Step;
+import eu.slipo.workbench.common.model.tool.AnyTool;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
 import eu.slipo.workbench.common.repository.AccountRepository;
@@ -262,7 +263,7 @@ public class DefaultProcessOperator implements ProcessOperator
             final Workflow.JobNode node = workflow.node(step.nodeName());
             final List<Path> inputPaths = node.input();
 
-            final ToolConfiguration config = step.configuration();
+            final ToolConfiguration<? extends AnyTool> config = step.configuration();
             final Class<? extends ToolConfiguration> configType = step.configurationType();
 
             final ZonedDateTime now = ZonedDateTime.now();
@@ -533,7 +534,9 @@ public class DefaultProcessOperator implements ProcessOperator
          * @param inputPaths The input paths feeding a tool's invocation
          */
         private Map<EnumOutputType, List<String>> determineOutputNames(
-            ToolConfiguration configuration, Class<? extends ToolConfiguration> configType, List<Path> inputPaths)
+            ToolConfiguration<? extends AnyTool> configuration,
+            Class<? extends ToolConfiguration> configType,
+            List<Path> inputPaths)
         {
             try {
                 configuration = cloner.cloneAsBean(configuration, configType);

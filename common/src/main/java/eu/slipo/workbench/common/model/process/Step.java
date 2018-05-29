@@ -9,6 +9,7 @@ import java.util.Optional;
 import org.springframework.cglib.beans.ImmutableBean;
 import org.springframework.util.StringUtils;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -23,6 +24,7 @@ import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumOperation;
 import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.resource.DataSource;
+import eu.slipo.workbench.common.model.tool.AnyTool;
 import eu.slipo.workbench.common.model.tool.DeerConfiguration;
 import eu.slipo.workbench.common.model.tool.FagiConfiguration;
 import eu.slipo.workbench.common.model.tool.ImportDataConfiguration;
@@ -30,6 +32,7 @@ import eu.slipo.workbench.common.model.tool.LimesConfiguration;
 import eu.slipo.workbench.common.model.tool.RegisterToCatalogConfiguration;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
+import eu.slipo.workbench.common.model.tool.output.OutputPart;
 
 @JsonDeserialize(converter = Step.DeserializeSanitizer.class)
 public class Step implements Serializable
@@ -70,11 +73,9 @@ public class Step implements Serializable
     public static class Input implements Serializable
     {
         private static final long serialVersionUID = 1L;
-        
-        @JsonProperty("inputKey")
+       
         protected int inputKey;
         
-        @JsonProperty("partKey")
         protected Optional<String> partKey;
         
         private Input(int inputKey, Optional<String> partKey)
@@ -83,16 +84,28 @@ public class Step implements Serializable
             this.partKey = partKey;
         }
         
-        @JsonProperty("inputKey")
+        @JsonIgnore
         public int inputKey()
         {
             return inputKey;
         }
         
-        @JsonProperty("partKey")
+        @JsonProperty("inputKey")
+        public int getInputKey()
+        {
+            return inputKey;
+        }
+        
+        @JsonIgnore
         public Optional<String> partKey()
         {
             return partKey;
+        }
+        
+        @JsonProperty("partKey")
+        public String getPartKey()
+        {
+            return partKey.orElse(null);
         }
         
         protected static Input of(int inputKey)
@@ -100,9 +113,39 @@ public class Step implements Serializable
             return new Input(inputKey, Optional.empty());
         }
         
-        protected static Input ofPart(int inputKey, String partKey)
+        @JsonCreator
+        protected static Input of(
+            @JsonProperty("inputKey") int inputKey, @JsonProperty("partKey") String partKey)
         {
-            return new Input(inputKey, Optional.of(partKey));
+            return new Input(inputKey, Optional.ofNullable(partKey));
+        }
+
+        @Override
+        public String toString()
+        {
+            return String.format("input:%d%s", 
+                inputKey, partKey.isPresent()? ("/" + partKey.get()) : (""));
+        }
+
+        @Override
+        public int hashCode()
+        {
+            final int P = 31;
+            int result = 1;
+            result = P * result + inputKey;
+            result = P * result + partKey.hashCode();
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (this == obj)
+                return true;
+            if (!(obj instanceof Input))
+                return false;
+            Input other = (Input) obj;
+            return inputKey == other.inputKey && partKey.equals(other.partKey);
         }
     }
     
@@ -149,7 +192,7 @@ public class Step implements Serializable
         @Type(name = "IMPORTER", value = ImportDataConfiguration.class),
         @Type(name = "REGISTER", value = RegisterToCatalogConfiguration.class)
     })
-    protected ToolConfiguration configuration;
+    protected ToolConfiguration<? extends AnyTool> configuration;
 
     protected Step() {}
 
@@ -230,13 +273,16 @@ public class Step implements Serializable
      * @return an instance of {@link ToolConfiguration}
      */
     @JsonProperty("configuration")
-    public ToolConfiguration configuration()
+    @SuppressWarnings("unchecked")
+    public ToolConfiguration<? extends AnyTool> configuration()
     {
-        return (ToolConfiguration) ImmutableBean.create(configuration);
+        return (ToolConfiguration<? extends AnyTool>) ImmutableBean.create(configuration);
     }
     
     /**
      * The tool-specific type of configuration.
+     * 
+     * Todo: review configurationType: if cloner is not used, this may be removed 
      * 
      * <p>Note: This piece of information is needed for cloning a configuration bean
      * (since the actual bean returned by {@link Step#configuration} may be of a runtime-enhanced
@@ -295,6 +341,12 @@ public class Step implements Serializable
         return outputFormat;
     }
 
+    @JsonIgnore
+    public List<OutputPart<? extends AnyTool>> outputParts()
+    {
+        return tool.getOutputParts();
+    }
+    
     @Override
     public String toString()
     {

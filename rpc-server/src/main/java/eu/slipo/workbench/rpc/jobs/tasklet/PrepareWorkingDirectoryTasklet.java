@@ -1,18 +1,12 @@
 package eu.slipo.workbench.rpc.jobs.tasklet;
 
 import java.io.BufferedInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.StringWriter;
-import java.io.Writer;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileSystemException;
 import java.nio.file.Files;
-import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -29,14 +23,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -44,15 +36,13 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.core.io.Resource;
-import org.springframework.data.util.Pair;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import com.google.common.collect.Maps;
 
-import eu.slipo.workbench.common.model.ApplicationException;
-import eu.slipo.workbench.common.model.BasicErrorCode;
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
+import eu.slipo.workbench.common.model.tool.AnyTool;
 import eu.slipo.workbench.common.model.tool.EnumConfigurationFormat;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.rpc.service.ConfigurationGeneratorService;
@@ -268,7 +258,7 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
          * @param configFormat The desired configuration format
          */
         public Builder config(
-            String key, String name, ToolConfiguration source, EnumConfigurationFormat configFormat)
+            String key, String name, ToolConfiguration<? extends AnyTool> source, EnumConfigurationFormat configFormat)
         {
             Assert.notNull(key, "A key is required for a configuration");
             Assert.isTrue(key.matches(CONFIG_KEY_PATTERN), "The key contains invalid characters");

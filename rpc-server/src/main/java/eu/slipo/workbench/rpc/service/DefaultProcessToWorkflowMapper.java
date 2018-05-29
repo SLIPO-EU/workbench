@@ -44,6 +44,7 @@ import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
 import eu.slipo.workbench.common.model.resource.ResourceRecord;
 import eu.slipo.workbench.common.model.resource.UploadDataSource;
 import eu.slipo.workbench.common.model.resource.UrlDataSource;
+import eu.slipo.workbench.common.model.tool.AnyTool;
 import eu.slipo.workbench.common.model.tool.FagiConfiguration;
 import eu.slipo.workbench.common.model.tool.ImportDataConfiguration;
 import eu.slipo.workbench.common.model.tool.LimesConfiguration;
@@ -216,7 +217,7 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
 
         for (Step step: dependencyAnalyzedDefinition.stepsInTopologicalOrder()) {
             final EnumTool tool = step.tool();
-            final ToolConfiguration configuration = step.configuration();
+            final ToolConfiguration<? extends AnyTool> configuration = step.configuration();
             final Class<? extends ToolConfiguration> configurationType = step.configurationType();
             final List<Integer> inputKeys = step.inputKeys();
 
@@ -365,7 +366,8 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
      * @return a map of output names categorized by output type
      */
     private Map<EnumOutputType, List<String>> determineOutputNames(
-        ToolConfiguration configuration, Class<? extends ToolConfiguration> configurationType,
+        ToolConfiguration<? extends AnyTool> configuration,
+        Class<? extends ToolConfiguration> configurationType,
         List<String> inputNames)
     {
         if (!inputNames.isEmpty()) {
@@ -381,7 +383,7 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
         return configuration.getOutputNames();
     }
 
-    private Properties buildParameters(ProcessDefinition def, ToolConfiguration config, int userId)
+    private Properties buildParameters(ProcessDefinition def, ToolConfiguration<? extends AnyTool> config, int userId)
     {
         return propertiesConverter.valueToProperties(config);
     }
@@ -392,7 +394,7 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
         final Properties parametersMap = new Properties();
 
         EnumDataFormat format = producer.outputFormat();
-        ToolConfiguration producerConfig = producer.configuration();
+        ToolConfiguration<? extends AnyTool> producerConfig = producer.configuration();
         EnumDataFormat inputFormat = producerConfig.getInputFormat();
 
         parametersMap.put("createdBy", Integer.valueOf(userId).longValue());

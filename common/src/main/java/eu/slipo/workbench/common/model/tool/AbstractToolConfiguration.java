@@ -86,7 +86,7 @@ public abstract class AbstractToolConfiguration <T extends AnyTool> implements T
     @Override
     public EnumTool getTool()
     {
-        return EnumTool.fromType(getToolType());
+        return ToolConfiguration.super.getTool();
     }
     
     @Override
