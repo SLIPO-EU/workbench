@@ -1,6 +1,5 @@
 package eu.slipo.workbench.common.model.tool.output;
 
-import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.tool.ImportData;
 
 public enum EnumImportDataOutputPart implements OutputPart<ImportData>
@@ -11,6 +10,7 @@ public enum EnumImportDataOutputPart implements OutputPart<ImportData>
     
     private EnumImportDataOutputPart(String key)
     {
+        OutputPart.validateKey(key);
         this.key = key; 
     }
     
@@ -27,9 +27,9 @@ public enum EnumImportDataOutputPart implements OutputPart<ImportData>
     }
 
     @Override
-    public EnumTool tool()
+    public Class<ImportData> toolType()
     {
-        return EnumTool.IMPORTER;
+        return ImportData.class;
     }
     
     public static EnumImportDataOutputPart fromKey(String key)

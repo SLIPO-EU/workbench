@@ -1,6 +1,5 @@
 package eu.slipo.workbench.common.model.tool.output;
 
-import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.tool.Deer;
 
 public enum EnumDeerOutputPart implements OutputPart<Deer>
@@ -13,6 +12,7 @@ public enum EnumDeerOutputPart implements OutputPart<Deer>
     
     private EnumDeerOutputPart(String key, EnumOutputType outputType)
     {
+        OutputPart.validateKey(key);
         this.key = key;
         this.outputType = outputType;
     }
@@ -30,9 +30,9 @@ public enum EnumDeerOutputPart implements OutputPart<Deer>
     }
 
     @Override
-    public EnumTool tool()
+    public Class<Deer> toolType()
     {
-        return EnumTool.DEER;
+        return Deer.class;
     }
     
     public static EnumDeerOutputPart fromKey(String key)

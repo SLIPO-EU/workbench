@@ -1,6 +1,5 @@
 package eu.slipo.workbench.common.model.tool.output;
 
-import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.tool.Triplegeo;
 
 public enum EnumTriplegeoOutputPart implements OutputPart<Triplegeo>
@@ -13,8 +12,7 @@ public enum EnumTriplegeoOutputPart implements OutputPart<Triplegeo>
     
     CLASSIFICATION_METADATA("classification-metadata", EnumOutputType.KPI),
     
-    REGISTRATION_REQUEST("registration-request", EnumOutputType.OUTPUT)
-    ;
+    REGISTRATION_REQUEST("registration-request", EnumOutputType.OUTPUT);
 
     private final String key;
 
@@ -22,14 +20,15 @@ public enum EnumTriplegeoOutputPart implements OutputPart<Triplegeo>
 
     private EnumTriplegeoOutputPart(String key, EnumOutputType outputType)
     {
+        OutputPart.validateKey(key);
         this.key = key;
         this.outputType = outputType;
     }
 
     @Override
-    public EnumTool tool()
+    public Class<Triplegeo> toolType()
     {
-        return EnumTool.TRIPLEGEO;
+        return Triplegeo.class;
     }
     
     @Override

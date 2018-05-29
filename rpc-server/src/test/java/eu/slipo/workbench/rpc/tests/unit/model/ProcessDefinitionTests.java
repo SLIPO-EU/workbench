@@ -667,7 +667,7 @@ public class ProcessDefinitionTests
 
 
     @Test(expected = IllegalStateException.class)
-    public void test_checkInputOfUnknownOutputPart1()
+    public void test_checkInputOfNonExistingOutputPart()
     {
         final int RESOURCE_1_KEY = 1, TRANSFORM_1_KEY = 10;
         final ResourceMetadataCreate metadata = new ResourceMetadataCreate("tr-1", "An RDF file");
@@ -681,10 +681,11 @@ public class ProcessDefinitionTests
                 .outputKey(TRANSFORM_1_KEY))
             .register("tr-1", TRANSFORM_1_KEY, "transformed", metadata)
             .build();
+        System.err.println(definition);
     }
 
     @Test(expected = IllegalStateException.class)
-    public void test_checkInputOfUnknownOutputPart2()
+    public void test_checkInputOfUnknownOutputPart()
     {
         final int RESOURCE_1_KEY = 1, TRANSFORM_1_KEY = 10;
         final ResourceMetadataCreate metadata = new ResourceMetadataCreate("tr-1", "An RDF file");
@@ -698,6 +699,25 @@ public class ProcessDefinitionTests
                 .outputKey(TRANSFORM_1_KEY))
             .register("tr-1", TRANSFORM_1_KEY, "something", metadata) // a non-existing part of output
             .build();
+        System.err.println(definition);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void test_checkInputOfInvalidOutputPart()
+    {
+        final int RESOURCE_1_KEY = 1, TRANSFORM_1_KEY = 10;
+        final ResourceMetadataCreate metadata = new ResourceMetadataCreate("tr-1", "An RDF file");
+
+        ProcessDefinition definition = processDefinitionBuilderFactory.create("register-1")
+            .resource(RESOURCE_1_NAME, RESOURCE_1_KEY, RESOURCE_1_ID)
+            .transform("triplegeo-1", builder -> builder
+                .input(RESOURCE_1_KEY)
+                .configuration(sampleTriplegeoConfiguration1)
+                .outputFormat(EnumDataFormat.N_TRIPLES)
+                .outputKey(TRANSFORM_1_KEY))
+            .register("tr-1", TRANSFORM_1_KEY, "transformed-metadata", metadata) // a part of KPI output
+            .build();
+        System.err.println(definition);
     }
 
     @Test

@@ -134,13 +134,6 @@ public class RegisterToCatalogConfiguration implements ToolConfiguration<Registe
     
     @JsonIgnore
     @Override
-    public Map<EnumOutputType, List<String>> getOutputNames()
-    {
-        return Collections.emptyMap(); // no output is produced
-    }
-    
-    @JsonIgnore
-    @Override
     public OutputNameMapper<RegisterToCatalog> getOutputNameMapper()
     {
         return input -> Collections.emptyMap(); // no output is produced

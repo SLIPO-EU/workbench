@@ -629,31 +629,6 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
     {
         this.outputDir = this.target.outputDir = dir;
     }
-
-    @JsonIgnore
-    @Override
-    public Map<EnumOutputType, List<String>> getOutputNames()
-    {
-        Assert.state(target.fusedPath != null, "The path (fusion) is required");
-        Assert.state(target.remainingPath != null, "The path (remaining) is required");
-        Assert.state(target.reviewPath != null, "The path (review) is required");
-        Assert.state(target.statsPath != null, "The path (stats) is required");
-        
-        Map<EnumOutputType, List<String>> namesByType = new EnumMap<>(EnumOutputType.class);
-        Function<String, String> getFileName = p -> Paths.get(p).getFileName().toString();
-        List<String> names = null;
-        
-        names = Stream.of(target.fusedPath, target.remainingPath, target.reviewPath)
-            .collect(Collectors.mapping(getFileName, Collectors.toList()));
-        namesByType.put(EnumOutputType.OUTPUT, names);
-        
-        // Fixme: The current version of Fagi doesn't produce statistics (uncomment when fixed)
-        names = Stream.<String>of() // Stream.of(target.statsPath)
-            .collect(Collectors.mapping(getFileName, Collectors.toList()));
-        namesByType.put(EnumOutputType.KPI, names);
-        
-        return namesByType;
-    }
     
     @JsonIgnore
     @Override

@@ -353,6 +353,7 @@ public class DefaultResourceRepository implements ResourceRepository
                     "No step entity for step #%d inside execution #%d (or former executions of same process)",
                     stepKey, executionId));
             }
+            // Fixme filtering by ProcessExecutionStepFileEntity::isPrimary is broken
             ProcessExecutionStepFileEntity fileEntity = stepEntity.getFiles().stream()
                 .filter(f -> f.getType() == EnumStepFile.OUTPUT && f.isPrimary())
                 .collect(MoreCollectors.toOptional())

@@ -1,6 +1,5 @@
 package eu.slipo.workbench.common.model.tool.output;
 
-import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.tool.Fagi;
 
 public enum EnumFagiOutputPart implements OutputPart<Fagi>
@@ -19,14 +18,15 @@ public enum EnumFagiOutputPart implements OutputPart<Fagi>
 
     private EnumFagiOutputPart(String key, EnumOutputType outputType)
     {
+        OutputPart.validateKey(key);
         this.key = key;
         this.outputType = outputType;
     }
     
     @Override
-    public EnumTool tool()
+    public Class<Fagi> toolType()
     {
-        return EnumTool.FAGI;
+        return Fagi.class;
     }
 
     @Override

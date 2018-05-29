@@ -173,12 +173,4 @@ public class ImportDataConfiguration implements ToolConfiguration<ImportData>
         return input -> Collections.singletonMap(
             EnumImportDataOutputPart.DOWNLOAD, Collections.singletonList(outputName));
     }
-    
-    @JsonIgnore
-    @Override
-    public Map<EnumOutputType, List<String>> getOutputNames()
-    {
-        final String outputName = getOutputName();
-        return Collections.singletonMap(EnumOutputType.OUTPUT, Collections.singletonList(outputName));
-    }
 }

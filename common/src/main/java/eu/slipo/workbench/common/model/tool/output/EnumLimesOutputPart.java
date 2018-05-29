@@ -1,6 +1,5 @@
 package eu.slipo.workbench.common.model.tool.output;
 
-import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.tool.Limes;
 
 public enum EnumLimesOutputPart implements OutputPart<Limes>
@@ -15,14 +14,15 @@ public enum EnumLimesOutputPart implements OutputPart<Limes>
 
     private EnumLimesOutputPart(String key, EnumOutputType outputType)
     {
+        OutputPart.validateKey(key);
         this.key = key;
         this.outputType = outputType;
     }
 
     @Override
-    public EnumTool tool()
+    public Class<Limes> toolType()
     {
-        return EnumTool.LIMES;
+        return Limes.class;
     }
     
     @Override

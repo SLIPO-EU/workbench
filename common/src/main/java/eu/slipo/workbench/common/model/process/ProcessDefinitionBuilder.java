@@ -39,6 +39,7 @@ import eu.slipo.workbench.common.model.tool.RegisterToCatalogConfiguration;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.model.tool.TransformConfiguration;
 import eu.slipo.workbench.common.model.tool.TransformTool;
+import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
 import eu.slipo.workbench.common.service.util.ClonerService;
 
 /**
@@ -944,7 +945,8 @@ public class ProcessDefinitionBuilder
             "A partial input may only refer to output of another step");
         
         BiPredicate<Step, String> isPartOfOutput = (Step producer, String partKey) -> 
-            producer.outputParts().stream().anyMatch(p -> p.key().equals(partKey));
+            producer.outputParts().stream()
+                .anyMatch(p -> p.key().equals(partKey) && p.outputType() == EnumOutputType.OUTPUT);
         Assert.state(partialInputs.stream()
                 .allMatch(p -> isPartOfOutput.test(outputKeyToStep.get(p.inputKey()), p.partKey())),
             "A partial input refers to a non-existing part of output of another step");

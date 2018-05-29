@@ -32,6 +32,7 @@ import com.google.common.collect.Maps;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumOperation;
+import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.process.EnumProcessExecutionStatus;
 import eu.slipo.workbench.common.model.process.EnumStepFile;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
@@ -48,6 +49,7 @@ import eu.slipo.workbench.common.model.process.Step;
 import eu.slipo.workbench.common.model.tool.AnyTool;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
+import eu.slipo.workbench.common.model.tool.output.OutputPart;
 import eu.slipo.workbench.common.repository.AccountRepository;
 import eu.slipo.workbench.common.repository.ProcessRepository;
 import eu.slipo.workbench.common.repository.ProcessRepository.ProcessExecutionNotActiveException;
@@ -189,6 +191,7 @@ public class DefaultProcessOperator implements ProcessOperator
 
             // Associate process execution with registered resources
 
+            // Fixme: pass outputPart to ResourceRepository.setProcessExecution ??
             resourceRepository.setProcessExecution(
                 resourceId, resourceVersion, executionId, producerStep.key());
         }
@@ -263,8 +266,8 @@ public class DefaultProcessOperator implements ProcessOperator
             final Workflow.JobNode node = workflow.node(step.nodeName());
             final List<Path> inputPaths = node.input();
 
-            final ToolConfiguration<? extends AnyTool> config = step.configuration();
-            final Class<? extends ToolConfiguration> configType = step.configurationType();
+            final ToolConfiguration<? extends AnyTool> configuration = step.configuration();
+            final EnumTool tool = step.tool();
 
             final ZonedDateTime now = ZonedDateTime.now();
 
@@ -281,7 +284,7 @@ public class DefaultProcessOperator implements ProcessOperator
 
             // Add input files under step record
 
-            final EnumDataFormat inputFormat = config.getInputFormat();
+            final EnumDataFormat inputFormat = configuration.getInputFormat();
             for (Path inputPath: inputPaths) {
                 URI inputUri = convertPathToUri(inputPath);
                 Long size = null;
@@ -299,31 +302,36 @@ public class DefaultProcessOperator implements ProcessOperator
 
             // Add the expected output files under step record
 
+            final OutputPart<? extends AnyTool> defaultOutputPart = tool.getDefaultOutputPart();
+            final Class<?> outputPartEnumeration = tool.getOutputPartEnumeration();
+
             final List<Path> outputPaths = node.output();
             Assert.state(outputPaths.stream().allMatch(Path::isAbsolute),
                 "An output path is expected as absolute path");
             Assert.state(outputPaths.stream().allMatch(path -> path.startsWith(workflowDataDir)),
                 "An output path is expected to be under workflow data directory");
 
-            final Map<EnumOutputType, List<String>> outputMap =
-                determineOutputNames(config, configType, inputPaths);
+            final Map<? extends OutputPart<? extends AnyTool>, List<String>> outputMap =
+                configuration.getOutputNameMapper().applyToPath(inputPaths);
             Assert.state(outputPaths.size() == outputMap.values().stream().mapToInt(List::size).sum(),
                 "The number of output paths differs from the one determined by step configuration");
+            Assert.state(outputMap.keySet().stream().allMatch(outputPartEnumeration::isInstance),
+                "An output part is expected to be one of the enumerated parts");
 
-            for (EnumOutputType outputType: outputMap.keySet()) {
-                final boolean isPrimaryType = outputType == EnumOutputType.OUTPUT;
-                final EnumDataFormat outputFormat = isPrimaryType?
-                    config.getOutputFormat() : null; // format is relevant only to actual output results
-                final EnumStepFile type = EnumStepFile.from(outputType);
-                final List<String> outputNames = outputMap.get(outputType);
-                for (int index = 0, n = outputNames.size(); index < n; ++index) {
-                    String outputName = outputNames.get(index);
+            for (OutputPart<? extends AnyTool> outputPart: outputMap.keySet()) {
+                Assert.state(tool.getOutputPartEnumeration().isInstance(outputPart),
+                    "The outputPart is expected to be one of the enumerated parts defined by the tool");
+                final EnumOutputType outputType = outputPart.outputType();
+                final EnumDataFormat dataFormat = outputType == EnumOutputType.OUTPUT?
+                    configuration.getOutputFormat() : null; // dataFormat only relevant to actual output results
+                final EnumStepFile stepFileType = EnumStepFile.from(outputType);
+                for (String outputName: outputMap.get(outputPart)) {
                     // Find corresponding item from node's output paths (must exist!)
                     Path outputPath = Iterables.find(outputPaths, path -> path.endsWith(outputName));
                     URI outputUri = convertPathToUri(outputPath);
                     ProcessExecutionStepFileRecord fileRecord =
-                        new ProcessExecutionStepFileRecord(type, outputUri, null, outputFormat);
-                    fileRecord.setPrimary(!isPrimaryType? null : (index == 0));
+                        new ProcessExecutionStepFileRecord(stepFileType, outputUri, null, dataFormat);
+                    fileRecord.setPrimary(outputPart.equals(defaultOutputPart));
                     stepRecord.addFile(fileRecord);
                 }
             }
@@ -525,27 +533,6 @@ public class DefaultProcessOperator implements ProcessOperator
             }
 
             return uri;
-        }
-
-        /**
-         * Determine the output names (i.e. names of output files) based on a given {@link ToolConfiguration}.
-         *
-         * @param configuration The configuration for a tool invocation
-         * @param inputPaths The input paths feeding a tool's invocation
-         */
-        private Map<EnumOutputType, List<String>> determineOutputNames(
-            ToolConfiguration<? extends AnyTool> configuration,
-            Class<? extends ToolConfiguration> configType,
-            List<Path> inputPaths)
-        {
-            try {
-                configuration = cloner.cloneAsBean(configuration, configType);
-            } catch (IOException ex) {
-                throw new IllegalStateException("Cannot clone configuration", ex);
-            }
-
-            configuration.setInput(Lists.transform(inputPaths, Path::toString));
-            return configuration.getOutputNames();
         }
     }
 

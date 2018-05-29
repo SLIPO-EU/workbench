@@ -133,7 +133,7 @@ public enum EnumTool
         Assert.notNull(op1, "An operation constant is required");
         Assert.notNull(outputPartEnumeration, "Expected an enumeration of output parts");
         Assert.notNull(defaultOutputPart, "Expected a default part (inside given enumeration)");
-        Assert.isTrue(EnumOutputType.OUTPUT.equals(defaultOutputPart.outputType()), 
+        Assert.isTrue(defaultOutputPart.outputType() == EnumOutputType.OUTPUT, 
             "A default output part must be of OUTPUT type");
         this.type = toolType;
         this.operations = Collections.singleton(op1);

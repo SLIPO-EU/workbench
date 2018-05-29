@@ -8,16 +8,19 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.collections4.map.DefaultedMap;
 import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,6 +55,7 @@ import eu.slipo.workbench.common.model.tool.RegisterToCatalogConfiguration;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
+import eu.slipo.workbench.common.model.tool.output.OutputPart;
 import eu.slipo.workbench.common.repository.ResourceRepository;
 import eu.slipo.workbench.common.service.UserFileNamingStrategy;
 import eu.slipo.workbench.common.service.util.ClonerService;
@@ -62,6 +66,7 @@ import eu.slipo.workflows.WorkflowBuilderFactory;
 import eu.slipo.workflows.util.digraph.DependencyGraph;
 import eu.slipo.workflows.util.digraph.DependencyGraphs;
 import eu.slipo.workflows.util.digraph.TopologicalSort.CycleDetected;
+import jersey.repackaged.com.google.common.collect.Lists;
 
 @Service
 public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
@@ -175,11 +180,14 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
     private Workflow buildWorkflow(Workflow.Builder workflowBuilder, ProcessDefinition definition, int createdBy)
         throws CycleDetected
     {
+        final String DEFAULT_PART_KEY = OutputPart.defaultKey();
+
         // Map external sources to the node assigned to carry out downloading
         final Map<DataSource, String> sourceToNodeName = new HashMap<>();
 
-        // Map a node's (real) name to the output it produces (if any)
-        final Map<String, String> nodeNameToOutputName = new HashMap<>();
+        // Map a node's (real) name to the output it produces (if any).
+        // The output is a map from a part key to a (single) output name.
+        final Map<String, Map<String, Path>> nodeNameToOutputNames = new HashMap<>();
 
         // Map a node's alias to a real name (ie. to the one know to the workflow level)
         final Map<String, String> nodeAliasToNodeName = new HashMap<>();
@@ -197,7 +205,7 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
             final URL url = ((UrlDataSource) source).getUrl();
             final String nodeName = "download-" + Integer.toHexString(source.hashCode());
             final String outputName = (new ImportDataConfiguration(url)).getOutputName();
-            // Add a job node into workflow
+            // Add a job node (a downloader) into workflow
             workflowBuilder.job(b -> b.name(nodeName)
                 .flow(downloadFileFlow)
                 .parameters(
@@ -205,7 +213,9 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
                 .output(outputName));
             // Map this source to a node name
             sourceToNodeName.put(source, nodeName);
-            nodeNameToOutputName.put(nodeName, outputName);
+            // Map node to output (a single entry under the default key)
+            Path outputPath = Paths.get(outputName);
+            nodeNameToOutputNames.put(nodeName, Collections.singletonMap(DEFAULT_PART_KEY, outputPath));
         }
 
         //
@@ -218,8 +228,7 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
         for (Step step: dependencyAnalyzedDefinition.stepsInTopologicalOrder()) {
             final EnumTool tool = step.tool();
             final ToolConfiguration<? extends AnyTool> configuration = step.configuration();
-            final Class<? extends ToolConfiguration> configurationType = step.configurationType();
-            final List<Integer> inputKeys = step.inputKeys();
+            final List<Step.Input> input = step.input();
 
             final JobDefinitionBuilder jobDefinitionBuilder = JobDefinitionBuilder.create(step.nodeName());
 
@@ -228,15 +237,16 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
             List<String> inputNames = new ArrayList<>();
             if (!step.sources().isEmpty()) {
                 // This step expects input from an imported data source (external to the application)
-                Assert.state(inputKeys.isEmpty(), "Expected no input keys for this step");
+                Assert.state(input.isEmpty(), "Expected no input keys for this step");
                 for (DataSource source: step.sources()) {
-                    String dependencyName = sourceToNodeName.get(source);
-                    if (dependencyName != null) {
-                        String inputName = nodeNameToOutputName.get(dependencyName);
+                    String downloaderName = sourceToNodeName.get(source);
+                    if (downloaderName != null) {
+                        Path inputName = nodeNameToOutputNames.get(downloaderName)
+                            .get(DEFAULT_PART_KEY);
                         Assert.state(inputName != null,
                             "No output is known to be produced by the step we depend on!");
-                        jobDefinitionBuilder.input(dependencyName, inputName);
-                        inputNames.add(inputName);
+                        jobDefinitionBuilder.input(downloaderName, inputName);
+                        inputNames.add(inputName.toString());
                     } else {
                         Path inputPath = resolveToPath(source, createdBy);
                         jobDefinitionBuilder.input(inputPath);
@@ -245,8 +255,9 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
                 }
             } else {
                 // This step expects input from a catalog resource or from another step
-                Assert.state(!inputKeys.isEmpty(), "Did not expect an empty list of input keys");
-                for (Integer inputKey: inputKeys) {
+                for (Step.Input p: step.input()) {
+                    final int inputKey = p.inputKey();
+                    final String partKey = p.partKey();
                     ResourceIdentifier resourceIdentifier =
                         definition.resourceIdentifierByResourceKey(inputKey);
                     if (resourceIdentifier != null) {
@@ -261,31 +272,33 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
                             "A step is expected to produce the input we depend on!");
                         String dependencyName = dependency.nodeName();
                         dependencyName = nodeAliasToNodeName.getOrDefault(dependencyName, dependencyName);
-                        String inputName = nodeNameToOutputName.get(dependencyName);
+                        Path inputName = nodeNameToOutputNames.get(dependencyName)
+                            .get(partKey == null? DEFAULT_PART_KEY : partKey);
                         Assert.state(inputName != null,
                             "No output is known to be produced by the step we depend on!");
                         jobDefinitionBuilder.input(dependencyName, inputName);
-                        inputNames.add(inputName);
+                        inputNames.add(inputName.toString());
                     }
                 }
             }
 
-            // Define outputs
+            // Define output names
 
-            Map<EnumOutputType, List<String>> outputMap =
-                determineOutputNames(configuration, configurationType, inputNames);
+            final Map<? extends OutputPart<? extends AnyTool>, List<String>> outputMap =
+                configuration.getOutputNameMapper().apply(inputNames);
             if (!outputMap.isEmpty()) {
-                List<String> results = outputMap.get(EnumOutputType.OUTPUT);
-                Assert.state(results != null && !results.isEmpty(),
+                Map<String, Path> outputNames = outputMap.keySet().stream()
+                    .filter(part -> part.outputType() == EnumOutputType.OUTPUT)
+                    .collect(Collectors.toMap(
+                        part -> part.key(),
+                        part -> Paths.get(Iterables.getOnlyElement(outputMap.get(part)))));
+                Assert.state(!outputNames.isEmpty(),
                     "An output-producing step must declare at least 1 result as OUTPUT");
-                Stream<String> outputNames = Arrays.stream(EnumOutputType.values())
-                    .filter(outputMap::containsKey)
-                    .flatMap(t -> outputMap.get(t).stream());
-                jobDefinitionBuilder.output(outputNames.toArray(String[]::new));
-
-                // The 1st result of OUTPUT group is considered as node's output
-                String outputName = results.get(0);
-                nodeNameToOutputName.put(step.nodeName(), outputName);
+                jobDefinitionBuilder.output(outputNames.values());
+                // Define the output map for this node
+                OutputPart<? extends AnyTool> defaultPart = tool.getDefaultOutputPart();
+                nodeNameToOutputNames.put(step.nodeName(),
+                    DefaultedMap.defaultedMap(outputNames, outputNames.get(defaultPart.key())));
             }
 
             // Define flow and parameters
@@ -312,8 +325,8 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
                 break;
             case REGISTER:
                 {
-                    Assert.state(inputKeys.size() == 1, "A registration step expects a single input");
-                    Step producer = definition.stepByResourceKey(inputKeys.get(0));
+                    Assert.state(input.size() == 1, "A registration step expects a single input");
+                    Step producer = definition.stepByResourceKey(input.get(0).inputKey());
                     parametersMap = buildParameters(
                         definition, (RegisterToCatalogConfiguration) configuration, producer, createdBy);
                     flow = registerResourceFlow;
@@ -328,7 +341,7 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
                 break;
             case LIMES:
                 {
-                    Assert.state(inputNames.size() == 2, "A interlinking step expects a pair of inputs");
+                    Assert.state(inputNames.size() == 2, "A interlinking step expects a pair (L, R) of inputs");
                     parametersMap = buildParameters(definition, configuration, createdBy);
                     flow = limesFlow;
                 }
@@ -358,31 +371,6 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
         return workflowBuilder.build();
     }
 
-    /**
-     * Determine the names of expected outputs for a given tool configuration.
-     *
-     * @param configuration An input-agnostic tool configuration
-     * @param inputNames The list of input names
-     * @return a map of output names categorized by output type
-     */
-    private Map<EnumOutputType, List<String>> determineOutputNames(
-        ToolConfiguration<? extends AnyTool> configuration,
-        Class<? extends ToolConfiguration> configurationType,
-        List<String> inputNames)
-    {
-        if (!inputNames.isEmpty()) {
-            // Clone this configuration and reset input
-            try {
-                configuration = cloner.cloneAsBean(configuration, configurationType);
-            } catch (IOException ex) {
-                throw new IllegalStateException("Cannot clone configuration", ex);
-            }
-            configuration.setInput(inputNames);
-        }
-
-        return configuration.getOutputNames();
-    }
-
     private Properties buildParameters(ProcessDefinition def, ToolConfiguration<? extends AnyTool> config, int userId)
     {
         return propertiesConverter.valueToProperties(config);
@@ -394,8 +382,7 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
         final Properties parametersMap = new Properties();
 
         EnumDataFormat format = producer.outputFormat();
-        ToolConfiguration<? extends AnyTool> producerConfig = producer.configuration();
-        EnumDataFormat inputFormat = producerConfig.getInputFormat();
+        EnumDataFormat inputFormat = producer.configuration().getInputFormat();
 
         parametersMap.put("createdBy", Integer.valueOf(userId).longValue());
         parametersMap.put("format", format.toString());

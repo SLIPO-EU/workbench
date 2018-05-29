@@ -67,15 +67,6 @@ public interface ToolConfiguration <T extends AnyTool> extends Serializable
      * @param dataFormat
      */
     void setOutputFormat(EnumDataFormat dataFormat);
-
-    /**
-     * Fixme: replace  getOutputNames method by a mapper function (input to outputMap)
-     * 
-     * Get the list of expected output names (as plain file names) categorized by their 
-     * output type. If no output is expected, an empty map should be returned.
-     */
-    @Deprecated
-    Map<EnumOutputType, List<String>> getOutputNames();
     
     /**
      * Get a function to map input names to (expected) output names

@@ -31,8 +31,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
+import eu.slipo.workbench.common.model.tool.Triplegeo;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
+import eu.slipo.workbench.common.model.tool.output.EnumTriplegeoOutputPart;
+import eu.slipo.workbench.common.model.tool.output.OutputPart;
 import eu.slipo.workbench.common.service.util.JsonBasedPropertiesConverterService;
 import eu.slipo.workbench.common.service.util.PropertiesConverterService;
 
@@ -335,42 +338,54 @@ public class TriplegeoConfigurationTests
     @Test
     public void test1_getOutputNames() throws Exception
     {
-        Map<EnumOutputType, List<String>> outputNamesByType = config1.getOutputNames();
+        Map<? extends OutputPart<Triplegeo>, List<String>> outputMap =
+            config1.getOutputNameMapper().apply(Arrays.asList("/data/p1.csv", "/data/p2.csv"));
 
-        assertEquals(
-            Arrays.asList("p1.nt", "p2.nt", "classification.nt"),
-            outputNamesByType.get(EnumOutputType.OUTPUT));
-
-        assertEquals(
-            Arrays.asList("p1_metadata.json", "p2_metadata.json", "classification_metadata.json"),
-            outputNamesByType.get(EnumOutputType.KPI));
+        assertEquals(Arrays.asList("p1.nt", "p2.nt"),
+            outputMap.get(EnumTriplegeoOutputPart.TRANSFORMED));
+        assertEquals(Arrays.asList("p1_metadata.json", "p2_metadata.json"),
+            outputMap.get(EnumTriplegeoOutputPart.TRANSFORMED_METADATA));
+        assertEquals(Arrays.asList("classification.nt"),
+            outputMap.get(EnumTriplegeoOutputPart.CLASSIFICATION));
+        assertEquals(Arrays.asList("classification_metadata.json"),
+            outputMap.get(EnumTriplegeoOutputPart.CLASSIFICATION_METADATA));
+        assertEquals(Collections.emptyList(),
+            outputMap.get(EnumTriplegeoOutputPart.REGISTRATION_REQUEST));
     }
 
     @Test
     public void test2a_getOutputNames() throws Exception
     {
-        Map<EnumOutputType, List<String>> outputNamesByType = config2a.getOutputNames();
+        Map<? extends OutputPart<Triplegeo>, List<String>> outputMap =
+            config2a.getOutputNameMapper().apply(Arrays.asList("/data/p1.csv", "/data/p2.csv"));
 
-        assertEquals(
-            Arrays.asList("p1.ttl", "p2.ttl", "classification.ttl"),
-            outputNamesByType.get(EnumOutputType.OUTPUT));
-
-        assertEquals(
-            Arrays.asList("p1_metadata.json", "p2_metadata.json", "classification_metadata.json"),
-            outputNamesByType.get(EnumOutputType.KPI));
+        assertEquals(Arrays.asList("p1.ttl", "p2.ttl"),
+            outputMap.get(EnumTriplegeoOutputPart.TRANSFORMED));
+        assertEquals(Arrays.asList("p1_metadata.json", "p2_metadata.json"),
+            outputMap.get(EnumTriplegeoOutputPart.TRANSFORMED_METADATA));
+        assertEquals(Arrays.asList("classification.ttl"),
+            outputMap.get(EnumTriplegeoOutputPart.CLASSIFICATION));
+        assertEquals(Arrays.asList("classification_metadata.json"),
+            outputMap.get(EnumTriplegeoOutputPart.CLASSIFICATION_METADATA));
+        assertEquals(Collections.emptyList(),
+            outputMap.get(EnumTriplegeoOutputPart.REGISTRATION_REQUEST));
     }
 
     @Test
     public void test2b_getOutputNames() throws Exception
     {
-        Map<EnumOutputType, List<String>> outputNamesByType = config2b.getOutputNames();
+        Map<? extends OutputPart<Triplegeo>, List<String>> outputMap =
+            config2b.getOutputNameMapper().apply(Arrays.asList("/data/p1.csv", "/data/p2.csv"));
 
-        assertEquals(
-            Arrays.asList("p1.ttl", "p1.csv", "p2.ttl", "p2.csv", "classification.ttl"),
-            outputNamesByType.get(EnumOutputType.OUTPUT));
-
-        assertEquals(
-            Arrays.asList("p1_metadata.json", "p2_metadata.json", "classification_metadata.json"),
-            outputNamesByType.get(EnumOutputType.KPI));
+        assertEquals(Arrays.asList("p1.ttl", "p2.ttl"),
+            outputMap.get(EnumTriplegeoOutputPart.TRANSFORMED));
+        assertEquals(Arrays.asList("p1_metadata.json", "p2_metadata.json"),
+            outputMap.get(EnumTriplegeoOutputPart.TRANSFORMED_METADATA));
+        assertEquals(Arrays.asList("classification.ttl"),
+            outputMap.get(EnumTriplegeoOutputPart.CLASSIFICATION));
+        assertEquals(Arrays.asList("classification_metadata.json"),
+            outputMap.get(EnumTriplegeoOutputPart.CLASSIFICATION_METADATA));
+        assertEquals(Arrays.asList("p1.csv", "p2.csv"),
+            outputMap.get(EnumTriplegeoOutputPart.REGISTRATION_REQUEST));
     }
 }

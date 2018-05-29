@@ -34,8 +34,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.google.common.collect.ImmutableMap;
 
+import eu.slipo.workbench.common.model.tool.Limes;
 import eu.slipo.workbench.common.model.tool.LimesConfiguration;
+import eu.slipo.workbench.common.model.tool.output.EnumLimesOutputPart;
 import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
+import eu.slipo.workbench.common.model.tool.output.OutputPart;
 import eu.slipo.workbench.common.service.util.JsonBasedPropertiesConverterService;
 import eu.slipo.workbench.common.service.util.PropertiesConverterService;
 
@@ -332,11 +335,10 @@ public class LimesConfigurationTests
     @Test
     public void test1_getOutputNames() throws Exception
     {
-        Map<EnumOutputType, List<String>> outputNamesByType = config1.getOutputNames();
+        Map<? extends OutputPart<Limes>, List<String>> outputMap =
+            config1.getOutputNameMapper().apply(Arrays.asList("/data/a.nt", "/data/b.nt"));
 
-        assertEquals(
-            Collections.singleton(EnumOutputType.OUTPUT), outputNamesByType.keySet());
-        assertEquals(
-            Arrays.asList("accepted.nt", "review.nt"), outputNamesByType.get(EnumOutputType.OUTPUT));
+        assertEquals(Collections.singletonList("accepted.nt"), outputMap.get(EnumLimesOutputPart.ACCEPTED));
+        assertEquals(Collections.singletonList("review.nt"), outputMap.get(EnumLimesOutputPart.REVIEW));
     }
 }

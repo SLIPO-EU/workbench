@@ -518,46 +518,6 @@ public class TriplegeoConfiguration extends TransformConfiguration<Triplegeo>
     {
         return tmpDir;
     }
-
-    @JsonIgnore
-    @Override
-    public Map<EnumOutputType, List<String>> getOutputNames()
-    {
-        Assert.state(outputFormat != null, "The output format is not specified");
-        String extension = outputFormat.getFilenameExtension();
-
-        Map<EnumOutputType, List<String>> outputMap = new EnumMap<>(EnumOutputType.class);
-
-        outputMap.put(EnumOutputType.OUTPUT, new ArrayList<>());
-        outputMap.put(EnumOutputType.KPI, new ArrayList<>());
-
-        // Each input file yields an RDF output and a JSON metadata file
-
-        for (String inputPath: input) {
-            String inputName = StringUtils.stripFilenameExtension(
-                Paths.get(inputPath).getFileName().toString());
-            // The primary output (per input) is the transformed file
-            outputMap.get(EnumOutputType.OUTPUT)
-                .add(inputName + "." + extension);
-            // For each transformed file, relevant KPI metadata are generated
-            outputMap.get(EnumOutputType.KPI)
-                .add(inputName + "_metadata" + ".json");
-            if (registerFeatures) {
-                // An additional CSV is generated as a registration payload
-                outputMap.get(EnumOutputType.OUTPUT)
-                    .add(inputName + ".csv");
-            }
-        }
-
-        // An output file with classification in an RDF format is always produced
-
-        outputMap.get(EnumOutputType.OUTPUT)
-            .add("classification" + "." + extension);
-        outputMap.get(EnumOutputType.KPI)
-            .add("classification_metadata" + ".json");
-
-        return outputMap;
-    }
     
     @JsonIgnore
     @Override

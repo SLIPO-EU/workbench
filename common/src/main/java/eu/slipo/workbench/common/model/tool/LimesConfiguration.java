@@ -914,22 +914,6 @@ public class LimesConfiguration extends InterlinkConfiguration<Limes>
     
     @JsonIgnore
     @Override
-    public Map<EnumOutputType, List<String>> getOutputNames()
-    {
-        Assert.state(accepted != null, "The output spec for `accepted` is null");
-        Assert.state(accepted.path != null, "The path for `accepted` is null");
-        Assert.state(review != null, "The output spec for `review` is null");
-        Assert.state(review.path != null, "The path for `review` is null");
-        
-        String acceptedFileName = Paths.get(accepted.path).getFileName().toString();
-        String reviewFileName = Paths.get(review.path).getFileName().toString();
-        
-        return Collections.singletonMap(
-            EnumOutputType.OUTPUT, Arrays.asList(acceptedFileName, reviewFileName));
-    }
-    
-    @JsonIgnore
-    @Override
     public OutputNameMapper<Limes> getOutputNameMapper()
     {
         Assert.state(accepted != null, "The output spec for `accepted` is null");

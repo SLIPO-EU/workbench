@@ -97,13 +97,6 @@ public class DeerConfiguration extends EnrichConfiguration<Deer>
     {
         return super.getOutputFormat();
     }
-
-    @JsonIgnore
-    @Override
-    public Map<EnumOutputType, List<String>> getOutputNames()
-    {
-        throw new NotImplementedException("not implemented yet");
-    }
     
     @JsonIgnore
     @Override

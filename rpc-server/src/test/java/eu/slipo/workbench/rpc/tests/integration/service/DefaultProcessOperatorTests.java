@@ -80,6 +80,7 @@ import eu.slipo.workbench.common.model.resource.UrlDataSource;
 import eu.slipo.workbench.common.model.tool.FagiConfiguration;
 import eu.slipo.workbench.common.model.tool.LimesConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
+import eu.slipo.workbench.common.model.tool.output.EnumTriplegeoOutputPart;
 import eu.slipo.workbench.common.model.user.Account;
 import eu.slipo.workbench.common.repository.AccountRepository;
 import eu.slipo.workbench.common.repository.ProcessRepository;
@@ -641,7 +642,7 @@ public class DefaultProcessOperatorTests
                 Iterables.all(executionRecord.getSteps(), s -> s.getStatus().isTerminated());
         } while (!terminated);
 
-        Thread.sleep(500L);
+        Thread.sleep(250L);
 
         final ProcessRecord processRecord1 = processRepository.findOne(id, version, true);
         assertNotNull(processRecord1);
@@ -658,16 +659,16 @@ public class DefaultProcessOperatorTests
     {
         final int resourceKey = 1;
         final DataSource source = fixture.inputAsDataSource();
-        final TriplegeoConfiguration configuration = fixture.configuration();
+        final ResourceMetadataCreate resourceMetadata =
+            new ResourceMetadataCreate(resourceName, "A sample input file");
 
         return processDefinitionBuilderFactory.create(procName)
             .transform("Triplegeo 1", builder -> builder
                 .source(source)
                 .outputFormat(EnumDataFormat.N_TRIPLES)
                 .outputKey(resourceKey)
-                .configuration(configuration))
-            .register("Register 1", resourceKey,
-                new ResourceMetadataCreate(resourceName, "A sample input file"))
+                .configuration(fixture.configuration()))
+            .register("Register 1", resourceKey, resourceMetadata)
             .build();
     }
 
@@ -679,6 +680,8 @@ public class DefaultProcessOperatorTests
         final URL sourceUrl = fixture.inputUri().toURL();
         final TriplegeoConfiguration configuration = fixture.configuration();
         final EnumDataFormat inputFormat1 = configuration.getInputFormat();
+        final ResourceMetadataCreate resourceMetadata =
+            new ResourceMetadataCreate(resourceName, "A sample input file");
 
         return processDefinitionBuilderFactory.create(procName)
             .resource(resourceName, key1, sourceUrl, inputFormat1)
@@ -687,8 +690,26 @@ public class DefaultProcessOperatorTests
                 .outputFormat(EnumDataFormat.N_TRIPLES)
                 .outputKey(resourceKey)
                 .configuration(configuration))
-            .register("Register 1", resourceKey,
-                new ResourceMetadataCreate(resourceName, "A sample input file"))
+            .register("Register 1", resourceKey, resourceMetadata)
+            .build();
+    }
+
+    private ProcessDefinition buildDefinitionUseNamedParts(
+        String procName, TransformFixture fixture, String resourceName)
+        throws MalformedURLException
+    {
+        final int resourceKey = 1;
+        final DataSource source = fixture.inputAsDataSource();
+        final ResourceMetadataCreate resourceMetadata =
+            new ResourceMetadataCreate(resourceName, "A sample input file");
+
+        return processDefinitionBuilderFactory.create(procName)
+            .transform("Triplegeo 1", builder -> builder
+                .source(source)
+                .outputFormat(EnumDataFormat.N_TRIPLES)
+                .outputKey(resourceKey)
+                .configuration(fixture.configuration()))
+            .register("Register 1", resourceKey, "transformed", resourceMetadata)
             .build();
     }
 
@@ -699,8 +720,7 @@ public class DefaultProcessOperatorTests
     }
 
     private ResourceRecord transformAndRegister(
-            String procName, TransformFixture fixture, Account creator,
-            TransformToDefinition transformToDefinition)
+            String procName, TransformFixture fixture, Account creator, TransformToDefinition transformToDefinition)
         throws Exception
     {
         logger.debug("tranformAndRegister: procName={} fixture={}", procName, fixture);
@@ -768,6 +788,12 @@ public class DefaultProcessOperatorTests
     {
         final int resourceKey = 1, outputKey1 = 2, outputKey2 = 3;
         final Pair<DataSource, DataSource> sourcePair = fixture.inputAsDataSource();
+        final ResourceMetadataCreate outputMetadata1 =
+            new ResourceMetadataCreate(output1Name, "The first (transformed) input file");
+        final ResourceMetadataCreate outputMetadata2 =
+            new ResourceMetadataCreate(output2Name, "The second (transformed) input file");
+        final ResourceMetadataCreate resourceMetadata =
+            new ResourceMetadataCreate(resourceName, "The links on pair of inputs");
 
         return processDefinitionBuilderFactory.create(procName)
             .transform("Transform 1", builder -> builder
@@ -786,12 +812,9 @@ public class DefaultProcessOperatorTests
                 .outputFormat(EnumDataFormat.N_TRIPLES)
                 .outputKey(resourceKey)
                 .configuration(fixture.configuration()))
-            .register("Register 1", outputKey1,
-                new ResourceMetadataCreate(output1Name, "The first (transformed) input file"))
-            .register("Register 2", outputKey2,
-                new ResourceMetadataCreate(output2Name, "The second (transformed) input file"))
-            .register("Register links", resourceKey,
-                new ResourceMetadataCreate(resourceName, "The links on pair of inputs"))
+            .register("Register 1", outputKey1, outputMetadata1)
+            .register("Register 2", outputKey2, outputMetadata2)
+            .register("Register links", resourceKey, resourceMetadata)
             .build();
     }
 
@@ -807,6 +830,12 @@ public class DefaultProcessOperatorTests
         final URL url1 = sourcePair.getFirst().toURL(), url2 = sourcePair.getSecond().toURL();
         final TriplegeoConfiguration transformConfiguration1 = transformConfiguration.getFirst();
         final TriplegeoConfiguration transformConfiguration2 = transformConfiguration.getSecond();
+        final ResourceMetadataCreate outputMetadata1 =
+            new ResourceMetadataCreate(output1Name, "The first (transformed) input file");
+        final ResourceMetadataCreate outputMetadata2 =
+            new ResourceMetadataCreate(output2Name, "The second (transformed) input file");
+        final ResourceMetadataCreate resourceMetadata =
+            new ResourceMetadataCreate(resourceName, "The links on pair of inputs");
 
         return processDefinitionBuilderFactory.create(procName)
             .resource("input 1", inputKey1, url1, transformConfiguration1.getInputFormat())
@@ -827,12 +856,46 @@ public class DefaultProcessOperatorTests
                 .outputFormat(EnumDataFormat.N_TRIPLES)
                 .outputKey(resourceKey)
                 .configuration(fixture.configuration()))
-            .register("Register 1", outputKey1,
-                new ResourceMetadataCreate(output1Name, "The first (transformed) input file"))
-            .register("Register 2", outputKey2,
-                new ResourceMetadataCreate(output2Name, "The second (transformed) input file"))
-            .register("Register links", resourceKey,
-                new ResourceMetadataCreate(resourceName, "The links on pair of inputs"))
+            .register("Register 1", outputKey1, outputMetadata1)
+            .register("Register 2", outputKey2, outputMetadata2)
+            .register("Register links", resourceKey, resourceMetadata)
+            .build();
+    }
+
+    private ProcessDefinition buildDefinitionUseNamedParts(
+        String procName, InterlinkFixture fixture,
+        String resourceName, String output1Name, String output2Name)
+        throws Exception
+    {
+        final int resourceKey = 1, outputKey1 = 2, outputKey2 = 3;
+        final Pair<DataSource, DataSource> sourcePair = fixture.inputAsDataSource();
+        final ResourceMetadataCreate outputMetadata1 =
+            new ResourceMetadataCreate(output1Name, "The first (transformed) input file");
+        final ResourceMetadataCreate outputMetadata2 =
+            new ResourceMetadataCreate(output2Name, "The second (transformed) input file");
+        final ResourceMetadataCreate resourceMetadata =
+            new ResourceMetadataCreate(resourceName, "The links on pair of inputs");
+
+        return processDefinitionBuilderFactory.create(procName)
+            .transform("Transform 1", builder -> builder
+                .source(sourcePair.getFirst())
+                .outputFormat(EnumDataFormat.N_TRIPLES)
+                .outputKey(outputKey1)
+                .configuration(fixture.configurationForTransformation().getFirst()))
+            .transform("Transform 2", builder -> builder
+                .source(sourcePair.getSecond())
+                .outputFormat(EnumDataFormat.N_TRIPLES)
+                .outputKey(outputKey2)
+                .configuration(fixture.configurationForTransformation().getSecond()))
+            .interlink("Link 1 with 2", builder -> builder
+                .left(outputKey1, "transformed")
+                .right(outputKey2, "transformed")
+                .outputFormat(EnumDataFormat.N_TRIPLES)
+                .outputKey(resourceKey)
+                .configuration(fixture.configuration()))
+            .register("Register 1", outputKey1, "transformed", outputMetadata1)
+            .register("Register 2", outputKey2, "transformed", outputMetadata2)
+            .register("Register links", resourceKey, "accepted", resourceMetadata)
             .build();
     }
 
@@ -924,8 +987,12 @@ public class DefaultProcessOperatorTests
             String procName, FuseFixture fixture, String resourceName)
         throws Exception
     {
-        final int inputKey1 = 1, inputKey2 = 2, linksKey = 3, fusedKey = 4;
+        final int inputKey1 = 1, inputKey2 = 2, linksKey = 3, resourceKey = 4;
         final Pair<URI, URI> inputPair = fixture.inputPair();
+        final ResourceMetadataCreate linksMetadata =
+            new ResourceMetadataCreate(resourceName + "-links", "The links from a pair of inputs");
+        final ResourceMetadataCreate resourceMetadata =
+            new ResourceMetadataCreate(resourceName, "The fusion of a pair of inputs");
 
         return processDefinitionBuilderFactory.create(procName)
             .resource("input 1",
@@ -946,17 +1013,50 @@ public class DefaultProcessOperatorTests
                 .link(linksKey)
                 .configuration(fixture.configuration())
                 .outputFormat(EnumDataFormat.N_TRIPLES)
-                .outputKey(fusedKey))
-            .register("Register links", linksKey,
-                new ResourceMetadataCreate(resourceName + "-links", "The links from a pair of inputs"))
-            .register("Register fused", fusedKey,
-                new ResourceMetadataCreate(resourceName, "The fusion of a pair of inputs"))
+                .outputKey(resourceKey))
+            .register("Register links", linksKey, linksMetadata)
+            .register("Register fused", resourceKey, resourceMetadata)
+            .build();
+    }
+
+    private ProcessDefinition buildDefinitionUseNamedParts(
+        String procName, FuseFixture fixture, String resourceName)
+        throws Exception
+    {
+        final int inputKey1 = 1, inputKey2 = 2, linksKey = 3, resourceKey = 4;
+        final Pair<URI, URI> inputPair = fixture.inputPair();
+        final ResourceMetadataCreate linksMetadata =
+            new ResourceMetadataCreate(resourceName + "-links", "The links from a pair of inputs");
+        final ResourceMetadataCreate resourceMetadata =
+            new ResourceMetadataCreate(resourceName, "The fusion of a pair of inputs");
+
+        return processDefinitionBuilderFactory.create(procName)
+            .resource("input 1",
+                inputKey1, inputPair.getFirst().toURL(), EnumDataFormat.N_TRIPLES)
+            .resource("input 2",
+                inputKey2, inputPair.getSecond().toURL(), EnumDataFormat.N_TRIPLES)
+            .interlink("Link 1 with 2", builder -> builder
+                .group(1)
+                .left(inputKey1)
+                .right(inputKey2)
+                .configuration(fixture.configurationForLinking())
+                .outputFormat(EnumDataFormat.N_TRIPLES)
+                .outputKey(linksKey))
+            .fuse("Fuse 1 with 2", builder -> builder
+                .group(2)
+                .left(inputKey1)
+                .right(inputKey2)
+                .link(linksKey, "accepted")
+                .configuration(fixture.configuration())
+                .outputFormat(EnumDataFormat.N_TRIPLES)
+                .outputKey(resourceKey))
+            .register("Register links", linksKey, "accepted", linksMetadata)
+            .register("Register fused", resourceKey, "fused", resourceMetadata)
             .build();
     }
 
     private ResourceRecord linkAndFuseAndRegister(
-            String procName, FuseFixture fixture, Account creator,
-            FuseToDefinition fuseToDefinition)
+            String procName, FuseFixture fixture, Account creator, FuseToDefinition fuseToDefinition)
         throws Exception
     {
         logger.debug("linkAndFuseAndRegister: procName={} fixture={}", procName, fixture);
@@ -1140,6 +1240,13 @@ public class DefaultProcessOperatorTests
     }
 
     @Test(timeout = 40 * 1000L)
+    public void test1T_transformAndRegister1a_namedPart() throws Exception
+    {
+        transformAndRegister("file-1-1-a-namedPart", transformFixtures.get("file-1-1-a"), user,
+            this::buildDefinitionUseNamedParts);
+    }
+
+    @Test(timeout = 40 * 1000L)
     public void test1T_transformAndRegister1b() throws Exception
     {
         transformAndRegister("file-1-1-b", transformFixtures.get("file-1-1-b"), user);
@@ -1150,6 +1257,13 @@ public class DefaultProcessOperatorTests
     {
         transformAndRegister("file-1-1-b-imported", transformFixtures.get("file-1-1-b"), user,
             this::buildDefinitionWithImportSteps);
+    }
+
+    @Test(timeout = 40 * 1000L)
+    public void test1T_transformAndRegister1b_namedPart() throws Exception
+    {
+        transformAndRegister("file-1-1-b-namedPart", transformFixtures.get("file-1-1-b"), user,
+            this::buildDefinitionUseNamedParts);
     }
 
     @Test(timeout = 40 * 1000L)
@@ -1314,6 +1428,13 @@ public class DefaultProcessOperatorTests
     }
 
     @Test(timeout = 40 * 1000L)
+    public void test1L_transformAndLinkAndRegister1a_namedPart() throws Exception
+    {
+        transformAndLinkAndRegister("links-1-a-namedPart", interlinkFixtures.get("file-1-a"), user,
+            this::buildDefinitionUseNamedParts);
+    }
+
+    @Test(timeout = 40 * 1000L)
     public void test1L_transformAndLinkAndRegister1b() throws Exception
     {
         transformAndLinkAndRegister("links-1-b", interlinkFixtures.get("file-1-b"), user);
@@ -1323,6 +1444,13 @@ public class DefaultProcessOperatorTests
     public void test1F_linkAndFuseAndRegister1a() throws Exception
     {
         linkAndFuseAndRegister("fused-1-a", fuseFixtures.get("file-1-a"), user);
+    }
+
+    @Test(timeout = 40 * 1000L)
+    public void test1F_linkAndFuseAndRegister1a_namedPart() throws Exception
+    {
+        linkAndFuseAndRegister("fused-1-a-namedPart", fuseFixtures.get("file-1-a"), user,
+            this::buildDefinitionUseNamedParts);
     }
 
     @Test(timeout = 40 * 1000L)
