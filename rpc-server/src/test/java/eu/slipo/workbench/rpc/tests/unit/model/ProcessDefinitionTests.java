@@ -716,19 +716,20 @@ public class ProcessDefinitionTests
     {
         ProcessDefinition definition1 = buildDefinition1a();
 
-        final List<ProcessInput> inputs = definition1.resources();
-        final List<Step> steps = definition1.steps();
-        final DependencyGraph dependencyGraph = buildDependencyGraph(definition1);
-
-        Iterable<Step> sortedSteps =
-            IterableUtils.transformedIterable(
-                DependencyGraphs.topologicalSort(dependencyGraph), k -> definition1.stepByKey(k));
-
         String s1 = jsonMapper.writeValueAsString(definition1);
         System.err.println(s1);
 
         ProcessDefinition definition1a = jsonMapper.readValue(s1, ProcessDefinition.class);
         String s2 = jsonMapper.writeValueAsString(definition1a);
         assertEquals(s1, s2);
+
+        final List<ProcessInput> inputs = definition1.resources();
+        final List<Step> steps = definition1.steps();
+        final DependencyGraph dependencyGraph = buildDependencyGraph(definition1);
+
+        Iterable<Step> sortedSteps = IterableUtils.transformedIterable(
+            DependencyGraphs.topologicalSort(dependencyGraph), k -> definition1.stepByKey(k));
+
+
     }
 }

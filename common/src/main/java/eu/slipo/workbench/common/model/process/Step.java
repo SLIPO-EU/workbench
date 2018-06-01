@@ -35,7 +35,7 @@ import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.model.tool.output.OutputPart;
 
-@JsonDeserialize(converter = Step.DeserializeSanitizer.class)
+@JsonDeserialize(converter = Step.DeserializeConverter.class)
 public class Step implements Serializable
 {
     private static final long serialVersionUID = 1L;
@@ -48,18 +48,15 @@ public class Step implements Serializable
     }
     
     /**
-     * A deserialization sanitizer for a {@link Step}
+     * A deserialization converter for a {@link Step}
      */
-    protected static class DeserializeSanitizer extends StdConverter<Step,Step>
+    protected static class DeserializeConverter extends StdConverter<Step,Step>
     {
         @Override
         public Step convert(Step step)
         {
-            // Sanitize step in-place
-            
-            // If nodeName is absent, compute it from name
-            if (StringUtils.isEmpty(step.nodeName) && !StringUtils.isEmpty(step.name))
-                step.nodeName = Step.slugifyName(step.name);
+            // Initialize step in-place
+            step.initialize();
             
             return step;
         }   
@@ -69,7 +66,7 @@ public class Step implements Serializable
      * An input descriptor for a {@link Step}. 
      * 
      * <p>This is not identical to a {@link ProcessInput} because a step may be interested only in a
-     * part of an available process-scoped resource (i.e. a part of the output of another step). 
+     * part of an available process-wide resource (i.e. a part of the output of another step). 
      */
     public static class Input implements Serializable
     {
@@ -105,7 +102,8 @@ public class Step implements Serializable
         
         @JsonCreator
         protected static Input of(
-            @JsonProperty("inputKey") int inputKey, @JsonProperty("partKey") String partKey)
+            @JsonProperty("inputKey") int inputKey, 
+            @JsonProperty("partKey") String partKey)
         {
             return new Input(inputKey, partKey);
         }
@@ -173,6 +171,9 @@ public class Step implements Serializable
     @JsonProperty("outputFormat")
     protected EnumDataFormat outputFormat;
 
+    /**
+     * The user-provided configuration to drive a tool's invocation.
+     */
     @JsonProperty("configuration")
     @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXTERNAL_PROPERTY, property = "tool")
@@ -186,27 +187,63 @@ public class Step implements Serializable
     })
     protected ToolConfiguration<? extends AnyTool> configuration;
 
+    /**
+     * An unmodifiable view of user-provided configuration.
+     */
+    @JsonIgnore
+    private ToolConfiguration<? extends AnyTool> _configuration = null;
+    
     protected Step() {}
 
-    protected Step(Step other)
+    protected Step(int key)
     {
-        this.key = other.key;
-        this.name = other.name;
-        this.nodeName = other.nodeName;
-        this.group = other.group;
-        this.operation = other.operation;
-        this.tool = other.tool;
-        this.input = other.input;
-        this.sources = other.sources;
-        this.configuration = other.configuration;
-        this.outputFormat = other.outputFormat;
-        this.outputKey = other.outputKey;
+        this.key = key;
+    }
+    
+    protected static Step of(int key, Step other)
+    {
+        Step step = new Step(key);
+        
+        step.name = other.name;
+        step.nodeName = other.nodeName;
+        step.group = other.group;
+        step.operation = other.operation;
+        step.tool = other.tool;
+        step.input = other.input;
+        step.sources = other.sources;
+        step.configuration = other.configuration;
+        step.outputFormat = other.outputFormat;
+        step.outputKey = other.outputKey;
+        
+        step.initialize();
+        return step;
+    }
+    
+    /**
+     * A hook to perform post-construct initialization. 
+     * <p>This post-processing is idempotent, but not thread-safe!
+     */
+    protected void initialize()
+    {
+        // If nodeName is absent, compute it from name
+        
+        if (StringUtils.isEmpty(this.nodeName) && !StringUtils.isEmpty(this.name)) {
+            this.nodeName = Step.slugifyName(this.name);
+        }
+        
+        // Create an unmodifiable view of configuration
+        
+        if (this._configuration == null) {
+            @SuppressWarnings("unchecked")
+            ToolConfiguration<? extends AnyTool> configuration = 
+                (ToolConfiguration<? extends AnyTool>) ImmutableBean.create(this.configuration);
+            this._configuration = configuration;
+        }
     }
     
     /**
      * The unique key for this step
      */
-    @JsonProperty("key")
     public int key()
     {
         return key;
@@ -215,7 +252,6 @@ public class Step implements Serializable
     /**
      * The human-friendly name of this step
      */
-    @JsonProperty("name")
     public String name()
     {
         return name;
@@ -224,7 +260,6 @@ public class Step implements Serializable
     /**
      * The workflow-friendly name of this step
      */
-    @JsonProperty("nodeName")
     public String nodeName()
     {
         return nodeName;
@@ -234,7 +269,6 @@ public class Step implements Serializable
      * The step group index
      * @return the group index
      */
-    @JsonProperty("group")
     public int group()
     {
         return group;
@@ -244,7 +278,6 @@ public class Step implements Serializable
      * The step operation type
      * @return the operation type
      */
-    @JsonProperty("operation")
     public EnumOperation operation()
     {
         return operation;
@@ -254,21 +287,18 @@ public class Step implements Serializable
      * The tool that implements the operation
      * @return the tool type
      */
-    @JsonProperty("tool")
     public EnumTool tool()
     {
         return tool;
     }
 
     /**
-     * The tool-specific configuration
-     * @return an instance of {@link ToolConfiguration}
+     * The tool-specific user-provided configuration
+     * @return an unmodifiable instance of {@link ToolConfiguration}
      */
-    @JsonProperty("configuration")
-    @SuppressWarnings("unchecked")
     public ToolConfiguration<? extends AnyTool> configuration()
     {
-        return (ToolConfiguration<? extends AnyTool>) ImmutableBean.create(configuration);
+        return _configuration;
     }
     
     /**
@@ -277,7 +307,6 @@ public class Step implements Serializable
      *
      * @return the output resource index
      */
-    @JsonProperty("outputKey")
     public Integer outputKey()
     {
         return outputKey;
@@ -286,7 +315,6 @@ public class Step implements Serializable
     /**
      * The descriptor of input resources that should be provided to this step.
      */
-    @JsonProperty("input")
     public List<Input> input()
     {
         return Collections.unmodifiableList(input);
@@ -295,7 +323,6 @@ public class Step implements Serializable
     /**
      * The keys of input resources that should be provided to this step.
      */
-    @JsonIgnore
     public List<Integer> inputKeys()
     {
         return Lists.transform(input, p -> p.inputKey);
@@ -305,13 +332,11 @@ public class Step implements Serializable
      * A list of external data sources (i.e resources that are neither catalog resources nor
      * intermediate process results) for this step.
      */
-    @JsonProperty("sources")
     public List<DataSource> sources()
     {
         return Collections.unmodifiableList(sources);
     }
     
-    @JsonProperty("outputFormat")
     public EnumDataFormat outputFormat()
     {
         return outputFormat;
@@ -320,7 +345,6 @@ public class Step implements Serializable
     /**
      * A list of available output parts ({@link OutputPart}) provided by this step.
      */
-    @JsonIgnore
     public List<OutputPart<? extends AnyTool>> outputParts()
     {
         return tool.getOutputParts();
@@ -332,7 +356,6 @@ public class Step implements Serializable
      * @param partKey The part key to search by; may be <tt>null</tt>, and in such a case it 
      *   will be behave exactly as {@link Step#defaultOutputPart()}
      */
-    @JsonIgnore
     public OutputPart<? extends AnyTool> outputPart(String partKey)
     {
         return StringUtils.isEmpty(partKey)? 
@@ -343,7 +366,6 @@ public class Step implements Serializable
      * Get the default output part ({@link OutputPart}) of this this step (may be <tt>null</tt>
      * if this step doesn't produce any output).
      */
-    @JsonIgnore
     public OutputPart<? extends AnyTool> defaultOutputPart()
     {
         return tool.getDefaultOutputPart();
@@ -353,7 +375,7 @@ public class Step implements Serializable
     public String toString()
     {
         return String.format(
-            "Step [key=%s, name=%s, operation=%s, tool=%s, outputFormat=%s]", 
-            key, name, operation, tool, outputFormat);
+            "Step [key=%s, nodeName=%s, operation=%s, tool=%s, outputFormat=%s]", 
+            key, nodeName, operation, tool, outputFormat);
     }
 }

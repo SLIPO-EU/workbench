@@ -93,7 +93,6 @@ public class ProcessDefinition implements Serializable
        this(name, null, resources, steps);
     }
 
-
     @JsonProperty("name")
     public String name()
     {
@@ -229,11 +228,7 @@ public class ProcessDefinition implements Serializable
             .collect(Collectors.toList());
         
         final List<Step> steps = def.steps.stream()
-            .map(s -> {
-                Step s1 = new Step(s);
-                s1.key = mapping.get(s1.key);
-                return s1;
-            })
+            .map(s -> Step.of(mapping.get(s.key), s))
             .collect(Collectors.toList());
         
         return new ProcessDefinition(def.name, def.description, resources, steps);

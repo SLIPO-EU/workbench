@@ -166,10 +166,6 @@ public class ProcessDefinitionBuilder
                 throw new IllegalStateException("Cannot clone the configuration object", ex);
             }
             
-            // Todo: consider creating a read-only view of configuration object here.
-            // In this case, the post-deserialization work done in Step.DeserializeSanitizer
-            // must also be updated accordingly.
-            
             // A couple of things are implied from tool's configuration
             this.tool = configuration.getTool();
             this.outputFormat = expectedOutputFormat;
@@ -970,10 +966,18 @@ public class ProcessDefinitionBuilder
         
         int stepKey = this.stepKeySequence++;
         
+        // Build step
+        
         B stepBuilder = builderFactory.apply(stepKey);
         configurer.accept(stepBuilder);
         Step step = stepBuilder.build();
-
+        
+        // Perform post-construct initialization
+        
+        step.initialize();
+        
+        // Add to this process
+        
         this.steps.add(step);
         
         if (step.outputKey != null)
