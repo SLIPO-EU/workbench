@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.util.Assert;
@@ -190,6 +191,13 @@ public enum EnumTool
     public OutputPart<? extends AnyTool> getDefaultOutputPart()
     {
         return defaultOutputPart;
+    }
+    
+    public Optional<OutputPart<? extends AnyTool>> getOutputPart(String partKey)
+    {
+        Assert.notNull(partKey, "A part key is required");
+        return outputParts.stream().filter(part -> part.key().equals(partKey))
+            .findFirst();
     }
     
     public static EnumTool fromName(String name) 

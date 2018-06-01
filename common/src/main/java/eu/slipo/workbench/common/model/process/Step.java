@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import javax.annotation.Nullable;
 
@@ -336,14 +335,8 @@ public class Step implements Serializable
     @JsonIgnore
     public OutputPart<? extends AnyTool> outputPart(String partKey)
     {
-        if (StringUtils.isEmpty(partKey))
-            return tool.getDefaultOutputPart();
-        
-        Optional<OutputPart<? extends AnyTool>> part = tool.getOutputParts().stream()
-            .filter(p -> p.key().equals(partKey))
-            .findFirst();
-        
-        return part.orElse(null);
+        return StringUtils.isEmpty(partKey)? 
+            tool.getDefaultOutputPart() : tool.getOutputPart(partKey).orElse(null);
     }
     
     /**
