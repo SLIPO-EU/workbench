@@ -273,22 +273,6 @@ public class Step implements Serializable
     }
     
     /**
-     * The tool-specific type of configuration.
-     * 
-     * Todo: review configurationType: if cloner is not used, this may be removed 
-     * 
-     * <p>Note: This piece of information is needed for cloning a configuration bean
-     * (since the actual bean returned by {@link Step#configuration} may be of a runtime-enhanced
-     * type (e.g. by CGLIB))
-     *  
-     * @return a class object
-     */
-    public Class<? extends ToolConfiguration> configurationType()
-    {
-        return configuration.getClass();
-    }
-
-    /**
      * The unique resource key of an {@link ProcessOutput} that is the output of
      * this step
      *
@@ -319,8 +303,8 @@ public class Step implements Serializable
     }
 
     /**
-     * A list of external data sources (i.e neither catalog resources nor intermediate
-     * process results) for this step.
+     * A list of external data sources (i.e resources that are neither catalog resources nor
+     * intermediate process results) for this step.
      */
     @JsonProperty("sources")
     public List<DataSource> sources()
@@ -333,11 +317,43 @@ public class Step implements Serializable
     {
         return outputFormat;
     }
-
+    
+    /**
+     * A list of available output parts ({@link OutputPart}) provided by this step.
+     */
     @JsonIgnore
     public List<OutputPart<? extends AnyTool>> outputParts()
     {
         return tool.getOutputParts();
+    }
+    
+    /**
+     * Get an output part ({@link OutputPart}).
+     * 
+     * @param partKey The part key to search by; may be <tt>null</tt>, and in such a case it 
+     *   will be behave exactly as {@link Step#defaultOutputPart()}
+     */
+    @JsonIgnore
+    public OutputPart<? extends AnyTool> outputPart(String partKey)
+    {
+        if (StringUtils.isEmpty(partKey))
+            return tool.getDefaultOutputPart();
+        
+        Optional<OutputPart<? extends AnyTool>> part = tool.getOutputParts().stream()
+            .filter(p -> p.key().equals(partKey))
+            .findFirst();
+        
+        return part.orElse(null);
+    }
+    
+    /**
+     * Get the default output part ({@link OutputPart}) of this this step (may be <tt>null</tt>
+     * if this step doesn't produce any output).
+     */
+    @JsonIgnore
+    public OutputPart<? extends AnyTool> defaultOutputPart()
+    {
+        return tool.getDefaultOutputPart();
     }
     
     @Override

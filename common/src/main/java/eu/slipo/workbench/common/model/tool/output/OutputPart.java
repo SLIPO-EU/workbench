@@ -1,5 +1,6 @@
 package eu.slipo.workbench.common.model.tool.output;
 
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 import org.springframework.util.Assert;

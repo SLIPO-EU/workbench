@@ -9,10 +9,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
@@ -27,8 +31,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumOperation;
@@ -49,6 +51,7 @@ import eu.slipo.workbench.common.model.process.Step;
 import eu.slipo.workbench.common.model.tool.AnyTool;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
+import eu.slipo.workbench.common.model.tool.output.InputToOutputNameMapper;
 import eu.slipo.workbench.common.model.tool.output.OutputPart;
 import eu.slipo.workbench.common.repository.AccountRepository;
 import eu.slipo.workbench.common.repository.ProcessRepository;
@@ -301,9 +304,11 @@ public class DefaultProcessOperator implements ProcessOperator
             }
 
             // Add the expected output files under step record
+            // Note: Every output part is expected to hold at most 1 output path!
 
             final OutputPart<? extends AnyTool> defaultOutputPart = tool.getDefaultOutputPart();
             final Class<?> outputPartEnumeration = tool.getOutputPartEnumeration();
+            final InputToOutputNameMapper<? extends AnyTool> outputNameMapper = configuration.getOutputNameMapper();
 
             final List<Path> outputPaths = node.output();
             Assert.state(outputPaths.stream().allMatch(Path::isAbsolute),
@@ -311,29 +316,29 @@ public class DefaultProcessOperator implements ProcessOperator
             Assert.state(outputPaths.stream().allMatch(path -> path.startsWith(workflowDataDir)),
                 "An output path is expected to be under workflow data directory");
 
-            final Map<? extends OutputPart<? extends AnyTool>, List<String>> outputMap =
-                configuration.getOutputNameMapper().applyToPath(inputPaths);
-            Assert.state(outputPaths.size() == outputMap.values().stream().mapToInt(List::size).sum(),
-                "The number of output paths differs from the one determined by step configuration");
-            Assert.state(outputMap.keySet().stream().allMatch(outputPartEnumeration::isInstance),
-                "An output part is expected to be one of the enumerated parts");
+            Map<OutputPart<? extends AnyTool>, String> outputMap = outputNameMapper.applyToPath(inputPaths)
+                .entries().stream()
+                .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+            Set<OutputPart<? extends AnyTool>> outputParts = outputMap.keySet();
 
-            for (OutputPart<? extends AnyTool> outputPart: outputMap.keySet()) {
-                Assert.state(tool.getOutputPartEnumeration().isInstance(outputPart),
-                    "The outputPart is expected to be one of the enumerated parts defined by the tool");
+            Assert.state(outputParts.isEmpty() || outputParts.stream().allMatch(outputPartEnumeration::isInstance),
+                "An output part is expected to be one of the enumerated parts");
+            Assert.state(outputParts.size() == outputPaths.size(),
+                "The number of output paths differs from the one determined by step configuration");
+
+            for (OutputPart<? extends AnyTool> outputPart: outputParts) {
+                final String outputName = outputMap.get(outputPart);
                 final EnumOutputType outputType = outputPart.outputType();
+                // Todo: dataFormat is not correct (probably it should be reported from InputToOutputNameMapper)
                 final EnumDataFormat dataFormat = outputType == EnumOutputType.OUTPUT?
-                    configuration.getOutputFormat() : null; // dataFormat only relevant to actual output results
-                final EnumStepFile stepFileType = EnumStepFile.from(outputType);
-                for (String outputName: outputMap.get(outputPart)) {
-                    // Find corresponding item from node's output paths (must exist!)
-                    Path outputPath = Iterables.find(outputPaths, path -> path.endsWith(outputName));
-                    URI outputUri = convertPathToUri(outputPath);
-                    ProcessExecutionStepFileRecord fileRecord =
-                        new ProcessExecutionStepFileRecord(stepFileType, outputUri, null, dataFormat);
-                    fileRecord.setPrimary(outputPart.equals(defaultOutputPart));
-                    stepRecord.addFile(fileRecord);
-                }
+                    configuration.getOutputFormat() : null; // only relevant to actual output results
+                // Find corresponding item from node's output paths (expect to always exist)
+                Path outputPath = Iterables.find(outputPaths, path -> path.endsWith(outputName));
+                URI outputUri = convertPathToUri(outputPath);
+                ProcessExecutionStepFileRecord fileRecord = new ProcessExecutionStepFileRecord(
+                    EnumStepFile.from(outputType), outputUri, null, dataFormat);
+                fileRecord.setPrimary(outputPart.equals(defaultOutputPart));
+                stepRecord.addFile(fileRecord);
             }
 
             // Update record in repository

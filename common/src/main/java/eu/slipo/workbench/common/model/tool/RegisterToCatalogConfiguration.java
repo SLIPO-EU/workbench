@@ -6,13 +6,14 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableMultimap;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
 import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
-import eu.slipo.workbench.common.model.tool.output.OutputNameMapper;
+import eu.slipo.workbench.common.model.tool.output.InputToOutputNameMapper;
 
 /**
  * Represent configuration for registration to catalog
@@ -134,8 +135,8 @@ public class RegisterToCatalogConfiguration implements ToolConfiguration<Registe
     
     @JsonIgnore
     @Override
-    public OutputNameMapper<RegisterToCatalog> getOutputNameMapper()
+    public InputToOutputNameMapper<RegisterToCatalog> getOutputNameMapper()
     {
-        return input -> Collections.emptyMap(); // no output is produced
+        return input -> ImmutableMultimap.of(); // no output is produced
     }
 }

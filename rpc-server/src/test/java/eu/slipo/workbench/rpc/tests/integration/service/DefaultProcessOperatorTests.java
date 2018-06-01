@@ -694,7 +694,7 @@ public class DefaultProcessOperatorTests
             .build();
     }
 
-    private ProcessDefinition buildDefinitionUseNamedParts(
+    private ProcessDefinition buildDefinitionUsingNamedParts(
         String procName, TransformFixture fixture, String resourceName)
         throws MalformedURLException
     {
@@ -862,7 +862,7 @@ public class DefaultProcessOperatorTests
             .build();
     }
 
-    private ProcessDefinition buildDefinitionUseNamedParts(
+    private ProcessDefinition buildDefinitionUsingNamedParts(
         String procName, InterlinkFixture fixture,
         String resourceName, String output1Name, String output2Name)
         throws Exception
@@ -1019,7 +1019,7 @@ public class DefaultProcessOperatorTests
             .build();
     }
 
-    private ProcessDefinition buildDefinitionUseNamedParts(
+    private ProcessDefinition buildDefinitionUsingNamedParts(
         String procName, FuseFixture fixture, String resourceName)
         throws Exception
     {
@@ -1243,7 +1243,7 @@ public class DefaultProcessOperatorTests
     public void test1T_transformAndRegister1a_namedPart() throws Exception
     {
         transformAndRegister("file-1-1-a-namedPart", transformFixtures.get("file-1-1-a"), user,
-            this::buildDefinitionUseNamedParts);
+            this::buildDefinitionUsingNamedParts);
     }
 
     @Test(timeout = 40 * 1000L)
@@ -1263,7 +1263,7 @@ public class DefaultProcessOperatorTests
     public void test1T_transformAndRegister1b_namedPart() throws Exception
     {
         transformAndRegister("file-1-1-b-namedPart", transformFixtures.get("file-1-1-b"), user,
-            this::buildDefinitionUseNamedParts);
+            this::buildDefinitionUsingNamedParts);
     }
 
     @Test(timeout = 40 * 1000L)
@@ -1358,6 +1358,13 @@ public class DefaultProcessOperatorTests
     }
 
     @Test(timeout = 40 * 1000L)
+    public void test1T_downloadAndTransformAndRegister1a_namedPart() throws Exception
+    {
+        transformAndRegister("url-1-1-a-namedPart", transformFixtures.get("url-1-1-a"), user,
+            this::buildDefinitionUsingNamedParts);
+    }
+
+    @Test(timeout = 40 * 1000L)
     public void test1T_downloadAndTransformAndRegister1b() throws Exception
     {
         transformAndRegister("url-1-1-b", transformFixtures.get("url-1-1-b"), user);
@@ -1431,7 +1438,7 @@ public class DefaultProcessOperatorTests
     public void test1L_transformAndLinkAndRegister1a_namedPart() throws Exception
     {
         transformAndLinkAndRegister("links-1-a-namedPart", interlinkFixtures.get("file-1-a"), user,
-            this::buildDefinitionUseNamedParts);
+            this::buildDefinitionUsingNamedParts);
     }
 
     @Test(timeout = 40 * 1000L)
@@ -1450,7 +1457,7 @@ public class DefaultProcessOperatorTests
     public void test1F_linkAndFuseAndRegister1a_namedPart() throws Exception
     {
         linkAndFuseAndRegister("fused-1-a-namedPart", fuseFixtures.get("file-1-a"), user,
-            this::buildDefinitionUseNamedParts);
+            this::buildDefinitionUsingNamedParts);
     }
 
     @Test(timeout = 40 * 1000L)

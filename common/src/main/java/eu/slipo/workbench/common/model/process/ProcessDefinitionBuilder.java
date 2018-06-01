@@ -155,7 +155,7 @@ public class ProcessDefinitionBuilder
             Assert.isTrue(tool == null || tool == configuration.getTool(), 
                 "The tool must agree with one reported by step configuration");
             
-            // Hold a copy of this configuration
+            // Make a copy of this configuration
             
             try {
                 @SuppressWarnings("unchecked")
@@ -163,8 +163,12 @@ public class ProcessDefinitionBuilder
                     (ToolConfiguration<? extends AnyTool>) cloner.cloneAsBean(configuration);
                 this.configuration = clonedConfiguration;
             } catch (Exception ex) {
-                throw new IllegalStateException("Cannot clone the configuration bean", ex);
+                throw new IllegalStateException("Cannot clone the configuration object", ex);
             }
+            
+            // Todo: consider creating a read-only view of configuration object here.
+            // In this case, the post-deserialization work done in Step.DeserializeSanitizer
+            // must also be updated accordingly.
             
             // A couple of things are implied from tool's configuration
             this.tool = configuration.getTool();

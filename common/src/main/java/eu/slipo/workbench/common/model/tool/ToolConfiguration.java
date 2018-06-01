@@ -7,7 +7,7 @@ import java.util.Map;
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
-import eu.slipo.workbench.common.model.tool.output.OutputNameMapper;
+import eu.slipo.workbench.common.model.tool.output.InputToOutputNameMapper;
 
 public interface ToolConfiguration <T extends AnyTool> extends Serializable
 {
@@ -71,5 +71,5 @@ public interface ToolConfiguration <T extends AnyTool> extends Serializable
     /**
      * Get a function to map input names to (expected) output names
      */
-    OutputNameMapper<T> getOutputNameMapper();
+    InputToOutputNameMapper<T> getOutputNameMapper();
 }

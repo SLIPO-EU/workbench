@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumTool;
-import eu.slipo.workbench.common.model.tool.output.OutputNameMapper;
+import eu.slipo.workbench.common.model.tool.output.InputToOutputNameMapper;
 
 
 /**
@@ -159,5 +159,5 @@ public abstract class AbstractToolConfiguration <T extends AnyTool> implements T
     
     @JsonIgnore
     @Override
-    public abstract OutputNameMapper<T> getOutputNameMapper();
+    public abstract InputToOutputNameMapper<T> getOutputNameMapper();
 }

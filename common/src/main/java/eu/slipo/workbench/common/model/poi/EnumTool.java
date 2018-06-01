@@ -122,7 +122,7 @@ public enum EnumTool
         this.type = toolType;
         this.operations = Collections.singleton(op1);
         this.outputPartEnumeration = null;
-        this.outputParts = null;
+        this.outputParts = Collections.emptyList();
         this.defaultOutputPart = null;
     }
 

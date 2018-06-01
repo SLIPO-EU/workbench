@@ -611,15 +611,6 @@ public class ProcessDefinitionTests
     }
 
     @Test
-    public void test1a_checkDefinitionConfigurationType()
-    {
-        ProcessDefinition definition1 = buildDefinition1a();
-        Step step11 = definition1.stepByNodeName("triplegeo-1");
-        Class<?> configurationType = step11.configurationType();
-        assertEquals(TriplegeoConfiguration.class, configurationType);
-    }
-
-    @Test
     public void test1a_buildDependencyGraph() throws Exception
     {
         ProcessDefinition def1 = buildDefinition1a();

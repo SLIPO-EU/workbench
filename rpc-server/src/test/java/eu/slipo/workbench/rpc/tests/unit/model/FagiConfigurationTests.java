@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Multimap;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.tool.Fagi;
@@ -328,8 +329,8 @@ public class FagiConfigurationTests
     @Test
     public void test1_getOutputNames() throws Exception
     {
-        Map<? extends OutputPart<Fagi>, List<String>> outputMap =
-            config1.getOutputNameMapper().apply(Arrays.asList(
+        Multimap<OutputPart<Fagi>, String> outputMap = config1.getOutputNameMapper()
+            .apply(Arrays.asList(
                 "/var/local/limes/input/a.nt",
                 "/var/local/limes/input/b.nt",
                 "/var/local/limes/input/links.nt"));

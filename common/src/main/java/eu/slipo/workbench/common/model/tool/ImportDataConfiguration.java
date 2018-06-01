@@ -15,12 +15,13 @@ import org.springframework.util.StringUtils;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableMultimap;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.tool.output.EnumImportDataOutputPart;
 import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
-import eu.slipo.workbench.common.model.tool.output.OutputNameMapper;
+import eu.slipo.workbench.common.model.tool.output.InputToOutputNameMapper;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ImportDataConfiguration implements ToolConfiguration<ImportData>
@@ -167,10 +168,9 @@ public class ImportDataConfiguration implements ToolConfiguration<ImportData>
     
     @JsonIgnore
     @Override
-    public OutputNameMapper<ImportData> getOutputNameMapper()
+    public InputToOutputNameMapper<ImportData> getOutputNameMapper()
     {
         final String outputName = getOutputName();
-        return input -> Collections.singletonMap(
-            EnumImportDataOutputPart.DOWNLOAD, Collections.singletonList(outputName));
+        return input -> ImmutableMultimap.of(EnumImportDataOutputPart.DOWNLOAD, outputName);
     }
 }

@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
-import eu.slipo.workbench.common.model.tool.output.OutputNameMapper;
+import eu.slipo.workbench.common.model.tool.output.InputToOutputNameMapper;
 
 /**
  * Configuration for DEER
@@ -100,7 +100,7 @@ public class DeerConfiguration extends EnrichConfiguration<Deer>
     
     @JsonIgnore
     @Override
-    public OutputNameMapper<Deer> getOutputNameMapper()
+    public InputToOutputNameMapper<Deer> getOutputNameMapper()
     {
         throw new NotImplementedException("not implemented yet");
     }

@@ -33,6 +33,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Multimap;
 
 import eu.slipo.workbench.common.model.tool.Limes;
 import eu.slipo.workbench.common.model.tool.LimesConfiguration;
@@ -335,7 +336,7 @@ public class LimesConfigurationTests
     @Test
     public void test1_getOutputNames() throws Exception
     {
-        Map<? extends OutputPart<Limes>, List<String>> outputMap =
+        Multimap<OutputPart<Limes>, String> outputMap =
             config1.getOutputNameMapper().apply(Arrays.asList("/data/a.nt", "/data/b.nt"));
 
         assertEquals(Collections.singletonList("accepted.nt"), outputMap.get(EnumLimesOutputPart.ACCEPTED));

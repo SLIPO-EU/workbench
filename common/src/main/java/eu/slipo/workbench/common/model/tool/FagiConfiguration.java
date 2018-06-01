@@ -31,13 +31,16 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.tool.output.EnumFagiOutputPart;
 import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
-import eu.slipo.workbench.common.model.tool.output.OutputNameMapper;
+import eu.slipo.workbench.common.model.tool.output.InputToOutputNameMapper;
+import eu.slipo.workbench.common.model.tool.output.OutputPart;
 
 /**
  * Configuration for FAGI
@@ -461,6 +464,30 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
         }        
     }
   
+    public class OutputNameMapper implements InputToOutputNameMapper<Fagi>
+    {
+        private OutputNameMapper() {};
+        
+        @Override
+        public Multimap<OutputPart<Fagi>, String> applyToPath(List<Path> input)
+        {
+            Assert.state(target.fusedPath != null, "The path (fusion) is required");
+            Assert.state(target.remainingPath != null, "The path (remaining) is required");
+            Assert.state(target.reviewPath != null, "The path (review) is required");
+            Assert.state(target.statsPath != null, "The path (stats) is required");
+            
+            final Function<String, String> getName = p -> Paths.get(p).getFileName().toString();
+            
+            return ImmutableMultimap.<OutputPart<Fagi>, String>builder()
+                .put(EnumFagiOutputPart.FUSED, getName.apply(target.fusedPath))
+                .put(EnumFagiOutputPart.REMAINING, getName.apply(target.remainingPath))
+                .put(EnumFagiOutputPart.REVIEW, getName.apply(target.reviewPath))
+                // Fixme: The current version of Fagi doesn't produce statistics (uncomment when fixed)
+                //.put(EnumFagiOutputPart.STATS, getName.apply(target.statsPath))
+                .build();
+        }
+    }
+    
     private String lang = "en";
     
     private Similarity similarity;
@@ -632,28 +659,9 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
     
     @JsonIgnore
     @Override
-    public OutputNameMapper<Fagi> getOutputNameMapper()
+    public InputToOutputNameMapper<Fagi> getOutputNameMapper()
     {
-        Assert.state(target.fusedPath != null, "The path (fusion) is required");
-        Assert.state(target.remainingPath != null, "The path (remaining) is required");
-        Assert.state(target.reviewPath != null, "The path (review) is required");
-        Assert.state(target.statsPath != null, "The path (stats) is required");
-        
-        final Function<String, String> getName = p -> Paths.get(p).getFileName().toString();
-        final Map<EnumFagiOutputPart, List<String>> outputMap = new EnumMap<>(EnumFagiOutputPart.class);
-        
-        outputMap.put(EnumFagiOutputPart.FUSED, 
-            Collections.singletonList(getName.apply(target.fusedPath)));
-        outputMap.put(EnumFagiOutputPart.REMAINING, 
-            Collections.singletonList(getName.apply(target.remainingPath)));
-        outputMap.put(EnumFagiOutputPart.REVIEW, 
-            Collections.singletonList(getName.apply(target.reviewPath)));
-        
-        // Fixme: The current version of Fagi doesn't produce statistics (uncomment when fixed)
-        //outputMap.put(EnumFagiOutputPart.STATS, 
-        //    Collections.singletonList(getName.apply(target.statsPath)));
-        
-        return input -> outputMap;
+        return new OutputNameMapper();
     }
     
     @JsonIgnore

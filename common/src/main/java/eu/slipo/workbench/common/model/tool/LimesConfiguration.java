@@ -39,13 +39,16 @@ import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.tool.output.EnumLimesOutputPart;
 import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
-import eu.slipo.workbench.common.model.tool.output.OutputNameMapper;
+import eu.slipo.workbench.common.model.tool.output.InputToOutputNameMapper;
+import eu.slipo.workbench.common.model.tool.output.OutputPart;
 
 /**
  * Configuration for LIMES
@@ -559,6 +562,27 @@ public class LimesConfiguration extends InterlinkConfiguration<Limes>
         }
     }
     
+    public class OutputNameMapper implements InputToOutputNameMapper<Limes>
+    {
+        private OutputNameMapper() {}
+
+        @Override
+        public Multimap<OutputPart<Limes>, String> applyToPath(List<Path> input)
+        {
+            Assert.state(accepted != null, "The output spec for `accepted` is null");
+            Assert.state(accepted.path != null, "The path for `accepted` is null");
+            Assert.state(review != null, "The output spec for `review` is null");
+            Assert.state(review.path != null, "The path for `review` is null");
+            
+            final Function<String, String> getName = p -> Paths.get(p).getFileName().toString();
+            
+            return ImmutableMultimap.<OutputPart<Limes>, String>builder()
+                .put(EnumLimesOutputPart.ACCEPTED, getName.apply(accepted.path))
+                .put(EnumLimesOutputPart.REVIEW, getName.apply(review.path))
+                .build();
+        }
+    }
+    
     /**
      * A list of aliased XML namespaces
      */
@@ -914,22 +938,9 @@ public class LimesConfiguration extends InterlinkConfiguration<Limes>
     
     @JsonIgnore
     @Override
-    public OutputNameMapper<Limes> getOutputNameMapper()
+    public InputToOutputNameMapper<Limes> getOutputNameMapper()
     {
-        Assert.state(accepted != null, "The output spec for `accepted` is null");
-        Assert.state(accepted.path != null, "The path for `accepted` is null");
-        Assert.state(review != null, "The output spec for `review` is null");
-        Assert.state(review.path != null, "The path for `review` is null");
-        
-        final Function<String, String> getName = p -> Paths.get(p).getFileName().toString();
-        final Map<EnumLimesOutputPart, List<String>> outputMap = new EnumMap<>(EnumLimesOutputPart.class);
-        
-        outputMap.put(EnumLimesOutputPart.ACCEPTED, 
-            Collections.singletonList(getName.apply(accepted.path)));
-        outputMap.put(EnumLimesOutputPart.REVIEW, 
-            Collections.singletonList(getName.apply(review.path)));
-        
-        return input -> outputMap;
+        return new OutputNameMapper();
     }
     
     @JsonProperty("acceptance")

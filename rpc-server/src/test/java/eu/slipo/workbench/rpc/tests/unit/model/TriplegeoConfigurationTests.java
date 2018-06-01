@@ -29,6 +29,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.google.common.collect.Multimap;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.tool.Triplegeo;
@@ -338,7 +339,7 @@ public class TriplegeoConfigurationTests
     @Test
     public void test1_getOutputNames() throws Exception
     {
-        Map<? extends OutputPart<Triplegeo>, List<String>> outputMap =
+        Multimap<OutputPart<Triplegeo>, String> outputMap =
             config1.getOutputNameMapper().apply(Arrays.asList("/data/p1.csv", "/data/p2.csv"));
 
         assertEquals(Arrays.asList("p1.nt", "p2.nt"),
@@ -356,7 +357,7 @@ public class TriplegeoConfigurationTests
     @Test
     public void test2a_getOutputNames() throws Exception
     {
-        Map<? extends OutputPart<Triplegeo>, List<String>> outputMap =
+        Multimap<OutputPart<Triplegeo>, String> outputMap =
             config2a.getOutputNameMapper().apply(Arrays.asList("/data/p1.csv", "/data/p2.csv"));
 
         assertEquals(Arrays.asList("p1.ttl", "p2.ttl"),
@@ -374,7 +375,7 @@ public class TriplegeoConfigurationTests
     @Test
     public void test2b_getOutputNames() throws Exception
     {
-        Map<? extends OutputPart<Triplegeo>, List<String>> outputMap =
+        Multimap<OutputPart<Triplegeo>, String> outputMap =
             config2b.getOutputNameMapper().apply(Arrays.asList("/data/p1.csv", "/data/p2.csv"));
 
         assertEquals(Arrays.asList("p1.ttl", "p2.ttl"),

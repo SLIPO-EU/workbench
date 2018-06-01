@@ -1,11 +1,11 @@
 package eu.slipo.workbench.common.model.tool;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,18 +24,24 @@ import org.hibernate.validator.constraints.URL;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import static org.springframework.util.StringUtils.stripFilenameExtension;
+import static org.springframework.util.StringUtils.getFilenameExtension;
+
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumSpatialOntology;
 import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
 import eu.slipo.workbench.common.model.tool.output.EnumTriplegeoOutputPart;
-import eu.slipo.workbench.common.model.tool.output.OutputNameMapper;
+import eu.slipo.workbench.common.model.tool.output.InputToOutputNameMapper;
 import eu.slipo.workbench.common.model.tool.output.OutputPart;
 
 
@@ -163,6 +169,49 @@ public class TriplegeoConfiguration extends TransformConfiguration<Triplegeo>
         }
     }
 
+    public class OutputNameMapper implements InputToOutputNameMapper<Triplegeo> 
+    {
+        private OutputNameMapper() {};
+        
+        @Override
+        public Multimap<OutputPart<Triplegeo>, String> applyToPath(List<Path> inputList)
+        {
+            Assert.state(outputFormat != null, "The output format is not specified");
+            
+            final String extension = outputFormat.getFilenameExtension();
+            final ImmutableMultimap.Builder<OutputPart<Triplegeo>, String> outputMapBuilder = 
+                ImmutableMultimap.builder();
+            
+            // Each input yields an RDF output and a JSON metadata file
+            
+            for (Path inputPath: inputList) {
+                String inputName = stripFilenameExtension(inputPath.getFileName().toString());
+                outputMapBuilder.put(
+                    EnumTriplegeoOutputPart.TRANSFORMED, inputName + "." + extension);
+                outputMapBuilder.put(
+                    EnumTriplegeoOutputPart.TRANSFORMED_METADATA, inputName + "_metadata" + ".json");
+                if (registerFeatures) {
+                    // An additional CSV is generated as a registration request payload
+                    outputMapBuilder.put(
+                        EnumTriplegeoOutputPart.REGISTRATION_REQUEST, inputName + ".csv");
+                }
+            }
+            
+            // An output file with classification (in RDF format) is always produced
+            
+            if (classificationSpec != null) {
+                outputMapBuilder.put(
+                    EnumTriplegeoOutputPart.CLASSIFICATION, "classification" + "." + extension);
+                outputMapBuilder.put(
+                    EnumTriplegeoOutputPart.CLASSIFICATION_METADATA, "classification_metadata" + ".json");
+            }
+            
+            // Done
+            
+            return outputMapBuilder.build();
+        }   
+    }
+    
     //
     // Member data
     //
@@ -521,53 +570,9 @@ public class TriplegeoConfiguration extends TransformConfiguration<Triplegeo>
     
     @JsonIgnore
     @Override
-    public OutputNameMapper<Triplegeo> getOutputNameMapper()
+    public InputToOutputNameMapper<Triplegeo> getOutputNameMapper()
     {
-        Assert.state(outputFormat != null, "The output format is not specified");
-        final String extension = outputFormat.getFilenameExtension();
-        
-        return new OutputNameMapper<Triplegeo>()
-        {
-            @Override
-            public Map<? extends OutputPart<Triplegeo>, List<String>> apply(List<String> inputList)
-            {
-                final Map<EnumTriplegeoOutputPart, List<String>> outputMap = 
-                    new EnumMap<>(EnumTriplegeoOutputPart.class);
-                
-                if (inputList.isEmpty())
-                    return outputMap;
-                
-                // The input is not empty
-                
-                for (EnumTriplegeoOutputPart part: EnumTriplegeoOutputPart.values())
-                    outputMap.put(part, new ArrayList<>());
-                
-                // Each input yields an RDF output and a JSON metadata file
-                
-                for (String inputPath: inputList) {
-                    String inputName = StringUtils.stripFilenameExtension(
-                        Paths.get(inputPath).getFileName().toString());
-                    outputMap.get(EnumTriplegeoOutputPart.TRANSFORMED)
-                        .add(inputName + "." + extension);
-                    outputMap.get(EnumTriplegeoOutputPart.TRANSFORMED_METADATA)
-                        .add(inputName + "_metadata" + ".json");
-                    if (registerFeatures) {
-                        // An additional CSV is generated as a registration request payload
-                        outputMap.get(EnumTriplegeoOutputPart.REGISTRATION_REQUEST)
-                            .add(inputName + ".csv");
-                    }
-                }
-                
-                // An output file with classification (in RDF format) is always produced
-                
-                outputMap.get(EnumTriplegeoOutputPart.CLASSIFICATION)
-                    .add("classification" + "." + extension);
-                outputMap.get(EnumTriplegeoOutputPart.CLASSIFICATION_METADATA)
-                    .add("classification_metadata" + ".json");
-                
-                return outputMap;
-            }
-        };
+        return new OutputNameMapper();
     }
     
     @JsonProperty("mode")
