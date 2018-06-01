@@ -15,6 +15,7 @@ import org.springframework.util.StringUtils;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.Iterables;
 
 import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
 
@@ -39,7 +40,10 @@ public class ProcessDefinition implements Serializable
      * Map a step's node name to a step descriptor
      */
     private final Map<String, Step> nodeNameToStep;
-
+    
+    /**
+     * Map a resource key to a process-wide resource descriptor ({@link ProcessInput})
+     */
     private final Map<Integer, ProcessInput> resourceKeyToResource;
 
     /**
@@ -73,7 +77,7 @@ public class ProcessDefinition implements Serializable
 
         this.nodeNameToStep = Collections.unmodifiableMap(
             steps.stream().collect(Collectors.toMap(s -> s.nodeName(), Function.identity())));
-
+        
         this.resourceKeyToResource = Collections.unmodifiableMap(
             resources.stream().collect(Collectors.toMap(r -> r.key(), Function.identity())));
 
@@ -132,7 +136,6 @@ public class ProcessDefinition implements Serializable
      * Get a {@link Step} descriptor by step key
      * @param stepKey The step key
      */
-    @JsonIgnore
     public Step stepByKey(int stepKey)
     {
         return keyToStep.get(stepKey);
@@ -141,19 +144,25 @@ public class ProcessDefinition implements Serializable
     /**
      * Get a {@link Step} descriptor by node name.
      */
-    @JsonIgnore
     public Step stepByNodeName(String nodeName)
     {
         return nodeName == null? null : nodeNameToStep.get(nodeName);
     }
-
+    
+    /**
+     * Get a {@link Step} descriptor by its user-provided name.
+     */
+    public Step stepByName(String name)
+    {
+        return name == null? null : Iterables.find(steps, s -> s.name.equals(name), null);
+    }
+    
     /**
      * Get a resource by its key
      *
      * @param resourceKey The resource key
      * @return
      */
-    @JsonIgnore
     public ProcessInput resourceByResourceKey(int resourceKey)
     {
         return resourceKeyToResource.get(resourceKey);
@@ -167,7 +176,6 @@ public class ProcessDefinition implements Serializable
      *   else <tt>null</tt> (i.e when the key is not not known, or it corresponds to
      *   other a non-output kind of resource)
      */
-    @JsonIgnore
     public Step stepByResourceKey(int resourceKey)
     {
         Integer stepKey = resourceKeyToStepKey.get(resourceKey);
@@ -181,7 +189,6 @@ public class ProcessDefinition implements Serializable
      * @return a {@link ResourceIdentifier} identifier if the given key corresponds to
      *   a previously defined catalog resource, else <tt>null</tt>.
      */
-    @JsonIgnore
     public ResourceIdentifier resourceIdentifierByResourceKey(int resourceKey)
     {
         return resourceKeyToResourceIdentifier.get(resourceKey);
@@ -192,7 +199,6 @@ public class ProcessDefinition implements Serializable
      * (i.e correspond to a resource of type {@link ProcessOutput}).
      * @return A set of keys
      */
-    @JsonIgnore
     public Set<Integer> outputKeys()
     {
         return resourceKeyToStepKey.keySet();

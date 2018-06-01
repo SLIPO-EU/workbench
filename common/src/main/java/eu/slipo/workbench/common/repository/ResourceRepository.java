@@ -99,16 +99,18 @@ public interface ResourceRepository
      * @param id The id of the resource entity
      * @param version The version of the resource entity
      * @param executionId The id of a process execution
-     * @param stepKey The step-key of a specific step inside the execution; may be <tt>null</tt>. 
+     * @param stepKey The key of a specific step inside the execution; may be <tt>null</tt>. 
      *   If <tt>null</tt>, it will be ignored; otherwise the corresponding step entity will also
-     *   update its reference to the resource (its single file marked as OUTPUT will point to the
-     *   target resource).
+     *   update its reference to the resource: the file identified by <tt>partKey</tt> will point 
+     *   to the target resource.
+     * @param partKey The key of the output part of the step identified by <tt>stepKey</tt>. This 
+     *   may only be <tt>null</tt>, if <tt>stepKey</tt> is also null.   
      * @return a resource record for the updated entity
      */
-    void setProcessExecution(long id, long version, long executionId, Integer stepKey);
+    void setProcessExecution(long id, long version, long executionId, Integer stepKey, String partKey);
     
     default void setProcessExecution(long id, long version, long executionId)
     {
-        setProcessExecution(id, version, executionId, null);
+        setProcessExecution(id, version, executionId, null, null);
     }
 }

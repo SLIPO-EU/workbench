@@ -11,7 +11,6 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -59,8 +58,8 @@ import eu.slipo.workbench.common.repository.ProcessRepository.ProcessExecutionNo
 import eu.slipo.workbench.common.repository.ProcessRepository.ProcessHasActiveExecutionException;
 import eu.slipo.workbench.common.repository.ResourceRepository;
 import eu.slipo.workbench.common.service.UserFileNamingStrategy;
+import eu.slipo.workbench.rpc.jobs.RegisterResourceJobConfiguration;
 import eu.slipo.workbench.common.service.ProcessOperator;
-import eu.slipo.workbench.common.service.util.ClonerService;
 import eu.slipo.workflows.Workflow;
 import eu.slipo.workflows.WorkflowExecutionEventListener;
 import eu.slipo.workflows.WorkflowExecutionEventListenerSupport;
@@ -112,9 +111,6 @@ public class DefaultProcessOperator implements ProcessOperator
     @Autowired
     private ProcessToWorkflowMapper processToWorkflowMapper;
 
-    @Autowired
-    private ClonerService cloner;
-
     /**
      * Fix status of interrupted executions.
      *
@@ -161,7 +157,9 @@ public class DefaultProcessOperator implements ProcessOperator
         {
             final Step step = definition.stepByNodeName(nodeName);
             Assert.state(step.operation() == EnumOperation.REGISTER, "Expected a registration step");
-            Assert.state(step.inputKeys().size() == 1, "Expected a single input for a registration step!");
+
+            // Retrieve the input (a registration step expects a single input)
+            Step.Input input = Iterables.getOnlyElement(step.input());
 
             // Check batch status; proceed only if registration was successful
 
@@ -171,14 +169,18 @@ public class DefaultProcessOperator implements ProcessOperator
 
             // Determine the step that produced (as output) the input for registration step
 
-            final int inputKey = step.inputKeys().get(0);
-            final Step producerStep = definition.stepByResourceKey(inputKey);
-            Assert.state(producerStep != null, "A processing step is expected to produce this resource!");
+            final Step producer = definition.stepByResourceKey(input.inputKey());
+            Assert.state(producer != null, "A step is expected to produce the resource to be registered");
+
+            final OutputPart<? extends AnyTool> outputPart = producer.outputPart(input.partKey());
+            if (outputPart == null)
+                throw new IllegalStateException(
+                    "The step " + producer + " has no output part of [" + input.partKey() + "]");
 
             // Extract resource (id, version) from execution context
 
-            final String RESOURCE_ID_KEY = "resourceId";
-            final String RESOURCE_VERSION_KEY = "resourceVersion";
+            final String RESOURCE_ID_KEY = RegisterResourceJobConfiguration.RESOURCE_ID_KEY;
+            final String RESOURCE_VERSION_KEY = RegisterResourceJobConfiguration.RESOURCE_VERSION_KEY;
 
             final ExecutionContext executionContext = jobExecution.getExecutionContext();
 
@@ -194,9 +196,12 @@ public class DefaultProcessOperator implements ProcessOperator
 
             // Associate process execution with registered resources
 
-            // Fixme: pass outputPart to ResourceRepository.setProcessExecution ??
             resourceRepository.setProcessExecution(
-                resourceId, resourceVersion, executionId, producerStep.key());
+                resourceId,
+                resourceVersion,
+                executionId,
+                producer.key(),
+                outputPart.key());
         }
     }
 
@@ -329,7 +334,7 @@ public class DefaultProcessOperator implements ProcessOperator
             for (OutputPart<? extends AnyTool> outputPart: outputParts) {
                 final String outputName = outputMap.get(outputPart);
                 final EnumOutputType outputType = outputPart.outputType();
-                // Todo: dataFormat is not correct (probably it should be reported from InputToOutputNameMapper)
+                // Todo: dataFormat is not correct (probably should be reported from InputToOutputNameMapper)
                 final EnumDataFormat dataFormat = outputType == EnumOutputType.OUTPUT?
                     configuration.getOutputFormat() : null; // only relevant to actual output results
                 // Find corresponding item from node's output paths (expect to always exist)
@@ -337,7 +342,7 @@ public class DefaultProcessOperator implements ProcessOperator
                 URI outputUri = convertPathToUri(outputPath);
                 ProcessExecutionStepFileRecord fileRecord = new ProcessExecutionStepFileRecord(
                     EnumStepFile.from(outputType), outputUri, null, dataFormat);
-                fileRecord.setPrimary(outputPart.equals(defaultOutputPart));
+                fileRecord.setOutputPartKey(outputPart.key());
                 stepRecord.addFile(fileRecord);
             }
 

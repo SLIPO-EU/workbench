@@ -305,20 +305,26 @@ public class DefaultResourceRepository implements ResourceRepository
     }
 
     @Override
-    public void setProcessExecution(long id, long version, long executionId, Integer stepKey)
+    public void setProcessExecution(
+        long id, long version, long executionId, Integer stepKey, String partKey)
     {
+        Assert.isTrue(stepKey == null || partKey != null, 
+            "A part key is required (in context of the given step)");
+        
         final ResourceRevisionEntity resourceRevisionEntity = findRevision(id, version);
-        Assert.notNull(resourceRevisionEntity,
-            "The pair of (id, version) does not refer to a ResourceRevision entity");
+        Assert.notNull(resourceRevisionEntity, 
+            "The pair of (id, version) doesn't refer to a ResourceRevision entity");
 
         final ProcessExecutionEntity executionEntity =
             entityManager.find(ProcessExecutionEntity.class, executionId);
-        Assert.notNull(executionEntity,
-            "The execution id does not refer to a ProcessExecution entity");
+        Assert.notNull(executionEntity, 
+            "The execution id doesn't refer to a ProcessExecution entity");
         final ZonedDateTime submittedOn = executionEntity.getSubmittedOn();
 
+        //
         // Associate targeted revision entity with given execution
-
+        //
+        
         String qlUpdateRevision =
             "UPDATE ResourceRevision r SET r.processExecution = :execution " +
             "WHERE r.parent.id = :id AND r.version = :version AND r.processExecution is NULL";
@@ -331,13 +337,16 @@ public class DefaultResourceRepository implements ResourceRepository
 
         if (countUpdated == 0) {
             logger.warn("Did not update process execution for resource %d@%d: " +
-                "resource is already linked to a process execution",
+                    "resource is already linked to a process execution",
                 id, version);
         }
 
+        //
         // If stepKey is given, must also update the step file entity
+        //
 
         if (stepKey != null) {
+            // Find the step entity to be updated 
             ProcessExecutionStepEntity stepEntity = executionEntity.getStepByKey(stepKey);
             if (stepEntity == null) {
                 // Find step entity inside a former execution (which handled this step key)
@@ -349,25 +358,35 @@ public class DefaultResourceRepository implements ResourceRepository
                     .findFirst()
                     .map(x -> x.getStepByKey(stepKey))
                     .orElse(null);
+                
                 Assert.state(stepEntity != null, String.format(
                     "No step entity for step #%d inside execution #%d (or former executions of same process)",
                     stepKey, executionId));
             }
-            // Fixme filtering by ProcessExecutionStepFileEntity::isPrimary is broken
+            if (stepEntity == null) {
+                throw new IllegalStateException(
+                    String.format("No step entity for step #%d inside execution:%d (or former executions of same process)",
+                        stepKey, executionId));
+            }
+            
+            // Find the output file entity matching given partKey
             ProcessExecutionStepFileEntity fileEntity = stepEntity.getFiles().stream()
-                .filter(f -> f.getType() == EnumStepFile.OUTPUT && f.isPrimary())
+                .filter(f -> partKey.equals(f.getOutputPartKey()))
                 .collect(MoreCollectors.toOptional())
                 .orElse(null);
             if (fileEntity != null) {
                 fileEntity.setResource(resourceRevisionEntity);
             } else {
-                Assert.state(false, String.format(
-                    "No output file entity for step #%d inside execution #%d", stepKey, executionId));
+                throw new IllegalStateException(
+                    String.format("No output file of part [%s] for execution:%d/step:%d", 
+                        partKey, executionId, stepKey));
             }
         }
 
+        //
         // If targeted revision is the latest, parent entity must also be updated
-
+        //
+        
         String qlUpdateParent =
             "UPDATE Resource r SET r.processExecution = :execution " +
             "WHERE r.id = :id AND r.version = :version";

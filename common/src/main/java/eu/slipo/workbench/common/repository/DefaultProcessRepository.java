@@ -13,9 +13,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
-import javax.swing.event.ListSelectionEvent;
 
-import org.apache.commons.collections4.IterableUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +22,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+
+import com.google.common.collect.Iterables;
 
 import eu.slipo.workbench.common.domain.AccountEntity;
 import eu.slipo.workbench.common.domain.ProcessEntity;
@@ -117,7 +117,7 @@ public class DefaultProcessRepository implements ProcessRepository
             if (query.getCreatedBy() != null) {
                 filters.add("(p.createdBy.id = :ownerId)");
             }
-            if (!StringUtils.isBlank(query.getName())) {
+            if (!StringUtils.isEmpty(query.getName())) {
                 filters.add("(p.name like :name)");
             }
             if (query.getTaskType() != null) {
@@ -697,10 +697,8 @@ public class DefaultProcessRepository implements ProcessRepository
         for (ProcessExecutionStepFileEntity fileEntity: executionStepEntity.getFiles()) {
             // Every existing file entity must correspond to a given record
             final long fid = fileEntity.getId();
-            final ProcessExecutionStepFileRecord fileRecord =
-                IterableUtils.find(fileRecords, r -> r.getId() == fid);
-            Assert.state(fileRecord != null && IterableUtils.frequency(fids, fid) == 1,
-                "Expected a single file record to match to a given id!");
+            final ProcessExecutionStepFileRecord fileRecord = 
+                Iterables.getOnlyElement(Iterables.filter(fileRecords, r -> r.getId() == fid));
             final boolean verified = completed || !fileRecord.getType().isOfOutputType();
             // Set updatable metadata from current file record
             fileEntity.setSize(fileRecord.getFileSize());
@@ -715,9 +713,7 @@ public class DefaultProcessRepository implements ProcessRepository
         // Add file records (if any)
         // A file record is considered as a new one if carrying an invalid (negative) id
         
-        for (ProcessExecutionStepFileRecord fileRecord:
-                IterableUtils.filteredIterable(fileRecords, f -> f.getId() < 0))
-        {
+        for (ProcessExecutionStepFileRecord fileRecord: Iterables.filter(fileRecords, f -> f.getId() < 0)) {
             ProcessExecutionStepFileEntity fileEntity =
                 new ProcessExecutionStepFileEntity(executionStepEntity, fileRecord);
             ResourceIdentifier resourceIdentifier = fileRecord.getResource();

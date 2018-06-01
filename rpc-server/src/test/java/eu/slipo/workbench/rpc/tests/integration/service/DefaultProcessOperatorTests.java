@@ -77,10 +77,14 @@ import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
 import eu.slipo.workbench.common.model.resource.ResourceRecord;
 import eu.slipo.workbench.common.model.resource.UrlDataSource;
+import eu.slipo.workbench.common.model.tool.AnyTool;
 import eu.slipo.workbench.common.model.tool.FagiConfiguration;
 import eu.slipo.workbench.common.model.tool.LimesConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
+import eu.slipo.workbench.common.model.tool.output.EnumFagiOutputPart;
+import eu.slipo.workbench.common.model.tool.output.EnumLimesOutputPart;
 import eu.slipo.workbench.common.model.tool.output.EnumTriplegeoOutputPart;
+import eu.slipo.workbench.common.model.tool.output.OutputPart;
 import eu.slipo.workbench.common.model.user.Account;
 import eu.slipo.workbench.common.repository.AccountRepository;
 import eu.slipo.workbench.common.repository.ProcessRepository;
@@ -749,7 +753,7 @@ public class DefaultProcessOperatorTests
         assertNotNull(step1Record);
         assertEquals(EnumProcessExecutionStatus.COMPLETED, step1Record.getStatus());
         ProcessExecutionStepFileRecord outfile1Record = step1Record.getFiles().stream()
-            .filter(f -> f.getType() == EnumStepFile.OUTPUT && f.isPrimary())
+            .filter(f -> EnumTriplegeoOutputPart.TRANSFORMED.key().equals(f.getOutputPartKey()))
             .collect(MoreCollectors.toOptional())
             .orElse(null);
         assertNotNull(outfile1Record);
@@ -937,11 +941,12 @@ public class DefaultProcessOperatorTests
         assertEquals(6, stepRecords.size());
 
         for (String name: Arrays.asList("Transform 1", "Transform 2", "Link 1 with 2")) {
+            OutputPart<? extends AnyTool> outputPart = definition.stepByName(name).defaultOutputPart();
             ProcessExecutionStepRecord stepRecord = executionRecord.getStepByName(name);
             assertNotNull(stepRecord);
             assertEquals(EnumProcessExecutionStatus.COMPLETED, stepRecord.getStatus());
             ProcessExecutionStepFileRecord outfileRecord = stepRecord.getFiles().stream()
-                .filter(f -> f.getType() == EnumStepFile.OUTPUT && f.isPrimary())
+                .filter(f -> outputPart.key().equals(f.getOutputPartKey()))
                 .collect(MoreCollectors.toOptional())
                 .orElse(null);
             assertNotNull(outfileRecord);
@@ -961,7 +966,7 @@ public class DefaultProcessOperatorTests
         ProcessExecutionStepFileRecord resourceStepFileRecord = executionRecord
             .getStepByName("Link 1 with 2").getFiles()
             .stream()
-            .filter(f -> f.getType() == EnumStepFile.OUTPUT && f.isPrimary())
+            .filter(f -> EnumLimesOutputPart.ACCEPTED.key().equals(f.getOutputPartKey()))
             .findFirst().get();
         ResourceIdentifier resourceIdentifier = resourceStepFileRecord.getResource();
         assertNotNull(resourceIdentifier);
@@ -1084,11 +1089,12 @@ public class DefaultProcessOperatorTests
         assertEquals(4, stepRecords.size());
 
         for (String name: Arrays.asList("Link 1 with 2", "Fuse 1 with 2")) {
+            OutputPart<? extends AnyTool> outputPart = definition.stepByName(name).defaultOutputPart();
             ProcessExecutionStepRecord stepRecord = executionRecord.getStepByName(name);
             assertNotNull(stepRecord);
             assertEquals(EnumProcessExecutionStatus.COMPLETED, stepRecord.getStatus());
             ProcessExecutionStepFileRecord outfileRecord = stepRecord.getFiles().stream()
-                .filter(f -> f.getType() == EnumStepFile.OUTPUT && f.isPrimary())
+                .filter(f -> outputPart.key().equals(f.getOutputPartKey()))
                 .collect(MoreCollectors.toOptional())
                 .orElse(null);
             assertNotNull(outfileRecord);
@@ -1109,7 +1115,7 @@ public class DefaultProcessOperatorTests
 
         ProcessExecutionStepFileRecord resourceStepFileRecord = executionRecord.getStepByName("Fuse 1 with 2")
             .getFiles().stream()
-            .filter(f -> f.getType() == EnumStepFile.OUTPUT && f.isPrimary())
+            .filter(f -> EnumFagiOutputPart.FUSED.key().equals(f.getOutputPartKey()))
             .collect(MoreCollectors.onlyElement());
         ResourceIdentifier resourceIdentifier = resourceStepFileRecord.getResource();
         assertNotNull(resourceIdentifier);
@@ -1192,7 +1198,7 @@ public class DefaultProcessOperatorTests
         assertNotNull(outputStepRecord);
         assertEquals(EnumProcessExecutionStatus.COMPLETED, outputStepRecord.getStatus());
         ProcessExecutionStepFileRecord outfileRecord = outputStepRecord.getFiles().stream()
-            .filter(f -> f.getType() == EnumStepFile.OUTPUT && f.isPrimary())
+            .filter(f -> EnumLimesOutputPart.ACCEPTED.key().equals(f.getOutputPartKey()))
             .collect(MoreCollectors.toOptional())
             .orElse(null);
         assertNotNull(outfileRecord);

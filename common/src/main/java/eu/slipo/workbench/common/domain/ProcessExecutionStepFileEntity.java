@@ -23,8 +23,10 @@ import org.hibernate.annotations.Type;
 import com.vividsolutions.jts.geom.Geometry;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
+import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.process.EnumStepFile;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepFileRecord;
+import eu.slipo.workbench.common.model.tool.output.OutputPart;
 
 
 @Entity(name = "ProcessExecutionStepFile")
@@ -103,16 +105,24 @@ public class ProcessExecutionStepFileEntity {
     UUID tableName;
     
     /**
-     * A flag that indicates that a step file is verified to exist.
+     * A flag that indicates that a step file is verified to exist. 
+     * 
+     * This flag is only relevant to output files (as input files must always exist for a step
+     * to be created).
      */
     @Column(name = "verified")
     boolean verified;
     
     /**
-     * A flag that indicates that a step file is the primary output of the step it belongs.
+     * A key identifying an output part. This is, of course, only relevant to output files.
+     * 
+     * <p>A part key is expected to match an {@link OutputPart} object from the enumeration of
+     * available parts provided by each tool (so it is tool-specific key).
+     * 
+     * @see EnumTool#getOutputPartEnumeration() 
      */
-    @Column(name = "primary_output", updatable = false)
-    Boolean primary;
+    @Column(name = "output_part", updatable = false)
+    String outputPartKey;
     
     protected ProcessExecutionStepFileEntity() {}
    
@@ -126,9 +136,8 @@ public class ProcessExecutionStepFileEntity {
         this.dataFormat = record.getDataFormat();
         this.boundingBox = record.getBoundingBox();
         this.tableName = record.getTableName();
-        this.primary = record.getPrimary();
+        this.outputPartKey = record.getOutputPartKey();
         this.verified = false;
-        
     }
     
     public ProcessExecutionStepFileEntity(
@@ -255,35 +264,29 @@ public class ProcessExecutionStepFileEntity {
         return verified;
     }
    
-    public void setPrimary(Boolean primary)
+    public void setOutputPartKey(String outputPartKey)
     {
-        this.primary = primary;
+        this.outputPartKey = outputPartKey;
     }
     
-    public Boolean getPrimary()
+    public String getOutputPartKey()
     {
-        return primary;
-    }
-    
-    public boolean isPrimary()
-    {
-        return primary != null && primary.booleanValue();
+        return outputPartKey;
     }
    
     public ProcessExecutionStepFileRecord toProcessExecutionStepFileRecord() 
     {
         ProcessExecutionStepFileRecord fileRecord = 
             new ProcessExecutionStepFileRecord(type, path, size, dataFormat);
-
         fileRecord.setId(id);
+        
+        fileRecord.setOutputPartKey(outputPartKey);
         
         if (resource != null)
             fileRecord.setResource(resource.parent.id, resource.version);
-
+        
         fileRecord.setBoundingBox(boundingBox);
         fileRecord.setTableName(tableName);
-        
-        fileRecord.setPrimary(primary);
         
         return fileRecord;
     }

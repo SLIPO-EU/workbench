@@ -43,9 +43,31 @@ import eu.slipo.workbench.rpc.jobs.listener.ExecutionContextPromotionListeners;
 @Component
 public class RegisterResourceJobConfiguration
 {
+    /**
+     * The key of an entry (under execution context) holding the id of a registered resource
+     */
+    public static final String RESOURCE_ID_KEY = "resourceId";
+
+    /**
+     * The key of an entry (under execution context) holding the version of a registered resource
+     */
+    public static final String RESOURCE_VERSION_KEY = "resourceVersion";
+
+    /**
+     * The key of an entry (under execution context) holding the absolute file path to the resource
+     */
+    public static final String PATH_KEY = "path";
+
+    private static final String INPUT_PATH_KEY = "inputPath";
+
     private static final Logger logger = LoggerFactory.getLogger(RegisterResourceJobConfiguration.class);
 
     private static final Slugify slugify = new Slugify();
+
+    private static String slugify(String text)
+    {
+        return slugify.slugify(text);
+    }
 
     @Autowired
     private StepBuilderFactory stepBuilderFactory;
@@ -102,21 +124,20 @@ public class RegisterResourceJobConfiguration
             StepContext stepContext = chunkContext.getStepContext();
             ExecutionContext executionContext = stepContext.getStepExecution().getExecutionContext();
 
-            // Check if already complete (a restart of a stopped yet complete execution)
+            // Check if already complete (a restart of a stopped, yet complete, execution)
 
-            if (executionContext.containsKey("resourceId")) {
+            if (executionContext.containsKey(RESOURCE_ID_KEY)) {
                 // Assume the task is complete
-                Assert.state(executionContext.getLong("resourceId", -1L) > 0,
+                Assert.state(executionContext.getLong(RESOURCE_ID_KEY, -1L) > 0,
                     "The tasklet is expected to write a resource id into execution context");
-                Assert.state(executionContext.getLong("resourceVersion", -1L) > 0,
+                Assert.state(executionContext.getLong(RESOURCE_VERSION_KEY, -1L) > 0,
                     "The tasklet is expected to write a resource version into execution context");
                 return RepeatStatus.FINISHED;
             }
 
             // Compose name and resolve target path under catalog root directory
 
-            String targetName = slugify.slugify(metadata.getName()) + "." +
-                format.getFilenameExtension();
+            String targetName = slugify(metadata.getName()) + "." + format.getFilenameExtension();
             Path targetPath = catalogUserFileNamingStrategy.resolvePath(createdBy, targetName);
             Assert.state(targetPath.startsWith(catalogDataDir),
                 "The target path is expected to be under catalog data directory");
@@ -161,10 +182,10 @@ public class RegisterResourceJobConfiguration
 
             // Update execution context
 
-            executionContext.put("inputPath", inputPath.toString());
-            executionContext.put("path", targetPath.toString());
-            executionContext.put("resourceId", record.getId());
-            executionContext.put("resourceVersion", record.getVersion());
+            executionContext.put(INPUT_PATH_KEY, inputPath.toString());
+            executionContext.put(PATH_KEY, targetPath.toString());
+            executionContext.put(RESOURCE_ID_KEY, record.getId());
+            executionContext.put(RESOURCE_VERSION_KEY, record.getVersion());
 
             return RepeatStatus.FINISHED;
         }
@@ -213,13 +234,11 @@ public class RegisterResourceJobConfiguration
     public Step step(@Qualifier("registerResource.tasklet") Tasklet registerTasklet)
         throws Exception
     {
-        String[] promotedKeys = new String[] {
-            "resourceId", "resourceVersion", "path"
-        };
+        String[] keys = new String[] { RESOURCE_ID_KEY, RESOURCE_VERSION_KEY, PATH_KEY };
 
         return stepBuilderFactory.get("registerResource")
             .tasklet(registerTasklet)
-            .listener(ExecutionContextPromotionListeners.fromKeys(promotedKeys))
+            .listener(ExecutionContextPromotionListeners.fromKeys(keys))
             .build();
     }
 
