@@ -38,8 +38,10 @@ import org.springframework.util.StringUtils;
 import static org.springframework.util.StringUtils.stripFilenameExtension;
 import static org.springframework.util.StringUtils.getFilenameExtension;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.spotify.docker.client.DockerClient;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
@@ -65,6 +67,13 @@ public class FagiJobConfiguration extends BaseJobConfiguration
      * The default interval (milliseconds) for polling a container
      */
     public static final long DEFAULT_CHECK_INTERVAL = 1000L;
+
+    /**
+     * A list of keys of parameters that should be ignored (blacklisted) as conflicting with
+     * <tt>input</tt> parameter.
+     */
+    private static final List<String> blacklistedParameterKeys =
+        ImmutableList.of("left.path", "right.path", "links.path");
 
     @Autowired
     private DockerClient docker;
@@ -119,17 +128,19 @@ public class FagiJobConfiguration extends BaseJobConfiguration
 
             // Read given parameters
 
-            FagiConfiguration config =
+            parameters = Maps.filterKeys(parameters, key -> !blacklistedParameterKeys.contains(key));
+
+            FagiConfiguration configuration =
                 propertiesConverter.propertiesToValue(parameters, FagiConfiguration.class);
 
-            String rulesSpec = config.getRulesSpec();
+            String rulesSpec = configuration.getRulesSpec();
             Assert.isTrue(rulesSpec != null && rulesSpec.matches("^(file|classpath):.*"),
                 "The ruleset is expected as a file-based resource location");
-            config.setRulesSpec("rules.xml"); // a dummy name
+            configuration.setRulesSpec("rules.xml"); // a dummy name
 
-            String leftPath = config.getLeftPath();
-            String rightPath = config.getRightPath();
-            String linksPath = config.getLinksPath();
+            String leftPath = configuration.getLeftPath();
+            String rightPath = configuration.getRightPath();
+            String linksPath = configuration.getLinksPath();
 
             List<String> inputPaths = Arrays.asList(leftPath, rightPath, linksPath);
             Assert.isTrue(!Iterables.any(inputPaths, StringUtils::isEmpty),
@@ -137,18 +148,18 @@ public class FagiJobConfiguration extends BaseJobConfiguration
             Assert.isTrue(Iterables.all(inputPaths, p -> Paths.get(p).isAbsolute()),
                 "The input is expected as a list of absolute paths");
 
-            config.clearInput();
+            configuration.clearInput();
 
             // Validate
 
-            Set<ConstraintViolation<FagiConfiguration>> errors = validator.validate(config);
+            Set<ConstraintViolation<FagiConfiguration>> errors = validator.validate(configuration);
             if (!errors.isEmpty()) {
                 throw InvalidConfigurationException.fromErrors(errors);
             }
 
             // Update execution context
 
-            executionContext.put("spec", config);
+            executionContext.put("spec", configuration);
             executionContext.putString("rules", rulesSpec);
             executionContext.put("input", inputPaths);
 
