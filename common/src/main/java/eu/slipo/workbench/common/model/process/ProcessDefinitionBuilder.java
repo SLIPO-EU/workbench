@@ -2,7 +2,6 @@ package eu.slipo.workbench.common.model.process;
 
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -10,15 +9,11 @@ import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntFunction;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
-
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumOperation;

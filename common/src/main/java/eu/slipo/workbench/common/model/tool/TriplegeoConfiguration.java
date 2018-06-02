@@ -1,8 +1,9 @@
 package eu.slipo.workbench.common.model.tool;
 
+import static org.springframework.util.StringUtils.stripFilenameExtension;
+
 import java.io.File;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -15,7 +16,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import javax.validation.Valid;
-import javax.validation.constraints.AssertTrue;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 
@@ -24,9 +24,6 @@ import org.hibernate.validator.constraints.URL;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-import static org.springframework.util.StringUtils.stripFilenameExtension;
-import static org.springframework.util.StringUtils.getFilenameExtension;
-
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -34,12 +31,9 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumSpatialOntology;
-import eu.slipo.workbench.common.model.poi.EnumTool;
-import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
 import eu.slipo.workbench.common.model.tool.output.EnumTriplegeoOutputPart;
 import eu.slipo.workbench.common.model.tool.output.InputToOutputNameMapper;
 import eu.slipo.workbench.common.model.tool.output.OutputPart;

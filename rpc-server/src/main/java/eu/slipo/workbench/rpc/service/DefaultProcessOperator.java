@@ -9,8 +9,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -311,7 +309,6 @@ public class DefaultProcessOperator implements ProcessOperator
             // Add the expected output files under step record
             // Note: Every output part is expected to hold at most 1 output path!
 
-            final OutputPart<? extends AnyTool> defaultOutputPart = tool.getDefaultOutputPart();
             final Class<?> outputPartEnumeration = tool.getOutputPartEnumeration();
             final InputToOutputNameMapper<? extends AnyTool> outputNameMapper = configuration.getOutputNameMapper();
 

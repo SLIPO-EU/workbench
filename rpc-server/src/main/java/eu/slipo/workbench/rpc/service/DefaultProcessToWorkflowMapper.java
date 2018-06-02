@@ -1,6 +1,5 @@
 package eu.slipo.workbench.rpc.service;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.nio.ByteBuffer;
@@ -8,18 +7,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
@@ -34,12 +29,9 @@ import org.springframework.util.StringUtils;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.common.collect.Table;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
-import eu.slipo.workbench.common.model.poi.EnumOperation;
 import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.Step;
@@ -54,17 +46,14 @@ import eu.slipo.workbench.common.model.resource.UrlDataSource;
 import eu.slipo.workbench.common.model.tool.AnyTool;
 import eu.slipo.workbench.common.model.tool.FagiConfiguration;
 import eu.slipo.workbench.common.model.tool.ImportDataConfiguration;
-import eu.slipo.workbench.common.model.tool.LimesConfiguration;
 import eu.slipo.workbench.common.model.tool.RegisterToCatalogConfiguration;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.model.tool.output.EnumImportDataOutputPart;
-import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
 import eu.slipo.workbench.common.model.tool.output.InputToOutputNameMapper;
 import eu.slipo.workbench.common.model.tool.output.OutputPart;
 import eu.slipo.workbench.common.repository.ResourceRepository;
 import eu.slipo.workbench.common.service.UserFileNamingStrategy;
-import eu.slipo.workbench.common.service.util.ClonerService;
 import eu.slipo.workbench.common.service.util.PropertiesConverterService;
 import eu.slipo.workflows.Workflow;
 import eu.slipo.workflows.Workflow.JobDefinitionBuilder;

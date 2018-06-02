@@ -1,6 +1,6 @@
 package eu.slipo.workbench.rpc.tests.unit.model;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -9,7 +9,6 @@ import java.io.ObjectOutputStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
 import java.util.Properties;
@@ -38,7 +37,6 @@ import com.google.common.collect.Multimap;
 import eu.slipo.workbench.common.model.tool.Limes;
 import eu.slipo.workbench.common.model.tool.LimesConfiguration;
 import eu.slipo.workbench.common.model.tool.output.EnumLimesOutputPart;
-import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
 import eu.slipo.workbench.common.model.tool.output.OutputPart;
 import eu.slipo.workbench.common.service.util.JsonBasedPropertiesConverterService;
 import eu.slipo.workbench.common.service.util.PropertiesConverterService;

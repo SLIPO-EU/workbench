@@ -5,14 +5,11 @@ import java.io.Serializable;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.validation.Valid;
@@ -36,9 +33,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
-import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.tool.output.EnumFagiOutputPart;
-import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
 import eu.slipo.workbench.common.model.tool.output.InputToOutputNameMapper;
 import eu.slipo.workbench.common.model.tool.output.OutputPart;
 

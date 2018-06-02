@@ -2,8 +2,6 @@ package eu.slipo.workbench.rpc.tests.integration.service;
 
 import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URL;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -12,7 +10,6 @@ import java.util.Properties;
 
 import org.springframework.data.util.Pair;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
 import com.google.auto.value.AutoValue;
 

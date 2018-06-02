@@ -1,15 +1,12 @@
 package eu.slipo.workbench.common.model.tool;
 
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.lang3.NotImplementedException;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
-import eu.slipo.workbench.common.model.poi.EnumTool;
-import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
 import eu.slipo.workbench.common.model.tool.output.InputToOutputNameMapper;
 
 /**
