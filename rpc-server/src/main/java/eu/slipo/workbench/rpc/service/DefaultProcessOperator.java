@@ -56,7 +56,7 @@ import eu.slipo.workbench.common.repository.ProcessRepository.ProcessExecutionNo
 import eu.slipo.workbench.common.repository.ProcessRepository.ProcessHasActiveExecutionException;
 import eu.slipo.workbench.common.repository.ResourceRepository;
 import eu.slipo.workbench.common.service.UserFileNamingStrategy;
-import eu.slipo.workbench.rpc.jobs.RegisterResourceJobConfiguration;
+import eu.slipo.workbench.rpc.jobs.RegisterToCatalogJobConfiguration;
 import eu.slipo.workbench.common.service.ProcessOperator;
 import eu.slipo.workflows.Workflow;
 import eu.slipo.workflows.WorkflowExecutionEventListener;
@@ -177,8 +177,8 @@ public class DefaultProcessOperator implements ProcessOperator
 
             // Extract resource (id, version) from execution context
 
-            final String RESOURCE_ID_KEY = RegisterResourceJobConfiguration.RESOURCE_ID_KEY;
-            final String RESOURCE_VERSION_KEY = RegisterResourceJobConfiguration.RESOURCE_VERSION_KEY;
+            final String RESOURCE_ID_KEY = RegisterToCatalogJobConfiguration.RESOURCE_ID_KEY;
+            final String RESOURCE_VERSION_KEY = RegisterToCatalogJobConfiguration.RESOURCE_VERSION_KEY;
 
             final ExecutionContext executionContext = jobExecution.getExecutionContext();
 

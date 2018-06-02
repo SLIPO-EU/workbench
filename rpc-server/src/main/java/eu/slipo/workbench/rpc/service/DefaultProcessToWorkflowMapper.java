@@ -101,8 +101,8 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
     private Flow fagiFlow;
 
     @Autowired
-    @Qualifier("registerResource.flow")
-    private Flow registerResourceFlow;
+    @Qualifier("registerToCatalog.flow")
+    private Flow registerToCatalogFlow;
 
     @Autowired
     @Qualifier("downloadFile.flow")
@@ -155,6 +155,8 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
         final UUID workflowId = computeWorkflowId(id, version);
         final Workflow.Builder workflowBuilder = workflowBuilderFactory.get(workflowId);
         Workflow workflow = buildWorkflow(workflowBuilder, definition, createdBy);
+
+        logger.info("The process {}@{} is mapped onto workflow {}", id, version, workflowId);
         return workflow;
     }
 
@@ -306,7 +308,7 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
                     Step producer = definition.stepByResourceKey(input.get(0).inputKey());
                     parametersMap = buildParameters(
                         definition, (RegisterToCatalogConfiguration) configuration, producer, createdBy);
-                    flow = registerResourceFlow;
+                    flow = registerToCatalogFlow;
                 }
                 break;
             case TRIPLEGEO:

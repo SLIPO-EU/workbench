@@ -41,7 +41,7 @@ import eu.slipo.workbench.common.service.UserFileNamingStrategy;
 import eu.slipo.workbench.rpc.jobs.listener.ExecutionContextPromotionListeners;
 
 @Component
-public class RegisterResourceJobConfiguration
+public class RegisterToCatalogJobConfiguration
 {
     /**
      * The key of an entry (under execution context) holding the id of a registered resource
@@ -60,7 +60,7 @@ public class RegisterResourceJobConfiguration
 
     private static final String INPUT_PATH_KEY = "inputPath";
 
-    private static final Logger logger = LoggerFactory.getLogger(RegisterResourceJobConfiguration.class);
+    private static final Logger logger = LoggerFactory.getLogger(RegisterToCatalogJobConfiguration.class);
 
     private static final Slugify slugify = new Slugify();
 
@@ -191,7 +191,7 @@ public class RegisterResourceJobConfiguration
         }
     }
 
-    @Bean("registerResource.tasklet")
+    @Bean("registerToCatalog.tasklet")
     @JobScope
     public RegisterResourceTasklet tasklet(
         @Value("#{jobParameters['input']}") String input,
@@ -230,21 +230,21 @@ public class RegisterResourceJobConfiguration
             resourceId == null? null : ResourceIdentifier.of(resourceId));
     }
 
-    @Bean("registerResource.step")
-    public Step step(@Qualifier("registerResource.tasklet") Tasklet registerTasklet)
+    @Bean("registerToCatalog.step")
+    public Step step(@Qualifier("registerToCatalog.tasklet") Tasklet registerTasklet)
         throws Exception
     {
         String[] keys = new String[] { RESOURCE_ID_KEY, RESOURCE_VERSION_KEY, PATH_KEY };
 
-        return stepBuilderFactory.get("registerResource")
+        return stepBuilderFactory.get("registerToCatalog")
             .tasklet(registerTasklet)
             .listener(ExecutionContextPromotionListeners.fromKeys(keys))
             .build();
     }
 
-    @Bean("registerResource.flow")
-    public Flow flow(@Qualifier("registerResource.step") Step step)
+    @Bean("registerToCatalog.flow")
+    public Flow flow(@Qualifier("registerToCatalog.step") Step step)
     {
-        return new FlowBuilder<Flow>("registerResource").start(step).end();
+        return new FlowBuilder<Flow>("registerToCatalog").start(step).end();
     }
 }
