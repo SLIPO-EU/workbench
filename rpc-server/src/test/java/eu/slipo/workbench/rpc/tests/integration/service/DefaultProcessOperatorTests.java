@@ -72,12 +72,10 @@ import eu.slipo.workbench.common.model.resource.DataSource;
 import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
 import eu.slipo.workbench.common.model.resource.ResourceRecord;
-import eu.slipo.workbench.common.model.tool.AnyTool;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.model.tool.output.EnumFagiOutputPart;
 import eu.slipo.workbench.common.model.tool.output.EnumLimesOutputPart;
 import eu.slipo.workbench.common.model.tool.output.EnumTriplegeoOutputPart;
-import eu.slipo.workbench.common.model.tool.output.OutputPart;
 import eu.slipo.workbench.common.model.user.Account;
 import eu.slipo.workbench.common.repository.AccountRepository;
 import eu.slipo.workbench.common.repository.ProcessRepository;
@@ -276,6 +274,9 @@ public class DefaultProcessOperatorTests
                 final Optional<Path> classificationPath = classificationResource.exists()?
                     Optional.of(Paths.get(classificationResource.getURI())) : Optional.empty();
 
+                final Optional<Path> expectedClassificationResult = classificationResource.exists()?
+                    Optional.of(resultsDir.resolve("classification.nt")) : Optional.empty();
+
                 // Copy mapping/classification files into user's data directory
 
                 Optional<Path> mappingsTempPath = mappingsPath
@@ -304,11 +305,12 @@ public class DefaultProcessOperatorTests
                         .name("file-" + inputNameToTempName.get(inputName) + "-a")
                         .stagingDir(userDir)
                         .inputUri(inputPath.toUri())
-                        .expectedResult(resultsDir.resolve(stripFilenameExtension(inputName) + ".nt"))
                         .configuration(
                             options,
                             mappingsTempPath.map(p -> userDir.relativize(p).toString()),
                             classificationTempPath.map(p -> userDir.relativize(p).toString()))
+                        .expectedResult(resultsDir.resolve(stripFilenameExtension(inputName) + ".nt"))
+                        .expectedClassificationResult(expectedClassificationResult)
                         .build();
                     String key = String.format("file-%s-%d-a", dirName, index + 1);
                     transformFixtures.put(key, fixture);
@@ -325,11 +327,12 @@ public class DefaultProcessOperatorTests
                         .name("file-" + inputNameToTempName.get(inputName) + "-b")
                         .stagingDir(userDir)
                         .inputUri(inputPath.toUri())
-                        .expectedResult(resultsDir.resolve(stripFilenameExtension(inputName) + ".nt"))
                         .configuration(
                             options,
                             mappingsPath.map(p -> p.toUri().toString()),
                             classificationPath.map(p -> p.toUri().toString()))
+                        .expectedResult(resultsDir.resolve(stripFilenameExtension(inputName) + ".nt"))
+                        .expectedClassificationResult(expectedClassificationResult)
                         .build();
                     String key = String.format("file-%s-%d-b", dirName, index + 1);
                     transformFixtures.put(key, fixture);
@@ -344,11 +347,12 @@ public class DefaultProcessOperatorTests
                     TransformFixture fixture = newTransformFixtureBuilder()
                         .name(fixtureName)
                         .inputUri(new URL(url, "#" + fixtureName.substring(1 + inputName.length())))
-                        .expectedResult(resultsDir.resolve(stripFilenameExtension(inputName) + ".nt"))
                         .configuration(
                             options,
                             mappingsTempPath.map(p -> userDir.relativize(p).toString()),
                             classificationTempPath.map(p -> userDir.relativize(p).toString()))
+                        .expectedResult(resultsDir.resolve(stripFilenameExtension(inputName) + ".nt"))
+                        .expectedClassificationResult(expectedClassificationResult)
                         .build();
                         String key = String.format("url-%s-%d-a", dirName, index + 1);
                     transformFixtures.put(key, fixture);
@@ -365,11 +369,12 @@ public class DefaultProcessOperatorTests
                     TransformFixture fixture = newTransformFixtureBuilder()
                         .name(fixtureName)
                         .inputUri(new URL(url, "#" + fixtureName.substring(1 + inputName.length())))
-                        .expectedResult(resultsDir.resolve(stripFilenameExtension(inputName) + ".nt"))
                         .configuration(
                             options,
                             mappingsPath.map(p -> p.toUri().toString()),
                             classificationPath.map(p -> p.toUri().toString()))
+                        .expectedResult(resultsDir.resolve(stripFilenameExtension(inputName) + ".nt"))
+                        .expectedClassificationResult(expectedClassificationResult)
                         .build();
                     String key = String.format("url-%s-%d-b", dirName, index + 1);
                     transformFixtures.put(key, fixture);
@@ -430,13 +435,12 @@ public class DefaultProcessOperatorTests
                         inputNameToTempPath.get("a.csv").toUri(),
                         inputNameToTempPath.get("b.csv").toUri()))
                     .configurationForTransformation(
-                        transformOptions1,
-                        transformOptions2,
+                        transformOptions1, transformOptions2,
                         userDir.relativize(mappingsTempPath).toString(),
                         userDir.relativize(classificationTempPath).toString())
+                    .configuration(interlinkOptions)
                     .expectedTransformedResults(expectedTransformedPair)
                     .expectedResult(expectedResult)
-                    .configuration(interlinkOptions)
                     .build();
                 String keyA = String.format("file-%s-a", dirName);
                 interlinkFixtures.put(keyA, fixtureA);
@@ -450,13 +454,12 @@ public class DefaultProcessOperatorTests
                         inputNameToTempPath.get("a.csv").toUri(),
                         inputNameToTempPath.get("b.csv").toUri()))
                     .configurationForTransformation(
-                        transformOptions1,
-                        transformOptions2,
+                        transformOptions1, transformOptions2,
                         mappingsUri.toString(),
                         classificationUri.toString())
+                    .configuration(interlinkOptions)
                     .expectedTransformedResults(expectedTransformedPair)
                     .expectedResult(expectedResult)
-                    .configuration(interlinkOptions)
                     .build();
                 String keyB = String.format("file-%s-b", dirName);
                 interlinkFixtures.put(keyB, fixtureB);
@@ -472,6 +475,7 @@ public class DefaultProcessOperatorTests
                 final Path inputDir = Paths.get(dir.createRelative("input").getURI());
                 final Path resultsDir = Paths.get(dir.createRelative("output").getURI());
                 final Path expectedResult = resultsDir.resolve("fused.nt");
+                final Path expectedRemainingResult = resultsDir.resolve("remaining.nt");
                 final Path expectedLinkResult = inputDir.resolve("links.nt");
 
                 final URI rulesUri = dir.createRelative("rules.xml").getURI();
@@ -507,9 +511,10 @@ public class DefaultProcessOperatorTests
                         inputNameToTempPath.get("a.nt").toUri(),
                         inputNameToTempPath.get("b.nt").toUri()))
                     .configurationForLinking(linkOptions)
+                    .configuration(fuseOptions, userDir.relativize(rulesTempPath).toString())
                     .expectedLinkResult(expectedLinkResult)
                     .expectedResult(expectedResult)
-                    .configuration(fuseOptions, userDir.relativize(rulesTempPath).toString())
+                    .expectedRemainingResult(expectedRemainingResult)
                     .build();
                     fixtureKey = String.format("file-%s-a", dirName);
                 fuseFixtures.put(fixtureKey, fixture);
@@ -523,9 +528,10 @@ public class DefaultProcessOperatorTests
                         inputNameToTempPath.get("a.nt").toUri(),
                         inputNameToTempPath.get("b.nt").toUri()))
                     .configurationForLinking(linkOptions)
+                    .configuration(fuseOptions, rulesUri.toString())
                     .expectedLinkResult(expectedLinkResult)
                     .expectedResult(expectedResult)
-                    .configuration(fuseOptions, rulesUri.toString())
+                    .expectedRemainingResult(expectedRemainingResult)
                     .build();
                 fixtureKey = String.format("file-%s-b", dirName);
                 fuseFixtures.put(fixtureKey, fixture);
@@ -657,7 +663,7 @@ public class DefaultProcessOperatorTests
         final int resourceKey = 1;
         final DataSource source = fixture.inputAsDataSource();
         final ResourceMetadataCreate resourceMetadata =
-            new ResourceMetadataCreate(resourceName, "A sample input file");
+            new ResourceMetadataCreate(resourceName, "A transformed RDF file");
 
         return processDefinitionBuilderFactory.create(procName)
             .transform("Triplegeo 1", builder -> builder
@@ -678,7 +684,7 @@ public class DefaultProcessOperatorTests
         final TriplegeoConfiguration configuration = fixture.configuration();
         final EnumDataFormat inputFormat1 = configuration.getInputFormat();
         final ResourceMetadataCreate resourceMetadata =
-            new ResourceMetadataCreate(resourceName, "A sample input file");
+            new ResourceMetadataCreate(resourceName, "A transformed RDF file");
 
         return processDefinitionBuilderFactory.create(procName)
             .resource(resourceName, key1, sourceUrl, inputFormat1)
@@ -697,8 +703,11 @@ public class DefaultProcessOperatorTests
     {
         final int resourceKey = 1;
         final DataSource source = fixture.inputAsDataSource();
-        final ResourceMetadataCreate resourceMetadata =
-            new ResourceMetadataCreate(resourceName, "A sample input file");
+
+        final ResourceMetadataCreate transformedResourceMetadata =
+            new ResourceMetadataCreate(resourceName, "A transformed RDF file");
+        final ResourceMetadataCreate classificationResourceMetadata =
+            new ResourceMetadataCreate(resourceName + ".classification", "A classification file");
 
         return processDefinitionBuilderFactory.create(procName)
             .transform("Triplegeo 1", builder -> builder
@@ -706,7 +715,10 @@ public class DefaultProcessOperatorTests
                 .outputFormat(EnumDataFormat.N_TRIPLES)
                 .outputKey(resourceKey)
                 .configuration(fixture.configuration()))
-            .register("Register 1", resourceKey, "transformed", resourceMetadata)
+            .register("Register 1",
+                resourceKey, EnumTriplegeoOutputPart.TRANSFORMED.key(), transformedResourceMetadata)
+            .register("Register 1 - Classification",
+                resourceKey, EnumTriplegeoOutputPart.CLASSIFICATION.key(), classificationResourceMetadata)
             .build();
     }
 
@@ -737,45 +749,83 @@ public class DefaultProcessOperatorTests
 
         assertEquals(EnumProcessExecutionStatus.COMPLETED, executionRecord.getStatus());
         assertNotNull(executionRecord.getCompletedOn());
+        assertNotNull(executionRecord.getSteps());
 
-        List<ProcessExecutionStepRecord> stepRecords = executionRecord.getSteps();
-        assertNotNull(stepRecords);
-        assertEquals(2, stepRecords.size());
+        final boolean expectClassificationResult = definition.stepByName("Register 1 - Classification") != null;
 
-        ProcessExecutionStepRecord step1Record = executionRecord.getStepByName("Triplegeo 1");
-        assertNotNull(step1Record);
-        assertEquals(EnumProcessExecutionStatus.COMPLETED, step1Record.getStatus());
-        ProcessExecutionStepFileRecord outfile1Record = step1Record.getFiles().stream()
+        ProcessExecutionStepRecord transformStepRecord = executionRecord.getStepByName("Triplegeo 1");
+        assertNotNull(transformStepRecord);
+        assertEquals(EnumProcessExecutionStatus.COMPLETED, transformStepRecord.getStatus());
+        ProcessExecutionStepFileRecord transformedFileRecord = transformStepRecord.getFiles().stream()
             .filter(f -> EnumTriplegeoOutputPart.TRANSFORMED.key().equals(f.getOutputPartKey()))
-            .collect(MoreCollectors.toOptional())
-            .orElse(null);
-        assertNotNull(outfile1Record);
-        assertNotNull(outfile1Record.getFileSize());
+            .collect(MoreCollectors.toOptional()).orElse(null);
+        assertNotNull(transformedFileRecord);
+        assertNotNull(transformedFileRecord.getFileSize());
+        ProcessExecutionStepFileRecord classificationFileRecord = transformStepRecord.getFiles().stream()
+            .filter(f -> EnumTriplegeoOutputPart.CLASSIFICATION.key().equals(f.getOutputPartKey()))
+            .collect(MoreCollectors.toOptional()).orElse(null);
+        assertNotNull(classificationFileRecord);
+        assertNotNull(classificationFileRecord.getFileSize());
 
-        ResourceIdentifier resourceIdentifier = outfile1Record.getResource();
-        assertNotNull(resourceIdentifier);
-        ResourceRecord resourceRecord = resourceRepository.findOne(resourceIdentifier);
-        assertNotNull(resourceRecord);
-        assertEquals(Long.valueOf(executionId), resourceRecord.getProcessExecutionId());
+        ResourceIdentifier transformedResourceIdentifier = transformedFileRecord.getResource();
+        assertNotNull(transformedResourceIdentifier);
+        ResourceRecord transformedResourceRecord = resourceRepository.findOne(transformedResourceIdentifier);
+        assertNotNull(transformedResourceRecord);
+        assertEquals(Long.valueOf(executionId), transformedResourceRecord.getProcessExecutionId());
 
-        ProcessExecutionStepRecord step2Record = executionRecord.getStepByName("Register 1");
-        assertNotNull(step2Record);
-        assertEquals(EnumProcessExecutionStatus.COMPLETED, step2Record.getStatus());
+        ResourceRecord classificationResourceRecord = null;
+        if (expectClassificationResult) {
+            ResourceIdentifier classificationResourceIdentifier = classificationFileRecord.getResource();
+            assertNotNull(classificationResourceIdentifier);
+            classificationResourceRecord = resourceRepository.findOne(classificationResourceIdentifier);
+            assertNotNull(classificationResourceRecord);
+            assertEquals(Long.valueOf(executionId), classificationResourceRecord.getProcessExecutionId());
+        }
 
-        // Find and check resource by (name, user)
+        // Check status of registration step(s)
 
-        ResourceRecord resourceRecord1 = resourceRepository.findOne(resourceName, creatorId);
-        assertNotNull(resourceRecord1);
-        assertEquals(resourceRecord.getId(), resourceRecord1.getId());
-        assertEquals(resourceRecord.getVersion(), resourceRecord1.getVersion());
+        ProcessExecutionStepRecord registerStepRecord = executionRecord.getStepByName("Register 1");
+        assertNotNull(registerStepRecord);
+        assertEquals(EnumProcessExecutionStatus.COMPLETED, registerStepRecord.getStatus());
 
-        // Check output against expected result
+        if (expectClassificationResult) {
+            ProcessExecutionStepRecord registerClassificationStepRecord = executionRecord.getStepByName("Register 1 - Classification");
+            assertNotNull(registerClassificationStepRecord);
+            assertEquals(EnumProcessExecutionStatus.COMPLETED, registerClassificationStepRecord.getStatus());
+        }
 
-        Path resourcePath = catalogDataDir.resolve(resourceRecord.getFilePath());
-        assertTrue(Files.isRegularFile(resourcePath) && Files.isReadable(resourcePath));
-        AssertFile.assertFileEquals(fixture.expectedResult().toFile(), resourcePath.toFile());
+        // Find and check resource(s) by (name, user)
 
-        return resourceRecord1;
+        ResourceRecord transformedResourceRecord1 = resourceRepository.findOne(resourceName, creatorId);
+        assertNotNull(transformedResourceRecord1);
+        assertEquals(transformedResourceRecord.getId(), transformedResourceRecord1.getId());
+        assertEquals(transformedResourceRecord.getVersion(), transformedResourceRecord1.getVersion());
+
+        ResourceRecord classificationResourceRecord1 = null;
+        if (expectClassificationResult) {
+            classificationResourceRecord1 = resourceRepository.findOne(resourceName + ".classification", creatorId);
+            assertNotNull(classificationResourceRecord);
+            assertEquals(classificationResourceRecord.getId(), classificationResourceRecord1.getId());
+            assertEquals(classificationResourceRecord.getVersion(), classificationResourceRecord1.getVersion());
+        }
+
+        // Check output against expected result(s)
+
+        Path transformedResourcePath = catalogDataDir.resolve(transformedResourceRecord.getFilePath());
+        assertTrue(
+            Files.isRegularFile(transformedResourcePath) && Files.isReadable(transformedResourcePath));
+        AssertFile.assertFileEquals(
+            fixture.expectedResult().toFile(), transformedResourcePath.toFile());
+
+        if (expectClassificationResult) {
+            Path classificationResourcePath = catalogDataDir.resolve(classificationResourceRecord.getFilePath());
+            assertTrue(
+                Files.isRegularFile(classificationResourcePath) && Files.isReadable(classificationResourcePath));
+            AssertFile.assertFileEquals(
+                fixture.expectedClassificationResult().toFile(), classificationResourcePath.toFile());
+        }
+
+        return transformedResourceRecord;
     }
 
     private ProcessDefinition buildDefinition(
@@ -783,7 +833,8 @@ public class DefaultProcessOperatorTests
             String resourceName, String output1Name, String output2Name)
         throws Exception
     {
-        final int resourceKey = 1, outputKey1 = 2, outputKey2 = 3;
+        final int interlinkingKey = 1, outputKey1 = 2, outputKey2 = 3;
+
         final Pair<DataSource, DataSource> sourcePair = fixture.inputAsDataSource();
         final ResourceMetadataCreate outputMetadata1 =
             new ResourceMetadataCreate(output1Name, "The first (transformed) input file");
@@ -807,11 +858,11 @@ public class DefaultProcessOperatorTests
                 .left(outputKey1)
                 .right(outputKey2)
                 .outputFormat(EnumDataFormat.N_TRIPLES)
-                .outputKey(resourceKey)
+                .outputKey(interlinkingKey)
                 .configuration(fixture.configuration()))
             .register("Register 1", outputKey1, outputMetadata1)
             .register("Register 2", outputKey2, outputMetadata2)
-            .register("Register links", resourceKey, resourceMetadata)
+            .register("Register links", interlinkingKey, resourceMetadata)
             .build();
     }
 
@@ -820,7 +871,8 @@ public class DefaultProcessOperatorTests
             String resourceName, String output1Name, String output2Name)
         throws Exception
     {
-        final int resourceKey = 1, outputKey1 = 2, outputKey2 = 3, inputKey1 = 101, inputKey2 = 102;
+        final int interlinkingKey = 1, outputKey1 = 2, outputKey2 = 3, inputKey1 = 101, inputKey2 = 102;
+
         final Pair<URI, URI> sourcePair = fixture.inputPair();
         final Pair<TriplegeoConfiguration, TriplegeoConfiguration> transformConfiguration =
             fixture.configurationForTransformation();
@@ -851,11 +903,11 @@ public class DefaultProcessOperatorTests
                 .left(outputKey1)
                 .right(outputKey2)
                 .outputFormat(EnumDataFormat.N_TRIPLES)
-                .outputKey(resourceKey)
+                .outputKey(interlinkingKey)
                 .configuration(fixture.configuration()))
             .register("Register 1", outputKey1, outputMetadata1)
             .register("Register 2", outputKey2, outputMetadata2)
-            .register("Register links", resourceKey, resourceMetadata)
+            .register("Register links", interlinkingKey, resourceMetadata)
             .build();
     }
 
@@ -864,7 +916,8 @@ public class DefaultProcessOperatorTests
         String resourceName, String output1Name, String output2Name)
         throws Exception
     {
-        final int resourceKey = 1, outputKey1 = 2, outputKey2 = 3;
+        final int interlinkingKey = 1, transformKey1 = 2, transformKey2 = 3;
+
         final Pair<DataSource, DataSource> sourcePair = fixture.inputAsDataSource();
         final ResourceMetadataCreate outputMetadata1 =
             new ResourceMetadataCreate(output1Name, "The first (transformed) input file");
@@ -877,22 +930,31 @@ public class DefaultProcessOperatorTests
             .transform("Transform 1", builder -> builder
                 .source(sourcePair.getFirst())
                 .outputFormat(EnumDataFormat.N_TRIPLES)
-                .outputKey(outputKey1)
+                .outputKey(transformKey1)
                 .configuration(fixture.configurationForTransformation().getFirst()))
             .transform("Transform 2", builder -> builder
                 .source(sourcePair.getSecond())
                 .outputFormat(EnumDataFormat.N_TRIPLES)
-                .outputKey(outputKey2)
+                .outputKey(transformKey2)
                 .configuration(fixture.configurationForTransformation().getSecond()))
             .interlink("Link 1 with 2", builder -> builder
-                .left(outputKey1, "transformed")
-                .right(outputKey2, "transformed")
+                .left(transformKey1, EnumTriplegeoOutputPart.TRANSFORMED.key())
+                .right(transformKey2, EnumTriplegeoOutputPart.TRANSFORMED.key())
                 .outputFormat(EnumDataFormat.N_TRIPLES)
-                .outputKey(resourceKey)
+                .outputKey(interlinkingKey)
                 .configuration(fixture.configuration()))
-            .register("Register 1", outputKey1, "transformed", outputMetadata1)
-            .register("Register 2", outputKey2, "transformed", outputMetadata2)
-            .register("Register links", resourceKey, "accepted", resourceMetadata)
+            .register("Register 1",
+                transformKey1,
+                EnumTriplegeoOutputPart.TRANSFORMED.key(),
+                outputMetadata1)
+            .register("Register 2",
+                transformKey2,
+                EnumTriplegeoOutputPart.TRANSFORMED.key(),
+                outputMetadata2)
+            .register("Register links",
+                interlinkingKey,
+                EnumLimesOutputPart.ACCEPTED.key(),
+                resourceMetadata)
             .build();
     }
 
@@ -928,20 +990,15 @@ public class DefaultProcessOperatorTests
 
         assertEquals(EnumProcessExecutionStatus.COMPLETED, executionRecord.getStatus());
         assertNotNull(executionRecord.getCompletedOn());
+        assertNotNull(executionRecord.getSteps());
 
-        List<ProcessExecutionStepRecord> stepRecords = executionRecord.getSteps();
-        assertNotNull(stepRecords);
-        assertEquals(6, stepRecords.size());
-
-        for (String name: Arrays.asList("Transform 1", "Transform 2", "Link 1 with 2")) {
-            OutputPart<? extends AnyTool> outputPart = definition.stepByName(name).defaultOutputPart();
+        for (String name: Arrays.asList("Transform 1", "Transform 2")) {
             ProcessExecutionStepRecord stepRecord = executionRecord.getStepByName(name);
             assertNotNull(stepRecord);
             assertEquals(EnumProcessExecutionStatus.COMPLETED, stepRecord.getStatus());
             ProcessExecutionStepFileRecord outfileRecord = stepRecord.getFiles().stream()
-                .filter(f -> outputPart.key().equals(f.getOutputPartKey()))
-                .collect(MoreCollectors.toOptional())
-                .orElse(null);
+                .filter(f -> EnumTriplegeoOutputPart.TRANSFORMED.key().equals(f.getOutputPartKey()))
+                .collect(MoreCollectors.toOptional()).orElse(null);
             assertNotNull(outfileRecord);
             ResourceIdentifier outfileResourceIdentifier = outfileRecord.getResource();
             assertNotNull(outfileResourceIdentifier);
@@ -950,42 +1007,48 @@ public class DefaultProcessOperatorTests
             assertEquals(Long.valueOf(executionId), outfileResourceRecord.getProcessExecutionId());
         }
 
+        ProcessExecutionStepRecord interlinkStepRecord = executionRecord.getStepByName("Link 1 with 2");
+        assertNotNull(interlinkStepRecord);
+        assertEquals(EnumProcessExecutionStatus.COMPLETED, interlinkStepRecord.getStatus());
+        ProcessExecutionStepFileRecord linksFileRecord = interlinkStepRecord.getFiles().stream()
+            .filter(f -> EnumLimesOutputPart.ACCEPTED.key().equals(f.getOutputPartKey()))
+            .collect(MoreCollectors.toOptional()).orElse(null);
+        assertNotNull(linksFileRecord);
+        ResourceIdentifier linksResourceIdentifier = linksFileRecord.getResource();
+        assertNotNull(linksResourceIdentifier);
+        ResourceRecord linksResourceRecord = resourceRepository.findOne(linksResourceIdentifier);
+        assertNotNull(linksResourceRecord);
+        assertEquals(Long.valueOf(executionId), linksResourceRecord.getProcessExecutionId());
+
+
         for (String name: Arrays.asList("Register 1", "Register 2", "Register links")) {
             ProcessExecutionStepRecord stepRecord = executionRecord.getStepByName(name);
             assertNotNull(stepRecord);
             assertEquals(EnumProcessExecutionStatus.COMPLETED, stepRecord.getStatus());
         }
 
-        ProcessExecutionStepFileRecord resourceStepFileRecord = executionRecord
-            .getStepByName("Link 1 with 2").getFiles()
-            .stream()
-            .filter(f -> EnumLimesOutputPart.ACCEPTED.key().equals(f.getOutputPartKey()))
-            .findFirst().get();
-        ResourceIdentifier resourceIdentifier = resourceStepFileRecord.getResource();
-        assertNotNull(resourceIdentifier);
-        ResourceRecord resourceRecord = resourceRepository.findOne(resourceIdentifier);
-
         // Find and check resource by (name, user)
 
-        ResourceRecord resourceRecord1 = resourceRepository.findOne(resourceName, creatorId);
-        assertNotNull(resourceRecord1);
-        assertEquals(resourceRecord.getId(), resourceRecord1.getId());
-        assertEquals(resourceRecord.getVersion(), resourceRecord1.getVersion());
+        ResourceRecord linksResourceRecord1 = resourceRepository.findOne(resourceName, creatorId);
+        assertNotNull(linksResourceRecord1);
+        assertEquals(linksResourceRecord.getId(), linksResourceRecord1.getId());
+        assertEquals(linksResourceRecord.getVersion(), linksResourceRecord1.getVersion());
 
         // Check output against expected result
 
-        Path resourcePath = catalogDataDir.resolve(resourceRecord.getFilePath());
-        assertTrue(Files.isRegularFile(resourcePath) && Files.isReadable(resourcePath));
-        AssertFile.assertFileEquals(fixture.expectedResult().toFile(), resourcePath.toFile());
+        Path path = catalogDataDir.resolve(linksResourceRecord.getFilePath());
+        assertTrue(Files.isRegularFile(path) && Files.isReadable(path));
+        AssertFile.assertFileEquals(fixture.expectedResult().toFile(), path.toFile());
 
-        return resourceRecord1;
+        return linksResourceRecord;
     }
 
     private ProcessDefinition buildDefinition(
             String procName, FuseFixture fixture, String resourceName)
         throws Exception
     {
-        final int inputKey1 = 1, inputKey2 = 2, linksKey = 3, resourceKey = 4;
+        final int inputKey1 = 1, inputKey2 = 2, interlinkingKey = 3, fusionKey = 4;
+
         final Pair<URI, URI> inputPair = fixture.inputPair();
         final ResourceMetadataCreate linksMetadata =
             new ResourceMetadataCreate(resourceName + "-links", "The links from a pair of inputs");
@@ -1003,17 +1066,17 @@ public class DefaultProcessOperatorTests
                 .right(inputKey2)
                 .configuration(fixture.configurationForLinking())
                 .outputFormat(EnumDataFormat.N_TRIPLES)
-                .outputKey(linksKey))
+                .outputKey(interlinkingKey))
             .fuse("Fuse 1 with 2", builder -> builder
                 .group(2)
                 .left(inputKey1)
                 .right(inputKey2)
-                .link(linksKey)
+                .link(interlinkingKey)
                 .configuration(fixture.configuration())
                 .outputFormat(EnumDataFormat.N_TRIPLES)
-                .outputKey(resourceKey))
-            .register("Register links", linksKey, linksMetadata)
-            .register("Register fused", resourceKey, resourceMetadata)
+                .outputKey(fusionKey))
+            .register("Register links", interlinkingKey, linksMetadata)
+            .register("Register fused", fusionKey, resourceMetadata)
             .build();
     }
 
@@ -1021,12 +1084,15 @@ public class DefaultProcessOperatorTests
         String procName, FuseFixture fixture, String resourceName)
         throws Exception
     {
-        final int inputKey1 = 1, inputKey2 = 2, linksKey = 3, resourceKey = 4;
+        final int inputKey1 = 1, inputKey2 = 2, interlinkingKey = 3, fusionKey = 4;
+
         final Pair<URI, URI> inputPair = fixture.inputPair();
-        final ResourceMetadataCreate linksMetadata =
+        final ResourceMetadataCreate linksResourceMetadata =
             new ResourceMetadataCreate(resourceName + "-links", "The links from a pair of inputs");
-        final ResourceMetadataCreate resourceMetadata =
+        final ResourceMetadataCreate fusedResourceMetadata =
             new ResourceMetadataCreate(resourceName, "The fusion of a pair of inputs");
+        final ResourceMetadataCreate remainingResourceMetadata =
+            new ResourceMetadataCreate(resourceName + "-remaining", "The remainder of fusion of a pair of inputs");
 
         return processDefinitionBuilderFactory.create(procName)
             .resource("input 1",
@@ -1039,17 +1105,21 @@ public class DefaultProcessOperatorTests
                 .right(inputKey2)
                 .configuration(fixture.configurationForLinking())
                 .outputFormat(EnumDataFormat.N_TRIPLES)
-                .outputKey(linksKey))
+                .outputKey(interlinkingKey))
             .fuse("Fuse 1 with 2", builder -> builder
                 .group(2)
                 .left(inputKey1)
                 .right(inputKey2)
-                .link(linksKey, "accepted")
+                .link(interlinkingKey, "accepted")
                 .configuration(fixture.configuration())
                 .outputFormat(EnumDataFormat.N_TRIPLES)
-                .outputKey(resourceKey))
-            .register("Register links", linksKey, "accepted", linksMetadata)
-            .register("Register fused", resourceKey, "fused", resourceMetadata)
+                .outputKey(fusionKey))
+            .register("Register links",
+                interlinkingKey, EnumLimesOutputPart.ACCEPTED.key(), linksResourceMetadata)
+            .register("Register fused",
+                fusionKey, EnumFagiOutputPart.FUSED.key(), fusedResourceMetadata)
+            .register("Register remaining",
+                fusionKey, EnumFagiOutputPart.REMAINING.key(), remainingResourceMetadata)
             .build();
     }
 
@@ -1069,6 +1139,8 @@ public class DefaultProcessOperatorTests
         final ProcessDefinition definition =
             fuseToDefinition.buildDefinition(procName, fixture, resourceName);
 
+        final boolean expectRemainingResult = definition.stepByName("Register remaining") != null;
+
         final ProcessExecutionRecord executionRecord = executeDefinition(definition, creator);
         final long executionId = executionRecord.getId();
 
@@ -1076,58 +1148,92 @@ public class DefaultProcessOperatorTests
 
         assertEquals(EnumProcessExecutionStatus.COMPLETED, executionRecord.getStatus());
         assertNotNull(executionRecord.getCompletedOn());
+        assertNotNull(executionRecord.getSteps());
 
-        List<ProcessExecutionStepRecord> stepRecords = executionRecord.getSteps();
-        assertNotNull(stepRecords);
-        assertEquals(4, stepRecords.size());
+        ProcessExecutionStepRecord interlinkStepRecord = executionRecord.getStepByName("Link 1 with 2");
+        assertNotNull(interlinkStepRecord);
+        assertEquals(EnumProcessExecutionStatus.COMPLETED, interlinkStepRecord.getStatus());
+        ProcessExecutionStepFileRecord linksFileRecord = interlinkStepRecord.getFiles().stream()
+            .filter(f -> EnumLimesOutputPart.ACCEPTED.key().equals(f.getOutputPartKey()))
+            .collect(MoreCollectors.toOptional()).orElse(null);
+        assertNotNull(linksFileRecord);
 
-        for (String name: Arrays.asList("Link 1 with 2", "Fuse 1 with 2")) {
-            OutputPart<? extends AnyTool> outputPart = definition.stepByName(name).defaultOutputPart();
-            ProcessExecutionStepRecord stepRecord = executionRecord.getStepByName(name);
-            assertNotNull(stepRecord);
-            assertEquals(EnumProcessExecutionStatus.COMPLETED, stepRecord.getStatus());
-            ProcessExecutionStepFileRecord outfileRecord = stepRecord.getFiles().stream()
-                .filter(f -> outputPart.key().equals(f.getOutputPartKey()))
-                .collect(MoreCollectors.toOptional())
-                .orElse(null);
-            assertNotNull(outfileRecord);
-            ResourceIdentifier outfileResourceIdentifier = outfileRecord.getResource();
-            assertNotNull(outfileResourceIdentifier);
-            ResourceRecord outfileResourceRecord = resourceRepository.findOne(outfileResourceIdentifier);
-            assertNotNull(outfileResourceRecord);
-            assertEquals(Long.valueOf(executionId), outfileResourceRecord.getProcessExecutionId());
-        }
+        ResourceIdentifier linksResourceIdentifier = linksFileRecord.getResource();
+        assertNotNull(linksResourceIdentifier);
+        ResourceRecord linksResourceRecord = resourceRepository.findOne(linksResourceIdentifier);
+        assertNotNull(linksResourceRecord);
+        assertEquals(Long.valueOf(executionId), linksResourceRecord.getProcessExecutionId());
 
-        for (String name: Arrays.asList("Register links", "Register fused")) {
-            ProcessExecutionStepRecord stepRecord = executionRecord.getStepByName(name);
-            assertNotNull(stepRecord);
-            assertEquals(EnumProcessExecutionStatus.COMPLETED, stepRecord.getStatus());
-        }
-
-        // Check output against expected result
-
-        ProcessExecutionStepFileRecord resourceStepFileRecord = executionRecord.getStepByName("Fuse 1 with 2")
-            .getFiles().stream()
+        ProcessExecutionStepRecord fuseStepRecord = executionRecord.getStepByName("Fuse 1 with 2");
+        assertNotNull(fuseStepRecord);
+        assertEquals(EnumProcessExecutionStatus.COMPLETED, fuseStepRecord.getStatus());
+        ProcessExecutionStepFileRecord fusedFileRecord = fuseStepRecord.getFiles().stream()
             .filter(f -> EnumFagiOutputPart.FUSED.key().equals(f.getOutputPartKey()))
-            .collect(MoreCollectors.onlyElement());
-        ResourceIdentifier resourceIdentifier = resourceStepFileRecord.getResource();
-        assertNotNull(resourceIdentifier);
-        ResourceRecord resourceRecord = resourceRepository.findOne(resourceIdentifier);
+            .collect(MoreCollectors.toOptional()).orElse(null);
+        assertNotNull(fusedFileRecord);
+        ProcessExecutionStepFileRecord remainingFileRecord = fuseStepRecord.getFiles().stream()
+            .filter(f -> EnumFagiOutputPart.REMAINING.key().equals(f.getOutputPartKey()))
+            .collect(MoreCollectors.toOptional()).orElse(null);
+        assertNotNull(remainingFileRecord);
+
+        ResourceIdentifier fusedResourceIdentifier = fusedFileRecord.getResource();
+        assertNotNull(fusedResourceIdentifier);
+        ResourceRecord fusedResourceRecord = resourceRepository.findOne(fusedResourceIdentifier);
+        assertNotNull(fusedResourceRecord);
+        assertEquals(Long.valueOf(executionId), fusedResourceRecord.getProcessExecutionId());
+
+        ResourceIdentifier remainingResourceIdentifier = null;
+        ResourceRecord remainingResourceRecord = null;
+        if (expectRemainingResult) {
+            remainingResourceIdentifier = remainingFileRecord.getResource();
+            assertNotNull(remainingResourceIdentifier);
+            remainingResourceRecord = resourceRepository.findOne(remainingResourceIdentifier);
+            assertNotNull(remainingResourceRecord);
+            assertEquals(Long.valueOf(executionId), remainingResourceRecord.getProcessExecutionId());
+        }
+
+        ProcessExecutionStepRecord registerLinksStepRecord = executionRecord.getStepByName("Register links");
+        assertNotNull(registerLinksStepRecord);
+        assertEquals(EnumProcessExecutionStatus.COMPLETED, registerLinksStepRecord.getStatus());
+
+        ProcessExecutionStepRecord registerFusedStepRecord = executionRecord.getStepByName("Register fused");
+        assertNotNull(registerFusedStepRecord);
+        assertEquals(EnumProcessExecutionStatus.COMPLETED, registerFusedStepRecord.getStatus());
+
+        if (expectRemainingResult) {
+            ProcessExecutionStepRecord registerRemainingStepRecord = executionRecord.getStepByName("Register remaining");
+            assertNotNull(registerRemainingStepRecord);
+            assertEquals(EnumProcessExecutionStatus.COMPLETED, registerRemainingStepRecord.getStatus());
+        }
 
         // Find and check resource by (name, user)
 
-        ResourceRecord resourceRecord1 = resourceRepository.findOne(resourceName, creatorId);
-        assertNotNull(resourceRecord1);
-        assertEquals(resourceRecord.getId(), resourceRecord1.getId());
-        assertEquals(resourceRecord.getVersion(), resourceRecord1.getVersion());
+        ResourceRecord fusedResourceRecord1 = resourceRepository.findOne(resourceName, creatorId);
+        assertNotNull(fusedResourceRecord1);
+        assertEquals(fusedResourceRecord.getId(), fusedResourceRecord1.getId());
+        assertEquals(fusedResourceRecord.getVersion(), fusedResourceRecord1.getVersion());
 
-        // Check output against expected result
+        ResourceRecord remainingResourceRecord1 = null;
+        if (expectRemainingResult) {
+            remainingResourceRecord1 = resourceRepository.findOne(resourceName + "-remaining", creatorId);
+            assertNotNull(remainingResourceRecord1);
+            assertEquals(remainingResourceRecord.getId(), remainingResourceRecord1.getId());
+            assertEquals(remainingResourceRecord.getVersion(), remainingResourceRecord1.getVersion());
+        }
 
-        Path resourcePath = catalogDataDir.resolve(resourceRecord.getFilePath());
-        assertTrue(Files.isRegularFile(resourcePath) && Files.isReadable(resourcePath));
-        AssertFile.assertFileEquals(fixture.expectedResult().toFile(), resourcePath.toFile());
+        // Check output against expected result(s)
 
-        return resourceRecord1;
+        Path path1 = catalogDataDir.resolve(fusedResourceRecord.getFilePath());
+        assertTrue(Files.isRegularFile(path1) && Files.isReadable(path1));
+        AssertFile.assertFileEquals(fixture.expectedResult().toFile(), path1.toFile());
+
+        if (expectRemainingResult) {
+            Path path2 = catalogDataDir.resolve(remainingResourceRecord.getFilePath());
+            assertTrue(Files.isRegularFile(path2) && Files.isReadable(path2));
+            AssertFile.assertFileEquals(fixture.expectedRemainingResult().toFile(), path2.toFile());
+        }
+
+        return fusedResourceRecord;
     }
 
     private ResourceRecord linkAndFuseAndRegister(String procName, FuseFixture fixture, Account creator)
@@ -1238,7 +1344,7 @@ public class DefaultProcessOperatorTests
             this::buildDefinitionWithImportSteps);
     }
 
-    @Test(timeout = 40 * 1000L)
+    @Test // Fixme (timeout = 40 * 1000L)
     public void test1T_transformAndRegister1a_namedPart() throws Exception
     {
         transformAndRegister("file-1-1-a-namedPart", transformFixtures.get("file-1-1-a"), user,

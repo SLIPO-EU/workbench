@@ -46,6 +46,8 @@ abstract class FuseFixture extends BaseFixture
      */
     abstract FagiConfiguration configuration();
 
+    abstract Path expectedRemainingResult();
+
     public Pair<DataSource, DataSource> inputAsDataSource() throws MalformedURLException
     {
         Pair<URI, URI> p = inputPair();
@@ -57,9 +59,9 @@ abstract class FuseFixture extends BaseFixture
     {
         super.checkState();
 
-        for (Path p: Arrays.asList(expectedLinkResult(), expectedResult())) {
+        for (Path p: Arrays.asList(expectedLinkResult(), expectedResult(), expectedRemainingResult())) {
             Assert.isTrue(p != null && p.isAbsolute() && Files.isReadable(p),
-                "The expected result should be given as an absolute file path");
+                "An expected result should be given as an absolute file path");
         }
 
         final Pair<URI, URI> inputPair = inputPair();
@@ -104,6 +106,8 @@ abstract class FuseFixture extends BaseFixture
         abstract Builder expectedLinkResult(Path p);
 
         abstract Builder configuration(FagiConfiguration c);
+
+        abstract Builder expectedRemainingResult(Path p);
 
         Builder configuration(Properties p, String rulesSpec)
             throws ConversionFailedException

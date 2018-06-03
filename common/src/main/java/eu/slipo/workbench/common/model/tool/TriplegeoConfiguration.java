@@ -191,14 +191,13 @@ public class TriplegeoConfiguration extends TransformConfiguration<Triplegeo>
                 }
             }
             
-            // An output file with classification (in RDF format) is always produced
+            // An output file with classification (in RDF format) is always produced, even if a
+            // classification spec is not directly provided (as configuration)
             
-            if (classificationSpec != null) {
-                outputMapBuilder.put(
-                    EnumTriplegeoOutputPart.CLASSIFICATION, "classification" + "." + extension);
-                outputMapBuilder.put(
-                    EnumTriplegeoOutputPart.CLASSIFICATION_METADATA, "classification_metadata" + ".json");
-            }
+            outputMapBuilder.put(EnumTriplegeoOutputPart.CLASSIFICATION,
+                "classification" + "." + extension);
+            outputMapBuilder.put(EnumTriplegeoOutputPart.CLASSIFICATION_METADATA,
+                "classification_metadata" + ".json");
             
             // Done
             

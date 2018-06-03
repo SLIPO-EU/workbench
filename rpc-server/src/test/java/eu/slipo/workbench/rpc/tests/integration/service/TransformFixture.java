@@ -4,10 +4,13 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.Properties;
+
+import javax.annotation.Nullable;
 
 import org.springframework.util.Assert;
 
@@ -28,6 +31,8 @@ abstract class TransformFixture extends BaseFixture
 
     abstract TriplegeoConfiguration configuration();
 
+    abstract @Nullable Path expectedClassificationResult();
+
     DataSource inputAsDataSource() throws MalformedURLException
     {
         return inputAsDataSource(inputUri());
@@ -44,6 +49,11 @@ abstract class TransformFixture extends BaseFixture
             "If no staging directory given, input is expected as an absolute file URI");
         Assert.state(!inputUri.getScheme().equals("file") || Paths.get(inputUri).startsWith(stagingDir),
             "If input is a local file (a file URI), must be located under staging directory");
+
+        Path classificationResult = expectedClassificationResult();
+        Assert.isTrue(classificationResult == null || (
+                classificationResult.isAbsolute() && Files.isReadable(classificationResult)),
+            "The expected result (classification as RDF) should be given as an absolute file path");
     }
 
     static Builder newBuilder()
@@ -69,6 +79,13 @@ abstract class TransformFixture extends BaseFixture
         }
 
         abstract Builder configuration(TriplegeoConfiguration configuration);
+
+        abstract Builder expectedClassificationResult(Path path);
+
+        Builder expectedClassificationResult(Optional<Path> optionalPath)
+        {
+            return expectedClassificationResult(optionalPath.orElse(null));
+        }
 
         Builder configuration(Properties opts, Optional<String> mappingSpec, Optional<String> classificationSpec)
             throws ConversionFailedException
