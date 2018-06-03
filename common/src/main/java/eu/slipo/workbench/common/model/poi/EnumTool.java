@@ -16,7 +16,6 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.google.common.collect.Lists;
 
 import eu.slipo.workbench.common.model.tool.output.OutputPart;
 import eu.slipo.workbench.common.model.tool.output.EnumImportDataOutputPart;

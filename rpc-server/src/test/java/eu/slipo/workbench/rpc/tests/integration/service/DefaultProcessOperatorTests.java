@@ -716,9 +716,9 @@ public class DefaultProcessOperatorTests
                 .outputKey(resourceKey)
                 .configuration(fixture.configuration()))
             .register("Register 1",
-                resourceKey, EnumTriplegeoOutputPart.TRANSFORMED.key(), transformedResourceMetadata)
+                resourceKey, EnumTriplegeoOutputPart.TRANSFORMED, transformedResourceMetadata)
             .register("Register 1 - Classification",
-                resourceKey, EnumTriplegeoOutputPart.CLASSIFICATION.key(), classificationResourceMetadata)
+                resourceKey, EnumTriplegeoOutputPart.CLASSIFICATION, classificationResourceMetadata)
             .build();
     }
 
@@ -938,23 +938,17 @@ public class DefaultProcessOperatorTests
                 .outputKey(transformKey2)
                 .configuration(fixture.configurationForTransformation().getSecond()))
             .interlink("Link 1 with 2", builder -> builder
-                .left(transformKey1, EnumTriplegeoOutputPart.TRANSFORMED.key())
-                .right(transformKey2, EnumTriplegeoOutputPart.TRANSFORMED.key())
+                .left(transformKey1, EnumTriplegeoOutputPart.TRANSFORMED)
+                .right(transformKey2, EnumTriplegeoOutputPart.TRANSFORMED)
                 .outputFormat(EnumDataFormat.N_TRIPLES)
                 .outputKey(interlinkingKey)
                 .configuration(fixture.configuration()))
             .register("Register 1",
-                transformKey1,
-                EnumTriplegeoOutputPart.TRANSFORMED.key(),
-                outputMetadata1)
+                transformKey1, EnumTriplegeoOutputPart.TRANSFORMED, outputMetadata1)
             .register("Register 2",
-                transformKey2,
-                EnumTriplegeoOutputPart.TRANSFORMED.key(),
-                outputMetadata2)
+                transformKey2, EnumTriplegeoOutputPart.TRANSFORMED, outputMetadata2)
             .register("Register links",
-                interlinkingKey,
-                EnumLimesOutputPart.ACCEPTED.key(),
-                resourceMetadata)
+                interlinkingKey, EnumLimesOutputPart.ACCEPTED, resourceMetadata)
             .build();
     }
 
@@ -1110,16 +1104,16 @@ public class DefaultProcessOperatorTests
                 .group(2)
                 .left(inputKey1)
                 .right(inputKey2)
-                .link(interlinkingKey, "accepted")
+                .link(interlinkingKey, EnumLimesOutputPart.ACCEPTED)
                 .configuration(fixture.configuration())
                 .outputFormat(EnumDataFormat.N_TRIPLES)
                 .outputKey(fusionKey))
             .register("Register links",
-                interlinkingKey, EnumLimesOutputPart.ACCEPTED.key(), linksResourceMetadata)
+                interlinkingKey, EnumLimesOutputPart.ACCEPTED, linksResourceMetadata)
             .register("Register fused",
-                fusionKey, EnumFagiOutputPart.FUSED.key(), fusedResourceMetadata)
+                fusionKey, EnumFagiOutputPart.FUSED, fusedResourceMetadata)
             .register("Register remaining",
-                fusionKey, EnumFagiOutputPart.REMAINING.key(), remainingResourceMetadata)
+                fusionKey, EnumFagiOutputPart.REMAINING, remainingResourceMetadata)
             .build();
     }
 
@@ -1344,7 +1338,7 @@ public class DefaultProcessOperatorTests
             this::buildDefinitionWithImportSteps);
     }
 
-    @Test // Fixme (timeout = 40 * 1000L)
+    @Test(timeout = 40 * 1000L)
     public void test1T_transformAndRegister1a_namedPart() throws Exception
     {
         transformAndRegister("file-1-1-a-namedPart", transformFixtures.get("file-1-1-a"), user,

@@ -8,6 +8,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import org.springframework.cglib.beans.ImmutableBean;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -33,6 +34,7 @@ import eu.slipo.workbench.common.model.tool.LimesConfiguration;
 import eu.slipo.workbench.common.model.tool.RegisterToCatalogConfiguration;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
+import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
 import eu.slipo.workbench.common.model.tool.output.OutputPart;
 
 @JsonDeserialize(converter = Step.DeserializeConverter.class)
@@ -57,7 +59,6 @@ public class Step implements Serializable
         {
             // Initialize step in-place
             step.initialize();
-            
             return step;
         }   
     }
@@ -72,15 +73,27 @@ public class Step implements Serializable
     {
         private static final long serialVersionUID = 1L;
        
-        protected int inputKey;
+        protected final int inputKey;
         
         @Nullable
-        protected String partKey;
+        protected final String partKey;
+        
+        @JsonIgnore
+        @Nullable
+        protected final OutputPart<? extends AnyTool> part;
         
         private Input(int inputKey, String partKey)
         {
             this.inputKey = inputKey;
             this.partKey = partKey;
+            this.part = null;
+        }
+        
+        private Input(int inputKey, OutputPart<? extends AnyTool> part)
+        {
+            this.inputKey = inputKey;
+            this.partKey = part.key();
+            this.part = part;
         }
         
         @JsonProperty("inputKey")
@@ -95,24 +108,41 @@ public class Step implements Serializable
             return partKey;
         }
         
+        protected OutputPart<? extends AnyTool> part()
+        {
+            return part;
+        }
+        
         protected static Input of(int inputKey)
         {
-            return new Input(inputKey, null);
+            return new Input(inputKey, (String) null);
         }
         
         @JsonCreator
         protected static Input of(
-            @JsonProperty("inputKey") int inputKey, 
-            @JsonProperty("partKey") String partKey)
+            @JsonProperty("inputKey") int inputKey, @JsonProperty("partKey") String partKey)
         {
             return new Input(inputKey, partKey);
+        }
+        
+        protected static Input of(int inputKey, OutputPart<? extends AnyTool> part)
+        {
+            Assert.notNull(part, "An output part is required");
+            
+            if (part.outputType() != EnumOutputType.OUTPUT) {
+                throw new IllegalArgumentException(
+                    String.format("A step may receive as input only parts of output of type [%s], not [%s]",
+                        EnumOutputType.OUTPUT, part.outputType()));
+            }
+            
+            return new Input(inputKey, part);
         }
 
         @Override
         public String toString()
         {
-            return String.format(
-                "input:%d%s", inputKey, partKey != null? ("/" + partKey) : (""));
+            return String.format("input:%s%s", 
+                inputKey, partKey != null? ("/" + partKey) : (""));
         }
 
         @Override

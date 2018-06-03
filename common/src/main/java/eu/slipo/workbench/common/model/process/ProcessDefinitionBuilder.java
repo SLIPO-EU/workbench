@@ -35,6 +35,7 @@ import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.model.tool.TransformConfiguration;
 import eu.slipo.workbench.common.model.tool.TransformTool;
 import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
+import eu.slipo.workbench.common.model.tool.output.OutputPart;
 import eu.slipo.workbench.common.service.util.ClonerService;
 
 /**
@@ -191,15 +192,18 @@ public class ProcessDefinitionBuilder
         }
         
         /**
-         * Designate a part of a process-wide resource as an input to this step. This is only meaningful
-         * for resources produced as outputs of other steps (represented as {@link ProcessOutput}).
+         * Designate a part of a process-wide resource as an input to this step. 
+         * 
+         * <p>This is only meaningful for resources produced as outputs of other steps (i.e. those
+         * represented as {@link ProcessOutput}).
          * 
          * @param inputKey The key identifying the resource
-         * @param partKey The key identifying a part of the input
+         * @param part The targeted part of the input (i.e a part of the output of the step providing
+         *   the resource identified by <tt>inputKey</tt>)
          */
-        public GenericStepBuilder input(int inputKey, String partKey)
+        public GenericStepBuilder input(int inputKey, OutputPart<? extends AnyTool> part)
         {
-            this.input.add(Input.of(inputKey, partKey));
+            this.input.add(Input.of(inputKey, part));
             return this;
         }
         
@@ -297,8 +301,7 @@ public class ProcessDefinitionBuilder
         
         protected TransformStepBuilder(int key, String name) 
         {
-            this.stepBuilder = 
-                ProcessDefinitionBuilder.this.new GenericStepBuilder(key, name, Step::new);
+            this.stepBuilder = ProcessDefinitionBuilder.this.new GenericStepBuilder(key, name, Step::new);
             this.stepBuilder.operation(EnumOperation.TRANSFORM);
             this.stepBuilder.tool(EnumTool.TRIPLEGEO);
         }
@@ -336,9 +339,9 @@ public class ProcessDefinitionBuilder
             return input(Input.of(inputKey));
         }
         
-        public TransformStepBuilder input(int inputKey, String partKey)
+        public TransformStepBuilder input(int inputKey, OutputPart<? extends AnyTool> part)
         {
-            return input(Input.of(inputKey, partKey));
+            return input(Input.of(inputKey, part));
         }
         
         public TransformStepBuilder configuration(TransformConfiguration<? extends TransformTool> configuration)
@@ -376,8 +379,7 @@ public class ProcessDefinitionBuilder
 
         public InterlinkStepBuilder(int key, String name)
         {
-            this.stepBuilder = 
-                ProcessDefinitionBuilder.this.new GenericStepBuilder(key, name, Step::new);
+            this.stepBuilder = ProcessDefinitionBuilder.this.new GenericStepBuilder(key, name, Step::new);
             this.stepBuilder.operation(EnumOperation.INTERLINK);
             this.stepBuilder.tool(EnumTool.LIMES);
         }
@@ -401,10 +403,10 @@ public class ProcessDefinitionBuilder
             return this;
         }
         
-        public InterlinkStepBuilder left(int inputKey, String partKey)
+        public InterlinkStepBuilder left(int inputKey, OutputPart<? extends AnyTool> part)
         {
             Assert.isTrue(this.left == null, "The left input is already specified");
-            this.left = Input.of(inputKey, partKey);
+            this.left = Input.of(inputKey, part);
             return this;
         }
         
@@ -415,10 +417,10 @@ public class ProcessDefinitionBuilder
             return this;
         }
         
-        public InterlinkStepBuilder right(int inputKey, String partKey)
+        public InterlinkStepBuilder right(int inputKey, OutputPart<? extends AnyTool> part)
         {
             Assert.isTrue(this.right == null, "The right input is already specified");
-            this.right = Input.of(inputKey, partKey);
+            this.right = Input.of(inputKey, part);
             return this;
         }
         
@@ -464,8 +466,7 @@ public class ProcessDefinitionBuilder
         
         public FuseStepBuilder(int key, String name)
         {
-            this.stepBuilder = 
-                ProcessDefinitionBuilder.this.new GenericStepBuilder(key, name, Step::new);
+            this.stepBuilder = ProcessDefinitionBuilder.this.new GenericStepBuilder(key, name, Step::new);
             this.stepBuilder.operation(EnumOperation.FUSION);
             this.stepBuilder.tool(EnumTool.FAGI);
         }
@@ -489,10 +490,10 @@ public class ProcessDefinitionBuilder
             return this;
         }
         
-        public FuseStepBuilder left(int inputKey, String partKey)
+        public FuseStepBuilder left(int inputKey, OutputPart<? extends AnyTool> part)
         {
             Assert.isTrue(this.left == null, "The left input is already specified");
-            this.left = Input.of(inputKey, partKey);
+            this.left = Input.of(inputKey, part);
             return this;
         }
         
@@ -503,10 +504,10 @@ public class ProcessDefinitionBuilder
             return this;
         }
         
-        public FuseStepBuilder right(int inputKey, String partKey)
+        public FuseStepBuilder right(int inputKey, OutputPart<? extends AnyTool> part)
         {
             Assert.isTrue(this.right == null, "The right input is already specified");
-            this.right = Input.of(inputKey, partKey);
+            this.right = Input.of(inputKey, part);
             return this;
         }
         
@@ -517,10 +518,10 @@ public class ProcessDefinitionBuilder
             return this;
         }
         
-        public FuseStepBuilder link(int inputKey, String partKey)
+        public FuseStepBuilder link(int inputKey, OutputPart<? extends InterlinkTool> part)
         {
             Assert.isTrue(this.link == null, "The input of owl:sameAs links is already specified");
-            this.link = Input.of(inputKey, partKey);
+            this.link = Input.of(inputKey, part);
             return this;
         }
         
@@ -566,8 +567,7 @@ public class ProcessDefinitionBuilder
         
         protected RegisterStepBuilder(int key, String name) 
         {
-            this.stepBuilder = 
-                ProcessDefinitionBuilder.this.new GenericStepBuilder(key, name, Step::new);
+            this.stepBuilder = ProcessDefinitionBuilder.this.new GenericStepBuilder(key, name, Step::new);
             this.stepBuilder.operation(EnumOperation.REGISTER);
             this.stepBuilder.tool(EnumTool.REGISTER);
         }
@@ -591,10 +591,10 @@ public class ProcessDefinitionBuilder
             return this;
         }
         
-        public RegisterStepBuilder resource(int inputKey, String partKey)
+        public RegisterStepBuilder resource(int inputKey, OutputPart<? extends AnyTool> part)
         {
             Assert.isTrue(this.stepBuilder.input.isEmpty(), "A resource key is already specified");
-            this.stepBuilder.input(inputKey, partKey);
+            this.stepBuilder.input(inputKey, part);
             return this;
         }
         
@@ -646,8 +646,7 @@ public class ProcessDefinitionBuilder
         protected ImportStepBuilder(int key, String name, URL url) 
         {
             this.url = url;
-            this.stepBuilder = 
-                ProcessDefinitionBuilder.this.new GenericStepBuilder(key, name, Step::new);
+            this.stepBuilder = ProcessDefinitionBuilder.this.new GenericStepBuilder(key, name, Step::new);
             this.stepBuilder.operation(EnumOperation.IMPORT_DATA);
             this.stepBuilder.tool(EnumTool.IMPORTER);
             this.stepBuilder.source(new UrlDataSource(url));
@@ -670,7 +669,8 @@ public class ProcessDefinitionBuilder
         @Override
         protected Step build()
         {
-            this.stepBuilder.configuration(new ImportDataConfiguration(this.url, this.dataFormat));
+            ImportDataConfiguration configuration = new ImportDataConfiguration(this.url, this.dataFormat); 
+            this.stepBuilder.configuration(configuration);
             return stepBuilder.build();
         }
     }
@@ -722,6 +722,9 @@ public class ProcessDefinitionBuilder
         return this;
     }
 
+    /**
+     * @see ProcessDefinitionBuilder#resource(String, int, ResourceIdentifier, EnumResourceType)
+     */
     public ProcessDefinitionBuilder resource(String name, int key, ResourceIdentifier resourceIdentifier)
     {
         return this.resource(name, key, resourceIdentifier, EnumResourceType.POI_DATA);
@@ -830,23 +833,22 @@ public class ProcessDefinitionBuilder
      * 
      * @param name The user-friendly name for this step
      * @param resourceKey The resource key defined as the output by some processing step 
-     * @param partKey A named part of our resource
+     * @param part A part of the targeted resource
      * @param metadata The metadata to accompany the resource
      * @return this builder
      */
     public ProcessDefinitionBuilder register(
-        String name, int resourceKey, String partKey, ResourceMetadataCreate metadata)
+        String name, int resourceKey, OutputPart<? extends AnyTool> part, ResourceMetadataCreate metadata)
     {
         Assert.notNull(metadata, "The resource metadata are required");
-        return this.register(name, b -> b.resource(resourceKey, partKey).metadata(metadata));
+        return this.register(name, b -> b.resource(resourceKey, part).metadata(metadata));
     }
     
     /**
      * Register an intermediate result (produced by a processing step) as a new catalog resource.
      * @see ProcessDefinitionBuilder#register(String, int, String, ResourceMetadataCreate)
      */
-    public ProcessDefinitionBuilder register(
-        String name, int resourceKey, ResourceMetadataCreate metadata)
+    public ProcessDefinitionBuilder register(String name, int resourceKey, ResourceMetadataCreate metadata)
     {
         Assert.notNull(metadata, "The resource metadata are required");
         return this.register(name, b -> b.resource(resourceKey).metadata(metadata));
@@ -857,17 +859,19 @@ public class ProcessDefinitionBuilder
      * existing catalog resource.
      * 
      * @param name The user-friendly name for this step
-     * @param resourceKey The resource key defined as the output by some processing step 
+     * @param resourceKey The resource key defined as the output by some processing step
+     * @param part A part of the targeted resource
      * @param metadata The metadata to accompany the resource
      * @param target The identifier of an existing catalog resource
      * @return this builder
      */
     public ProcessDefinitionBuilder registerAsNewRevision(
-        String name, int resourceKey, String partKey, ResourceMetadataCreate metadata, ResourceIdentifier target)
+        String name, int resourceKey, OutputPart<? extends AnyTool> part, 
+        ResourceMetadataCreate metadata, ResourceIdentifier target)
     {
         Assert.notNull(metadata, "The resource metadata are required");
         Assert.notNull(target, "A target resource is required");
-        return this.register(name, b -> b.resource(resourceKey, partKey).metadata(metadata).revisionOf(target));
+        return this.register(name, b -> b.resource(resourceKey, part).metadata(metadata).revisionOf(target));
     }
     
     /**
@@ -936,16 +940,17 @@ public class ProcessDefinitionBuilder
             .filter(p -> p.partKey() != null)
             .collect(Collectors.toSet());
         
-        Assert.state(partialInputs.stream().allMatch(p -> outputKeys.contains(p.inputKey())),
+        Assert.state(partialInputs.stream().allMatch(p -> p.part() != null), 
+            "A partial input (from this builder) is expected to refer to an instance of OutputPart");
+        
+        Assert.state(partialInputs.stream()
+                .allMatch(p -> outputKeys.contains(p.inputKey())),
             "A partial input may only refer to output of another step");
         
-        BiPredicate<Step, String> isPartOfOutput = (Step producer, String partKey) -> 
-            producer.outputParts().stream()
-                .anyMatch(p -> p.key().equals(partKey) && p.outputType() == EnumOutputType.OUTPUT);
         Assert.state(partialInputs.stream()
-                .allMatch(p -> isPartOfOutput.test(outputKeyToStep.get(p.inputKey()), p.partKey())),
-            "A partial input refers to a non-existing part of output of another step");
-
+                .allMatch(p -> outputKeyToStep.get(p.inputKey()).outputParts().contains(p.part())),
+            "A partial input refers to a non-existing part of the output of another step");
+    
         // The definition seems valid
 
         ProcessDefinition definition = new ProcessDefinition(this.name, this.resources, this.steps);

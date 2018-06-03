@@ -49,7 +49,13 @@ import eu.slipo.workbench.common.model.tool.DeerConfiguration;
 import eu.slipo.workbench.common.model.tool.FagiConfiguration;
 import eu.slipo.workbench.common.model.tool.LimesConfiguration;
 import eu.slipo.workbench.common.model.tool.RegisterToCatalogConfiguration;
+import eu.slipo.workbench.common.model.tool.Triplegeo;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
+import eu.slipo.workbench.common.model.tool.output.EnumImportDataOutputPart;
+import eu.slipo.workbench.common.model.tool.output.EnumLimesOutputPart;
+import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
+import eu.slipo.workbench.common.model.tool.output.EnumTriplegeoOutputPart;
+import eu.slipo.workbench.common.model.tool.output.OutputPart;
 import eu.slipo.workflows.util.digraph.DependencyGraph;
 import eu.slipo.workflows.util.digraph.DependencyGraphs;
 
@@ -69,6 +75,40 @@ public class ProcessDefinitionTests
     private static final ResourceIdentifier RESOURCE_2_ID = ResourceIdentifier.of(19L, 1L);
 
     private static final String RESOURCE_2_NAME = "resource-example-2";
+
+    enum BazOutputPart implements OutputPart<Triplegeo>
+    {
+        BAZ_1("baz1"),
+
+        BAZ_2("baz2")
+
+        ;
+
+        private final String key;
+
+        private BazOutputPart(String key)
+        {
+            this.key = key;
+        }
+
+        @Override
+        public String key()
+        {
+            return key;
+        }
+
+        @Override
+        public EnumOutputType outputType()
+        {
+            return EnumOutputType.OUTPUT;
+        }
+
+        @Override
+        public Class<Triplegeo> toolType()
+        {
+            return Triplegeo.class;
+        }
+    }
 
     @TestConfiguration
     public static class Setup
@@ -196,21 +236,24 @@ public class ProcessDefinitionTests
                 .outputKey(TRANSFORM_1_KEY)
                 .source(dataSource1)
                 .configuration(sampleTriplegeoConfiguration1))
-            .register("register-1", TRANSFORM_1_KEY, "transformed", metadataForTransformed1)
             .transform("triplegeo-2", b -> b
                 .group(1)
                 .outputKey(TRANSFORM_2_KEY)
                 .source(dataSource2)
                 .configuration(sampleTriplegeoConfiguration1))
-            .register("register-2", TRANSFORM_2_KEY, "transformed", metadataForTransformed2)
             .interlink("link-1-with-2", b -> b
                 .group(2)
                 .configuration(sampleLimesConfiguration1)
-                .left(TRANSFORM_1_KEY, "transformed")
-                .right(TRANSFORM_2_KEY, "transformed")
+                .left(TRANSFORM_1_KEY, EnumTriplegeoOutputPart.TRANSFORMED)
+                .right(TRANSFORM_2_KEY, EnumTriplegeoOutputPart.TRANSFORMED)
                 .outputKey(LINKS_KEY)
                 .outputFormat(EnumDataFormat.N_TRIPLES))
-            .register("register-links", LINKS_KEY, "accepted", metadataForLinks)
+            .register("register-1",
+                TRANSFORM_1_KEY, EnumTriplegeoOutputPart.TRANSFORMED, metadataForTransformed1)
+            .register("register-2",
+                TRANSFORM_2_KEY, EnumTriplegeoOutputPart.TRANSFORMED, metadataForTransformed2)
+            .register("register-links",
+                LINKS_KEY, EnumLimesOutputPart.ACCEPTED, metadataForLinks)
             .build();
 
         return definition;
@@ -236,21 +279,24 @@ public class ProcessDefinitionTests
                 .outputKey(TRANSFORM_1_KEY)
                 .input(RESOURCE_1_KEY)
                 .configuration(sampleTriplegeoConfiguration1))
-            .register("register-1", TRANSFORM_1_KEY, "transformed", metadataForTransformed1)
             .transform("triplegeo-2", b -> b
                 .group(1)
                 .outputKey(TRANSFORM_2_KEY)
                 .input(RESOURCE_2_KEY)
                 .configuration(sampleTriplegeoConfiguration1))
-            .register("register-2", TRANSFORM_2_KEY, "transformed", metadataForTransformed2)
             .interlink("link-1-with-2", b -> b
                 .group(2)
                 .configuration(sampleLimesConfiguration1)
-                .left(TRANSFORM_1_KEY, "transformed")
-                .right(TRANSFORM_2_KEY, "transformed")
+                .left(TRANSFORM_1_KEY)
+                .right(TRANSFORM_2_KEY)
                 .outputKey(LINKS_KEY)
                 .outputFormat(EnumDataFormat.N_TRIPLES))
-            .register("register-links", LINKS_KEY, "accepted", metadataForLinks)
+            .register("register-links",
+                LINKS_KEY, EnumLimesOutputPart.ACCEPTED, metadataForLinks)
+            .register("register-1",
+                TRANSFORM_1_KEY, EnumTriplegeoOutputPart.TRANSFORMED, metadataForTransformed1)
+            .register("register-2",
+                TRANSFORM_2_KEY, EnumTriplegeoOutputPart.TRANSFORMED, metadataForTransformed2)
             .build();
 
         return definition;
@@ -261,6 +307,8 @@ public class ProcessDefinitionTests
         String s1 = jsonMapper.writeValueAsString(definition);
         ProcessDefinition definition1 = jsonMapper.readValue(s1, ProcessDefinition.class);
         assertEquals(s1, jsonMapper.writeValueAsString(definition1));
+
+        System.err.println(s1);
     }
 
     private void serializeDefault(ProcessDefinition definition) throws Exception
@@ -475,8 +523,8 @@ public class ProcessDefinitionTests
         assertEquals(2, step3.inputKeys().size());
         assertNotNull(step3.outputKey());
         assertEquals(0, step3.sources().size());
-        assertEquals("transformed", step3.input().get(0).partKey());
-        assertEquals("transformed", step3.input().get(1).partKey());
+        assertNull(step3.input().get(0).partKey());
+        assertNull(step3.input().get(1).partKey());
         ProcessInput inp3a = resourcesByKey.get(step3.inputKeys().get(0));
         ProcessInput inp3b = resourcesByKey.get(step3.inputKeys().get(1));
         assertNotNull(inp3a);
@@ -661,11 +709,12 @@ public class ProcessDefinitionTests
         ProcessDefinition definition = processDefinitionBuilderFactory.create("register-1")
             .resource(RESOURCE_1_NAME, RESOURCE_1_KEY, RESOURCE_1_ID)
             .transform("triplegeo-1", builder -> builder
-                .input(RESOURCE_1_KEY, "something") // a catalog resource has no parts!
+                .input(RESOURCE_1_KEY, EnumImportDataOutputPart.DOWNLOAD) // a catalog resource has no parts!
                 .configuration(sampleTriplegeoConfiguration1)
                 .outputFormat(EnumDataFormat.N_TRIPLES)
                 .outputKey(TRANSFORM_1_KEY))
-            .register("tr-1", TRANSFORM_1_KEY, "transformed", metadata)
+            .register("register-1",
+                TRANSFORM_1_KEY, EnumTriplegeoOutputPart.TRANSFORMED, metadata)
             .build();
         System.err.println(definition);
     }
@@ -683,12 +732,14 @@ public class ProcessDefinitionTests
                 .configuration(sampleTriplegeoConfiguration1)
                 .outputFormat(EnumDataFormat.N_TRIPLES)
                 .outputKey(TRANSFORM_1_KEY))
-            .register("tr-1", TRANSFORM_1_KEY, "something", metadata) // a non-existing part of output
+            // Cannot refer to a non-existing part of output identified by TRANSFORM_1_KEY!
+            .register("register-1",
+                TRANSFORM_1_KEY, BazOutputPart.BAZ_1, metadata)
             .build();
         System.err.println(definition);
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void test_checkInputOfInvalidOutputPart()
     {
         final int RESOURCE_1_KEY = 1, TRANSFORM_1_KEY = 10;
@@ -701,7 +752,9 @@ public class ProcessDefinitionTests
                 .configuration(sampleTriplegeoConfiguration1)
                 .outputFormat(EnumDataFormat.N_TRIPLES)
                 .outputKey(TRANSFORM_1_KEY))
-            .register("tr-1", TRANSFORM_1_KEY, "transformed-metadata", metadata) // a part of KPI output
+            // Cannot refer to a part of a non-OUTPUT output (e.g. KPI data)!
+            .register("register-1",
+                TRANSFORM_1_KEY, EnumTriplegeoOutputPart.TRANSFORMED_METADATA, metadata)
             .build();
         System.err.println(definition);
     }
