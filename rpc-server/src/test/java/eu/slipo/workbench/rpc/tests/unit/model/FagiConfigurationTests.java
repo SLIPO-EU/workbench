@@ -29,12 +29,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.tool.Fagi;
 import eu.slipo.workbench.common.model.tool.FagiConfiguration;
 import eu.slipo.workbench.common.model.tool.output.EnumFagiOutputPart;
 import eu.slipo.workbench.common.model.tool.output.OutputPart;
+import eu.slipo.workbench.common.model.tool.output.OutputSpec;
 import eu.slipo.workbench.common.service.util.JsonBasedPropertiesConverterService;
 import eu.slipo.workbench.common.service.util.PropertiesConverterService;
 
@@ -324,17 +326,19 @@ public class FagiConfigurationTests
     @Test
     public void test1_getOutputNames() throws Exception
     {
-        Multimap<OutputPart<Fagi>, String> outputMap = config1.getOutputNameMapper()
+        Multimap<OutputPart<Fagi>, OutputSpec> outputMap = config1.getOutputNameMapper()
             .apply(Arrays.asList(
                 "/var/local/limes/input/a.nt",
                 "/var/local/limes/input/b.nt",
                 "/var/local/limes/input/links.nt"));
+        Multimap<OutputPart<Fagi>, String> outputNames =
+            Multimaps.transformValues(outputMap, s -> s.fileName());
 
-        assertEquals(Collections.singletonList("fused.nt"), outputMap.get(EnumFagiOutputPart.FUSED));
-        assertEquals(Collections.singletonList("remaining.nt"), outputMap.get(EnumFagiOutputPart.REMAINING));
-        assertEquals(Collections.singletonList("review.nt"), outputMap.get(EnumFagiOutputPart.REVIEW));
+        assertEquals(Arrays.asList("fused.nt"), outputNames.get(EnumFagiOutputPart.FUSED));
+        assertEquals(Arrays.asList("remaining.nt"), outputNames.get(EnumFagiOutputPart.REMAINING));
+        assertEquals(Arrays.asList("review.nt"), outputNames.get(EnumFagiOutputPart.REVIEW));
 
         // Todo: Uncomment when updates to a Fagi version which creates KPI metadata
-        //assertEquals(Collections.singletonList("stats.json"), outputMap.get(EnumFagiOutputPart.STATS));
+        //assertEquals(Arrays.asList("stats.json"), outputNames.get(EnumFagiOutputPart.STATS));
     }
 }

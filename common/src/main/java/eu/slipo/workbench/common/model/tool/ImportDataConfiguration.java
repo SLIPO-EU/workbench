@@ -22,6 +22,7 @@ import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.tool.output.EnumImportDataOutputPart;
 import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
 import eu.slipo.workbench.common.model.tool.output.InputToOutputNameMapper;
+import eu.slipo.workbench.common.model.tool.output.OutputSpec;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ImportDataConfiguration implements ToolConfiguration<ImportData>
@@ -171,6 +172,7 @@ public class ImportDataConfiguration implements ToolConfiguration<ImportData>
     public InputToOutputNameMapper<ImportData> getOutputNameMapper()
     {
         final String outputName = getOutputName();
-        return input -> ImmutableMultimap.of(EnumImportDataOutputPart.DOWNLOAD, outputName);
+        final OutputSpec outputSpec = OutputSpec.of(outputName, dataFormat);
+        return input -> ImmutableMultimap.of(EnumImportDataOutputPart.DOWNLOAD, outputSpec);
     }
 }

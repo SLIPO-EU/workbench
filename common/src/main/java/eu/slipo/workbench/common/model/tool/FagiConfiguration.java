@@ -36,6 +36,7 @@ import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.tool.output.EnumFagiOutputPart;
 import eu.slipo.workbench.common.model.tool.output.InputToOutputNameMapper;
 import eu.slipo.workbench.common.model.tool.output.OutputPart;
+import eu.slipo.workbench.common.model.tool.output.OutputSpec;
 
 /**
  * Configuration for FAGI
@@ -464,21 +465,24 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
         private OutputNameMapper() {};
         
         @Override
-        public Multimap<OutputPart<Fagi>, String> applyToPath(List<Path> input)
+        public Multimap<OutputPart<Fagi>, OutputSpec> applyToPath(List<Path> input)
         {
+            Assert.state(outputFormat != null, "The output format is required");
             Assert.state(target.fusedPath != null, "The path (fusion) is required");
             Assert.state(target.remainingPath != null, "The path (remaining) is required");
             Assert.state(target.reviewPath != null, "The path (review) is required");
             Assert.state(target.statsPath != null, "The path (stats) is required");
             
-            final Function<String, String> getName = p -> Paths.get(p).getFileName().toString();
-            
-            return ImmutableMultimap.<OutputPart<Fagi>, String>builder()
-                .put(EnumFagiOutputPart.FUSED, getName.apply(target.fusedPath))
-                .put(EnumFagiOutputPart.REMAINING, getName.apply(target.remainingPath))
-                .put(EnumFagiOutputPart.REVIEW, getName.apply(target.reviewPath))
+            return ImmutableMultimap.<OutputPart<Fagi>, OutputSpec>builder()
+                .put(EnumFagiOutputPart.FUSED, 
+                    OutputSpec.of(Paths.get(target.fusedPath).getFileName(), outputFormat))
+                .put(EnumFagiOutputPart.REMAINING, 
+                    OutputSpec.of(Paths.get(target.remainingPath).getFileName(), outputFormat))
+                .put(EnumFagiOutputPart.REVIEW, 
+                    OutputSpec.of(Paths.get(target.reviewPath).getFileName(), outputFormat))
                 // Fixme: The current version of Fagi doesn't produce statistics (uncomment when fixed)
-                //.put(EnumFagiOutputPart.STATS, getName.apply(target.statsPath))
+                //.put(EnumFagiOutputPart.STATS, 
+                //    OutputSpec.of(Paths.get(target.statsPath).getFileName()))
                 .build();
         }
     }

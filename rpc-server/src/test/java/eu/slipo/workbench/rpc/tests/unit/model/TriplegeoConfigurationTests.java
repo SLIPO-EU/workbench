@@ -1,18 +1,15 @@
 package eu.slipo.workbench.rpc.tests.unit.model;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.Properties;
 import java.util.Set;
-import java.util.Map;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -30,13 +27,14 @@ import org.springframework.test.context.junit4.SpringRunner;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.tool.Triplegeo;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
-import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
 import eu.slipo.workbench.common.model.tool.output.EnumTriplegeoOutputPart;
 import eu.slipo.workbench.common.model.tool.output.OutputPart;
+import eu.slipo.workbench.common.model.tool.output.OutputSpec;
 import eu.slipo.workbench.common.service.util.JsonBasedPropertiesConverterService;
 import eu.slipo.workbench.common.service.util.PropertiesConverterService;
 
@@ -339,54 +337,60 @@ public class TriplegeoConfigurationTests
     @Test
     public void test1_getOutputNames() throws Exception
     {
-        Multimap<OutputPart<Triplegeo>, String> outputMap =
-            config1.getOutputNameMapper().apply(Arrays.asList("/data/p1.csv", "/data/p2.csv"));
+        Multimap<OutputPart<Triplegeo>, OutputSpec> outputMap = config1.getOutputNameMapper()
+            .apply(Arrays.asList("/data/p1.csv", "/data/p2.csv"));
+        Multimap<OutputPart<Triplegeo>, String> outputNames =
+            Multimaps.transformValues(outputMap, OutputSpec::fileName);
 
         assertEquals(Arrays.asList("p1.nt", "p2.nt"),
-            outputMap.get(EnumTriplegeoOutputPart.TRANSFORMED));
+            outputNames.get(EnumTriplegeoOutputPart.TRANSFORMED));
         assertEquals(Arrays.asList("p1_metadata.json", "p2_metadata.json"),
-            outputMap.get(EnumTriplegeoOutputPart.TRANSFORMED_METADATA));
+            outputNames.get(EnumTriplegeoOutputPart.TRANSFORMED_METADATA));
         assertEquals(Arrays.asList("classification.nt"),
-            outputMap.get(EnumTriplegeoOutputPart.CLASSIFICATION));
+            outputNames.get(EnumTriplegeoOutputPart.CLASSIFICATION));
         assertEquals(Arrays.asList("classification_metadata.json"),
-            outputMap.get(EnumTriplegeoOutputPart.CLASSIFICATION_METADATA));
+            outputNames.get(EnumTriplegeoOutputPart.CLASSIFICATION_METADATA));
         assertEquals(Collections.emptyList(),
-            outputMap.get(EnumTriplegeoOutputPart.REGISTRATION_REQUEST));
+            outputNames.get(EnumTriplegeoOutputPart.REGISTRATION_REQUEST));
     }
 
     @Test
     public void test2a_getOutputNames() throws Exception
     {
-        Multimap<OutputPart<Triplegeo>, String> outputMap =
-            config2a.getOutputNameMapper().apply(Arrays.asList("/data/p1.csv", "/data/p2.csv"));
+        Multimap<OutputPart<Triplegeo>, OutputSpec> outputMap = config2a.getOutputNameMapper()
+            .apply(Arrays.asList("/data/p1.csv", "/data/p2.csv"));
+        Multimap<OutputPart<Triplegeo>, String> outputNames =
+            Multimaps.transformValues(outputMap, OutputSpec::fileName);
 
         assertEquals(Arrays.asList("p1.ttl", "p2.ttl"),
-            outputMap.get(EnumTriplegeoOutputPart.TRANSFORMED));
+            outputNames.get(EnumTriplegeoOutputPart.TRANSFORMED));
         assertEquals(Arrays.asList("p1_metadata.json", "p2_metadata.json"),
-            outputMap.get(EnumTriplegeoOutputPart.TRANSFORMED_METADATA));
+            outputNames.get(EnumTriplegeoOutputPart.TRANSFORMED_METADATA));
         assertEquals(Arrays.asList("classification.ttl"),
-            outputMap.get(EnumTriplegeoOutputPart.CLASSIFICATION));
+            outputNames.get(EnumTriplegeoOutputPart.CLASSIFICATION));
         assertEquals(Arrays.asList("classification_metadata.json"),
-            outputMap.get(EnumTriplegeoOutputPart.CLASSIFICATION_METADATA));
+            outputNames.get(EnumTriplegeoOutputPart.CLASSIFICATION_METADATA));
         assertEquals(Collections.emptyList(),
-            outputMap.get(EnumTriplegeoOutputPart.REGISTRATION_REQUEST));
+            outputNames.get(EnumTriplegeoOutputPart.REGISTRATION_REQUEST));
     }
 
     @Test
     public void test2b_getOutputNames() throws Exception
     {
-        Multimap<OutputPart<Triplegeo>, String> outputMap =
-            config2b.getOutputNameMapper().apply(Arrays.asList("/data/p1.csv", "/data/p2.csv"));
+        Multimap<OutputPart<Triplegeo>, OutputSpec> outputMap = config2b.getOutputNameMapper()
+            .apply(Arrays.asList("/data/p1.csv", "/data/p2.csv"));
+        Multimap<OutputPart<Triplegeo>, String> outputNames =
+            Multimaps.transformValues(outputMap, s -> s.fileName());
 
         assertEquals(Arrays.asList("p1.ttl", "p2.ttl"),
-            outputMap.get(EnumTriplegeoOutputPart.TRANSFORMED));
+            outputNames.get(EnumTriplegeoOutputPart.TRANSFORMED));
         assertEquals(Arrays.asList("p1_metadata.json", "p2_metadata.json"),
-            outputMap.get(EnumTriplegeoOutputPart.TRANSFORMED_METADATA));
+            outputNames.get(EnumTriplegeoOutputPart.TRANSFORMED_METADATA));
         assertEquals(Arrays.asList("classification.ttl"),
-            outputMap.get(EnumTriplegeoOutputPart.CLASSIFICATION));
+            outputNames.get(EnumTriplegeoOutputPart.CLASSIFICATION));
         assertEquals(Arrays.asList("classification_metadata.json"),
-            outputMap.get(EnumTriplegeoOutputPart.CLASSIFICATION_METADATA));
+            outputNames.get(EnumTriplegeoOutputPart.CLASSIFICATION_METADATA));
         assertEquals(Arrays.asList("p1.csv", "p2.csv"),
-            outputMap.get(EnumTriplegeoOutputPart.REGISTRATION_REQUEST));
+            outputNames.get(EnumTriplegeoOutputPart.REGISTRATION_REQUEST));
     }
 }

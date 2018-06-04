@@ -50,6 +50,7 @@ import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
 import eu.slipo.workbench.common.model.tool.output.InputToOutputNameMapper;
 import eu.slipo.workbench.common.model.tool.output.OutputPart;
+import eu.slipo.workbench.common.model.tool.output.OutputSpec;
 import eu.slipo.workbench.common.repository.AccountRepository;
 import eu.slipo.workbench.common.repository.ProcessRepository;
 import eu.slipo.workbench.common.repository.ProcessRepository.ProcessExecutionNotActiveException;
@@ -318,7 +319,7 @@ public class DefaultProcessOperator implements ProcessOperator
             Assert.state(outputPaths.stream().allMatch(path -> path.startsWith(workflowDataDir)),
                 "An output path is expected to be under workflow data directory");
 
-            Map<OutputPart<? extends AnyTool>, String> outputMap = outputNameMapper.applyToPath(inputPaths)
+            Map<OutputPart<? extends AnyTool>, OutputSpec> outputMap = outputNameMapper.applyToPath(inputPaths)
                 .entries().stream()
                 .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
             Set<OutputPart<? extends AnyTool>> outputParts = outputMap.keySet();
@@ -329,11 +330,10 @@ public class DefaultProcessOperator implements ProcessOperator
                 "The number of output paths differs from the one determined by step configuration");
 
             for (OutputPart<? extends AnyTool> outputPart: outputParts) {
-                final String outputName = outputMap.get(outputPart);
+                final OutputSpec outputSpec = outputMap.get(outputPart);
+                final String outputName = outputSpec.fileName();
                 final EnumOutputType outputType = outputPart.outputType();
-                // Todo: dataFormat is not correct (probably should be reported from InputToOutputNameMapper)
-                final EnumDataFormat dataFormat = outputType == EnumOutputType.OUTPUT?
-                    configuration.getOutputFormat() : null; // only relevant to actual output results
+                final EnumDataFormat dataFormat = outputSpec.dataFormat();
                 // Find corresponding item from node's output paths (expect to always exist)
                 Path outputPath = Iterables.find(outputPaths, path -> path.endsWith(outputName));
                 URI outputUri = convertPathToUri(outputPath);

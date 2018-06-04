@@ -46,6 +46,7 @@ import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.tool.output.EnumLimesOutputPart;
 import eu.slipo.workbench.common.model.tool.output.InputToOutputNameMapper;
 import eu.slipo.workbench.common.model.tool.output.OutputPart;
+import eu.slipo.workbench.common.model.tool.output.OutputSpec;
 
 /**
  * Configuration for LIMES
@@ -564,18 +565,19 @@ public class LimesConfiguration extends InterlinkConfiguration<Limes>
         private OutputNameMapper() {}
 
         @Override
-        public Multimap<OutputPart<Limes>, String> applyToPath(List<Path> input)
+        public Multimap<OutputPart<Limes>, OutputSpec> applyToPath(List<Path> input)
         {
+            Assert.state(outputFormat != null, "The output format is required");
             Assert.state(accepted != null, "The output spec for `accepted` is null");
             Assert.state(accepted.path != null, "The path for `accepted` is null");
             Assert.state(review != null, "The output spec for `review` is null");
             Assert.state(review.path != null, "The path for `review` is null");
             
-            final Function<String, String> getName = p -> Paths.get(p).getFileName().toString();
-            
-            return ImmutableMultimap.<OutputPart<Limes>, String>builder()
-                .put(EnumLimesOutputPart.ACCEPTED, getName.apply(accepted.path))
-                .put(EnumLimesOutputPart.REVIEW, getName.apply(review.path))
+            return ImmutableMultimap.<OutputPart<Limes>, OutputSpec>builder()
+                .put(EnumLimesOutputPart.ACCEPTED, 
+                    OutputSpec.of(Paths.get(accepted.path).getFileName(), outputFormat))
+                .put(EnumLimesOutputPart.REVIEW, 
+                    OutputSpec.of(Paths.get(review.path).getFileName(), outputFormat))
                 .build();
         }
     }

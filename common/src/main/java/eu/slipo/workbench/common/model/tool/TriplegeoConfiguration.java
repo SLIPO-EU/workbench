@@ -37,6 +37,7 @@ import eu.slipo.workbench.common.model.poi.EnumSpatialOntology;
 import eu.slipo.workbench.common.model.tool.output.EnumTriplegeoOutputPart;
 import eu.slipo.workbench.common.model.tool.output.InputToOutputNameMapper;
 import eu.slipo.workbench.common.model.tool.output.OutputPart;
+import eu.slipo.workbench.common.model.tool.output.OutputSpec;
 
 
 /**
@@ -168,26 +169,26 @@ public class TriplegeoConfiguration extends TransformConfiguration<Triplegeo>
         private OutputNameMapper() {};
         
         @Override
-        public Multimap<OutputPart<Triplegeo>, String> applyToPath(List<Path> inputList)
+        public Multimap<OutputPart<Triplegeo>, OutputSpec> applyToPath(List<Path> inputList)
         {
             Assert.state(outputFormat != null, "The output format is not specified");
             
             final String extension = outputFormat.getFilenameExtension();
-            final ImmutableMultimap.Builder<OutputPart<Triplegeo>, String> outputMapBuilder = 
+            final ImmutableMultimap.Builder<OutputPart<Triplegeo>, OutputSpec> outputMapBuilder = 
                 ImmutableMultimap.builder();
             
             // Each input yields an RDF output and a JSON metadata file
             
             for (Path inputPath: inputList) {
                 String inputName = stripFilenameExtension(inputPath.getFileName().toString());
-                outputMapBuilder.put(
-                    EnumTriplegeoOutputPart.TRANSFORMED, inputName + "." + extension);
-                outputMapBuilder.put(
-                    EnumTriplegeoOutputPart.TRANSFORMED_METADATA, inputName + "_metadata" + ".json");
+                outputMapBuilder.put(EnumTriplegeoOutputPart.TRANSFORMED, 
+                    OutputSpec.of(inputName + "." + extension, outputFormat));
+                outputMapBuilder.put(EnumTriplegeoOutputPart.TRANSFORMED_METADATA, 
+                    OutputSpec.of(inputName + "_metadata" + ".json"));
                 if (registerFeatures) {
                     // An additional CSV is generated as a registration request payload
-                    outputMapBuilder.put(
-                        EnumTriplegeoOutputPart.REGISTRATION_REQUEST, inputName + ".csv");
+                    outputMapBuilder.put(EnumTriplegeoOutputPart.REGISTRATION_REQUEST, 
+                        OutputSpec.of(inputName + ".csv", EnumDataFormat.CSV));
                 }
             }
             
@@ -195,9 +196,9 @@ public class TriplegeoConfiguration extends TransformConfiguration<Triplegeo>
             // classification spec is not directly provided (as configuration)
             
             outputMapBuilder.put(EnumTriplegeoOutputPart.CLASSIFICATION,
-                "classification" + "." + extension);
+                OutputSpec.of("classification" + "." + extension, outputFormat));
             outputMapBuilder.put(EnumTriplegeoOutputPart.CLASSIFICATION_METADATA,
-                "classification_metadata" + ".json");
+                OutputSpec.of("classification_metadata" + ".json"));
             
             // Done
             

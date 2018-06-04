@@ -33,13 +33,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 
 import eu.slipo.workbench.common.model.tool.Limes;
 import eu.slipo.workbench.common.model.tool.LimesConfiguration;
 import eu.slipo.workbench.common.model.tool.output.EnumLimesOutputPart;
 import eu.slipo.workbench.common.model.tool.output.OutputPart;
+import eu.slipo.workbench.common.model.tool.output.OutputSpec;
 import eu.slipo.workbench.common.service.util.JsonBasedPropertiesConverterService;
 import eu.slipo.workbench.common.service.util.PropertiesConverterService;
+import jersey.repackaged.com.google.common.collect.Iterables;
 
 @RunWith(SpringRunner.class)
 @ActiveProfiles({ "testing" })
@@ -334,10 +337,12 @@ public class LimesConfigurationTests
     @Test
     public void test1_getOutputNames() throws Exception
     {
-        Multimap<OutputPart<Limes>, String> outputMap =
-            config1.getOutputNameMapper().apply(Arrays.asList("/data/a.nt", "/data/b.nt"));
+        Multimap<OutputPart<Limes>, OutputSpec> outputMap = config1.getOutputNameMapper()
+            .apply(Arrays.asList("/data/a.nt", "/data/b.nt"));
+        Multimap<OutputPart<Limes>, String> outputNames =
+            Multimaps.transformValues(outputMap, s -> s.fileName());
 
-        assertEquals(Collections.singletonList("accepted.nt"), outputMap.get(EnumLimesOutputPart.ACCEPTED));
-        assertEquals(Collections.singletonList("review.nt"), outputMap.get(EnumLimesOutputPart.REVIEW));
+        assertEquals(Arrays.asList("accepted.nt"), outputNames.get(EnumLimesOutputPart.ACCEPTED));
+        assertEquals(Arrays.asList("review.nt"), outputNames.get(EnumLimesOutputPart.REVIEW));
     }
 }

@@ -29,6 +29,9 @@ import org.springframework.util.StringUtils;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Table;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
@@ -52,6 +55,7 @@ import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.model.tool.output.EnumImportDataOutputPart;
 import eu.slipo.workbench.common.model.tool.output.InputToOutputNameMapper;
 import eu.slipo.workbench.common.model.tool.output.OutputPart;
+import eu.slipo.workbench.common.model.tool.output.OutputSpec;
 import eu.slipo.workbench.common.repository.ResourceRepository;
 import eu.slipo.workbench.common.service.UserFileNamingStrategy;
 import eu.slipo.workbench.common.service.util.PropertiesConverterService;
@@ -61,6 +65,7 @@ import eu.slipo.workflows.WorkflowBuilderFactory;
 import eu.slipo.workflows.util.digraph.DependencyGraph;
 import eu.slipo.workflows.util.digraph.DependencyGraphs;
 import eu.slipo.workflows.util.digraph.TopologicalSort.CycleDetected;
+import jersey.repackaged.com.google.common.collect.Multimaps;
 
 @Service
 public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
@@ -274,7 +279,9 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
             final InputToOutputNameMapper<? extends AnyTool> outputNameMapper = configuration.getOutputNameMapper();
             final Map<OutputPart<? extends AnyTool>, Path> outputNames = outputNameMapper.apply(inputNames)
                 .entries().stream()
-                .collect(Collectors.toMap(e -> e.getKey(), e -> Paths.get(e.getValue())));
+                .collect(Collectors.toMap(
+                    entry -> entry.getKey(),
+                    entry -> Paths.get(entry.getValue().fileName())));
             if (!outputNames.isEmpty()) {
                 jobDefinitionBuilder.output(outputNames.values());
                 nodeNameToOutputNames.row(step.nodeName()).putAll(outputNames);

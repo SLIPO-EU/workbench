@@ -18,9 +18,13 @@ public interface InputToOutputNameMapper <T extends AnyTool>
      * @param input A list of input paths
      * @return a multimap mapping an output part ({@link OutputPart}) to a list of output paths
      */
-    Multimap<OutputPart<T>, String> applyToPath(List<Path> input);
+    Multimap<OutputPart<T>, OutputSpec> applyToPath(List<Path> input);
     
-    default Multimap<OutputPart<T>, String> apply(List<String> inputPaths)
+    /**
+     * Return an output map for a given input
+     * @see InputToOutputNameMapper#applyToPath(List)
+     */
+    default Multimap<OutputPart<T>, OutputSpec> apply(List<String> inputPaths)
     {
         return applyToPath(Lists.transform(inputPaths, Paths::get));
     }

@@ -13,17 +13,27 @@ public enum EnumDataFormat
     CSV("csv"),
     
     /**
+     * Plain JSON (any schema)
+     */
+    JSON("json"),
+    
+    /**
+     * Generic XML
+     */
+    XML("xml"),
+    
+    /**
      * GPS Exchange Format
      */
     GPX("gpx"),
     
     /**
-     * JSON encoded geographic data structures
+     * JSON-encoded geographic data structures
      */
     GEOJSON("geojson"),
     
     /**
-     * Open Street Maps XML format
+     * XML - Open Street Maps format
      */
     OSM("xml"),
     
@@ -33,7 +43,7 @@ public enum EnumDataFormat
     SHAPEFILE("shp"),
     
     /**
-     * W3C standard RDF serialization format
+     * XML - W3C standard RDF serialization format
      */
     RDF_XML("rdf"),
     
