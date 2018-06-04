@@ -23,7 +23,7 @@ public class ProcessOutput extends ProcessInput
 
     protected ProcessOutput()
     {
-        super(-1, EnumInputType.OUTPUT, null);
+        super(null, EnumInputType.OUTPUT, null);
     }
 
     protected ProcessOutput(Step step, EnumResourceType resourceType)

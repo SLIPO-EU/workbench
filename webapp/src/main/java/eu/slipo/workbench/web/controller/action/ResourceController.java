@@ -102,7 +102,7 @@ public class ResourceController extends BaseController {
             Assert.notNull(metadata, "Expected metadata for resource registration");
             Assert.isTrue(!StringUtils.isEmpty(metadata.getName()), "A non-empty name is required");
 
-            final int resourceKey = 1;
+            final String resourceKey = "transformed";
             final String procName = String.format("Resource registration: %s", metadata.getName());
 
             ProcessDefinition definition = processDefinitionBuilderFactory.create(procName)

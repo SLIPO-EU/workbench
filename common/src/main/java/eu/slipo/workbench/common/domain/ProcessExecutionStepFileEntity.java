@@ -18,7 +18,6 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.annotations.Type;
 
 import com.vividsolutions.jts.geom.Geometry;
 

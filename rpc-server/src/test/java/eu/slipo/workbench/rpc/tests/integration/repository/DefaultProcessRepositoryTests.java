@@ -140,7 +140,7 @@ public class DefaultProcessRepositoryTests
 
             final ResourceMetadataCreate metadata =
                 new ResourceMetadataCreate("sample-1", "A sample CSV file");
-            final int resourceKey = 1;
+            final String resourceKey = "res-1";
             final DataSource source = new FileSystemDataSource("/tmp/1.csv");
 
             ProcessDefinition definition = processDefinitionBuilderFactory.create("register-1")
@@ -169,7 +169,7 @@ public class DefaultProcessRepositoryTests
 
             final ResourceMetadataCreate metadata =
                 new ResourceMetadataCreate("sample-2", "A sample SHP file");
-            final int resourceKey = 1;
+            final String resourceKey = "res-1";
             final DataSource source = new FileSystemDataSource("/tmp/1.zip");
 
             ProcessDefinition definition = processDefinitionBuilderFactory.create("register-2")

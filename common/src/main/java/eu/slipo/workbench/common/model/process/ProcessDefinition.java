@@ -44,17 +44,17 @@ public class ProcessDefinition implements Serializable
     /**
      * Map a resource key to a process-wide resource descriptor ({@link ProcessInput})
      */
-    private final Map<Integer, ProcessInput> resourceKeyToResource;
+    private final Map<String, ProcessInput> resourceKeyToResource;
 
     /**
      * Map a resource key to the step key of a processing step which produces it as an output
      */
-    private final Map<Integer, Integer> resourceKeyToStepKey;
+    private final Map<String, Integer> resourceKeyToStepKey;
 
     /**
      * Map a resource key to the identifier of a catalog resource
      */
-    private final Map<Integer, ResourceIdentifier> resourceKeyToResourceIdentifier;
+    private final Map<String, ResourceIdentifier> resourceKeyToResourceIdentifier;
 
     @JsonCreator
     protected ProcessDefinition(
@@ -163,7 +163,7 @@ public class ProcessDefinition implements Serializable
      * @param resourceKey The resource key
      * @return
      */
-    public ProcessInput resourceByResourceKey(int resourceKey)
+    public ProcessInput resourceByResourceKey(String resourceKey)
     {
         return resourceKeyToResource.get(resourceKey);
     }
@@ -176,7 +176,7 @@ public class ProcessDefinition implements Serializable
      *   else <tt>null</tt> (i.e when the key is not not known, or it corresponds to
      *   other a non-output kind of resource)
      */
-    public Step stepByResourceKey(int resourceKey)
+    public Step stepByResourceKey(String resourceKey)
     {
         Integer stepKey = resourceKeyToStepKey.get(resourceKey);
         return stepKey == null? null : keyToStep.get(stepKey);
@@ -189,7 +189,7 @@ public class ProcessDefinition implements Serializable
      * @return a {@link ResourceIdentifier} identifier if the given key corresponds to
      *   a previously defined catalog resource, else <tt>null</tt>.
      */
-    public ResourceIdentifier resourceIdentifierByResourceKey(int resourceKey)
+    public ResourceIdentifier resourceIdentifierByResourceKey(String resourceKey)
     {
         return resourceKeyToResourceIdentifier.get(resourceKey);
     }
@@ -199,7 +199,7 @@ public class ProcessDefinition implements Serializable
      * (i.e correspond to a resource of type {@link ProcessOutput}).
      * @return A set of keys
      */
-    public Set<Integer> outputKeys()
+    public Set<String> outputKeys()
     {
         return resourceKeyToStepKey.keySet();
     }

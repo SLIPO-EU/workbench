@@ -69,11 +69,11 @@ public class Step implements Serializable
      * <p>This is not identical to a {@link ProcessInput} because a step may be interested only in a
      * part of an available process-wide resource (i.e. a part of the output of another step). 
      */
-    public static class Input implements Serializable
+    public final static class Input implements Serializable
     {
         private static final long serialVersionUID = 1L;
        
-        protected final int inputKey;
+        protected final String inputKey;
         
         @Nullable
         protected final String partKey;
@@ -82,14 +82,14 @@ public class Step implements Serializable
         @Nullable
         protected final OutputPart<? extends AnyTool> part;
         
-        private Input(int inputKey, String partKey)
+        private Input(String inputKey, String partKey)
         {
             this.inputKey = inputKey;
             this.partKey = partKey;
             this.part = null;
         }
         
-        private Input(int inputKey, OutputPart<? extends AnyTool> part)
+        private Input(String inputKey, OutputPart<? extends AnyTool> part)
         {
             this.inputKey = inputKey;
             this.partKey = part.key();
@@ -97,7 +97,7 @@ public class Step implements Serializable
         }
         
         @JsonProperty("inputKey")
-        public int inputKey()
+        public String inputKey()
         {
             return inputKey;
         }
@@ -113,20 +113,23 @@ public class Step implements Serializable
             return part;
         }
         
-        protected static Input of(int inputKey)
+        protected static Input of(String inputKey)
         {
+            Assert.isTrue(!StringUtils.isEmpty(inputKey), "An non-empty input key is expected");
             return new Input(inputKey, (String) null);
         }
         
         @JsonCreator
         protected static Input of(
-            @JsonProperty("inputKey") int inputKey, @JsonProperty("partKey") String partKey)
+            @JsonProperty("inputKey") String inputKey, @JsonProperty("partKey") String partKey)
         {
+            Assert.isTrue(!StringUtils.isEmpty(inputKey), "An non-empty input key is expected");
             return new Input(inputKey, partKey);
         }
         
-        protected static Input of(int inputKey, OutputPart<? extends AnyTool> part)
+        protected static Input of(String inputKey, OutputPart<? extends AnyTool> part)
         {
+            Assert.isTrue(!StringUtils.isEmpty(inputKey), "An non-empty input key is expected");
             Assert.notNull(part, "An output part is required");
             
             if (part.outputType() != EnumOutputType.OUTPUT) {
@@ -150,7 +153,7 @@ public class Step implements Serializable
         {
             final int P = 31;
             int result = 1;
-            result = P * result + inputKey;
+            result = P * result + inputKey.hashCode();
             result = P * result + (partKey == null? 0 : partKey.hashCode());
             return result;
         }
@@ -163,7 +166,7 @@ public class Step implements Serializable
             if (!(obj instanceof Input))
                 return false;
             Input other = (Input) obj;
-            if (inputKey != other.inputKey)
+            if (!inputKey.equals(other.inputKey))
                 return false;
             return partKey == null? (other.partKey == null): (partKey.equals(other.partKey));
         }
@@ -196,7 +199,7 @@ public class Step implements Serializable
     protected List<DataSource> sources = new ArrayList<>();
 
     @JsonProperty("outputKey")
-    protected Integer outputKey;
+    protected String outputKey;
     
     @JsonProperty("outputFormat")
     protected EnumDataFormat outputFormat;
@@ -337,7 +340,7 @@ public class Step implements Serializable
      *
      * @return the output resource index
      */
-    public Integer outputKey()
+    public String outputKey()
     {
         return outputKey;
     }
@@ -353,7 +356,7 @@ public class Step implements Serializable
     /**
      * The keys of input resources that should be provided to this step.
      */
-    public List<Integer> inputKeys()
+    public List<String> inputKeys()
     {
         return Lists.transform(input, p -> p.inputKey);
     }

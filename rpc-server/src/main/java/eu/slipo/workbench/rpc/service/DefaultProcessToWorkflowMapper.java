@@ -138,7 +138,7 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
 
             final DependencyGraph dependencyGraph = DependencyGraphs.create(steps.size());
             for (Step step: steps) {
-                for (Integer inputKey: step.inputKeys()) {
+                for (String inputKey: step.inputKeys()) {
                     Step dependency = definition.stepByResourceKey(inputKey);
                     if (dependency != null)
                         dependencyGraph.addDependency(step.key(), dependency.key());

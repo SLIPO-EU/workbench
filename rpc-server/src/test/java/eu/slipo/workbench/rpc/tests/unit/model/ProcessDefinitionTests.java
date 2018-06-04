@@ -221,7 +221,8 @@ public class ProcessDefinitionTests
 
     private ProcessDefinition buildDefinition1a()
     {
-        final int TRANSFORM_1_KEY = 1001, TRANSFORM_2_KEY = 1002, LINKS_KEY = 1003;
+        final String TRANSFORM_1_KEY = "transformed-1", TRANSFORM_2_KEY = "transformed-2",
+            LINKS_KEY = "links";
 
         ResourceMetadataCreate metadataForTransformed1 =
             new ResourceMetadataCreate("tr-1", "The 1st RDF file");
@@ -261,8 +262,9 @@ public class ProcessDefinitionTests
 
     private ProcessDefinition buildDefinition1b()
     {
-        final int TRANSFORM_1_KEY = 1001, TRANSFORM_2_KEY = 1002, LINKS_KEY = 1003;
-        final int RESOURCE_1_KEY = 1, RESOURCE_2_KEY = 2;
+        final String TRANSFORM_1_KEY = "transformed-1", TRANSFORM_2_KEY = "transformed-2",
+            LINKS_KEY = "links";
+        final String RESOURCE_1_KEY = "resource-1", RESOURCE_2_KEY = "resource-2";
 
         ResourceMetadataCreate metadataForTransformed1 =
             new ResourceMetadataCreate("tr-1", "The 1st RDF file");
@@ -331,18 +333,18 @@ public class ProcessDefinitionTests
 
     private DependencyGraph buildDependencyGraph(ProcessDefinition definition)
     {
-        List<ProcessInput> inputs = definition.resources();
+        List<ProcessInput> resources = definition.resources();
         List<Step> steps = definition.steps();
 
         // Map each output key to the key of processing step (expected to produce it)
-        final Map<Integer, Integer> outputKeyToStepKey = inputs.stream()
+        final Map<String, Integer> outputKeyToStepKey = resources.stream()
             .filter(r -> r.getInputType() == EnumInputType.OUTPUT)
             .collect(Collectors.toMap(r -> r.key(), r -> ((ProcessOutput) r).stepKey()));
 
         // Build dependency graph
         final DependencyGraph graph = DependencyGraphs.create(steps.size());
         for (Step step: steps) {
-            for (Integer k: step.inputKeys()) {
+            for (String k: step.inputKeys()) {
                 if (outputKeyToStepKey.containsKey(k))
                     graph.addDependency(step.key(), outputKeyToStepKey.get(k));
             }
@@ -362,7 +364,7 @@ public class ProcessDefinitionTests
 
         List<ProcessInput> resources = definition1.resources();
         assertEquals(3, resources.size());
-        assertEquals(3, resources.stream().mapToInt(r -> r.key()).distinct().count());
+        assertEquals(3, resources.stream().map(r -> r.key()).distinct().count());
 
         List<Step> steps = definition1.steps();
         assertEquals(6, steps.size());
@@ -467,8 +469,8 @@ public class ProcessDefinitionTests
 
         List<ProcessInput> resources = definition1.resources();
         assertEquals(5, resources.size());
-        assertEquals(5, resources.stream().mapToInt(r -> r.key()).distinct().count());
-        Map<Integer, ProcessInput> resourcesByKey = resources.stream()
+        assertEquals(5, resources.stream().map(r -> r.key()).distinct().count());
+        Map<String, ProcessInput> resourcesByKey = resources.stream()
             .collect(Collectors.toMap(r -> r.key(), Function.identity()));
 
         List<Step> steps = definition1.steps();
@@ -531,8 +533,8 @@ public class ProcessDefinitionTests
         assertNotNull(inp3b);
         assertTrue(inp3a instanceof ProcessOutput);
         assertTrue(inp3b instanceof ProcessOutput);
-        assertEquals(step1.outputKey(), Integer.valueOf(inp3a.key()));
-        assertEquals(step2.outputKey(), Integer.valueOf(inp3b.key()));
+        assertEquals(step1.outputKey(), inp3a.key());
+        assertEquals(step2.outputKey(), inp3b.key());
         assertEquals(
             jsonMapper.writeValueAsString(sampleLimesConfiguration1),
             jsonMapper.writeValueAsString(step3.configuration()));
@@ -675,7 +677,7 @@ public class ProcessDefinitionTests
     @Test(expected = IllegalStateException.class)
     public void test_checkRegisterUndefinedResource1()
     {
-        final int resourceKey = 1; // not a catalog resource, neither is an output from another step
+        final String resourceKey = "something"; // not a catalog resource, neither is an output from another step
         ProcessDefinition definition = processDefinitionBuilderFactory.create("register-1")
             .register("register-1", resourceKey, new ResourceMetadataCreate("sample", "Another sample"))
             .build();
@@ -685,9 +687,9 @@ public class ProcessDefinitionTests
     @Test(expected = IllegalStateException.class)
     public void test_checkInputFromUndefinedResource1()
     {
-        final int inputKey1 = 1;
-        final int inputKey2 = 2; // not a catalog resource, neither is an output from another step
-        final int outputKey = 10;
+        final String inputKey1 = "res-1";
+        final String inputKey2 = "res-X"; // not a catalog resource, neither is an output from another step
+        final String outputKey = "transformed-1";
         ProcessDefinition definition = processDefinitionBuilderFactory.create("register-1")
             .resource("res-1", inputKey1, ResourceIdentifier.of(5L, 27L))
             .transform("triplegeo-1", builder -> builder
@@ -703,7 +705,7 @@ public class ProcessDefinitionTests
     @Test(expected = IllegalStateException.class)
     public void test_checkInputOfNonExistingOutputPart()
     {
-        final int RESOURCE_1_KEY = 1, TRANSFORM_1_KEY = 10;
+        final String RESOURCE_1_KEY = "res-1", TRANSFORM_1_KEY = "transformed-1";
         final ResourceMetadataCreate metadata = new ResourceMetadataCreate("tr-1", "An RDF file");
 
         ProcessDefinition definition = processDefinitionBuilderFactory.create("register-1")
@@ -722,7 +724,7 @@ public class ProcessDefinitionTests
     @Test(expected = IllegalStateException.class)
     public void test_checkInputOfUnknownOutputPart()
     {
-        final int RESOURCE_1_KEY = 1, TRANSFORM_1_KEY = 10;
+        final String RESOURCE_1_KEY = "res-1", TRANSFORM_1_KEY = "transformed-1";
         final ResourceMetadataCreate metadata = new ResourceMetadataCreate("tr-1", "An RDF file");
 
         ProcessDefinition definition = processDefinitionBuilderFactory.create("register-1")
@@ -742,7 +744,7 @@ public class ProcessDefinitionTests
     @Test(expected = IllegalArgumentException.class)
     public void test_checkInputOfInvalidOutputPart()
     {
-        final int RESOURCE_1_KEY = 1, TRANSFORM_1_KEY = 10;
+        final String RESOURCE_1_KEY = "res-1", TRANSFORM_1_KEY = "transformed-1";
         final ResourceMetadataCreate metadata = new ResourceMetadataCreate("tr-1", "An RDF file");
 
         ProcessDefinition definition = processDefinitionBuilderFactory.create("register-1")
@@ -775,9 +777,7 @@ public class ProcessDefinitionTests
         final List<Step> steps = definition1.steps();
         final DependencyGraph dependencyGraph = buildDependencyGraph(definition1);
 
-        Iterable<Step> sortedSteps = IterableUtils.transformedIterable(
+        Iterable<Step> stepsInTopologicalOrder = IterableUtils.transformedIterable(
             DependencyGraphs.topologicalSort(dependencyGraph), k -> definition1.stepByKey(k));
-
-
     }
 }

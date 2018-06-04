@@ -660,7 +660,7 @@ public class DefaultProcessOperatorTests
             String procName, TransformFixture fixture, String resourceName)
         throws MalformedURLException
     {
-        final int resourceKey = 1;
+        final String resourceKey = "transformed-1";
         final DataSource source = fixture.inputAsDataSource();
         final ResourceMetadataCreate resourceMetadata =
             new ResourceMetadataCreate(resourceName, "A transformed RDF file");
@@ -679,7 +679,7 @@ public class DefaultProcessOperatorTests
             String procName, TransformFixture fixture, String resourceName)
         throws MalformedURLException
     {
-        final int resourceKey = 1, key1 = 101;
+        final String resourceKey = "transformed-1", key1 = "res-1";
         final URL sourceUrl = fixture.inputUri().toURL();
         final TriplegeoConfiguration configuration = fixture.configuration();
         final EnumDataFormat inputFormat1 = configuration.getInputFormat();
@@ -701,7 +701,7 @@ public class DefaultProcessOperatorTests
         String procName, TransformFixture fixture, String resourceName)
         throws MalformedURLException
     {
-        final int resourceKey = 1;
+        final String resourceKey = "transformed-1";
         final DataSource source = fixture.inputAsDataSource();
 
         final ResourceMetadataCreate transformedResourceMetadata =
@@ -833,7 +833,7 @@ public class DefaultProcessOperatorTests
             String resourceName, String output1Name, String output2Name)
         throws Exception
     {
-        final int interlinkingKey = 1, outputKey1 = 2, outputKey2 = 3;
+        final String interlinkingKey = "links", outputKey1 = "transformed-1", outputKey2 = "transformed-2";
 
         final Pair<DataSource, DataSource> sourcePair = fixture.inputAsDataSource();
         final ResourceMetadataCreate outputMetadata1 =
@@ -871,7 +871,8 @@ public class DefaultProcessOperatorTests
             String resourceName, String output1Name, String output2Name)
         throws Exception
     {
-        final int interlinkingKey = 1, outputKey1 = 2, outputKey2 = 3, inputKey1 = 101, inputKey2 = 102;
+        final String interlinkingKey = "links", outputKey1 = "transformed-1", outputKey2 = "transformed-2",
+            inputKey1 = "res-1", inputKey2 = "res-2";
 
         final Pair<URI, URI> sourcePair = fixture.inputPair();
         final Pair<TriplegeoConfiguration, TriplegeoConfiguration> transformConfiguration =
@@ -916,7 +917,9 @@ public class DefaultProcessOperatorTests
         String resourceName, String output1Name, String output2Name)
         throws Exception
     {
-        final int interlinkingKey = 1, transformKey1 = 2, transformKey2 = 3;
+        final String interlinkingKey = "links",
+            transformKey1 = "transformed-1",
+            transformKey2 = "transfomed-2";
 
         final Pair<DataSource, DataSource> sourcePair = fixture.inputAsDataSource();
         final ResourceMetadataCreate outputMetadata1 =
@@ -1041,7 +1044,10 @@ public class DefaultProcessOperatorTests
             String procName, FuseFixture fixture, String resourceName)
         throws Exception
     {
-        final int inputKey1 = 1, inputKey2 = 2, interlinkingKey = 3, fusionKey = 4;
+        final String inputKey1 = "input-1",
+            inputKey2 = "input-2",
+            interlinkingKey = "links",
+            fusionKey = "fusion";
 
         final Pair<URI, URI> inputPair = fixture.inputPair();
         final ResourceMetadataCreate linksMetadata =
@@ -1078,7 +1084,8 @@ public class DefaultProcessOperatorTests
         String procName, FuseFixture fixture, String resourceName)
         throws Exception
     {
-        final int inputKey1 = 1, inputKey2 = 2, interlinkingKey = 3, fusionKey = 4;
+        final String inputKey1 = "input-1", inputKey2 = "input-2",
+            interlinkingKey = "links", fusionKey = "fusion";
 
         final Pair<URI, URI> inputPair = fixture.inputPair();
         final ResourceMetadataCreate linksResourceMetadata =
@@ -1248,19 +1255,19 @@ public class DefaultProcessOperatorTests
             transformAndRegister(procName + ".tr-1", transformFixtures.getFirst(), creator);
         final ResourceIdentifier resourceIdentifier1 =
             ResourceIdentifier.of(resourceRecord1.getId(), resourceRecord1.getVersion());
-        final int inputKey1 = 1;
+        final String inputKey1 = "res-1";
 
         final ResourceRecord resourceRecord2 =
             transformAndRegister(procName + ".tr-2", transformFixtures.getSecond(), creator);
         final ResourceIdentifier resourceIdentifier2 =
             ResourceIdentifier.of(resourceRecord2.getId(), resourceRecord2.getVersion());
-        final int inputKey2 = 2;
+        final String inputKey2 = "res-2";
 
         // Build a process that uses on the 2 previously registered resources
 
         final String resourceName = procName + "." + fixtureName;
 
-        final int linksKey = 3;
+        final String linksKey = "links";
 
         ProcessDefinition definition = processDefinitionBuilderFactory.create(procName)
             .resource("tr-1", inputKey1, resourceIdentifier1, EnumResourceType.POI_DATA)
