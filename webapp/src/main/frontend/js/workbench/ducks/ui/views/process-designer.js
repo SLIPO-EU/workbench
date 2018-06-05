@@ -533,6 +533,7 @@ export {
 
 export {
   cloneTemplate,
+  checkFile,
   downloadFile,
   fetchExecutionDetails,
   fetchExecutionKpiData,

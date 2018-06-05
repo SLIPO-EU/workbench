@@ -96,17 +96,20 @@ const tableColumns = [{
   width: 80,
   Cell: props => {
     switch (props.original.type) {
-      case EnumStepFileType.CONFIGURATION: case EnumStepFileType.QA:
+      case EnumStepFileType.INPUT:
+      case EnumStepFileType.OUTPUT:
+      case EnumStepFileType.CONFIGURATION:
+      case EnumStepFileType.QA:
         return (
           <span>
-            <i data-action="config-download" className='fa fa-cloud-download slipo-table-row-action p-1'></i>
+            <i data-action="file-download" className='fa fa-cloud-download slipo-table-row-action p-1'></i>
           </span>
         );
 
       case EnumStepFileType.KPI:
         return (
           <span>
-            <i data-action="config-download" className='fa fa-cloud-download slipo-table-row-action p-1'></i>
+            <i data-action="file-download" className='fa fa-cloud-download slipo-table-row-action p-1'></i>
             <i data-action="kpi-view" className='fa fa-bar-chart slipo-table-row-action p-1'></i>
           </span>
         );
@@ -170,7 +173,7 @@ export default class ExecutionStepDetails extends React.Component {
     this.props.selectFile(rowInfo.row.id);
 
     switch (e.target.getAttribute('data-action')) {
-      case 'config-download':
+      case 'file-download':
         this.downloadFile(rowInfo.row.id, rowInfo.row.name.split('/').reverse()[0]);
         break;
 
@@ -187,12 +190,22 @@ export default class ExecutionStepDetails extends React.Component {
   }
 
   downloadFile(fileId, fileName) {
-    this.props.downloadFile(this.props.process.id, this.props.process.version, this.props.execution.id, fileId, fileName)
+    this.props.checkFile(this.props.process.id, this.props.process.version, this.props.execution.id, fileId, fileName)
+      .then(() => {
+        this.props.downloadFile(this.props.process.id, this.props.process.version, this.props.execution.id, fileId, fileName)
+          .catch(err => {
+            toast.dismiss();
+
+            toast.error(
+              <ToastTemplate iconClass='fa-cloud-download' text='Failed to download file' />
+            );
+          });
+      })
       .catch(err => {
         toast.dismiss();
 
         toast.error(
-          <ToastTemplate iconClass='fa-cloud-download' text='Failed to download file' />
+          <ToastTemplate iconClass='fa-cloud-download' text={err.message} />
         );
       });
   }
