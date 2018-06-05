@@ -63,6 +63,7 @@ import {
 
 import {
   reset,
+  checkFile,
   downloadFile,
   fetchProcess,
   fetchProcessRevision,
@@ -479,6 +480,7 @@ class ProcessDesigner extends React.Component {
 
     return (
       <ExecutionStepDetails
+        checkFile={this.props.checkFile}
         downloadFile={this.props.downloadFile}
         execution={this.props.execution}
         files={files}
@@ -572,6 +574,7 @@ const mapStateToProps = (state) => ({
 const mapDispatchToProps = (dispatch) => bindActionCreators({
   // Workflow designer
   reset,
+  checkFile,
   downloadFile,
   fetchProcess,
   fetchProcessRevision,

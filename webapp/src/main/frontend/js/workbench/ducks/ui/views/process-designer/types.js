@@ -59,7 +59,8 @@ export const RECEIVE_EXECUTION_KPI_DATA = 'ui/process/execution/viewer/RECEIVE_E
 
 export const RESET_SELECTED_KPI = 'ui/process/execution/viewer/RESET_SELECTED_KPI';
 
-export const FILE_DOWNLOAD_REQUEST = 'ui/process/execution/viewer/FILE_DOWNLOAD_REQUEST';
+export const FILE_EXISTS_RESPONSE = 'ui/process/execution/viewer/FILE_EXISTS_RESPONSE';
+export const FILE_DOWNLOAD_RESPONSE = 'ui/process/execution/viewer/FILE_DOWNLOAD_RESPONSE';
 
 /*
  * Layers
