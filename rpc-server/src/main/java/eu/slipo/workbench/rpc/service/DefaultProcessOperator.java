@@ -45,6 +45,7 @@ import eu.slipo.workbench.common.model.process.ProcessIdentifier;
 import eu.slipo.workbench.common.model.process.ProcessNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
 import eu.slipo.workbench.common.model.process.Step;
+import eu.slipo.workbench.common.model.resource.DataSource;
 import eu.slipo.workbench.common.model.tool.AnyTool;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
@@ -290,6 +291,7 @@ public class DefaultProcessOperator implements ProcessOperator
             stepRecord.setTool(step.tool());
 
             // Add input files under step record
+            // Note: Do not fail if input is not found (let actual Batch job to fail)
 
             final EnumDataFormat inputFormat = configuration.getInputFormat();
             for (Path inputPath: inputPaths) {
@@ -298,13 +300,12 @@ public class DefaultProcessOperator implements ProcessOperator
                 try {
                     size = Files.size(inputPath);
                 } catch (IOException ex) {
-                    String message = String.format(
-                        "Cannot stat input of execution:%d/step:%d: %s", executionId, step.key(), inputPath);
-                    throw new IllegalStateException(message, ex);
+                    logger.warn("Cannot stat input of execution step {}/{}: {}",
+                        executionId, step.key(), inputPath);
+                    size = null;
                 }
-                ProcessExecutionStepFileRecord fileRecord =
-                    new ProcessExecutionStepFileRecord(EnumStepFile.INPUT, inputUri, size, inputFormat);
-                stepRecord.addFile(fileRecord);
+                stepRecord.addFile(
+                    new ProcessExecutionStepFileRecord(EnumStepFile.INPUT, inputUri, size, inputFormat));
             }
 
             // Add the expected output files under step record
@@ -381,7 +382,7 @@ public class DefaultProcessOperator implements ProcessOperator
             ProcessExecutionStepRecord stepRecord = executionRecord.getStep(step.key());
             if (stepRecord == null)
                 throw new IllegalStateException(String.format(
-                    "Expected a step record for execution:%d/step:%d", executionId, step.key()));
+                    "Expected a record for execution step %d/%d", executionId, step.key()));
 
             //
             // Update step record
@@ -416,8 +417,7 @@ public class DefaultProcessOperator implements ProcessOperator
                     try {
                         size = Files.size(path);
                     } catch (IOException ex) {
-                        String message = String.format(
-                            "Cannot stat configuration of execution:%d/step:%d: %s",
+                        String message = String.format("Cannot stat configuration of execution step %d/%d: %s",
                             executionId, step.key(), path);
                         throw new IllegalStateException(message, ex);
                     }
@@ -447,7 +447,7 @@ public class DefaultProcessOperator implements ProcessOperator
                             fileRecord.setFileSize(Files.size(path));
                         } catch (IOException ex) {
                             String message = String.format(
-                                "Cannot stat output of execution:%d/step:%d: %s", executionId, step.key(), path);
+                                "Cannot stat output of execution step %d/%d: %s", executionId, step.key(), path);
                             throw new IllegalStateException(message, ex);
                         }
                     }
@@ -459,7 +459,7 @@ public class DefaultProcessOperator implements ProcessOperator
                     stepRecord.setStatus(EnumProcessExecutionStatus.FAILED);
                     stepRecord.setCompletedOn(now);
                     if (!failureExceptions.isEmpty())
-                        stepRecord.setErrorMessage(failureExceptions.get(0).getMessage());
+                        stepRecord.setErrorMessage(failureExceptions.get(0).toString());
                 }
                 break;
             case STOPPED:
