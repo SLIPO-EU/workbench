@@ -56,4 +56,5 @@ before_script:
 script:
 - set -e
 - mvn clean install
+- (cd rpc-server && mvn -P integration-tests verify)
 

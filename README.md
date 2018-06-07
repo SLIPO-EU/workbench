@@ -1,5 +1,7 @@
 # Slipo Workbench -- Project
 
+[![Build Status](https://travis-ci.org/SLIPO-EU/workbench.svg?branch=master)](https://travis-ci.org/SLIPO-EU/workbench)
+
 Design and execute workflows on POI datasets.
 
 ## 1. Build
