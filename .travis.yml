@@ -1,0 +1,55 @@
+language: java
+
+jdk:
+- 'openjdk8'
+
+env:
+  global:
+   - VERSION=0.0.1-SNAPSHOT
+  matrix:
+
+cache:
+  directories:
+  - "$HOME/.m2"
+  - node_modules
+
+sudo: required
+
+services:
+- postgresql
+- docker
+
+addons:
+  postgresql: '9.5'
+  apt:
+    packages:
+    - postgresql-9.5-postgis-2.3
+
+install:
+
+- sudo apt-get install -y ruby ruby-dev
+- sudo gem install sass --version "=3.4.24"
+
+- docker pull athenarc/triplegeo:1.4
+- docker pull athenarc/fagi:1.2
+- docker pull athenarc/limes:1.3
+
+before_script:
+
+# Setup database
+- createuser -U postgres slipo
+- createdb -U postgres -O slipo slipo-workbench-tests
+- psql -c "CREATE EXTENSION postgis" -U postgres slipo-workbench-tests
+- psql -f command/src/main/resources/db/scripts/initialize.sql -h localhost -U slipo slipo-workbench-tests
+
+# Check database connectivity
+- psql -h localhost -c "SELECT user" -U slipo slipo-workbench-tests
+- psql -h localhost -c '\d' -U slipo slipo-workbench-tests
+
+# Create directory hierarchy for tests
+- mkdir -p ~/var/slipo-workbench/jobs ~/var/slipo-workbench/catalog/ ~/var/slipo-workbench/workflows/ ~/var/slipo-workbench/temp
+
+script:
+- set -e
+- mvn clean install
+
