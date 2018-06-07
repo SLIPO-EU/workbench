@@ -48,6 +48,10 @@ before_script:
 
 # Create directory hierarchy for tests
 - mkdir -p ~/var/slipo-workbench/jobs ~/var/slipo-workbench/catalog/ ~/var/slipo-workbench/workflows/ ~/var/slipo-workbench/temp
+# Create default configuration under src/main/resources/config
+- cp command/config-example/* command/src/main/resources/config/
+- cp rpc-server/config-example/* rpc-server/src/main/resources/config/
+- cp webapp/config-example/* webapp/src/main/resources/config/
 
 script:
 - set -e
