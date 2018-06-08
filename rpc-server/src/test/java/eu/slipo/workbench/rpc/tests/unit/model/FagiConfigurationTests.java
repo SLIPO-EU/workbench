@@ -6,6 +6,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
@@ -27,6 +28,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
@@ -50,13 +53,19 @@ public class FagiConfigurationTests
         @Bean
         public ObjectMapper objectMapper()
         {
-            return new ObjectMapper();
+            ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.registerModule(new JavaTimeModule());
+            objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+            return objectMapper;
         }
 
         @Bean
         public XmlMapper xmlMapper()
         {
-            return new XmlMapper();
+            XmlMapper xmlMapper = new XmlMapper();
+            xmlMapper.registerModule(new JavaTimeModule());
+            xmlMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+            return xmlMapper;
         }
 
         @Bean
@@ -86,8 +95,10 @@ public class FagiConfigurationTests
             config.setSimilarity("jarowinkler");
             config.setRulesSpec("rules-1.xml");
 
-            config.setLeft("a", "input/a.nt", "classpath:tools/defaults/fagi/classification.csv");
-            config.setRight("b", "input/b.nt", "classpath:tools/defaults/fagi/classification.csv");
+            config.setLeft("a",
+                "input/a.nt", "classpath:defaults/fagi/classification.csv", LocalDate.of(2018, 5, 21));
+            config.setRight("b",
+                "input/b.nt", "classpath:defaults/fagi/classification.csv", LocalDate.of(2018, 6, 1));
             config.setLinks("links", "input/links.nt");
 
             config.setTargetMode("aa");
@@ -118,6 +129,7 @@ public class FagiConfigurationTests
         assertEquals(expected.getId(), actual.getId());
         assertEquals(expected.getPath(), actual.getPath());
         assertEquals(expected.getCategoriesLocation(), actual.getCategoriesLocation());
+        assertEquals(expected.getDate(), actual.getDate());
     }
 
     void checkEquals(FagiConfiguration.Links expected, FagiConfiguration.Links actual)
@@ -337,8 +349,6 @@ public class FagiConfigurationTests
         assertEquals(Arrays.asList("fused.nt"), outputNames.get(EnumFagiOutputPart.FUSED));
         assertEquals(Arrays.asList("remaining.nt"), outputNames.get(EnumFagiOutputPart.REMAINING));
         assertEquals(Arrays.asList("review.nt"), outputNames.get(EnumFagiOutputPart.REVIEW));
-
-        // Todo: Uncomment when updates to a Fagi version which creates KPI metadata
-        //assertEquals(Arrays.asList("stats.json"), outputNames.get(EnumFagiOutputPart.STATS));
+        assertEquals(Arrays.asList("stats.json"), outputNames.get(EnumFagiOutputPart.STATS));
     }
 }

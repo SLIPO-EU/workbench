@@ -1,14 +1,14 @@
 package eu.slipo.workbench.rpc.jobs;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.validation.ConstraintViolation;
@@ -34,9 +34,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
-
-import static org.springframework.util.StringUtils.stripFilenameExtension;
-import static org.springframework.util.StringUtils.getFilenameExtension;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -202,7 +199,7 @@ public class FagiJobConfiguration extends BaseJobConfiguration
             .input(Lists.transform(input, Paths::get))
             .inputFormat(spec.getInputFormat())
             .outputFormat(spec.getOutputFormat())
-            .config("rules", "rules.yml", rulesResource)
+            .config("rules", "rules.xml", rulesResource)
             .build();
     }
 
@@ -274,16 +271,24 @@ public class FagiJobConfiguration extends BaseJobConfiguration
                 .env("RULES_FILE", containerConfigDir.resolve("rules.xml"))
                 .env("LEFT_ID", leftSpec.getId())
                 .env("LEFT_FILE", containerInputDir.resolve(leftFileName))
+                .env("LEFT_DATE", Optional.ofNullable(leftSpec.getDate())
+                    .map(LocalDate::toString).orElse(""))
                 .env("RIGHT_ID", rightSpec.getId())
                 .env("RIGHT_FILE", containerInputDir.resolve(rightFileName))
+                .env("RIGHT_DATE", Optional.ofNullable(rightSpec.getDate())
+                    .map(LocalDate::toString).orElse(""))
                 .env("LINKS_ID", linksSpec.getId())
                 .env("LINKS_FILE", containerInputDir.resolve(linksFileName))
                 .env("TARGET_ID", targetSpec.getId())
                 .env("TARGET_MODE", targetSpec.getModeAsString())
-                .env("TARGET_FUSED_NAME", stripFilenameExtension(fusedFileName.toString()))
-                .env("TARGET_REMAINING_NAME", stripFilenameExtension(remainingFileName.toString()))
-                .env("TARGET_REVIEW_NAME", stripFilenameExtension(reviewFileName.toString()))
-                .env("TARGET_STATS_NAME", stripFilenameExtension(statsFileName.toString()))
+                .env("TARGET_FUSED_NAME",
+                    StringUtils.stripFilenameExtension(fusedFileName.toString()))
+                .env("TARGET_REMAINING_NAME",
+                    StringUtils.stripFilenameExtension(remainingFileName.toString()))
+                .env("TARGET_REVIEW_NAME",
+                    StringUtils.stripFilenameExtension(reviewFileName.toString()))
+                .env("TARGET_STATS_NAME",
+                    StringUtils.stripFilenameExtension(statsFileName.toString()))
                 .env("OUTPUT_DIR", containerOutputDir))
             .build();
     }

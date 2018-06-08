@@ -4,12 +4,12 @@ import java.io.File;
 import java.io.Serializable;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import javax.validation.Valid;
@@ -174,6 +174,11 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
          */
         String categoriesLocation;
         
+        /**
+         * The date of last update
+         */
+        LocalDate date;
+        
         InputSpec() {}
         
         InputSpec(String id)
@@ -181,14 +186,15 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
             this.id = id;
         }
         
-        InputSpec(String id, String categoriesLocation)
+        InputSpec(String id, String categoriesLocation, LocalDate date)
         {
             this.id = id;
             this.categoriesLocation = categoriesLocation;
+            this.date = date;
         }
     }
     
-    @JsonPropertyOrder({ "id", "file", "categories" })
+    @JsonPropertyOrder({ "id", "file", "categories", "date" })
     public static class Input implements Serializable
     {
         private static final long serialVersionUID = 1L;
@@ -203,15 +209,15 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
             this.spec = new InputSpec();
         }
         
-        Input(String id, String path, String categoriesLocation)
+        Input(String id, String path, String categoriesLocation, LocalDate date)
         {
             this.path = path;
-            this.spec = new InputSpec(id, categoriesLocation);
+            this.spec = new InputSpec(id, categoriesLocation, date);
         }
         
         Input(String id, String path)
         {
-            this(id, path, null);
+            this(id, path, null, null);
         }
         
         @JsonProperty("file")
@@ -249,6 +255,18 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
         public void setCategoriesLocation(String location)
         {
             this.spec.categoriesLocation = location;
+        }
+        
+        @JsonProperty("date")
+        public LocalDate getDate()
+        {
+            return spec.date;
+        }
+        
+        @JsonProperty("date")
+        public void setDate(LocalDate date)
+        {
+            this.spec.date = date;
         }
     }
     
@@ -480,9 +498,8 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
                     OutputSpec.of(Paths.get(target.remainingPath).getFileName(), outputFormat))
                 .put(EnumFagiOutputPart.REVIEW, 
                     OutputSpec.of(Paths.get(target.reviewPath).getFileName(), outputFormat))
-                // Fixme: The current version of Fagi doesn't produce statistics (uncomment when fixed)
-                //.put(EnumFagiOutputPart.STATS, 
-                //    OutputSpec.of(Paths.get(target.statsPath).getFileName()))
+                .put(EnumFagiOutputPart.STATS, 
+                    OutputSpec.of(Paths.get(target.statsPath).getFileName()))
                 .build();
         }
     }
@@ -776,7 +793,8 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
     @Valid
     public Input getLeft()
     {
-        return new Input(leftSpec.id, input.get(LEFT_INDEX), leftSpec.categoriesLocation);
+        final String path = input.get(LEFT_INDEX);
+        return new Input(leftSpec.id, path, leftSpec.categoriesLocation, leftSpec.date);
     }
     
     @JsonProperty("left")
@@ -786,17 +804,19 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
         Assert.notNull(r, "An input descriptor is required");
         this.leftSpec.id = r.spec.id;
         this.leftSpec.categoriesLocation = r.spec.categoriesLocation;
+        this.leftSpec.date = r.spec.date;
         
         if (!StringUtils.isEmpty(r.path))
             this.input.set(LEFT_INDEX, r.path);
     }
     
     @JsonIgnore
-    public void setLeft(String id, String path, String categoriesLocation)
+    public void setLeft(String id, String path, String categoriesLocation, LocalDate date)
     {
         this.input.set(LEFT_INDEX, path);
         this.leftSpec.id = id;
         this.leftSpec.categoriesLocation = categoriesLocation;
+        this.leftSpec.date = date;
     }
     
     @JsonProperty("input.left")
@@ -825,7 +845,8 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
     @Valid
     public Input getRight()
     {
-        return new Input(rightSpec.id, input.get(RIGHT_INDEX), rightSpec.categoriesLocation);
+        final String path = input.get(RIGHT_INDEX);
+        return new Input(rightSpec.id, path, rightSpec.categoriesLocation, rightSpec.date);
     }
     
     @JsonProperty("right")
@@ -835,17 +856,19 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
         Assert.notNull(r, "An input descriptor is required");
         this.rightSpec.id = r.spec.id;
         this.rightSpec.categoriesLocation = r.spec.categoriesLocation;
+        this.rightSpec.date = r.spec.date;
         
         if (!StringUtils.isEmpty(r.path))
             this.input.set(RIGHT_INDEX, r.path);
     }
     
     @JsonIgnore
-    public void setRight(String id, String path, String categoriesLocation)
+    public void setRight(String id, String path, String categoriesLocation, LocalDate date)
     {
         this.input.set(RIGHT_INDEX, path);
         this.rightSpec.id = id;
         this.rightSpec.categoriesLocation = categoriesLocation;
+        this.rightSpec.date = date;
     }
     
     @JsonProperty("input.right")

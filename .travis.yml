@@ -56,10 +56,11 @@ before_script:
 script:
 - set -e
 - mvn clean install
-- (cd rpc-server && mvn test -P integration-tests -Dtest=eu.slipo.workbench.rpc.tests.integration.jobs.TriplegeoJobTests)
-- (cd rpc-server && mvn test -P integration-tests -Dtest=eu.slipo.workbench.rpc.tests.integration.jobs.LimesJobTests)
-- (cd rpc-server && mvn test -P integration-tests -Dtest=eu.slipo.workbench.rpc.tests.integration.jobs.FagiJobTests)
-- (cd rpc-server && mvn test -P integration-tests -Dtest=eu.slipo.workbench.rpc.tests.integration.repository.DefaultProcessRepositoryTests)
-- (cd rpc-server && mvn test -P integration-tests -Dtest=eu.slipo.workbench.rpc.tests.integration.repository.DefaultResourceRepositoryTests)
-- (cd rpc-server && mvn test -P integration-tests -Dtest=eu.slipo.workbench.rpc.tests.integration.service.DefaultProcessOperatorTests)
+
+- (cd rpc-server && mvn test -Dtest=eu.slipo.workbench.rpc.tests.integration.jobs.TriplegeoJobTests)
+- (cd rpc-server && mvn test -Dtest=eu.slipo.workbench.rpc.tests.integration.jobs.LimesJobTests)
+- (cd rpc-server && mvn test -Dtest=eu.slipo.workbench.rpc.tests.integration.jobs.FagiJobTests)
+- (cd rpc-server && mvn test -Dtest=eu.slipo.workbench.rpc.tests.integration.repository.DefaultProcessRepositoryTests)
+- (cd rpc-server && mvn test -Dtest=eu.slipo.workbench.rpc.tests.integration.repository.DefaultResourceRepositoryTests)
+- (cd rpc-server && mvn test -Dtest=eu.slipo.workbench.rpc.tests.integration.service.DefaultProcessOperatorTests)
 
