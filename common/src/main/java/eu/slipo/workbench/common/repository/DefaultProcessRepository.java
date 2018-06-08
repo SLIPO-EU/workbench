@@ -3,8 +3,11 @@ package eu.slipo.workbench.common.repository;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -356,32 +359,71 @@ public class DefaultProcessRepository implements ProcessRepository
     public ProcessExecutionRecord findLatestExecution(long id, long version)
     {
         final ProcessRevisionEntity revisionEntity = findRevision(id, version);
-        Assert.notNull(revisionEntity,
+        Assert.notNull(revisionEntity, 
             "The pair of (id, version) does not correspond to a process revision entity");
-
-        final List<ProcessExecutionEntity> executionEntities = revisionEntity.getExecutions();
-        if (executionEntities.isEmpty()) {
-            return null;
-        }
-        if (!executionEntities.stream().anyMatch(e -> e.getStartedOn() != null)) {
-            return null;
-        }
-
-        ProcessExecutionEntity executionEntity = executionEntities.stream()
+        
+        final ProcessExecutionEntity executionEntity = revisionEntity.getExecutions().stream()
             .filter(e -> e.getStartedOn() != null)
             .sorted(ProcessExecutionEntity.ORDER_BY_STARTED.reversed())
-            .findFirst().get();
-        long executionId = executionEntity.getId();
-
-        List<Long> runningExecutionIds = executionEntities.stream()
+            .findFirst().orElse(null);
+        
+        if (executionEntity == null) {
+            return null; // no execution is present
+        }
+        
+        final long executionId = executionEntity.getId();
+        List<Long> runningExecutionIds = revisionEntity.getExecutions().stream()
             .filter(e -> e.isRunning())
             .collect(Collectors.mapping(e -> e.getId(), Collectors.toList()));
-        Assert.state(runningExecutionIds.size() < 2,
+        Assert.state(runningExecutionIds.size() <= 1,
             "Expected at most 1 running execution for a given process revision");
         Assert.state(runningExecutionIds.isEmpty() || runningExecutionIds.get(0).equals(executionId),
             "Expected a running execution to be the one started most recently!");
-
+        
         return executionEntity.toProcessExecutionRecord(true, false);
+    }
+    
+    @Transactional(readOnly = true)
+    @Override
+    public ProcessExecutionRecord getExecutionCompactView(long id, long version)
+    {
+        final ProcessRevisionEntity revisionEntity = findRevision(id, version);
+        Assert.notNull(revisionEntity, 
+            "The pair of (id, version) does not correspond to a process revision entity");
+        
+        final List<ProcessExecutionEntity> executionEntities = revisionEntity.getExecutions().stream()
+            .filter(e -> e.getStartedOn() != null)
+            .sorted(ProcessExecutionEntity.ORDER_BY_STARTED.reversed())
+            .collect(Collectors.toList());
+        
+        if (executionEntities.isEmpty()) {
+            return null; // no execution is present
+        }
+        
+        // The basic execution metadata are populated from latest execution
+        final ProcessExecutionRecord executionRecord = 
+            executionEntities.get(0).toProcessExecutionRecord(false, false);
+        
+        // Represent each step execution with latest one
+        
+        Set<Integer> stepKeys = new HashSet<>();
+        List<ProcessExecutionStepRecord> stepRecords = new ArrayList<>();
+        for (ProcessExecutionEntity executionEntity: executionEntities) {
+            for (ProcessExecutionStepEntity stepEntity: executionEntity.getSteps()) {
+                if (!stepKeys.contains(stepEntity.getKey())) {
+                    ProcessExecutionStepRecord stepRecord = stepEntity.toProcessExecutionStepRecord(false);
+                    stepRecords.add(stepRecord);
+                    stepKeys.add(stepEntity.getKey());
+                }
+            }
+        }
+       
+        // Add steps (ordered by starting timestamp) 
+        
+        Collections.sort(stepRecords, Comparator.comparing(r -> r.getStartedOn()));
+        executionRecord.setSteps(stepRecords);
+        
+        return executionRecord;
     }
 
     @Transactional(readOnly = true)
@@ -676,8 +718,6 @@ public class DefaultProcessRepository implements ProcessRepository
         }
 
         final List<ProcessExecutionStepFileRecord> fileRecords = record.getFiles();
-        final List<Long> fids = fileRecords.stream()
-            .collect(Collectors.mapping(r -> r.getId(), Collectors.toList()));
 
         // Update top-level step metadata
 
@@ -845,7 +885,7 @@ public class DefaultProcessRepository implements ProcessRepository
             query.setParameter("status", executionQuery.getStatus());
         }
     }
-
+    
     /**
      * Find the latest {@link ProcessRevisionEntity} associated with a given process id.
      *
