@@ -30,7 +30,7 @@ public class ProcessExecutionStepFileRecord implements Serializable
     
     private UUID tableName;
     
-    private Boolean primary;
+    private String outputPartKey;
 
     protected ProcessExecutionStepFileRecord() {}
     
@@ -80,7 +80,7 @@ public class ProcessExecutionStepFileRecord implements Serializable
         this.dataFormat = record.dataFormat;
         this.boundingBox = record.boundingBox;
         this.tableName = record.tableName;
-        this.primary = record.primary;
+        this.outputPartKey = record.outputPartKey;
     }
     
     public long getId() 
@@ -168,28 +168,25 @@ public class ProcessExecutionStepFileRecord implements Serializable
         return tableName;
     }
     
-    public Boolean getPrimary()
+    public String getOutputPartKey()
     {
-        return primary;
+        return outputPartKey;
     }
     
-    public boolean isPrimary()
+    public void setOutputPartKey(String outputPartKey)
     {
-        return primary != null && primary.booleanValue();
+        this.outputPartKey = outputPartKey;
     }
-    
-    public void setPrimary(Boolean primary)
-    {
-        this.primary = primary;
-    }
-    
+
     @Override
     public String toString()
     {
         return String.format(
-            "ProcessExecutionStepFileRecord " +
-                "[id=%s, type=%s, filePath=%s, primary=%s, fileSize=%s, resource=%s, dataFormat=%s," +
-                " boundingBox=%s, tableName=%s]",
-            id, type, filePath, primary, fileSize, resource, dataFormat, boundingBox, tableName);
+            "ProcessExecutionStepFileRecord [" +
+                "id=%s, type=%s, filePath=%s, fileSize=%s, resource=%s, dataFormat=%s, " +
+                "boundingBox=%s, tableName=%s, outputPartKey=%s]",
+            id, type, filePath, fileSize, resource, dataFormat, boundingBox, tableName, outputPartKey);
     }
+    
+    
 }

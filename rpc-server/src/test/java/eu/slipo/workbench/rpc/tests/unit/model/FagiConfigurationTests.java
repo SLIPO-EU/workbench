@@ -8,8 +8,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.EnumSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -30,11 +28,15 @@ import org.springframework.test.context.junit4.SpringRunner;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
-import eu.slipo.workbench.common.model.poi.EnumOutputType;
+import eu.slipo.workbench.common.model.tool.Fagi;
 import eu.slipo.workbench.common.model.tool.FagiConfiguration;
+import eu.slipo.workbench.common.model.tool.output.EnumFagiOutputPart;
+import eu.slipo.workbench.common.model.tool.output.OutputPart;
+import eu.slipo.workbench.common.model.tool.output.OutputSpec;
 import eu.slipo.workbench.common.service.util.JsonBasedPropertiesConverterService;
 import eu.slipo.workbench.common.service.util.PropertiesConverterService;
 
@@ -324,18 +326,19 @@ public class FagiConfigurationTests
     @Test
     public void test1_getOutputNames() throws Exception
     {
-        Map<EnumOutputType, List<String>> outputNamesByType = config1.getOutputNames();
+        Multimap<OutputPart<Fagi>, OutputSpec> outputMap = config1.getOutputNameMapper()
+            .apply(Arrays.asList(
+                "/var/local/limes/input/a.nt",
+                "/var/local/limes/input/b.nt",
+                "/var/local/limes/input/links.nt"));
+        Multimap<OutputPart<Fagi>, String> outputNames =
+            Multimaps.transformValues(outputMap, s -> s.fileName());
 
-        assertEquals(
-            EnumSet.of(EnumOutputType.OUTPUT, EnumOutputType.KPI),
-            outputNamesByType.keySet());
-        assertEquals(
-            Arrays.asList("fused.nt", "remaining.nt", "review.nt"),
-            outputNamesByType.get(EnumOutputType.OUTPUT));
-        // Fixme: Uncomment when Fagi actually creates KPI metadata
-        //assertEquals(
-        //    Arrays.asList("stats.json"),
-        //    outputNamesByType.get(EnumOutputType.KPI));
+        assertEquals(Arrays.asList("fused.nt"), outputNames.get(EnumFagiOutputPart.FUSED));
+        assertEquals(Arrays.asList("remaining.nt"), outputNames.get(EnumFagiOutputPart.REMAINING));
+        assertEquals(Arrays.asList("review.nt"), outputNames.get(EnumFagiOutputPart.REVIEW));
 
+        // Todo: Uncomment when updates to a Fagi version which creates KPI metadata
+        //assertEquals(Arrays.asList("stats.json"), outputNames.get(EnumFagiOutputPart.STATS));
     }
 }

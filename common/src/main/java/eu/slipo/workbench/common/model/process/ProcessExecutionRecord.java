@@ -181,6 +181,11 @@ public class ProcessExecutionRecord implements Serializable
             Collections.emptyList() : Collections.unmodifiableList(steps);
     }
 
+    public void setSteps(List<ProcessExecutionStepRecord> steps)
+    {
+        this.steps = new ArrayList(steps);
+    }
+    
     public void addStep(ProcessExecutionStepRecord s)
     {
         if (this.steps == null) {

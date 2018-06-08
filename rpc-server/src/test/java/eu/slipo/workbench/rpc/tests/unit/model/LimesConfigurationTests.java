@@ -1,6 +1,6 @@
 package eu.slipo.workbench.rpc.tests.unit.model;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -9,7 +9,6 @@ import java.io.ObjectOutputStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
 import java.util.Properties;
@@ -33,11 +32,17 @@ import org.springframework.test.context.junit4.SpringRunner;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 
-import eu.slipo.workbench.common.model.poi.EnumOutputType;
+import eu.slipo.workbench.common.model.tool.Limes;
 import eu.slipo.workbench.common.model.tool.LimesConfiguration;
+import eu.slipo.workbench.common.model.tool.output.EnumLimesOutputPart;
+import eu.slipo.workbench.common.model.tool.output.OutputPart;
+import eu.slipo.workbench.common.model.tool.output.OutputSpec;
 import eu.slipo.workbench.common.service.util.JsonBasedPropertiesConverterService;
 import eu.slipo.workbench.common.service.util.PropertiesConverterService;
+import jersey.repackaged.com.google.common.collect.Iterables;
 
 @RunWith(SpringRunner.class)
 @ActiveProfiles({ "testing" })
@@ -332,11 +337,12 @@ public class LimesConfigurationTests
     @Test
     public void test1_getOutputNames() throws Exception
     {
-        Map<EnumOutputType, List<String>> outputNamesByType = config1.getOutputNames();
+        Multimap<OutputPart<Limes>, OutputSpec> outputMap = config1.getOutputNameMapper()
+            .apply(Arrays.asList("/data/a.nt", "/data/b.nt"));
+        Multimap<OutputPart<Limes>, String> outputNames =
+            Multimaps.transformValues(outputMap, s -> s.fileName());
 
-        assertEquals(
-            Collections.singleton(EnumOutputType.OUTPUT), outputNamesByType.keySet());
-        assertEquals(
-            Arrays.asList("accepted.nt", "review.nt"), outputNamesByType.get(EnumOutputType.OUTPUT));
+        assertEquals(Arrays.asList("accepted.nt"), outputNames.get(EnumLimesOutputPart.ACCEPTED));
+        assertEquals(Arrays.asList("review.nt"), outputNames.get(EnumLimesOutputPart.REVIEW));
     }
 }

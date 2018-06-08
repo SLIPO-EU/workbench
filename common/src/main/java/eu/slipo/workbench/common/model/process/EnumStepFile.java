@@ -2,7 +2,7 @@ package eu.slipo.workbench.common.model.process;
 
 import org.springframework.util.Assert;
 
-import eu.slipo.workbench.common.model.poi.EnumOutputType;
+import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
 
 /**
  * Step input/output file types

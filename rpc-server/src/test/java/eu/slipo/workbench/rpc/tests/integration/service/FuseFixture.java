@@ -2,7 +2,6 @@ package eu.slipo.workbench.rpc.tests.integration.service;
 
 import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -47,6 +46,8 @@ abstract class FuseFixture extends BaseFixture
      */
     abstract FagiConfiguration configuration();
 
+    abstract Path expectedRemainingResult();
+
     public Pair<DataSource, DataSource> inputAsDataSource() throws MalformedURLException
     {
         Pair<URI, URI> p = inputPair();
@@ -58,9 +59,9 @@ abstract class FuseFixture extends BaseFixture
     {
         super.checkState();
 
-        for (Path p: Arrays.asList(expectedLinkResult(), expectedResult())) {
+        for (Path p: Arrays.asList(expectedLinkResult(), expectedResult(), expectedRemainingResult())) {
             Assert.isTrue(p != null && p.isAbsolute() && Files.isReadable(p),
-                "The expected result should be given as an absolute file path");
+                "An expected result should be given as an absolute file path");
         }
 
         final Pair<URI, URI> inputPair = inputPair();
@@ -105,6 +106,8 @@ abstract class FuseFixture extends BaseFixture
         abstract Builder expectedLinkResult(Path p);
 
         abstract Builder configuration(FagiConfiguration c);
+
+        abstract Builder expectedRemainingResult(Path p);
 
         Builder configuration(Properties p, String rulesSpec)
             throws ConversionFailedException

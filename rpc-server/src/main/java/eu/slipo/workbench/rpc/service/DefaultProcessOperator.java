@@ -9,10 +9,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
@@ -27,12 +28,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumOperation;
-import eu.slipo.workbench.common.model.poi.EnumOutputType;
+import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.process.EnumProcessExecutionStatus;
 import eu.slipo.workbench.common.model.process.EnumStepFile;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
@@ -46,15 +45,21 @@ import eu.slipo.workbench.common.model.process.ProcessIdentifier;
 import eu.slipo.workbench.common.model.process.ProcessNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
 import eu.slipo.workbench.common.model.process.Step;
+import eu.slipo.workbench.common.model.resource.DataSource;
+import eu.slipo.workbench.common.model.tool.AnyTool;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
+import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
+import eu.slipo.workbench.common.model.tool.output.InputToOutputNameMapper;
+import eu.slipo.workbench.common.model.tool.output.OutputPart;
+import eu.slipo.workbench.common.model.tool.output.OutputSpec;
 import eu.slipo.workbench.common.repository.AccountRepository;
 import eu.slipo.workbench.common.repository.ProcessRepository;
 import eu.slipo.workbench.common.repository.ProcessRepository.ProcessExecutionNotActiveException;
 import eu.slipo.workbench.common.repository.ProcessRepository.ProcessHasActiveExecutionException;
 import eu.slipo.workbench.common.repository.ResourceRepository;
 import eu.slipo.workbench.common.service.UserFileNamingStrategy;
+import eu.slipo.workbench.rpc.jobs.RegisterToCatalogJobConfiguration;
 import eu.slipo.workbench.common.service.ProcessOperator;
-import eu.slipo.workbench.common.service.util.ClonerService;
 import eu.slipo.workflows.Workflow;
 import eu.slipo.workflows.WorkflowExecutionEventListener;
 import eu.slipo.workflows.WorkflowExecutionEventListenerSupport;
@@ -106,9 +111,6 @@ public class DefaultProcessOperator implements ProcessOperator
     @Autowired
     private ProcessToWorkflowMapper processToWorkflowMapper;
 
-    @Autowired
-    private ClonerService cloner;
-
     /**
      * Fix status of interrupted executions.
      *
@@ -155,7 +157,9 @@ public class DefaultProcessOperator implements ProcessOperator
         {
             final Step step = definition.stepByNodeName(nodeName);
             Assert.state(step.operation() == EnumOperation.REGISTER, "Expected a registration step");
-            Assert.state(step.inputKeys().size() == 1, "Expected a single input for a registration step!");
+
+            // Retrieve the input (a registration step expects a single input)
+            Step.Input input = Iterables.getOnlyElement(step.input());
 
             // Check batch status; proceed only if registration was successful
 
@@ -165,14 +169,18 @@ public class DefaultProcessOperator implements ProcessOperator
 
             // Determine the step that produced (as output) the input for registration step
 
-            final int inputKey = step.inputKeys().get(0);
-            final Step producerStep = definition.stepByResourceKey(inputKey);
-            Assert.state(producerStep != null, "A processing step is expected to produce this resource!");
+            final Step producer = definition.stepByResourceKey(input.inputKey());
+            Assert.state(producer != null, "A step is expected to produce the resource to be registered");
+
+            final OutputPart<? extends AnyTool> outputPart = producer.outputPart(input.partKey());
+            if (outputPart == null)
+                throw new IllegalStateException(
+                    "The step " + producer + " has no output part of [" + input.partKey() + "]");
 
             // Extract resource (id, version) from execution context
 
-            final String RESOURCE_ID_KEY = "resourceId";
-            final String RESOURCE_VERSION_KEY = "resourceVersion";
+            final String RESOURCE_ID_KEY = RegisterToCatalogJobConfiguration.RESOURCE_ID_KEY;
+            final String RESOURCE_VERSION_KEY = RegisterToCatalogJobConfiguration.RESOURCE_VERSION_KEY;
 
             final ExecutionContext executionContext = jobExecution.getExecutionContext();
 
@@ -189,7 +197,11 @@ public class DefaultProcessOperator implements ProcessOperator
             // Associate process execution with registered resources
 
             resourceRepository.setProcessExecution(
-                resourceId, resourceVersion, executionId, producerStep.key());
+                resourceId,
+                resourceVersion,
+                executionId,
+                producer.key(),
+                outputPart.key());
         }
     }
 
@@ -262,8 +274,8 @@ public class DefaultProcessOperator implements ProcessOperator
             final Workflow.JobNode node = workflow.node(step.nodeName());
             final List<Path> inputPaths = node.input();
 
-            final ToolConfiguration config = step.configuration();
-            final Class<? extends ToolConfiguration> configType = step.configurationType();
+            final ToolConfiguration<? extends AnyTool> configuration = step.configuration();
+            final EnumTool tool = step.tool();
 
             final ZonedDateTime now = ZonedDateTime.now();
 
@@ -279,24 +291,28 @@ public class DefaultProcessOperator implements ProcessOperator
             stepRecord.setTool(step.tool());
 
             // Add input files under step record
+            // Note: Do not fail if input is not found (let actual Batch job to fail)
 
-            final EnumDataFormat inputFormat = config.getInputFormat();
+            final EnumDataFormat inputFormat = configuration.getInputFormat();
             for (Path inputPath: inputPaths) {
                 URI inputUri = convertPathToUri(inputPath);
                 Long size = null;
                 try {
                     size = Files.size(inputPath);
                 } catch (IOException ex) {
-                    String message = String.format(
-                        "Cannot stat input of execution:%d/step:%d: %s", executionId, step.key(), inputPath);
-                    throw new IllegalStateException(message, ex);
+                    logger.warn("Cannot stat input of execution step {}/{}: {}",
+                        executionId, step.key(), inputPath);
+                    size = null;
                 }
-                ProcessExecutionStepFileRecord fileRecord =
-                    new ProcessExecutionStepFileRecord(EnumStepFile.INPUT, inputUri, size, inputFormat);
-                stepRecord.addFile(fileRecord);
+                stepRecord.addFile(
+                    new ProcessExecutionStepFileRecord(EnumStepFile.INPUT, inputUri, size, inputFormat));
             }
 
             // Add the expected output files under step record
+            // Note: Every output part is expected to hold at most 1 output path!
+
+            final Class<?> outputPartEnumeration = tool.getOutputPartEnumeration();
+            final InputToOutputNameMapper<? extends AnyTool> outputNameMapper = configuration.getOutputNameMapper();
 
             final List<Path> outputPaths = node.output();
             Assert.state(outputPaths.stream().allMatch(Path::isAbsolute),
@@ -304,27 +320,28 @@ public class DefaultProcessOperator implements ProcessOperator
             Assert.state(outputPaths.stream().allMatch(path -> path.startsWith(workflowDataDir)),
                 "An output path is expected to be under workflow data directory");
 
-            final Map<EnumOutputType, List<String>> outputMap =
-                determineOutputNames(config, configType, inputPaths);
-            Assert.state(outputPaths.size() == outputMap.values().stream().mapToInt(List::size).sum(),
+            Map<OutputPart<? extends AnyTool>, OutputSpec> outputMap = outputNameMapper.applyToPath(inputPaths)
+                .entries().stream()
+                .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+            Set<OutputPart<? extends AnyTool>> outputParts = outputMap.keySet();
+
+            Assert.state(outputParts.isEmpty() || outputParts.stream().allMatch(outputPartEnumeration::isInstance),
+                "An output part is expected to be one of the enumerated parts");
+            Assert.state(outputParts.size() == outputPaths.size(),
                 "The number of output paths differs from the one determined by step configuration");
 
-            for (EnumOutputType outputType: outputMap.keySet()) {
-                final boolean isPrimaryType = outputType == EnumOutputType.OUTPUT;
-                final EnumDataFormat outputFormat = isPrimaryType?
-                    config.getOutputFormat() : null; // format is relevant only to actual output results
-                final EnumStepFile type = EnumStepFile.from(outputType);
-                final List<String> outputNames = outputMap.get(outputType);
-                for (int index = 0, n = outputNames.size(); index < n; ++index) {
-                    String outputName = outputNames.get(index);
-                    // Find corresponding item from node's output paths (must exist!)
-                    Path outputPath = Iterables.find(outputPaths, path -> path.endsWith(outputName));
-                    URI outputUri = convertPathToUri(outputPath);
-                    ProcessExecutionStepFileRecord fileRecord =
-                        new ProcessExecutionStepFileRecord(type, outputUri, null, outputFormat);
-                    fileRecord.setPrimary(!isPrimaryType? null : (index == 0));
-                    stepRecord.addFile(fileRecord);
-                }
+            for (OutputPart<? extends AnyTool> outputPart: outputParts) {
+                final OutputSpec outputSpec = outputMap.get(outputPart);
+                final String outputName = outputSpec.fileName();
+                final EnumOutputType outputType = outputPart.outputType();
+                final EnumDataFormat dataFormat = outputSpec.dataFormat();
+                // Find corresponding item from node's output paths (expect to always exist)
+                Path outputPath = Iterables.find(outputPaths, path -> path.endsWith(outputName));
+                URI outputUri = convertPathToUri(outputPath);
+                ProcessExecutionStepFileRecord fileRecord = new ProcessExecutionStepFileRecord(
+                    EnumStepFile.from(outputType), outputUri, null, dataFormat);
+                fileRecord.setOutputPartKey(outputPart.key());
+                stepRecord.addFile(fileRecord);
             }
 
             // Update record in repository
@@ -365,7 +382,7 @@ public class DefaultProcessOperator implements ProcessOperator
             ProcessExecutionStepRecord stepRecord = executionRecord.getStep(step.key());
             if (stepRecord == null)
                 throw new IllegalStateException(String.format(
-                    "Expected a step record for execution:%d/step:%d", executionId, step.key()));
+                    "Expected a record for execution step %d/%d", executionId, step.key()));
 
             //
             // Update step record
@@ -400,8 +417,7 @@ public class DefaultProcessOperator implements ProcessOperator
                     try {
                         size = Files.size(path);
                     } catch (IOException ex) {
-                        String message = String.format(
-                            "Cannot stat configuration of execution:%d/step:%d: %s",
+                        String message = String.format("Cannot stat configuration of execution step %d/%d: %s",
                             executionId, step.key(), path);
                         throw new IllegalStateException(message, ex);
                     }
@@ -431,7 +447,7 @@ public class DefaultProcessOperator implements ProcessOperator
                             fileRecord.setFileSize(Files.size(path));
                         } catch (IOException ex) {
                             String message = String.format(
-                                "Cannot stat output of execution:%d/step:%d: %s", executionId, step.key(), path);
+                                "Cannot stat output of execution step %d/%d: %s", executionId, step.key(), path);
                             throw new IllegalStateException(message, ex);
                         }
                     }
@@ -443,7 +459,7 @@ public class DefaultProcessOperator implements ProcessOperator
                     stepRecord.setStatus(EnumProcessExecutionStatus.FAILED);
                     stepRecord.setCompletedOn(now);
                     if (!failureExceptions.isEmpty())
-                        stepRecord.setErrorMessage(failureExceptions.get(0).getMessage());
+                        stepRecord.setErrorMessage(failureExceptions.get(0).toString());
                 }
                 break;
             case STOPPED:
@@ -524,25 +540,6 @@ public class DefaultProcessOperator implements ProcessOperator
             }
 
             return uri;
-        }
-
-        /**
-         * Determine the output names (i.e. names of output files) based on a given {@link ToolConfiguration}.
-         *
-         * @param config The configuration for a tool invocation
-         * @param inputPaths The input paths feeding a tool's invocation
-         */
-        private Map<EnumOutputType, List<String>> determineOutputNames(
-            ToolConfiguration config, Class<? extends ToolConfiguration> configType, List<Path> inputPaths)
-        {
-            try {
-                config = cloner.cloneAsBean(config, configType);
-            } catch (IOException ex) {
-                throw new IllegalStateException("Cannot clone configuration", ex);
-            }
-
-            config = config.withInput(Lists.transform(inputPaths, Path::toString));
-            return config.getOutputNames();
         }
     }
 

@@ -5,14 +5,11 @@ import java.io.Serializable;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.validation.Valid;
@@ -31,11 +28,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
-import eu.slipo.workbench.common.model.poi.EnumOutputType;
-import eu.slipo.workbench.common.model.poi.EnumTool;
+import eu.slipo.workbench.common.model.tool.output.EnumFagiOutputPart;
+import eu.slipo.workbench.common.model.tool.output.InputToOutputNameMapper;
+import eu.slipo.workbench.common.model.tool.output.OutputPart;
+import eu.slipo.workbench.common.model.tool.output.OutputSpec;
 
 /**
  * Configuration for FAGI
@@ -45,7 +46,7 @@ import eu.slipo.workbench.common.model.poi.EnumTool;
     "left", "right", "links", "target"
 })
 @JacksonXmlRootElement(localName = "specification")
-public class FagiConfiguration extends FuseConfiguration 
+public class FagiConfiguration extends FuseConfiguration<Fagi> 
 {
     private static final long serialVersionUID = 1L;
 
@@ -459,6 +460,33 @@ public class FagiConfiguration extends FuseConfiguration
         }        
     }
   
+    public class OutputNameMapper implements InputToOutputNameMapper<Fagi>
+    {
+        private OutputNameMapper() {};
+        
+        @Override
+        public Multimap<OutputPart<Fagi>, OutputSpec> applyToPath(List<Path> input)
+        {
+            Assert.state(outputFormat != null, "The output format is required");
+            Assert.state(target.fusedPath != null, "The path (fusion) is required");
+            Assert.state(target.remainingPath != null, "The path (remaining) is required");
+            Assert.state(target.reviewPath != null, "The path (review) is required");
+            Assert.state(target.statsPath != null, "The path (stats) is required");
+            
+            return ImmutableMultimap.<OutputPart<Fagi>, OutputSpec>builder()
+                .put(EnumFagiOutputPart.FUSED, 
+                    OutputSpec.of(Paths.get(target.fusedPath).getFileName(), outputFormat))
+                .put(EnumFagiOutputPart.REMAINING, 
+                    OutputSpec.of(Paths.get(target.remainingPath).getFileName(), outputFormat))
+                .put(EnumFagiOutputPart.REVIEW, 
+                    OutputSpec.of(Paths.get(target.reviewPath).getFileName(), outputFormat))
+                // Fixme: The current version of Fagi doesn't produce statistics (uncomment when fixed)
+                //.put(EnumFagiOutputPart.STATS, 
+                //    OutputSpec.of(Paths.get(target.statsPath).getFileName()))
+                .build();
+        }
+    }
+    
     private String lang = "en";
     
     private Similarity similarity;
@@ -507,9 +535,9 @@ public class FagiConfiguration extends FuseConfiguration
     
     @JsonIgnore
     @Override
-    public EnumTool getTool()
+    public Class<Fagi> getToolType()
     {
-        return EnumTool.FAGI;
+        return Fagi.class;
     }
     
     @JsonIgnore
@@ -627,30 +655,12 @@ public class FagiConfiguration extends FuseConfiguration
     {
         this.outputDir = this.target.outputDir = dir;
     }
-
+    
     @JsonIgnore
     @Override
-    public Map<EnumOutputType, List<String>> getOutputNames()
+    public InputToOutputNameMapper<Fagi> getOutputNameMapper()
     {
-        Assert.state(target.fusedPath != null, "The path (fusion) is required");
-        Assert.state(target.remainingPath != null, "The path (remaining) is required");
-        Assert.state(target.reviewPath != null, "The path (review) is required");
-        Assert.state(target.statsPath != null, "The path (stats) is required");
-        
-        Map<EnumOutputType, List<String>> namesByType = new EnumMap<>(EnumOutputType.class);
-        Function<String, String> getFileName = p -> Paths.get(p).getFileName().toString();
-        List<String> names = null;
-        
-        names = Stream.of(target.fusedPath, target.remainingPath, target.reviewPath)
-            .collect(Collectors.mapping(getFileName, Collectors.toList()));
-        namesByType.put(EnumOutputType.OUTPUT, names);
-        
-        // Fixme: The current version of Fagi doesn't produce statistics (uncomment when fixed)
-        names = Stream.<String>of() // Stream.of(target.statsPath)
-            .collect(Collectors.mapping(getFileName, Collectors.toList()));
-        namesByType.put(EnumOutputType.KPI, names);
-        
-        return namesByType;
+        return new OutputNameMapper();
     }
     
     @JsonIgnore

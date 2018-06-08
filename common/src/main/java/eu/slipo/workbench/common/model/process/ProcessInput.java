@@ -24,7 +24,7 @@ public abstract class ProcessInput implements Serializable
 {
     private static final long serialVersionUID = 1L;
 
-    protected int key;
+    protected String key;
 
     @JsonDeserialize(using = EnumInputType.Deserializer.class)
     protected EnumInputType inputType;
@@ -37,7 +37,7 @@ public abstract class ProcessInput implements Serializable
     protected ProcessInput() {}
 
     protected ProcessInput(
-        int key, EnumInputType inputType, String name, EnumResourceType resourceType) 
+        String key, EnumInputType inputType, String name, EnumResourceType resourceType) 
     {
         this.key = key;
         this.inputType = inputType;
@@ -45,7 +45,7 @@ public abstract class ProcessInput implements Serializable
         this.resourceType = resourceType;
     }
     
-    protected ProcessInput(int key, EnumInputType inputType, String name) 
+    protected ProcessInput(String key, EnumInputType inputType, String name) 
     {
         this.key = key;
         this.inputType = inputType;
@@ -54,13 +54,13 @@ public abstract class ProcessInput implements Serializable
     }
 
     @JsonIgnore
-    public int key()
+    public String key()
     {
         return key;
     }
     
     @JsonProperty
-    public int getKey() {
+    public String getKey() {
         return key;
     }
 

@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
 import java.util.TreeSet;
+import java.util.function.Function;
 
 import javax.validation.Valid;
 import javax.validation.constraints.AssertTrue;
@@ -37,11 +38,15 @@ import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
-import eu.slipo.workbench.common.model.poi.EnumOutputType;
-import eu.slipo.workbench.common.model.poi.EnumTool;
+import eu.slipo.workbench.common.model.tool.output.EnumLimesOutputPart;
+import eu.slipo.workbench.common.model.tool.output.InputToOutputNameMapper;
+import eu.slipo.workbench.common.model.tool.output.OutputPart;
+import eu.slipo.workbench.common.model.tool.output.OutputSpec;
 
 /**
  * Configuration for LIMES
@@ -58,7 +63,7 @@ import eu.slipo.workbench.common.model.poi.EnumTool;
 })
 @JacksonXmlRootElement(localName = "LIMES")
 @eu.slipo.workbench.common.model.tool.serialization.DtdDeclaration(name = "LIMES", href = "limes.dtd")
-public class LimesConfiguration extends InterlinkConfiguration 
+public class LimesConfiguration extends InterlinkConfiguration<Limes> 
 {
     private static final long serialVersionUID = 1L;
     
@@ -555,6 +560,28 @@ public class LimesConfiguration extends InterlinkConfiguration
         }
     }
     
+    public class OutputNameMapper implements InputToOutputNameMapper<Limes>
+    {
+        private OutputNameMapper() {}
+
+        @Override
+        public Multimap<OutputPart<Limes>, OutputSpec> applyToPath(List<Path> input)
+        {
+            Assert.state(outputFormat != null, "The output format is required");
+            Assert.state(accepted != null, "The output spec for `accepted` is null");
+            Assert.state(accepted.path != null, "The path for `accepted` is null");
+            Assert.state(review != null, "The output spec for `review` is null");
+            Assert.state(review.path != null, "The path for `review` is null");
+            
+            return ImmutableMultimap.<OutputPart<Limes>, OutputSpec>builder()
+                .put(EnumLimesOutputPart.ACCEPTED, 
+                    OutputSpec.of(Paths.get(accepted.path).getFileName(), outputFormat))
+                .put(EnumLimesOutputPart.REVIEW, 
+                    OutputSpec.of(Paths.get(review.path).getFileName(), outputFormat))
+                .build();
+        }
+    }
+    
     /**
      * A list of aliased XML namespaces
      */
@@ -605,9 +632,9 @@ public class LimesConfiguration extends InterlinkConfiguration
     
     @JsonIgnore
     @Override
-    public EnumTool getTool()
+    public Class<Limes> getToolType()
     {
-        return EnumTool.LIMES;
+        return Limes.class;
     }
     
     @Override
@@ -910,18 +937,9 @@ public class LimesConfiguration extends InterlinkConfiguration
     
     @JsonIgnore
     @Override
-    public Map<EnumOutputType, List<String>> getOutputNames()
+    public InputToOutputNameMapper<Limes> getOutputNameMapper()
     {
-        Assert.state(accepted != null, "The output spec for `accepted` is null");
-        Assert.state(accepted.path != null, "The path for `accepted` is null");
-        Assert.state(review != null, "The output spec for `review` is null");
-        Assert.state(review.path != null, "The path for `review` is null");
-        
-        String acceptedFileName = Paths.get(accepted.path).getFileName().toString();
-        String reviewFileName = Paths.get(review.path).getFileName().toString();
-        
-        return Collections.singletonMap(
-            EnumOutputType.OUTPUT, Arrays.asList(acceptedFileName, reviewFileName));
+        return new OutputNameMapper();
     }
     
     @JsonProperty("acceptance")

@@ -2,15 +2,15 @@ package eu.slipo.workbench.common.model.process;
 
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -18,16 +18,22 @@ import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumOperation;
 import eu.slipo.workbench.common.model.poi.EnumResourceType;
 import eu.slipo.workbench.common.model.poi.EnumTool;
+import eu.slipo.workbench.common.model.process.Step.Input;
 import eu.slipo.workbench.common.model.resource.DataSource;
 import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
 import eu.slipo.workbench.common.model.resource.UrlDataSource;
+import eu.slipo.workbench.common.model.tool.AnyTool;
 import eu.slipo.workbench.common.model.tool.FuseConfiguration;
+import eu.slipo.workbench.common.model.tool.FuseTool;
 import eu.slipo.workbench.common.model.tool.ImportDataConfiguration;
 import eu.slipo.workbench.common.model.tool.InterlinkConfiguration;
-import eu.slipo.workbench.common.model.tool.MetadataRegistrationConfiguration;
+import eu.slipo.workbench.common.model.tool.InterlinkTool;
+import eu.slipo.workbench.common.model.tool.RegisterToCatalogConfiguration;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.model.tool.TransformConfiguration;
+import eu.slipo.workbench.common.model.tool.TransformTool;
+import eu.slipo.workbench.common.model.tool.output.OutputPart;
 import eu.slipo.workbench.common.service.util.ClonerService;
 
 /**
@@ -39,6 +45,10 @@ public class ProcessDefinitionBuilder
     {
         protected abstract Step build();
     }
+    
+    public static final String NODE_NAME_PATTERN = "^[a-zA-Z][-\\w]*$";
+    
+    public static final String OUTPUT_KEY_PATTERN = "^[a-zA-Z][-\\w]*$";
     
     /**
      * A builder for a generic {@link Step} inside a process.
@@ -59,15 +69,15 @@ public class ProcessDefinitionBuilder
 
         protected EnumTool tool;
 
-        protected List<Integer> inputKeys = new ArrayList<>();
+        protected List<Input> input = new ArrayList<>();
 
         protected List<DataSource> sources = new ArrayList<>();
 
-        protected Integer outputKey;
+        protected String outputKey;
         
         protected EnumDataFormat outputFormat;
 
-        protected ToolConfiguration configuration;
+        protected ToolConfiguration<? extends AnyTool> configuration;
 
         /**
          * Create a builder for a step ({@link Step}).
@@ -93,8 +103,8 @@ public class ProcessDefinitionBuilder
         
         public GenericStepBuilder nodeName(String nodeName)
         {
-            Assert.notNull(nodeName, "A name is required");
-            Assert.isTrue(nodeName.matches("^[a-zA-Z][-\\w]*$"), "The name is invalid");
+            Assert.isTrue(!StringUtils.isEmpty(nodeName), "A non-empty name is expected");
+            Assert.isTrue(nodeName.matches(NODE_NAME_PATTERN), "The name is invalid");
             this.nodeName = nodeName;
             return this;
         }
@@ -105,7 +115,7 @@ public class ProcessDefinitionBuilder
          */
         public GenericStepBuilder operation(EnumOperation operation)
         {
-            Assert.notNull(operation, "Expected an non-null operation");
+            Assert.notNull(operation, "A non-null operation is expected");
             this.operation = operation;
             return this;
         }
@@ -122,7 +132,7 @@ public class ProcessDefinitionBuilder
          */
         public GenericStepBuilder tool(EnumTool tool)
         {
-            Assert.notNull(tool, "Expected a tool constant");
+            Assert.notNull(tool, "A non-null tool constant is expected");
             this.tool = tool;
             return this;
         }
@@ -131,9 +141,10 @@ public class ProcessDefinitionBuilder
          * Provide the tool-specific configuration
          * @param configuration A tool-specific configuration bean
          */
-        public GenericStepBuilder configuration(ToolConfiguration configuration)
+        
+        public GenericStepBuilder configuration(ToolConfiguration<? extends AnyTool> configuration)
         {
-            Assert.notNull(configuration, "Expected a non-null configuration");
+            Assert.notNull(configuration, "A non-null configuration is expected");
             
             final EnumDataFormat expectedOutputFormat = configuration.getOutputFormat();
             Assert.isTrue(outputFormat == null || expectedOutputFormat == null || 
@@ -142,12 +153,15 @@ public class ProcessDefinitionBuilder
             Assert.isTrue(tool == null || tool == configuration.getTool(), 
                 "The tool must agree with one reported by step configuration");
             
-            // Hold a copy of this configuration
+            // Make a copy of this configuration
+            
             try {
-                
-                this.configuration = (ToolConfiguration) cloner.cloneAsBean(configuration);
+                @SuppressWarnings("unchecked")
+                ToolConfiguration<? extends AnyTool> clonedConfiguration = 
+                    (ToolConfiguration<? extends AnyTool>) cloner.cloneAsBean(configuration);
+                this.configuration = clonedConfiguration;
             } catch (Exception ex) {
-                throw new IllegalStateException("Cannot clone the configuration bean", ex);
+                throw new IllegalStateException("Cannot clone the configuration object", ex);
             }
             
             // A couple of things are implied from tool's configuration
@@ -162,62 +176,44 @@ public class ProcessDefinitionBuilder
          * a process.
          * @param outputKey
          */
-        public GenericStepBuilder outputKey(int outputKey)
+        public GenericStepBuilder outputKey(String outputKey)
         {
+            Assert.isTrue(!StringUtils.isEmpty(outputKey), "A non-empty key is expected");
+            Assert.isTrue(outputKey.matches(OUTPUT_KEY_PATTERN), "The key is invalid");
             this.outputKey = outputKey;
             return this;
         }
 
         /**
-         * Set the keys of process-wide resources that should be input to this step
-         * @param inputKeys A list of resource keys
+         * Designate a process-wide resource as an input to this step
+         * 
+         * @param inputKey The key identifying the resource
          */
-        public GenericStepBuilder input(List<Integer> inputKeys)
+        public GenericStepBuilder input(String inputKey)
         {
-            this.inputKeys.addAll(inputKeys);
-            return this;
-        }
-
-        /**
-         * @see {@link Step.GenericStepBuilder#input(List)}
-         * @param inputKey
-         */
-        public GenericStepBuilder input(int inputKey)
-        {
-            this.inputKeys.add(inputKey);
-            return this;
-        }
-
-        /**
-         * @see {@link Step.GenericStepBuilder#input(List)}
-         * @param inputKey
-         */
-        public GenericStepBuilder input(int inputKey1, int inputKey2)
-        {
-            this.inputKeys.add(inputKey1);
-            this.inputKeys.add(inputKey2);
-            return this;
+            return input(Input.of(inputKey));
         }
         
         /**
-         * @see {@link Step.GenericStepBuilder#input(List)}
-         * @param inputKey
+         * Designate a part of a process-wide resource as an input to this step. 
+         * 
+         * <p>This is only meaningful for resources produced as outputs of other steps (i.e. those
+         * represented as {@link ProcessOutput}).
+         * 
+         * @param inputKey The key identifying the resource
+         * @param part The targeted part of the input (i.e a part of the output of the step providing
+         *   the resource identified by <tt>inputKey</tt>)
          */
-        public GenericStepBuilder input(int inputKey1, int inputKey2, int inputKey3)
+        public GenericStepBuilder input(String inputKey, OutputPart<? extends AnyTool> part)
         {
-            this.inputKeys.add(inputKey1);
-            this.inputKeys.add(inputKey2);
-            this.inputKeys.add(inputKey3);
-            return this;
+            return input(Input.of(inputKey, part));
         }
         
-        /**
-         * @see {@link Step.GenericStepBuilder#input(List)}
-         * @param inputKey
-         */
-        public GenericStepBuilder input(int ...inputKeys)
+        protected GenericStepBuilder input(Input p)
         {
-            this.inputKeys.addAll(Arrays.asList(ArrayUtils.toObject(inputKeys)));
+            Assert.notNull(p, "An input descriptor is required");
+            Assert.isTrue(!this.input.contains(p), "The given input is already added");
+            this.input.add(p);
             return this;
         }
 
@@ -229,8 +225,9 @@ public class ProcessDefinitionBuilder
          *
          * @param s A list of data sources
          */
-        public GenericStepBuilder source(List<DataSource> s)
+        public GenericStepBuilder source(Set<DataSource> s)
         {
+            Assert.notNull(s, "A list of data sources is required");
             this.sources.addAll(s);
             return this;
         }
@@ -241,24 +238,12 @@ public class ProcessDefinitionBuilder
          */
         public GenericStepBuilder source(DataSource s)
         {
-            Assert.notNull(s, "Expected a non-null data source");
+            Assert.notNull(s, "A data source is required");
+            Assert.isTrue(!this.sources.contains(s), "The given source is already added");
             this.sources.add(s);
             return this;
         }
-        
-        /**
-         * @see {@link Step.GenericStepBuilder#source(List)}
-         * @param s
-         */
-        public GenericStepBuilder source(DataSource s1, DataSource s2)
-        {
-            Assert.notNull(s1, "Expected a non-null data source (s1)");
-            Assert.notNull(s2, "Expected a non-null data source (s2)");
-            this.sources.add(s1);
-            this.sources.add(s2);
-            return this;
-        }
-        
+                
         public GenericStepBuilder outputFormat(EnumDataFormat outputFormat)
         {
             Assert.isTrue(configuration == null || outputFormat == configuration.getOutputFormat(), 
@@ -272,12 +257,13 @@ public class ProcessDefinitionBuilder
             Assert.state(this.operation != null, "The operation must be specified");
             Assert.state(this.tool != null, "The tool must be specified");
             Assert.state(this.configuration != null, "The tool configuration must be provided");
-            Assert.state(this.operation == EnumOperation.REGISTER || 
-                    (this.outputKey != null && this.outputFormat != null),
-                "An output key and format is required for a non-registration step");
+            Assert.state(this.operation == EnumOperation.REGISTER || !StringUtils.isEmpty(this.outputKey),
+                "A non-empty output key is required for a non-registration step");
+            Assert.state(this.operation == EnumOperation.REGISTER || this.outputFormat != null,
+                "An output format is required for a non-registration step");
             Assert.state(this.tool.supportsOperation(operation), 
                 "The operation is not supported by given tool");
-            Assert.state(!this.inputKeys.isEmpty() || !this.sources.isEmpty(),
+            Assert.state(!this.input.isEmpty() || !this.sources.isEmpty(),
                 "The list of data sources and list of input keys cannot be both empty!");
             Assert.isTrue(this.outputFormat == null || this.configuration.getOutputFormat() == null || 
                     this.outputFormat == this.configuration.getOutputFormat(), 
@@ -292,7 +278,7 @@ public class ProcessDefinitionBuilder
             step.operation = this.operation;
             step.tool = this.tool;
             step.sources = new ArrayList<>(this.sources);
-            step.inputKeys = new ArrayList<>(this.inputKeys);
+            step.input = new ArrayList<>(this.input);
             step.outputKey = this.outputKey;
             step.outputFormat = this.outputFormat;
             step.configuration = this.configuration;
@@ -307,8 +293,7 @@ public class ProcessDefinitionBuilder
         
         protected TransformStepBuilder(int key, String name) 
         {
-            this.stepBuilder = 
-                ProcessDefinitionBuilder.this.new GenericStepBuilder(key, name, TransformStep::new);
+            this.stepBuilder = ProcessDefinitionBuilder.this.new GenericStepBuilder(key, name, Step::new);
             this.stepBuilder.operation(EnumOperation.TRANSFORM);
             this.stepBuilder.tool(EnumTool.TRIPLEGEO);
         }
@@ -327,29 +312,37 @@ public class ProcessDefinitionBuilder
         
         public TransformStepBuilder source(DataSource source)
         {
-            Assert.isTrue(
-                this.stepBuilder.sources.isEmpty() && this.stepBuilder.inputKeys.isEmpty(), 
+            Assert.isTrue(this.stepBuilder.sources.isEmpty() && this.stepBuilder.input.isEmpty(), 
                 "A input (either datasource or a key) is already specified for this step");
             this.stepBuilder.source(source);
             return this;
         }
         
-        public TransformStepBuilder input(int inputKey)
+        protected TransformStepBuilder input(Input p)
         {
-            Assert.isTrue(
-                this.stepBuilder.sources.isEmpty() && this.stepBuilder.inputKeys.isEmpty(), 
+            Assert.isTrue(this.stepBuilder.sources.isEmpty() && this.stepBuilder.input.isEmpty(), 
                 "A input (either datasource or a key) is already specified for this step");
-            this.stepBuilder.input(inputKey);
+            this.stepBuilder.input(p);
             return this;
         }
         
-        public TransformStepBuilder configuration(TransformConfiguration configuration)
+        public TransformStepBuilder input(String inputKey)
+        {
+            return input(Input.of(inputKey));
+        }
+        
+        public TransformStepBuilder input(String inputKey, OutputPart<? extends AnyTool> part)
+        {
+            return input(Input.of(inputKey, part));
+        }
+        
+        public TransformStepBuilder configuration(TransformConfiguration<? extends TransformTool> configuration)
         {
             this.stepBuilder.configuration(configuration);
             return this;
         }
         
-        public TransformStepBuilder outputKey(int outputKey)
+        public TransformStepBuilder outputKey(String outputKey)
         {
             this.stepBuilder.outputKey(outputKey);
             return this;
@@ -371,11 +364,14 @@ public class ProcessDefinitionBuilder
     public class InterlinkStepBuilder extends StepBuilder
     {
         private final GenericStepBuilder stepBuilder;
+        
+        private Input left;
+        
+        private Input right;
 
         public InterlinkStepBuilder(int key, String name)
         {
-            this.stepBuilder = 
-                ProcessDefinitionBuilder.this.new GenericStepBuilder(key, name, InterlinkStep::new);
+            this.stepBuilder = ProcessDefinitionBuilder.this.new GenericStepBuilder(key, name, Step::new);
             this.stepBuilder.operation(EnumOperation.INTERLINK);
             this.stepBuilder.tool(EnumTool.LIMES);
         }
@@ -392,42 +388,41 @@ public class ProcessDefinitionBuilder
             return this;
         }
         
-        /**
-         * Link 2 data sources
-         * 
-         * @param source1 A data source
-         * @param source2 Another data source
-         */
-        public InterlinkStepBuilder link(DataSource source1, DataSource source2)
+        public InterlinkStepBuilder left(String inputKey)
         {
-            Assert.isTrue(this.stepBuilder.sources.isEmpty() && this.stepBuilder.inputKeys.isEmpty(), 
-                "An input pair (either as datasources or as keys) is already specified for this step");
-            this.stepBuilder.source(source1, source2);
+            Assert.isTrue(this.left == null, "The left input is already specified");
+            this.left = Input.of(inputKey);
             return this;
         }
         
-        /**
-         * Link 2 inputs (i.e catalog resources or intermediate processing results)
-         * 
-         * @param leftKey The key of the first (left) input resource
-         * @param rightKey The key of the second (right) input resource
-         * @return
-         */
-        public InterlinkStepBuilder link(int leftKey, int rightKey)
+        public InterlinkStepBuilder left(String inputKey, OutputPart<? extends AnyTool> part)
         {
-            Assert.isTrue(this.stepBuilder.sources.isEmpty() && this.stepBuilder.inputKeys.isEmpty(), 
-                "An input pair (either as datasources or as keys) is already specified for this step");
-            this.stepBuilder.input(leftKey, rightKey);
+            Assert.isTrue(this.left == null, "The left input is already specified");
+            this.left = Input.of(inputKey, part);
             return this;
         }
         
-        public InterlinkStepBuilder configuration(InterlinkConfiguration configuration)
+        public InterlinkStepBuilder right(String inputKey)
+        {
+            Assert.isTrue(this.right == null, "The right input is already specified");
+            this.right = Input.of(inputKey);
+            return this;
+        }
+        
+        public InterlinkStepBuilder right(String inputKey, OutputPart<? extends AnyTool> part)
+        {
+            Assert.isTrue(this.right == null, "The right input is already specified");
+            this.right = Input.of(inputKey, part);
+            return this;
+        }
+        
+        public InterlinkStepBuilder configuration(InterlinkConfiguration<? extends InterlinkTool> configuration)
         {
             this.stepBuilder.configuration(configuration);
             return this;
         }
         
-        public InterlinkStepBuilder outputKey(int outputKey)
+        public InterlinkStepBuilder outputKey(String outputKey)
         {
             this.stepBuilder.outputKey(outputKey);
             return this;
@@ -442,6 +437,11 @@ public class ProcessDefinitionBuilder
         @Override
         protected Step build()
         {
+            Assert.state(this.left != null, "The left input is not specified");
+            Assert.state(this.right != null, "The right input is not specified");
+            this.stepBuilder.input(left);
+            this.stepBuilder.input(right);
+            
             return this.stepBuilder.build();
         }
     }
@@ -450,10 +450,15 @@ public class ProcessDefinitionBuilder
     {
         private final GenericStepBuilder stepBuilder;
         
+        private Input left;
+        
+        private Input right;
+        
+        private Input link;
+        
         public FuseStepBuilder(int key, String name)
         {
-            this.stepBuilder = 
-                ProcessDefinitionBuilder.this.new GenericStepBuilder(key, name, FuseStep::new);
+            this.stepBuilder = ProcessDefinitionBuilder.this.new GenericStepBuilder(key, name, Step::new);
             this.stepBuilder.operation(EnumOperation.FUSION);
             this.stepBuilder.tool(EnumTool.FAGI);
         }
@@ -469,31 +474,56 @@ public class ProcessDefinitionBuilder
             this.stepBuilder.nodeName(nodeName);
             return this;
         }
-        
-        /**
-         * Fuse 2 inputs using (as a 3rd input) a given set of <tt>sameAs</tt> links. All inputs
-         * are expected as either catalog resources or intermediate processing results. 
-         * 
-         * @param leftKey The key of the first (left) input resource 
-         * @param rightKey The key of the second (right) input resource
-         * @param linksKey The key of the third (links) resource
-         * @return this builder
-         */
-        public FuseStepBuilder fuse(int leftKey, int rightKey, int linksKey)
+       
+        public FuseStepBuilder left(String inputKey)
         {
-            Assert.isTrue(this.stepBuilder.sources.isEmpty() && this.stepBuilder.inputKeys.isEmpty(), 
-                "An input of (left, right, links) is already specified for this step");
-            this.stepBuilder.input(leftKey, rightKey, linksKey);
+            Assert.isTrue(this.left == null, "The left input is already specified");
+            this.left = Input.of(inputKey);
             return this;
         }
         
-        public FuseStepBuilder configuration(FuseConfiguration configuration)
+        public FuseStepBuilder left(String inputKey, OutputPart<? extends AnyTool> part)
+        {
+            Assert.isTrue(this.left == null, "The left input is already specified");
+            this.left = Input.of(inputKey, part);
+            return this;
+        }
+        
+        public FuseStepBuilder right(String inputKey)
+        {
+            Assert.isTrue(this.right == null, "The right input is already specified");
+            this.right = Input.of(inputKey);
+            return this;
+        }
+        
+        public FuseStepBuilder right(String inputKey, OutputPart<? extends AnyTool> part)
+        {
+            Assert.isTrue(this.right == null, "The right input is already specified");
+            this.right = Input.of(inputKey, part);
+            return this;
+        }
+        
+        public FuseStepBuilder link(String inputKey)
+        {
+            Assert.isTrue(this.link == null, "The input of owl:sameAs links is already specified");
+            this.link = Input.of(inputKey);
+            return this;
+        }
+        
+        public FuseStepBuilder link(String inputKey, OutputPart<? extends InterlinkTool> part)
+        {
+            Assert.isTrue(this.link == null, "The input of owl:sameAs links is already specified");
+            this.link = Input.of(inputKey, part);
+            return this;
+        }
+        
+        public FuseStepBuilder configuration(FuseConfiguration<? extends FuseTool> configuration)
         {
             this.stepBuilder.configuration(configuration);
             return this;
         }
         
-        public FuseStepBuilder outputKey(int outputKey)
+        public FuseStepBuilder outputKey(String outputKey)
         {
             this.stepBuilder.outputKey(outputKey);
             return this;
@@ -508,6 +538,13 @@ public class ProcessDefinitionBuilder
         @Override
         protected Step build()
         {
+            Assert.state(this.left != null, "The left input is not specified");
+            Assert.state(this.right != null, "The right input is not specified");
+            Assert.state(this.link != null, "The input of owl:sameAs links is not specified");
+            this.stepBuilder.input(left);
+            this.stepBuilder.input(right);
+            this.stepBuilder.input(link);
+            
             return this.stepBuilder.build();
         }
     }
@@ -522,8 +559,7 @@ public class ProcessDefinitionBuilder
         
         protected RegisterStepBuilder(int key, String name) 
         {
-            this.stepBuilder = 
-                ProcessDefinitionBuilder.this.new GenericStepBuilder(key, name, RegisterStep::new);
+            this.stepBuilder = ProcessDefinitionBuilder.this.new GenericStepBuilder(key, name, Step::new);
             this.stepBuilder.operation(EnumOperation.REGISTER);
             this.stepBuilder.tool(EnumTool.REGISTER);
         }
@@ -540,11 +576,17 @@ public class ProcessDefinitionBuilder
             return this;
         }
         
-        public RegisterStepBuilder resource(int resourceKey)
+        public RegisterStepBuilder resource(String inputKey)
         {
-            Assert.isTrue(this.stepBuilder.inputKeys.isEmpty(), 
-                "A resource key is already specified");
-            this.stepBuilder.input(resourceKey);
+            Assert.isTrue(this.stepBuilder.input.isEmpty(), "A resource key is already specified");
+            this.stepBuilder.input(inputKey);
+            return this;
+        }
+        
+        public RegisterStepBuilder resource(String inputKey, OutputPart<? extends AnyTool> part)
+        {
+            Assert.isTrue(this.stepBuilder.input.isEmpty(), "A resource key is already specified");
+            this.stepBuilder.input(inputKey, part);
             return this;
         }
         
@@ -575,12 +617,11 @@ public class ProcessDefinitionBuilder
         
         protected Step build()
         {
-            Assert.state(metadata != null, 
-                "The required metadata for a resource are missing");
-            Assert.state(!stepBuilder.inputKeys.isEmpty(), 
+            Assert.state(metadata != null, "The resource metadata are required");
+            Assert.state(!stepBuilder.input.isEmpty(), 
                 "No resource key is specified (as input for the registration step)");
-            MetadataRegistrationConfiguration configuration = 
-                new MetadataRegistrationConfiguration(metadata, resourceIdentifier);
+            RegisterToCatalogConfiguration configuration = 
+                new RegisterToCatalogConfiguration(metadata, resourceIdentifier);
             this.stepBuilder.configuration(configuration);
             return this.stepBuilder.build();
         }
@@ -597,14 +638,13 @@ public class ProcessDefinitionBuilder
         protected ImportStepBuilder(int key, String name, URL url) 
         {
             this.url = url;
-            this.stepBuilder = 
-                ProcessDefinitionBuilder.this.new GenericStepBuilder(key, name, Step::new);
-            this.stepBuilder.operation(EnumOperation.IMPORT);
+            this.stepBuilder = ProcessDefinitionBuilder.this.new GenericStepBuilder(key, name, Step::new);
+            this.stepBuilder.operation(EnumOperation.IMPORT_DATA);
             this.stepBuilder.tool(EnumTool.IMPORTER);
             this.stepBuilder.source(new UrlDataSource(url));
         }
         
-        public ImportStepBuilder outputKey(int outputKey)
+        public ImportStepBuilder outputKey(String outputKey)
         {
             this.stepBuilder.outputKey(outputKey);
             return this;
@@ -621,7 +661,8 @@ public class ProcessDefinitionBuilder
         @Override
         protected Step build()
         {
-            this.stepBuilder.configuration(new ImportDataConfiguration(this.url, this.dataFormat));
+            ImportDataConfiguration configuration = new ImportDataConfiguration(this.url, this.dataFormat); 
+            this.stepBuilder.configuration(configuration);
             return stepBuilder.build();
         }
     }
@@ -662,7 +703,7 @@ public class ProcessDefinitionBuilder
      * @return
      */
     public ProcessDefinitionBuilder resource(
-        String name, int key, ResourceIdentifier resourceIdentifier, EnumResourceType resourceType)
+        String name, String key, ResourceIdentifier resourceIdentifier, EnumResourceType resourceType)
     {
         Assert.isTrue(!StringUtils.isEmpty(name), "Expected a non-empty name for this resource");
         Assert.notNull(resourceIdentifier, "A resource identifier of (id, version) is required");
@@ -673,7 +714,10 @@ public class ProcessDefinitionBuilder
         return this;
     }
 
-    public ProcessDefinitionBuilder resource(String name, int key, ResourceIdentifier resourceIdentifier)
+    /**
+     * @see ProcessDefinitionBuilder#resource(String, int, ResourceIdentifier, EnumResourceType)
+     */
+    public ProcessDefinitionBuilder resource(String name, String key, ResourceIdentifier resourceIdentifier)
     {
         return this.resource(name, key, resourceIdentifier, EnumResourceType.POI_DATA);
     }
@@ -692,7 +736,7 @@ public class ProcessDefinitionBuilder
      * @param The data format for this resource
      * @return
      */
-    public ProcessDefinitionBuilder resource(String name, int key, URL url, EnumDataFormat dataFormat)
+    public ProcessDefinitionBuilder resource(String name, String key, URL url, EnumDataFormat dataFormat)
     {
         Assert.isTrue(!StringUtils.isEmpty(name), "Expected a non-empty name for this resource");
         Assert.notNull(url, "A source URL is required");
@@ -781,10 +825,22 @@ public class ProcessDefinitionBuilder
      * 
      * @param name The user-friendly name for this step
      * @param resourceKey The resource key defined as the output by some processing step 
+     * @param part A part of the targeted resource
      * @param metadata The metadata to accompany the resource
      * @return this builder
      */
-    public ProcessDefinitionBuilder register(String name, int resourceKey, ResourceMetadataCreate metadata)
+    public ProcessDefinitionBuilder register(
+        String name, String resourceKey, OutputPart<? extends AnyTool> part, ResourceMetadataCreate metadata)
+    {
+        Assert.notNull(metadata, "The resource metadata are required");
+        return this.register(name, b -> b.resource(resourceKey, part).metadata(metadata));
+    }
+    
+    /**
+     * Register an intermediate result (produced by a processing step) as a new catalog resource.
+     * @see ProcessDefinitionBuilder#register(String, int, String, ResourceMetadataCreate)
+     */
+    public ProcessDefinitionBuilder register(String name, String resourceKey, ResourceMetadataCreate metadata)
     {
         Assert.notNull(metadata, "The resource metadata are required");
         return this.register(name, b -> b.resource(resourceKey).metadata(metadata));
@@ -795,13 +851,28 @@ public class ProcessDefinitionBuilder
      * existing catalog resource.
      * 
      * @param name The user-friendly name for this step
-     * @param resourceKey The resource key defined as the output by some processing step 
+     * @param resourceKey The resource key defined as the output by some processing step
+     * @param part A part of the targeted resource
      * @param metadata The metadata to accompany the resource
      * @param target The identifier of an existing catalog resource
      * @return this builder
      */
     public ProcessDefinitionBuilder registerAsNewRevision(
-        String name, int resourceKey, ResourceMetadataCreate metadata, ResourceIdentifier target)
+        String name, String resourceKey, OutputPart<? extends AnyTool> part, 
+        ResourceMetadataCreate metadata, ResourceIdentifier target)
+    {
+        Assert.notNull(metadata, "The resource metadata are required");
+        Assert.notNull(target, "A target resource is required");
+        return this.register(name, b -> b.resource(resourceKey, part).metadata(metadata).revisionOf(target));
+    }
+    
+    /**
+     * Register an intermediate result (produced by a processing step) as a new revision of an 
+     * existing catalog resource.
+     * @see ProcessDefinitionBuilder#registerAsNewRevision(String, int, String, ResourceMetadataCreate, ResourceIdentifier)
+     */
+    public ProcessDefinitionBuilder registerAsNewRevision(
+        String name, String resourceKey, ResourceMetadataCreate metadata, ResourceIdentifier target)
     {
         Assert.notNull(metadata, "The resource metadata are required");
         Assert.notNull(target, "A target resource is required");
@@ -812,42 +883,63 @@ public class ProcessDefinitionBuilder
     {
         Assert.state(!StringUtils.isEmpty(this.name), "The name cannot be empty");
 
-        // Validate definition
-
         final Set<String> names = this.steps.stream()
             .collect(Collectors.mapping(Step::name, Collectors.toSet()));
-        Assert.state(names.size() == this.steps.size(),
-            "The list of given steps contains duplicate names!");
         
         final Set<String> nodeNames = this.steps.stream()
             .collect(Collectors.mapping(Step::nodeName, Collectors.toSet()));
-        Assert.state(nodeNames.size() == this.steps.size(),
+        
+        final Set<String> resourceKeys = this.resources.stream()
+            .collect(Collectors.mapping(r -> r.key(), Collectors.toSet()));
+        
+        final Set<String> outputKeys = this.resources.stream()
+            .filter(ProcessOutput.class::isInstance)
+            .collect(Collectors.mapping(r -> r.key(), Collectors.toSet()));
+        
+        final Map<Integer, Step> stepByKey = this.steps.stream()
+            .collect(Collectors.toMap(s -> s.key(), Function.identity()));
+        
+        final Map<String, Step> outputKeyToStep = this.resources.stream()
+            .filter(ProcessOutput.class::isInstance)
+            .map(ProcessOutput.class::cast)
+            .collect(Collectors.toMap(r -> r.key(), r -> stepByKey.get(r.stepKey())));
+        
+        // Validate definition
+
+        Assert.state(names.size() == this.steps.size(),
             "The list of given steps contains duplicate names!");
         
-        final Set<Integer> resourceKeys = this.resources.stream()
-            .collect(Collectors.mapping(r -> r.key(), Collectors.toSet()));
-        
-        final Set<Integer> outputKeys = this.resources.stream()
-            .filter(r -> r instanceof ProcessOutput)
-            .collect(Collectors.mapping(r -> r.key(), Collectors.toSet()));
+        Assert.state(nodeNames.size() == this.steps.size(),
+            "The list of given steps contains duplicate names!");
         
         Assert.state(resourceKeys.size() == this.resources.size(),
             "The list of given resources contains duplicate keys!");
         
-        Assert.state(resourceKeys.stream().allMatch(key -> key > 0), 
-            "The resource keys must all be positive integers");
-        
-        Assert.state(
-            this.steps.stream()
+        Assert.state(this.steps.stream()
                 .allMatch(step -> resourceKeys.containsAll(step.inputKeys())),
             "The input keys (for every step) must refer to existing resource keys");
 
-        Assert.state(
-            this.steps.stream()
-                .filter(step -> step.operation == EnumOperation.REGISTER)
+        Assert.state(this.steps.stream()
+                .filter(step -> step.operation() == EnumOperation.REGISTER)
                 .allMatch(step -> outputKeys.containsAll(step.inputKeys())), 
            "The input key for a registration step must refer to an output of another step");
         
+        final Set<Input> partialInputs = this.steps.stream()
+            .flatMap(s -> s.input().stream())
+            .filter(p -> p.partKey() != null)
+            .collect(Collectors.toSet());
+        
+        Assert.state(partialInputs.stream().allMatch(p -> p.part() != null), 
+            "A partial input (from this builder) is expected to refer to an instance of OutputPart");
+        
+        Assert.state(partialInputs.stream()
+                .allMatch(p -> outputKeys.contains(p.inputKey())),
+            "A partial input may only refer to output of another step");
+        
+        Assert.state(partialInputs.stream()
+                .allMatch(p -> outputKeyToStep.get(p.inputKey()).outputParts().contains(p.part())),
+            "A partial input refers to a non-existing part of the output of another step");
+    
         // The definition seems valid
 
         ProcessDefinition definition = new ProcessDefinition(this.name, this.resources, this.steps);
@@ -855,7 +947,7 @@ public class ProcessDefinitionBuilder
         
         return definition;
     }
-    
+
     private <B extends StepBuilder> ProcessDefinitionBuilder addStep(
         Consumer<B> configurer, IntFunction<B> builderFactory)
     {
@@ -863,10 +955,18 @@ public class ProcessDefinitionBuilder
         
         int stepKey = this.stepKeySequence++;
         
+        // Build step
+        
         B stepBuilder = builderFactory.apply(stepKey);
         configurer.accept(stepBuilder);
         Step step = stepBuilder.build();
-
+        
+        // Perform post-construct initialization
+        
+        step.initialize();
+        
+        // Add to this process
+        
         this.steps.add(step);
         
         if (step.outputKey != null)
