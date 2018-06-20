@@ -65,12 +65,14 @@ public class ConfigurationController extends BaseController {
         config.setBingMaps(this.mapConfiguration.getBingMaps());
         config.setTripleGeo(toolkitConfiguration.getTriplegeo());
         config.setLimes(toolkitConfiguration.getLimes());
+        config.setFagi(toolkitConfiguration.getFagi());
+        config.setDeer(toolkitConfiguration.getDeer());
 
         return config;
     }
 
-    private Map<EnumTool, Map<String, ToolConfiguration>> getToolProfiles() {
-        Map<EnumTool, Map<String, ToolConfiguration>>  result = new HashMap<EnumTool, Map<String, ToolConfiguration>>();
+    private Map<EnumTool, Map<String, ToolConfiguration<?>>> getToolProfiles() {
+        Map<EnumTool, Map<String, ToolConfiguration<?>>>  result = new HashMap<EnumTool, Map<String, ToolConfiguration<?>>>();
         try {
             String re = ".*vendor\\/(.*)\\/.*config\\/profiles\\/(.*)\\/(options\\.conf)";
             Pattern pattern = Pattern.compile(re);
@@ -92,7 +94,7 @@ public class ConfigurationController extends BaseController {
                 if (m.matches()) {
                     EnumTool tool = EnumTool.fromName(m.group(1).toUpperCase());
                     String profile = m.group(2);
-                    ToolConfiguration conf = null;
+                    ToolConfiguration<?> conf = null;
 
                     try {
                         if (tool == null) {
@@ -107,7 +109,7 @@ public class ConfigurationController extends BaseController {
                                 return;
                         }
                         if(!result.containsKey(tool)) {
-                            result.put(tool, new HashMap<String, ToolConfiguration>());
+                            result.put(tool, new HashMap<String, ToolConfiguration<?>>());
                         }
                         if(!result.get(tool).containsKey(profile)) {
                             result.get(tool).put(profile, conf);
@@ -125,9 +127,9 @@ public class ConfigurationController extends BaseController {
         return result;
     }
 
-    private void postProcessProfies(Map<EnumTool, Map<String, ToolConfiguration>> profiles) {
+    private void postProcessProfies(Map<EnumTool, Map<String, ToolConfiguration<?>>> profiles) {
         for (EnumTool tool : profiles.keySet()) {
-            for (ToolConfiguration config : profiles.get(tool).values()) {
+            for (ToolConfiguration<?> config : profiles.get(tool).values()) {
                 switch (tool) {
                     case TRIPLEGEO:
                         TriplegeoConfiguration typedConfig = (TriplegeoConfiguration) config;

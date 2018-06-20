@@ -101,6 +101,28 @@ function createLimesDefaultConfiguration(appConfiguration, effectiveVersion) {
   };
 }
 
+function createFagiDefaultConfiguration(appConfiguration, effectiveVersion) {
+  const configuration = {
+    version: effectiveVersion || appConfiguration.fagi.version,
+  };
+
+  return {
+    configuration,
+    errors: {},
+  };
+}
+
+function createDeerDefaultConfiguration(appConfiguration, effectiveVersion) {
+  const configuration = {
+    version: effectiveVersion || appConfiguration.deer.version,
+  };
+
+  return {
+    configuration,
+    errors: {},
+  };
+}
+
 function createDefaultConfiguration(steps, tool, appConfiguration) {
   const effectiveVersion = steps.reduce((version, step) => version ? version : step.configuration ? step.configuration.version : null, null) || null;
 
@@ -110,6 +132,12 @@ function createDefaultConfiguration(steps, tool, appConfiguration) {
 
     case EnumTool.LIMES:
       return createLimesDefaultConfiguration(appConfiguration, effectiveVersion);
+
+    case EnumTool.FAGI:
+      return createFagiDefaultConfiguration(appConfiguration, effectiveVersion);
+
+    case EnumTool.DEER:
+      return createDeerDefaultConfiguration(appConfiguration, effectiveVersion);
 
     default:
       return {

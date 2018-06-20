@@ -13,6 +13,10 @@ function resolveVersion(tool, version, appConfiguration) {
       return appConfiguration.tripleGeo.baselineVersion;
     case EnumTool.LIMES:
       return appConfiguration.limes.baselineVersion;
+    case EnumTool.FAGI:
+      return appConfiguration.fagi.baselineVersion;
+    case EnumTool.DEER:
+      return appConfiguration.deer.baselineVersion;
     default:
       return null;
   }
