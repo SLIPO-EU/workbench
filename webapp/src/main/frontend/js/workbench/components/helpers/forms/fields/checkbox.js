@@ -5,7 +5,7 @@ import { Input } from 'reactstrap';
 
 import decorateField from './form-field';
 
-class Checkbox extends React.Component {
+export class Checkbox extends React.Component {
 
   static defaultProps = {
     id: PropTypes.string.isRequired,

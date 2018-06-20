@@ -182,3 +182,33 @@ export const EnumKpiViewMode = {
   CHART: 'Chart',
 };
 
+/**
+ * Output partial keys for SLIPO Toolkit components
+ */
+export const DEFAULT_OUTPUT_PART = 'DEFAULT';
+
+export const EnumTriplegeoOutputPart = {
+  [DEFAULT_OUTPUT_PART]: null,
+  TRANSFORMED: 'transformed',
+  CLASSIFICATION: 'classification',
+};
+
+export const EnumLimesOutputPart = {
+  [DEFAULT_OUTPUT_PART]: null,
+  ACCEPTED: 'accepted',
+  REVIEW: 'review',
+};
+
+export const EnumFagiOutputPart = {
+  [DEFAULT_OUTPUT_PART]: null,
+  FUSED: 'fused',
+  REMAINING: 'remaining',
+  REVIEW: 'review',
+  STATS: 'stats',
+};
+
+export const EnumDeerOutputPart = {
+  [DEFAULT_OUTPUT_PART]: null,
+  ENRICHED: 'enriched',
+};
+

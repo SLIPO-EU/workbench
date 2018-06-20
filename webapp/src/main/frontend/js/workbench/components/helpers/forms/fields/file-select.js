@@ -70,9 +70,10 @@ function createFileColumns(props) {
       accessor: r => formatFileSize(r.size),
     },
     {
-      Header: 'Created',
-      id: 'createdOn',
-      accessor: 'createdOn',
+      Header: 'Modified',
+      id: 'modified',
+      accessor: 'modified',
+      style: { 'textAlign': 'center' },
       Cell: props => (
         <FormattedTime value={props.value} day='numeric' month='numeric' year='numeric' />
       ),
@@ -259,7 +260,7 @@ export class FileSelect extends React.Component {
     }
 
     return (
-      <Dialog
+      <Dialog className="modal-dialog-centered"
         header={
           <span>
             <i className={'fa fa-warning mr-2'}></i>System Message

@@ -201,14 +201,14 @@ $slipo-invalid-color:#E74856 !default;
 .slipo-pd-resource-delete {
   right: 5px;
   position: absolute;
-  top: 5px;
+  top: 25px;
   cursor: pointer;
 }
 
 .slipo-pd-resource-view {
   right: 4px;
   position: absolute;
-  top: 25px;
+  top: 5px;
   color: black;
   cursor: pointer;
 }
@@ -449,6 +449,29 @@ $slipo-invalid-color:#E74856 !default;
   white-space: nowrap;
   width: 200px;
   overflow: hidden;
+  margin: 0px;
+  padding: 0px;
+}
+
+.slipo-pd-step-input-part-key {
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 200px;
+  overflow: hidden;
+  margin: 0px;
+  padding: 0px;
+}
+
+.slipo-pd-step-input-part-key-enabled {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.slipo-pd-step-input-partial-output-popover {
+  border: 1px dotted #616161;
+  border-radius: 0.25rem;
+  padding: 10px 10px 0px 10px;
 }
 
 /*
@@ -467,13 +490,19 @@ $slipo-invalid-color:#E74856 !default;
 
 .slipo-pd-step-resource-delete {
   right: 5px;
-  top: 5px;
 }
 
 .slipo-pd-step-resource-view {
   right: 4px;
-  top: 25px;
   color: black;
+}
+
+.slipo-pd-step-resource-0 {
+  top: 5px;
+}
+
+.slipo-pd-step-resource-1 {
+  top: 25px;
 }
 
 .slipo-pd-step-input:hover .slipo-pd-step-resource-actions,

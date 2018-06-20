@@ -10,10 +10,10 @@ export function resourceToLayers(steps, resources, execution) {
 
   // All input resources (exclude registered step output)
   const allInputResources = steps.reduce((agg, value) =>
-    (value.tool === EnumTool.CATALOG ? agg : agg.concat(value.resources)), []);
+    (value.tool === EnumTool.CATALOG ? agg : agg.concat(value.input)), []);
   // All output resources created either by TripleGeo or the workflow final step
   const stepsWithOutput = steps.reduce((keys, step) =>
-    (((step.outputKey) && ((step.tool === EnumTool.TripleGeo) || (allInputResources.indexOf(step.outputKey) === -1))) ? keys.concat([step.key]) : keys), []);
+    (((step.outputKey) && ((step.tool === EnumTool.TripleGeo) || (allInputResources.find((i) => i.inputKey === step.outputKey)))) ? keys.concat([step.key]) : keys), []);
   // All catalog resources used by any step
   const catalogInputResources = resources.filter((r) =>
     ((r.inputType === EnumInputType.CATALOG) && (allInputResources.indexOf(r.key !== -1))));

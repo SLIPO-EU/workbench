@@ -24,6 +24,7 @@ export const SET_STEP_PROPERTY = 'ui/process-designer/SET_STEP_PROPERTY';
 export const ADD_STEP_INPUT = 'ui/process-designer/ADD_STEP_INPUT';
 export const REMOVE_STEP_INPUT = 'ui/process-designer/REMOVE_STEP_INPUT';
 export const SELECT_STEP_INPUT = 'ui/process-designer/SELECT_STEP_INPUT';
+export const SET_STEP_INPUT_OUTPUT_PART = 'ui/process/execution/viewer/SET_STEP_INPUT_OUTPUT_PART';
 
 export const ADD_STEP_DATA_SOURCE = 'ui/process-designer/ADD_STEP_DATA_SOURCE';
 export const REMOVE_STEP_DATA_SOURCE = 'ui/process-designer/REMOVE_STEP_DATA_SOURCE';

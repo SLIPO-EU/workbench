@@ -210,8 +210,8 @@ public class ProcessController extends BaseController {
      * @param version the process version
      * @param executionId the execution id
      * @param fileId the file id
-     * @return a list of {@link ProcessExecutionRecord}
-     * @throws IOException  if process or file is not found
+     * @return an instance of {@link FileSystemResource}
+     * @throws IOException  if an I/O exception has occurred
      */
     @RequestMapping(value = "/action/process/{id}/{version}/execution/{executionId}/file/{fileId}/download", method = RequestMethod.GET)
     public FileSystemResource downloadProcessExecutionFile(

@@ -1,5 +1,6 @@
 export { BarChart } from './chart';
 export { default as Card } from './card';
+export { Checkbox } from './forms/fields/checkbox';
 export { default as DashboardCard } from './dashboard-card';
 export { default as Dialog } from './dialog';
 export { default as ErrorLevel } from './error-level';

@@ -92,11 +92,12 @@ export const configureStepEnd = function (step, configuration, errors) {
   };
 };
 
-export const addStepInput = function (step, resource) {
+export const addStepInput = function (step, resource, partKey) {
   return {
     type: Types.ADD_STEP_INPUT,
     step,
     resource,
+    partKey,
   };
 };
 
@@ -261,6 +262,13 @@ export const resetSelectedFile = () => ({
 
 export const resetSelectedKpi = () => ({
   type: Types.RESET_SELECTED_KPI,
+});
+
+export const selectOutputPart = (step, resource, partKey) => ({
+  type: Types.SET_STEP_INPUT_OUTPUT_PART,
+  step,
+  resource,
+  partKey,
 });
 
 /*

@@ -150,7 +150,7 @@ class Step extends React.Component {
       order: PropTypes.number.isRequired,
     }),
     resources: PropTypes.arrayOf(PropTypes.shape({
-      key: PropTypes.number.isRequired,
+      key: PropTypes.string.isRequired,
       inputType: PropTypes.string.isRequired,
       resourceType: PropTypes.string.isRequired,
       name: PropTypes.string.isRequired,
@@ -395,6 +395,7 @@ class Step extends React.Component {
               removeStepInput={this.props.removeStepInput}
               setActiveStepInput={this.props.setActiveStepInput}
               readOnly={this.props.readOnly}
+              selectOutputPart={this.props.selectOutputPart}
             />
           }
           {this.props.step.tool == EnumTool.TripleGeo &&

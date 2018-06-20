@@ -111,6 +111,7 @@ class StepInputContainer extends React.Component {
         remove={this.props.removeStepInput}
         setActiveStepInput={this.props.setActiveStepInput}
         readOnly={this.props.readOnly}
+        selectOutputPart={this.props.selectOutputPart}
       />
     );
   }

@@ -1,6 +1,7 @@
 import * as Types from '../types';
 
 import {
+  DEFAULT_OUTPUT_PART,
   defaultTripleGeoValues,
   EnumDataFormat,
   EnumInputType,
@@ -131,14 +132,14 @@ export function addStepReducer(state, action) {
   if (action.type == Types.ADD_STEP) {
     // Update counters
     const stepKey = ++state.counters.step;
-    const resourceKey = ++state.counters.resource;
+    const resourceKey = (++state.counters.resource).toString();
 
     // Create step
     const step = {
       ...action.step,
       group: action.group.key,
       name: `${ToolTitles[action.step.tool]} ${stepKey}`,
-      resources: [],
+      input: [],
       dataSources: [],
       key: stepKey,
       ...createDefaultConfiguration(state.steps.filter(s => s.tool === action.step.tool), action.step.tool, action.appConfiguration),
@@ -233,7 +234,7 @@ export function addStepReducer(state, action) {
  * @param {any} state
  * @param {any} action
  */
-export function setStepPropertyReducer(state, action) {
+export function stepPropertyReducer(state, action) {
   if (action.type === Types.SET_STEP_PROPERTY) {
     return {
       ...state,
@@ -310,6 +311,32 @@ export function moveStepReducer(state, action) {
   return state;
 }
 
+export function stepOutputPartReducer(state, action) {
+  switch (action.type) {
+    case Types.SET_STEP_INPUT_OUTPUT_PART:
+      return state.map((step) => {
+        if (step.key === action.step.key) {
+          return {
+            ...step,
+            input: step.input.map((input) => {
+              if (input.inputKey === action.resource.key) {
+                return {
+                  ...input,
+                  partKey: (action.partKey === DEFAULT_OUTPUT_PART ? null : action.partKey),
+                };
+              }
+              return input;
+            }),
+          };
+        }
+        return step;
+      });
+
+    default:
+      return state;
+  }
+}
+
 export function stepReducer(state, action) {
   switch (action.type) {
     case Types.REMOVE_STEP:
@@ -320,8 +347,8 @@ export function stepReducer(state, action) {
         .map((step) => {
           return {
             ...step,
-            resources: step.resources.filter((key) => {
-              return (key !== action.step.outputKey);
+            input: step.input.filter((i) => {
+              return (i.inputKey !== action.step.outputKey);
             })
           };
         });
@@ -331,7 +358,7 @@ export function stepReducer(state, action) {
         if (step.key === action.step.key) {
           return {
             ...step,
-            resources: [...step.resources, action.resource.key],
+            input: [...step.input, { inputKey: action.resource.key, partKey: null }],
           };
         }
         return step;
@@ -342,8 +369,8 @@ export function stepReducer(state, action) {
         if (step.key === action.step.key) {
           return {
             ...step,
-            resources: step.resources.filter((key) => {
-              return (key !== action.resource.key);
+            input: step.input.filter((i) => {
+              return (i.inputKey !== action.resource.key);
             })
           };
         }
@@ -383,8 +410,8 @@ export function stepReducer(state, action) {
       return state.map((step) => {
         return {
           ...step,
-          resources: step.resources.filter((key) => {
-            return (key !== action.resource.key);
+          input: step.input.filter((i) => {
+            return (i.inputKey !== action.resource.key);
           })
         };
       });

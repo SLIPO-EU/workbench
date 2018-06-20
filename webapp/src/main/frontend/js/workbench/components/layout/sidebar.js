@@ -97,7 +97,7 @@ class Sidebar extends React.Component {
             </li>
 
             <SecureContent role={Roles.ADMIN}>
-              <li className={'nav-item nav-dropdown ' + (expanded(Sections.Tool) ? 'open' : '')}>
+              <li className={'d-none nav-item nav-dropdown ' + (expanded(Sections.Tool) ? 'open' : '')}>
                 <a className="nav-link nav-dropdown-toggle" onClick={() => (toggle(Sections.Tool), false)}>
                   {'Tools'}
                 </a>

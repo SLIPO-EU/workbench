@@ -297,32 +297,34 @@ public class DefaultProcessRepository implements ProcessRepository
 
         return (result.isEmpty() ? null : result.get(0).toProcessRecord(false, false));
     }
-    
+
     @Transactional(readOnly = true)
     @Override
     public ProcessIdentifier mapToProcessIdentifier(UUID workflowId)
     {
         Assert.notNull(workflowId, "A workflow id is required");
         WorkflowEntity workflowEntity = entityManager.find(WorkflowEntity.class, workflowId);
-        if (workflowEntity == null)
+        if (workflowEntity == null) {
             return null;
-        
-        ProcessRevisionEntity revisionEntity = workflowEntity.getProcess(); 
+        }
+
+        ProcessRevisionEntity revisionEntity = workflowEntity.getProcess();
         return revisionEntity.getProcessIdentifier();
     }
-    
+
     @Transactional(readOnly = true)
     @Override
     public UUID mapToWorkflowIdentifier(long id, long version)
     {
         ProcessRevisionEntity revisionEntity = findRevision(id, version);
-        if (revisionEntity == null)
+        if (revisionEntity == null) {
             return null;
-        
+        }
+
         TypedQuery<WorkflowEntity> query = entityManager
             .createQuery("FROM Workflow w WHERE w.process.id = :rid", WorkflowEntity.class)
             .setParameter("rid", revisionEntity.getId());
-        
+
         WorkflowEntity workflowEntity = null;
         try {
             workflowEntity = query.getSingleResult();
@@ -331,14 +333,14 @@ public class DefaultProcessRepository implements ProcessRepository
         }
         return workflowEntity == null? null : workflowEntity.getId();
     }
-    
+
     @Transactional(readOnly = true)
     @Override
     public UUID mapToWorkflowIdentifier(ProcessIdentifier processIdentifier)
     {
         return ProcessRepository.super.mapToWorkflowIdentifier(processIdentifier);
     }
-    
+
     @Transactional(readOnly = true)
     @Override
     public ProcessExecutionRecord findExecution(long executionId, boolean includeNonVerifiedFiles)
@@ -359,18 +361,18 @@ public class DefaultProcessRepository implements ProcessRepository
     public ProcessExecutionRecord findLatestExecution(long id, long version)
     {
         final ProcessRevisionEntity revisionEntity = findRevision(id, version);
-        Assert.notNull(revisionEntity, 
+        Assert.notNull(revisionEntity,
             "The pair of (id, version) does not correspond to a process revision entity");
-        
+
         final ProcessExecutionEntity executionEntity = revisionEntity.getExecutions().stream()
             .filter(e -> e.getStartedOn() != null)
             .sorted(ProcessExecutionEntity.ORDER_BY_STARTED.reversed())
             .findFirst().orElse(null);
-        
+
         if (executionEntity == null) {
             return null; // no execution is present
         }
-        
+
         final long executionId = executionEntity.getId();
         List<Long> runningExecutionIds = revisionEntity.getExecutions().stream()
             .filter(e -> e.isRunning())
@@ -379,33 +381,33 @@ public class DefaultProcessRepository implements ProcessRepository
             "Expected at most 1 running execution for a given process revision");
         Assert.state(runningExecutionIds.isEmpty() || runningExecutionIds.get(0).equals(executionId),
             "Expected a running execution to be the one started most recently!");
-        
+
         return executionEntity.toProcessExecutionRecord(true, false);
     }
-    
+
     @Transactional(readOnly = true)
     @Override
     public ProcessExecutionRecord getExecutionCompactView(long id, long version)
     {
         final ProcessRevisionEntity revisionEntity = findRevision(id, version);
-        Assert.notNull(revisionEntity, 
+        Assert.notNull(revisionEntity,
             "The pair of (id, version) does not correspond to a process revision entity");
-        
+
         final List<ProcessExecutionEntity> executionEntities = revisionEntity.getExecutions().stream()
             .filter(e -> e.getStartedOn() != null)
             .sorted(ProcessExecutionEntity.ORDER_BY_STARTED.reversed())
             .collect(Collectors.toList());
-        
+
         if (executionEntities.isEmpty()) {
             return null; // no execution is present
         }
-        
+
         // The basic execution metadata are populated from latest execution
-        final ProcessExecutionRecord executionRecord = 
-            executionEntities.get(0).toProcessExecutionRecord(false, false);
-        
+        final ProcessExecutionRecord executionRecord =
+            executionEntities.get(0).toProcessExecutionRecord(true, false);
+
         // Represent each step execution with latest one
-        
+
         Set<Integer> stepKeys = new HashSet<>();
         List<ProcessExecutionStepRecord> stepRecords = new ArrayList<>();
         for (ProcessExecutionEntity executionEntity: executionEntities) {
@@ -417,12 +419,12 @@ public class DefaultProcessRepository implements ProcessRepository
                 }
             }
         }
-       
-        // Add steps (ordered by starting timestamp) 
-        
+
+        // Add steps (ordered by starting timestamp)
+
         Collections.sort(stepRecords, Comparator.comparing(r -> r.getStartedOn()));
         executionRecord.setSteps(stepRecords);
-        
+
         return executionRecord;
     }
 
@@ -435,7 +437,7 @@ public class DefaultProcessRepository implements ProcessRepository
     }
 
     @Override
-    public ProcessRecord create(ProcessDefinition definition, int createdBy, boolean isTemplate) 
+    public ProcessRecord create(ProcessDefinition definition, int createdBy, boolean isTemplate)
     {
         return create(definition, createdBy, EnumProcessTaskType.DATA_INTEGRATION, isTemplate);
     }
@@ -445,7 +447,7 @@ public class DefaultProcessRepository implements ProcessRepository
     {
         return create(definition, createdBy, EnumProcessTaskType.DATA_INTEGRATION, false);
     }
-    
+
     @Override
     public ProcessRecord create(ProcessDefinition definition, int userId, EnumProcessTaskType taskType, boolean isTemplate)
     {
@@ -539,9 +541,9 @@ public class DefaultProcessRepository implements ProcessRepository
         if (executionEntities.stream().anyMatch(e -> !e.isTerminated())) {
             throw new ProcessHasActiveExecutionException(id, version);
         }
-        
+
         // Associate with a workflow (if not already associated by a previous execution)
-        
+
         WorkflowEntity workflowEntity = entityManager.find(WorkflowEntity.class, workflowId);
         if (workflowEntity == null) {
             workflowEntity = new WorkflowEntity(workflowId, revisionEntity);
@@ -550,7 +552,7 @@ public class DefaultProcessRepository implements ProcessRepository
             Assert.state(workflowEntity.getProcess() == revisionEntity,
                 "A workflow entity is expected to map to a single process revision");
         }
-        
+
         // Create an execution entity
 
         final ZonedDateTime now = ZonedDateTime.now();
@@ -665,7 +667,7 @@ public class DefaultProcessRepository implements ProcessRepository
 
         // Set step metadata
 
-        ProcessExecutionStepEntity executionStepEntity = 
+        ProcessExecutionStepEntity executionStepEntity =
             new ProcessExecutionStepEntity(executionEntity, record.getKey());
         executionStepEntity.setName(record.getName());
         executionStepEntity.setNodeName(record.getNodeName());
@@ -736,7 +738,7 @@ public class DefaultProcessRepository implements ProcessRepository
         for (ProcessExecutionStepFileEntity fileEntity: executionStepEntity.getFiles()) {
             // Every existing file entity must correspond to a given record
             final long fid = fileEntity.getId();
-            final ProcessExecutionStepFileRecord fileRecord = 
+            final ProcessExecutionStepFileRecord fileRecord =
                 Iterables.getOnlyElement(Iterables.filter(fileRecords, r -> r.getId() == fid));
             final boolean verified = completed || !fileRecord.getType().isOfOutputType();
             // Set updatable metadata from current file record
@@ -751,7 +753,7 @@ public class DefaultProcessRepository implements ProcessRepository
 
         // Add file records (if any)
         // A file record is considered as a new one if carrying an invalid (negative) id
-        
+
         for (ProcessExecutionStepFileRecord fileRecord: Iterables.filter(fileRecords, f -> f.getId() < 0)) {
             ProcessExecutionStepFileEntity fileEntity =
                 new ProcessExecutionStepFileEntity(executionStepEntity, fileRecord);
@@ -792,10 +794,10 @@ public class DefaultProcessRepository implements ProcessRepository
 
         // Add file record
 
-        ProcessExecutionStepFileEntity fileEntity = 
+        ProcessExecutionStepFileEntity fileEntity =
             new ProcessExecutionStepFileEntity(executionStepEntity, fileRecord);
         fileEntity.setVerified(true);
-        
+
         ResourceIdentifier resourceIdentifier = fileRecord.getResource();
         if (resourceIdentifier != null) {
             fileEntity.setResource(findResourceEntity(resourceIdentifier, true));
@@ -885,7 +887,7 @@ public class DefaultProcessRepository implements ProcessRepository
             query.setParameter("status", executionQuery.getStatus());
         }
     }
-    
+
     /**
      * Find the latest {@link ProcessRevisionEntity} associated with a given process id.
      *

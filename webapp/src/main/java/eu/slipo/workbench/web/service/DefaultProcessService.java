@@ -133,7 +133,7 @@ public class DefaultProcessService implements ProcessService {
         throws ProcessExecutionNotFoundException{
 
         ProcessRecord processRecord = processRepository.findOne(id, version, false);
-        ProcessExecutionRecord executionRecord = processRepository.findExecution(executionId);
+        ProcessExecutionRecord executionRecord = processRepository.getExecutionCompactView(id, version);
         if (processRecord == null ||
             executionRecord == null ||
             executionRecord.getProcess().getId() != id ||
