@@ -139,6 +139,7 @@ class StepInput extends React.Component {
 
     return parts.map((value) =>
       <Checkbox
+        key={value || DEFAULT_OUTPUT_PART}
         id={value}
         text={value}
         value={value === partKey || value === DEFAULT_OUTPUT_PART && partKey === null}
