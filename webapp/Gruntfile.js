@@ -13,6 +13,7 @@ module.exports = function (grunt) {
 
     targetDir: 'target/classes/public/',
 
+    // Clean build directory
     clean: {
       options: {
         force: true,
@@ -22,7 +23,120 @@ module.exports = function (grunt) {
       },
     },
 
+    // Compile Sass files
+    sass: {
+      'workbench': {
+        options: {
+          style: develop ? 'expanded' : 'compressed',
+        },
+        files: {
+          '<%= buildDir %>/css/style.css': ['<%= sourceDir %>/scss/style.scss'],
+        },
+      },
+    },
 
+    // Apply JavaScript lint rules
+    eslint: {
+      'workbench': {
+        options: {
+          configFile: develop ? '.eslintrc.develop.js' : '.eslintrc.js',
+        },
+        src: [
+          '<%= sourceDir %>/js/workbench/**/*.js',
+          '!<%= sourceDir %>/js/workbench/__tests__/**/*.js',
+        ],
+      },
+    },
+
+    // Transpile and bundle JavaScript files
+    browserify: {
+      options: {
+        /* moved to package.json */
+        watch: true,
+      },
+      'workbench': {
+        options: {
+          // Exclude the modules below from being packaged into the main JS file:
+          // The following will be resolved globally (shim) or via earlier vendor includes
+          external: [
+            'fetch',
+            'flat',
+            'history',
+            'immutable',
+            'intl-messageformat',
+            'lodash',
+            'moment',
+            'moment/locale/el',
+            'prop-types',
+            'react',
+            'react-dom',
+            'react-intl',
+            'react-intl/locale-data/el',
+            'react-intl/locale-data/en',
+            'react-redux',
+            'react-router-dom',
+            'react-router-redux',
+            'react-transition-group',
+            'reactstrap',
+            'redux',
+            'redux-logger',
+            'redux-thunk',
+            'url-search-params',
+          ]
+        },
+        files: {
+          '<%= buildDir %>/js/workbench.js': ['<%= sourceDir %>/js/workbench/main.js'],
+        },
+      },
+      'vendor-util': {
+        options: {
+          alias: [
+            'isomorphic-fetch:fetch',
+          ],
+          require: [
+            'flat',
+            'history',
+            'immutable',
+            'intl-messageformat',
+            'lodash',
+            'moment',
+            'moment/locale/el',
+            'url-search-params',
+          ],
+        },
+        files: {
+          '<%= buildDir %>/js/vendor/util.js': []
+        },
+      },
+      'vendor-react': {
+        options: {
+          alias: [
+            'tether:reactstrap-tether',
+          ],
+          require: [
+            'prop-types',
+            'react',
+            'react-dom',
+            'react-intl',
+            'react-intl/locale-data/el',
+            'react-intl/locale-data/en',
+            'react-redux',
+            'react-router-dom',
+            'react-router-redux',
+            'react-transition-group',
+            'reactstrap',
+            'redux',
+            'redux-logger',
+            'redux-thunk',
+          ],
+        },
+        files: {
+          '<%= buildDir %>/js/vendor/react-with-redux.js': [],
+        },
+      },
+    },
+
+    // Minify JavaScript files
     uglify: {
       options: {
         banner: '/*! Package: <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n',
@@ -41,83 +155,38 @@ module.exports = function (grunt) {
       },
     },
 
+    // Generate API documentation
+    apidoc: {
+      'webapp-action': {
+        src: "apidoc/src/webapp-action",
+        dest: "apidoc/docs/webapp-action",
+        template: "apidoc/template",
+        options: {
+          debug: false,
+          includeFilters: [".*\\.js$"]
+        }
+      }
+    },
 
-    browserify: {
-      options: {
-        /* moved to package.json */
-        watch: true,
-      },
+    // Generate workbench documentation
+    jsdoc: {
       'workbench': {
+        src: [
+          '<%= sourceDir %>/js/workbench/**/*.js',
+          '!<%= sourceDir %>/js/workbench/__tests__/**/*.js',
+        ],
         options: {
-          // Exclude the modules below from being packaged into the main JS file:
-          // The following will be resolved globally (shim) or via earlier vendor includes
-          external: [
-            'fetch', 'lodash', 'immutable', 'history', 'url-search-params', 'flat',
-            'moment', 'moment/locale/el',
-            'react', 'react-dom', 'prop-types', 'react-router-dom',
-            'redux', 'redux-logger', 'redux-thunk', 'react-router-redux', 'react-redux',
-            'reactstrap', 'react-transition-group',
-            'intl-messageformat', 'react-intl', 'react-intl/locale-data/en', 'react-intl/locale-data/el',
-          ]
-        },
-        files: {
-          '<%= buildDir %>/js/workbench.js': ['<%= sourceDir %>/js/workbench/main.js'],
-        },
-      },
-      'vendor-util': {
-        options: {
-          alias: [
-            'isomorphic-fetch:fetch',
-          ],
-          require: [
-            'moment', 'moment/locale/el',
-            'url-search-params',
-            'intl-messageformat',
-            'lodash',
-            'flat',
-            'history',
-            'immutable',
-          ],
-        },
-        files: {
-          '<%= buildDir %>/js/vendor/util.js': []
-        },
-      },
-      'vendor-react': {
-        options: {
-          alias: [
-            'tether:reactstrap-tether',
-          ],
-          require: [
-            'react', 'react-dom', 'prop-types', 'react-router-dom',
-            'redux', 'redux-logger', 'redux-thunk', 'react-router-redux', 'react-redux',
-            'reactstrap', 'react-transition-group',
-            'react-intl', 'react-intl/locale-data/en', 'react-intl/locale-data/el',
-          ],
-        },
-        files: {
-          '<%= buildDir %>/js/vendor/react-with-redux.js': [],
-        },
+          destination: 'jsdoc',
+        }
       },
     },
 
-
-    sass: {
-      'workbench': {
-        options: {
-          style: develop ? 'expanded' : 'compressed',
-        },
-        files: {
-          '<%= buildDir %>/css/style.css': ['<%= sourceDir %>/scss/style.scss'],
-        },
-      },
-    },
-
-
+    // Copy files to target folder
     copy: {
       options: {
         mode: '0644',
       },
+      // Copy API documentation
       'apidoc': {
         expand: true,
         filter: 'isFile',
@@ -125,6 +194,15 @@ module.exports = function (grunt) {
         src: ['**/*'],
         dest: '<%= targetDir %>/docs/',
       },
+      // Copy workbench documentation
+      'jsdoc': {
+        expand: true,
+        filter: 'isFile',
+        cwd: 'jsdoc',
+        src: ['**/*'],
+        dest: '<%= targetDir %>/docs/webapp-workbench/',
+      },
+      // Copy JavaScript files
       'workbench-scripts': {
         files: [
           {
@@ -136,6 +214,18 @@ module.exports = function (grunt) {
           },
         ],
       },
+      'vendor-scripts': {
+        files: [
+          {
+            expand: true,
+            filter: 'isFile',
+            cwd: '<%= buildDir %>/',
+            src: 'js/vendor/*.js',
+            dest: '<%= targetDir %>',
+          },
+        ],
+      },
+      // Copy i18n data
       'workbench-i18n-data': {
         files: [
           // Note i18n data are just copied verbatim to build/target directory
@@ -149,12 +239,13 @@ module.exports = function (grunt) {
           {
             expand: true,
             filter: 'isFile',
-            cwd: '<%= buildDir %>',
+            cwd: '<%= sourceDir %>/js/workbench',
             src: 'i18n/**/*.json',
             dest: '<%= targetDir %>',
           },
         ],
       },
+      // Copy CSS files
       'workbench-stylesheets': {
         files: [
           {
@@ -173,45 +264,20 @@ module.exports = function (grunt) {
           },
         ],
       },
-      'vendor': {
-        files: [
-          {
-            expand: true,
-            filter: 'isFile',
-            cwd: '<%= buildDir %>/',
-            src: 'vendor/*.js',
-            dest: '<%= targetDir %>',
-          },
-        ],
-      },
     },
 
-
-    eslint: {
-      'workbench': {
-        options: {
-          configFile: develop ? '.eslintrc.develop.js' : '.eslintrc.js',
-        },
-        src: [
-          '<%= sourceDir %>/js/workbench/**/*.js',
-          '!<%= sourceDir %>/js/workbench/__tests__/**/*.js',
-        ],
-      },
-    },
-
-
+    // Watch for changes to JavaScript, Sass and i18n files
     watch: {
       options: {
         interrupt: true
       },
-      'workbench-scripts': {
-        files: ['<%= sourceDir %>/js/workbench/**/*.js'],
-        tasks: ['copy:workbench-scripts'],
-      },
       'workbench-i18n-data': {
         files: ['<%= sourceDir %>/js/workbench/i18n/**/*.json'],
         tasks: ['copy:workbench-i18n-data'],
-
+      },
+      'workbench-scripts': {
+        files: ['<%= sourceDir %>/js/workbench/**/*.js'],
+        tasks: ['copy:workbench-scripts'],
       },
       'workbench-stylesheets': {
         files: ['<%= sourceDir %>/scss/**/*.scss'],
@@ -219,29 +285,7 @@ module.exports = function (grunt) {
       },
     },
 
-    apidoc: {
-      'webapp-action': {
-        src: "apidoc/src/webapp-action",
-        dest: "apidoc/docs/webapp-action",
-        template: "apidoc/template",
-        options: {
-          debug: false,
-          includeFilters: [".*\\.js$"]
-        }
-      }
-    },
 
-    jsdoc: {
-      'workbench': {
-        src: [
-          '<%= sourceDir %>/js/workbench/**/*.js',
-          '!<%= sourceDir %>/js/workbench/__tests__/**/*.js',
-        ],
-        options: {
-          destination: 'jsdoc',
-        }
-      },
-    },
 
   }); /* initConfig */
 
@@ -273,30 +317,26 @@ module.exports = function (grunt) {
   // Register new tasks
   //
 
-  grunt.registerTask('docs', ['apidoc', 'jsdoc', 'copy:apidoc']);
+  grunt.registerTask('docs', ['apidoc', 'jsdoc', 'copy:apidoc', 'copy:jsdoc']);
 
   grunt.registerTask('browserify:vendor', [
     'browserify:vendor-util', 'browserify:vendor-react',
   ]);
+
+  grunt.registerTask('build:vendor', develop ?
+    ['browserify:vendor',] :
+    ['browserify:vendor', 'uglify:vendor']
+  );
 
   grunt.registerTask('build:workbench', develop ?
     ['sass:workbench', 'eslint:workbench', 'browserify:workbench', 'copy:workbench-i18n-data'] :
     ['sass:workbench', 'eslint:workbench', 'browserify:workbench', 'copy:workbench-i18n-data', 'uglify:workbench']
   );
 
-  grunt.registerTask('build:vendor', develop ?
-    ['browserify'] :
-    ['browserify:vendor', 'uglify:vendor']
-  );
-
   grunt.registerTask('build', ['build:workbench', 'build:vendor']);
 
-  grunt.registerTask('copy:workbench', [
-    'copy:workbench-scripts', 'copy:workbench-i18n-data', 'copy:workbench-stylesheets',
-  ]);
-  grunt.registerTask('deploy', ['copy']);
+  grunt.registerTask('develop', ['clean', 'build', 'docs', 'copy', 'watch']);
 
-  grunt.registerTask('default', ['clean', 'build', 'docs', 'deploy']);
+  grunt.registerTask('default', ['clean', 'build', 'docs', 'copy',]);
 
-  grunt.registerTask('develop', ['clean', 'build', 'copy', 'watch']);
 };
