@@ -24,6 +24,7 @@ export const SET_STEP_PROPERTY = 'ui/process-designer/SET_STEP_PROPERTY';
 export const ADD_STEP_INPUT = 'ui/process-designer/ADD_STEP_INPUT';
 export const REMOVE_STEP_INPUT = 'ui/process-designer/REMOVE_STEP_INPUT';
 export const SELECT_STEP_INPUT = 'ui/process-designer/SELECT_STEP_INPUT';
+export const SET_STEP_INPUT_OUTPUT_PART = 'ui/process/execution/viewer/SET_STEP_INPUT_OUTPUT_PART';
 
 export const ADD_STEP_DATA_SOURCE = 'ui/process-designer/ADD_STEP_DATA_SOURCE';
 export const REMOVE_STEP_DATA_SOURCE = 'ui/process-designer/REMOVE_STEP_DATA_SOURCE';
@@ -59,7 +60,8 @@ export const RECEIVE_EXECUTION_KPI_DATA = 'ui/process/execution/viewer/RECEIVE_E
 
 export const RESET_SELECTED_KPI = 'ui/process/execution/viewer/RESET_SELECTED_KPI';
 
-export const FILE_DOWNLOAD_REQUEST = 'ui/process/execution/viewer/FILE_DOWNLOAD_REQUEST';
+export const FILE_EXISTS_RESPONSE = 'ui/process/execution/viewer/FILE_EXISTS_RESPONSE';
+export const FILE_DOWNLOAD_RESPONSE = 'ui/process/execution/viewer/FILE_DOWNLOAD_RESPONSE';
 
 /*
  * Layers

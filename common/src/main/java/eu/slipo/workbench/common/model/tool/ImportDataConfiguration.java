@@ -15,13 +15,17 @@ import org.springframework.util.StringUtils;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableMultimap;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
-import eu.slipo.workbench.common.model.poi.EnumOutputType;
 import eu.slipo.workbench.common.model.poi.EnumTool;
+import eu.slipo.workbench.common.model.tool.output.EnumImportDataOutputPart;
+import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
+import eu.slipo.workbench.common.model.tool.output.InputToOutputNameMapper;
+import eu.slipo.workbench.common.model.tool.output.OutputSpec;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ImportDataConfiguration implements ToolConfiguration
+public class ImportDataConfiguration implements ToolConfiguration<ImportData>
 {
     private static final long serialVersionUID = 1L;
     
@@ -59,9 +63,16 @@ public class ImportDataConfiguration implements ToolConfiguration
     
     @JsonIgnore
     @Override
+    public Class<ImportData> getToolType()
+    {
+        return ImportData.class;
+    }
+    
+    @JsonIgnore
+    @Override
     public EnumTool getTool()
     {
-        return EnumTool.IMPORTER;
+        return ToolConfiguration.super.getTool();
     }
 
     @JsonProperty("dataFormat")
@@ -158,9 +169,10 @@ public class ImportDataConfiguration implements ToolConfiguration
     
     @JsonIgnore
     @Override
-    public Map<EnumOutputType, List<String>> getOutputNames()
+    public InputToOutputNameMapper<ImportData> getOutputNameMapper()
     {
-        String outputName = getOutputName();
-        return Collections.singletonMap(EnumOutputType.OUTPUT, Collections.singletonList(outputName));
+        final String outputName = getOutputName();
+        final OutputSpec outputSpec = OutputSpec.of(outputName, dataFormat);
+        return input -> ImmutableMultimap.of(EnumImportDataOutputPart.DOWNLOAD, outputSpec);
     }
 }

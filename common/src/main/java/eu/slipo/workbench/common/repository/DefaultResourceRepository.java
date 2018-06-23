@@ -246,8 +246,7 @@ public class DefaultResourceRepository implements ResourceRepository
         ProcessExecutionEntity executionEntity = stepEntity.getExecution();
 
         EnumOperation operation = stepEntity.getOperation();
-        Assert.state(operation != null && operation != EnumOperation.UNDEFINED,
-            "Expected a valid operation type for this processing step");
+        Assert.state(operation != null, "Expected a valid operation type for this processing step");
 
         Map<EnumStepFile, List<ProcessExecutionStepFileEntity>> fileEntitiesByType =
             stepEntity.getFiles().stream()
@@ -306,20 +305,26 @@ public class DefaultResourceRepository implements ResourceRepository
     }
 
     @Override
-    public void setProcessExecution(long id, long version, long executionId, Integer stepKey)
+    public void setProcessExecution(
+        long id, long version, long executionId, Integer stepKey, String partKey)
     {
+        Assert.isTrue(stepKey == null || partKey != null, 
+            "A part key is required (in context of the given step)");
+        
         final ResourceRevisionEntity resourceRevisionEntity = findRevision(id, version);
-        Assert.notNull(resourceRevisionEntity,
-            "The pair of (id, version) does not refer to a ResourceRevision entity");
+        Assert.notNull(resourceRevisionEntity, 
+            "The pair of (id, version) doesn't refer to a ResourceRevision entity");
 
         final ProcessExecutionEntity executionEntity =
             entityManager.find(ProcessExecutionEntity.class, executionId);
-        Assert.notNull(executionEntity,
-            "The execution id does not refer to a ProcessExecution entity");
+        Assert.notNull(executionEntity, 
+            "The execution id doesn't refer to a ProcessExecution entity");
         final ZonedDateTime submittedOn = executionEntity.getSubmittedOn();
 
+        //
         // Associate targeted revision entity with given execution
-
+        //
+        
         String qlUpdateRevision =
             "UPDATE ResourceRevision r SET r.processExecution = :execution " +
             "WHERE r.parent.id = :id AND r.version = :version AND r.processExecution is NULL";
@@ -332,13 +337,16 @@ public class DefaultResourceRepository implements ResourceRepository
 
         if (countUpdated == 0) {
             logger.warn("Did not update process execution for resource %d@%d: " +
-                "resource is already linked to a process execution",
+                    "resource is already linked to a process execution",
                 id, version);
         }
 
+        //
         // If stepKey is given, must also update the step file entity
+        //
 
         if (stepKey != null) {
+            // Find the step entity to be updated 
             ProcessExecutionStepEntity stepEntity = executionEntity.getStepByKey(stepKey);
             if (stepEntity == null) {
                 // Find step entity inside a former execution (which handled this step key)
@@ -350,24 +358,35 @@ public class DefaultResourceRepository implements ResourceRepository
                     .findFirst()
                     .map(x -> x.getStepByKey(stepKey))
                     .orElse(null);
+                
                 Assert.state(stepEntity != null, String.format(
                     "No step entity for step #%d inside execution #%d (or former executions of same process)",
                     stepKey, executionId));
             }
+            if (stepEntity == null) {
+                throw new IllegalStateException(
+                    String.format("No step entity for step #%d inside execution:%d (or former executions of same process)",
+                        stepKey, executionId));
+            }
+            
+            // Find the output file entity matching given partKey
             ProcessExecutionStepFileEntity fileEntity = stepEntity.getFiles().stream()
-                .filter(f -> f.getType() == EnumStepFile.OUTPUT && f.isPrimary())
+                .filter(f -> partKey.equals(f.getOutputPartKey()))
                 .collect(MoreCollectors.toOptional())
                 .orElse(null);
             if (fileEntity != null) {
                 fileEntity.setResource(resourceRevisionEntity);
             } else {
-                Assert.state(false, String.format(
-                    "No output file entity for step #%d inside execution #%d", stepKey, executionId));
+                throw new IllegalStateException(
+                    String.format("No output file of part [%s] for execution:%d/step:%d", 
+                        partKey, executionId, stepKey));
             }
         }
 
+        //
         // If targeted revision is the latest, parent entity must also be updated
-
+        //
+        
         String qlUpdateParent =
             "UPDATE Resource r SET r.processExecution = :execution " +
             "WHERE r.id = :id AND r.version = :version";
@@ -533,8 +552,7 @@ public class DefaultResourceRepository implements ResourceRepository
         final ProcessExecutionStepEntity stepEntity = fileEntity.getStep();
         final int stepKey = stepEntity.getKey();
         final EnumOperation operation = stepEntity.getOperation();
-        Assert.state(operation != null
-                && operation != EnumOperation.UNDEFINED && operation != EnumOperation.REGISTER,
+        Assert.state(operation != null && operation != EnumOperation.REGISTER,
             "Encountered an invalid operation type (for the kind of processing step)");
         if (operation != EnumOperation.TRANSFORM) {
             return EnumDataSourceType.FILESYSTEM;

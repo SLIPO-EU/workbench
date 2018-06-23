@@ -2,6 +2,10 @@
   margin: 0;
 }
 
+.checkbox>label {
+  cursor: pointer;
+}
+
 .c-checkbox input {
   opacity: 0;
 }

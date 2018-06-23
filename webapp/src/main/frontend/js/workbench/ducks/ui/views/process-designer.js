@@ -88,8 +88,9 @@ import {
 
 import {
   addStepReducer,
-  setStepPropertyReducer,
   moveStepReducer,
+  stepOutputPartReducer,
+  stepPropertyReducer,
   stepReducer,
 } from './process-designer/reducers/step';
 
@@ -159,7 +160,7 @@ export default (state = initialState, action) => {
       requireValidation = true;
       supportUndo = true;
 
-      newState = setStepPropertyReducer(state, action);
+      newState = stepPropertyReducer(state, action);
       break;
 
     case Types.REMOVE_STEP:
@@ -459,6 +460,12 @@ export default (state = initialState, action) => {
         execution: executionReducer(state, action),
       };
 
+    case Types.SET_STEP_INPUT_OUTPUT_PART:
+      return {
+        ...state,
+        steps: stepOutputPartReducer(state.steps, action),
+      };
+
     default:
       return state;
   }
@@ -525,6 +532,7 @@ export {
   setBaseLayer,
   setLayerColor,
   selectFeatures,
+  selectOutputPart,
 } from './process-designer/actions';
 
 /*
@@ -533,6 +541,7 @@ export {
 
 export {
   cloneTemplate,
+  checkFile,
   downloadFile,
   fetchExecutionDetails,
   fetchExecutionKpiData,

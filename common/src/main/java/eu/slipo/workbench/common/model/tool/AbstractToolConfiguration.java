@@ -3,16 +3,18 @@ package eu.slipo.workbench.common.model.tool;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
-import eu.slipo.workbench.common.model.poi.EnumOutputType;
+import eu.slipo.workbench.common.model.poi.EnumTool;
+import eu.slipo.workbench.common.model.tool.output.InputToOutputNameMapper;
 
 
 /**
  * An abstract base class for (quite) common tool configuration.
  */
-public abstract class AbstractToolConfiguration implements ToolConfiguration
+public abstract class AbstractToolConfiguration <T extends AnyTool> implements ToolConfiguration<T>
 {
     private static final long serialVersionUID = 1L;
 
@@ -71,10 +73,21 @@ public abstract class AbstractToolConfiguration implements ToolConfiguration
     //
     
     //
-    // Note: Do not place serialization-related (e.g. JsonIgnore, JsonProperty) annotations here.
-    // This kind of annotation should only be present on our concrete subclasses (by overriding
-    // a specific method).
+    // Note: Apart from getTool/getToolType/getOutputMapper, do not place serialization-related (e.g. JsonIgnore,
+    // JsonProperty) annotations here. This kind of annotation should be present on our concrete subclasses (by 
+    // overriding a specific method).
     //
+    
+    @JsonIgnore
+    @Override
+    public abstract Class<T> getToolType();
+    
+    @JsonIgnore
+    @Override
+    public EnumTool getTool()
+    {
+        return ToolConfiguration.super.getTool();
+    }
     
     @Override
     public EnumDataFormat getInputFormat()
@@ -143,4 +156,8 @@ public abstract class AbstractToolConfiguration implements ToolConfiguration
     {
         this._version = version;
     }
+    
+    @JsonIgnore
+    @Override
+    public abstract InputToOutputNameMapper<T> getOutputNameMapper();
 }

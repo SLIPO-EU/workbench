@@ -70,7 +70,7 @@ class ProcessInput extends React.Component {
     // Resource metadata
     resource: PropTypes.shape({
       // Unique key
-      key: PropTypes.number.isRequired,
+      key: PropTypes.string.isRequired,
       // Title
       name: PropTypes.string.isRequired,
       // Icon
@@ -122,13 +122,13 @@ class ProcessInput extends React.Component {
         onClick={(e) => this.select(e)}
       >
         <div className="slipo-pd-resource-actions">
-          {this.props.resource.inputType != EnumInputType.OUTPUT && !this.props.readOnly &&
-            <i className="slipo-pd-resource-delete fa fa-trash" onClick={() => { this.remove(); }}></i>
-          }
           {this.props.resource.inputType != EnumInputType.OUTPUT &&
             <Link to={buildPath(DynamicRoutes.ResourceViewer, [this.props.resource.id, this.props.resource.version])}>
               <i className="slipo-pd-resource-view fa fa-search"></i>
             </Link>
+          }
+          {this.props.resource.inputType != EnumInputType.OUTPUT && !this.props.readOnly &&
+            <i className="slipo-pd-resource-delete fa fa-trash" onClick={() => { this.remove(); }}></i>
           }
         </div>
         <div className="slipo-pd-resource-icon">

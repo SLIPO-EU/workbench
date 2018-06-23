@@ -130,9 +130,29 @@ export function cloneTemplate(id, version) {
   };
 }
 
+const fileExists = function (fileId, fileName) {
+  return {
+    type: Types.FILE_EXISTS_RESPONSE,
+    fileId,
+    fileName,
+  };
+};
+
+export const checkFile = (id, version, executionId, fileId, fileName) => {
+  return (dispatch, getState) => {
+    const { meta: { csrfToken: token } } = getState();
+    const url = `/action/process/${id}/${version}/execution/${executionId}/file/${fileId}/exists`;
+
+    return file.exists(url, token)
+      .then(data => {
+        dispatch(fileExists(fileId, fileName));
+      });
+  };
+};
+
 const filedDownloaded = function (fileId, fileName) {
   return {
-    type: Types.FILE_DOWNLOAD_REQUEST,
+    type: Types.FILE_DOWNLOAD_RESPONSE,
     fileId,
     fileName,
   };
@@ -141,13 +161,21 @@ const filedDownloaded = function (fileId, fileName) {
 export const downloadFile = (id, version, executionId, fileId, fileName) => {
   return (dispatch, getState) => {
     const { meta: { csrfToken: token } } = getState();
-    const url = `/action/process/${id}/${version}/execution/${executionId}/file/${fileId}`;
+    const url = `/action/process/${id}/${version}/execution/${executionId}/file/${fileId}/download`;
 
+    dom.downloadUrl(url, fileName);
+
+    dispatch(filedDownloaded(fileId, fileName));
+
+    return Promise.resolve();
+
+    /*
     return file.download(url, token)
       .then(data => {
         dom.downloadLink(data, fileName);
 
         dispatch(filedDownloaded(fileId, fileName));
       });
+    */
   };
 };

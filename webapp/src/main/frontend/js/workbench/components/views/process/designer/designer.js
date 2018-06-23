@@ -90,6 +90,7 @@ class Designer extends React.Component {
         setActiveStepDataSource={this.props.setActiveStepDataSource}
         readOnly={this.props.readOnly}
         stepExecutions={stepExecutions}
+        selectOutputPart={this.props.selectOutputPart}
       />
     );
   }

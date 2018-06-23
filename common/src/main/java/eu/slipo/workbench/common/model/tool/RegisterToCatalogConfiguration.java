@@ -2,21 +2,21 @@ package eu.slipo.workbench.common.model.tool;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.collect.ImmutableMultimap;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
-import eu.slipo.workbench.common.model.poi.EnumOutputType;
 import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
+import eu.slipo.workbench.common.model.tool.output.InputToOutputNameMapper;
 
 /**
  * Represent configuration for registration to catalog
  */
-public class MetadataRegistrationConfiguration implements ToolConfiguration 
+public class RegisterToCatalogConfiguration implements ToolConfiguration<RegisterToCatalog> 
 {
     private static final long serialVersionUID = 1L;
     
@@ -31,16 +31,16 @@ public class MetadataRegistrationConfiguration implements ToolConfiguration
      */
     private ResourceIdentifier target;
     
-    public MetadataRegistrationConfiguration() {}
+    public RegisterToCatalogConfiguration() {}
     
-    public MetadataRegistrationConfiguration(
+    public RegisterToCatalogConfiguration(
         ResourceMetadataCreate metadata, ResourceIdentifier resourceIdentifier) 
     {
         this.metadata = metadata;
         this.target = resourceIdentifier;
     }
 
-    public MetadataRegistrationConfiguration(ResourceMetadataCreate metadata)
+    public RegisterToCatalogConfiguration(ResourceMetadataCreate metadata)
     {
         this(metadata, null);
     }
@@ -71,9 +71,16 @@ public class MetadataRegistrationConfiguration implements ToolConfiguration
     
     @JsonIgnore
     @Override
+    public Class<RegisterToCatalog> getToolType()
+    {
+        return RegisterToCatalog.class;
+    }
+    
+    @JsonIgnore
+    @Override
     public EnumTool getTool()
     {
-        return EnumTool.REGISTER;
+        return ToolConfiguration.super.getTool();
     }
 
     @Override
@@ -123,10 +130,11 @@ public class MetadataRegistrationConfiguration implements ToolConfiguration
     {
         // no-op
     }
-
+    
+    @JsonIgnore
     @Override
-    public Map<EnumOutputType, List<String>> getOutputNames()
+    public InputToOutputNameMapper<RegisterToCatalog> getOutputNameMapper()
     {
-        return Collections.emptyMap(); // no output is produced
+        return input -> ImmutableMultimap.of(); // no output is produced
     }
 }

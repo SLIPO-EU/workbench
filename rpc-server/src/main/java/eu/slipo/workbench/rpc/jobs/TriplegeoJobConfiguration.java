@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -38,7 +39,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.spotify.docker.client.DockerClient;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
@@ -66,6 +69,12 @@ public class TriplegeoJobConfiguration extends BaseJobConfiguration
      * The default interval (milliseconds) for polling a container
      */
     public static final long DEFAULT_CHECK_INTERVAL = 1000L;
+
+    /**
+     * A list of keys of parameters that should be ignored (blacklisted) as conflicting with
+     * <tt>input</tt> parameter.
+     */
+    private static final List<String> blacklistedParameterKeys = ImmutableList.of("inputFiles");
 
     @Autowired
     private DockerClient docker;
@@ -117,33 +126,35 @@ public class TriplegeoJobConfiguration extends BaseJobConfiguration
         {
             StepContext stepContext = chunkContext.getStepContext();
             ExecutionContext executionContext = stepContext.getStepExecution().getExecutionContext();
-            Map<String, ?> parameters = stepContext.getJobParameters();
+            Map<String, Object> parameters = stepContext.getJobParameters();
 
             // Read given parameters
 
-            TriplegeoConfiguration config =
+            parameters = Maps.filterKeys(parameters, key -> !blacklistedParameterKeys.contains(key));
+
+            TriplegeoConfiguration configuration =
                 propertiesConverter.propertiesToValue(parameters, TriplegeoConfiguration.class);
 
-            String mappingSpec = config.getMappingSpec();
+            String mappingSpec = configuration.getMappingSpec();
             Assert.isTrue(mappingSpec != null && mappingSpec.matches("^(file|classpath):.*"),
                 "The mappings are expected as a file-based resource location");
-            config.setMappingSpec("mappings.yml"); // a dummy name
+            configuration.setMappingSpec("mappings.yml"); // a dummy name
 
-            String classificationSpec = config.getClassificationSpec();
+            String classificationSpec = configuration.getClassificationSpec();
             Assert.isTrue(classificationSpec != null && classificationSpec.matches("^(file|classpath):.*"),
                 "The classification is expected as a file-based resource location");
-            config.setClassificationSpec("classification.csv"); // a dummy name
+            configuration.setClassificationSpec("classification.csv"); // a dummy name
 
-            List<String> inputPaths = new ArrayList<>(config.getInput());
+            List<String> inputPaths = new ArrayList<>(configuration.getInput());
             Assert.isTrue(!inputPaths.isEmpty() && !Iterables.any(inputPaths, StringUtils::isEmpty),
                 "The input is expected as a non-empty list of paths");
             Assert.isTrue(Iterables.all(inputPaths, p -> Paths.get(p).isAbsolute()),
                 "The input is expected as a list of absolute paths");
-            config.clearInput();
+            configuration.clearInput();
 
             // Validate options
 
-            Set<ConstraintViolation<TriplegeoConfiguration>> errors = validator.validate(config);
+            Set<ConstraintViolation<TriplegeoConfiguration>> errors = validator.validate(configuration);
             if (!errors.isEmpty()) {
                 throw InvalidConfigurationException.fromErrors(errors);
             }
@@ -151,12 +162,12 @@ public class TriplegeoJobConfiguration extends BaseJobConfiguration
             // Check if output format is supported
             // The only supported output format is N-TRIPLES: this is a limitation applied by
             // workbench (i.e. not by Triplegeo) in order to easily concatenate output results.
-            Assert.state(config.getOutputFormat() == EnumDataFormat.N_TRIPLES,
+            Assert.state(configuration.getOutputFormat() == EnumDataFormat.N_TRIPLES,
                 "The given output format is not supported (inside SLIPO workbench)");
 
             // Update execution context
 
-            executionContext.put("options", config);
+            executionContext.put("options", configuration);
             executionContext.putString("mappings", mappingSpec);
             executionContext.putString("classification", classificationSpec);
             executionContext.put("input", inputPaths);

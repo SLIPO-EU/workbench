@@ -87,6 +87,13 @@
             <scope>provided</scope>
         </dependency> 
         
+        <!-- Source generators -->
+
+        <dependency>
+            <groupId>com.google.auto.value</groupId>
+            <artifactId>auto-value-annotations</artifactId>
+            <version>1.6</version>
+        </dependency>
 
         <!-- Utilities -->
 
@@ -142,6 +149,23 @@
 
     <build>
         <plugins>
+
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <!-- 
+                      For Eclipse to understand annotation-driven source generators, "m2e-apt" must be installed
+                      (and also enabled under Maven > Annotation Processors)
+                     -->
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>com.google.auto.value</groupId>
+                            <artifactId>auto-value</artifactId>
+                            <version>1.6</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

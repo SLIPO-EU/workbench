@@ -173,7 +173,7 @@ public class ProcessController extends BaseController {
     }
 
     /**
-     * Downloads a file for the selected execution
+     * Checks if a file for the selected execution exists
      *
      * @param id the process id
      * @param version the process version
@@ -182,7 +182,38 @@ public class ProcessController extends BaseController {
      * @return a list of {@link ProcessExecutionRecord}
      * @throws IOException  if process or file is not found
      */
-    @RequestMapping(value = "/action/process/{id}/{version}/execution/{executionId}/file/{fileId}", method = RequestMethod.GET)
+    @RequestMapping(value = "/action/process/{id}/{version}/execution/{executionId}/file/{fileId}/exists", method = RequestMethod.GET)
+    public RestResponse<?> processExecutionFileExists(
+        @PathVariable long id, @PathVariable long version, @PathVariable long executionId, @PathVariable long fileId,
+        HttpServletResponse response) throws IOException {
+
+        final File file;
+        try {
+            file = this.processService.getProcessExecutionFile(id, version, executionId, fileId);
+            if ((file != null) && (file.exists())) {
+                return RestResponse.success();
+            }
+        } catch (ProcessNotFoundException ex) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Process was not found");
+        } catch (ProcessExecutionNotFoundException ex) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Process execution was not found");
+        }
+
+        response.sendError(HttpServletResponse.SC_GONE, "File has been removed");
+        return null;
+    }
+
+    /**
+     * Downloads a file for the selected execution
+     *
+     * @param id the process id
+     * @param version the process version
+     * @param executionId the execution id
+     * @param fileId the file id
+     * @return an instance of {@link FileSystemResource}
+     * @throws IOException  if an I/O exception has occurred
+     */
+    @RequestMapping(value = "/action/process/{id}/{version}/execution/{executionId}/file/{fileId}/download", method = RequestMethod.GET)
     public FileSystemResource downloadProcessExecutionFile(
         @PathVariable long id, @PathVariable long version, @PathVariable long executionId, @PathVariable long fileId,
         HttpServletResponse response) throws IOException {
@@ -190,7 +221,7 @@ public class ProcessController extends BaseController {
         final File file;
         try {
             file = this.processService.getProcessExecutionFile(id, version, executionId, fileId);
-            if (file.exists()) {
+            if ((file != null) && (file.exists())) {
                 response.setHeader("Content-Disposition", String.format("attachment; filename=%s", file.getName()));
                 return new FileSystemResource(file);
             }

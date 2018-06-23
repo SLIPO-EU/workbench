@@ -8,6 +8,8 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.util.Assert;
 
 import eu.slipo.workbench.web.model.configuration.AbstractToolConfiguration;
+import eu.slipo.workbench.web.model.configuration.DeerConfiguration;
+import eu.slipo.workbench.web.model.configuration.FagiConfiguration;
 import eu.slipo.workbench.web.model.configuration.LimesConfiguration;
 import eu.slipo.workbench.web.model.configuration.TripleGeoConfiguration;
 
@@ -19,6 +21,10 @@ public class ToolkitConfiguration implements InitializingBean {
     private TripleGeoConfiguration triplegeo;
 
     private LimesConfiguration limes;
+
+    private FagiConfiguration fagi;
+
+    private DeerConfiguration deer;
 
     public TripleGeoConfiguration getTriplegeo() {
         return triplegeo;
@@ -36,10 +42,28 @@ public class ToolkitConfiguration implements InitializingBean {
         this.limes = limes;
     }
 
+    public FagiConfiguration getFagi() {
+        return fagi;
+    }
+
+    public void setFagi(FagiConfiguration fagi) {
+        this.fagi = fagi;
+    }
+
+    public DeerConfiguration getDeer() {
+        return deer;
+    }
+
+    public void setDeer(DeerConfiguration deer) {
+        this.deer = deer;
+    }
+
     @Override
     public void afterPropertiesSet() throws Exception {
         this.CheckConfiguration("TripleGeo", this.triplegeo);
         this.CheckConfiguration("LIMES", this.limes);
+        this.CheckConfiguration("FAGI", this.fagi);
+        this.CheckConfiguration("DEER", this.deer);
     }
 
     public void CheckConfiguration(String name, AbstractToolConfiguration configuration) throws Exception {

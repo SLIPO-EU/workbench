@@ -15,13 +15,15 @@ public class ProcessOutput extends ProcessInput
     private static final long serialVersionUID = 1L;
 
     @JsonDeserialize(using = EnumTool.Deserializer.class)
+    @JsonProperty("tool")
     protected EnumTool tool;
 
+    @JsonProperty("stepKey")
     protected int stepKey;
 
     protected ProcessOutput()
     {
-        super(-1, EnumInputType.OUTPUT, null);
+        super(null, EnumInputType.OUTPUT, null);
     }
 
     protected ProcessOutput(Step step, EnumResourceType resourceType)
@@ -47,19 +49,13 @@ public class ProcessOutput extends ProcessInput
     /**
      * The tool that generated the output
      */
-    @JsonProperty("tool")
     public EnumTool getTool() {
         return tool;
     }
 
     /**
-     * The Key of the processing step that created this resource
+     * The key of the processing step that produces this resource
      */
-    @JsonProperty("stepKey")
-    public int getStepKey() {
-        return stepKey;
-    }
-
     @JsonIgnore
     public int stepKey()
     {

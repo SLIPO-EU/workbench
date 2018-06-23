@@ -10,7 +10,7 @@ import eu.slipo.workbench.common.model.tool.ToolConfiguration;
  */
 public class ClientConfiguration {
 
-    private Map<EnumTool, Map<String, ToolConfiguration>> profiles;
+    private Map<EnumTool, Map<String, ToolConfiguration<?>>> profiles;
 
     private OsmConfiguration osm;
 
@@ -20,11 +20,15 @@ public class ClientConfiguration {
 
     private LimesConfiguration limes;
 
-    public Map<EnumTool, Map<String, ToolConfiguration>> getProfiles() {
+    private FagiConfiguration fagi;
+
+    private DeerConfiguration deer;
+
+    public Map<EnumTool, Map<String, ToolConfiguration<?>>> getProfiles() {
         return profiles;
     }
 
-    public void setProfiles(Map<EnumTool, Map<String, ToolConfiguration>> profiles) {
+    public void setProfiles(Map<EnumTool, Map<String, ToolConfiguration<?>>> profiles) {
         this.profiles = profiles;
     }
 
@@ -58,6 +62,22 @@ public class ClientConfiguration {
 
     public void setLimes(LimesConfiguration limes) {
         this.limes = limes;
+    }
+
+    public FagiConfiguration getFagi() {
+        return fagi;
+    }
+
+    public void setFagi(FagiConfiguration fagi) {
+        this.fagi = fagi;
+    }
+
+    public DeerConfiguration getDeer() {
+        return deer;
+    }
+
+    public void setDeer(DeerConfiguration deer) {
+        this.deer = deer;
     }
 
 }

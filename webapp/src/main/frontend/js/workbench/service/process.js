@@ -30,7 +30,8 @@ import {
 
 function buildProcessRequest(action, designer) {
   const allInputOutputResources = designer.steps.reduce((result, step) => {
-    return (step.outputKey ? result.concat(step.resources, [step.outputKey]) : result.concat(step.resources));
+    const stepInputKeys = step.input.map(i => i.inputKey);
+    return (step.outputKey ? result.concat(stepInputKeys, [step.outputKey]) : result.concat(stepInputKeys));
   }, []);
   const model = {
     action,
@@ -75,7 +76,7 @@ function buildProcessRequest(action, designer) {
           name: s.name,
           tool: s.tool,
           operation: s.operation,
-          inputKeys: [...s.resources],
+          input: [...s.input],
           sources: buildDataSource(s),
           configuration: buildConfiguration(s),
           outputKey: s.outputKey,
@@ -188,7 +189,7 @@ function readProcessResponse(result) {
         order: index,
         name: s.name,
         iconClass: ToolIcons[s.tool],
-        resources: [...s.inputKeys],
+        input: [...s.input],
         dataSources: readDataSource(s),
         configuration: readConfiguration(s),
         errors: {},
@@ -394,10 +395,10 @@ function validateSteps(action, model, isTemplate, errors) {
 
   // All input resources (exclude registered step output)
   const allInputResources = steps.reduce((agg, value) =>
-    (value.tool === EnumTool.CATALOG ? agg : agg.concat(value.resources)), []);
+    (value.tool === EnumTool.CATALOG ? agg : agg.concat(value.input)), []);
   // All output resources that are not used as an input
   const stepOutputResources = steps.reduce((agg, value) =>
-    (((value.outputKey) && (allInputResources.indexOf(value.outputKey) === -1)) ? agg.concat([value.outputKey]) : agg), []);
+    (((value.outputKey) && (!allInputResources.find((i) => i.inputKey === value.outputKey))) ? agg.concat([value.outputKey]) : agg), []);
 
   if (stepOutputResources.length !== 1) {
     errors.push({ code: 1, text: 'A workflow must generate a single output' });
@@ -433,7 +434,7 @@ function validateResources(action, model, isTemplate, errors) {
 
   steps.forEach((s) => {
     // Resources
-    const stepResources = resources.filter((r) => { return (s.resources.indexOf(r.key) !== -1); });
+    const stepResources = resources.filter(r => (!!s.input.find(i => i.inputKey === r.key)));
     const requiredResources = getStepInputRequirements(s, stepResources);
 
     if ((requiredResources.poi > 0) && (requiredResources.any <= 0)) {

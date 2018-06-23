@@ -387,7 +387,8 @@ public class DefaultImportService implements ImportService, InitializingBean {
 
     private void updateStepFile(long executionId, Step step, String schema, String tableName, String geometryColumn) {
         ProcessExecutionRecord record = processRepository.findExecution(executionId, true);
-
+        record = processRepository.getExecutionCompactView(record.getProcess().getId(), record.getProcess().getVersion());
+        // TODO :Update code for using partKey
         Optional<ProcessExecutionStepFileRecord> file = record.getSteps().stream()
             .filter(s -> s.getKey() == step.key())
             .flatMap(s -> s.getFiles().stream()).filter(f -> f.getType() == EnumStepFile.OUTPUT)

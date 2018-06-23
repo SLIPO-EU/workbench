@@ -63,6 +63,7 @@ import {
 
 import {
   reset,
+  checkFile,
   downloadFile,
   fetchProcess,
   fetchProcessRevision,
@@ -98,6 +99,7 @@ import {
   resetSelectedFile,
   resetSelectedKpi,
   selectFile,
+  selectOutputPart,
 } from '../../ducks/ui/views/process-designer';
 
 /**
@@ -420,6 +422,7 @@ class ProcessDesigner extends React.Component {
                   setActiveStepDataSource={this.props.setActiveStepDataSource}
                   setActiveResource={this.props.setActiveResource}
                   readOnly={this.props.readOnly}
+                  selectOutputPart={this.props.selectOutputPart}
                 />
               </Col>
             </Row>
@@ -479,6 +482,7 @@ class ProcessDesigner extends React.Component {
 
     return (
       <ExecutionStepDetails
+        checkFile={this.props.checkFile}
         downloadFile={this.props.downloadFile}
         execution={this.props.execution}
         files={files}
@@ -498,7 +502,7 @@ class ProcessDesigner extends React.Component {
 
   renderCancelDialog() {
     return (
-      <Dialog
+      <Dialog className="modal-dialog-centered"
         header={
           <span>
             <i className={'fa fa-question mr-2'}></i>System Message
@@ -572,6 +576,7 @@ const mapStateToProps = (state) => ({
 const mapDispatchToProps = (dispatch) => bindActionCreators({
   // Workflow designer
   reset,
+  checkFile,
   downloadFile,
   fetchProcess,
   fetchProcessRevision,
@@ -607,6 +612,7 @@ const mapDispatchToProps = (dispatch) => bindActionCreators({
   resetSelectedFile,
   resetSelectedKpi,
   selectFile,
+  selectOutputPart,
   // File system
   createFolder,
   uploadFile,

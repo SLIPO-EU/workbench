@@ -11,50 +11,38 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
  * Supported POI data integration operations
  */
 public enum EnumOperation 
-{
-    /**
-     * Invalid operation
-     */
-    UNDEFINED(0),
-    
+{    
     /**
      * Register resource to catalog
      */
-    REGISTER(1),
+    REGISTER,
     
     /**
      * Data transformation
      */
-    TRANSFORM(2),
+    TRANSFORM,
     
     /**
      * POI RDF dataset interlinking
      */
-    INTERLINK(3),
+    INTERLINK,
     
     /**
      * POI RDF dataset and linked data fusion
      */
-    FUSION(4),
+    FUSION,
     
     /**
      * POI RDF dataset enrichment
      */
-    ENRICHMENT(5),
+    ENRICHMENT,
     
     /**
      * Import external data sources into a process
      */
-    IMPORT(6);
+    IMPORT_DATA;
 
-    private final int value;
-
-    private EnumOperation(int value) {
-        this.value = value;
-    }
-
-    public int getValue() {
-        return value;
+    private EnumOperation() {
     }
 
     public String getKey() {
@@ -67,7 +55,7 @@ public enum EnumOperation
                 return item;
             }
         }
-        return EnumOperation.UNDEFINED;
+        return null;
     }
 
     public static class Deserializer extends JsonDeserializer<EnumOperation> {

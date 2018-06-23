@@ -122,11 +122,6 @@ public class ExecutionContextPromotionListeners
             this.keyMapper = keyMapper;
         }
 
-        public KeyMappingPromotionListener(String[] keys)
-        {
-            this(keys, null);
-        }
-
         /**
          * Set if an exception should be thrown if a key is missing
          */

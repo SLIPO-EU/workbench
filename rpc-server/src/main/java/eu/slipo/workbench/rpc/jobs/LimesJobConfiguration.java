@@ -33,6 +33,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
 import com.spotify.docker.client.DockerClient;
 
 import eu.slipo.workbench.common.model.tool.EnumConfigurationFormat;
@@ -58,6 +60,13 @@ public class LimesJobConfiguration extends BaseJobConfiguration
      * The default interval (milliseconds) for polling a container
      */
     public static final long DEFAULT_CHECK_INTERVAL = 1000L;
+
+    /**
+     * A list of keys of parameters that should be ignored (blacklisted) as conflicting with
+     * <tt>input</tt> parameter.
+     */
+    private static final List<String> blacklistedParameterKeys =
+        ImmutableList.of("source.endpoint", "target.endpoint");
 
     @Autowired
     private DockerClient docker;
@@ -113,29 +122,31 @@ public class LimesJobConfiguration extends BaseJobConfiguration
 
             // Read given parameters
 
-            LimesConfiguration config =
+            parameters = Maps.filterKeys(parameters, key -> !blacklistedParameterKeys.contains(key));
+
+            LimesConfiguration configuration =
                 propertiesConverter.propertiesToValue(parameters, LimesConfiguration.class);
 
-            String sourcePath = config.getSourcePath();
+            String sourcePath = configuration.getSourcePath();
             Assert.isTrue(!StringUtils.isEmpty(sourcePath), "A source path is required");
             Assert.isTrue(Paths.get(sourcePath).isAbsolute(), "The source is expected as an absolute path");
 
-            String targetPath = config.getTargetPath();
+            String targetPath = configuration.getTargetPath();
             Assert.isTrue(!StringUtils.isEmpty(targetPath), "A target path is required");
             Assert.isTrue(Paths.get(targetPath).isAbsolute(), "The target is expected as an absolute path");
 
-            config.clearInput();
+            configuration.clearInput();
 
             // Validate
 
-            Set<ConstraintViolation<LimesConfiguration>> errors = validator.validate(config);
+            Set<ConstraintViolation<LimesConfiguration>> errors = validator.validate(configuration);
             if (!errors.isEmpty()) {
                 throw InvalidConfigurationException.fromErrors(errors);
             }
 
             // Update execution context
 
-            executionContext.put("config", config);
+            executionContext.put("config", configuration);
             executionContext.put("input", Arrays.asList(sourcePath, targetPath));
 
             return null;

@@ -1,10 +1,14 @@
 import {
   EnumDataSource,
+  EnumDeerOutputPart,
+  EnumFagiOutputPart,
   EnumHarvester,
+  EnumInputType,
+  EnumLimesOutputPart,
   EnumOperation,
   EnumResourceType,
   EnumTool,
-  EnumInputType,
+  EnumTriplegeoOutputPart,
 } from './enum';
 
 /**
@@ -88,6 +92,7 @@ export const ToolConfigurationSettings = {
     linked: 0,
     any: 0,
     editable: true,
+    output: Object.keys(EnumTriplegeoOutputPart),
   },
   [EnumTool.LIMES]: {
     source: 0,
@@ -95,6 +100,7 @@ export const ToolConfigurationSettings = {
     linked: 0,
     any: 0,
     editable: false,
+    output: Object.keys(EnumLimesOutputPart),
   },
   [EnumTool.FAGI]: {
     source: 0,
@@ -102,6 +108,7 @@ export const ToolConfigurationSettings = {
     linked: 1,
     any: 0,
     editable: false,
+    output: Object.keys(EnumFagiOutputPart),
   },
   [EnumTool.DEER]: {
     source: 0,
@@ -109,6 +116,7 @@ export const ToolConfigurationSettings = {
     linked: 0,
     any: 0,
     editable: false,
+    output: Object.keys(EnumDeerOutputPart),
   },
   [EnumTool.CATALOG]: {
     source: 0,
@@ -116,6 +124,7 @@ export const ToolConfigurationSettings = {
     linked: 0,
     any: 1,
     editable: true,
+    output: [],
   }
 };
 

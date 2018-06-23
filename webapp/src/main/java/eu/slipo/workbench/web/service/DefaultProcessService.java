@@ -2,6 +2,7 @@ package eu.slipo.workbench.web.service;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
@@ -132,7 +133,7 @@ public class DefaultProcessService implements ProcessService {
         throws ProcessExecutionNotFoundException{
 
         ProcessRecord processRecord = processRepository.findOne(id, version, false);
-        ProcessExecutionRecord executionRecord = processRepository.findExecution(executionId);
+        ProcessExecutionRecord executionRecord = processRepository.getExecutionCompactView(id, version);
         if (processRecord == null ||
             executionRecord == null ||
             executionRecord.getProcess().getId() != id ||
@@ -271,7 +272,12 @@ public class DefaultProcessService implements ProcessService {
         }
 
         final String filename = result.get().getFilePath();
-        final Path path = fileNamingStrategy.resolveExecutionPath(filename);
+        Path path;
+        try {
+            path = fileNamingStrategy.resolveExecutionPath(filename);
+        } catch (URISyntaxException e) {
+            return null;
+        }
 
         return path.toFile();
     }
@@ -310,7 +316,12 @@ public class DefaultProcessService implements ProcessService {
         }
 
         final String filename = fileRecord.getFilePath();
-        final Path path = fileNamingStrategy.resolveExecutionPath(filename);
+        Path path;
+        try {
+            path = fileNamingStrategy.resolveExecutionPath(filename);
+        } catch (URISyntaxException e) {
+            throw ApplicationException.fromMessage(BasicErrorCode.NO_RESULT, "File was not found");
+        }
         final File file = path.toFile();
 
         if (!file.exists()) {

@@ -94,9 +94,9 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-tomcat</artifactId>
             <scope>provided</scope>
-        </dependency> 
-        
-        <!-- JDBC drivers -->    
+        </dependency>
+
+        <!-- JDBC drivers -->
 
         <dependency>
             <groupId>com.h2database</groupId>
@@ -156,8 +156,8 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin> 
- 
+            </plugin>
+
             <!-- Configure frontend builds -->
             <plugin>
                 <groupId>com.github.eirslett</groupId>
@@ -196,7 +196,7 @@
                             <goal>grunt</goal>
                         </goals>
                         <configuration>
-                            <arguments>build</arguments>
+                            <arguments>default</arguments>
                             <environmentVariables>
                                 <NODE_ENV>${node.env}</NODE_ENV>
                             </environmentVariables>
@@ -231,7 +231,7 @@
                         <goals><goal>run</goal></goals>
                         <configuration>
                             <target>
-                                <symlink overwrite="yes" link="${project.build.directory}/${project.artifactId}.war" 
+                                <symlink overwrite="yes" link="${project.build.directory}/${project.artifactId}.war"
                                     resource="${project.artifactId}-${project.version}.war"/>
                             </target>
                         </configuration>

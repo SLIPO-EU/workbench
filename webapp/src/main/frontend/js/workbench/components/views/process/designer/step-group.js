@@ -134,7 +134,7 @@ class StepGroup extends React.Component {
    * @memberof Designer
    */
   renderStep(step) {
-    const resources = this.props.resources.filter((resource) => { return (step.resources.indexOf(resource.key) !== -1); });
+    const resources = this.props.resources.filter((r) => !!step.input.find((i) => i.inputKey === r.key));
     const stepExecution = this.props.stepExecutions.find((e) => e.key === step.key) || null;
 
     return (
@@ -158,6 +158,7 @@ class StepGroup extends React.Component {
         setActiveStepDataSource={this.props.setActiveStepDataSource}
         readOnly={this.props.readOnly}
         stepExecution={stepExecution}
+        selectOutputPart={this.props.selectOutputPart}
       />
     );
   }

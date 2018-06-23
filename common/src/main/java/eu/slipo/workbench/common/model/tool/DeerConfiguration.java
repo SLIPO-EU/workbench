@@ -1,30 +1,34 @@
 package eu.slipo.workbench.common.model.tool;
 
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.lang3.NotImplementedException;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
-import eu.slipo.workbench.common.model.poi.EnumOutputType;
-import eu.slipo.workbench.common.model.poi.EnumTool;
+import eu.slipo.workbench.common.model.tool.output.InputToOutputNameMapper;
 
 /**
  * Configuration for DEER
  */
-public class DeerConfiguration extends EnrichConfiguration 
+public class DeerConfiguration extends EnrichConfiguration<Deer>
 {
     private static final long serialVersionUID = 1L;
+
+    // TODO: Temporary fix for serializing empty configuration. Should be removed once
+    // configuration specifications are implemented
+    @JsonProperty
+    public String specs;
 
     public DeerConfiguration() {}
 
     @JsonIgnore
     @Override
-    public EnumTool getTool()
+    public Class<Deer> getToolType()
     {
-        return EnumTool.DEER;
+        return Deer.class;
     }
 
     @JsonIgnore
@@ -82,14 +86,14 @@ public class DeerConfiguration extends EnrichConfiguration
     {
         super.setOutputDir(dir);
     }
-    
+
     @JsonIgnore
     @Override
     public void setOutputFormat(EnumDataFormat dataFormat)
     {
         super.setOutputFormat(dataFormat);
     }
-    
+
     @JsonIgnore
     @Override
     public EnumDataFormat getOutputFormat()
@@ -99,11 +103,11 @@ public class DeerConfiguration extends EnrichConfiguration
 
     @JsonIgnore
     @Override
-    public Map<EnumOutputType, List<String>> getOutputNames()
+    public InputToOutputNameMapper<Deer> getOutputNameMapper()
     {
         throw new NotImplementedException("not implemented yet");
     }
-    
+
     @JsonIgnore
     @Override
     public String getVersion()
@@ -116,5 +120,5 @@ public class DeerConfiguration extends EnrichConfiguration
     public void setVersion(String version)
     {
         super.setVersion(version);
-    } 
+    }
 }

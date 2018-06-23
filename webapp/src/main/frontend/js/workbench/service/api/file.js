@@ -5,6 +5,31 @@ import {
   ServerError,
 } from '../../model';
 
+export const exists = (url, token) => {
+  return fetch(url, {
+    method: 'GET',
+    headers: {
+      'x-requested-with': 'XMLHttpRequest',
+      'x-csrf-token': token,
+    },
+    credentials: 'same-origin',
+  })
+    .then(res => {
+      if (res.status >= 200 && res.status < 300) {
+        return res;
+      } else {
+        console.error(`Received: ${res.status} ${res.statusText}`);
+
+        throw new ServerError([{
+          code: 'UNKNOWN',
+          level: EnumErrorLevel.ERROR,
+          description: 'File was not found',
+        }]);
+      }
+    })
+    .then(res => res.json());
+};
+
 export const download = (url, token) => {
   return fetch(url, {
     method: 'GET',
@@ -32,4 +57,5 @@ export const download = (url, token) => {
 
 export default {
   download,
+  exists,
 };

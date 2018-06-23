@@ -231,6 +231,19 @@ public interface ProcessRepository
      * @return A record representing the execution entity
      */
     ProcessExecutionRecord findLatestExecution(long id, long version);
+    
+    /**
+     * Get a compact view of the execution of a process of a given id and version. 
+     * 
+     * <p>A compact view of the execution is an execution comprised of the latest execution of each step,
+     * successful or not (of course, a successful execution of a step will always be the latest,
+     * because it will never attempt to re-execute).
+     * 
+     * @param id The process id
+     * @param version The version of a specific revision of a process
+     * @return A record presenting a compact execution of given process revision
+     */
+    ProcessExecutionRecord getExecutionCompactView(long id, long version);
 
     /**
      * Find process executions filtered by a {@link ProcessExecutionQuery}.
