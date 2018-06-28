@@ -404,7 +404,7 @@ public class DefaultProcessRepository implements ProcessRepository
 
         // The basic execution metadata are populated from latest execution
         final ProcessExecutionRecord executionRecord =
-            executionEntities.get(0).toProcessExecutionRecord(true, false);
+            executionEntities.get(0).toProcessExecutionRecord(false, false);
 
         // Represent each step execution with latest one
 
