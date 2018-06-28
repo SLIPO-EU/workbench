@@ -29,10 +29,16 @@ import {
 } from './triplegeo';
 
 function buildProcessRequest(action, designer) {
-  const allInputOutputResources = designer.steps.reduce((result, step) => {
-    const stepInputKeys = step.input.map(i => i.inputKey);
-    return (step.outputKey ? result.concat(stepInputKeys, [step.outputKey]) : result.concat(stepInputKeys));
-  }, []);
+  const allInputOutputResources = designer.steps
+    .reduce((result, step) => {
+      const stepInputKeys = step.input.map(i => i.inputKey);
+      return (step.outputKey !== null ? result.concat(stepInputKeys, [step.outputKey]) : result.concat(stepInputKeys));
+    }, [])
+    .map((r) => {
+      // Server expects all step input/output keys to be strings
+      return r !== null ? r.toString() : null;
+    });
+
   const model = {
     action,
     definition: {
@@ -43,7 +49,7 @@ function buildProcessRequest(action, designer) {
           switch (r.inputType) {
             case EnumInputType.CATALOG:
               return {
-                key: r.key,
+                key: r.key !== null ? r.key.toString() : null,
                 inputType: EnumInputType.CATALOG,
                 resourceType: r.resourceType,
                 name: r.name,
@@ -55,7 +61,7 @@ function buildProcessRequest(action, designer) {
               };
             case EnumInputType.OUTPUT:
               return {
-                key: r.key,
+                key: r.key !== null ? r.key.toString() : null,
                 inputType: EnumInputType.OUTPUT,
                 resourceType: r.resourceType,
                 name: r.name,
@@ -79,7 +85,7 @@ function buildProcessRequest(action, designer) {
           input: [...s.input],
           sources: buildDataSource(s),
           configuration: buildConfiguration(s),
-          outputKey: s.outputKey,
+          outputKey: s.outputKey !== null ? s.outputKey.toString() : null,
           outputFormat: (s.tool === EnumTool.CATALOG ? null : EnumDataFormat.N_TRIPLES),
         };
       }).filter((s) => {
@@ -152,7 +158,7 @@ function readProcessResponse(result) {
         switch (r.inputType) {
           case EnumInputType.CATALOG:
             return {
-              key: r.key,
+              key: parseInt(r.key),
               inputType: r.inputType,
               resourceType: r.resourceType,
               name: r.name,
@@ -165,7 +171,7 @@ function readProcessResponse(result) {
             };
           case EnumInputType.OUTPUT:
             return {
-              key: r.key,
+              key: parseInt(r.key),
               inputType: r.inputType,
               resourceType: r.resourceType,
               name: r.name,
@@ -189,11 +195,11 @@ function readProcessResponse(result) {
         order: index,
         name: s.name,
         iconClass: ToolIcons[s.tool],
-        input: [...s.input],
+        input: s.input.map((i) => ({ inputKey: parseInt(i.inputKey), partKey: i.partKey })),
         dataSources: readDataSource(s),
         configuration: readConfiguration(s),
         errors: {},
-        outputKey: s.outputKey,
+        outputKey: s.outputKey !== null ? parseInt(s.outputKey) : null,
         outputFormat: EnumDataFormat.N_TRIPLES,
       };
     }),
@@ -367,7 +373,7 @@ function validateProcess(action, model, isTemplate, errors) {
   }
 }
 
-function validateSteps(action, model, isTemplate, errors) {
+function validateSteps(action, model, isTemplate, errors, requireSingleOutput) {
   const { process, steps, resources, ...rest } = model;
 
   if (steps.length === 0) {
@@ -393,15 +399,16 @@ function validateSteps(action, model, isTemplate, errors) {
       }
     });
 
-  // All input resources (exclude registered step output)
-  const allInputResources = steps.reduce((agg, value) =>
-    (value.tool === EnumTool.CATALOG ? agg : agg.concat(value.input)), []);
-  // All output resources that are not used as an input
-  const stepOutputResources = steps.reduce((agg, value) =>
-    (((value.outputKey) && (!allInputResources.find((i) => i.inputKey === value.outputKey))) ? agg.concat([value.outputKey]) : agg), []);
-
-  if (stepOutputResources.length !== 1) {
-    errors.push({ code: 1, text: 'A workflow must generate a single output' });
+  if (requireSingleOutput) {
+    // All input resources (exclude registered step output)
+    const allInputResources = steps.reduce((agg, value) =>
+      (value.tool === EnumTool.CATALOG ? agg : agg.concat(value.input)), []);
+    // All output resources that are not used as an input
+    const stepOutputResources = steps.reduce((agg, value) =>
+      (((value.outputKey !== null) && (!allInputResources.find((i) => i.inputKey === value.outputKey))) ? agg.concat([value.outputKey]) : agg), []);
+    if (stepOutputResources.length !== 1) {
+      errors.push({ code: 1, text: 'A workflow must generate a single output' });
+    }
   }
 
   if (isTemplate) {
@@ -480,7 +487,7 @@ export function validate(action, model, isTemplate) {
   validateProcess(action, model, isTemplate, errors);
 
   // Steps
-  validateSteps(action, model, isTemplate, errors);
+  validateSteps(action, model, isTemplate, errors, false);
 
   // Resources
   validateResources(action, model, isTemplate, errors);

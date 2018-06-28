@@ -70,7 +70,7 @@ class ProcessInput extends React.Component {
     // Resource metadata
     resource: PropTypes.shape({
       // Unique key
-      key: PropTypes.string.isRequired,
+      key: PropTypes.number.isRequired,
       // Title
       name: PropTypes.string.isRequired,
       // Icon

@@ -160,7 +160,7 @@ export function addStepReducer(state, action) {
   if (action.type == Types.ADD_STEP) {
     // Update counters
     const stepKey = ++state.counters.step;
-    const resourceKey = (++state.counters.resource).toString();
+    const resourceKey = ++state.counters.resource;
 
     // Create step
     const step = {
@@ -170,6 +170,7 @@ export function addStepReducer(state, action) {
       input: [],
       dataSources: [],
       key: stepKey,
+      outputKey: null,
       ...createDefaultConfiguration(state.steps.filter(s => s.tool === action.step.tool), action.step.tool, action.appConfiguration),
     };
     if (step.tool !== EnumTool.CATALOG) {

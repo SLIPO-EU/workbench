@@ -150,7 +150,7 @@ class Step extends React.Component {
       order: PropTypes.number.isRequired,
     }),
     resources: PropTypes.arrayOf(PropTypes.shape({
-      key: PropTypes.string.isRequired,
+      key: PropTypes.number.isRequired,
       inputType: PropTypes.string.isRequired,
       resourceType: PropTypes.string.isRequired,
       name: PropTypes.string.isRequired,

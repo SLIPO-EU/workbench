@@ -98,6 +98,7 @@ export function writeConfigurationTripleGeo(config) {
     namespaces: prefixes.map(v => v.namespace).join(','),
     mappingSpec: mappingSpec ? typeof mappingSpec === 'object' ? mappingSpec.path : mappingSpec : null,
     classificationSpec: classificationSpec ? typeof classificationSpec === 'object' ? classificationSpec.path : classificationSpec : null,
+    registerFeatures: true,
   };
 }
 

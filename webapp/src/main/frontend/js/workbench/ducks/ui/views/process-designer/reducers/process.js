@@ -1,3 +1,5 @@
+import * as Types from '../types';
+
 import {
   EnumInputType,
   EnumSelection,
@@ -18,11 +20,12 @@ function resolveVersion(tool, version, appConfiguration) {
     case EnumTool.DEER:
       return appConfiguration.deer.baselineVersion;
     default:
+      console.error(`Cannot resolve version. SLIPO Toolkit component ${tool} is not supported.`);
       return null;
   }
 }
 
-export function processReducer(state, action) {
+function load(state, action) {
   const data = action.process;
 
   // Create process
@@ -59,11 +62,12 @@ export function processReducer(state, action) {
   for (let key = 0; key < groupCounter; key++) {
     groups.push({
       key,
-      steps: data.steps.filter((step) => step.group == key).map((step) => step.key),
+      steps: data.steps.filter((step) => step.group === key).map((step) => step.key),
     });
   }
+
   // Create steps
-  const steps = data.steps.map((step, index) => {
+  const steps = data.steps.map((step) => {
     return {
       ...step,
       // Add baseline version if not set
@@ -73,6 +77,7 @@ export function processReducer(state, action) {
       }
     };
   });
+
   // Create resources
   let resources = state.resources
     .filter((r) => {
@@ -90,7 +95,7 @@ export function processReducer(state, action) {
       const existing = resources.find((value) => value.id === r.id && value.version === r.version);
       if (existing) {
         // Keep existing key
-        existing.key = r.key;
+        existing.key = parseInt(r.key);
       } else {
         resources.push(r);
       }
@@ -138,4 +143,13 @@ export function processReducer(state, action) {
     }],
     redo: [],
   };
+}
+
+export function processReducer(state, action) {
+  switch (action.type) {
+    case Types.LOAD_RECEIVE_RESPONSE:
+      return load(state, action);
+    default:
+      return state;
+  }
 }

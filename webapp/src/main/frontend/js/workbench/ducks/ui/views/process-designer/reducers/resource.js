@@ -30,7 +30,7 @@ export function addResourceToBagReducer(state, action) {
       return state;
     }
 
-    const resourceKey = (++state.counters.resource).toString();
+    const resourceKey = ++state.counters.resource;
     return {
       ...state,
       counters: {

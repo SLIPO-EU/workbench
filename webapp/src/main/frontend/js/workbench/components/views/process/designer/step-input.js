@@ -57,6 +57,9 @@ class StepInput extends React.Component {
   }
 
   onToggleOutputPartSelection(e) {
+    if (this.props.readOnly) {
+      return;
+    }
     this.setState({
       popoverOpen: !this.state.popoverOpen,
     });
