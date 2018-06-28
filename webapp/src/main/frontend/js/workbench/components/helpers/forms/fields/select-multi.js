@@ -4,6 +4,14 @@ import ReactSelect from 'react-select';
 
 import decorateField from './form-field';
 
+/**
+ * A functional component for rendering a drop down list that supports multiple
+ * items selection. The component is based on the ReactSelect component
+ *
+ * @export
+ * @param {object} props - Component properties
+ * @returns The new component
+ */
 export function MultiSelect(props) {
   const options = props.options.map(option => ({ value: option.value, label: option.label || option.value }));
   return (

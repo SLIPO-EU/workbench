@@ -4,6 +4,13 @@ import { Input } from 'reactstrap';
 
 import decorateField from './form-field';
 
+/**
+ * A component for rendering and editing string key value pairs
+ *
+ * @export
+ * @class ValuePairList
+ * @extends {React.Component}
+ */
 export class ValuePairList extends React.Component {
 
   constructor(props) {
@@ -32,13 +39,25 @@ export class ValuePairList extends React.Component {
     value: [],
   }
 
-  isReadOnly() {
+  /**
+   * Returns true if the component is read-only; Otherwise false
+   *
+   * @readonly
+   * @memberof ValuePairList
+   */
+  get isReadOnly() {
     if (typeof this.props.readOnly === 'function') {
       return this.props.readOnly(this.props.id);
     }
     return this.props.readOnly;
   }
 
+  /**
+   * Removes the item at the given index
+   *
+   * @param {number} index - The index of the item to remove
+   * @memberof ValuePairList
+   */
   removeItem(index) {
     const newValue = [...this.props.value];
     newValue.splice(index, 1);
@@ -46,6 +65,11 @@ export class ValuePairList extends React.Component {
     this.props.onChange(newValue);
   }
 
+  /**
+   * Adds a new item to the list
+   *
+   * @memberof ValuePairList
+   */
   addItem() {
     if ((!this.state.prefix) || (!this.state.namespace)) {
       this.setState({
@@ -73,6 +97,12 @@ export class ValuePairList extends React.Component {
     }
   }
 
+  /**
+   * Selects the item with the given index for editing
+   *
+   * @param {number} index - The index of the item to edit
+   * @memberof ValuePairList
+   */
   editItem(index) {
     this.setState({
       prefix: this.props.value[index].prefix,
@@ -94,7 +124,7 @@ export class ValuePairList extends React.Component {
             {value.namespace}
           </div>
         </div>
-        {!this.isReadOnly() &&
+        {!this.isReadOnly &&
           <div className="col" style={{ paddingTop: 2, fontSize: '1.2rem' }}>
             <i className="fa fa-trash mr-2" style={{ cursor: 'pointer' }} onClick={(e) => this.removeItem(index)} />
             <i className="fa fa-pencil" style={{ cursor: 'pointer' }} onClick={(e) => this.editItem(index)} />
@@ -114,7 +144,7 @@ export class ValuePairList extends React.Component {
             this.props.value.map((value, index) => this.renderItem(value, index))
           }
         </div>
-        {!this.isReadOnly() &&
+        {!this.isReadOnly &&
           <div className="row">
             <div className="col-3">
               <Input
@@ -125,7 +155,7 @@ export class ValuePairList extends React.Component {
                 value={this.state.prefix || ''}
                 onChange={e => this.setState({ prefix: e.target.value })}
                 autoComplete="off"
-                readOnly={this.isReadOnly()}
+                readOnly={this.isReadOnly}
               />
             </div>
             <div className="col-5">
@@ -137,7 +167,7 @@ export class ValuePairList extends React.Component {
                 value={this.state.namespace || ''}
                 onChange={e => this.setState({ namespace: e.target.value })}
                 autoComplete="off"
-                readOnly={this.isReadOnly()}
+                readOnly={this.isReadOnly}
               />
             </div>
             <div className="col" style={{ paddingTop: 2, fontSize: '1.2rem' }}>

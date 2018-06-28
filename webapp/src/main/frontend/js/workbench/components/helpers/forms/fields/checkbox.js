@@ -5,6 +5,13 @@ import { Input } from 'reactstrap';
 
 import decorateField from './form-field';
 
+/**
+ * Checkbox component
+ *
+ * @export
+ * @class Checkbox
+ * @extends {React.Component}
+ */
 export class Checkbox extends React.Component {
 
   static defaultProps = {
@@ -18,7 +25,15 @@ export class Checkbox extends React.Component {
     text: PropTypes.string,
   }
 
-  isReadOnly() {
+
+
+  /**
+   * Returns true if the component is read-only; Otherwise false
+   *
+   * @readonly
+   * @memberof Checkbox
+   */
+  get isReadOnly() {
     if (typeof this.props.readOnly === 'function') {
       return this.props.readOnly(this.props.id);
     }
@@ -34,13 +49,13 @@ export class Checkbox extends React.Component {
           classnames({
             "checkbox": true,
             "c-checkbox": true,
-            "c-checkbox-disabled": this.isReadOnly(),
+            "c-checkbox-disabled": this.isReadOnly,
           })
         }>
         <label>
           <Input
             type='checkbox'
-            disabled={this.isReadOnly() ? "disabled" : false}
+            disabled={this.isReadOnly ? "disabled" : false}
             checked={props.value || false}
             onChange={e => typeof props.onChange === 'function' ? props.onChange(e.target.checked) : null}
           />

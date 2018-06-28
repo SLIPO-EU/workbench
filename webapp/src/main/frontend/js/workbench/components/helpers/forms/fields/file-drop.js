@@ -5,12 +5,35 @@ import Dropzone from 'react-dropzone';
 import decorateField from './form-field';
 import formatFileSize from '../../../../util/file-size';
 
+/**
+ * Component for selecting a single file to upload
+ *
+ * @export
+ * @class FileDrop
+ * @extends {React.Component}
+ */
 export class FileDrop extends React.Component {
+
   constructor() {
     super();
     this.state = {
       file: null,
     };
+  }
+
+  static propTypes = {
+    id: PropTypes.string.isRequired,
+    value: PropTypes.any,
+    onChange: PropTypes.func.isRequired,
+  }
+
+  static defaultProps = {
+    style: {
+      textAlign: 'center',
+      fontSize: '3em',
+      color: '#656565',
+      border: '1px dotted #656565'
+    },
   }
 
   componentWillMount() {
@@ -41,29 +64,11 @@ export class FileDrop extends React.Component {
         >
           <i className="fa fa-cloud-upload fa-4x"></i>
         </Dropzone>
-        { this.state.file && this.state.file.name }
-        { this.state.file && ` (${formatFileSize(this.state.file.size)})`}
+        {this.state.file && this.state.file.name}
+        {this.state.file && ` (${formatFileSize(this.state.file.size)})`}
       </div>
     );
   }
 }
 
-FileDrop.defaultProps = {
-  style: {
-    textAlign: 'center',
-    fontSize: '3em',
-    color: '#656565',
-    border: '1px dotted #656565'
-  },
-};
-
 export default decorateField(FileDrop);
-
-FileDrop.propTypes = {
-  id: PropTypes.string.isRequired,
-  value: PropTypes.any,
-  onChange: PropTypes.func.isRequired,
-};
-
-
-
