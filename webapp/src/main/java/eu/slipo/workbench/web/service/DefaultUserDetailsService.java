@@ -87,6 +87,10 @@ public class DefaultUserDetailsService implements UserDetailsService
         public String getLang() {
             return account.getLang();
         }
+
+        public boolean hasRole(EnumRole role) {
+            return account.hasRole(role);
+        }
     }
 
     @Autowired

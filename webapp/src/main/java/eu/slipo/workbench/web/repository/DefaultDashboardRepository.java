@@ -37,26 +37,29 @@ public class DefaultDashboardRepository implements DashboardRepository {
     private ProcessOperator processOperator;
 
     @Override
-    public Dashboard load() throws Exception {
-        return this.load(this.dayInterval);
+    public Dashboard load(Integer userId) throws Exception {
+        return this.load(userId, this.dayInterval);
     }
 
     @Override
-    public Dashboard load(int days) throws Exception {
+    public Dashboard load(Integer userId, int days) throws Exception {
         final Dashboard result = new Dashboard();
+        final boolean isAdmin = userId == null;
 
         // Resource data
         final String resourceCountQuery =
-            "select count(r.id) from Resource r";
+            "select count(r.id) from Resource r where (r.createdBy.id = :userId or :userId is null)";
 
         final String resourceQuery =
             "select     r " +
             "from       Resource r " +
-            "where      r.createdOn >= :date or r.updatedOn >= :date " +
+            "where      (r.createdOn >= :date or r.updatedOn >= :date) and " +
+            "           (r.createdBy.id = :userId or :userId is null) " +
             "order by   r.updatedOn desc, r.version desc, r.id desc";
 
         final int totalResources = entityManager
             .createQuery(resourceCountQuery, Number.class)
+            .setParameter("userId", userId)
             .getSingleResult()
             .intValue();
 
@@ -64,6 +67,7 @@ public class DefaultDashboardRepository implements DashboardRepository {
         entityManager
             .createQuery(resourceQuery, ResourceEntity.class)
             .setParameter("date", ZonedDateTime.now().minusDays(this.dayInterval))
+            .setParameter("userId", userId)
             .getResultList()
             .stream()
             .map(ResourceEntity::toResourceRecord)
@@ -85,15 +89,18 @@ public class DefaultDashboardRepository implements DashboardRepository {
         result.getStatistics().resources = new Dashboard.ResourceStatistics(totalResources, newResources, updatedResources);
 
         // Process data
+        // TODO: Handle executions initiated by the system
         final String executionQuery =
             "select     e " +
             "from       ProcessExecution e " +
-            "where      e.startedOn != null and e.startedOn >= :date " +
+            "where      (e.startedOn != null and e.startedOn >= :date) and " +
+            "           (e.submittedBy.id = :userId or :userId is null) " +
             "order by   e.startedOn desc, e.id desc";
 
         entityManager
             .createQuery(executionQuery, ProcessExecutionEntity.class)
             .setParameter("date", ZonedDateTime.now().minusDays(this.dayInterval))
+            .setParameter("userId", userId)
             .getResultList()
             .stream()
             .map(e -> e.toProcessExecutionRecord(false))
@@ -120,58 +127,64 @@ public class DefaultDashboardRepository implements DashboardRepository {
         result.getStatistics().processes = new Dashboard.ProcessStatistics(completed, running, failed);
 
         // Event data
-        final String eventQuery =
-                "select     e " +
-                "from       Event e " +
-                "order by   e.generated desc, e.id desc";
+        if(isAdmin) {
+            final String eventQuery =
+                    "select     e " +
+                    "from       Event e " +
+                    "order by   e.generated desc, e.id desc";
 
-        entityManager
-            .createQuery(eventQuery, EventEntity.class)
-            .setMaxResults(this.maxResult)
-            .getResultList()
-            .stream()
-            .map(EventEntity::toEventRecord)
-            .collect(Collectors.toList())
-            .forEach(result::addEvent);
+            entityManager
+                .createQuery(eventQuery, EventEntity.class)
+                .setMaxResults(this.maxResult)
+                .getResultList()
+                .stream()
+                .map(EventEntity::toEventRecord)
+                .collect(Collectors.toList())
+                .forEach(result::addEvent);
 
-        final String countEventQuery =
-                "select     new eu.slipo.workbench.web.model.EventCounter(e.level, count(e)) " +
-                "from       Event e " +
-                "where      e.generated >= :date " +
-                "group by   e.level";
+            final String countEventQuery =
+                    "select     new eu.slipo.workbench.web.model.EventCounter(e.level, count(e)) " +
+                    "from       Event e " +
+                    "where      e.generated >= :date " +
+                    "group by   e.level";
 
-        long error = 0, warning = 0, info = 0;
+            long error = 0, warning = 0, info = 0;
 
-        List<EventCounter> counters = entityManager
-            .createQuery(countEventQuery, EventCounter.class)
-            .setParameter("date", ZonedDateTime.now().minusDays(1))
-            .getResultList();
+            List<EventCounter> counters = entityManager
+                .createQuery(countEventQuery, EventCounter.class)
+                .setParameter("date", ZonedDateTime.now().minusDays(1))
+                .getResultList();
 
-        for (EventCounter c : counters) {
-            switch (c.getLevel()) {
-                case ERROR:
-                    error = c.getValue();
-                    break;
-                case WARN:
-                    warning = c.getValue();
-                    break;
-                case INFO:
-                    info = c.getValue();
-                    break;
-                default:
-                    break;
+            for (EventCounter c : counters) {
+                switch (c.getLevel()) {
+                    case ERROR:
+                        error = c.getValue();
+                        break;
+                    case WARN:
+                        warning = c.getValue();
+                        break;
+                    case INFO:
+                        info = c.getValue();
+                        break;
+                    default:
+                        break;
+                }
             }
+
+            result.getStatistics().events = new Dashboard.EventStatistics(error, warning, info);
+        } else {
+            result.getStatistics().events = new Dashboard.EventStatistics(0, 0, 0);
         }
 
-        result.getStatistics().events = new Dashboard.EventStatistics(error, warning, info);
-
         // System status
-        try {
-            this.processOperator.list().size();
-            // TODO: Compute cluster resources
-            result.getStatistics().system = new Dashboard.SystemStatistics(null, null, null, null, null, null);
-        } catch(Exception ex) {
-            result.getStatistics().system = new Dashboard.SystemStatistics(false);
+        if(isAdmin) {
+            try {
+                this.processOperator.list().size();
+                // TODO: Compute cluster resources
+                result.getStatistics().system = new Dashboard.SystemStatistics(null, null, null, null, null, null);
+            } catch(Exception ex) {
+                result.getStatistics().system = new Dashboard.SystemStatistics(false);
+            }
         }
 
         return result;

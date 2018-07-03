@@ -20,7 +20,7 @@ import eu.slipo.workbench.web.service.etl.DatabaseImportResult;
 import eu.slipo.workbench.web.service.etl.ImportService;
 
 @RestController
-@Secured({ "ROLE_ADMIN" })
+@Secured({ "USER_ROLE", "ROLE_ADMIN" })
 @RequestMapping(produces = "application/json")
 public class ImportController extends BaseController {
 
@@ -33,7 +33,7 @@ public class ImportController extends BaseController {
     public RestResponse<?> importExecutionData(@PathVariable() Long executionId) {
 
         try {
-            final ImportResult result = importService.publiseExecutionLayers(currentUserId(), executionId);
+            final ImportResult result = importService.publishExecutionLayers(currentUserId(), executionId);
 
             return RestResponse.result(result);
         } catch (Exception ex) {

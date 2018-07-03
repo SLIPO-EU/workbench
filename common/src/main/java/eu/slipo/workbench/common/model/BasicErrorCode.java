@@ -5,7 +5,7 @@ public enum BasicErrorCode implements ErrorCode
     UNKNOWN,
     NOT_IMPLEMENTED,
     NOT_SUPPORTED,
-    
+
     INPUT_NOT_READABLE, // input cannot be parsed
     INPUT_INVALID,      // input is readable but invalid
 
@@ -20,6 +20,7 @@ public enum BasicErrorCode implements ErrorCode
 
     AUTHENTICATION_FAILED,
     AUTHENTICATION_REQUIRED,
+    AUTHORIZATION_FAILED,
 
     IO_ERROR,                   // IO error has occurred
     ;

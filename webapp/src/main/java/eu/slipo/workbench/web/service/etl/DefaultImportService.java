@@ -95,12 +95,12 @@ public class DefaultImportService implements ImportService, InitializingBean {
     }
 
     @Override
-    public ImportResult publiseExecutionLayers(int userId, long executionId) {
-        return this.publiseExecutionLayers(userId, executionId, this.defaultSchema, this.defaultGeometryColumn);
+    public ImportResult publishExecutionLayers(int userId, long executionId) {
+        return this.publishExecutionLayers(userId, executionId, this.defaultSchema, this.defaultGeometryColumn);
     }
 
     @Override
-    public ImportResult publiseExecutionLayers(int userId, long executionId, String schema, String geometryColumn) {
+    public ImportResult publishExecutionLayers(int userId, long executionId, String schema, String geometryColumn) {
 
         final ProcessExecutionRecord execution = processRepository.findExecution(executionId);
         final ProcessRecord process = processRepository.findOne(execution.getProcess().getId(), execution.getProcess().getVersion());

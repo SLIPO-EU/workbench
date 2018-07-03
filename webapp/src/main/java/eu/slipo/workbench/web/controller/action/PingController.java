@@ -19,10 +19,9 @@ import eu.slipo.workbench.common.model.TextMessage;
 import eu.slipo.workbench.common.service.EchoService;
 
 @RestController
-@Secured({ "ROLE_USER", "ROLE_ADMIN" })
+@Secured({ "ROLE_ADMIN" })
 @RequestMapping(produces = "application/json")
-public class PingController
-{
+public class PingController {
 
     @Autowired
     private EchoService echoService;
@@ -36,9 +35,8 @@ public class PingController
      * @return the round-trip time needed (milliseconds) for the message to be echoed
      */
     @GetMapping(value = "/action/ping-rpc-server")
-    public RestResponse<Long> pingRpcServer(
-        @RequestParam(name = "text", defaultValue = "Hello World") String text)
-    {
+    public RestResponse<Long> pingRpcServer(@RequestParam(name = "text", defaultValue = "Hello World") String text) {
+
         TextMessage echoedText = null;
         Error error = null;
         long started = -1L, elapsed = -1L;
@@ -55,7 +53,8 @@ public class PingController
         Assert.state(echoedText == null || echoedText.text().equals(text),
             "Expected an echo of our original message");
 
-        return echoedText != null?
+        return echoedText != null ?
             RestResponse.result(elapsed) : RestResponse.error(error);
     }
+
 }

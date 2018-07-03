@@ -25,7 +25,7 @@ public interface ImportService {
      *
      * @return an instance of {@link ImportResult}
      */
-    ImportResult publiseExecutionLayers(int userId, long executionId, String schema, String geometryColumn);
+    ImportResult publishExecutionLayers(int userId, long executionId, String schema, String geometryColumn);
 
     /**
      * Imports a TripleGeo input file to database and publishes the data as a GeoServer
@@ -36,6 +36,6 @@ public interface ImportService {
      *
      * @return an instance of {@link ImportResult}
      */
-    ImportResult publiseExecutionLayers(int userId, long executionId);
+    ImportResult publishExecutionLayers(int userId, long executionId);
 
 }

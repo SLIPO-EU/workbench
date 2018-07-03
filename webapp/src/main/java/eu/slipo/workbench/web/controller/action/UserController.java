@@ -16,7 +16,7 @@ import eu.slipo.workbench.common.service.UserService;
  * Actions for querying and updating user data
  */
 @RestController
-@Secured({ "ROLE_USER", "ROLE_ADMIN" })
+@Secured({ "ROLE_USER", "ROLE_AUTHOR", "ROLE_ADMIN" })
 @RequestMapping(produces = "application/json")
 public class UserController {
 
