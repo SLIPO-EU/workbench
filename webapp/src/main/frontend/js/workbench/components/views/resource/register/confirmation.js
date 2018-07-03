@@ -1,50 +1,104 @@
 import React from 'react';
+
 import formatFileSize from '../../../../util/file-size';
 
+function renderUpload(metadata, triplegeo, upload) {
+  return (
+    <div>
+      <div className="float-left pr-2">
+        <div className="slipo-pd-item slipo-pd-item-disabled slipo-pd-operation slipo-pd-operation">
+          <div className="slipo-pd-operation-icon">
+            <i className={'fa fa-cloud-upload'}></i>
+          </div>
+          <div className="slipo-pd-item-label">
+            Upload
+          </div>
+        </div>
+      </div>
+      <div>
+        <table>
+          <tbody>
+            <tr>
+              <td className="font-weight-bold">Name</td>
+              <td className="pl-2">{metadata.name}</td>
+            </tr>
+            <tr>
+              <td className="font-weight-bold">Description</td>
+              <td className="pl-2">{metadata.description}</td>
+            </tr>
+            <tr>
+              <td className="font-weight-bold">Format</td>
+              <td className="pl-2">{triplegeo.inputFormat}</td>
+            </tr>
+            <tr>
+              <td className="font-weight-bold">File</td>
+              <td className="pl-2">{upload.file.name + ', ' + formatFileSize(upload.file.size)}</td>
+            </tr>
+            <tr>
+              <td className="font-weight-bold">File alias</td>
+              <td className="pl-2">{upload.name}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function renderFileSystem(metadata, triplegeo, filesystem) {
+  return (
+    <div>
+      <div className="float-left pr-2">
+        <div className="slipo-pd-item slipo-pd-item-disabled slipo-pd-operation slipo-pd-operation">
+          <div className="slipo-pd-operation-icon">
+            <i className={'fa fa-folder'}></i>
+          </div>
+          <div className="slipo-pd-item-label">
+            File System
+          </div>
+        </div>
+      </div>
+      <div>
+        <table>
+          <tbody>
+            <tr>
+              <td className="font-weight-bold">Resource</td>
+              <td className="pl-2">{filesystem.resource.path}</td>
+            </tr>
+            <tr>
+              <td className="font-weight-bold">Name</td>
+              <td className="pl-2">{metadata.name}</td>
+            </tr>
+            <tr>
+              <td className="font-weight-bold">Description</td>
+              <td className="pl-2">{metadata.description}</td>
+            </tr>
+            <tr>
+              <td className="font-weight-bold">Format</td>
+              <td className="pl-2">{triplegeo.inputFormat}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div >
+  );
+}
+
 export const Component = (props) => {
-  const { type, triplegeo, upload, filesystem, external, metadata, harvester, harvesterConfig } = props.values;
+  const { type, triplegeo, upload, filesystem, external, metadata } = props.values;
   return (
     <div>
       <div>
-        <ul>
-          <li>Input method: {type.path}</li>
-        </ul>
+
         {
           type.path === 'UPLOAD' ?
-            <ul>
-              <li>Name: {metadata.name}</li>
-              <li>Description: {metadata.description}</li>
-              <li>Format: {triplegeo.inputFormat}</li>
-              <li>File: {upload.file.name + ', ' + formatFileSize(upload.file.size)}</li>
-              <li>File alias: {upload.name}</li>
-            </ul>
+            renderUpload(metadata, triplegeo, upload)
             : null
         }
+
         {
           type.path === 'FILESYSTEM' ?
-            <ul>
-              <li>Resource: {filesystem.resource.path}</li>
-              <li>Name: {metadata.name}</li>
-              <li>Description: {metadata.description}</li>
-              <li>Format: {triplegeo.inputFormat}</li>
-            </ul>
-            : null
-        }
-        {
-          type.path === 'EXTERNAL' ?
-            <ul>
-              <li>Url: {external.url}</li>
-            </ul>
-            : null
-        }
-        {
-          type.path === 'HARVESTER' ?
-            <ul>
-              <li>Type: {harvester.type}</li>
-              <li>Url: {harvester.url}</li>
-              <li>Option 1: {harvesterConfig.option1}</li>
-              <li>Option 2: {harvesterConfig.option2}</li>
-            </ul>
+            renderFileSystem(metadata, triplegeo, filesystem)
             : null
         }
 
