@@ -14,14 +14,6 @@ import {
 } from 'react-toastify';
 
 import {
-  Button,
-  Card,
-  CardBody,
-  Col,
-  Row,
-} from 'reactstrap';
-
-import {
   OpenLayers,
   ToastTemplate,
 } from '../../components/helpers';

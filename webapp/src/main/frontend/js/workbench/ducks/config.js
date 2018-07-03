@@ -71,8 +71,8 @@ export const getConfiguration = () => (dispatch, getState) => {
     .then((configuration) => {
       dispatch(receiveConfiguration(configuration));
     })
-    .catch((err) => {
-      console.error('Error receiving configuration', err);
+    .catch(() => {
+
     });
 };
 
@@ -83,9 +83,6 @@ export const getFilesystem = () => (dispatch, getState) => {
   return filesystemService.fetch(token)
     .then((fs) => {
       dispatch(receiveFilesystem(fs));
-    })
-    .catch((err) => {
-      console.error('Error receiving filesystem', err);
     });
 };
 

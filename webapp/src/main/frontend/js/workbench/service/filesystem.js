@@ -8,6 +8,7 @@ function relativePath(path) {
 }
 
 module.exports = {
+
   fetch: (token) => {
     return actions.get(`/action/file-system`, token);
   },

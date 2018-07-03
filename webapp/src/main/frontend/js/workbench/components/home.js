@@ -9,7 +9,6 @@ import { Container } from 'reactstrap';
 import * as Roles from '../model/role';
 
 import {
-  Pages,
   StaticRoutes,
   DynamicRoutes,
   ErrorPages
@@ -37,14 +36,11 @@ import {
   ProcessExplorer,
   ProcessExecutionExplorer,
   RecipeExplorer,
-  SchemaExplorer,
   UserManager,
   EventViewer,
   ResourceViewer,
   ProcessDesigner,
   ProcessExecutionMapViewer,
-  ProcessExecutionViewer,
-  SchemaDesigner,
 } from './views/';
 
 /////////////////////////////////////////////////////////////////
@@ -89,6 +85,10 @@ class Home extends React.Component {
     };
   }
 
+  static propTypes = {
+    user: userPropType,
+  }
+
   _toggleSidebar() {
     this.setState({ sidebarOpen: !this.state.sidebarOpen });
   }
@@ -120,7 +120,9 @@ class Home extends React.Component {
   }
 
   render() {
-    var cssClasses = [
+    const { user } = this.props;
+
+    const cssClasses = [
       'app',
       /* header-* */
       'header-fixed',
@@ -145,32 +147,30 @@ class Home extends React.Component {
         <div className="app-body">
           <Route path="/" component={Sidebar} />
           <div className="main">
-            <Route path="/" component={Breadcrumb} />
+            <Route path="/" render={({ location }) => <Breadcrumb location={location} roles={user ? user.roles : []} />} />
             <Container fluid className="slipo-container">
               <Switch>
                 <Redirect from="/" to={StaticRoutes.Dashboard} exact />
                 {/* Dynamic */}
                 <Route path={DynamicRoutes.ResourceViewer} component={ResourceViewer} />
                 <Route path={DynamicRoutes.ProcessDesignerView} component={ProcessDesigner} exact />
-                <Route path={DynamicRoutes.ProcessDesignerEditTemplate} component={ProcessDesigner} exact />
-                <Route path={DynamicRoutes.ProcessDesignerEdit} component={ProcessDesigner} exact />
-                <Route path={DynamicRoutes.ProcessDesignerCreate} component={ProcessDesigner} exact />
+                <SecureRoute path={DynamicRoutes.ProcessDesignerEditTemplate} component={ProcessDesigner} exact roles={[Roles.ADMIN, Roles.AUTHOR]} />
+                <SecureRoute path={DynamicRoutes.ProcessDesignerEdit} component={ProcessDesigner} exact roles={[Roles.ADMIN, Roles.AUTHOR]} />
+                <SecureRoute path={DynamicRoutes.ProcessDesignerCreate} component={ProcessDesigner} exact roles={[Roles.ADMIN, Roles.AUTHOR]} />
                 <Route path={DynamicRoutes.ProcessExecutionViewer} component={ProcessDesigner} exact />
                 <Route path={DynamicRoutes.ProcessExecutionMapViewer} component={ProcessExecutionMapViewer} />
-                <Route path={DynamicRoutes.SchemaDesigner} component={SchemaDesigner} />
                 {/* Static */}
                 <Route path={StaticRoutes.Dashboard} component={Dashboard} />
-                <Route path={StaticRoutes.HarvesterDataExplorer} component={HarvesterDataExplorer} />
+                <SecureRoute path={StaticRoutes.HarvesterDataExplorer} component={HarvesterDataExplorer} roles={[Roles.ADMIN]} />
                 <Route path={StaticRoutes.Profile} component={Profile} />
                 <Route path={StaticRoutes.Settings} component={Settings} />
                 <Route path={StaticRoutes.ResourceExplorer} component={ResourceExplorer} />
-                <Route path={StaticRoutes.ResourceRegistration} component={ResourceRegistration} />
+                <SecureRoute path={StaticRoutes.ResourceRegistration} component={ResourceRegistration} roles={[Roles.ADMIN, Roles.AUTHOR]} />
                 <Route path={StaticRoutes.ProcessExplorer} component={ProcessExplorer} />
                 <Route path={StaticRoutes.ProcessExecutionExplorer} component={ProcessExecutionExplorer} />
                 <Route path={StaticRoutes.RecipeExplorer} component={RecipeExplorer} />
-                <Route path={StaticRoutes.SchemaExplorer} component={SchemaExplorer} />
-                <SecureRoute path={StaticRoutes.UserManager} component={UserManager} role={Roles.ADMIN} />
-                <SecureRoute path={StaticRoutes.EventViewer} component={EventViewer} role={Roles.ADMIN} />
+                <SecureRoute path={StaticRoutes.UserManager} component={UserManager} roles={[Roles.ADMIN]} />
+                <SecureRoute path={StaticRoutes.EventViewer} component={EventViewer} roles={[Roles.ADMIN]} />
                 {/* Default */}
                 <Redirect push={true} to={ErrorPages.NotFound} />
               </Switch>
@@ -184,8 +184,4 @@ class Home extends React.Component {
   }
 }
 
-Home.propTypes = {
-  user: userPropType,
-};
-
-module.exports = Home;
+export default Home;

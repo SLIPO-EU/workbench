@@ -5,7 +5,12 @@ import {
 } from 'react-intl';
 
 import {
-  Table
+  Roles,
+} from '../../../../model';
+
+import {
+  SecureContent,
+  Table,
 } from '../../../helpers';
 
 const processColumns = [{
@@ -38,7 +43,9 @@ const processColumns = [{
     return (
       <span>
         <i data-action="view" className='fa fa-search slipo-table-row-action p-1'></i>
-        <i data-action="edit" className='fa fa-pencil slipo-table-row-action p-1'></i>
+        <SecureContent roles={[Roles.ADMIN, Roles.AUTHOR]}>
+          <i data-action="edit" className='fa fa-pencil slipo-table-row-action p-1'></i>
+        </SecureContent>
         {!props.original.running &&
           <i data-action="play" className='fa fa-play slipo-table-row-action text-success p-1'></i>
         }
@@ -91,7 +98,9 @@ function getProcessHistoryColumns(parent) {
           {
             parent.row.version === props.row.version
               ?
-              <i data-action="edit" className='fa fa-pencil slipo-table-row-action p-1'></i>
+              <SecureContent roles={[Roles.ADMIN, Roles.AUTHOR]}>
+                <i data-action="edit" className='fa fa-pencil slipo-table-row-action p-1'></i>
+              </SecureContent>
               :
               <i data-action="view" className='fa fa-search slipo-table-row-action p-1'></i>
           }

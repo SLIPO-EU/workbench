@@ -43,7 +43,7 @@ export default function ResourceWizard(props) {
 
             toast.dismiss();
             props.createResource(data, file)
-              .then((result) => {
+              .then(() => {
                 toast.success(
                   <ToastTemplate iconClass='fa-book' text='Resource registration has been initialized successfully!' />
                 );

@@ -43,7 +43,6 @@ import {
 
 import * as CardConfig from '../helpers/card-config';
 import * as TableConfig from '../helpers/table-config';
-import * as ChartConfig from '../helpers/chart-config';
 import * as DashboardCardConfig from '../helpers/dashboardCard-config';
 
 class Dashboard extends React.Component {
@@ -73,35 +72,29 @@ class Dashboard extends React.Component {
     return (
       <div className="animated fadeIn">
         <Row>
+
           <Col className="col-sm-12 col-md-6 col-lg-3">
             <Card {...CardConfig.ResourceCardConfig(this.props.stats.resources, this.props.intl)} />
           </Col>
+
           <Col className="col-sm-12 col-md-6 col-lg-3">
             <Card {...CardConfig.JobCardConfig(this.props.stats.processes, this.props.intl)} />
           </Col>
-          <Col className="col-sm-12 col-md-6 col-lg-3">
-            <Card {...CardConfig.SystemCardConfig(this.props.stats.system)} />
-          </Col>
-          <Col className="col-sm-12 col-md-6 col-lg-3">
-            <Card {...CardConfig.EventCardConfig(this.props.stats.events, this.props.intl)} />
-          </Col>
+
+          <SecureContent roles={[Roles.ADMIN]}>
+            <Col className="col-sm-12 col-md-6 col-lg-3">
+              <Card {...CardConfig.SystemCardConfig(this.props.stats.system)} />
+            </Col>
+          </SecureContent>
+
+          <SecureContent roles={[Roles.ADMIN]}>
+            <Col className="col-sm-12 col-md-6 col-lg-3">
+              <Card {...CardConfig.EventCardConfig(this.props.stats.events, this.props.intl)} />
+            </Col>
+          </SecureContent>
+
         </Row>
         <Row>
-          <Col className="col-sm-12 col-md-12 col-lg-6">
-            <DashboardCard
-              {...DashboardCardConfig.DashboardProcessExplorerConfig}
-              updatedOn={new Date()}
-              filterChange={this.props.changeDashboardFilter}
-              filterValue={this.props.filters.processExplorer}
-            >
-              <Table
-                data={TableConfig.processDataMapper(this.props.processes)}
-                columns={TableConfig.ProcessExecutionGridColumns}
-                minRows={10}
-                showPagination={true}
-              />
-            </DashboardCard>
-          </Col>
           <Col className="col-sm-12 col-md-12 col-lg-6">
             <DashboardCard
               {...DashboardCardConfig.DashboardResourcesConfig}
@@ -117,8 +110,23 @@ class Dashboard extends React.Component {
               />
             </DashboardCard>
           </Col>
+          <Col className="col-sm-12 col-md-12 col-lg-6">
+            <DashboardCard
+              {...DashboardCardConfig.DashboardProcessExplorerConfig}
+              updatedOn={new Date()}
+              filterChange={this.props.changeDashboardFilter}
+              filterValue={this.props.filters.processExplorer}
+            >
+              <Table
+                data={TableConfig.processDataMapper(this.props.processes)}
+                columns={TableConfig.ProcessExecutionGridColumns}
+                minRows={10}
+                showPagination={true}
+              />
+            </DashboardCard>
+          </Col>
         </Row >
-        <SecureContent role={Roles.ADMIN}>
+        <SecureContent roles={[Roles.ADMIN]}>
           <Row>
             <Col className="col-12">
               <DashboardCard

@@ -5,7 +5,12 @@ import {
 } from 'react-intl';
 
 import {
-  Table
+  Roles,
+} from '../../../../model';
+
+import {
+  SecureContent,
+  Table,
 } from '../../../helpers';
 
 const templateColumns = [{
@@ -34,12 +39,14 @@ const templateColumns = [{
 }, {
   Header: 'Actions',
   id: 'actions',
-  Cell: props => {
+  Cell: () => {
     return (
-      <span>
-        <i data-action="edit" className='fa fa-pencil slipo-table-row-action mr-1'></i>
-        <i data-action="clone" className='fa fa-magic slipo-table-row-action'></i>
-      </span>
+      <SecureContent roles={[Roles.ADMIN, Roles.AUTHOR]}>
+        <span>
+          <i data-action="edit" className='fa fa-pencil slipo-table-row-action mr-1'></i>
+          <i data-action="clone" className='fa fa-magic slipo-table-row-action'></i>
+        </span>
+      </SecureContent>
     );
   },
   style: { 'textAlign': 'center' },
@@ -68,7 +75,7 @@ const templateColumns = [{
   maxWidth: 160,
 }];
 
-function getTemplateHistoryColumns(parent) {
+function getTemplateHistoryColumns() {
   return [{
     accessor: 'id',
     show: false,
@@ -80,9 +87,11 @@ function getTemplateHistoryColumns(parent) {
   }, {
     Header: 'Actions',
     id: 'actions',
-    Cell: props => {
+    Cell: () => {
       return (
-        <i data-action="clone" className='fa fa-magic slipo-table-row-action'></i>
+        <SecureContent roles={[Roles.ADMIN, Roles.AUTHOR]}>
+          <i data-action="clone" className='fa fa-magic slipo-table-row-action'></i>
+        </SecureContent>
       );
     },
     style: { 'textAlign': 'center' },

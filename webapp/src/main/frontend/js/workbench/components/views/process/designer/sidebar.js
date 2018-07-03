@@ -179,7 +179,7 @@ class Sidebar extends React.Component {
                 className={classnames({ active: this.state.activeTab === '1' })}
                 onClick={() => { this.toggle('1'); }}
               >
-                <i className="icon-list"></i>
+                <i className={this.props.resources.length === 0 ? 'icon-basket' : 'icon-basket-loaded'}></i>
               </NavLink>
             </NavItem>
           }
@@ -188,7 +188,7 @@ class Sidebar extends React.Component {
               className={classnames({ active: this.state.activeTab === '2' })}
               onClick={() => { this.toggle('2'); }}
             >
-              <i className="icon-settings"></i>
+              <i className="icon-note"></i>
             </NavLink>
           </NavItem>
           {!this.props.execution &&
@@ -212,7 +212,7 @@ class Sidebar extends React.Component {
               <Row className="slipo-pd-sidebar-resource-list-wrapper">
                 <Col>
                   <div style={{ borderBottom: '1px solid #cfd8dc', padding: 11 }}>
-                    Resources
+                    Resource Bag
                     <ButtonToolbar style={{ position: 'absolute', right: 20, top: 4 }}>
                       <ButtonGroup data-toggle="buttons" aria-label="First group">
                         {filters.map((f) => (

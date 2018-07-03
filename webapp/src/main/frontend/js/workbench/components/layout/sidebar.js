@@ -49,14 +49,16 @@ class Sidebar extends React.Component {
               <ul className="nav-dropdown-items">
                 <li className="nav-item">
                   <NavLink to={StaticRoutes.ResourceExplorer} className="nav-link" activeClassName="active">
-                    <i className="fa fa-database"></i>{'Explorer'}
+                    <i className="fa fa-search"></i>{'Search'}
                   </NavLink>
                 </li>
-                <li className="nav-item">
-                  <NavLink to={StaticRoutes.ResourceRegistration} className="nav-link" activeClassName="active">
-                    <i className="fa fa-pencil"></i>{'Register'}
-                  </NavLink>
-                </li>
+                <SecureContent roles={[Roles.ADMIN, Roles.AUTHOR]}>
+                  <li className="nav-item">
+                    <NavLink to={StaticRoutes.ResourceRegistration} className="nav-link" activeClassName="active">
+                      <i className="fa fa-pencil"></i>{'Register'}
+                    </NavLink>
+                  </li>
+                </SecureContent>
               </ul>
             </li>
 
@@ -67,19 +69,21 @@ class Sidebar extends React.Component {
               <ul className="nav-dropdown-items">
                 <li className="nav-item">
                   <NavLink to={StaticRoutes.ProcessExplorer} className="nav-link" activeClassName="active">
-                    <i className="fa fa-clock-o"></i>{'Workflow Explorer'}
+                    <i className="fa fa-search"></i>{'Search'}
                   </NavLink>
                 </li>
                 <li className="nav-item">
                   <NavLink to={StaticRoutes.ProcessExecutionExplorer} className="nav-link" activeClassName="active">
-                    <i className="fa fa-cog"></i>{'Executions'}
+                    <i className="fa fa-cogs"></i>{'Workflow Executions'}
                   </NavLink>
                 </li>
-                <li className="nav-item">
-                  <NavLink to={DynamicRoutes.ProcessDesignerCreate} className="nav-link" activeClassName="active">
-                    <i className="fa fa-magic"></i>{'Design'}
-                  </NavLink>
-                </li>
+                <SecureContent roles={[Roles.ADMIN, Roles.AUTHOR]}>
+                  <li className="nav-item">
+                    <NavLink to={DynamicRoutes.ProcessDesignerCreate} className="nav-link" activeClassName="active">
+                      <i className="fa fa-magic"></i>{'Design'}
+                    </NavLink>
+                  </li>
+                </SecureContent>
               </ul>
             </li>
 
@@ -96,17 +100,12 @@ class Sidebar extends React.Component {
               </ul>
             </li>
 
-            <SecureContent role={Roles.ADMIN}>
+            <SecureContent roles={[Roles.ADMIN]}>
               <li className={'d-none nav-item nav-dropdown ' + (expanded(Sections.Tool) ? 'open' : '')}>
                 <a className="nav-link nav-dropdown-toggle" onClick={() => (toggle(Sections.Tool), false)}>
                   {'Tools'}
                 </a>
                 <ul className="nav-dropdown-items">
-                  <li className="nav-item">
-                    <NavLink to={StaticRoutes.SchemaExplorer} className="nav-link" activeClassName="active">
-                      <i className="fa fa-file-code-o"></i>{'Schema Mapper'}
-                    </NavLink>
-                  </li>
                   <li className="nav-item">
                     <NavLink to={StaticRoutes.HarvesterDataExplorer} className="nav-link" activeClassName="active">
                       <i className="fa fa-bar-chart"></i>{'Harvester Data'}
@@ -116,7 +115,7 @@ class Sidebar extends React.Component {
               </li>
             </SecureContent>
 
-            <SecureContent role={Roles.ADMIN}>
+            <SecureContent roles={[Roles.ADMIN]}>
               <li className={'nav-item nav-dropdown ' + (expanded(Sections.Admin) ? 'open' : '')}>
                 <a className="nav-link nav-dropdown-toggle" onClick={() => (toggle(Sections.Admin), false)}>
                   {'Admin'}

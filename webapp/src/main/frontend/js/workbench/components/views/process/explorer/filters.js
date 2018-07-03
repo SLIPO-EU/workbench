@@ -1,13 +1,29 @@
 import * as React from 'react';
-import { Row, Col, Button } from 'reactstrap';
 
-import { TextField, SelectField } from '../../../helpers/forms/fields/';
+import {
+  Button,
+  Col,
+  Row,
+} from 'reactstrap';
 
-// TODO : Load during configuration
-const supportedTask = [
+import {
+  EnumTaskType,
+} from '../../../../model/process-designer/enum';
+
+import * as Roles from '../../../../model/role';
+
+import {
+  SecureContent,
+} from '../../../helpers';
+
+import {
+  SelectField,
+  TextField,
+} from '../../../helpers/forms/fields/';
+
+const supportedTasks = [
   { value: null, label: 'Select...' },
-  { value: 'REGISTRATION', label: 'Registration' },
-  { value: 'DATA_INTEGRATION', label: 'Data Integration' },
+  ...Object.keys(EnumTaskType).map(key => ({ value: key, label: EnumTaskType[key] }))
 ];
 
 export default class Filters extends React.Component {
@@ -21,7 +37,7 @@ export default class Filters extends React.Component {
 
   clear() {
     this.props.resetFilters();
-    this.props.fetchProcesses({query: {}});
+    this.props.fetchProcesses({ query: {} });
   }
 
   search(e) {
@@ -30,7 +46,7 @@ export default class Filters extends React.Component {
     e.preventDefault();
 
     props.fetchProcesses({
-      query: {...this.props.filters},
+      query: { ...this.props.filters },
     });
   }
 
@@ -50,13 +66,15 @@ export default class Filters extends React.Component {
             />
           </Col>
           <Col xs="12" md="3">
-            <SelectField
-              id="taskType"
-              label="Task"
-              value={props.filters.taskType || ''}
-              onChange={(val) => props.setFilter('taskType', val)}
-              options={supportedTask}
-            />
+            <SecureContent roles={[Roles.ADMIN]}>
+              <SelectField
+                id="taskType"
+                label="Task"
+                value={props.filters.taskType || ''}
+                onChange={(val) => props.setFilter('taskType', val)}
+                options={supportedTasks}
+              />
+            </SecureContent>
           </Col>
           <Col xs="12" md="6">
             <Button color="warning" onClick={this.clear} style={{ marginTop: 30, float: 'right' }}>Clear</Button>

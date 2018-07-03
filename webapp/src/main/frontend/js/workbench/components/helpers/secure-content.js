@@ -15,31 +15,43 @@ class SecureContent extends React.Component {
     super(props);
   }
 
-  hasRole(role) {
-    let user = this.props.user;
+  static propTypes = {
+    roles: PropTypes.arrayOf(PropTypes.string).isRequired,
+    children: PropTypes.element.isRequired,
+  }
 
-    if ((!user) || (!role)) {
+  static defaultProps = {
+    roles: [],
+  }
+
+  hasAnyRole(roles) {
+    if ((!roles) || (roles.length === 0)) {
       return false;
     }
 
-    return (user.roles.indexOf(role) !== -1);
+    const user = this.props.user;
+    if (!user) {
+      return false;
+    }
+
+    for (let role of roles) {
+      if (user.roles.indexOf(role) !== -1) {
+        return true;
+      }
+    }
+    return false;
   }
 
   render() {
-    let { role } = this.props;
+    let { roles } = this.props;
 
-    if (!this.hasRole(role)) {
+    if (!this.hasAnyRole(roles)) {
       return null;
     }
 
     return this.props.children;
   }
 }
-
-SecureContent.propTypes = {
-  role: PropTypes.string,
-  children: PropTypes.element.isRequired,
-};
 
 //
 // Wrap into a connected component

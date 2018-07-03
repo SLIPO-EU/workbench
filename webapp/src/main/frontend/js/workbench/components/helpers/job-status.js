@@ -1,6 +1,4 @@
 import * as React from 'react';
-import * as PropTypes from 'prop-types';
-import * as ReactRedux from 'react-redux';
 
 /**
  * A presentational component for displaying job execution status as a label

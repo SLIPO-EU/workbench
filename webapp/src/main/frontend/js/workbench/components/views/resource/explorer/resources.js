@@ -99,7 +99,9 @@ const resourceColumns = [{
   accessor: r => r.metadata.name,
   Cell: props => {
     return (
-      <Link to={buildPath(DynamicRoutes.ResourceViewer, [props.row.id, props.row.version])}><i className={ResourceTypeIcons[props.original.type] + ' mr-2'}></i>{props.value}</Link>
+      <Link to={buildPath(DynamicRoutes.ResourceViewer, [props.row.id, props.row.version])}>
+        <i className={ResourceTypeIcons[props.original.type] + ' mr-2'}></i>{props.value}
+      </Link>
     );
   },
   headerStyle: { 'textAlign': 'left' },
