@@ -5,8 +5,10 @@ const SET_PAGER = 'ui/resource/explorer/SET_PAGER';
 const RESET_PAGER = 'ui/resource/explorer/RESET_PAGER';
 const SET_FILTER = 'ui/resource/explorer/SET_FILTER';
 const RESET_FILTERS = 'ui/resource/explorer/RESET_FILTERS';
-const REQUEST_RESOURCES = 'ui/resource/explorer/REQUEST_RESOURCES';
-const RECEIVE_RESOURCES = 'ui/resource/explorer/RECEIVE_RESOURCES';
+const FIND_ONE_INIT = 'ui/resource/explorer/FIND_ONE_INIT';
+const FIND_ONE_SUCCESS = 'ui/resource/explorer/FIND_ONE_SUCCESS';
+const SEARCH_INIT = 'ui/resource/explorer/SEARCH_INIT';
+const SEARCH_SUCCESS = 'ui/resource/explorer/SEARCH_SUCCESS';
 const SET_SELECTED = 'ui/resource/explorer/SET_SELECTED';
 const RESET_SELECTED = 'ui/resource/explorer/RESET_SELECTED';
 
@@ -56,7 +58,7 @@ function toFeatureCollection(features) {
   };
 }
 
-function findResource(items, id, version) {
+function findResource(items, id) {
   if (!items) {
     return null;
   }
@@ -81,6 +83,7 @@ const initialState = {
   selected: null,
   selectedFeatures: null,
   lastUpdate: null,
+  resource: null,
 };
 
 // Reducer
@@ -126,14 +129,27 @@ export default (state = initialState, action) => {
         selectedFeatures: null,
       };
 
-    case REQUEST_RESOURCES:
+    case FIND_ONE_INIT:
+      return {
+        ...state,
+        resource: null,
+      };
+
+    case FIND_ONE_SUCCESS:
+      return {
+        ...state,
+        resource: action.result.resource || null,
+      };
+
+    case SEARCH_INIT:
       return {
         ...state,
         selected: null,
         selectedFeatures: null,
+        resource: null,
       };
 
-    case RECEIVE_RESOURCES:
+    case SEARCH_SUCCESS:
       return {
         ...state,
         items: action.result.items.map((r) => {
@@ -193,12 +209,21 @@ export const resetFilters = () => ({
   type: RESET_FILTERS,
 });
 
-const requestResources = () => ({
-  type: REQUEST_RESOURCES,
+const findOneInit = () => ({
+  type: FIND_ONE_INIT,
 });
 
-const receiveResources = (result) => ({
-  type: RECEIVE_RESOURCES,
+const findOneSuccess = (result) => ({
+  type: FIND_ONE_SUCCESS,
+  result,
+});
+
+const searchInit = () => ({
+  type: SEARCH_INIT,
+});
+
+const searchSuccess = (result) => ({
+  type: SEARCH_SUCCESS,
   result,
 });
 
@@ -214,20 +239,34 @@ export const resetSelectedResource = () => ({
 
 
 // Thunk actions
-export const fetchResources = (query) => (dispatch, getState) => {
+export const findOne = (id, version) => (dispatch, getState) => {
   const { meta: { csrfToken: token } } = getState();
-  dispatch(requestResources());
+  dispatch(findOneInit());
 
-  return resourceService.fetch(query, token)
+  return resourceService.findOne(id, version, token)
     .then((result) => {
-      dispatch(receiveResources(result));
+      dispatch(findOneSuccess(result));
     })
     .catch((err) => {
       console.error('Failed loading resources:', err);
     });
 };
 
-export const createResource = (data, file = null) => (dispatch, getState) => {
+
+export const search = (query) => (dispatch, getState) => {
+  const { meta: { csrfToken: token } } = getState();
+  dispatch(searchInit());
+
+  return resourceService.find(query, token)
+    .then((result) => {
+      dispatch(searchSuccess(result));
+    })
+    .catch((err) => {
+      console.error('Failed loading resources:', err);
+    });
+};
+
+export const create = (data, file = null) => (dispatch, getState) => {
   const { meta: { csrfToken: token } } = getState();
 
   if (file != null) {
