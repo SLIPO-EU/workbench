@@ -25,9 +25,11 @@
       },
       "viewer": "Workflow Execution Viewer"
     },
+    "profile": "Profile",
     "recipe": {
       "explorer": "Recipe Explorer"
     },
+    "settings": "Settings",
     "admin": {
       "user-manager": "User Management",
       "event-viewer": "Event Viewer"
@@ -120,5 +122,9 @@
       "FAGI": "FAGI",
       "DEER": "DEER"
     }
+  },
+  "error": {
+    "FILESYSTEM_LOAD": "Failed to load filesystem",
+    "NOT_IMPLEMENTED": "Not implemented!"
   }
 }
