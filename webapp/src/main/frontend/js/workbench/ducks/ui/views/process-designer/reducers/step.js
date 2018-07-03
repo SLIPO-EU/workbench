@@ -75,7 +75,7 @@ function createLimesDefaultConfiguration(appConfiguration, effectiveVersion) {
       ],
       dataFormat: EnumDataFormat.N_TRIPLES,
     },
-    metric: 'trigrams(a.level, b.level)',
+    metric: 'trigrams(a.label, b.label)',
     acceptance: {
       threshold: 0.98,
       file: '/var/local/limes/output/accepted.nt',
@@ -103,6 +103,34 @@ function createLimesDefaultConfiguration(appConfiguration, effectiveVersion) {
 
 function createFagiDefaultConfiguration(appConfiguration, effectiveVersion) {
   const configuration = {
+    inputFormat: 'NT',
+    outputFormat: 'NT',
+    locale: 'el-GR',
+    similarity: 'jarowinkler',
+    left: {
+      id: 'a',
+      file: null,
+      categories: null,
+    },
+    right: {
+      id: 'b',
+      file: null,
+      categories: null,
+    },
+    links: {
+      id: 'links',
+      file: null,
+    },
+    target: {
+      id: 'target',
+      mode: 'aa_mode',
+      outputDir: null,
+      fused: 'fused.nt',
+      remaining: 'remaining.nt',
+      ambiguous: 'review.nt',
+      statistics: 'stats.json'
+    },
+    rulesSpec: 'fagi/defaults/rules-1.xml',
     version: effectiveVersion || appConfiguration.fagi.version,
   };
 

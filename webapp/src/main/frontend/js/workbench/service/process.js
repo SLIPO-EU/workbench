@@ -82,7 +82,7 @@ function buildProcessRequest(action, designer) {
           name: s.name,
           tool: s.tool,
           operation: s.operation,
-          input: [...s.input],
+          input: buildInput(s, designer.steps),
           sources: buildDataSource(s),
           configuration: buildConfiguration(s),
           outputKey: s.outputKey !== null ? s.outputKey.toString() : null,
@@ -95,6 +95,18 @@ function buildProcessRequest(action, designer) {
   };
 
   return model;
+}
+
+function buildInput(step, steps) {
+  if ((step.tool === EnumTool.FAGI) && (step.input.length === 1)) {
+    const interlinkStep = steps.find((s) => s.outputKey === step.input[0].inputKey);
+    return [
+      { ...interlinkStep.input[0] },
+      { ...interlinkStep.input[1] },
+      { ...step.input[0] },
+    ];
+  }
+  return [...step.input];
 }
 
 function buildConfiguration(step) {
@@ -148,44 +160,42 @@ function buildDataSource(step) {
 
 function readProcessResponse(result) {
   const { id, version, template, definition } = result;
-  return {
-    ...definition,
-    id,
-    version,
-    template,
-    resources: definition.resources
-      .map((r) => {
-        switch (r.inputType) {
-          case EnumInputType.CATALOG:
-            return {
-              key: parseInt(r.key),
-              inputType: r.inputType,
-              resourceType: r.resourceType,
-              name: r.name,
-              iconClass: ResourceTypeIcons[r.resourceType],
-              id: r.resource.id,
-              version: r.resource.version,
-              description: r.description,
-              boundingBox: r.boundingBox,
-              tableName: r.tableName,
-            };
-          case EnumInputType.OUTPUT:
-            return {
-              key: parseInt(r.key),
-              inputType: r.inputType,
-              resourceType: r.resourceType,
-              name: r.name,
-              iconClass: ResourceTypeIcons[r.resourceType],
-              tool: r.tool,
-              stepKey: r.stepKey,
-            };
-          default:
-            return null;
-        }
-      }).filter((r) => {
-        return (r != null);
-      }),
-    steps: definition.steps.map((s, index) => {
+
+  const resources = definition.resources
+    .map((r) => {
+      switch (r.inputType) {
+        case EnumInputType.CATALOG:
+          return {
+            key: parseInt(r.key),
+            inputType: r.inputType,
+            resourceType: r.resourceType,
+            name: r.name,
+            iconClass: ResourceTypeIcons[r.resourceType],
+            id: r.resource.id,
+            version: r.resource.version,
+            description: r.description,
+            boundingBox: r.boundingBox,
+            tableName: r.tableName,
+          };
+        case EnumInputType.OUTPUT:
+          return {
+            key: parseInt(r.key),
+            inputType: r.inputType,
+            resourceType: r.resourceType,
+            name: r.name,
+            iconClass: ResourceTypeIcons[r.resourceType],
+            tool: r.tool,
+            stepKey: r.stepKey,
+          };
+        default:
+          return null;
+      }
+    }).filter((r) => {
+      return (r != null);
+    });
+
+  const steps = definition.steps
+    .map((s, index) => {
       return {
         key: s.key,
         group: s.group,
@@ -195,15 +205,36 @@ function readProcessResponse(result) {
         order: index,
         name: s.name,
         iconClass: ToolIcons[s.tool],
-        input: s.input.map((i) => ({ inputKey: parseInt(i.inputKey), partKey: i.partKey })),
+        input: readInput(s, resources),
         dataSources: readDataSource(s),
         configuration: readConfiguration(s),
         errors: {},
         outputKey: s.outputKey !== null ? parseInt(s.outputKey) : null,
         outputFormat: EnumDataFormat.N_TRIPLES,
       };
-    }),
+    });
+
+  return {
+    ...definition,
+    id,
+    version,
+    template,
+    resources,
+    steps,
   };
+}
+
+function readInput(step, resources) {
+  const input = step.input.map((i) => ({ inputKey: parseInt(i.inputKey), partKey: i.partKey }));
+
+  if (step.tool === EnumTool.FAGI) {
+    return input.filter((i) => {
+      const resource = resources.find((r) => r.key === i.inputKey);
+      return resource.resourceType === EnumResourceType.LINKED;
+    });
+  }
+
+  return input;
 }
 
 function readConfiguration(step) {
@@ -366,7 +397,7 @@ export function getStepInputRequirements(step, resources) {
 }
 
 function validateProcess(action, model, isTemplate, errors) {
-  const { process, steps, resources, ...rest } = model;
+  const { process } = model;
 
   if ((!process.properties.name) || (!process.properties.description)) {
     errors.push({ code: 1, text: 'One or more workflow property values are missing' });
@@ -374,7 +405,7 @@ function validateProcess(action, model, isTemplate, errors) {
 }
 
 function validateSteps(action, model, isTemplate, errors, requireSingleOutput) {
-  const { process, steps, resources, ...rest } = model;
+  const { steps } = model;
 
   if (steps.length === 0) {
     errors.push({ code: 1, text: 'At least a single step is required' });

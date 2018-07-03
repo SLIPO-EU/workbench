@@ -19,6 +19,8 @@ function resolveVersion(tool, version, appConfiguration) {
       return appConfiguration.fagi.baselineVersion;
     case EnumTool.DEER:
       return appConfiguration.deer.baselineVersion;
+    case EnumTool.CATALOG:
+      return null;
     default:
       console.error(`Cannot resolve version. SLIPO Toolkit component ${tool} is not supported.`);
       return null;
