@@ -48,7 +48,7 @@ import eu.slipo.workbench.web.service.ProcessService;
  * Actions for managing processes
  */
 @RestController
-@Secured({ "ROLE_USER", "ROLE_ADMIN" })
+@Secured({ "ROLE_USER", "ROLE_AUTHOR", "ROLE_ADMIN" })
 @RequestMapping(produces = "application/json")
 public class ProcessController extends BaseController {
 
@@ -242,15 +242,19 @@ public class ProcessController extends BaseController {
      * @return the updated process model
      */
     @RequestMapping(value = "/action/process/{id}", method = RequestMethod.GET)
-    public RestResponse<ProcessRecordView> getProcess(@PathVariable long id) {
-        ProcessRecord record = processService.findOne(id);
-        if (record == null) {
-            return RestResponse.error(new Error(ProcessErrorCode.NOT_FOUND, "Process was not found"));
+    public RestResponse<?> getProcess(@PathVariable long id) {
+        try {
+            ProcessRecord record = processService.findOne(id);
+            if (record == null) {
+                return RestResponse.error(new Error(ProcessErrorCode.NOT_FOUND, "Process was not found"));
+            }
+            if (record.getDefinition() == null) {
+                return RestResponse.error(new Error(ProcessErrorCode.INVALID, "Failed to parse process definition"));
+            }
+            return RestResponse.result(new ProcessRecordView(record));
+        } catch (Exception ex) {
+            return this.exceptionToResponse(ex);
         }
-        if (record.getDefinition() == null) {
-            return RestResponse.error(new Error(ProcessErrorCode.INVALID, "Failed to parse process definition"));
-        }
-        return RestResponse.result(new ProcessRecordView(record));
     }
 
     /**
@@ -260,16 +264,19 @@ public class ProcessController extends BaseController {
      * @return the updated process model
      */
     @RequestMapping(value = "/action/process/{id}/{version}", method = RequestMethod.GET)
-    public RestResponse<ProcessRecordView> getProcessRevision(@PathVariable long id, @PathVariable long version) {
-
-        ProcessRecord record = processService.findOne(id, version);
-        if (record == null) {
-            return RestResponse.error(new Error(ProcessErrorCode.NOT_FOUND, "Process was not found"));
+    public RestResponse<?> getProcessRevision(@PathVariable long id, @PathVariable long version) {
+        try {
+            ProcessRecord record = processService.findOne(id, version);
+            if (record == null) {
+                return RestResponse.error(new Error(ProcessErrorCode.NOT_FOUND, "Process was not found"));
+            }
+            if (record.getDefinition() == null) {
+                return RestResponse.error(new Error(ProcessErrorCode.INVALID, "Failed to parse process definition"));
+            }
+            return RestResponse.result(new ProcessRecordView(record));
+        } catch (Exception ex) {
+            return this.exceptionToResponse(ex);
         }
-        if (record.getDefinition() == null) {
-            return RestResponse.error(new Error(ProcessErrorCode.INVALID, "Failed to parse process definition"));
-        }
-        return RestResponse.result(new ProcessRecordView(record));
     }
 
     /**

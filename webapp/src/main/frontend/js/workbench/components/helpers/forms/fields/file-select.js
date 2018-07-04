@@ -24,15 +24,31 @@ import {
   ToastTemplate,
 } from '../../';
 
+/**
+ * Presentation modes for {@link FileSelect} component
+ * @readonly
+ * @enum {string}
+ */
 export const EnumFileSelectMode = {
+  /** View selected file relative path as an input component */
   FIELD: 'FIELD',
+  /** Browse the files of the current folder */
   BROWSER: 'BROWSER',
+  /** Create a new folder */
   NEW_FOLDER: 'NEW_FOLDER',
+  /** Upload a file */
   UPLOAD: 'UPLOAD',
 };
 
+/**
+ * Actions for {@link FileSelect} component
+ * @readonly
+ * @enum {string}
+ */
 const EnumAction = {
+  /** Delete file or folder */
   Delete: 'Delete',
+  /** Cancel current action */
   Cancel: 'Cancel',
 };
 
@@ -81,6 +97,37 @@ function createFileColumns(props) {
   ];
 }
 
+/**
+ * A server file
+ *
+ * @typedef {Object} File
+ * @property {string} modified - Most recent modification timestamp
+ * @property {string} name - File name
+ * @property {string} path - File relative path
+ * @property {number} size - File size in bytes
+ */
+
+/**
+ * A server folder
+ *
+ * @typedef {Object} Folder
+ * @property {number} count - # of files in the folder
+ * @property {File[]} files - Array of {@link File} objects
+ * @property {Folder[]} folders - Array of {@link Folder} objects
+ * @property {number} modified - Most recent modification timestamp
+ * @property {string} name - Folder name
+ * @property {string} path - Folder relative path
+ * @property {number} size - Folder contents size in bytes
+ */
+
+/**
+ * Component for browsing the server file system and managing user files.
+ *
+ * @export
+ * @class FileSelect
+ * @extends {React.Component}
+ */
+
 export class FileSelect extends React.Component {
 
   constructor(props) {
@@ -118,10 +165,23 @@ export class FileSelect extends React.Component {
     allowDelete: false,
   }
 
+  /**
+   * Returns the current selected path
+   *
+   * @readonly
+   * @memberof FileSelect
+   */
   get selectedPath() {
     return this.props.value ? typeof this.props.value === 'object' ? this.props.value.path : this.props.value : null;
   }
 
+  /**
+   * Finds a folder object from the current path
+   *
+   * @param {string} path - The path of the file system
+   * @returns A {@link Folder} object
+   * @memberof FileSelect
+   */
   findFolderFromPath(path) {
     const currentPath = path || this.selectedPath || (this.state && this.state.folder && this.state.folder.path) || '/';
 
@@ -136,6 +196,15 @@ export class FileSelect extends React.Component {
     return folder;
   }
 
+  /**
+   * Creates a hierarchy of folders given a relative path. The hierarchy is
+   * represented as an array of objects with two properties, namely, the folder
+   * name and the corresponding {@link Folder} object
+   *
+   * @param {string} path - A relative path
+   * @returns A hierarchy of folders
+   * @memberof FileSelect
+   */
   getFolderHierarchy(path) {
     const hierarchy = [{ name: '..', folder: this.props.filesystem }];
     let currentFolder = this.props.filesystem;
@@ -150,22 +219,47 @@ export class FileSelect extends React.Component {
     return hierarchy;
   }
 
+  /**
+   * Checks if the file represented by the given grid row is selected
+   *
+   * @param {*} rowInfo - A grid row
+   * @returns True if the corresponding file is selected; Otherwise false
+   * @memberof FileSelect
+   */
   isFileSelected(rowInfo) {
     return this.selectedPath && rowInfo && rowInfo.row.type === 'file' && rowInfo.row.path === this.selectedPath;
   }
 
+  /**
+   * Sets the mode of the component to any of the values defined in
+   * {@link EnumFileSelectMode}
+   *
+   * @param {EnumFileSelectMode} mode - The new component mode
+   * @memberof FileSelect
+   */
   setMode(mode) {
     this.setState({
       mode,
     });
   }
 
+  /**
+   * Sets the name of a new folder
+   *
+   * @param {string} name - The folder name
+   * @memberof FileSelect
+   */
   setFolderName(name) {
     this.setState({
       newFolderName: name,
     });
   }
 
+  /**
+   * Creates a new folder
+   *
+   * @memberof FileSelect
+   */
   createNewFolder() {
     if ((!this.props.readOnly) && (this.props.allowNewFolder)) {
       this.props.createFolder(this.state.folder.path + this.state.newFolderName)
@@ -182,6 +276,11 @@ export class FileSelect extends React.Component {
     }
   }
 
+  /**
+   * Cancels the creation of a new folder
+   *
+   * @memberof FileSelect
+   */
   discardNewFolder() {
     this.setState({
       mode: EnumFileSelectMode.BROWSER,
@@ -189,6 +288,11 @@ export class FileSelect extends React.Component {
     });
   }
 
+  /**
+   * Cancels the uploading of a new file
+   *
+   * @memberof FileSelect
+   */
   cancelUpload() {
     this.setState({
       mode: EnumFileSelectMode.BROWSER,
@@ -196,6 +300,12 @@ export class FileSelect extends React.Component {
     });
   }
 
+  /**
+   * Displays a warning message to the user
+   *
+   * @param {string} message - The message to display
+   * @memberof FileSelect
+   */
   displayToast(message) {
     toast.dismiss();
 

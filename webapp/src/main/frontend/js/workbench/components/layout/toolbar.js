@@ -18,19 +18,28 @@ class Toolbar extends React.Component {
   }
 
   /**
-   * Determines if the current user has the specific role
+   * Determines if the current user has any of the given roles
    *
-   * @param {String} role - the role
-   * @returns true if the user has the given role
+   * @param {String} roles - the roles to check
+   * @returns true if the user has any of the given roles or the roles array is null or empty
    * @memberof Toolbar
    */
-  hasRole(role) {
-    if (!role) {
+  checkRoles(roles) {
+    if ((!roles) || (roles.length === 0)) {
       return true;
     }
 
-    let user = this.props.user;
-    return (user && user.roles.indexOf(role) !== -1);
+    const user = this.props.user;
+    if (!user) {
+      return false;
+    }
+
+    for (let role of roles) {
+      if (user.roles.indexOf(role) !== -1) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -40,13 +49,13 @@ class Toolbar extends React.Component {
    * @memberof Toolbar
    */
   getLinks() {
-    let route = getRoute(this.props.location.pathname);
-    let links = [];
+    const route = getRoute(this.props.location.pathname);
+    const links = [];
 
     if ((route) && (route.links)) {
       for (let path of route.links) {
-        let r = getRoute(path);
-        if (this.hasRole(r.role)) {
+        const r = getRoute(path);
+        if (this.checkRoles(r.roles || [])) {
           links.push(
             <li className="nav-item px-3" key={path}>
               <NavLink to={path} className="nav-link" activeClassName="active">

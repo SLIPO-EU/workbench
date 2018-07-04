@@ -25,9 +25,11 @@
       },
       "viewer": "Προβολή Εκτέλεσης Διεργασίας"
     },
+    "profile": "Στοιχεία Χρήστη",
     "recipe": {
       "explorer": "Πρότυπα Διεργασιών"
     },
+    "settings": "Ρυθμίσεις",
     "admin": {
       "user-manager": "Χρήστες",
       "event-viewer": "Καταγραφή Συμβάντων"
@@ -120,5 +122,9 @@
       "FAGI": "FAGI",
       "DEER": "DEER"
     }
+  },
+  "error": {
+    "FILESYSTEM_LOAD": "Failed to load filesystem",
+    "NOT_IMPLEMENTED": "Not implemented!"
   }
 }

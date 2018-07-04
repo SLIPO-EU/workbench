@@ -1,11 +1,15 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
+
 import {
-  Button, Card, CardBody, Row, Col,
+  Card,
+  CardBody,
 } from 'reactstrap';
+
 import {
   EnumTool
 } from '../../../../model/process-designer';
+
 import Form from '../../../helpers/forms/form';
 
 import * as metadata from '../../resource/register/metadata';

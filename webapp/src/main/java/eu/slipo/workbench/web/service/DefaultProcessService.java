@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import eu.slipo.workbench.common.model.ApplicationException;
 import eu.slipo.workbench.common.model.BasicErrorCode;
+import eu.slipo.workbench.common.model.EnumRole;
 import eu.slipo.workbench.common.model.ErrorCode;
 import eu.slipo.workbench.common.model.FileSystemErrorCode;
 import eu.slipo.workbench.common.model.QueryResultPage;
@@ -86,7 +87,7 @@ public class DefaultProcessService implements ProcessService {
     @Autowired
     private ProcessOperator processOperator;
 
-    private int currentUserId() {
+    private Integer currentUserId() {
         return authenticationFacade.getCurrentUserId();
     }
 
@@ -94,14 +95,25 @@ public class DefaultProcessService implements ProcessService {
         return authenticationFacade.getCurrentUserLocale();
     }
 
+    private boolean isAdmin() {
+        return this.authenticationFacade.isAdmin();
+    }
+
     private ApplicationException wrapAndFormatException(Exception ex, ErrorCode errorCode, String message) {
         return ApplicationException.fromMessage(ex, errorCode, message).withFormattedMessage(messageSource, currentUserLocale());
+    }
+
+    private ApplicationException accessDenied() {
+        return ApplicationException.fromPattern(BasicErrorCode.AUTHORIZATION_FAILED).withFormattedMessage(messageSource, currentUserLocale());
     }
 
     @Override
     public QueryResultPage<ProcessRecord> find(ProcessQuery query, PageRequest pageRequest) {
         query.setTemplate(false);
-        query.setCreatedBy(currentUserId());
+        query.setCreatedBy(isAdmin() ? null : currentUserId());
+        if (!this.authenticationFacade.isAdmin()) {
+            query.setTaskType(EnumProcessTaskType.DATA_INTEGRATION);
+        }
 
         final QueryResultPage<ProcessRecord> result = processRepository.query(query, pageRequest);
         updateProcessRecords(result.getItems());
@@ -113,14 +125,17 @@ public class DefaultProcessService implements ProcessService {
     public QueryResultPage<ProcessRecord> findTemplates(ProcessQuery query, PageRequest pageRequest) {
         query.setTaskType(EnumProcessTaskType.DATA_INTEGRATION);
         query.setTemplate(true);
-        query.setCreatedBy(currentUserId());
+        query.setCreatedBy(isAdmin() ? null : currentUserId());
 
         return processRepository.query(query, pageRequest);
     }
 
     @Override
     public QueryResultPage<ProcessExecutionRecord> find(ProcessExecutionQuery query, PageRequest pageRequest) {
-        query.setCreatedBy(currentUserId());
+        query.setCreatedBy(isAdmin() ? null : currentUserId());
+        if (!this.authenticationFacade.isAdmin()) {
+            query.setTaskType(EnumProcessTaskType.DATA_INTEGRATION);
+        }
 
         final QueryResultPage<ProcessExecutionRecord> result = processRepository.queryExecutions(query, pageRequest);
         updateProcessExecutionRecords(result.getItems());
@@ -140,6 +155,7 @@ public class DefaultProcessService implements ProcessService {
             executionRecord.getProcess().getVersion() != version) {
             throw ProcessExecutionNotFoundException.forExecution(executionId);
         }
+        checkProcessAccess(processRecord);
 
         // For catalog resources update bounding box and table name values
         processRecord
@@ -170,6 +186,9 @@ public class DefaultProcessService implements ProcessService {
     }
 
     private ProcessRecord create(ProcessDefinition definition, EnumProcessTaskType taskType, boolean isTemplate) throws InvalidProcessDefinitionException {
+        if (!this.authenticationFacade.hasAnyRole(EnumRole.ADMIN, EnumRole.AUTHOR)) {
+            throw this.accessDenied();
+        }
         try {
             processValidationService.validate(null, definition, isTemplate);
 
@@ -185,8 +204,14 @@ public class DefaultProcessService implements ProcessService {
 
     @Override
     public ProcessRecord update(long id, ProcessDefinition definition, boolean isTemplate) throws InvalidProcessDefinitionException {
+        if (!this.authenticationFacade.hasAnyRole(EnumRole.ADMIN, EnumRole.AUTHOR)) {
+            throw this.accessDenied();
+        }
         try {
             processValidationService.validate(id, definition, isTemplate);
+
+            ProcessRecord record = processRepository.findOne(id);
+            checkProcessAccess(record);
 
             return processRepository.update(id, definition, currentUserId());
         } catch (InvalidProcessDefinitionException ex) {
@@ -200,26 +225,35 @@ public class DefaultProcessService implements ProcessService {
 
     @Override
     public ProcessRecord findOne(long id) {
-        return processRepository.findOne(id);
+        ProcessRecord record = processRepository.findOne(id);
+        checkProcessAccess(record);
+        return record;
     }
 
     @Override
     public ProcessRecord findOne(long id, long version) {
-        return processRepository.findOne(id, version);
+        ProcessRecord record = processRepository.findOne(id, version);
+        checkProcessAccess(record);
+        return record;
     }
 
     @Override
     public List<ProcessExecutionRecord> findExecutions(long id, long version) {
         ProcessRecord record = processRepository.findOne(id, version, true);
+        checkProcessAccess(record);
         return record == null ? Collections.emptyList() : record.getExecutions();
     }
 
     @Override
     public ProcessExecutionRecord start(long id, long version) throws ProcessNotFoundException, ProcessExecutionStartException, IOException {
         final ProcessRecord processRecord = this.processRepository.findOne(id, version);
+
         if (processRecord == null) {
             throw new ProcessNotFoundException(id, version);
         }
+
+        checkProcessAccess(processRecord);
+
         final ProcessExecutionRecord record = this.processOperator.poll(id, version);
         if ((record == null) ||
             (record.getStatus() == EnumProcessExecutionStatus.FAILED) ||
@@ -235,9 +269,13 @@ public class DefaultProcessService implements ProcessService {
     @Override
     public void stop(long id, long version) throws ProcessNotFoundException, ProcessExecutionStopException {
         final ProcessRecord processRecord = this.processRepository.findOne(id, version);
+
         if (processRecord == null) {
             throw new ProcessNotFoundException(id, version);
         }
+
+        checkProcessAccess(processRecord);
+
         final ProcessExecutionRecord record = this.processOperator.poll(id, version);
         if ((record != null) && (record.getStatus() == EnumProcessExecutionStatus.RUNNING)) {
             this.processOperator.stop(id, version);
@@ -259,6 +297,8 @@ public class DefaultProcessService implements ProcessService {
 
             throw new ProcessNotFoundException(id, version);
         }
+
+        checkProcessAccess(processRecord);
 
         final Optional<ProcessExecutionStepFileRecord> result = executionRecord
             .getSteps()
@@ -294,6 +334,8 @@ public class DefaultProcessService implements ProcessService {
             executionRecord.getProcess().getVersion() != version) {
             throw ProcessExecutionNotFoundException.forExecution(executionId);
         }
+
+        checkProcessAccess(processRecord);
 
         final Optional<Pair<ProcessExecutionStepRecord, ProcessExecutionStepFileRecord>> result = executionRecord
             .getSteps()
@@ -352,7 +394,7 @@ public class DefaultProcessService implements ProcessService {
     // TODO: Store process status in database redundant field to avoid querying RPC-server
     // on every request
 
-    void updateProcessRecords(List<ProcessRecord> records) {
+    private void updateProcessRecords(List<ProcessRecord> records) {
         try {
             final List<ProcessIdentifier> running = this.processOperator.list();
 
@@ -381,7 +423,7 @@ public class DefaultProcessService implements ProcessService {
         }
     }
 
-    void updateProcessExecutionRecords(List<ProcessExecutionRecord> records) {
+    private void updateProcessExecutionRecords(List<ProcessExecutionRecord> records) {
         try {
             final List<ProcessIdentifier> running = this.processOperator.list();
 
@@ -395,6 +437,15 @@ public class DefaultProcessService implements ProcessService {
             });
         } catch(Exception ex) {
             // Ignore
+        }
+    }
+
+    private void checkProcessAccess(ProcessRecord record) {
+        if ((!this.authenticationFacade.isAdmin()) && (!this.currentUserId().equals(record.getCreatedBy().getId()))) {
+            throw this.accessDenied();
+        }
+        if ((!this.authenticationFacade.isAdmin()) && (record.getTaskType() != EnumProcessTaskType.DATA_INTEGRATION)) {
+            throw this.accessDenied();
         }
     }
 

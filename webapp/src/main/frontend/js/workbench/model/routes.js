@@ -46,8 +46,6 @@ const ProcessExecutionExplorer = '/process/execution/explore';
 
 const RecipeExplorer = '/recipe/explore';
 
-const SchemaExplorer = '/tools/schema/explore';
-
 const UserManager = '/admin/user-manager';
 const EventViewer = '/admin/event-viewer';
 
@@ -61,7 +59,6 @@ export const StaticRoutes = {
   ProcessExplorer,
   ProcessExecutionExplorer,
   RecipeExplorer,
-  SchemaExplorer,
   UserManager,
   EventViewer,
 };
@@ -81,9 +78,6 @@ const ProcessDesignerEditTemplate = '/workflow/template/designer/:id';
 const ProcessExecutionViewer = '/workflow/designer/:id/:version/execution/:execution';
 const ProcessExecutionMapViewer = '/workflow/designer/:id/:version/execution/:execution/map';
 
-const SchemaDesigner = '/tools/schema/view/:id';
-
-
 export const DynamicRoutes = {
   ResourceViewer,
   ProcessDesignerCreate,
@@ -92,7 +86,6 @@ export const DynamicRoutes = {
   ProcessDesignerView,
   ProcessExecutionMapViewer,
   ProcessExecutionViewer,
-  SchemaDesigner,
 };
 
 /**
@@ -134,6 +127,7 @@ const routes = {
     description: 'Explore Harvester Data',
     title: 'links.harvester.data.explore',
     defaultTitle: 'Explore Harvester Data',
+    roles: [Roles.ADMIN],
     links: [Dashboard],
   },
   [Profile]: {
@@ -159,6 +153,7 @@ const routes = {
     description: 'Register a new resource',
     title: 'links.resource.registration',
     defaultTitle: 'Resource Registration',
+    roles: [Roles.ADMIN, Roles.AUTHOR],
     links: defaultLinks
   },
   [ProcessExplorer]: {
@@ -179,24 +174,18 @@ const routes = {
     defaultTitle: 'Recipe Explorer',
     links: defaultLinks
   },
-  [SchemaExplorer]: {
-    description: 'Browse schema mappings',
-    title: 'links.tools.schema-explorer',
-    defaultTitle: 'Schema Explorer',
-    links: defaultLinks
-  },
   [UserManager]: {
     description: 'Manage user accounts',
     title: 'links.admin.user-manager',
     defaultTitle: 'User Management',
-    role: Roles.ADMIN,
+    roles: [Roles.ADMIN],
     links: [Dashboard, EventViewer],
   },
   [EventViewer]: {
     description: 'Browse event logs',
     title: 'links.admin.event-viewer',
     defaultTitle: 'Event Viewer',
-    role: Roles.ADMIN,
+    roles: [Roles.ADMIN],
     links: [Dashboard, UserManager],
   },
   // Dynamic
@@ -210,6 +199,7 @@ const routes = {
     description: 'Create a data integration workflow',
     title: 'links.process.designer.default',
     defaultTitle: 'Workflow Designer',
+    roles: [Roles.ADMIN, Roles.AUTHOR],
     links: defaultLinks,
     contextComponent: ProcessDesignerSidebar,
   },
@@ -217,6 +207,7 @@ const routes = {
     description: 'Update a data integration workflow',
     title: 'links.process.designer.edit',
     defaultTitle: 'Edit',
+    roles: [Roles.ADMIN, Roles.AUTHOR],
     links: defaultLinks,
     contextComponent: ProcessDesignerSidebar,
   },
@@ -224,6 +215,7 @@ const routes = {
     description: 'Update a template integration workflow',
     title: 'links.process.designer.edit-template',
     defaultTitle: 'Edit Template',
+    roles: [Roles.ADMIN, Roles.AUTHOR],
     links: defaultLinks,
     contextComponent: ProcessDesignerSidebar,
   },
@@ -240,12 +232,6 @@ const routes = {
     defaultTitle: 'Execution',
     links: defaultLinks,
     contextComponent: ProcessDesignerSidebar,
-  },
-  [SchemaDesigner]: {
-    description: 'View/Update schema mappings',
-    title: 'links.tools.schema-designer',
-    defaultTitle: 'Schema Editor',
-    links: defaultLinks
   },
   [ProcessExecutionMapViewer]: {
     description: 'View a POI dataset',

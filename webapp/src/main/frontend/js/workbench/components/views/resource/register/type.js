@@ -4,8 +4,6 @@ import { SelectField } from '../../../helpers/forms/form-fields/';
 const options = [
   { value: 'UPLOAD', label: 'Upload' },
   { value: 'FILESYSTEM', label: 'File system' },
-  { value: 'EXTERNAL', label: 'External url' },
-  { value: 'HARVESTER', label: 'Harvester' },
 ];
 
 export const initialValue = {
@@ -13,7 +11,7 @@ export const initialValue = {
 };
 
 export const validator = (value) => {
-  if (value.path === 'EXTERNAL' || value.path === 'HARVESTER') {
+  if (value.path === 'HARVESTER') {
     throw { path: 'External url & harvester not yet supported!' };
   }
 };

@@ -51,39 +51,39 @@ function createLimesDefaultConfiguration(appConfiguration, effectiveVersion) {
     ],
     source: {
       id: 'a',
-      endpoint: '/var/local/limes/input/a.nt',
+      endpoint: 'a.nt',
       var: '?x',
       pageSize: -1,
       restrictions: [
         ''
       ],
       properties: [
-        'slipo:name/slipo:nameType RENAME label'
+        'slipo:name/slipo:nameValue RENAME label'
       ],
       dataFormat: EnumDataFormat.N_TRIPLES,
     },
     target: {
       id: 'b',
-      endpoint: '/var/local/limes/input/b.nt',
+      endpoint: 'b.nt',
       var: '?y',
       pageSize: -1,
       restrictions: [
         ''
       ],
       properties: [
-        'slipo:name/slipo:nameType RENAME label'
+        'slipo:name/slipo:nameValue RENAME label'
       ],
       dataFormat: EnumDataFormat.N_TRIPLES,
     },
-    metric: 'trigrams(a.level, b.level)',
+    metric: 'trigrams(x.label, y.label)',
     acceptance: {
-      threshold: 0.98,
-      file: '/var/local/limes/output/accepted.nt',
+      threshold: 0.96,
+      file: 'accepted.nt',
       relation: 'owl:sameAs'
     },
     review: {
       threshold: 0.90,
-      file: '/var/local/limes/output/review.nt',
+      file: 'review.nt',
       relation: 'owl:sameAs'
     },
     execution: {
@@ -103,6 +103,34 @@ function createLimesDefaultConfiguration(appConfiguration, effectiveVersion) {
 
 function createFagiDefaultConfiguration(appConfiguration, effectiveVersion) {
   const configuration = {
+    inputFormat: 'NT',
+    outputFormat: 'NT',
+    locale: 'en',
+    similarity: 'jarowinkler',
+    left: {
+      id: 'a',
+      file: null,
+      categories: null,
+    },
+    right: {
+      id: 'b',
+      file: null,
+      categories: null,
+    },
+    links: {
+      id: 'links',
+      file: null,
+    },
+    target: {
+      id: 'target',
+      mode: 'aa_mode',
+      outputDir: null,
+      fused: 'fused.nt',
+      remaining: 'remaining.nt',
+      ambiguous: 'review.nt',
+      statistics: 'stats.json'
+    },
+    rulesSpec: null,
     version: effectiveVersion || appConfiguration.fagi.version,
   };
 
@@ -160,7 +188,7 @@ export function addStepReducer(state, action) {
   if (action.type == Types.ADD_STEP) {
     // Update counters
     const stepKey = ++state.counters.step;
-    const resourceKey = (++state.counters.resource).toString();
+    const resourceKey = ++state.counters.resource;
 
     // Create step
     const step = {
@@ -170,6 +198,7 @@ export function addStepReducer(state, action) {
       input: [],
       dataSources: [],
       key: stepKey,
+      outputKey: null,
       ...createDefaultConfiguration(state.steps.filter(s => s.tool === action.step.tool), action.step.tool, action.appConfiguration),
     };
     if (step.tool !== EnumTool.CATALOG) {

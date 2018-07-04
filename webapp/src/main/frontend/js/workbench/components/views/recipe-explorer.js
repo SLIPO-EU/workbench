@@ -95,7 +95,7 @@ class TemplateExplorer extends React.Component {
    */
   cloneTemplate(id, version) {
     this.props.cloneTemplate(id, version)
-      .then(result => {
+      .then(() => {
         const path = buildPath(DynamicRoutes.ProcessDesignerCreate);
 
         this.props.history.push(path);
@@ -105,7 +105,7 @@ class TemplateExplorer extends React.Component {
       });
   }
 
-  error(message, redirect) {
+  error(message) {
     toast.dismiss();
 
     toast.error(

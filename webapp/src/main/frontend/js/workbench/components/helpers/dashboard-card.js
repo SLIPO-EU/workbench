@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as ReactRedux from 'react-redux';
 import {
   Card as ReactCard, CardBody, CardTitle, Row, Col,
-  ButtonToolbar, Button, ButtonGroup, Label, Input
+  ButtonToolbar, ButtonGroup, Label, Input
 } from 'reactstrap';
 import { FormattedTime } from 'react-intl';
 

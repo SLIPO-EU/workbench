@@ -64,10 +64,10 @@ export const ToolIcons = {
  * Default tool titles
  */
 export const ToolTitles = {
-  [EnumTool.TripleGeo]: 'TripleGeo',
-  [EnumTool.LIMES]: 'LIMES',
-  [EnumTool.FAGI]: 'FAGI',
-  [EnumTool.DEER]: 'DEER',
+  [EnumTool.TripleGeo]: 'Transform',
+  [EnumTool.LIMES]: 'Interlink',
+  [EnumTool.FAGI]: 'Fuse',
+  [EnumTool.DEER]: 'Enrich',
   [EnumTool.CATALOG]: 'Register Resource',
 };
 
@@ -120,9 +120,9 @@ export const ToolConfigurationSettings = {
   },
   [EnumTool.CATALOG]: {
     source: 0,
-    poi: 0,
+    poi: 1,
     linked: 0,
-    any: 1,
+    any: 0,
     editable: true,
     output: [],
   }

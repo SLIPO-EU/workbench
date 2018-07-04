@@ -11,8 +11,6 @@ import RecipeExplorer from './recipe-explorer';
 import ResourceExplorer from './resource-explorer';
 import ResourceRegistration from './resource-registration';
 import ResourceViewer from './resource-viewer';
-import SchemaDesigner from './schema-designer';
-import SchemaExplorer from './schema-explorer';
 import Settings from './settings';
 import UserManager from './user-manager';
 
@@ -26,12 +24,10 @@ export {
   ProcessExplorer,
   ProcessExecutionExplorer,
   RecipeExplorer,
-  SchemaExplorer,
   UserManager,
   EventViewer,
   ResourceViewer,
   ProcessDesigner,
-  SchemaDesigner,
   ProcessExecutionMapViewer,
   ContextSidebar,
 };

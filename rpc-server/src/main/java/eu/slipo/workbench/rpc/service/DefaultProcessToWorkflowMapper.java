@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
@@ -432,11 +433,14 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
     {
         final Properties parametersMap = propertiesConverter.valueToProperties(config);
 
-        // If this configuration contains a reference to `rulesSpec` file, then this may need to
-        // be resolved to an absolute URI
+        // The reference to `rulesSpec` file may need to be resolved to an absolute URI
 
-        String rulesLocation = parametersMap.getProperty("rulesSpec");
-        Assert.state(!StringUtils.isEmpty(rulesLocation), "Expected a location for rules specification file");
+        final String defaultRulesLocation = "classpath:common/vendor/fagi/config/rulesets/1.xml";
+
+        String rulesLocation = Optional.ofNullable(parametersMap.getProperty("rulesSpec"))
+            .filter(s -> !s.isEmpty())
+            .orElse(defaultRulesLocation);
+
         URI rulesUri = resolveToAbsoluteUri(rulesLocation, userId);
         parametersMap.put("rulesSpec", rulesUri.toString());
 

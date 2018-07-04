@@ -32,7 +32,7 @@ import eu.slipo.workbench.web.model.UploadRequest;
 
 
 @RestController
-@Secured({ "ROLE_USER", "ROLE_ADMIN" })
+@Secured({ "ROLE_USER", "ROLE_AUTHOR", "ROLE_ADMIN" })
 @RequestMapping(produces = "application/json")
 public class FileSytemController extends BaseController {
 
@@ -42,10 +42,10 @@ public class FileSytemController extends BaseController {
     public void setDefaultLocale(String maxUserSpace) {
         this.maxUserSpace = this.parseSize(maxUserSpace);
     }
-  
+
     /**
      * List (recursively) files and folders for user's directory
-     * 
+     *
      * @return information on all files and folders
      */
     @RequestMapping(value = "/action/file-system",  method = RequestMethod.GET)
@@ -73,7 +73,7 @@ public class FileSytemController extends BaseController {
 
             final int userId = currentUserId();
             final Path userDir = fileNamingStrategy.getUserDir(userId);
-            
+
             final Path dir = userDir.resolve(request.getPath());
             if (Files.exists(dir)) {
                 return RestResponse.error(
@@ -104,7 +104,7 @@ public class FileSytemController extends BaseController {
 
             final int userId = currentUserId();
             final Path userDir = fileNamingStrategy.getUserDir(userId);
-            
+
             final Path absolutePath = userDir.resolve(relativePath);
             final File file = absolutePath.toFile();
 
@@ -137,16 +137,16 @@ public class FileSytemController extends BaseController {
         try {
             final int userId = currentUserId();
             final Path userDir = fileNamingStrategy.getUserDir(userId);
-            
+
             final DirectoryInfo userDirInfo = directoryTraverse.getDirectoryInfo(userDir);
-            
+
             final long size = userDirInfo.getSize();
             if (size + file.getSize() > maxUserSpace) {
                 return RestResponse.error(FileSystemErrorCode.NOT_ENOUGH_SPACE, "Insufficient storage space");
             }
 
             if (StringUtils.isEmpty(request.getPath())) {
-                return RestResponse.error(FileSystemErrorCode.PATH_IS_EMPTY, "A path is required");
+                request.setPath("");
             }
             if (StringUtils.isEmpty(request.getFilename())) {
                 return RestResponse.error(FileSystemErrorCode.PATH_IS_EMPTY, "File name is not set");

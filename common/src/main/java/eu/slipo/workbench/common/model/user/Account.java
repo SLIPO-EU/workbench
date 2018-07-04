@@ -21,31 +21,29 @@ public class Account implements Serializable
     private Integer id;
 
     private String username;
-    
+
     private String email;
-    
+
     private String givenName;
- 
+
     private String familyName;
-    
+
     private String lang;
-    
+
     private boolean active = true;
-    
+
     private boolean blocked = false;
-    
+
     private ZonedDateTime registeredAt;
-    
+
     private Set<EnumRole> roles = EnumSet.noneOf(EnumRole.class);
-    
-    private Account() {}
-    
+
     public Account(String username, String email)
     {
         this.username = username;
         this.email = email;
     }
-    
+
     public Account(Integer id, String username, String email)
     {
         this.id = id;
@@ -144,7 +142,7 @@ public class Account implements Serializable
     {
         this.roles = roles;
     }
-    
+
     public void setRoles(EnumRole... roles)
     {
         this.roles = Arrays.stream(roles).collect(Collectors.toSet());
@@ -154,10 +152,15 @@ public class Account implements Serializable
     {
         return registeredAt;
     }
-    
+
     public void setRegisteredAt(ZonedDateTime registeredAt)
     {
         this.registeredAt = registeredAt;
+    }
+
+    public boolean hasRole(EnumRole role)
+    {
+        return this.roles.contains(role);
     }
 
     @Override
@@ -167,6 +170,6 @@ public class Account implements Serializable
             "Account [id=%s, username=%s, email=%s, givenName=%s, familyName=%s, lang=%s, active=%s, blocked=%s, registeredAt=%s, roles=%s]",
             id, username, email, givenName, familyName, lang, active, blocked, registeredAt, roles);
     }
-    
-    
+
+
 }

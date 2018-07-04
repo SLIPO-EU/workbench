@@ -1,7 +1,9 @@
 import * as React from 'react';
 import { Row, Col, Button } from 'reactstrap';
 
-import { TextField, SelectField } from '../../../helpers/forms/fields/';
+import {
+  TextField,
+} from '../../../helpers/forms/fields/';
 
 export default class Filters extends React.Component {
 
@@ -14,7 +16,7 @@ export default class Filters extends React.Component {
 
   clear() {
     this.props.resetFilters();
-    this.props.fetchTemplates({query: {}});
+    this.props.fetchTemplates({ query: {} });
   }
 
   search(e) {
@@ -23,7 +25,7 @@ export default class Filters extends React.Component {
     e.preventDefault();
 
     props.fetchTemplates({
-      query: {...this.props.filters},
+      query: { ...this.props.filters },
     });
   }
 

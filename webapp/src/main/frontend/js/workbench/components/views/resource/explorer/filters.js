@@ -42,8 +42,6 @@ export default class Filters extends React.Component {
   }
 
   search(e) {
-    const props = this.props;
-
     e.preventDefault();
 
     this.props.fetchResources({

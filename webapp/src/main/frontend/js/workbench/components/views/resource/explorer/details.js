@@ -7,7 +7,6 @@ import {
 } from 'reactstrap';
 
 import {
-  FormattedTime,
   injectIntl,
   intlShape,
 } from 'react-intl';

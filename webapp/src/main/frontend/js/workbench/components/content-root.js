@@ -4,7 +4,10 @@ import * as ReactRedux from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { Switch, Route, Redirect } from 'react-router-dom';
 
-import { ToastContainer } from 'react-toastify';
+import {
+  toast,
+  ToastContainer
+} from 'react-toastify';
 
 import { Pages, StaticRoutes, DynamicRoutes, ErrorPages } from '../model/routes';
 import { userPropType } from '../model/prop-types/user';
@@ -50,7 +53,14 @@ class ContentRoot extends React.Component {
   }
 
   _getFileSystem() {
-    this.props.getFilesystem();
+    this.props.getFilesystem()
+      .catch((err) => {
+        toast.dismiss();
+
+        toast.error(
+          <ToastTemplate iconClass='fa-folder' text='error.FILESYSTEM_LOAD' />
+        );
+      });
   }
 
   _setViewport() {

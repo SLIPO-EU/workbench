@@ -112,7 +112,7 @@ class Sidebar extends React.Component {
           <NavItem>
             <NavLink className={classnames({ active: this.state.activeTab === '1' })}
               onClick={() => { this.toggle('1'); }}>
-              <i className="icon-list"></i>
+              <i className="icon-layers"></i>
               {this.state.activeTab === '1' &&
                 <div style={{ margin: '-2px 0px 0px 6px', float: 'right' }}> Layers</div>
               }

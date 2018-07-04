@@ -32,7 +32,7 @@ import eu.slipo.workbench.web.config.ToolkitConfiguration;
 import eu.slipo.workbench.web.model.configuration.ClientConfiguration;
 
 @RestController
-@Secured({ "ROLE_USER", "ROLE_ADMIN" })
+@Secured({ "ROLE_USER", "ROLE_AUTHOR", "ROLE_ADMIN" })
 @RequestMapping(produces = "application/json")
 public class ConfigurationController extends BaseController {
 
@@ -123,11 +123,11 @@ public class ConfigurationController extends BaseController {
             logger.error("Failed to scan classpath for vendor profiles", e);
         }
 
-        postProcessProfies(result);
+        postProcessProfiles(result);
         return result;
     }
 
-    private void postProcessProfies(Map<EnumTool, Map<String, ToolConfiguration<?>>> profiles) {
+    private void postProcessProfiles(Map<EnumTool, Map<String, ToolConfiguration<?>>> profiles) {
         for (EnumTool tool : profiles.keySet()) {
             for (ToolConfiguration<?> config : profiles.get(tool).values()) {
                 switch (tool) {

@@ -27,7 +27,6 @@ import {
 
 import {
   readConfigurationTripleGeo,
-  validator,
 } from '../../../../service/triplegeo';
 
 export {

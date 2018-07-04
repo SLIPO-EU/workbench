@@ -4,6 +4,13 @@ import { Input } from 'reactstrap';
 
 import decorateField from './form-field';
 
+/**
+ * A functional component for rendering a drop down list
+ *
+ * @export
+ * @param {object} props - Component properties
+ * @returns The new component
+ */
 export function Select(props) {
   return (
     <Input

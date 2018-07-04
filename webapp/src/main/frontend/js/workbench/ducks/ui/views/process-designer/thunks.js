@@ -10,11 +10,6 @@ import {
 import * as Types from './types';
 
 import {
-  EnumErrorLevel,
-  ServerError,
-} from '../../../../model';
-
-import {
   dom,
   file,
 } from '../../../../service/api';

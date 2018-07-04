@@ -1,7 +1,6 @@
 import _ from 'lodash';
 
 import {
-  EnumErrorLevel,
   ServerError,
 } from '../../model/error';
 

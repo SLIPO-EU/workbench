@@ -57,8 +57,7 @@ public class DefaultResourceRepository implements ResourceRepository
 
     @Transactional(readOnly = true)
     @Override
-    public QueryResultPage<ResourceRecord> find(ResourceQuery query, PageRequest pageReq)
-    {
+    public QueryResultPage<ResourceRecord> find(ResourceQuery query, PageRequest pageReq) {
         // Check query parameters
         if (pageReq == null) {
             pageReq = new PageRequest(0, 10);
@@ -72,7 +71,7 @@ public class DefaultResourceRepository implements ResourceRepository
 
         if (query != null) {
             if (query.getCreatedBy() != null) {
-                filters.add("(r.createdBy.id = :ownerId)");
+                filters.add("(r.createdBy.id = :ownerId or :ownerId is null)");
             }
 
             if (!StringUtils.isBlank(query.getName())) {
@@ -117,7 +116,7 @@ public class DefaultResourceRepository implements ResourceRepository
         if (!filters.isEmpty()) {
             qlString += " where " + StringUtils.join(filters, " and ");
         }
-        qlString += " order by r.updatedOn, r.name ";
+        qlString += " order by r.updatedOn desc, r.name ";
 
         TypedQuery<ResourceEntity> selectQuery = entityManager.createQuery(qlString, ResourceEntity.class);
         if (query != null) {
@@ -135,30 +134,27 @@ public class DefaultResourceRepository implements ResourceRepository
 
     @Transactional(readOnly = true)
     @Override
-    public ResourceRecord findOne(long id)
-    {
+    public ResourceRecord findOne(long id) {
         ResourceEntity r = entityManager.find(ResourceEntity.class, id);
         return r == null? null : r.toResourceRecord(false);
     }
 
     @Transactional(readOnly = true)
     @Override
-    public ResourceRecord findOne(long id, long version)
-    {
+    public ResourceRecord findOne(long id, long version) {
         ResourceRevisionEntity r = findRevision(id, version);
         return r == null? null : r.toResourceRecord();
     }
 
     @Transactional(readOnly = true)
     @Override
-    public ResourceRecord findOne(String resourceName, int userId)
-    {
+    public ResourceRecord findOne(String resourceName, Integer userId) {
         Assert.isTrue(!StringUtils.isEmpty(resourceName), "Expected a non-empty resource name");
 
         AccountEntity createdBy = entityManager.find(AccountEntity.class, userId);
         Assert.notNull(createdBy, "The userId does not correspond to a user entity");
 
-        String qlString = "FROM Resource r WHERE r.name = :name AND r.createdBy.id = :userId";
+        String qlString = "FROM Resource r WHERE (r.name = :name) AND (r.createdBy.id = :userId or :userId is null)";
         TypedQuery<ResourceEntity> query = entityManager.createQuery(qlString, ResourceEntity.class)
             .setParameter("name", resourceName)
             .setParameter("userId", userId);
@@ -175,14 +171,12 @@ public class DefaultResourceRepository implements ResourceRepository
 
     @Transactional(readOnly = true)
     @Override
-    public ResourceRecord findOne(ResourceIdentifier resourceIdentifier)
-    {
+    public ResourceRecord findOne(ResourceIdentifier resourceIdentifier) {
         return ResourceRepository.super.findOne(resourceIdentifier);
     }
 
     @Override
-    public ResourceRecord create(ResourceRecord record, int userId)
-    {
+    public ResourceRecord create(ResourceRecord record, int userId) {
         Assert.notNull(record, "Expected a non-null record");
         Assert.isTrue(record.getId() < 0, "Did not expect an explicit id");
         Assert.isTrue(record.getVersion() < 0, "Did not expect an explicit version");
@@ -233,8 +227,8 @@ public class DefaultResourceRepository implements ResourceRepository
 
     @Override
     public ResourceRecord createFromProcessExecution(
-        long executionId, int stepKey, ResourceMetadataCreate metadata)
-    {
+        long executionId, int stepKey, ResourceMetadataCreate metadata
+    ) {
         Assert.notNull(metadata, "Expected non-null metadata");
         Assert.isTrue(!StringUtils.isBlank(metadata.getName()), "A non-blank name is required");
 
@@ -306,25 +300,25 @@ public class DefaultResourceRepository implements ResourceRepository
 
     @Override
     public void setProcessExecution(
-        long id, long version, long executionId, Integer stepKey, String partKey)
-    {
-        Assert.isTrue(stepKey == null || partKey != null, 
+        long id, long version, long executionId, Integer stepKey, String partKey
+    ) {
+        Assert.isTrue(stepKey == null || partKey != null,
             "A part key is required (in context of the given step)");
-        
+
         final ResourceRevisionEntity resourceRevisionEntity = findRevision(id, version);
-        Assert.notNull(resourceRevisionEntity, 
+        Assert.notNull(resourceRevisionEntity,
             "The pair of (id, version) doesn't refer to a ResourceRevision entity");
 
         final ProcessExecutionEntity executionEntity =
             entityManager.find(ProcessExecutionEntity.class, executionId);
-        Assert.notNull(executionEntity, 
+        Assert.notNull(executionEntity,
             "The execution id doesn't refer to a ProcessExecution entity");
         final ZonedDateTime submittedOn = executionEntity.getSubmittedOn();
 
         //
         // Associate targeted revision entity with given execution
         //
-        
+
         String qlUpdateRevision =
             "UPDATE ResourceRevision r SET r.processExecution = :execution " +
             "WHERE r.parent.id = :id AND r.version = :version AND r.processExecution is NULL";
@@ -346,7 +340,7 @@ public class DefaultResourceRepository implements ResourceRepository
         //
 
         if (stepKey != null) {
-            // Find the step entity to be updated 
+            // Find the step entity to be updated
             ProcessExecutionStepEntity stepEntity = executionEntity.getStepByKey(stepKey);
             if (stepEntity == null) {
                 // Find step entity inside a former execution (which handled this step key)
@@ -358,7 +352,7 @@ public class DefaultResourceRepository implements ResourceRepository
                     .findFirst()
                     .map(x -> x.getStepByKey(stepKey))
                     .orElse(null);
-                
+
                 Assert.state(stepEntity != null, String.format(
                     "No step entity for step #%d inside execution #%d (or former executions of same process)",
                     stepKey, executionId));
@@ -368,7 +362,7 @@ public class DefaultResourceRepository implements ResourceRepository
                     String.format("No step entity for step #%d inside execution:%d (or former executions of same process)",
                         stepKey, executionId));
             }
-            
+
             // Find the output file entity matching given partKey
             ProcessExecutionStepFileEntity fileEntity = stepEntity.getFiles().stream()
                 .filter(f -> partKey.equals(f.getOutputPartKey()))
@@ -378,7 +372,7 @@ public class DefaultResourceRepository implements ResourceRepository
                 fileEntity.setResource(resourceRevisionEntity);
             } else {
                 throw new IllegalStateException(
-                    String.format("No output file of part [%s] for execution:%d/step:%d", 
+                    String.format("No output file of part [%s] for execution:%d/step:%d",
                         partKey, executionId, stepKey));
             }
         }
@@ -386,7 +380,7 @@ public class DefaultResourceRepository implements ResourceRepository
         //
         // If targeted revision is the latest, parent entity must also be updated
         //
-        
+
         String qlUpdateParent =
             "UPDATE Resource r SET r.processExecution = :execution " +
             "WHERE r.id = :id AND r.version = :version";
@@ -399,14 +393,12 @@ public class DefaultResourceRepository implements ResourceRepository
     }
 
     @Override
-    public void setProcessExecution(long id, long version, long executionId)
-    {
+    public void setProcessExecution(long id, long version, long executionId) {
         ResourceRepository.super.setProcessExecution(id, version, executionId);
     }
 
     @Override
-    public ResourceRecord update(long id, ResourceRecord record, int userId)
-    {
+    public ResourceRecord update(long id, ResourceRecord record, int userId) {
         Assert.notNull(record, "Expected a non-null record");
         Assert.isTrue(record.getId() < 0, "Did not expect an explicit id");
         Assert.isTrue(record.getVersion() < 0, "Did not expect an explicit version");
@@ -456,8 +448,7 @@ public class DefaultResourceRepository implements ResourceRepository
         return entity.toResourceRecord();
     }
 
-    private ResourceRevisionEntity findRevision(long id, long version)
-    {
+    private ResourceRevisionEntity findRevision(long id, long version) {
         String qlString =
             "FROM ResourceRevision r WHERE r.parent.id = :id AND r.version = :version";
 
@@ -475,8 +466,7 @@ public class DefaultResourceRepository implements ResourceRepository
         return r;
     }
 
-    private void setFindParameters(ResourceQuery resourceQuery, Query query)
-    {
+    private void setFindParameters(ResourceQuery resourceQuery, Query query) {
         Geometry geometry = resourceQuery.getBoundingBox();
         if ((geometry != null) && (geometry.getSRID() == 0)) {
             geometry.setSRID(4326);
@@ -500,9 +490,9 @@ public class DefaultResourceRepository implements ResourceRepository
         if (geometry != null) {
             query.setParameter("geometry", geometry);
         }
-
-        Integer userId = resourceQuery.getCreatedBy();
-        query.setParameter("ownerId", userId == null? -1 : userId.intValue());
+        if (resourceQuery.getCreatedBy() != null) {
+            query.setParameter("ownerId", resourceQuery.getCreatedBy());
+        }
     }
 
     /**
@@ -511,8 +501,7 @@ public class DefaultResourceRepository implements ResourceRepository
      * @param stepKey
      * @return
      */
-    private ProcessExecutionStepEntity findProcessExecutionStep(long executionId, int stepKey)
-    {
+    private ProcessExecutionStepEntity findProcessExecutionStep(long executionId, int stepKey) {
         TypedQuery<ProcessExecutionStepEntity> q = entityManager
             .createQuery(
                 "FROM ProcessExecutionStep s WHERE s.execution.id = :xid AND s.key = :key",
@@ -544,8 +533,7 @@ public class DefaultResourceRepository implements ResourceRepository
      * @param fileEntity
      * @return
      */
-    private EnumDataSourceType determineSourceType(ProcessExecutionStepFileEntity fileEntity)
-    {
+    private EnumDataSourceType determineSourceType(ProcessExecutionStepFileEntity fileEntity) {
         Assert.state(fileEntity != null && fileEntity.getType() == EnumStepFile.OUTPUT,
             "Expected a non-null file entity produced as output from a processing step");
 

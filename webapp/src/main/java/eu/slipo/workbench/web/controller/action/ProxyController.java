@@ -38,7 +38,7 @@ import org.springframework.web.bind.annotation.RestController;
 import eu.slipo.workbench.web.config.MapConfiguration;
 
 @RestController
-@Secured({ "ROLE_USER", "ROLE_ADMIN" })
+@Secured({ "ROLE_USER", "ROLE_AUTHOR", "ROLE_ADMIN" })
 @RequestMapping(produces = "application/json")
 public class ProxyController implements InitializingBean {
 

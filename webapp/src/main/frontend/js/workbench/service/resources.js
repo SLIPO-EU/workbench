@@ -1,6 +1,10 @@
 import actions from './api/fetch-actions';
 
-export function fetch(data, token) {
+export function findOne(id, version, token) {
+  return actions.get(`/action/resource/${id}/${version}`, token);
+}
+
+export function find(data, token) {
   return actions.post('/action/resource/query', token, data);
 }
 

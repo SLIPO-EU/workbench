@@ -33,7 +33,6 @@ import {
   EnumDesignerMode,
   EnumDesignerSaveAction,
   EnumDesignerView,
-  EnumHarvester,
   EnumSelection,
 } from '../../model/process-designer';
 

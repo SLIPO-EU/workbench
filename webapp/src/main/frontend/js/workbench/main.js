@@ -27,8 +27,9 @@ document.addEventListener("DOMContentLoaded", function () {
     .then(() => store.dispatch(changeLocale(language)))
     .then(() => store.dispatch(getConfiguration()))
     .then(() => store.dispatch(refreshProfile())
-      // recover from an "Unauthorized" error
-      .catch(() => console.error('Cannot refresh user profile')))
+      .catch(() => {
+        // Ignore an "Unauthorized" error
+      }))
     .then(() => renderRoot(rootEl));
 });
 

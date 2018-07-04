@@ -33,7 +33,7 @@ export default (state = initialState, action) => {
         profile: null,
       };
     case REQUEST_LOGOUT:
-      return state; // no-op  
+      return state; // no-op
     case LOGOUT:
       return initialState;
     case REQUEST_PROFILE:
@@ -101,12 +101,6 @@ const requestProfile = () => ({
 
 const loadProfile = (profile, timestamp) => ({
   type: LOAD_PROFILE,
-  profile,
-  timestamp,
-});
-
-const setProfile = (profile, timestamp) => ({
-  type: SET_PROFILE,
   profile,
   timestamp,
 });

@@ -75,7 +75,7 @@ export const defaultTripleGeoValues = {
   'prefixes': [...defaultNamespaces],
   'profile': null,
   'quote': '"',
-  'registerFeatures': false,
+  'registerFeatures': true,
   'serialization': serializations[2].value,
   'sourceCRS': crs[1].value,
   'targetCRS': crs[1].value,

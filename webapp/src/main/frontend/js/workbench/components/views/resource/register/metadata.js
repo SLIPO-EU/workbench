@@ -1,5 +1,8 @@
 import React from 'react';
-import { SelectField, TextField } from '../../../helpers/forms/form-fields/';
+
+import {
+  TextField,
+} from '../../../helpers/forms/form-fields/';
 
 export const initialValue = {
   name: '',

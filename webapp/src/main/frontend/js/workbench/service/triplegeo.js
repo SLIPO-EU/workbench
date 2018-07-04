@@ -46,9 +46,6 @@ export const validator = function (values) {
     if (!values['delimiter']) {
       errors['delimiter'] = 'Required for CSV';
     }
-    if (!values['quote']) {
-      errors['quote'] = 'Required for CSV';
-    }
     if (!values['attrGeometry']) {
       if (!values['attrX']) {
         errors['attrX'] = 'Required for CSV';
@@ -90,7 +87,7 @@ export function readConfigurationTripleGeo(config) {
 }
 
 export function writeConfigurationTripleGeo(config) {
-  const { prefixes, mappingSpec, classificationSpec, ...rest } = config;
+  const { quote, prefixes, mappingSpec, classificationSpec, ...rest } = config;
 
   return {
     ...rest,
@@ -98,6 +95,8 @@ export function writeConfigurationTripleGeo(config) {
     namespaces: prefixes.map(v => v.namespace).join(','),
     mappingSpec: mappingSpec ? typeof mappingSpec === 'object' ? mappingSpec.path : mappingSpec : null,
     classificationSpec: classificationSpec ? typeof classificationSpec === 'object' ? classificationSpec.path : classificationSpec : null,
+    registerFeatures: true,
+    quote: quote || '',
   };
 }
 

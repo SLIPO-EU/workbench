@@ -774,7 +774,6 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
     }
     
     @JsonProperty("rulesSpec")
-    @NotNull
     public String getRulesSpec()
     {
         return rulesSpec;

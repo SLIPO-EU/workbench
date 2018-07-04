@@ -1,25 +1,39 @@
 import * as React from 'react';
 import * as ReactRedux from 'react-redux';
-import { bindActionCreators } from 'redux';
+
+import classnames from 'classnames';
+
 import {
-  Row, Col,
-  ButtonToolbar, Button, ButtonGroup, Label, Input
+  bindActionCreators,
+} from 'redux';
+
+import {
+  ButtonGroup,
+  ButtonToolbar,
+  Col,
+  Input,
+  Label,
+  Row,
 } from 'reactstrap';
+
 import {
-  EnumSelection,
   EnumInputType,
   EnumResourceType,
+  EnumSelection,
   ProcessInputIcons,
   ResourceTypeIcons
 } from '../../../../model/process-designer';
+
 import {
   filterResource,
   filteredResources,
   removeResourceFromBag,
   setActiveResource,
 } from '../../../../ducks/ui/views/process-designer';
-import classnames from 'classnames';
-import ProcessInput from '../../process/designer/process-input';
+
+import {
+  ProcessInput,
+} from '../../process/designer';
 
 /**
  * Resource filter options
@@ -99,7 +113,7 @@ class Sidebar extends React.Component {
         <Row className="slipo-re-sidebar-resource-list-wrapper">
           <Col className="slipo-re-sidebar-resource-list-wrapper">
             <div style={{ borderBottom: '1px solid #cfd8dc', padding: 11 }}>
-              Resources
+              Resource Bag
               <ButtonToolbar style={{ position: 'absolute', right: 20, top: 4 }}>
                 <ButtonGroup data-toggle="buttons" aria-label="First group">
                   {filters.map((f) => (

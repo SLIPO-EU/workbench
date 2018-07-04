@@ -28,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import eu.slipo.workbench.common.model.ApplicationException;
 import eu.slipo.workbench.common.model.BasicErrorCode;
+import eu.slipo.workbench.common.model.EnumRole;
 import eu.slipo.workbench.common.model.Error;
 import eu.slipo.workbench.common.model.QueryResultPage;
 import eu.slipo.workbench.common.model.RestResponse;
@@ -63,7 +64,7 @@ import eu.slipo.workbench.web.service.ProcessService;
  * Actions for managing resources
  */
 @RestController
-@Secured({ "ROLE_USER", "ROLE_ADMIN" })
+@Secured({ "ROLE_USER", "ROLE_AUTHOR", "ROLE_ADMIN" })
 @RequestMapping(produces = "application/json")
 public class ResourceController extends BaseController {
 
@@ -97,12 +98,14 @@ public class ResourceController extends BaseController {
         ProcessRecord record = null;
 
         try {
+            this.hasAnyRole(EnumRole.ADMIN, EnumRole.AUTHOR);
+
             Assert.notNull(source, "A data source is required");
             Assert.notNull(configuration, "Expected configuration for Triplegeo transformation");
             Assert.notNull(metadata, "Expected metadata for resource registration");
             Assert.isTrue(!StringUtils.isEmpty(metadata.getName()), "A non-empty name is required");
 
-            final String resourceKey = "transformed";
+            final String resourceKey = "1";
             final String procName = String.format("Resource registration: %s", metadata.getName());
 
             ProcessDefinition definition = processDefinitionBuilderFactory.create(procName)
@@ -148,7 +151,7 @@ public class ResourceController extends BaseController {
 
         PageRequest pageRequest = request.getPageRequest();
         ResourceQuery query = request.getQuery();
-        query.setCreatedBy(currentUserId());
+        query.setCreatedBy(isAdmin() ? null : currentUserId());
 
         QueryResultPage<ResourceRecord> r = resourceRepository.find(query, pageRequest);
         return RestResponse.result(QueryResult.create(r));
@@ -162,9 +165,9 @@ public class ResourceController extends BaseController {
      * @throws InvalidProcessDefinitionException
      */
     @RequestMapping(value = "/action/resource/register", method = RequestMethod.POST)
-    public RestResponse<?> registerResource(@RequestBody ResourceRegistrationRequest request)
-    {
+    public RestResponse<?> registerResource(@RequestBody ResourceRegistrationRequest request) {
         try {
+            this.hasAnyRole(EnumRole.ADMIN, EnumRole.AUTHOR);
             List<Error> errors = resourceValidationService.validate(request, currentUserId());
             if (!errors.isEmpty()) {
                 return RestResponse.error(errors);
@@ -185,10 +188,12 @@ public class ResourceController extends BaseController {
      */
     @RequestMapping(value = "/action/resource/upload", method = RequestMethod.POST)
     public RestResponse<?> uploadResource(
-        @RequestPart("file") MultipartFile file, @RequestPart("data") RegistrationRequest request)
-    {
+        @RequestPart("file") MultipartFile file, @RequestPart("data") RegistrationRequest request
+    ) {
 
         try {
+            this.hasAnyRole(EnumRole.ADMIN, EnumRole.AUTHOR);
+
             final Path userDir = fileNamingStrategy.getUserDir(currentUserId(), true);
             final String extension = FilenameUtils.getExtension(file.getOriginalFilename());
             final Path inputPath = createTemporaryFile(file.getBytes(), userDir, null, extension);
@@ -214,12 +219,18 @@ public class ResourceController extends BaseController {
      * @return the resource metadata
      */
     @RequestMapping(value = "/action/resource/{id}", method = RequestMethod.GET)
-    public RestResponse<ResourceResult> getResource(@PathVariable long id) {
+    public RestResponse<?> getResource(@PathVariable long id) {
+        try {
+            final ResourceRecord resource = resourceRepository.findOne(id);
+            this.checkResourceAccess(resource);
 
-        final ResourceRecord resource = resourceRepository.findOne(id);
-        final ProcessExecutionRecord execution = this.getExecution(resource);
+            final ProcessExecutionRecord execution = this.getExecution(resource);
+            this.checkExecutionAccess(execution);
 
-        return RestResponse.result(new ResourceResult(resource, execution));
+            return RestResponse.result(new ResourceResult(resource, execution));
+        } catch (Exception ex) {
+            return this.exceptionToResponse(ex);
+        }
     }
 
     /**
@@ -229,11 +240,19 @@ public class ResourceController extends BaseController {
      * @return the resource metadata
      */
     @RequestMapping(value = "/action/resource/{id}/{version}", method = RequestMethod.GET)
-    public RestResponse<ResourceResult> getResource(@PathVariable long id, @PathVariable long version)
-    {
-        final ResourceRecord resource = resourceRepository.findOne(id, version);
-        final ProcessExecutionRecord execution = this.getExecution(resource);
-        return RestResponse.result(new ResourceResult(resource, execution));
+    public RestResponse<?> getResource(@PathVariable long id, @PathVariable long version) {
+
+        try {
+            final ResourceRecord resource = resourceRepository.findOne(id, version);
+            this.checkResourceAccess(resource);
+
+            final ProcessExecutionRecord execution = this.getExecution(resource);
+            this.checkExecutionAccess(execution);
+
+            return RestResponse.result(new ResourceResult(resource, execution));
+        } catch (Exception ex) {
+            return this.exceptionToResponse(ex);
+        }
     }
 
     /**
@@ -243,8 +262,7 @@ public class ResourceController extends BaseController {
      * @return the updated resource metadata
      */
     @RequestMapping(value = "/action/resource/{id}", method = RequestMethod.POST)
-    public RestResponse<?> updateResource(@PathVariable long id, @RequestBody ResourceMetadataUpdate data)
-    {
+    public RestResponse<?> updateResource(@PathVariable long id, @RequestBody ResourceMetadataUpdate data) {
         return RestResponse.result(resourceRepository.findOne(id));
     }
 
@@ -255,8 +273,8 @@ public class ResourceController extends BaseController {
      * @return
      */
     @RequestMapping(value = "/action/resource/{id}", method = RequestMethod.DELETE)
-    public RestResponse<?> deleteResource(@PathVariable long id)
-    {
+    public RestResponse<?> deleteResource(@PathVariable long id) {
+
         return RestResponse.result(null);
     }
 

@@ -42,8 +42,7 @@ export class Component extends React.Component {
         <TextField
           {...this.props}
           id="name"
-          label="Alias"
-          help="File alias"
+          label="File alias"
         />
       </div>
     );

@@ -4,6 +4,13 @@ import { Input } from 'reactstrap';
 
 import decorateField from './form-field';
 
+/**
+ * Simple text component
+ *
+ * @export
+ * @class Text
+ * @extends {React.Component}
+ */
 export class Text extends React.Component {
 
   constructor(props) {
@@ -20,7 +27,14 @@ export class Text extends React.Component {
     readOnly: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
   }
 
-  isReadOnly() {
+
+  /**
+   * Returns true if the component is read-only; Otherwise false
+   *
+   * @readonly
+   * @memberof Text
+   */
+  get isReadOnly() {
     if (typeof this.props.readOnly === 'function') {
       return this.props.readOnly(this.props.id);
     }
@@ -38,7 +52,7 @@ export class Text extends React.Component {
         value={props.value || ''}
         autoComplete="off"
         onChange={e => typeof props.onChange === 'function' ? props.onChange(e.target.value) : null}
-        readOnly={this.isReadOnly()}
+        readOnly={this.isReadOnly}
       />
     );
   }

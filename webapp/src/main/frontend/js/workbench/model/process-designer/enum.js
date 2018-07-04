@@ -204,7 +204,6 @@ export const EnumFagiOutputPart = {
   FUSED: 'fused',
   REMAINING: 'remaining',
   REVIEW: 'review',
-  STATS: 'stats',
 };
 
 export const EnumDeerOutputPart = {
@@ -212,3 +211,8 @@ export const EnumDeerOutputPart = {
   ENRICHED: 'enriched',
 };
 
+// Supported data integration tasks
+export const EnumTaskType = {
+  REGISTRATION: 'Registration',
+  DATA_INTEGRATION: 'Data Integration',
+};

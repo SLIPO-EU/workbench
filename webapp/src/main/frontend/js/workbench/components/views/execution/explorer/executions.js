@@ -1,5 +1,4 @@
 import * as React from 'react';
-import ReactTable from 'react-table';
 import moment from 'moment';
 
 import {
@@ -11,7 +10,12 @@ import {
 } from 'reactstrap';
 
 import {
+  Roles,
+} from '../../../../model';
+
+import {
   JobStatus,
+  SecureContent,
   Table,
 } from '../../../helpers';
 
@@ -39,7 +43,9 @@ const executionsColumns = [{
   Expander: (props) => {
     return (
       <span>
-        <i data-action="edit" className='fa fa-pencil slipo-table-row-action p-1'></i>
+        <SecureContent roles={[Roles.ADMIN, Roles.AUTHOR]}>
+          <i data-action="edit" className='fa fa-pencil slipo-table-row-action p-1'></i>
+        </SecureContent>
         <i data-action="view" className='fa fa-search slipo-table-row-action p-1'></i>
         <i data-action="map" className='fa fa-map-o slipo-table-row-action p-1'></i>
         {props.original.errorMessage &&

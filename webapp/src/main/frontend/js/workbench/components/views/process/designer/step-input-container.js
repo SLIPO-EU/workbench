@@ -69,13 +69,6 @@ const containerTarget = {
   }
 };
 
-function collect(connect, monitor) {
-  return {
-    connectDropTarget: connect.dropTarget(),
-    isOver: monitor.isOver()
-  };
-}
-
 /**
  * A presentational component which acts as a drop target for resource items
  * inside a process step.

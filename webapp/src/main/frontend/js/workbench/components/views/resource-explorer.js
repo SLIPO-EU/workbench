@@ -20,7 +20,6 @@ import {
   toast
 } from 'react-toastify';
 
-
 import {
   OpenLayers,
   ToastTemplate,
@@ -33,7 +32,7 @@ import {
 } from './resource/explorer/';
 
 import {
-  fetchResources,
+  search as fetchResources,
   resetFilters,
   setFilter,
   setPager,
@@ -98,7 +97,7 @@ class ResourceExplorer extends React.Component {
     toast.dismiss();
 
     toast.error(
-      <ToastTemplate iconClass='fa-warning' text='Not implemented!' />
+      <ToastTemplate iconClass='fa-warning' text='error.NOT_IMPLEMENTED' />
     );
   }
 

@@ -3,6 +3,14 @@ import PropTypes from 'prop-types';
 import { FormGroup, FormText, Label, FormFeedback } from 'reactstrap';
 
 
+/**
+ * A functional component for extending form fields with label, feedback and description
+ * elements
+ *
+ * @export
+ * @param {object} props - The properties to pass to the wrapped component
+ * @returns The new component
+ */
 export function FormField(props) {
   return (
     <FormGroup color={props.error ? 'danger' : null}>

@@ -2,14 +2,15 @@ package eu.slipo.workbench.common.model;
 
 public enum EnumRole
 {
-    USER(1, "user"),
-    ADMIN(2, "site administrator"),
-    MAINTAINER(3, "site maintainer");
-    
+    USER(1, "User"),
+    ADMIN(2, "Site administrator"),
+    AUTHOR(3, "Data integration workflow author"),
+    ;
+
     private final int value;
-    
+
     private final String description;
-    
+
     private EnumRole(int value, String description)
     {
         this.value = value;
@@ -25,12 +26,14 @@ public enum EnumRole
     {
         return value;
     }
-    
+
     public static EnumRole valueOf(int value)
     {
-        for (EnumRole r: EnumRole.values())
-            if (r.value == value)
+        for (EnumRole r: EnumRole.values()) {
+            if (r.value == value) {
                 return r;
+            }
+        }
         return null;
     }
 }

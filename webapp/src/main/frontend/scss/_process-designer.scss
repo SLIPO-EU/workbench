@@ -49,6 +49,10 @@ $slipo-invalid-color:#E74856 !default;
   cursor: move;
 }
 
+.slipo-pd-item-disabled {
+  cursor: default;
+}
+
 .slipo-pd-item-is-dragging {
   opacity: 0.5;
 }
@@ -559,11 +563,26 @@ $slipo-invalid-color:#E74856 !default;
   margin-left: 0;
 }
 
-.slipo-pd-error-list {
-  padding: 10px 0px 0px 25px;
+.slipo-pd-error-list-wrapper {}
+
+.slipo-pd-error-list {}
+
+.slipo-pd-error {
+  border-bottom: 1px solid #cfd8dc;
 }
 
 .slipo-pd-error-item {
-  text-align: justify;
-  padding: 10px 5px 0px 0px;
+  padding: 0px 5px 10px 5px;
+  vertical-align: top;
 }
+
+.slipo-pd-error-item.slipo-pd-error-icon {
+  &.error {
+    color: #f86c6b;
+  }
+  &.warning {
+    color: #f8cb00;
+  }
+}
+
+.slipo-pd-error-item td.slipo-pd-error-text {}

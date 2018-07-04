@@ -1,8 +1,5 @@
 import * as React from 'react';
 import { withRouter } from 'react-router';
-import {
-  Row, Col,
-} from 'reactstrap';
 
 import { matchRoute, getRoute } from '../../model/routes';
 

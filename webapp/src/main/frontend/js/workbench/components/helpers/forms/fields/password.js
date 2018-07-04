@@ -4,7 +4,13 @@ import { Input } from 'reactstrap';
 
 import decorateField from './form-field';
 
-
+/**
+ * A password text field functional component
+ *
+ * @export
+ * @param {object} props - Component properties
+ * @returns The new component
+ */
 export function Password(props) {
   return (
     <Input
