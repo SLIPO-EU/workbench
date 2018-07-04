@@ -51,39 +51,39 @@ function createLimesDefaultConfiguration(appConfiguration, effectiveVersion) {
     ],
     source: {
       id: 'a',
-      endpoint: '/var/local/limes/input/a.nt',
+      endpoint: 'a.nt',
       var: '?x',
       pageSize: -1,
       restrictions: [
         ''
       ],
       properties: [
-        'slipo:name/slipo:nameType RENAME label'
+        'slipo:name/slipo:nameValue RENAME label'
       ],
       dataFormat: EnumDataFormat.N_TRIPLES,
     },
     target: {
       id: 'b',
-      endpoint: '/var/local/limes/input/b.nt',
+      endpoint: 'b.nt',
       var: '?y',
       pageSize: -1,
       restrictions: [
         ''
       ],
       properties: [
-        'slipo:name/slipo:nameType RENAME label'
+        'slipo:name/slipo:nameValue RENAME label'
       ],
       dataFormat: EnumDataFormat.N_TRIPLES,
     },
-    metric: 'trigrams(a.label, b.label)',
+    metric: 'trigrams(x.label, y.label)',
     acceptance: {
-      threshold: 0.98,
-      file: '/var/local/limes/output/accepted.nt',
+      threshold: 0.96,
+      file: 'accepted.nt',
       relation: 'owl:sameAs'
     },
     review: {
       threshold: 0.90,
-      file: '/var/local/limes/output/review.nt',
+      file: 'review.nt',
       relation: 'owl:sameAs'
     },
     execution: {
@@ -105,7 +105,7 @@ function createFagiDefaultConfiguration(appConfiguration, effectiveVersion) {
   const configuration = {
     inputFormat: 'NT',
     outputFormat: 'NT',
-    locale: 'el-GR',
+    locale: 'en',
     similarity: 'jarowinkler',
     left: {
       id: 'a',
@@ -130,7 +130,7 @@ function createFagiDefaultConfiguration(appConfiguration, effectiveVersion) {
       ambiguous: 'review.nt',
       statistics: 'stats.json'
     },
-    rulesSpec: 'fagi/defaults/rules-1.xml',
+    rulesSpec: null,
     version: effectiveVersion || appConfiguration.fagi.version,
   };
 
