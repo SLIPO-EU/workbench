@@ -51,6 +51,7 @@ import eu.slipo.workbench.common.model.tool.LimesConfiguration;
 import eu.slipo.workbench.common.model.tool.RegisterToCatalogConfiguration;
 import eu.slipo.workbench.common.model.tool.Triplegeo;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
+import eu.slipo.workbench.common.model.tool.output.EnumDeerOutputPart;
 import eu.slipo.workbench.common.model.tool.output.EnumImportDataOutputPart;
 import eu.slipo.workbench.common.model.tool.output.EnumLimesOutputPart;
 import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
@@ -149,15 +150,6 @@ public class ProcessDefinitionTests
         }
 
         @Bean
-        public DeerConfiguration sampleDeerConfiguration1()
-        {
-            DeerConfiguration config = new DeerConfiguration();
-            config.setInputFormat(EnumDataFormat.N_TRIPLES);
-            config.setOutputFormat(EnumDataFormat.N_TRIPLES);
-            return config;
-        }
-
-        @Bean
         public FagiConfiguration sampleFagiConfiguration1()
         {
             FagiConfiguration config = new FagiConfiguration();
@@ -178,6 +170,19 @@ public class ProcessDefinitionTests
             config.setOutputFormatFromString("N-TRIPLES");
             config.setAccepted(0.98, "accepted.nt");
             config.setReview(0.95, "review.nt");
+
+            return config;
+        }
+
+        @Bean
+        public DeerConfiguration sampleDeerConfiguration1()
+        {
+            DeerConfiguration config = new DeerConfiguration();
+
+            config.setInputFormat(EnumDataFormat.N_TRIPLES);
+            config.setInput("1.nt");
+            config.setOutputFormat(EnumDataFormat.N_TRIPLES);
+            config.setOutputDir("out");
 
             return config;
         }
@@ -299,6 +304,37 @@ public class ProcessDefinitionTests
                 TRANSFORM_1_KEY, EnumTriplegeoOutputPart.TRANSFORMED, metadataForTransformed1)
             .register("register-2",
                 TRANSFORM_2_KEY, EnumTriplegeoOutputPart.TRANSFORMED, metadataForTransformed2)
+            .build();
+
+        return definition;
+    }
+
+    private ProcessDefinition buildDefinition1c()
+    {
+        final String TRANSFORM_1_KEY = "transformed-1", ENRICHED_1_KEY = "enriched-1";
+        final String RESOURCE_1_KEY = "resource-1";
+
+        ResourceMetadataCreate metadataForTransformed1 =
+            new ResourceMetadataCreate("transfomed-1", "The 1st RDF file");
+        ResourceMetadataCreate metadataForEnriched1 =
+            new ResourceMetadataCreate("enriched-1", "The 1st RDF file (enriched)");
+
+        ProcessDefinition definition = processDefinitionBuilderFactory.create("proc-1-c")
+            .resource(RESOURCE_1_NAME, RESOURCE_1_KEY, RESOURCE_1_ID)
+            .transform("triplegeo-1", b -> b
+                .group(1)
+                .outputKey(TRANSFORM_1_KEY)
+                .input(RESOURCE_1_KEY)
+                .configuration(sampleTriplegeoConfiguration1))
+            .enrich("deer-1", b -> b
+                .group(2)
+                .outputKey(ENRICHED_1_KEY)
+                .input(TRANSFORM_1_KEY)
+                .configuration(sampleDeerConfiguration1))
+            .register("register-transformed-1",
+                TRANSFORM_1_KEY, EnumTriplegeoOutputPart.TRANSFORMED, metadataForTransformed1)
+            .register("register-enriched-1",
+                ENRICHED_1_KEY, EnumDeerOutputPart.ENRICHED, metadataForEnriched1)
             .build();
 
         return definition;
@@ -585,7 +621,99 @@ public class ProcessDefinitionTests
         assertEquals(
             ImmutableSet.of("triplegeo-1", "triplegeo-2", "link-1-with-2"),
             outputResources.stream().map(r -> r.getName()).collect(Collectors.toSet()));
+    }
 
+    @Test
+    public void test1c_checkDefinition() throws Exception
+    {
+        ProcessDefinition definition1 = buildDefinition1c();
+        assertNotNull(definition1);
+        assertEquals("proc-1-c", definition1.name());
+
+        List<ProcessInput> resources = definition1.resources();
+        assertEquals(3, resources.size());
+        assertEquals(3, resources.stream().map(r -> r.key()).distinct().count());
+        Map<String, ProcessInput> resourcesByKey = resources.stream()
+            .collect(Collectors.toMap(r -> r.key(), Function.identity()));
+
+        List<Step> steps = definition1.steps();
+        assertEquals(4, steps.size());
+        assertEquals(4, steps.stream().mapToInt(s -> s.key()).distinct().count());
+        assertEquals(
+            ImmutableSet.of("register-transformed-1", "register-enriched-1", "triplegeo-1", "deer-1"),
+            steps.stream().map(r -> r.name()).collect(Collectors.toSet()));
+
+        Step step1 = steps.stream().filter(s -> s.name().equals("triplegeo-1")).findFirst().get();
+        assertEquals(EnumTool.TRIPLEGEO, step1.tool());
+        assertEquals(EnumOperation.TRANSFORM, step1.operation());
+        assertEquals(EnumDataFormat.N_TRIPLES, step1.outputFormat());
+        assertEquals(1, step1.inputKeys().size());
+        assertNotNull(step1.outputKey());
+        assertEquals(0, step1.sources().size());
+        assertNull(step1.input().get(0).partKey());
+        ProcessInput inp1 = resourcesByKey.get(step1.inputKeys().get(0));
+        assertNotNull(inp1);
+        assertTrue(inp1 instanceof CatalogResource);
+        assertEquals(RESOURCE_1_ID, ((CatalogResource) inp1).getResource());
+        assertEquals(
+            jsonMapper.writeValueAsString(sampleTriplegeoConfiguration1),
+            jsonMapper.writeValueAsString(step1.configuration()));
+        assertTrue(step1.configuration() instanceof TriplegeoConfiguration);
+        assertEquals(EnumDataFormat.N_TRIPLES, step1.configuration().getOutputFormat());
+
+        Step step2 = steps.stream().filter(s -> s.name().equals("deer-1")).findFirst().get();
+        assertEquals(EnumTool.DEER, step2.tool());
+        assertEquals(EnumOperation.ENRICHMENT, step2.operation());
+        assertEquals(EnumDataFormat.N_TRIPLES, step2.outputFormat());
+        assertEquals(1, step2.inputKeys().size());
+        assertNotNull(step2.outputKey());
+        assertEquals(0, step2.sources().size());
+        assertNull(step2.input().get(0).partKey());
+        ProcessInput inp2 = resourcesByKey.get(step2.inputKeys().get(0));
+        assertNotNull(inp2);
+        assertTrue(inp2 instanceof ProcessOutput);
+        assertEquals(step1.key(), ((ProcessOutput) inp2).stepKey());
+        assertEquals(
+            jsonMapper.writeValueAsString(sampleDeerConfiguration1),
+            jsonMapper.writeValueAsString(step2.configuration()));
+        assertTrue(step2.configuration() instanceof DeerConfiguration);
+        assertEquals(EnumDataFormat.N_TRIPLES, step2.configuration().getOutputFormat());
+
+        Step stepR1 = steps.stream().filter(s -> s.name().equals("register-transformed-1")).findFirst().get();
+        assertEquals(EnumTool.REGISTER, stepR1.tool());
+        assertEquals(EnumOperation.REGISTER, stepR1.operation());
+        assertEquals(Collections.singletonList(step1.outputKey()), stepR1.inputKeys());
+        assertEquals("transformed", stepR1.input().get(0).partKey());
+        assertNull(stepR1.outputKey());
+        assertNotNull(stepR1.configuration());
+        assertTrue(stepR1.configuration() instanceof RegisterToCatalogConfiguration);
+
+        Step stepR2 = steps.stream().filter(s -> s.name().equals("register-enriched-1")).findFirst().get();
+        assertEquals(EnumTool.REGISTER, stepR1.tool());
+        assertEquals(EnumOperation.REGISTER, stepR1.operation());
+        assertEquals(Collections.singletonList(step2.outputKey()), stepR2.inputKeys());
+        assertEquals("enriched", stepR2.input().get(0).partKey());
+        assertNull(stepR2.outputKey());
+        assertNotNull(stepR2.configuration());
+        assertTrue(stepR2.configuration() instanceof RegisterToCatalogConfiguration);
+
+        List<CatalogResource> catalogResources = resources.stream()
+            .filter(r -> r.getInputType() == EnumInputType.CATALOG)
+            .map(CatalogResource.class::cast)
+            .collect(Collectors.toList());
+        assertEquals(1, catalogResources.size());
+        assertEquals(
+            ImmutableSet.of(RESOURCE_1_NAME),
+            catalogResources.stream().map(r -> r.getName()).collect(Collectors.toSet()));
+
+        List<ProcessOutput> outputResources = resources.stream()
+            .filter(r -> r.getInputType() == EnumInputType.OUTPUT)
+            .map(ProcessOutput.class::cast)
+            .collect(Collectors.toList());
+        assertEquals(2, outputResources.size());
+        assertEquals(
+            ImmutableSet.of("triplegeo-1", "deer-1"),
+            outputResources.stream().map(r -> r.getName()).collect(Collectors.toSet()));
     }
 
     @Test
@@ -601,6 +729,12 @@ public class ProcessDefinitionTests
     }
 
     @Test
+    public void test1c_serializeToJson() throws Exception
+    {
+        serializeToJson(buildDefinition1c());
+    }
+
+    @Test
     public void test1a_serializeDefault() throws Exception
     {
         serializeDefault(buildDefinition1a());
@@ -610,6 +744,12 @@ public class ProcessDefinitionTests
     public void test1b_serializeDefault() throws Exception
     {
         serializeDefault(buildDefinition1b());
+    }
+
+    @Test
+    public void test1c_serializeDefault() throws Exception
+    {
+        serializeDefault(buildDefinition1c());
     }
 
     @Test(expected = UnsupportedOperationException.class)
