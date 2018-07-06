@@ -1,12 +1,11 @@
 import * as React from 'react';
-import * as ReactRedux from 'react-redux';
 import {
   Card as ReactCard, CardBody, CardTitle, Row, Col,
   ButtonToolbar, ButtonGroup, Label, Input
 } from 'reactstrap';
 import { FormattedTime } from 'react-intl';
 
-import moment from 'moment';
+import moment from '../../moment-localized';
 
 import PropTypes from 'prop-types';
 

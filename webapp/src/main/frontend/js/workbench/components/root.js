@@ -12,8 +12,8 @@ import ContentRoot from './content-root';
 //
 
 import en from 'react-intl/locale-data/en';
-import de from 'react-intl/locale-data/en';
-import el from 'react-intl/locale-data/en';
+import de from 'react-intl/locale-data/de';
+import el from 'react-intl/locale-data/el';
 
 ReactIntl.addLocaleData(en);
 ReactIntl.addLocaleData(de);
@@ -24,6 +24,11 @@ ReactIntl.addLocaleData(el);
 //
 
 class Root extends React.Component {
+
+  static defaultProps = {
+    locale: 'en-GB',
+    messages: {},
+  }
 
   render() {
     var { locale, messages } = this.props;
@@ -38,11 +43,6 @@ class Root extends React.Component {
     );
   }
 }
-
-Root.defaultProps = {
-  locale: 'en-GB',
-  messages: {},
-};
 
 //
 // Wrap into a connected component

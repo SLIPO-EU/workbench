@@ -1,6 +1,5 @@
 import * as React from 'react';
-import ReactTable from 'react-table';
-import moment from 'moment';
+import moment from '../../../../moment-localized';
 
 import {
   FormattedTime

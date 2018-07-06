@@ -1,12 +1,13 @@
+import moment from '../moment-localized';
+
 import { getMessages } from '../service/i18n';
 
 // Actions
-const SET_LOCALE = 'locale/SET_LOCALE';
 const REQUEST_MESSAGES = 'locale/REQUEST_MESSAGES';
 const LOAD_MESSAGES = 'locale/LOAD_MESSAGES';
 
 const initialState = {
-  locale: '',
+  locale: 'en-GB',
   messages: {},
 };
 
@@ -14,25 +15,27 @@ const initialState = {
 export default (state = initialState, action) => {
   switch (action.type) {
     case REQUEST_MESSAGES:
-      return state; // no-op
-    case LOAD_MESSAGES: {
-      const newState = { ...state };
-      newState.messages[action.locale] = action.messages;
-      return newState;
-    }
-    case SET_LOCALE:
+      return state;
+
+    case LOAD_MESSAGES:
+      moment.locale(action.locale);
       return {
         ...state,
         locale: action.locale,
+        messages: {
+          ...state.messages,
+          [action.locale]: action.messages,
+        }
       };
+
     default:
       return state;
   }
 };
 
 // Action Creators
-export const setLocale = (locale) => ({
-  type: SET_LOCALE,
+const requestMessages = (locale) => ({
+  type: REQUEST_MESSAGES,
   locale,
 });
 
@@ -40,11 +43,6 @@ const loadMessages = (locale, messages) => ({
   type: LOAD_MESSAGES,
   locale,
   messages,
-});
-
-const requestMessages = (locale) => ({
-  type: REQUEST_MESSAGES,
-  locale,
 });
 
 // Thunk actions
@@ -55,8 +53,6 @@ const fetchMessages = (locale) => (dispatch) => {
 };
 
 export const changeLocale = (locale) => (dispatch) => {
-  dispatch(setLocale(locale));
-
   dispatch(fetchMessages(locale))
     .catch(
       () => console.warn("No messages for locale " + locale));
