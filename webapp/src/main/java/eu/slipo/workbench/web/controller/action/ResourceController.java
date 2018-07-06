@@ -98,8 +98,6 @@ public class ResourceController extends BaseController {
         ProcessRecord record = null;
 
         try {
-            this.hasAnyRole(EnumRole.ADMIN, EnumRole.AUTHOR);
-
             Assert.notNull(source, "A data source is required");
             Assert.notNull(configuration, "Expected configuration for Triplegeo transformation");
             Assert.notNull(metadata, "Expected metadata for resource registration");
@@ -127,7 +125,7 @@ public class ResourceController extends BaseController {
         }
 
         try {
-            ProcessExecutionRecord executionRecord = processService.start(record.getId(), record.getVersion());
+            ProcessExecutionRecord executionRecord = processService.start(record.getId(), record.getVersion(), EnumProcessTaskType.REGISTRATION);
             logger.info("A request for registration is submitted as execution #{}: metadata = {}", executionRecord.getId(), metadata);
         } catch (Exception ex) {
             return this.exceptionToResponse(ex, Error.EnumLevel.WARN);
@@ -143,8 +141,7 @@ public class ResourceController extends BaseController {
      * @return a list of resources
      */
     @RequestMapping(value = "/action/resource/query", method = RequestMethod.POST)
-    public RestResponse<QueryResult<ResourceRecord>> find(@RequestBody ResourceQueryRequest request)
-    {
+    public RestResponse<QueryResult<ResourceRecord>> find(@RequestBody ResourceQueryRequest request) {
         if (request == null || request.getQuery() == null) {
             return RestResponse.error(ResourceErrorCode.QUERY_IS_EMPTY, "The query is empty");
         }
@@ -168,6 +165,7 @@ public class ResourceController extends BaseController {
     public RestResponse<?> registerResource(@RequestBody ResourceRegistrationRequest request) {
         try {
             this.hasAnyRole(EnumRole.ADMIN, EnumRole.AUTHOR);
+
             List<Error> errors = resourceValidationService.validate(request, currentUserId());
             if (!errors.isEmpty()) {
                 return RestResponse.error(errors);
@@ -224,8 +222,10 @@ public class ResourceController extends BaseController {
             final ResourceRecord resource = resourceRepository.findOne(id);
             this.checkResourceAccess(resource);
 
-            final ProcessExecutionRecord execution = this.getExecution(resource);
-            this.checkExecutionAccess(execution);
+            ProcessExecutionRecord execution = null;
+            if (this.isAdmin()) {
+                execution = this.getExecution(resource);
+            }
 
             return RestResponse.result(new ResourceResult(resource, execution));
         } catch (Exception ex) {
@@ -246,8 +246,10 @@ public class ResourceController extends BaseController {
             final ResourceRecord resource = resourceRepository.findOne(id, version);
             this.checkResourceAccess(resource);
 
-            final ProcessExecutionRecord execution = this.getExecution(resource);
-            this.checkExecutionAccess(execution);
+            ProcessExecutionRecord execution = null;
+            if (this.isAdmin()) {
+                execution = this.getExecution(resource);
+            }
 
             return RestResponse.result(new ResourceResult(resource, execution));
         } catch (Exception ex) {
@@ -274,7 +276,6 @@ public class ResourceController extends BaseController {
      */
     @RequestMapping(value = "/action/resource/{id}", method = RequestMethod.DELETE)
     public RestResponse<?> deleteResource(@PathVariable long id) {
-
         return RestResponse.result(null);
     }
 
@@ -286,8 +287,7 @@ public class ResourceController extends BaseController {
      * @return an instance {@link
      */
     @RequestMapping(value = "/action/resource/{id}/{version}", method = RequestMethod.DELETE)
-    public RestResponse<?> deleteResource(@PathVariable long id, @PathVariable int version)
-    {
+    public RestResponse<?> deleteResource(@PathVariable long id, @PathVariable int version) {
         return RestResponse.result(null);
     }
 
@@ -297,17 +297,15 @@ public class ResourceController extends BaseController {
      * @param data The contents to write to the file
      * @param dir A directory to create the file under
      * @param prefix An optional prefix to use; may be <tt>null</tt>
-     * @param extension An optional extension to use for the file; may be <tt>null</tt>, and in
-     *   such a case a ".dat" extension will be used.
+     * @param extension An optional extension to use for the file; may be <tt>null</tt>,
+     * and in such a case a ".dat" extension will be used.
      *
      * @throws IOException in case of an I/O error
      *
-     * @return the file path under which data is written (the path will always be relative to
-     *   given directory <tt>dir</tt>)
+     * @return the file path under which data is written (the path will always be relative
+     * to given directory <tt>dir</tt>)
      */
-    private Path createTemporaryFile(byte[] data, Path dir, String prefix, String extension)
-        throws IOException
-    {
+    private Path createTemporaryFile(byte[] data, Path dir, String prefix, String extension) throws IOException {
         Path path = null;
 
         try {
