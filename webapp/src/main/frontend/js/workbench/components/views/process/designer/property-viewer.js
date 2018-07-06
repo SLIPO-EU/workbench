@@ -1,8 +1,6 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
-import * as ReactRedux from 'react-redux';
-import classnames from 'classnames';
-import moment from 'moment';
+import moment from '../../../../moment-localized';
 
 import {
   FormattedTime
@@ -16,17 +14,7 @@ import {
 import {
   EnumSelection,
   EnumInputType,
-  EnumResourceType,
 } from '../../../../model/process-designer';
-
-import {
-  JobStatus,
-} from '../../../helpers';
-
-import {
-  TextField,
-  TextAreaField,
-} from '../../../helpers/forms/form-fields';
 
 /**
  * A presentational component for displaying selected item properties

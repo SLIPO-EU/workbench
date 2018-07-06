@@ -1,7 +1,33 @@
 .login-brand {
-    background-image: url(../images/logo.png);
-    background-size: 148px auto;
-    height: 55px;
-    display: block;
-    background-repeat: no-repeat;
+  background-image: url(../images/logo.png);
+  background-size: 148px auto;
+  height: 55px;
+  display: block;
+  background-repeat: no-repeat;
+}
+
+.login-header {
+  position: absolute;
+  top: 0px;
+  width: 100%;
+  border-bottom: 1px solid #cfd8dc;
+  text-align: right;
+  padding: 0.5rem 1rem;
+
+  button {
+    border: none;
+
+    &.dropdown-toggle {
+      background-color: white !important;
+    }
+
+    &.dropdown-item {
+      border-bottom: 1px solid #cfd8dc;
+    }
+
+    &.dropdown-item:last-child {
+      border: none;
+    }
+  }
+
 }

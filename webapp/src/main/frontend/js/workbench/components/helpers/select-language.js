@@ -24,6 +24,15 @@ class SelectLanguage extends React.Component {
     };
   }
 
+  static propTypes = {
+    language: PropTypes.string.isRequired,
+    changeLanguage: PropTypes.func.isRequired,
+  }
+
+  static defaultProps = {
+    language: 'en-GB',
+  }
+
   componentWillReceiveProps() {
     this.setState({ open: false });
   }
@@ -51,15 +60,6 @@ class SelectLanguage extends React.Component {
   }
 }
 
-SelectLanguage.defaultProps = {
-  language: 'en-GB',
-};
-
-SelectLanguage.propTypes = {
-  language: PropTypes.string.isRequired,
-  changeLanguage: PropTypes.func.isRequired,
-};
-
 //
 // Wrap into a connected component
 //
@@ -74,7 +74,4 @@ const mapDispatchToProps = (dispatch) => ({
   changeLanguage: (language) => dispatch(changeLocale(language)),
 });
 
-SelectLanguage = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(SelectLanguage);
-
-module.exports = SelectLanguage;
-
+export default ReactRedux.connect(mapStateToProps, mapDispatchToProps)(SelectLanguage);

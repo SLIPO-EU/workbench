@@ -77,7 +77,7 @@ class StepInput extends React.Component {
     const input = step.input.find((i) => i.inputKey === resource.key);
     const popoverId = `popover-${step.key}-${resource.key}`;
     const partKey = input.partKey;
-
+    const outputParts = ToolConfigurationSettings[resource.tool].outputParts;
     let icon = 0;
 
     return (
@@ -117,7 +117,7 @@ class StepInput extends React.Component {
         }>
           <a
             onClick={(e) => this.onToggleOutputPartSelection(e)}
-          >{partKey || DEFAULT_OUTPUT_PART}</a>
+          >{partKey ? outputParts[partKey] : DEFAULT_OUTPUT_PART}</a>
           {this.props.resource.inputType !== EnumInputType.CATALOG &&
             <Popover
               placement="bottom"
@@ -138,13 +138,13 @@ class StepInput extends React.Component {
 
   renderOutputPartList(partKey) {
     const tool = this.props.resource.tool;
-    const parts = ToolConfigurationSettings[tool].output;
+    const outputParts = ToolConfigurationSettings[tool].outputParts;
 
-    return parts.map((value) =>
+    return Object.keys(outputParts).map((value) =>
       <Checkbox
         key={value || DEFAULT_OUTPUT_PART}
         id={value}
-        text={value}
+        text={outputParts[value] || DEFAULT_OUTPUT_PART}
         value={value === partKey || value === DEFAULT_OUTPUT_PART && partKey === null}
         state="success"
         readOnly={false}

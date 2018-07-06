@@ -290,6 +290,7 @@ export class Component extends React.Component {
                   id="quote"
                   label="Quote"
                   help="Specify quote character for string values"
+                  maxLength={1}
                 />
               </div>
             </div>

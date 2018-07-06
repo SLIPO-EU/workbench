@@ -245,14 +245,41 @@ public class DefaultProcessService implements ProcessService {
     }
 
     @Override
-    public ProcessExecutionRecord start(long id, long version) throws ProcessNotFoundException, ProcessExecutionStartException, IOException {
+    public ProcessExecutionRecord start(
+        long id, long version, EnumProcessTaskType task
+    ) throws ProcessNotFoundException, ProcessExecutionStartException, IOException {
+
         final ProcessRecord processRecord = this.processRepository.findOne(id, version);
 
         if (processRecord == null) {
             throw new ProcessNotFoundException(id, version);
         }
 
-        checkProcessAccess(processRecord);
+        // Resolve authorization based on requested task type
+        if (!this.authenticationFacade.isAdmin()) {
+            // Check record owner
+            if (!this.currentUserId().equals(processRecord.getCreatedBy().getId())) {
+                throw this.accessDenied();
+            }
+            switch (task) {
+                case REGISTRATION:
+                    // Registration tasks can only be initiated by authors
+                    if (!this.authenticationFacade.hasRole(EnumRole.AUTHOR)) {
+                        throw this.accessDenied();
+                    }
+                    break;
+                case DATA_INTEGRATION:
+                    // Data integration tasks can be initiated by any user
+                    break;
+                default:
+                    // When no specific task type is given, allow only data integration
+                    // tasks
+                    if (processRecord.getTaskType() != EnumProcessTaskType.DATA_INTEGRATION) {
+                        throw this.accessDenied();
+                    }
+                    break;
+            }
+        }
 
         final ProcessExecutionRecord record = this.processOperator.poll(id, version);
         if ((record == null) ||

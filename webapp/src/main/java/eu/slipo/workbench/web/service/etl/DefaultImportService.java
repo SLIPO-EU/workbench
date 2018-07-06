@@ -216,9 +216,13 @@ public class DefaultImportService implements ImportService, InitializingBean {
         jdbcTemplate.execute(creteTableSql);
 
         // Import data
-        String copySql = String.format(
-                "COPY \"%s\".\"%s\" FROM '%s' CSV HEADER DELIMITER '%s' QUOTE '%s' NULL '' ENCODING '%s';", schema,
-                tableName, fileName, config.getDelimiter(), config.getQuote(), config.getEncoding());
+        String copySql = StringUtils.isBlank(config.getQuote()) ?
+            String.format(
+                "COPY \"%s\".\"%s\" FROM '%s' CSV HEADER DELIMITER '%s' QUOTE %s NULL '' ENCODING '%s';", schema,
+                tableName, fileName, config.getDelimiter(), "E'\\b'", config.getEncoding()) :
+            String.format(
+                "COPY \"%s\".\"%s\" FROM '%s' CSV HEADER DELIMITER '%s' QUOTE %s NULL '' ENCODING '%s';", schema,
+                tableName, fileName, config.getDelimiter(), config.getQuote().charAt(0), config.getEncoding());
 
         jdbcTemplate.execute(copySql);
 
@@ -236,12 +240,11 @@ public class DefaultImportService implements ImportService, InitializingBean {
 
         // Helper variables
         char delimiter = config.getDelimiter().charAt(0);
-        char quote = config.getQuote().charAt(0);
         CSVFormat format = CSVFormat.DEFAULT
             .withIgnoreEmptyLines()
             .withFirstRecordAsHeader()
             .withDelimiter(delimiter)
-            .withQuote(quote)
+            .withQuote(StringUtils.isBlank(config.getQuote()) ? null : config.getQuote().charAt(0))
             .withTrim();
 
         // Scan the CSV file to extract columns names (the first line is assumed to
@@ -268,39 +271,31 @@ public class DefaultImportService implements ImportService, InitializingBean {
             // Build SQL script for creating the table
             script.append(String.format("CREATE TABLE \"%s\".\"%s\" (\n", schema, tableName));
 
-            // Handle primary keys either as string values or integers
-            if (width.containsKey(config.getAttrKey())) {
-                script.append(String.format("%s varchar(%d) PRIMARY KEY,\n", config.getAttrKey(),
-                        width.get(config.getAttrKey())));
-            } else {
-                script.append(String.format("%s bigint PRIMARY KEY,\n", config.getAttrKey()));
-            }
-
-            // Append all columns but key, longitude and latitude
+            // Append all columns
+            int index = 0;
             for (String field : fields) {
                 if (config.getAttrKey().equals(field)) {
                     keyExists = true;
-                    continue;
-                }
-                if (config.getAttrX().equals(field)) {
+                    // Handle primary keys either as string values or integers
+                    if (width.containsKey(field)) {
+                        script.append(String.format("%s varchar(%d) PRIMARY KEY", field, width.get(field)));
+                    } else {
+                        script.append(String.format("%s bigint PRIMARY KEY", field));
+                    }
+                } else if (config.getAttrX().equals(field)) {
                     xExists = true;
-                    continue;
-                }
-                if (config.getAttrY().equals(field)) {
+                    script.append(String.format("%s double precision", field));
+                } else if (config.getAttrY().equals(field)) {
                     yExists = true;
-                    continue;
-                }
-
-                if (width.containsKey(field)) {
-                    script.append(String.format("%s varchar(%d),\n", field, width.get(field)));
+                    script.append(String.format("%s double precision", field));
+                } else if (width.containsKey(field)) {
+                    script.append(String.format("%s varchar(%d)", field, width.get(field)));
                 } else {
-                    script.append(String.format("%s double precision,\n", field));
+                    script.append(String.format("%s double precision", field));
                 }
+                script.append(++index == fields.length ? "\n" : ",\n");
             }
 
-            // Append longitude and latitude values
-            script.append(String.format("%s double precision,\n", config.getAttrX()));
-            script.append(String.format("%s double precision\n", config.getAttrY()));
             script.append(");\n");
 
             // Key, longitude and latitude attributes are required

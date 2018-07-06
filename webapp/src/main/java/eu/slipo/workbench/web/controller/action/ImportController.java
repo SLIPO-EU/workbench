@@ -20,7 +20,7 @@ import eu.slipo.workbench.web.service.etl.DatabaseImportResult;
 import eu.slipo.workbench.web.service.etl.ImportService;
 
 @RestController
-@Secured({ "USER_ROLE", "ROLE_ADMIN" })
+@Secured({ "ROLE_USER", "ROLE_AUTHOR", "ROLE_ADMIN" })
 @RequestMapping(produces = "application/json")
 public class ImportController extends BaseController {
 
