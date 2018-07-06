@@ -185,30 +185,30 @@ export const EnumKpiViewMode = {
 /**
  * Output partial keys for SLIPO Toolkit components
  */
-export const DEFAULT_OUTPUT_PART = 'DEFAULT';
+export const DEFAULT_OUTPUT_PART = 'Default';
 
 export const EnumTriplegeoOutputPart = {
   [DEFAULT_OUTPUT_PART]: null,
-  TRANSFORMED: 'transformed',
-  CLASSIFICATION: 'classification',
+  transformed: 'Transformed',
+  classification: 'Classification',
 };
 
 export const EnumLimesOutputPart = {
   [DEFAULT_OUTPUT_PART]: null,
-  ACCEPTED: 'accepted',
-  REVIEW: 'review',
+  accepted: 'Accepted',
+  review: 'Review',
 };
 
 export const EnumFagiOutputPart = {
   [DEFAULT_OUTPUT_PART]: null,
-  FUSED: 'fused',
-  REMAINING: 'remaining',
-  REVIEW: 'review',
+  fused: 'Fused',
+  remaining: 'Remaining',
+  review: 'Review',
 };
 
 export const EnumDeerOutputPart = {
   [DEFAULT_OUTPUT_PART]: null,
-  ENRICHED: 'enriched',
+  enriched: 'Enriched',
 };
 
 // Supported data integration tasks
