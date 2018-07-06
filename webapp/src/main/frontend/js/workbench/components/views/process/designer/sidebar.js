@@ -180,6 +180,9 @@ class Sidebar extends React.Component {
                 onClick={() => { this.toggle('1'); }}
               >
                 <i className={this.props.resources.length === 0 ? 'icon-basket' : 'icon-basket-loaded'}></i>
+                {this.state.activeTab === '1' &&
+                  <div style={{ margin: '-2px 0px 0px 6px', float: 'right' }}> Resource Bag</div>
+                }
               </NavLink>
             </NavItem>
           }
@@ -189,6 +192,9 @@ class Sidebar extends React.Component {
               onClick={() => { this.toggle('2'); }}
             >
               <i className="icon-note"></i>
+              {this.state.activeTab === '2' &&
+                <div style={{ margin: '-2px 0px 0px 6px', float: 'right' }}> Properties</div>
+              }
             </NavLink>
           </NavItem>
           {!this.props.execution &&
@@ -202,6 +208,9 @@ class Sidebar extends React.Component {
                 {this.state.activeTab !== '3' && this.props.errors.length > 0 &&
                   <span className="badge badge-pill badge-danger slipo-pd-error-badge">{this.props.errors.length}</span>
                 }
+                {this.state.activeTab === '3' &&
+                  <div style={{ margin: '-2px 0px 0px 6px', float: 'right' }}> Messages</div>
+                }
               </NavLink>
             </NavItem>
           }
@@ -212,7 +221,7 @@ class Sidebar extends React.Component {
               <Row className="slipo-pd-sidebar-resource-list-wrapper">
                 <Col>
                   <div style={{ borderBottom: '1px solid #cfd8dc', padding: 11 }}>
-                    Resource Bag
+                    Filters
                     <ButtonToolbar style={{ position: 'absolute', right: 20, top: 4 }}>
                       <ButtonGroup data-toggle="buttons" aria-label="First group">
                         {filters.map((f) => (
@@ -253,9 +262,6 @@ class Sidebar extends React.Component {
             <Row className="mb-2" style={{ flex: '1 1 auto' }}>
               <Col>
                 <div>
-                  <div style={{ borderBottom: '1px solid #cfd8dc', padding: 11 }}>
-                    Properties
-                  </div>
                   {this.selectedItem ?
                     <div className="slipo-pd-properties">
                       {this.props.active.type === EnumSelection.Process &&
@@ -286,9 +292,6 @@ class Sidebar extends React.Component {
           {!this.props.execution &&
             <TabPane tabId="3">
               <div>
-                <div style={{ borderBottom: '1px solid #cfd8dc', padding: 11 }}>
-                  Errors
-              </div>
                 <ErrorList
                   errors={this.props.errors}
                 >
