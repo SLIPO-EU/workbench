@@ -48,6 +48,7 @@ import eu.slipo.workbench.common.model.resource.ResourceRecord;
 import eu.slipo.workbench.common.model.resource.UploadDataSource;
 import eu.slipo.workbench.common.model.resource.UrlDataSource;
 import eu.slipo.workbench.common.model.tool.AnyTool;
+import eu.slipo.workbench.common.model.tool.DeerConfiguration;
 import eu.slipo.workbench.common.model.tool.FagiConfiguration;
 import eu.slipo.workbench.common.model.tool.ImportDataConfiguration;
 import eu.slipo.workbench.common.model.tool.RegisterToCatalogConfiguration;
@@ -105,6 +106,10 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
     @Autowired
     @Qualifier("fagi.flow")
     private Flow fagiFlow;
+
+    @Autowired
+    @Qualifier("deer.flow")
+    private Flow deerFlow;
 
     @Autowired
     @Qualifier("registerToCatalog.flow")
@@ -341,8 +346,12 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
                 }
                 break;
             case DEER:
-                throw new NotImplementedException("Α Batch flow for a tool of type [" + tool + "]");
-
+                {
+                    Assert.state(inputNames.size() == 1, "A enrichment step expects a single input");
+                    parametersMap = buildParameters(definition, (DeerConfiguration) configuration, createdBy);
+                    flow = deerFlow;
+                }
+                break;
             default:
                 Assert.state(false, "Did not expect a tool of type [" + tool + "]");
             }
@@ -443,6 +452,24 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
 
         URI rulesUri = resolveToAbsoluteUri(rulesLocation, userId);
         parametersMap.put("rulesSpec", rulesUri.toString());
+
+        return parametersMap;
+    }
+
+    private Properties buildParameters(ProcessDefinition def, DeerConfiguration config, int userId)
+    {
+        final Properties parametersMap = propertiesConverter.valueToProperties(config);
+
+        // The reference to `spec` file may need to be resolved to an absolute URI
+
+        final String defaultSpecLocation = "classpath:common/vendor/deer/config/1.xml";
+
+        String specLocation = Optional.ofNullable(parametersMap.getProperty("spec"))
+            .filter(s -> !s.isEmpty())
+            .orElse(defaultSpecLocation);
+
+        URI specUri = resolveToAbsoluteUri(specLocation, userId);
+        parametersMap.put("spec", specUri.toString());
 
         return parametersMap;
     }

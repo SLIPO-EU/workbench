@@ -49,6 +49,12 @@ public class DeerConfiguration extends EnrichConfiguration<Deer>
         }
     }
     
+    /**
+     * The location of the actual configuration (described using an RDF vocabulary).
+     * @see https://dice-group.github.io/deer/configuring_deer/
+     */
+    private String spec;
+    
     public DeerConfiguration() 
     {
         this._version = VERSION;
@@ -109,12 +115,18 @@ public class DeerConfiguration extends EnrichConfiguration<Deer>
     {
         return this.input.get(0);
     }
+    
+    @JsonIgnore
+    public String getInputPath()
+    {
+        return this.input.get(0);
+    }
 
     @JsonIgnore
     @Override
     public void clearInput()
     {
-        super.clearInput();
+        this.input.set(0, null);
     }
 
     @JsonProperty("outputDir")
@@ -157,6 +169,18 @@ public class DeerConfiguration extends EnrichConfiguration<Deer>
     public InputToOutputNameMapper<Deer> getOutputNameMapper()
     {
         return new OutputNameMapper();
+    }
+    
+    @JsonProperty("spec")
+    public String getSpec()
+    {
+        return spec;
+    }
+    
+    @JsonProperty("spec")
+    public void setSpec(String spec)
+    {
+        this.spec = spec;
     }
     
     @JsonIgnore

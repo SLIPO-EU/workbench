@@ -183,6 +183,7 @@ public class ProcessDefinitionTests
             config.setInput("1.nt");
             config.setOutputFormat(EnumDataFormat.N_TRIPLES);
             config.setOutputDir("out");
+            config.setSpec("classpath:config/deer/defaults/1.ttl");
 
             return config;
         }
