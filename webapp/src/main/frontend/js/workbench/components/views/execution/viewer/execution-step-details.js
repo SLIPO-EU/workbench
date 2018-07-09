@@ -42,6 +42,7 @@ import {
 } from '../../process/designer';
 
 import {
+  KpiFagiView,
   KpiTripleGeoView,
 } from './';
 
@@ -272,6 +273,11 @@ export default class ExecutionStepDetails extends React.Component {
                   file={file}
                 />
               }
+              {this.props.step.tool === EnumTool.FAGI &&
+                <KpiFagiView
+                  data={data}
+                  file={file}
+                />}
             </Col>
           </Row>
         }
