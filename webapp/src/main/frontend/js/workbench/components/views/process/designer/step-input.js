@@ -77,7 +77,7 @@ class StepInput extends React.Component {
     const input = step.input.find((i) => i.inputKey === resource.key);
     const popoverId = `popover-${step.key}-${resource.key}`;
     const partKey = input.partKey;
-    const outputParts = ToolConfigurationSettings[resource.tool].outputParts;
+    const outputParts = resource.inputType === EnumInputType.OUTPUT ? ToolConfigurationSettings[resource.tool].outputParts : null;
     let icon = 0;
 
     return (
@@ -108,30 +108,31 @@ class StepInput extends React.Component {
         <p className="slipo-pd-step-input-label">
           {this.props.resource.name}
         </p>
-        <p className={
-          classnames({
-            "slipo-pd-step-input-part-key": true,
-            "slipo-pd-step-input-part-key-enabled": !this.props.readOnly,
-            "d-none": this.props.resource.inputType === EnumInputType.CATALOG,
-          })
-        }>
-          <a
-            onClick={(e) => this.onToggleOutputPartSelection(e)}
-          >{partKey ? outputParts[partKey] : DEFAULT_OUTPUT_PART}</a>
-          {this.props.resource.inputType !== EnumInputType.CATALOG &&
-            <Popover
-              placement="bottom"
-              isOpen={this.state.popoverOpen}
-              target={popoverId}
-              toggle={(e) => this.onToggleOutputPartSelection(e)}
-              className="slipo-pd-step-input-partial-output-popover"
-            >
-              <PopoverBody>
-                {this.renderOutputPartList(partKey)}
-              </PopoverBody>
-            </Popover>
-          }
-        </p>
+        {outputParts &&
+          <p className={
+            classnames({
+              "slipo-pd-step-input-part-key": true,
+              "slipo-pd-step-input-part-key-enabled": !this.props.readOnly,
+            })
+          }>
+            <a
+              onClick={(e) => this.onToggleOutputPartSelection(e)}
+            >{partKey ? outputParts[partKey] : DEFAULT_OUTPUT_PART}</a>
+            {this.props.resource.inputType !== EnumInputType.CATALOG &&
+              <Popover
+                placement="bottom"
+                isOpen={this.state.popoverOpen}
+                target={popoverId}
+                toggle={(e) => this.onToggleOutputPartSelection(e)}
+                className="slipo-pd-step-input-partial-output-popover"
+              >
+                <PopoverBody>
+                  {this.renderOutputPartList(partKey)}
+                </PopoverBody>
+              </Popover>
+            }
+          </p>
+        }
       </div>
     );
   }
