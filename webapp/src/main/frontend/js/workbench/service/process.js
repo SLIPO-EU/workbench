@@ -250,8 +250,15 @@ function readConfiguration(step) {
     case EnumTool.LIMES:
       return config;
 
+    case EnumTool.FAGI:
+      return config;
+
     case EnumTool.CATALOG:
       return config.metadata;
+
+    case EnumTool.DEER:
+      // TODO: Update Deer configuration
+      return {};
 
     default:
       return {};
