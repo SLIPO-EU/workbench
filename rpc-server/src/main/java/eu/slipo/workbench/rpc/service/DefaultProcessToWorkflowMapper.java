@@ -462,7 +462,7 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
 
         // The reference to `spec` file may need to be resolved to an absolute URI
 
-        final String defaultSpecLocation = "classpath:common/vendor/deer/config/1.xml";
+        final String defaultSpecLocation = "classpath:common/vendor/deer/config/1.ttl";
 
         String specLocation = Optional.ofNullable(parametersMap.getProperty("spec"))
             .filter(s -> !s.isEmpty())
