@@ -18,13 +18,18 @@ If vendor-supplied data are used (e.g. ontologies, classification schemes), they
 
 ##### 1.1.2.1 Prepare vendor data : configuration profiles for Triplegeo 
 
-This kind of vendor data provides configuration profiles (schema-To-RDF mappings and classifications) to be used inside a Triplegeo transformation. The data is expected to be found under the following directory hierarchy:   
+This kind of vendor data provides configuration profiles (schema-To-RDF mappings and classifications) to be used inside a `Triplegeo` transformation. The data is expected to be found under the following directory hierarchy:   
 
    * `triplegeo/config/profiles/<PROFILE-NAME>/options.conf`: sample configuration
    * `triplegeo/config/profiles/<PROFILE-NAME>/mappings.(yml|ttl)`: schema-to-RDF mappings
    * `triplegeo/config/profiles/<PROFILE-NAME>/classification.csv`: a classification scheme
 
 The `PROFILE-NAME` can be used to reference a mapping/classification inside Triplegeo configuration (without having to specify a filesystem path for it). 
+
+##### 1.1.2.2 Prepare vendor data : rulesets for Fagi
+
+This kind of vendor data provides rulesets for `Fagi` fusion tool. A ruleset may be placed under `fagi/config/rulesets`
+
 
 ## 1.2. Build
 
