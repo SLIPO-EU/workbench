@@ -3,6 +3,7 @@ package eu.slipo.workbench.common.model.tool;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import javax.validation.constraints.NotNull;
@@ -89,7 +90,7 @@ public class DeerConfiguration extends EnrichConfiguration<Deer>
     @Override
     public List<String> getInput()
     {
-        return super.getInput();
+        return Collections.unmodifiableList(this.input);
     }
 
     @JsonIgnore
