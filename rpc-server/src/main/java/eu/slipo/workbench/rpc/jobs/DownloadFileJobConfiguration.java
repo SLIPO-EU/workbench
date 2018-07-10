@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -14,7 +15,6 @@ import java.nio.file.StandardOpenOption;
 import javax.annotation.PostConstruct;
 
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.StepExecution;
@@ -30,6 +30,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 import eu.slipo.workbench.rpc.jobs.listener.ExecutionContextPromotionListeners;
 
@@ -55,6 +56,8 @@ public class DownloadFileJobConfiguration extends BaseJobConfiguration
         private final URL url;
 
         private final String checksum;
+
+        private final boolean tryLink = true;
 
         /**
          * Create an instance of {@link DownloadFileTasklet}
@@ -111,9 +114,7 @@ public class DownloadFileJobConfiguration extends BaseJobConfiguration
             // Download file
 
             final Path target = outputDir.resolve(outputName);
-            try (InputStream in = url.openStream()) {
-                Files.copy(in, target, StandardCopyOption.REPLACE_EXISTING);
-            }
+            downloadToTarget(target);
 
             // Verify download
 
@@ -132,6 +133,28 @@ public class DownloadFileJobConfiguration extends BaseJobConfiguration
             executionContext.put("outputName", outputName.toString());
 
             return RepeatStatus.FINISHED;
+        }
+
+        private void downloadToTarget(Path target) throws IOException
+        {
+            // If URL represents a local file, first try to link
+
+            Path link = null;
+            if (tryLink && url.getProtocol().equals("file") && StringUtils.isEmpty(url.getHost())) {
+                try {
+                    link = Files.createLink(target, Paths.get(url.getPath()));
+                } catch (FileSystemException e) {
+                    link = null;
+                }
+            }
+
+            // If no link was created, fallback to plain copying
+
+            if (link == null) {
+                try (InputStream in = url.openStream()) {
+                    Files.copy(in, target, StandardCopyOption.REPLACE_EXISTING);
+                }
+            }
         }
     }
 

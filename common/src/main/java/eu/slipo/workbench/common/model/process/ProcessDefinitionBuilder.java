@@ -1,6 +1,8 @@
 package eu.slipo.workbench.common.model.process;
 
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -814,7 +816,47 @@ public class ProcessDefinitionBuilder
             k -> this.new ImportStepBuilder(k, String.format("Import: %s", name), url);
         return this.addStep(b -> b.outputKey(key).outputFormat(dataFormat), stepBuilder);
     }
-
+    
+    /**
+     * @see ProcessDefinitionBuilder#resource(String, String, URL, EnumDataFormat)
+     */
+    public ProcessDefinitionBuilder resource(String name, String key, String urlSpec, EnumDataFormat dataFormat)
+    {
+        Assert.notNull(urlSpec, "A source URL is required");
+        
+        URL url = null;
+        try {
+            url = new URL(urlSpec);
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException(e);
+        }
+        
+        return resource(name, key, url, dataFormat);
+    }
+    
+    /**
+     * Designate an external source, a file path, as a input available to this process.
+     * 
+     * @param name A user-friendly name for this input resource
+     * @param key A resource key for this resource to be referenced as an input
+     * @param path A file path for the source 
+     * @param dataFormat The data format for this resource
+     * @return
+     */
+    public ProcessDefinitionBuilder resource(String name, String key, Path path, EnumDataFormat dataFormat) 
+    {
+        Assert.notNull(path, "An source path is required");
+        
+        URL url = null;
+        try {
+            url = new URL("file", null, path.toString());
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException("The path yields a malformed URL", e);
+        }
+        
+        return resource(name, key, url, dataFormat);
+    }
+    
     /**
      * Add a generic step to this process.
      *
