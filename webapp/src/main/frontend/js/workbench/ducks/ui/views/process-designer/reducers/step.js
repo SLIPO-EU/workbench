@@ -142,6 +142,10 @@ function createFagiDefaultConfiguration(appConfiguration, effectiveVersion) {
 
 function createDeerDefaultConfiguration(appConfiguration, effectiveVersion) {
   const configuration = {
+    inputFormat: EnumDataFormat.N_TRIPLES,
+    outputFormat: EnumDataFormat.N_TRIPLES,
+    outputDir: "output",
+    spec: null,
     version: effectiveVersion || appConfiguration.deer.version,
   };
 
