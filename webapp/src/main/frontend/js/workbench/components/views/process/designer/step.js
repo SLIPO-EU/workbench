@@ -375,7 +375,9 @@ class Step extends React.Component {
                 {this.props.stepExecution && this.props.stepExecution.files && this.props.stepExecution.files.length !== 0 &&
                   <i className="slipo-pd-step-action slipo-pd-step-config fa fa-folder-open" onClick={(e) => { this.viewDetails(e); }}></i>
                 }
-                <i className="slipo-pd-step-action slipo-pd-step-config fa fa-wrench" onClick={(e) => { this.configure(e); }}></i>
+                {ToolConfigurationSettings[this.props.step.tool].editable &&
+                  <i className="slipo-pd-step-action slipo-pd-step-config fa fa-wrench" onClick={(e) => { this.configure(e); }}></i>
+                }
               </div>
               :
               <div className="slipo-pd-step-actions">
