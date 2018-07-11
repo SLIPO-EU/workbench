@@ -1,6 +1,8 @@
 package eu.slipo.workbench.common.model.process;
 
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +26,8 @@ import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
 import eu.slipo.workbench.common.model.resource.UrlDataSource;
 import eu.slipo.workbench.common.model.tool.AnyTool;
+import eu.slipo.workbench.common.model.tool.EnrichConfiguration;
+import eu.slipo.workbench.common.model.tool.EnrichTool;
 import eu.slipo.workbench.common.model.tool.FuseConfiguration;
 import eu.slipo.workbench.common.model.tool.FuseTool;
 import eu.slipo.workbench.common.model.tool.ImportDataConfiguration;
@@ -550,6 +554,71 @@ public class ProcessDefinitionBuilder
         }
     }
 
+    public class EnrichStepBuilder extends StepBuilder
+    {
+        private final GenericStepBuilder stepBuilder;
+        
+        public EnrichStepBuilder(int key, String name)
+        {
+            this.stepBuilder = ProcessDefinitionBuilder.this.new GenericStepBuilder(key, name, Step::new);
+            this.stepBuilder.operation(EnumOperation.ENRICHMENT);
+            this.stepBuilder.tool(EnumTool.DEER);
+        }
+        
+        public EnrichStepBuilder group(int groupNumber)
+        {
+            this.stepBuilder.group(groupNumber);
+            return this;
+        }
+
+        public EnrichStepBuilder nodeName(String nodeName)
+        {
+            this.stepBuilder.nodeName(nodeName);
+            return this;
+        }
+        
+        public EnrichStepBuilder input(String inputKey)
+        {
+            Assert.isTrue(this.stepBuilder.input.isEmpty(), 
+                "The input is already specified (a single input is expected)");
+            this.stepBuilder.input(inputKey);
+            return this;
+        }
+
+        public EnrichStepBuilder input(String inputKey, OutputPart<? extends AnyTool> part)
+        {
+            Assert.isTrue(this.stepBuilder.input.isEmpty(), 
+                "The input is already specified (a single input is expected)");
+            this.stepBuilder.input(inputKey, part);
+            return this;
+        }
+        
+        public EnrichStepBuilder configuration(EnrichConfiguration<? extends EnrichTool> configuration)
+        {
+            this.stepBuilder.configuration(configuration);
+            return this;
+        }
+
+        public EnrichStepBuilder outputKey(String outputKey)
+        {
+            this.stepBuilder.outputKey(outputKey);
+            return this;
+        }
+
+        public EnrichStepBuilder outputFormat(EnumDataFormat format)
+        {
+            this.stepBuilder.outputFormat(format);
+            return this;
+        }
+        
+        @Override
+        protected Step build()
+        {
+            Assert.state(!this.stepBuilder.input.isEmpty(), "No input is specified");
+            return this.stepBuilder.build();
+        }
+    }
+    
     public class RegisterStepBuilder extends StepBuilder
     {
         private final GenericStepBuilder stepBuilder;
@@ -747,7 +816,47 @@ public class ProcessDefinitionBuilder
             k -> this.new ImportStepBuilder(k, String.format("Import: %s", name), url);
         return this.addStep(b -> b.outputKey(key).outputFormat(dataFormat), stepBuilder);
     }
-
+    
+    /**
+     * @see ProcessDefinitionBuilder#resource(String, String, URL, EnumDataFormat)
+     */
+    public ProcessDefinitionBuilder resource(String name, String key, String urlSpec, EnumDataFormat dataFormat)
+    {
+        Assert.notNull(urlSpec, "A source URL is required");
+        
+        URL url = null;
+        try {
+            url = new URL(urlSpec);
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException(e);
+        }
+        
+        return resource(name, key, url, dataFormat);
+    }
+    
+    /**
+     * Designate an external source, a file path, as a input available to this process.
+     * 
+     * @param name A user-friendly name for this input resource
+     * @param key A resource key for this resource to be referenced as an input
+     * @param path A file path for the source 
+     * @param dataFormat The data format for this resource
+     * @return
+     */
+    public ProcessDefinitionBuilder resource(String name, String key, Path path, EnumDataFormat dataFormat) 
+    {
+        Assert.notNull(path, "An source path is required");
+        
+        URL url = null;
+        try {
+            url = new URL("file", null, path.toString());
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException("The path yields a malformed URL", e);
+        }
+        
+        return resource(name, key, url, dataFormat);
+    }
+    
     /**
      * Add a generic step to this process.
      *
@@ -806,6 +915,20 @@ public class ProcessDefinitionBuilder
         Assert.isTrue(!StringUtils.isEmpty(name), "Expected a non-empty name");
         Assert.notNull(configurer, "Expected a non-null configurer for a step");
         return this.addStep(configurer, k -> this.new FuseStepBuilder(k, name));
+    }
+    
+    /**
+     * Add a enrichment step to this process.
+     * 
+     * @param name The user-friendly name for this step
+     * @param configurer A function to build the step
+     * @return this builder
+     */
+    public ProcessDefinitionBuilder enrich(String name, Consumer<EnrichStepBuilder> configurer)
+    {
+        Assert.isTrue(!StringUtils.isEmpty(name), "Expected a non-empty name");
+        Assert.notNull(configurer, "Expected a non-null configurer for a step");
+        return this.addStep(configurer, k -> this.new EnrichStepBuilder(k, name));
     }
 
     /**

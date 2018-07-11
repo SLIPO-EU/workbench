@@ -1,5 +1,6 @@
 package eu.slipo.workbench.rpc.service;
 
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.nio.ByteBuffer;
@@ -30,9 +31,6 @@ import org.springframework.util.StringUtils;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Table;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
@@ -48,6 +46,7 @@ import eu.slipo.workbench.common.model.resource.ResourceRecord;
 import eu.slipo.workbench.common.model.resource.UploadDataSource;
 import eu.slipo.workbench.common.model.resource.UrlDataSource;
 import eu.slipo.workbench.common.model.tool.AnyTool;
+import eu.slipo.workbench.common.model.tool.DeerConfiguration;
 import eu.slipo.workbench.common.model.tool.FagiConfiguration;
 import eu.slipo.workbench.common.model.tool.ImportDataConfiguration;
 import eu.slipo.workbench.common.model.tool.RegisterToCatalogConfiguration;
@@ -56,7 +55,6 @@ import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.model.tool.output.EnumImportDataOutputPart;
 import eu.slipo.workbench.common.model.tool.output.InputToOutputNameMapper;
 import eu.slipo.workbench.common.model.tool.output.OutputPart;
-import eu.slipo.workbench.common.model.tool.output.OutputSpec;
 import eu.slipo.workbench.common.repository.ResourceRepository;
 import eu.slipo.workbench.common.service.UserFileNamingStrategy;
 import eu.slipo.workbench.common.service.util.PropertiesConverterService;
@@ -66,7 +64,6 @@ import eu.slipo.workflows.WorkflowBuilderFactory;
 import eu.slipo.workflows.util.digraph.DependencyGraph;
 import eu.slipo.workflows.util.digraph.DependencyGraphs;
 import eu.slipo.workflows.util.digraph.TopologicalSort.CycleDetected;
-import jersey.repackaged.com.google.common.collect.Multimaps;
 
 @Service
 public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
@@ -105,6 +102,10 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
     @Autowired
     @Qualifier("fagi.flow")
     private Flow fagiFlow;
+
+    @Autowired
+    @Qualifier("deer.flow")
+    private Flow deerFlow;
 
     @Autowired
     @Qualifier("registerToCatalog.flow")
@@ -204,8 +205,9 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
             // Add a job node (a downloader) into workflow
             workflowBuilder.job(b -> b.name(nodeName)
                 .flow(downloadFileFlow)
-                .parameters(
-                    p -> p.addString("url", url.toString()).addString("outputName", outputName))
+                .parameters(p -> p
+                    .addString("url", resolveRelativePath(url, createdBy).toString())
+                    .addString("outputName", outputName))
                 .output(outputName));
             // Map this source to a node name
             sourceToNodeName.put(source, nodeName);
@@ -303,7 +305,6 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
                     flow = null;
                     // Link to the downloader node responsible for our source URL
                     final URL url = ((ImportDataConfiguration) configuration).getUrl();
-                    Assert.state(url != null, "An importer node should target a non-empty URL");
                     final DataSource source = sourcesToDownload.stream()
                         .filter(s -> url.equals(((UrlDataSource) s).getUrl()))
                         .findFirst().get();
@@ -341,8 +342,12 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
                 }
                 break;
             case DEER:
-                throw new NotImplementedException("Α Batch flow for a tool of type [" + tool + "]");
-
+                {
+                    Assert.state(inputNames.size() == 1, "A enrichment step expects a single input");
+                    parametersMap = buildParameters(definition, (DeerConfiguration) configuration, createdBy);
+                    flow = deerFlow;
+                }
+                break;
             default:
                 Assert.state(false, "Did not expect a tool of type [" + tool + "]");
             }
@@ -447,6 +452,24 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
         return parametersMap;
     }
 
+    private Properties buildParameters(ProcessDefinition def, DeerConfiguration config, int userId)
+    {
+        final Properties parametersMap = propertiesConverter.valueToProperties(config);
+
+        // The reference to `spec` file may need to be resolved to an absolute URI
+
+        final String defaultSpecLocation = "classpath:common/vendor/deer/config/1.ttl";
+
+        String specLocation = Optional.ofNullable(parametersMap.getProperty("spec"))
+            .filter(s -> !s.isEmpty())
+            .orElse(defaultSpecLocation);
+
+        URI specUri = resolveToAbsoluteUri(specLocation, userId);
+        parametersMap.put("spec", specUri.toString());
+
+        return parametersMap;
+    }
+
     /**
      * Resolve a resource identifier (an instance of {@link ResourceIdentifier}) into a
      * resource record.
@@ -484,7 +507,7 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
         Assert.notNull(uri, "A non-empty URI is required");
         if (!uri.isAbsolute()) {
             Path path = Paths.get(uri.getPath());
-            Assert.notNull(path, "The input URI is expected to have a non-empty path");
+            Assert.notNull(path, "The given URI is expected to have a non-empty path");
             if (!path.isAbsolute()) {
                 // Treat as a file resource into user's data directory
                 path = userFileNamingStrategy.resolvePath(userId, path);
@@ -493,6 +516,25 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
             uri = path.toUri();
         }
         return uri;
+    }
+
+    private URL resolveRelativePath(URL url, int userId)
+    {
+        if (url.getProtocol().equals("file")) {
+            Path path = Paths.get(url.getPath());
+            Assert.notNull(path, "The given URL is expected to have a non-empty path");
+            if (!path.isAbsolute()) {
+                // Treat as a file resource into user's data directory
+                path = userFileNamingStrategy.resolvePath(userId, path);
+                try {
+                    url = new URL("file", null, path.toString());
+                } catch (MalformedURLException e) {
+                    throw new IllegalStateException("The path yields a malformed URL", e);
+                }
+            }
+        }
+
+        return url;
     }
 
     private Path resolveToPath(ResourceIdentifier resourceIdentifier)

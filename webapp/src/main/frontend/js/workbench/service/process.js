@@ -248,6 +248,8 @@ function readConfiguration(step) {
       return readConfigurationTripleGeo(config);
 
     case EnumTool.LIMES:
+    case EnumTool.FAGI:
+    case EnumTool.DEER:
       return config;
 
     case EnumTool.CATALOG:

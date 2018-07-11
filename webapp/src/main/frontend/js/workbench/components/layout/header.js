@@ -16,11 +16,11 @@ import { StaticRoutes } from '../../model/routes';
 import Toolbar from './toolbar';
 import AsideToggle from './aside-toggle';
 
+import SelectLanguage from '../helpers/select-language';
+
 //
 // Presentational component
 //
-
-const SelectLanguage = require('../helpers/select-language');
 
 class Header extends React.Component {
   constructor(props) {

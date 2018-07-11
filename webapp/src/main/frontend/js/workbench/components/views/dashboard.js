@@ -10,7 +10,6 @@ import {
 } from 'react-router-dom';
 
 import {
-  FormattedTime,
   injectIntl,
 } from 'react-intl';
 
@@ -19,8 +18,6 @@ import {
   CardBody,
   Row,
 } from 'reactstrap';
-
-import moment from 'moment';
 
 import {
   Roles,

@@ -131,12 +131,13 @@ public interface ProcessService {
      *
      * @param id The process id
      * @param version The version of the process (revision)
+     * @param task The {@link EnumProcessTaskType} of the required operation.
      *
      * @throws ProcessNotFoundException if no matching revision entity is found
      * @throws ProcessExecutionStartException if the execution failed to start
      * @throws IOException if an I/O error has occurred
      */
-    ProcessExecutionRecord start(long id, long version) throws ProcessNotFoundException, ProcessExecutionStartException, IOException;
+    ProcessExecutionRecord start(long id, long version, EnumProcessTaskType task) throws ProcessNotFoundException, ProcessExecutionStartException, IOException;
 
     /**
      * Stops the execution of a process revision. A revision will be identified as the

@@ -1,8 +1,10 @@
-const moment = require('moment');
+import moment from 'moment';
 
-require('moment/locale/el');
-require('moment/locale/de');
+import 'moment/locale/el';
+import 'moment/locale/de';
+import 'moment/locale/en-gb';
 
-moment.locale('en-GB'); // set global locale
+// Set default locale
+moment.locale('en-gb');
 
-module.exports = moment;
+export default moment;

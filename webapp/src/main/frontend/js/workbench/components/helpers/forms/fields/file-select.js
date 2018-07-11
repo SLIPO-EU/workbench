@@ -184,12 +184,11 @@ export class FileSelect extends React.Component {
    */
   findFolderFromPath(path) {
     const currentPath = path || this.selectedPath || (this.state && this.state.folder && this.state.folder.path) || '/';
-
     let folder = this.props.filesystem;
 
-    currentPath.split('/').slice(0, -1).forEach((name) => {
+    currentPath.split('/').forEach((name) => {
       if (name) {
-        folder = folder.folders.find((f) => f.name === name);
+        folder = folder.folders.find((f) => f.name === name) || folder;
       }
     });
 
@@ -209,14 +208,14 @@ export class FileSelect extends React.Component {
     const hierarchy = [{ name: '..', folder: this.props.filesystem }];
     let currentFolder = this.props.filesystem;
 
-    path.split('/').slice(0, -1).forEach((name) => {
+    path.split('/').forEach((name) => {
       if (name) {
         currentFolder = currentFolder.folders.find((f) => f.name === name);
         hierarchy.push({ name, folder: currentFolder });
       }
     });
 
-    return hierarchy;
+    return hierarchy.length === 1 && !path ? [{ name: '.', folder: this.props.filesystem }] : hierarchy;
   }
 
   /**
@@ -262,10 +261,12 @@ export class FileSelect extends React.Component {
    */
   createNewFolder() {
     if ((!this.props.readOnly) && (this.props.allowNewFolder)) {
-      this.props.createFolder(this.state.folder.path + this.state.newFolderName)
-        .then(fs => {
+      const newFolder = this.state.folder.path + '/' + this.state.newFolderName;
+
+      this.props.createFolder(newFolder)
+        .then(() => {
           this.setState({
-            folder: this.findFolderFromPath(this.state.folder.path),
+            folder: this.findFolderFromPath(newFolder),
             mode: EnumFileSelectMode.BROWSER,
             newFolderName: '',
           });
@@ -315,6 +316,9 @@ export class FileSelect extends React.Component {
   }
 
   handleRowAction(rowInfo, e, handleOriginal) {
+    if (!rowInfo) {
+      return;
+    }
     switch (e.target.getAttribute('data-action')) {
       case 'delete':
         this.setState({
@@ -347,7 +351,7 @@ export class FileSelect extends React.Component {
           this.props.onChange(null);
         }
         this.props.deletePath(this.state.pathToDelete)
-          .then(fs => {
+          .then(() => {
             this.setState({
               folder: this.findFolderFromPath(this.state.folder.path),
               pathToDelete: '',
@@ -426,22 +430,30 @@ export class FileSelect extends React.Component {
       <div style={{ display: 'flex' }}>
         <div style={{ flexGrow: '1' }}>
           {
-            hierarchy.map((item, i, arr) => (
-              <span key={i}>
-                <Button
-                  disabled={this.state.mode !== EnumFileSelectMode.BROWSER}
-                  color="link"
-                  onClick={(e) => {
-                    if (item && item.folder) {
-                      this.setState({ folder: item.folder });
-                    }
-                  }}
-                >
-                  {item.name}
-                </Button>
-                {i !== arr.length - 1 ? <span>/</span> : null}
-              </span>
-            ))
+            hierarchy.map((item, i, arr) => {
+              const isLast = (i === arr.length - 1);
+
+              return (
+                <span key={i}>
+                  {isLast ?
+                    <span className="btn" style={{ cursor: 'default' }}>{item.name}</span>
+                    :
+                    <Button
+                      disabled={this.state.mode !== EnumFileSelectMode.BROWSER}
+                      color="link"
+                      onClick={(e) => {
+                        if (item && item.folder) {
+                          this.setState({ folder: item.folder });
+                        }
+                      }}
+                    >
+                      {item.name}
+                    </Button>
+                  }
+                  {!isLast ? <span>/</span> : null}
+                </span>
+              );
+            })
           }
         </div>
         <div style={{ fontSize: '1.5em', paddingTop: '4px' }}>
@@ -530,7 +542,7 @@ export class FileSelect extends React.Component {
         <Dropzone
           onDrop={(accepted, rejected) => {
             if (rejected.length) {
-              console.error('rejected file:', rejected);
+              console.error('Rejected file:', rejected);
             }
             const file = accepted && accepted.length && accepted[0];
             this.setState({

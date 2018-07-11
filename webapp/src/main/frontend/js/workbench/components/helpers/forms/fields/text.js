@@ -25,6 +25,7 @@ export class Text extends React.Component {
     state: PropTypes.oneOf(['success', 'warning', 'danger']),
     onChange: PropTypes.func,
     readOnly: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
+    maxLength: PropTypes.number,
   }
 
 
@@ -53,6 +54,7 @@ export class Text extends React.Component {
         autoComplete="off"
         onChange={e => typeof props.onChange === 'function' ? props.onChange(e.target.value) : null}
         readOnly={this.isReadOnly}
+        maxLength={this.props.maxLength || ''}
       />
     );
   }

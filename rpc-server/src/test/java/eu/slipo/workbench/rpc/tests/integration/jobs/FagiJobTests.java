@@ -21,16 +21,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
-import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import eu.slipo.workbench.rpc.Application;
-import eu.slipo.workbench.rpc.tests.integration.jobs.AbstractJobTests.Fixture;
 
 @RunWith(SpringRunner.class)
 @ActiveProfiles({ "testing" })
@@ -66,8 +65,7 @@ public class FagiJobTests extends AbstractJobTests
                 try (InputStream in = specResource.getInputStream()) {
                     parametersMap.load(in);
                 }
-                Resource rulesResource = dir.createRelative("rules.xml");
-                parametersMap.put("rulesSpec", rulesResource.getURI());
+                parametersMap.put("rulesSpec", dir.createRelative("rules.xml").getURI());
                 fixtures.add(Fixture.create(inputDir, resultsDir, parametersMap));
             }
 

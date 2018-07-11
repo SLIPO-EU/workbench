@@ -1,6 +1,7 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
-import moment from 'moment';
+
+import moment from '../../../../moment-localized';
 
 import {
   FormattedTime

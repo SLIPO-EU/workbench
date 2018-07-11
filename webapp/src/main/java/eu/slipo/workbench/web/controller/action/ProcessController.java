@@ -24,6 +24,7 @@ import eu.slipo.workbench.common.model.BasicErrorCode;
 import eu.slipo.workbench.common.model.Error;
 import eu.slipo.workbench.common.model.QueryResultPage;
 import eu.slipo.workbench.common.model.RestResponse;
+import eu.slipo.workbench.common.model.process.EnumProcessTaskType;
 import eu.slipo.workbench.common.model.process.InvalidProcessDefinitionException;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.ProcessErrorCode;
@@ -314,7 +315,7 @@ public class ProcessController extends BaseController {
     @RequestMapping(value = "/action/process/{id}/{version}/start", method = RequestMethod.POST)
     public RestResponse<?> start(@PathVariable long id, @PathVariable long version) {
         try {
-            this.processService.start(id, version);
+            this.processService.start(id, version, EnumProcessTaskType.UNDEFINED);
         } catch (Exception ex) {
             return this.exceptionToResponse(ex);
         }
@@ -367,7 +368,7 @@ public class ProcessController extends BaseController {
 
         try {
             if (request.getAction() == EnumProcessSaveActionType.SAVE_AND_EXECUTE) {
-                this.processService.start(record.getId(), record.getVersion());
+                this.processService.start(record.getId(), record.getVersion(), EnumProcessTaskType.DATA_INTEGRATION);
             }
         } catch (Exception ex) {
             return this.exceptionToResponse(ex, Error.EnumLevel.WARN);
