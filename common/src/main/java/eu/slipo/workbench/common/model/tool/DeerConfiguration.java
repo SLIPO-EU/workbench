@@ -51,6 +51,11 @@ public class DeerConfiguration extends EnrichConfiguration<Deer>
     }
     
     /**
+     * A profile for setting default configuration values
+     */
+    private String _profile;
+    
+    /**
      * The location of the actual configuration (described using an RDF vocabulary).
      * @see https://dice-group.github.io/deer/configuring_deer/
      */
@@ -71,6 +76,19 @@ public class DeerConfiguration extends EnrichConfiguration<Deer>
         return Deer.class;
     }
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonProperty("profile")
+    public String getProfile()
+    {
+        return _profile;
+    }
+    
+    @JsonProperty("profile")
+    public void setProfile(String profile)
+    {
+        this._profile = profile;
+    }
+    
     @JsonProperty("inputFormat")
     @Override
     public EnumDataFormat getInputFormat()

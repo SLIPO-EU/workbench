@@ -49,6 +49,7 @@ import eu.slipo.workbench.common.model.tool.AnyTool;
 import eu.slipo.workbench.common.model.tool.DeerConfiguration;
 import eu.slipo.workbench.common.model.tool.FagiConfiguration;
 import eu.slipo.workbench.common.model.tool.ImportDataConfiguration;
+import eu.slipo.workbench.common.model.tool.LimesConfiguration;
 import eu.slipo.workbench.common.model.tool.RegisterToCatalogConfiguration;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
@@ -100,12 +101,24 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
     private Flow limesFlow;
 
     @Autowired
+    @Qualifier("limes.configurationProfiles")
+    private Map<String, LimesConfiguration> limesConfigurationProfiles;
+
+    @Autowired
     @Qualifier("fagi.flow")
     private Flow fagiFlow;
 
     @Autowired
+    @Qualifier("fagi.configurationProfiles")
+    private Map<String, FagiConfiguration> fagiConfigurationProfiles;
+
+    @Autowired
     @Qualifier("deer.flow")
     private Flow deerFlow;
+
+    @Autowired
+    @Qualifier("deer.configurationProfiles")
+    private Map<String, DeerConfiguration> deerConfigurationProfiles;
 
     @Autowired
     @Qualifier("registerToCatalog.flow")
@@ -330,7 +343,7 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
             case LIMES:
                 {
                     Assert.state(inputNames.size() == 2, "A interlinking step expects a pair (L, R) of inputs");
-                    parametersMap = buildParameters(definition, configuration, createdBy);
+                    parametersMap = buildParameters(definition, (LimesConfiguration) configuration, createdBy);
                     flow = limesFlow;
                 }
                 break;
@@ -399,23 +412,16 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
     {
         final Properties parametersMap = propertiesConverter.valueToProperties(config);
 
-        // If originates from a configuration profile, draw missing parts from profile
-
+        // If derives from a configuration profile, draw missing parts from profile
         final String profileName = parametersMap.getProperty("profile");
         if (!StringUtils.isEmpty(profileName)) {
             TriplegeoConfiguration profile = triplegeoConfigurationProfiles.get(profileName.toLowerCase());
-            if (profile == null)
-                throw new NoSuchElementException(
-                    "No such profile for Triplegeo configuration: [" + profileName + "]");
-
-            // Use profile defaults to draw (missing) properties
-
+            Assert.state(profile != null, "No such profile for Triplegeo configuration");
+            // Use profile defaults to populate missing properties
             if (StringUtils.isEmpty(parametersMap.getProperty("mappingSpec")))
                 parametersMap.put("mappingSpec", profile.getMappingSpec());
-
             if (StringUtils.isEmpty(parametersMap.getProperty("classificationSpec")))
                 parametersMap.put("classificationSpec", profile.getClassificationSpec());
-
             // Clear profile (everything useful is expanded into parameters)
             parametersMap.remove("profile");
         }
@@ -425,10 +431,25 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
 
         for (String key: Arrays.asList("mappingSpec", "classificationSpec")) {
             final String location = parametersMap.getProperty(key);
-            if (StringUtils.isEmpty(location))
-                continue;
-            URI uri = resolveToAbsoluteUri(location, userId);
-            parametersMap.put(key, uri.toString());
+            if (!StringUtils.isEmpty(location)) {
+                URI uri = resolveToAbsoluteUri(location, userId);
+                parametersMap.put(key, uri.toString());
+            }
+        }
+
+        return parametersMap;
+    }
+
+    private Properties buildParameters(ProcessDefinition def, LimesConfiguration config, int userId)
+    {
+        final Properties parametersMap = propertiesConverter.valueToProperties(config);
+
+        // If derives from a configuration profile, draw missing parts from profile
+        final String profileName = parametersMap.getProperty("profile");
+        if (!StringUtils.isEmpty(profileName)) {
+            LimesConfiguration profile = limesConfigurationProfiles.get(profileName.toLowerCase());
+            Assert.state(profile != null, "No such profile for Limes configuration");
+            parametersMap.remove("profile");
         }
 
         return parametersMap;
@@ -438,16 +459,23 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
     {
         final Properties parametersMap = propertiesConverter.valueToProperties(config);
 
+        // If derives from a configuration profile, draw missing parts from profile
+        final String profileName = parametersMap.getProperty("profile");
+        if (!StringUtils.isEmpty(profileName)) {
+            FagiConfiguration profile = fagiConfigurationProfiles.get(profileName.toLowerCase());
+            Assert.state(profile != null, "No such profile for Fagi configuration");
+            // Use profile defaults to populate missing properties
+            if (StringUtils.isEmpty(config.getRulesSpec()))
+                parametersMap.put("rulesSpec", profile.getRulesSpec());
+            parametersMap.remove("profile");
+        }
+
         // The reference to `rulesSpec` file may need to be resolved to an absolute URI
-
-        final String defaultRulesLocation = "classpath:common/vendor/fagi/config/rulesets/1.xml";
-
-        String rulesLocation = Optional.ofNullable(parametersMap.getProperty("rulesSpec"))
-            .filter(s -> !s.isEmpty())
-            .orElse(defaultRulesLocation);
-
-        URI rulesUri = resolveToAbsoluteUri(rulesLocation, userId);
-        parametersMap.put("rulesSpec", rulesUri.toString());
+        String rulesLocation = parametersMap.getProperty("rulesSpec");
+        if (!StringUtils.isEmpty(rulesLocation)) {
+            URI uri = resolveToAbsoluteUri(rulesLocation, userId);
+            parametersMap.put("rulesSpec", uri.toString());
+        }
 
         return parametersMap;
     }
@@ -456,16 +484,23 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
     {
         final Properties parametersMap = propertiesConverter.valueToProperties(config);
 
+        // If derives from a configuration profile, draw missing parts from profile
+        final String profileName = parametersMap.getProperty("profile");
+        if (!StringUtils.isEmpty(profileName)) {
+            DeerConfiguration profile = deerConfigurationProfiles.get(profileName.toLowerCase());
+            Assert.state(profile != null, "No such profile for Deer configuration");
+            // Use profile defaults to populate missing properties
+            if (StringUtils.isEmpty(config.getSpec()))
+                parametersMap.put("spec", profile.getSpec());
+            parametersMap.remove("profile");
+        }
+
         // The reference to `spec` file may need to be resolved to an absolute URI
-
-        final String defaultSpecLocation = "classpath:common/vendor/deer/config/1.ttl";
-
-        String specLocation = Optional.ofNullable(parametersMap.getProperty("spec"))
-            .filter(s -> !s.isEmpty())
-            .orElse(defaultSpecLocation);
-
-        URI specUri = resolveToAbsoluteUri(specLocation, userId);
-        parametersMap.put("spec", specUri.toString());
+        String location = parametersMap.getProperty("spec");
+        if (!StringUtils.isEmpty(location)) {
+            URI uri = resolveToAbsoluteUri(location, userId);
+            parametersMap.put("spec", uri.toString());
+        }
 
         return parametersMap;
     }

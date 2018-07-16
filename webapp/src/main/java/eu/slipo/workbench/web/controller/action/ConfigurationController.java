@@ -74,7 +74,7 @@ public class ConfigurationController extends BaseController {
     private Map<EnumTool, Map<String, ToolConfiguration<?>>> getToolProfiles() {
         Map<EnumTool, Map<String, ToolConfiguration<?>>>  result = new HashMap<EnumTool, Map<String, ToolConfiguration<?>>>();
         try {
-            String re = ".*vendor\\/(.*)\\/.*config\\/profiles\\/(.*)\\/(options\\.conf)";
+            String re = ".*vendor\\/(.*)\\/.*config\\/profiles\\/(.*)\\/(config\\.properties)";
             Pattern pattern = Pattern.compile(re);
 
             Stream.of(resourceResolver.getResources("classpath:" + vendorDataPath + "/**"))

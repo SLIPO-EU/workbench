@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
 import java.util.TreeSet;
-import java.util.function.Function;
 
 import javax.validation.Valid;
 import javax.validation.constraints.AssertTrue;
@@ -80,7 +79,7 @@ public class LimesConfiguration extends InterlinkConfiguration<Limes>
     public enum DataFormat
     {
         N3(EnumDataFormat.N3, "N3"),
-        N_TRIPLES(EnumDataFormat.N_TRIPLES, "N-TRIPLES"),
+        N_TRIPLES(EnumDataFormat.N_TRIPLES, "N-TRIPLE", "N-TRIPLES"),
         TURTLE(EnumDataFormat.TURTLE, "TURTLE", "TTL"),
         RDF_XML(EnumDataFormat.RDF_XML, "RDF", "RDF/XML"),
         RDF_XML_ABBREV(EnumDataFormat.RDF_XML_ABBREV, "RDF/XML-ABBREV");
@@ -583,6 +582,11 @@ public class LimesConfiguration extends InterlinkConfiguration<Limes>
     }
     
     /**
+     * A profile for setting default configuration values
+     */
+    private String _profile;
+    
+    /**
      * A list of aliased XML namespaces
      */
     private TreeSet<Prefix> prefixes;
@@ -642,6 +646,19 @@ public class LimesConfiguration extends InterlinkConfiguration<Limes>
     public String getVersion()
     {
         return _version;
+    }
+    
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonProperty("profile")
+    public String getProfile()
+    {
+        return _profile;
+    }
+    
+    @JsonProperty("profile")
+    public void setProfile(String profile)
+    {
+        this._profile = profile;
     }
     
     @JsonProperty("prefixes")
