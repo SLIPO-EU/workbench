@@ -113,7 +113,7 @@ export default class Form extends React.Component {
               style={{ maxHeight: '70vh', overflowY: 'auto', paddingRight: 16, paddingBottom: 50 }}
             >
               {
-                React.Children.map(children, (child, index) => {
+                React.Children.map(children, (child) => {
                   return React.cloneElement(child, {
                     setValue: this._setValue,
                     value: this.props.values,

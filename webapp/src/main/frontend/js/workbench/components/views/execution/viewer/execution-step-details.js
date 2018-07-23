@@ -6,14 +6,6 @@ import {
 } from '../../../../util';
 
 import {
-  EnumKpiViewMode,
-} from '../../../../model/process-designer';
-
-import {
-  FormattedTime
-} from 'react-intl';
-
-import {
   Button,
   Card,
   CardBody,

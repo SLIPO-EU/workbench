@@ -11,8 +11,6 @@ import GeoJSON from 'ol/format/geojson';
 
 import VectorLayer from 'ol/layer/vector';
 
-import URI from 'urijs';
-
 /**
  * Vector layer from GeoJSON data
  *

@@ -5,7 +5,6 @@ import classnames from 'classnames';
 
 import {
   EnumTool,
-  EnumToolboxItem,
   EnumDragSource,
 } from '../../../../model/process-designer';
 
@@ -185,12 +184,12 @@ class StepGroup extends React.Component {
           {this.props.group.key === 0 && this.props.steps.length == 0 &&
             <div className="slipo-pd-step-group-label">
               <i className="fa fa-paint-brush mr-2"></i> Drop a TripleGeo operation ...
-          </div>
+            </div>
           }
           {this.props.group.key !== 0 && this.props.steps.length == 0 &&
             <div className="slipo-pd-step-group-label">
               <i className="fa fa-paint-brush mr-2"></i> Drop a SLIPO Toolkit component ...
-          </div>
+            </div>
           }
           {this.props.steps.map((s) => this.renderStep(s))}
         </div>

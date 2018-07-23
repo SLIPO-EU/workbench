@@ -1,10 +1,5 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
-import classnames from 'classnames';
-
-import {
-  EnumToolboxItem,
-} from '../../../../model/process-designer';
 
 import {
   StepGroup,

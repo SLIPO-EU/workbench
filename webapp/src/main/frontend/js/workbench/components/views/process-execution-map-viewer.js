@@ -25,10 +25,6 @@ import {
 } from '../../ducks/ui/views/process-designer';
 
 import {
-  SelectField,
-} from '../helpers/forms/fields';
-
-import {
   StaticRoutes,
 } from '../../model';
 
