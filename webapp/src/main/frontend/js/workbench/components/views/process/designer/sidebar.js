@@ -7,7 +7,6 @@ import {
 } from 'redux';
 
 import {
-  Button,
   ButtonGroup,
   ButtonToolbar,
   Col,
@@ -172,7 +171,7 @@ class Sidebar extends React.Component {
     const filter = filters.find((f) => f.id === this.props.filters.resource);
     return (
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <Nav tabs style={{ height: '44px' }}>
+        <Nav tabs style={{ height: '2.75rem' }}>
           {!this.props.execution &&
             <NavItem>
               <NavLink
