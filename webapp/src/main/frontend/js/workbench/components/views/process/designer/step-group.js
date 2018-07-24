@@ -91,6 +91,7 @@ class StepGroup extends React.Component {
 
     // Step actions
     addStep: PropTypes.func.isRequired,
+    cloneStep: PropTypes.func.isRequired,
     removeStep: PropTypes.func.isRequired,
     moveStep: PropTypes.func.isRequired,
     configureStepBegin: PropTypes.func.isRequired,
@@ -148,6 +149,7 @@ class StepGroup extends React.Component {
         showStepExecutionDetails={this.props.showStepExecutionDetails}
         setStepProperty={this.props.setStepProperty}
         addStepInput={this.props.addStepInput}
+        cloneStep={this.props.cloneStep}
         removeStepInput={this.props.removeStepInput}
         addStepDataSource={this.props.addStepDataSource}
         removeStepDataSource={this.props.removeStepDataSource}

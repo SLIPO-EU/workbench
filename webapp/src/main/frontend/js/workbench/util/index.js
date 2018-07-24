@@ -1,5 +1,9 @@
-export { default as formatFileSize } from './file-size';
-export { default as validateUrl } from './validate-url';
+export { kpiDataToSeriesByPrefix } from './chart';
+export { checkStatus } from './check-fetch-status';
+export { checkError } from './check-json';
+export { formatFileSize } from './file-size';
+export { toFeatureCollection } from './geojson';
+export { validateUrl } from './validate-url';
 
 import {
   isDefined,

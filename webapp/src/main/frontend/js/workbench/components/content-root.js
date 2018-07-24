@@ -10,7 +10,7 @@ import {
 } from 'react-toastify';
 
 import { Pages, StaticRoutes, ErrorPages } from '../model/routes';
-import { userPropType } from '../model/prop-types/user';
+import userPropType from '../model/prop-types/user';
 import { resize } from '../ducks/ui/viewport';
 import { getFilesystem } from '../ducks/config';
 

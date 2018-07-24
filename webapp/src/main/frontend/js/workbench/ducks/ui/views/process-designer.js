@@ -156,6 +156,14 @@ export default (state = initialState, action) => {
       newState = addStepReducer(state, action);
       break;
 
+    case Types.CLONE_STEP:
+      requireValidation = true;
+      supportUndo = true;
+
+      newState = addStepReducer(state, action);
+      break;
+
+
     case Types.SET_STEP_PROPERTY:
       requireValidation = true;
       supportUndo = true;
@@ -236,6 +244,37 @@ export default (state = initialState, action) => {
         },
         steps: state.steps.map((step) => {
           if ((step.key === action.step.key) && (action.configuration)) {
+            return {
+              ...step,
+              configuration: _.cloneDeep(action.configuration),
+              errors: { ...action.errors },
+            };
+          }
+          return step;
+        })
+      };
+      break;
+
+    case Types.SET_STEP_CONFIGURATION:
+      if (!action.configuration) {
+        return {
+          ...state,
+          view: {
+            type: EnumDesignerView.Designer,
+          },
+        };
+      }
+
+      requireValidation = true;
+      supportUndo = true;
+
+      newState = {
+        ...state,
+        view: {
+          type: EnumDesignerView.Designer,
+        },
+        steps: state.steps.map((step) => {
+          if (step.key === action.step.key) {
             return {
               ...step,
               configuration: _.cloneDeep(action.configuration),
@@ -494,6 +533,7 @@ export default (state = initialState, action) => {
 export {
   reset,
   addStep,
+  cloneStep,
   moveStep,
   removeStep,
   resetActive,
@@ -518,6 +558,7 @@ export {
   filterResource,
   setActiveResource,
   setActiveProcess,
+  setConfiguration,
   processValidate,
   processUpdate,
   undo,

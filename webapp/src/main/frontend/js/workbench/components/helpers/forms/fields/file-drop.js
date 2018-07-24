@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import Dropzone from 'react-dropzone';
 
 import decorateField from './form-field';
-import formatFileSize from '../../../../util/file-size';
+import { formatFileSize } from '../../../../util';
 
 /**
  * Component for selecting a single file to upload

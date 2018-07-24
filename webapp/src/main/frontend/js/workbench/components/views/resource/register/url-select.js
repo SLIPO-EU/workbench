@@ -1,6 +1,6 @@
 import React from 'react';
 import { TextField } from '../../../helpers/forms/form-fields/';
-import validateUrl from '../../../../util/validate-url';
+import { validateUrl } from '../../../../util';
 
 export const initialValue = {
   url: null,

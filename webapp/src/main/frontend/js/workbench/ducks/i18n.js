@@ -1,6 +1,6 @@
 import moment from '../moment-localized';
 
-import { getMessages } from '../service/i18n';
+import { default as i18n } from '../service/i18n';
 
 // Actions
 const REQUEST_MESSAGES = 'locale/REQUEST_MESSAGES';
@@ -48,7 +48,7 @@ const loadMessages = (locale, messages) => ({
 // Thunk actions
 const fetchMessages = (locale) => (dispatch) => {
   dispatch(requestMessages(locale));
-  return getMessages(locale)
+  return i18n.getMessages(locale)
     .then(r => dispatch(loadMessages(locale, r)));
 };
 

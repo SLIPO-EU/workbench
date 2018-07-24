@@ -1,11 +1,11 @@
 import fetch from 'isomorphic-fetch';
 
-export default function validateUrl(url) {
+export function validateUrl(url) {
   if (!url || !url.startsWith('http')) {
     return Promise.reject('Enter valid url');
   }
   return fetch(url, {
-    method: 'GET',    
+    method: 'GET',
   })
     .then((res) => {
       if (!res.ok) {

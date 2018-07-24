@@ -1,4 +1,4 @@
-const actions = require('./api/fetch-actions');
+import actions from './api/fetch-actions';
 
 function relativePath(path) {
   if (path.startsWith('/')) {
@@ -7,7 +7,7 @@ function relativePath(path) {
   return path;
 }
 
-module.exports = {
+export default {
 
   fetch: (token) => {
     return actions.get(`/action/file-system`, token);

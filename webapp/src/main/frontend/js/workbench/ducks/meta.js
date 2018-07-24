@@ -1,6 +1,6 @@
 // meta.js
 
-const { LOGIN, LOGOUT } = require('./user');
+import { LOGIN, LOGOUT } from './user';
 
 // Actions
 const SET_CSRF_TOKEN = 'meta/SET_CSRF_TOKEN';
@@ -9,8 +9,8 @@ const SET_CSRF_TOKEN = 'meta/SET_CSRF_TOKEN';
 export default (state = {}, action) => {
   switch (action.type) {
     case SET_CSRF_TOKEN: // token read from meta tag
-    case LOGIN:  // token replaced by new session 
-    case LOGOUT: // -- 
+    case LOGIN:  // token replaced by new session
+    case LOGOUT: // --
       return { csrfToken: action.token };
     default:
       return state;

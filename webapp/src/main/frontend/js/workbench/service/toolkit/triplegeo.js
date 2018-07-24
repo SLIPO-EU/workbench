@@ -1,56 +1,57 @@
 import {
-  serializations, ontologies
-} from "../model/process-designer/configuration/triplegeo";
+  ontologies,
+  serializations,
+} from "../../model/process-designer/configuration/triplegeo";
 
 function fromEnumValue(value, list) {
   const result = list.find((item) => ((item.value === value) || (item.label === value)));
   return (result ? result.value : value);
 }
 
-export const validator = function (values) {
+export function validateConfiguration(config) {
   const errors = {};
-  if ((!values['mappingSpec']) && (!values['profile'])) {
+  if ((!config['mappingSpec']) && (!config['profile'])) {
     errors['mappingSpec'] = 'Required';
   }
-  if ((!values['classificationSpec']) && (!values['profile'])) {
+  if ((!config['classificationSpec']) && (!config['profile'])) {
     errors['classificationSpec'] = 'Required';
   }
-  if (!values['inputFormat']) {
+  if (!config['inputFormat']) {
     errors['inputFormat'] = 'Required';
   }
-  if (!values['mode']) {
+  if (!config['mode']) {
     errors['mode'] = 'Required';
   }
-  if (!values['encoding']) {
+  if (!config['encoding']) {
     errors['encoding'] = 'Required';
   }
-  if (!values['serialization']) {
+  if (!config['serialization']) {
     errors['serialization'] = 'Required';
   }
-  if (!values['targetGeoOntology']) {
+  if (!config['targetGeoOntology']) {
     errors['targetGeoOntology'] = 'Required';
   }
-  if (!values['attrKey']) {
+  if (!config['attrKey']) {
     errors['attrKey'] = 'Required';
   }
 
-  if (values && values.inputFormat !== 'CSV' && !values['attrGeometry']) {
+  if (config && config.inputFormat !== 'CSV' && !config['attrGeometry']) {
     errors['attrGeometry'] = 'Required';
   }
 
-  if (!values['featureSource']) {
+  if (!config['featureSource']) {
     errors['featureSource'] = 'Required';
   }
 
-  if (values && values.inputFormat === 'CSV') {
-    if (!values['delimiter']) {
+  if (config && config.inputFormat === 'CSV') {
+    if (!config['delimiter']) {
       errors['delimiter'] = 'Required for CSV';
     }
-    if (!values['attrGeometry']) {
-      if (!values['attrX']) {
+    if (!config['attrGeometry']) {
+      if (!config['attrX']) {
         errors['attrX'] = 'Required for CSV';
       }
-      if (!values['attrY']) {
+      if (!config['attrY']) {
         errors['attrY'] = 'Required for CSV';
       }
     }
@@ -59,9 +60,9 @@ export const validator = function (values) {
   if (Object.keys(errors).length) {
     throw errors;
   }
-};
+}
 
-export function readConfigurationTripleGeo(config) {
+export function readConfiguration(config) {
   const { prefixes, namespaces, profile = null, serialization, targetGeoOntology, ...rest } = config;
   const prefixArr = prefixes ? prefixes.split(',').map(v => v.trim()) : [];
   const namespaceArr = namespaces ? namespaces.split(',').map(v => v.trim()) : [];
@@ -86,7 +87,7 @@ export function readConfigurationTripleGeo(config) {
   };
 }
 
-export function writeConfigurationTripleGeo(config) {
+export function writeConfiguration(config) {
   const { quote, prefixes, mappingSpec, classificationSpec, ...rest } = config;
 
   return {

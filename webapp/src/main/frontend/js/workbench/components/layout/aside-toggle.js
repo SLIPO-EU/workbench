@@ -13,6 +13,11 @@ import { matchRoute, getRoute } from '../../model/routes';
  */
 class AsideToggle extends React.Component {
 
+  static propTypes = {
+    setAsideMenuVisibility: PropTypes.func.isRequired,
+    toggleAsideMenu: PropTypes.func.isRequired,
+  }
+
   _getComponent() {
     let route = getRoute(matchRoute(this.props.location.pathname));
     if ((route) && (route.contextComponent)) {
@@ -44,9 +49,4 @@ class AsideToggle extends React.Component {
 
 }
 
-AsideToggle.propTypes = {
-  setAsideMenuVisibility: PropTypes.func.isRequired,
-  toggleAsideMenu: PropTypes.func.isRequired,
-};
-
-module.exports = withRouter(AsideToggle);
+export default withRouter(AsideToggle);

@@ -35,5 +35,17 @@ export {
 } from './enum';
 
 export {
-  defaultTripleGeoValues
+  defaultValues as defaultTripleGeoValues,
 } from './configuration/triplegeo';
+
+export {
+  defaultValues as defaultLimesValues,
+} from './configuration/limes';
+
+export {
+  defaultValues as defaultFagiValues,
+} from './configuration/fagi';
+
+export {
+  defaultValues as defaultDeerValues,
+} from './configuration/deer';

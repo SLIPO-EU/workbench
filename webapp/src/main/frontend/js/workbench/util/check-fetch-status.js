@@ -1,7 +1,7 @@
 import {
   EnumErrorLevel,
   ServerError,
-} from "../../model/error";
+} from "../model/error";
 
 /**
  * A handler that can be chained to a fetch promise to reject non
