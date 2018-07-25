@@ -11,12 +11,12 @@ import {
 } from 'reactstrap';
 
 import userPropType from '../../model/prop-types/user';
-import { StaticRoutes } from '../../model/routes';
+import { Roles, StaticRoutes } from '../../model';
 
 import Toolbar from './toolbar';
 import AsideToggle from './aside-toggle';
 
-import SelectLanguage from '../helpers/select-language';
+import { SecureContent, SelectLanguage, Zoom } from '../helpers';
 
 import { logout } from '../../ducks/user';
 
@@ -74,6 +74,11 @@ class Header extends React.Component {
 
         {/* right-aligned menu items */}
         <ul className="nav navbar-nav ml-auto">
+          <SecureContent roles={[Roles.DEVELOPER]}>
+            <li className="nav-item">
+              <Zoom />
+            </li>
+          </SecureContent>
           <li className="nav-item d-md-down-none alert d-none">
             <Link to={StaticRoutes.EventViewer} className="nav-link">
               <i className="icon-bell"></i><span className="badge badge-pill badge-info">5</span>
