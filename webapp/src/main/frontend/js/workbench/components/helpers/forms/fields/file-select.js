@@ -530,6 +530,8 @@ export class FileSelect extends React.Component {
         columns={createFileColumns(this.props)}
         data={data}
         noDataText="No files found"
+        showPagination={false}
+        defaultPageSize={Number.MAX_VALUE}
       />
     );
   }
