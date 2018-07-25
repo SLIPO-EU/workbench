@@ -1,13 +1,17 @@
 export const EnumErrorLevel = {
+  TRACE: 'TRACE',
+  DEBUG: 'DEBUG',
   INFO: 'INFO',
   WARN: 'WARN',
   ERROR: 'ERROR',
 };
 
 const ErrorLevelValues = {
-  [EnumErrorLevel.INFO]: 0,
-  [EnumErrorLevel.WARN]: 1,
-  [EnumErrorLevel.ERROR]: 2,
+  [EnumErrorLevel.TRACE]: 0,
+  [EnumErrorLevel.DEBUG]: 1,
+  [EnumErrorLevel.INFO]: 2,
+  [EnumErrorLevel.WARN]: 3,
+  [EnumErrorLevel.ERROR]: 4,
 };
 
 

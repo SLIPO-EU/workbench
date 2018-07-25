@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import eu.slipo.workbench.common.model.EnumRole;
 
@@ -37,6 +38,10 @@ public class Account implements Serializable
     private ZonedDateTime registeredAt;
 
     private Set<EnumRole> roles = EnumSet.noneOf(EnumRole.class);
+
+    protected Account() {
+
+    }
 
     public Account(String username, String email)
     {
@@ -138,11 +143,13 @@ public class Account implements Serializable
         return roles;
     }
 
+    @JsonIgnore()
     public void setRoles(Set<EnumRole> roles)
     {
         this.roles = roles;
     }
 
+    @JsonProperty()
     public void setRoles(EnumRole... roles)
     {
         this.roles = Arrays.stream(roles).collect(Collectors.toSet());
