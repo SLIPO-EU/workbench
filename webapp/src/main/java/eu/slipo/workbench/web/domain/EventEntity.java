@@ -93,7 +93,7 @@ public class EventEntity {
     }
 
     public EventRecord toEventRecord() {
-        EventRecord record = new EventRecord();
+        EventRecord record = new EventRecord(id);
 
         record.setClientAddress(this.clientAddress);
         record.setCreatedOn(generated);
@@ -101,6 +101,7 @@ public class EventEntity {
         record.setMessage(message);
         record.setModule(application);
         record.setUserName(userName);
+        record.setException(throwable);
 
         return record;
     }

@@ -76,7 +76,7 @@ class ProcessInput extends React.Component {
       // Icon
       iconClass: PropTypes.string.isRequired,
       // Process input resource type
-      inputType: function (props, propName, componentName) {
+      inputType: function (props, propName) {
         for (let prop in EnumInputType) {
           if (EnumInputType[prop] === props[propName]) {
             return null;
@@ -85,7 +85,7 @@ class ProcessInput extends React.Component {
         return new Error(`Invalid value for property [${propName}].`);
       },
       // Resource type
-      resourceType: function (props, propName, componentName) {
+      resourceType: function (props, propName) {
         for (let prop in EnumResourceType) {
           if (EnumResourceType[prop] === props[propName]) {
             return null;
@@ -124,11 +124,11 @@ class ProcessInput extends React.Component {
         <div className="slipo-pd-resource-actions">
           {this.props.resource.inputType != EnumInputType.OUTPUT &&
             <Link to={buildPath(DynamicRoutes.ResourceViewer, [this.props.resource.id, this.props.resource.version])}>
-              <i className="slipo-pd-resource-view fa fa-search"></i>
+              <i className="slipo-pd-resource-view fa fa-search" title="View resource"></i>
             </Link>
           }
           {this.props.resource.inputType != EnumInputType.OUTPUT && !this.props.readOnly &&
-            <i className="slipo-pd-resource-delete fa fa-trash" onClick={() => { this.remove(); }}></i>
+            <i className="slipo-pd-resource-delete fa fa-trash" title="Delete" onClick={() => { this.remove(); }}></i>
           }
         </div>
         <div className="slipo-pd-resource-icon">

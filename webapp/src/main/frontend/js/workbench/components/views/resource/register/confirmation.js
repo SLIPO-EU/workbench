@@ -1,6 +1,6 @@
 import React from 'react';
 
-import formatFileSize from '../../../../util/file-size';
+import { formatFileSize } from '../../../../util';
 
 function renderUpload(metadata, triplegeo, upload) {
   return (

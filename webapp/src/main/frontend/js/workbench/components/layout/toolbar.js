@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as PropTypes from 'prop-types';
 import { NavLink, withRouter } from 'react-router-dom';
 import { FormattedMessage } from 'react-intl';
-import { userPropType } from '../../model/prop-types/user';
+import userPropType from '../../model/prop-types/user';
 import { getRoute } from '../../model/routes';
 
 /**

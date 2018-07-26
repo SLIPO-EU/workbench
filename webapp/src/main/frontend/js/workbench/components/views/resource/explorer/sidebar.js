@@ -112,7 +112,7 @@ class Sidebar extends React.Component {
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <Row className="slipo-re-sidebar-resource-list-wrapper">
           <Col className="slipo-re-sidebar-resource-list-wrapper">
-            <div style={{ borderBottom: '1px solid #cfd8dc', padding: 11 }}>
+            <div style={{ borderBottom: '1px solid #cfd8dc', padding: '0.7rem' }}>
               Resource Bag
               <ButtonToolbar style={{ position: 'absolute', right: 20, top: 4 }}>
                 <ButtonGroup data-toggle="buttons" aria-label="First group">

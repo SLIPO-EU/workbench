@@ -1,7 +1,7 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Button, Modal, ModalHeader, ModalBody, ModalFooter, Input, Label, Form, FormGroup } from 'reactstrap';
+import { Button, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
 
 /**
  * Generic dialog
@@ -54,7 +54,7 @@ class Dialog extends React.Component {
                 <Button
                   key={value.key}
                   color={value.color || 'secondary'}
-                  onClick={(e) => { this.props.handler({ key: value.key }); }}
+                  onClick={() => { this.props.handler({ key: value.key }); }}
                 >
                   <span><i className={value.iconClass + ' mr-2'}></i>{value.label}</span>
                 </Button>

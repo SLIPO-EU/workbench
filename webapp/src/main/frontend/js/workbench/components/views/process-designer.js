@@ -44,7 +44,6 @@ import {
 import {
   DataSourceConfig,
   Designer,
-  Operation,
   StepConfig,
   Toolbox,
 } from './process/designer';
@@ -70,6 +69,7 @@ import {
   fetchExecutionKpiData,
   save,
   addStep,
+  cloneStep,
   removeStep,
   moveStep,
   configureStepBegin,
@@ -91,6 +91,7 @@ import {
   setActiveStepInput,
   setActiveStepDataSource,
   setActiveResource,
+  setConfiguration,
   undo,
   redo,
   showStepExecutionDetails,
@@ -406,6 +407,7 @@ class ProcessDesigner extends React.Component {
                   steps={this.props.steps}
                   resources={this.props.resources}
                   addStep={this.props.addStep}
+                  cloneStep={this.props.cloneStep}
                   configureStepBegin={this.props.configureStepBegin}
                   showStepExecutionDetails={this.props.showStepExecutionDetails}
                   removeStep={this.props.removeStep}
@@ -446,6 +448,7 @@ class ProcessDesigner extends React.Component {
         createFolder={this.props.createFolder}
         uploadFile={this.props.uploadFile}
         deletePath={this.props.deletePath}
+        setConfiguration={this.props.setConfiguration}
       />
     );
   }
@@ -581,6 +584,7 @@ const mapDispatchToProps = (dispatch) => bindActionCreators({
   fetchProcessRevision,
   save,
   addStep,
+  cloneStep,
   removeStep,
   moveStep,
   configureStepBegin,
@@ -602,6 +606,7 @@ const mapDispatchToProps = (dispatch) => bindActionCreators({
   setActiveStepInput,
   setActiveStepDataSource,
   setActiveResource,
+  setConfiguration,
   undoAction: undo,
   redoAction: redo,
   showStepExecutionDetails,

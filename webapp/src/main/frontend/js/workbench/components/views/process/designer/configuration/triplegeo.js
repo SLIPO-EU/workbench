@@ -7,33 +7,28 @@ import {
   SelectField,
   TextField,
   ValuePairListField,
-} from '../../../helpers/forms/form-fields/';
+} from '../../../../helpers/forms/form-fields';
 
 import {
   crs,
-  defaultTripleGeoValues,
+  defaultValues as defaultTripleGeoValues,
   encodings,
   inputFormats,
   languages,
   modes,
   ontologies,
   serializations,
-} from '../../../../model/process-designer/configuration/triplegeo';
+} from '../../../../../model/process-designer/configuration/triplegeo';
 
 import {
   EnumTool,
-} from '../../../../model/process-designer';
-
+} from '../../../../../model/process-designer';
 
 import {
-  readConfigurationTripleGeo,
-} from '../../../../service/triplegeo';
+  readConfiguration,
+} from '../../../../../service/toolkit/triplegeo';
 
-export {
-  validator,
-} from '../../../../service/triplegeo';
-
-export class Component extends React.Component {
+class TripleGeoConfiguration extends React.Component {
 
   constructor(props) {
     super(props);
@@ -47,13 +42,13 @@ export class Component extends React.Component {
       },
     }];
 
-    const tripleGeoProfiles = this.props.appConfiguration.profiles[EnumTool.TripleGeo];
+    const tripleGeoProfiles = this.props.appConfiguration.profiles[EnumTool.TripleGeo] || [];
     Object.keys(tripleGeoProfiles).map(key => {
       this.profiles.push({
         value: key,
         label: key.replace('_', ' '),
         config: {
-          ...readConfigurationTripleGeo(tripleGeoProfiles[key]),
+          ...readConfiguration(tripleGeoProfiles[key]),
           profile: key,
         },
       });
@@ -157,6 +152,8 @@ export class Component extends React.Component {
                       placeHolder={!this.props.value['profile'] ? 'Select mapping file...' : 'Using default mapping file...'}
                     />
                   </div>
+                </div>
+                <div className="row">
                   <div className="col">
                     <div className="row">
                       <div className="col">
@@ -459,3 +456,5 @@ export class Component extends React.Component {
   }
 
 }
+
+export default TripleGeoConfiguration;

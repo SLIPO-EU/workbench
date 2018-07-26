@@ -14,7 +14,7 @@ import {
   ErrorPages
 } from '../model/routes';
 
-import { userPropType } from '../model/prop-types/user';
+import userPropType from '../model/prop-types/user';
 
 import {
   Aside,

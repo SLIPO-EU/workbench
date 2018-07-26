@@ -5,6 +5,7 @@ public enum EnumRole
     USER(1, "User"),
     ADMIN(2, "Site administrator"),
     AUTHOR(3, "Data integration workflow author"),
+    DEVELOPER(4, "Developer role that enables additional features")
     ;
 
     private final int value;

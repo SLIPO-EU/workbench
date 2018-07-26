@@ -1,9 +1,5 @@
 import * as processService from '../../../../service/process';
 
-import {
-  EnumDesignerSaveAction,
-} from '../../../../model/process-designer';
-
 /*
  * Action types
  */

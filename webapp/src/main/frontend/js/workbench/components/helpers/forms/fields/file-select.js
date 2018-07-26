@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Dropzone from 'react-dropzone';
 
-import formatFileSize from '../../../../util/file-size';
+import { formatFileSize } from '../../../../util';
 import decorateField from './form-field';
 
 import {
@@ -84,12 +84,14 @@ function createFileColumns(props) {
       Header: 'File Size',
       id: 'size',
       accessor: r => formatFileSize(r.size),
+      maxWidth: 120,
     },
     {
       Header: 'Modified',
       id: 'modified',
       accessor: 'modified',
       style: { 'textAlign': 'center' },
+      maxWidth: 140,
       Cell: props => (
         <FormattedTime value={props.value} day='numeric' month='numeric' year='numeric' />
       ),
@@ -528,6 +530,8 @@ export class FileSelect extends React.Component {
         columns={createFileColumns(this.props)}
         data={data}
         noDataText="No files found"
+        showPagination={false}
+        defaultPageSize={Number.MAX_VALUE}
       />
     );
   }

@@ -24,6 +24,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import eu.slipo.workbench.common.model.RestResponse;
 import eu.slipo.workbench.common.model.poi.EnumTool;
+import eu.slipo.workbench.common.model.tool.DeerConfiguration;
+import eu.slipo.workbench.common.model.tool.FagiConfiguration;
+import eu.slipo.workbench.common.model.tool.LimesConfiguration;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.service.util.PropertiesConverterService;
@@ -104,6 +107,15 @@ public class ConfigurationController extends BaseController {
                         switch (tool) {
                             case TRIPLEGEO:
                                 conf = propertiesConverter.propertiesToValue(pair.getRight(), TriplegeoConfiguration.class);
+                                break;
+                            case LIMES:
+                                conf = propertiesConverter.propertiesToValue(pair.getRight(), LimesConfiguration.class);
+                                break;
+                            case FAGI:
+                                conf = propertiesConverter.propertiesToValue(pair.getRight(), FagiConfiguration.class);
+                                break;
+                            case DEER:
+                                conf = propertiesConverter.propertiesToValue(pair.getRight(), DeerConfiguration.class);
                                 break;
                             default:
                                 return;

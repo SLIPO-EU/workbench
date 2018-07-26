@@ -21,6 +21,10 @@ class ToastTemplate extends React.Component {
     super(props);
   }
 
+  createMarkup() {
+    return { __html: this.props.html };
+  }
+
   render() {
     let iconClass = null;
     if (this.props.iconClass) {
@@ -34,7 +38,12 @@ class ToastTemplate extends React.Component {
               {iconClass &&
                 <td style={{ padding: this.props.padding }}><i className={iconClass}></i></td>
               }
-              <td style={{ padding: (this.props.padding + 4) }}><FormattedMessage id={this.props.text} defaultMessage={this.props.text} /></td>
+              {!this.props.html &&
+                <td style={{ padding: (this.props.padding + 4) }}><FormattedMessage id={this.props.text} defaultMessage={this.props.text} /></td>
+              }
+              {this.props.html &&
+                <td style={{ padding: (this.props.padding + 4) }} dangerouslySetInnerHTML={this.createMarkup()}></td>
+              }
             </tr>
           </tbody>
         </table>

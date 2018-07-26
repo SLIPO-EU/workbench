@@ -1,6 +1,6 @@
 import { StaticRoutes } from '../../model/routes';
 
-export const JobCardConfig = (props, intl) => ({
+export const JobCardConfig = (props) => ({
   title: 'dashboard.card.jobs',
   items: props ? [{
     value: props.completed,
@@ -22,7 +22,7 @@ export const JobCardConfig = (props, intl) => ({
   iconClass: 'fa fa-cog',
 });
 
-export const ResourceCardConfig = (props, intl) => ({
+export const ResourceCardConfig = (props) => ({
   title: 'dashboard.card.resources',
   items: props ? [{
     value: props.total,
@@ -61,7 +61,7 @@ export const SystemCardConfig = (props) => ({
   iconClass: 'fa fa-server',
 });
 
-export const EventCardConfig = (props, intl) => ({
+export const EventCardConfig = (props) => ({
   title: 'dashboard.card.events',
   items: props ? [{
     value: props.error,

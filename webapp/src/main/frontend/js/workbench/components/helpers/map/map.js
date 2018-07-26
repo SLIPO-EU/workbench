@@ -4,8 +4,6 @@ import * as PropTypes from 'prop-types';
 import OpenLayersMap from 'ol/map';
 import View from 'ol/view';
 
-import Layers from './layers/layers';
-
 /**
  * A wrapper component for {@link OpenLayers.Map}.
  *
@@ -97,7 +95,7 @@ class Map extends React.Component {
     return (
       <div className={this.props.className || 'slipo-map-container'} style={{ height: this.props.height || '600px' }} ref={(el) => { this._el = el; }}>
         {map &&
-          React.Children.map(children, (child, index) => {
+          React.Children.map(children, (child) => {
             return React.cloneElement(child, {
               map: this.state.map,
             });

@@ -1,4 +1,4 @@
-import * as actions from './api/fetch-actions';
+import actions from './api/fetch-actions';
 
 const getConfiguration = () => {
   return actions.get('/action/configuration');

@@ -7,6 +7,8 @@ import java.time.ZonedDateTime;
  */
 public class EventRecord {
 
+    private long id;
+
     private String module;
 
     private ZonedDateTime createdOn;
@@ -25,8 +27,12 @@ public class EventRecord {
 
     private String code;
 
-    public EventRecord() {
+    public EventRecord(long id) {
+        this.id = id;
+    }
 
+    public long getId() {
+        return id;
     }
 
     public String getModule() {

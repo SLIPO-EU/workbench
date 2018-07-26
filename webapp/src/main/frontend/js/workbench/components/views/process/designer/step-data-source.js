@@ -75,13 +75,25 @@ class StepDataSource extends React.Component {
       >
         {this.props.readOnly &&
           <div className="slipo-pd-step-data-source-actions">
-            <i className="slipo-pd-step-data-source-action slipo-pd-step-data-source-config fa fa-search" onClick={(e) => { this.configure(e); }}></i>
+            <i
+              className="slipo-pd-step-data-source-action slipo-pd-step-data-source-config fa fa-search"
+              title="View configuration"
+              onClick={(e) => { this.configure(e); }}>
+            </i>
           </div>
         }
         {!this.props.readOnly &&
           <div className="slipo-pd-step-data-source-actions">
-            <i className="slipo-pd-step-data-source-action slipo-pd-step-data-source-config fa fa-wrench" onClick={(e) => { this.configure(e); }}></i>
-            <i className="slipo-pd-step-data-source-action slipo-pd-step-data-source-delete fa fa-trash" onClick={() => { this.remove(); }}></i>
+            <i
+              className="slipo-pd-step-data-source-action slipo-pd-step-data-source-config fa fa-wrench"
+              title="Edit configuration"
+              onClick={(e) => { this.configure(e); }}>
+            </i>
+            <i
+              className="slipo-pd-step-data-source-action slipo-pd-step-data-source-delete fa fa-trash"
+              title="Delete"
+              onClick={() => { this.remove(); }}>
+            </i>
           </div>
         }
         <div className="slipo-pd-step-input-icon">

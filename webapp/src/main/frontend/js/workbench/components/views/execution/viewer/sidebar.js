@@ -108,7 +108,7 @@ class Sidebar extends React.Component {
   render() {
     return (
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <Nav tabs style={{ height: '44px' }}>
+        <Nav tabs style={{ height: '2.75rem' }}>
           <NavItem>
             <NavLink className={classnames({ active: this.state.activeTab === '1' })}
               onClick={() => { this.toggle('1'); }}>

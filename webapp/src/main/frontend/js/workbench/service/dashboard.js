@@ -1,8 +1,9 @@
 import actions from './api/fetch-actions';
 
-module.exports = {
+export default {
+
   fetch: (token) => {
     return actions.get(`/action/dashboard`, token);
   },
+
 };
-  

@@ -2,7 +2,7 @@ import _ from 'lodash';
 
 import {
   ServerError,
-} from '../../model/error';
+} from '../model/error';
 
 export function checkError(r) {
   if (_.isEmpty(r.errors)) {

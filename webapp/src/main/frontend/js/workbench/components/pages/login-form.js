@@ -34,6 +34,7 @@ import SelectLanguage from '../helpers/select-language';
 //
 
 class LoginForm extends React.Component {
+
   constructor(props) {
     super(props);
 
@@ -44,6 +45,11 @@ class LoginForm extends React.Component {
       password: '',
     };
   }
+
+  static propTypes = {
+    submit: PropTypes.func.isRequired,
+    username: PropTypes.string,
+  };
 
   componentWillReceiveProps(nextProps) {
     this.setState({
@@ -119,11 +125,6 @@ class LoginForm extends React.Component {
   }
 }
 
-LoginForm.propTypes = {
-  submit: PropTypes.func.isRequired,
-  username: PropTypes.string,
-};
-
 //
 // Container component
 //
@@ -144,6 +145,4 @@ const mapDispatchToProps = (dispatch) => ({
   ),
 });
 
-LoginForm = ReactRedux.connect(mapStateToProps, mapDispatchToProps)(LoginForm);
-
-module.exports = LoginForm;
+export default ReactRedux.connect(mapStateToProps, mapDispatchToProps)(LoginForm);

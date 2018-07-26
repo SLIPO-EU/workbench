@@ -13,7 +13,9 @@ import {
 } from './ducks/ui/';
 
 import {
+  accountReducer,
   dashboardReducer,
+  eventReducer,
   harvesterDataExplorerReducer,
   processDesignerReducer,
   processExecutionReducer,
@@ -31,7 +33,9 @@ export default Redux.combineReducers({
     menu,
     viewport,
     views: Redux.combineReducers({
+      account: accountReducer,
       dashboard: dashboardReducer,
+      event: eventReducer,
       harvester: harvesterDataExplorerReducer,
       resources: Redux.combineReducers({
         explorer: resourceExplorerReducer,
