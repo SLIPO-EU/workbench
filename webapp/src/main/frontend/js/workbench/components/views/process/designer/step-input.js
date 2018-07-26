@@ -95,11 +95,18 @@ class StepInput extends React.Component {
         <div className="slipo-pd-step-resource-actions">
           {this.props.resource.inputType === EnumInputType.CATALOG &&
             <Link to={buildPath(DynamicRoutes.ResourceViewer, [this.props.resource.id, this.props.resource.version])}>
-              <i className={`slipo-pd-step-resource-action slipo-pd-step-resource-view slipo-pd-step-resource-${icon++} fa fa-search`}></i>
+              <i
+                className={`slipo-pd-step-resource-action slipo-pd-step-resource-view slipo-pd-step-resource-${icon++} fa fa-search`}
+                title="View resource">
+              </i>
             </Link>
           }
           {!this.props.readOnly &&
-            <i className={`slipo-pd-step-resource-action slipo-pd-step-resource-delete slipo-pd-step-resource-${icon++} fa fa-trash`} onClick={() => { this.onRemove(); }}></i>
+            <i
+              className={`slipo-pd-step-resource-action slipo-pd-step-resource-delete slipo-pd-step-resource-${icon++} fa fa-trash`}
+              title="Delete"
+              onClick={() => { this.onRemove(); }}>
+            </i>
           }
         </div>
         <div className="slipo-pd-step-input-icon">

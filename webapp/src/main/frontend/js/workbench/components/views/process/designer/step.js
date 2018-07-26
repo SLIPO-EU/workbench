@@ -4,6 +4,10 @@ import { DragSource, DropTarget } from 'react-dnd';
 import classnames from 'classnames';
 
 import {
+  Roles,
+} from '../../../../model';
+
+import {
   EnumDragSource,
   EnumStepProperty,
   EnumResourceType,
@@ -12,8 +16,15 @@ import {
   ToolConfigurationSettings,
 } from '../../../../model/process-designer';
 
+import dom from '../../../../service/api/dom';
+
+import {
+  writeConfiguration,
+} from '../../../../service/toolkit';
+
 import {
   JobStatus,
+  SecureContent,
 } from '../../../helpers';
 
 import {
@@ -258,6 +269,40 @@ class Step extends React.Component {
   }
 
   /**
+   * Download configuration as JSON
+   *
+   * @param {*} e
+   * @memberof Step
+   */
+  downloadConfiguration(e) {
+    e.stopPropagation();
+
+    const { step: { name, tool, configuration } } = this.props;
+
+    if ((!ToolConfigurationSettings[tool].allowExport) || (!configuration)) {
+      return;
+    }
+    const data = writeConfiguration(tool, configuration);
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: 'application/json'
+    });
+    const fileName = name.split(' ').filter(value => !!value).join('-').toLowerCase();
+    dom.downloadBlob(blob, `${tool}-config-${fileName}.json`);
+  }
+
+  /**
+   * Clone selected step
+   *
+   * @param {*} e
+   * @memberof Step
+   */
+  clone(e) {
+    e.stopPropagation();
+
+    this.props.cloneStep(this.props.step);
+  }
+
+  /**
    * Initialize the configuration of the current step
    *
    * @param {any} e
@@ -373,18 +418,44 @@ class Step extends React.Component {
             {this.props.readOnly ?
               <div className="slipo-pd-step-actions">
                 {this.props.stepExecution && this.props.stepExecution.files && this.props.stepExecution.files.length !== 0 &&
-                  <i className="slipo-pd-step-action slipo-pd-step-config fa fa-folder-open" onClick={(e) => { this.viewDetails(e); }}></i>
+                  <i
+                    className="slipo-pd-step-action slipo-pd-step-config fa fa-folder-open"
+                    title="View step files"
+                    onClick={(e) => { this.viewDetails(e); }}></i>
                 }
                 {ToolConfigurationSettings[this.props.step.tool].editable &&
-                  <i className="slipo-pd-step-action slipo-pd-step-config fa fa-wrench" onClick={(e) => { this.configure(e); }}></i>
+                  <i
+                    className="slipo-pd-step-action slipo-pd-step-config fa fa-wrench"
+                    title="View configuration"
+                    onClick={(e) => { this.configure(e); }}></i>
                 }
               </div>
               :
               <div className="slipo-pd-step-actions">
-                {ToolConfigurationSettings[this.props.step.tool].editable &&
-                  <i className="slipo-pd-step-action slipo-pd-step-config fa fa-wrench" onClick={(e) => { this.configure(e); }}></i>
+                {ToolConfigurationSettings[this.props.step.tool].allowExport &&
+                  <SecureContent roles={[Roles.DEVELOPER]}>
+                    <i
+                      className="slipo-pd-step-action slipo-pd-step-config fa fa-cloud-download"
+                      title="Download configuration as JSON"
+                      onClick={(e) => { this.downloadConfiguration(e); }}></i>
+                  </SecureContent>
                 }
-                <i className="slipo-pd-step-action slipo-pd-step-delete fa fa-trash" onClick={(e) => { this.remove(e); }}></i>
+                {ToolConfigurationSettings[this.props.step.tool].allowClone &&
+                  <i
+                    className="slipo-pd-step-action slipo-pd-step-clone fa fa-clone"
+                    title="Clone step"
+                    onClick={(e) => { this.clone(e); }}></i>
+                }
+                {ToolConfigurationSettings[this.props.step.tool].editable &&
+                  <i
+                    className="slipo-pd-step-action slipo-pd-step-config fa fa-wrench"
+                    title="Edit configuration"
+                    onClick={(e) => { this.configure(e); }}></i>
+                }
+                <i
+                  className="slipo-pd-step-action slipo-pd-step-delete fa fa-trash"
+                  title="Delete step"
+                  onClick={(e) => { this.remove(e); }}></i>
               </div>
             }
           </div>

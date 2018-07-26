@@ -5,7 +5,6 @@ import classnames from 'classnames';
 
 import {
   EnumTool,
-  EnumToolboxItem,
   EnumDragSource,
 } from '../../../../model/process-designer';
 
@@ -92,6 +91,7 @@ class StepGroup extends React.Component {
 
     // Step actions
     addStep: PropTypes.func.isRequired,
+    cloneStep: PropTypes.func.isRequired,
     removeStep: PropTypes.func.isRequired,
     moveStep: PropTypes.func.isRequired,
     configureStepBegin: PropTypes.func.isRequired,
@@ -149,6 +149,7 @@ class StepGroup extends React.Component {
         showStepExecutionDetails={this.props.showStepExecutionDetails}
         setStepProperty={this.props.setStepProperty}
         addStepInput={this.props.addStepInput}
+        cloneStep={this.props.cloneStep}
         removeStepInput={this.props.removeStepInput}
         addStepDataSource={this.props.addStepDataSource}
         removeStepDataSource={this.props.removeStepDataSource}
@@ -185,12 +186,12 @@ class StepGroup extends React.Component {
           {this.props.group.key === 0 && this.props.steps.length == 0 &&
             <div className="slipo-pd-step-group-label">
               <i className="fa fa-paint-brush mr-2"></i> Drop a TripleGeo operation ...
-          </div>
+            </div>
           }
           {this.props.group.key !== 0 && this.props.steps.length == 0 &&
             <div className="slipo-pd-step-group-label">
               <i className="fa fa-paint-brush mr-2"></i> Drop a SLIPO Toolkit component ...
-          </div>
+            </div>
           }
           {this.props.steps.map((s) => this.renderStep(s))}
         </div>

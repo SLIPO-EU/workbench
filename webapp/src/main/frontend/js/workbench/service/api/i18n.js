@@ -2,7 +2,7 @@ import fetch from 'fetch';
 
 import {
   checkStatus,
-} from '../util/check-fetch-status';
+} from '../../util/check-fetch-status';
 
 const credentials = 'same-origin';
 

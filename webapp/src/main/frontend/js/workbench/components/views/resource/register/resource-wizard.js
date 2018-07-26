@@ -6,19 +6,29 @@ import ToastTemplate from '../../../helpers/toast-template';
 import { MultiStep } from '../../../helpers/forms/';
 import { EnumErrorLevel } from '../../../../model/error';
 import { StaticRoutes } from '../../../../model/routes';
-import { defaultTripleGeoValues } from '../../../../model/process-designer/configuration/triplegeo';
+import { defaultValues as defaultTripleGeoValues } from '../../../../model/process-designer/configuration/triplegeo';
+import { defaultMetadataValue } from '../../../../model/process-designer/configuration/metadata';
 
 import * as type from './type';
 import * as externalUrl from './url-select';
 import * as harvester from './harvester-select';
 import * as harvesterConfig from './harvester-config';
 import * as fileUpload from './file-upload';
-import * as metadata from './metadata';
-import * as triplegeo from './triplegeo';
 import * as filesystem from './filesystem';
 import * as confirmation from './confirmation';
 
-import { writeConfigurationTripleGeo } from '../../../../service/triplegeo';
+import { default as TripleGeoConfiguration } from '../../process/designer/configuration/triplegeo';
+import { default as MetadataConfiguration } from '../../process/designer/configuration/metadata';
+
+import {
+  validateConfiguration as validateTripleGeo,
+} from '../../../../service/toolkit/triplegeo';
+
+import {
+  validateConfiguration as validateMetadata,
+} from '../../../../service/toolkit/metadata';
+
+import { writeConfiguration as writeConfigurationTripleGeo } from '../../../../service/toolkit/triplegeo';
 
 export default function ResourceWizard(props) {
   return (
@@ -102,12 +112,12 @@ export default function ResourceWizard(props) {
           validate={fileUpload.validator}
           next={() => 'metadata'}
         />
-        <metadata.Component
+        <MetadataConfiguration
           id="metadata"
           title="Resource metadata"
           description=""
-          initialValue={props.initialValues.metadata || metadata.initialValue}
-          validate={metadata.validator}
+          initialValue={props.initialValues.metadata || { ...defaultMetadataValue }}
+          validate={validateMetadata}
           next={(value) => value.format !== 'RDF' ? 'triplegeo' : 'confirm'}
         />
         <harvester.Component
@@ -126,11 +136,11 @@ export default function ResourceWizard(props) {
           next={() => 'confirm'}
         />
 
-        <triplegeo.Component
+        <TripleGeoConfiguration
           id="triplegeo"
           title="TripleGeo"
           initialValue={props.initialValues.triplegeo || { ...defaultTripleGeoValues, version: props.appConfiguration.tripleGeo.version }}
-          validate={triplegeo.validator}
+          validate={validateTripleGeo}
           next={() => 'confirm'}
           appConfiguration={props.appConfiguration}
           filesystem={props.filesystem}

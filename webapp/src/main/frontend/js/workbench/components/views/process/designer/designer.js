@@ -1,10 +1,5 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
-import classnames from 'classnames';
-
-import {
-  EnumToolboxItem,
-} from '../../../../model/process-designer';
 
 import {
   StepGroup,
@@ -34,6 +29,7 @@ class Designer extends React.Component {
 
     // Action creators
     addStep: PropTypes.func.isRequired,
+    cloneStep: PropTypes.func.isRequired,
     removeStep: PropTypes.func.isRequired,
     moveStep: PropTypes.func.isRequired,
     configureStepBegin: PropTypes.func.isRequired,
@@ -75,6 +71,7 @@ class Designer extends React.Component {
         resources={this.props.resources}
         active={this.props.active}
         addStep={this.props.addStep}
+        cloneStep={this.props.cloneStep}
         removeStep={this.props.removeStep}
         moveStep={this.props.moveStep}
         configureStepBegin={this.props.configureStepBegin}

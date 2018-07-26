@@ -1,20 +1,35 @@
+import _ from 'lodash';
 import * as Types from '../types';
 
 import {
   DEFAULT_OUTPUT_PART,
   defaultTripleGeoValues,
+  defaultLimesValues,
+  defaultFagiValues,
+  defaultDeerValues,
   EnumDataFormat,
   EnumInputType,
   EnumResourceType,
   EnumStepProperty,
   EnumTool,
   ResourceTypeIcons,
+  ToolConfigurationSettings,
   ToolTitles,
 } from '../../../../../model/process-designer';
 
 import {
-  validator as tripleGeoValidator,
-} from '../../../../../service/triplegeo';
+  validateConfiguration as tripleGeoValidator,
+} from '../../../../../service/toolkit/triplegeo';
+import {
+  validateConfiguration as limesValidator,
+} from '../../../../../service/toolkit/limes';
+import {
+  validateConfiguration as fagiValidator,
+} from '../../../../../service/toolkit/fagi';
+
+import {
+  validateConfiguration as deerValidator,
+} from '../../../../../service/toolkit/deer';
 
 function createTripleGeoDefaultConfiguration(appConfiguration, effectiveVersion) {
   const configuration = {
@@ -39,61 +54,18 @@ function createTripleGeoDefaultConfiguration(appConfiguration, effectiveVersion)
 
 function createLimesDefaultConfiguration(appConfiguration, effectiveVersion) {
   const configuration = {
-    prefixes: [
-      {
-        namespace: 'http://slipo.eu/def#',
-        label: 'slipo'
-      },
-      {
-        namespace: 'http://www.w3.org/2002/07/owl#',
-        label: 'owl'
-      }
-    ],
-    source: {
-      id: 'a',
-      endpoint: 'a.nt',
-      var: '?x',
-      pageSize: -1,
-      restrictions: [
-        ''
-      ],
-      properties: [
-        'slipo:name/slipo:nameValue RENAME label'
-      ],
-      dataFormat: EnumDataFormat.N_TRIPLES,
-    },
-    target: {
-      id: 'b',
-      endpoint: 'b.nt',
-      var: '?y',
-      pageSize: -1,
-      restrictions: [
-        ''
-      ],
-      properties: [
-        'slipo:name/slipo:nameValue RENAME label'
-      ],
-      dataFormat: EnumDataFormat.N_TRIPLES,
-    },
-    metric: 'trigrams(x.label, y.label)',
-    acceptance: {
-      threshold: 0.96,
-      file: 'accepted.nt',
-      relation: 'owl:sameAs'
-    },
-    review: {
-      threshold: 0.90,
-      file: 'review.nt',
-      relation: 'owl:sameAs'
-    },
-    execution: {
-      rewriter: 'default',
-      planner: 'default',
-      engine: 'default'
-    },
-    outputFormat: EnumDataFormat.N_TRIPLES,
+    ...defaultLimesValues,
     version: effectiveVersion || appConfiguration.limes.version,
   };
+
+  try {
+    limesValidator(configuration);
+  } catch (errors) {
+    return {
+      configuration,
+      errors,
+    };
+  }
 
   return {
     configuration,
@@ -103,36 +75,18 @@ function createLimesDefaultConfiguration(appConfiguration, effectiveVersion) {
 
 function createFagiDefaultConfiguration(appConfiguration, effectiveVersion) {
   const configuration = {
-    inputFormat: 'NT',
-    outputFormat: 'NT',
-    locale: 'en',
-    similarity: 'jarowinkler',
-    left: {
-      id: 'a',
-      file: null,
-      categories: null,
-    },
-    right: {
-      id: 'b',
-      file: null,
-      categories: null,
-    },
-    links: {
-      id: 'links',
-      file: null,
-    },
-    target: {
-      id: 'target',
-      mode: 'aa_mode',
-      outputDir: null,
-      fused: 'fused.nt',
-      remaining: 'remaining.nt',
-      ambiguous: 'review.nt',
-      statistics: 'stats.json'
-    },
-    rulesSpec: null,
+    ...defaultFagiValues,
     version: effectiveVersion || appConfiguration.fagi.version,
   };
+
+  try {
+    fagiValidator(configuration);
+  } catch (errors) {
+    return {
+      configuration,
+      errors,
+    };
+  }
 
   return {
     configuration,
@@ -142,12 +96,18 @@ function createFagiDefaultConfiguration(appConfiguration, effectiveVersion) {
 
 function createDeerDefaultConfiguration(appConfiguration, effectiveVersion) {
   const configuration = {
-    inputFormat: EnumDataFormat.N_TRIPLES,
-    outputFormat: EnumDataFormat.N_TRIPLES,
-    outputDir: "output",
-    spec: null,
+    ...defaultDeerValues,
     version: effectiveVersion || appConfiguration.deer.version,
   };
+
+  try {
+    deerValidator(configuration);
+  } catch (errors) {
+    return {
+      configuration,
+      errors,
+    };
+  }
 
   return {
     configuration,
@@ -179,6 +139,201 @@ function createDefaultConfiguration(steps, tool, appConfiguration) {
   }
 }
 
+function addStep(state, action) {
+  // Update counters
+  const stepKey = ++state.counters.step;
+  const resourceKey = ++state.counters.resource;
+
+  // Create step
+  const step = {
+    ...action.step,
+    group: action.group.key,
+    name: `${ToolTitles[action.step.tool]} ${stepKey}`,
+    input: [],
+    dataSources: [],
+    key: stepKey,
+    outputKey: null,
+    ...createDefaultConfiguration(state.steps.filter(s => s.tool === action.step.tool), action.step.tool, action.appConfiguration),
+  };
+  if (step.tool !== EnumTool.CATALOG) {
+    step.outputKey = resourceKey;
+    step.outputFormat = EnumDataFormat.N_TRIPLES;
+  }
+
+  // Create output resource
+  const outputResource = {
+    key: resourceKey,
+    inputType: EnumInputType.OUTPUT,
+    resourceType: (action.step.tool == EnumTool.LIMES ? EnumResourceType.LINKED : EnumResourceType.POI),
+    name: `${step.name} : Output`,
+    iconClass: (action.step.tool == EnumTool.LIMES ? ResourceTypeIcons[EnumResourceType.LINKED] : ResourceTypeIcons[EnumResourceType.POI]),
+    tool: action.step.tool,
+    stepKey,
+  };
+
+  // Update steps array
+  let steps = [...state.steps, step];
+
+  // Reset ordering
+  steps = steps.map((value, index) => {
+    return {
+      ...value,
+      order: index,
+    };
+  });
+
+  // Update groups array
+  const groups = state.groups.map((group) => {
+    if (group.key == action.group.key) {
+      return {
+        ...group,
+        steps: [...group.steps, step.key],
+      };
+    }
+    return group;
+  });
+  // If the last step group is not empty, add a new empty step group
+  if (groups[groups.length - 1].steps.length !== 0) {
+    groups.push({
+      key: groups.length,
+      steps: [],
+    });
+  }
+
+  // 1. Move TripleGeo output after catalog resources
+  // 2. Move output from other tools to the end of the array
+  const resources = [...state.resources];
+  const outputResourceIndex = resources.reduce((result, value, index) => {
+    if ((value.inputType === EnumInputType.CATALOG) || (value.tool === EnumTool.TripleGeo)) {
+      return index;
+    }
+    return result;
+  }, -1);
+
+  switch (action.step.tool) {
+    case EnumTool.CATALOG:
+      // Ignore
+      break;
+    case EnumTool.TripleGeo:
+      resources.splice(outputResourceIndex + 1, 0, outputResource);
+      break;
+    default:
+      resources.push(outputResource);
+      break;
+  }
+
+  // Compose new state
+  return {
+    ...state,
+    counters: {
+      ...state.counters,
+      step: stepKey,
+      resource: resourceKey,
+    },
+    groups,
+    steps,
+    resources,
+  };
+}
+
+function cloneStep(state, action) {
+  const { step: initialStep, step: { tool } } = action;
+
+  if (!initialStep) {
+    return state;
+  }
+
+  if (!ToolConfigurationSettings[tool].allowClone) {
+    return state;
+  }
+
+  // Update counters
+  const stepKey = ++state.counters.step;
+  const resourceKey = ++state.counters.resource;
+
+  // Create step
+  const step = {
+    ..._.cloneDeep(initialStep),
+    name: `${initialStep.name} (Clone)`,
+    input: [],
+    dataSources: [],
+    key: stepKey,
+    outputKey: null,
+  };
+  if (step.tool !== EnumTool.CATALOG) {
+    step.outputKey = resourceKey;
+    step.outputFormat = EnumDataFormat.N_TRIPLES;
+  }
+
+  // Create output resource
+  const outputResource = {
+    key: resourceKey,
+    inputType: EnumInputType.OUTPUT,
+    resourceType: (tool === EnumTool.LIMES ? EnumResourceType.LINKED : EnumResourceType.POI),
+    name: `${step.name} : Output`,
+    iconClass: (tool === EnumTool.LIMES ? ResourceTypeIcons[EnumResourceType.LINKED] : ResourceTypeIcons[EnumResourceType.POI]),
+    tool,
+    stepKey,
+  };
+
+  // Update steps array
+  let steps = [...state.steps, step];
+
+  // Reset ordering
+  steps = steps.map((value, index) => {
+    return {
+      ...value,
+      order: index,
+    };
+  });
+
+  // Update groups array
+  const groups = state.groups.map((group) => {
+    if (group.key === step.group) {
+      return {
+        ...group,
+        steps: [...group.steps, step.key],
+      };
+    }
+    return group;
+  });
+
+  // 1. Move TripleGeo output after catalog resources
+  // 2. Move output from other tools to the end of the array
+  const resources = [...state.resources];
+  const outputResourceIndex = resources.reduce((result, value, index) => {
+    if ((value.inputType === EnumInputType.CATALOG) || (value.tool === EnumTool.TripleGeo)) {
+      return index;
+    }
+    return result;
+  }, -1);
+
+  switch (tool) {
+    case EnumTool.CATALOG:
+      // Ignore
+      break;
+    case EnumTool.TripleGeo:
+      resources.splice(outputResourceIndex + 1, 0, outputResource);
+      break;
+    default:
+      resources.push(outputResource);
+      break;
+  }
+
+  // Compose new state
+  return {
+    ...state,
+    counters: {
+      ...state.counters,
+      step: stepKey,
+      resource: resourceKey,
+    },
+    groups,
+    steps,
+    resources,
+  };
+}
+
 /**
  * Handles {@link ADD_STEP} action. This action updates several parts of the
  * state
@@ -189,103 +344,16 @@ function createDefaultConfiguration(steps, tool, appConfiguration) {
  * @returns the new state
  */
 export function addStepReducer(state, action) {
-  if (action.type == Types.ADD_STEP) {
-    // Update counters
-    const stepKey = ++state.counters.step;
-    const resourceKey = ++state.counters.resource;
+  switch (action.type) {
+    case Types.ADD_STEP:
+      return addStep(state, action);
 
-    // Create step
-    const step = {
-      ...action.step,
-      group: action.group.key,
-      name: `${ToolTitles[action.step.tool]} ${stepKey}`,
-      input: [],
-      dataSources: [],
-      key: stepKey,
-      outputKey: null,
-      ...createDefaultConfiguration(state.steps.filter(s => s.tool === action.step.tool), action.step.tool, action.appConfiguration),
-    };
-    if (step.tool !== EnumTool.CATALOG) {
-      step.outputKey = resourceKey;
-      step.outputFormat = EnumDataFormat.N_TRIPLES;
-    }
+    case Types.CLONE_STEP:
+      return cloneStep(state, action);
 
-    // Create output resource
-    const outputResource = {
-      key: resourceKey,
-      inputType: EnumInputType.OUTPUT,
-      resourceType: (action.step.tool == EnumTool.LIMES ? EnumResourceType.LINKED : EnumResourceType.POI),
-      name: `${step.name} : Output`,
-      iconClass: (action.step.tool == EnumTool.LIMES ? ResourceTypeIcons[EnumResourceType.LINKED] : ResourceTypeIcons[EnumResourceType.POI]),
-      tool: action.step.tool,
-      stepKey,
-    };
-
-    // Update steps array
-    let steps = [...state.steps, step];
-
-    // Reset ordering
-    steps = steps.map((value, index) => {
-      return {
-        ...value,
-        order: index,
-      };
-    });
-
-    // Update groups array
-    const groups = state.groups.map((group) => {
-      if (group.key == action.group.key) {
-        return {
-          ...group,
-          steps: [...group.steps, step.key],
-        };
-      }
-      return group;
-    });
-    // If the last step group is not empty, add a new empty step group
-    if (groups[groups.length - 1].steps.length !== 0) {
-      groups.push({
-        key: groups.length,
-        steps: [],
-      });
-    }
-
-    // 1. Move TripleGeo output after catalog resources
-    // 2. Move output from other tools to the end of the array
-    const resources = [...state.resources];
-    const outputResourceIndex = resources.reduce((result, value, index) => {
-      if ((value.inputType === EnumInputType.CATALOG) || (value.tool === EnumTool.TripleGeo)) {
-        return index;
-      }
-      return result;
-    }, -1);
-
-    switch (action.step.tool) {
-      case EnumTool.CATALOG:
-        // Ignore
-        break;
-      case EnumTool.TripleGeo:
-        resources.splice(outputResourceIndex + 1, 0, outputResource);
-        break;
-      default:
-        resources.push(outputResource);
-        break;
-    }
-
-    // Compose new state
-    return {
-      ...state,
-      counters: {
-        ...state.counters,
-        step: stepKey,
-        resource: resourceKey,
-      },
-      groups,
-      steps,
-      resources,
-    };
+    default:
+      return state;
   }
-  return state;
 }
 
 /**

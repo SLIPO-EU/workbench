@@ -32,9 +32,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-import com.spotify.docker.client.DockerClient;
-
-import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.tool.DeerConfiguration;
 import eu.slipo.workbench.common.model.tool.InvalidConfigurationException;
 import eu.slipo.workbench.rpc.jobs.listener.ExecutionContextPromotionListeners;
@@ -44,7 +41,7 @@ import eu.slipo.workbench.rpc.jobs.tasklet.docker.CreateContainerTasklet;
 import eu.slipo.workbench.rpc.jobs.tasklet.docker.RunContainerTasklet;
 
 @Component
-public class DeerJobConfiguration extends BaseJobConfiguration
+public class DeerJobConfiguration extends ContainerBasedJobConfiguration
 {
     private static final String JOB_NAME = "deer";
 
@@ -58,26 +55,14 @@ public class DeerJobConfiguration extends BaseJobConfiguration
      */
     public static final long DEFAULT_CHECK_INTERVAL = 1000L;
 
+    public static final long DEFAULT_MEMORY_LIMIT = 536870912L;
+
+    @Override
     @Autowired
-    private DockerClient docker;
-
-    private long runTimeout = -1L;
-
-    private long checkInterval = -1L;
-
-    /**
-     * The root directory on a container, under which directories/files will be bind-mounted
-     * (eg. <tt>/var/local/deer</tt>).
-     */
-    private Path containerDataDir;
-
-    @Autowired
-    private void setContainerDataDirectory(
+    protected void setContainerDataDirectory(
         @Value("${slipo.rpc-server.tools.deer.docker.container-data-dir}") String dir)
     {
-        Path dirPath = Paths.get(dir);
-        Assert.isTrue(dirPath.isAbsolute(), "Expected an absolute path (inside a container)");
-        this.containerDataDir = dirPath;
+        super.setContainerDataDirectory(dir);
     }
 
     @Autowired
@@ -92,6 +77,27 @@ public class DeerJobConfiguration extends BaseJobConfiguration
         @Value("${slipo.rpc-server.tools.deer.check-interval-millis:}") Integer checkInterval)
     {
         this.checkInterval = checkInterval == null? DEFAULT_CHECK_INTERVAL : checkInterval.longValue();
+    }
+
+    @Autowired
+    private void setMemoryLimit(
+        @Value("${slipo.rpc-server.tools.deer.container.memory.memory-limit-kbytes:}") Long kbytes)
+    {
+        this.memoryLimit = kbytes == null? DEFAULT_MEMORY_LIMIT : (kbytes.longValue() * 1024L);
+    }
+
+    @Autowired
+    private void setMemorySwapLimit(
+        @Value("${slipo.rpc-server.tools.deer.container.memory.memoryswap-limit-kbytes:}") Long kbytes)
+    {
+        this.memorySwapLimit = kbytes == null? -1L : kbytes.longValue() * 1024;
+    }
+
+    @PostConstruct
+    private void setMemoryLimitsIfNeeded()
+    {
+        if (this.memorySwapLimit < 0)
+            this.memorySwapLimit = 2L * this.memoryLimit;
     }
 
     @PostConstruct
@@ -229,10 +235,14 @@ public class DeerJobConfiguration extends BaseJobConfiguration
                 .volume(Paths.get(inputDir), containerInputDir, true)
                 .volume(Paths.get(outputDir), containerOutputDir)
                 .volume(configPath, containerConfigDir.resolve("config.ttl"), true)
+                // Set environment
                 .env("INPUT_FILE", containerInputDir.resolve(inputFileName))
                 .env("OUTPUT_FORMAT", outputFormatName)
                 .env("OUTPUT_DIR", containerOutputDir)
-                .env("CONFIG_FILE", containerConfigDir.resolve("config.ttl")))
+                .env("CONFIG_FILE", containerConfigDir.resolve("config.ttl"))
+                // Set resource limits
+                .memory(memoryLimit)
+                .memoryAndSwap(memorySwapLimit))
             .build();
     }
 

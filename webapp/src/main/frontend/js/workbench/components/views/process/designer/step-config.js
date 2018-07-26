@@ -12,10 +12,27 @@ import {
 
 import Form from '../../../helpers/forms/form';
 
-import * as metadata from '../../resource/register/metadata';
-import * as triplegeo from '../../resource/register/triplegeo';
+import { default as TripleGeoConfiguration } from '../../process/designer/configuration/triplegeo';
+import { default as LimesConfiguration } from '../../process/designer/configuration/limes';
+import { default as FagiConfiguration } from '../../process/designer/configuration/fagi';
+import { default as DeerConfiguration } from '../../process/designer/configuration/deer';
+import { default as MetadataConfiguration } from '../../process/designer/configuration/metadata';
 
-import Placeholder from '../../../helpers/placeholder';
+import {
+  validateConfiguration as validateTripleGeo,
+} from '../../../../service/toolkit/triplegeo';
+import {
+  validateConfiguration as validateLimes,
+} from '../../../../service/toolkit/limes';
+import {
+  validateConfiguration as validateFagi,
+} from '../../../../service/toolkit/fagi';
+import {
+  validateConfiguration as validateDeer,
+} from '../../../../service/toolkit/deer';
+import {
+  validateConfiguration as validateMetadata,
+} from '../../../../service/toolkit/metadata';
 
 /**
  * Presentational component that wraps the step configuration options
@@ -44,6 +61,7 @@ class StepConfig extends React.Component {
     configureStepUpdate: PropTypes.func.isRequired,
     configureStepEnd: PropTypes.func.isRequired,
     readOnly: PropTypes.bool.isRequired,
+    setConfiguration: PropTypes.func.isRequired,
   }
 
   setValue(configuration) {
@@ -94,7 +112,7 @@ class StepConfig extends React.Component {
       <Card>
         <CardBody className="card-body">
           {this.props.step.tool === EnumTool.TripleGeo &&
-            this.createForm(triplegeo.Component, triplegeo.validator, {
+            this.createForm(TripleGeoConfiguration, validateTripleGeo, {
               appConfiguration: this.props.appConfiguration,
               filesystem: this.props.filesystem,
               allowUpload: true,
@@ -106,16 +124,47 @@ class StepConfig extends React.Component {
             })
           }
           {this.props.step.tool === EnumTool.LIMES &&
-            this.createForm(<Placeholder style={{ height: '100%' }} label="Context" iconClass="fa fa-magic" />, null)
+            this.createForm(LimesConfiguration, validateLimes, {
+              appConfiguration: this.props.appConfiguration,
+              filesystem: this.props.filesystem,
+              allowUpload: true,
+              allowNewFolder: true,
+              allowDelete: true,
+              createFolder: this.props.createFolder,
+              uploadFile: this.props.uploadFile,
+              deletePath: this.props.deletePath,
+              step: this.props.step,
+              setConfiguration: this.props.setConfiguration,
+            })
           }
           {this.props.step.tool === EnumTool.FAGI &&
-            this.createForm(<Placeholder style={{ height: '100%' }} label="Context" iconClass="fa fa-magic" />, null)
+            this.createForm(FagiConfiguration, validateFagi, {
+              appConfiguration: this.props.appConfiguration,
+              filesystem: this.props.filesystem,
+              allowUpload: true,
+              allowNewFolder: true,
+              allowDelete: true,
+              createFolder: this.props.createFolder,
+              uploadFile: this.props.uploadFile,
+              deletePath: this.props.deletePath,
+              step: this.props.step,
+              setConfiguration: this.props.setConfiguration,
+            })
           }
           {this.props.step.tool === EnumTool.DEER &&
-            this.createForm(<Placeholder style={{ height: '100%' }} label="Context" iconClass="fa fa-magic" />, null)
+            this.createForm(DeerConfiguration, validateDeer, {
+              appConfiguration: this.props.appConfiguration,
+              filesystem: this.props.filesystem,
+              allowUpload: true,
+              allowNewFolder: true,
+              allowDelete: true,
+              createFolder: this.props.createFolder,
+              uploadFile: this.props.uploadFile,
+              deletePath: this.props.deletePath,
+            })
           }
           {this.props.step.tool === EnumTool.CATALOG &&
-            this.createForm(metadata.Component, metadata.validator)
+            this.createForm(MetadataConfiguration, validateMetadata)
           }
         </CardBody>
       </Card>

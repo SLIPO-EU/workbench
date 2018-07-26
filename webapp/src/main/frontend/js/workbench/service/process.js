@@ -24,9 +24,9 @@ import {
 } from '../model/process-designer';
 
 import {
-  readConfigurationTripleGeo,
-  writeConfigurationTripleGeo,
-} from './triplegeo';
+  readConfiguration as readConfigurationTripleGeo,
+  writeConfiguration as writeConfigurationTripleGeo,
+} from './toolkit/triplegeo';
 
 function buildProcessRequest(action, designer) {
   const allInputOutputResources = designer.steps

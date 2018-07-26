@@ -210,6 +210,11 @@ public class TriplegeoConfiguration extends TransformConfiguration<Triplegeo>
     // Member data
     //
 
+    /**
+     * A profile for setting default configuration values
+     */
+    private String _profile;
+    
     private Mode mode = Mode.STREAM;
 
     private EnumSpatialOntology targetGeoOntology = EnumSpatialOntology.GEOSPARQL;
@@ -259,11 +264,6 @@ public class TriplegeoConfiguration extends TransformConfiguration<Triplegeo>
      * coordinates of point locations
      */
     private String attrY = "lat";
-
-    /**
-     * A profile for setting default configuration values
-     */
-    private String profile;
 
     /**
      * A resource location of a YML file containing mappings from input schema to RDF according to a
@@ -426,6 +426,19 @@ public class TriplegeoConfiguration extends TransformConfiguration<Triplegeo>
     // Getters / Setters
     //
 
+    @JsonProperty("profile")
+    public void setProfile(String profile)
+    {
+        this._profile = profile;
+    }
+    
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonProperty("profile")
+    public String getProfile()
+    {
+        return _profile;
+    }
+    
     @JsonIgnore
     @Override
     public EnumDataFormat getInputFormat()
@@ -580,18 +593,6 @@ public class TriplegeoConfiguration extends TransformConfiguration<Triplegeo>
     public Mode getMode()
     {
         return mode;
-    }
-
-    @JsonProperty("profile")
-    public void setProfile(String profile)
-    {
-        this.profile = profile;
-    }
-
-    @JsonProperty("profile")
-    public String getProfile()
-    {
-        return profile;
     }
 
     @JsonProperty("mappingSpec")

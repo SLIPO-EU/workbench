@@ -1,9 +1,12 @@
-const React = require('react');
-const ReactRedux = require('react-redux');
-const PropTypes = require('prop-types');
-const { Dropdown, DropdownToggle, DropdownMenu, DropdownItem } = require('reactstrap');
-const { FormattedMessage } = require('react-intl');
-const _ = require('lodash');
+import _ from 'lodash';
+import * as React from 'react';
+import * as ReactRedux from 'react-redux';
+import * as PropTypes from 'prop-types';
+
+import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem } from 'reactstrap';
+import { FormattedMessage } from 'react-intl';
+
+import { changeLocale } from '../../ducks/i18n';
 
 //
 // Define presentational component
@@ -63,8 +66,6 @@ class SelectLanguage extends React.Component {
 //
 // Wrap into a connected component
 //
-
-const { changeLocale } = require('../../ducks/i18n');
 
 const mapStateToProps = (state) => ({
   language: state.i18n.locale,

@@ -35,7 +35,6 @@ import {
 } from '../helpers';
 
 import {
-  ExecutionDetails,
   Filters,
   Processes,
   ProcessExecutions,

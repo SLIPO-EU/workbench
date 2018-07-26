@@ -291,4 +291,46 @@ public class ContainerConfigurer
         return volume(Paths.get(containerPath));
     }
 
+    /**
+     * Set an upper limit for memory available to the container. This limit, if given, implies
+     * that an equally-sized amount of swap memory will also be available (so totally available
+     * memory-like storage will reach <tt>2 * sizeBytes</tt>).
+     *
+     * @param sizeBytes The size to make available (expressed in bytes)
+     */
+    public ContainerConfigurer memory(long sizeBytes)
+    {
+        Assert.isTrue(sizeBytes > 0, "The size must be a positive number");
+        hostConfigBuilder.memory(sizeBytes);
+        return this;
+    }
+
+    /**
+     * Set an upper limit for the total amount of memory+swap available to the container. If
+     * memory is also constrained ({@link ContainerConfigurer#memory(long)}), then this limit must
+     * be greater than the one given for memory.
+     *
+     * @param sizeBytes The size to make available (expressed in bytes)
+     * @return
+     */
+    public ContainerConfigurer memoryAndSwap(long sizeBytes)
+    {
+        Assert.isTrue(sizeBytes > 0, "The size must be a positive number");
+        hostConfigBuilder.memorySwap(sizeBytes);
+        return this;
+    }
+
+    /**
+     * Set the CPU share available to the container as a weighting factor.
+     *
+     * @param weightFactor A positive factor (default will be <tt>1.0</tt>) to be applied
+     */
+    public ContainerConfigurer cpu(float weightFactor)
+    {
+        Assert.isTrue(weightFactor > 0, "The weight must be a positive number");
+        // The unit for Docker is 1024, so scale factor to what is expected
+        long weight = Float.valueOf(weightFactor * 1024).longValue();
+        hostConfigBuilder.cpuShares(weight);
+        return this;
+    }
 }

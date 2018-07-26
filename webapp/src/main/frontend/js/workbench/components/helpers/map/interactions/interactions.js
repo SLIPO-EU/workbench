@@ -32,7 +32,7 @@ class Interactions extends React.Component {
     }
 
     return (
-      React.Children.map(children, (child, index) => {
+      React.Children.map(children, (child) => {
         return React.cloneElement(child, {
           map: this.props.map,
         });

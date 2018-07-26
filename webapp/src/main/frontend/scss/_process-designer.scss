@@ -274,7 +274,7 @@ $slipo-invalid-color:#E74856 !default;
   min-height: 500px;
   border-radius: 2px;
   border: 1px solid transparent;
-  min-width: 234px;
+  min-width: 14.8rem;
   margin: 5px;
   position: relative;
 }
@@ -451,7 +451,7 @@ $slipo-invalid-color:#E74856 !default;
   text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
-  width: 200px;
+  width: 12.5rem;
   overflow: hidden;
   margin: 0px;
   padding: 0px;
@@ -461,7 +461,7 @@ $slipo-invalid-color:#E74856 !default;
   text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
-  width: 200px;
+  width: 12.5rem;
   overflow: hidden;
   margin: 0px;
   padding: 0px;
@@ -559,7 +559,7 @@ $slipo-invalid-color:#E74856 !default;
   position: absolute;
   top: 50%;
   left: 50%;
-  margin-top: -16px;
+  margin-top: -1rem;
   margin-left: 0;
 }
 
@@ -577,6 +577,8 @@ $slipo-invalid-color:#E74856 !default;
 }
 
 .slipo-pd-error-item.slipo-pd-error-icon {
+  padding-top: 0.1rem;
+
   &.error {
     color: #f86c6b;
   }

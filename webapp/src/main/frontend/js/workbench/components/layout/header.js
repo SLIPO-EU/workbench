@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as PropTypes from 'prop-types';
 import * as ReactRedux from 'react-redux';
 import { Link, withRouter } from 'react-router-dom';
-import { FormattedMessage } from 'react-intl';
+
 import {
   Dropdown,
   DropdownMenu,
@@ -10,13 +10,15 @@ import {
   DropdownToggle,
 } from 'reactstrap';
 
-import { userPropType } from '../../model/prop-types/user';
-import { StaticRoutes } from '../../model/routes';
+import userPropType from '../../model/prop-types/user';
+import { Roles, StaticRoutes } from '../../model';
 
 import Toolbar from './toolbar';
 import AsideToggle from './aside-toggle';
 
-import SelectLanguage from '../helpers/select-language';
+import { SecureContent, SelectLanguage, Zoom } from '../helpers';
+
+import { logout } from '../../ducks/user';
 
 //
 // Presentational component
@@ -33,6 +35,16 @@ class Header extends React.Component {
     this.state = {
       dropdownOpen: false,
     };
+  }
+
+  static propTypes = {
+    user: userPropType,
+    logout: PropTypes.func.isRequired,
+    toggleSidebar: PropTypes.func.isRequired,
+    styleSidebar: PropTypes.func.isRequired,
+    setAsideMenuVisibility: PropTypes.func.isRequired,
+    toggleAsideMenu: PropTypes.func.isRequired,
+    styleAsideMenu: PropTypes.func.isRequired,
   }
 
   _toggleDropdown() {
@@ -62,6 +74,11 @@ class Header extends React.Component {
 
         {/* right-aligned menu items */}
         <ul className="nav navbar-nav ml-auto">
+          <SecureContent roles={[Roles.DEVELOPER]}>
+            <li className="nav-item">
+              <Zoom />
+            </li>
+          </SecureContent>
           <li className="nav-item d-md-down-none alert d-none">
             <Link to={StaticRoutes.EventViewer} className="nav-link">
               <i className="icon-bell"></i><span className="badge badge-pill badge-info">5</span>
@@ -97,22 +114,9 @@ class Header extends React.Component {
   }
 }
 
-Header.propTypes = {
-  user: userPropType,
-  logout: PropTypes.func.isRequired,
-  toggleSidebar: PropTypes.func.isRequired,
-  styleSidebar: PropTypes.func.isRequired,
-  setAsideMenuVisibility: PropTypes.func.isRequired,
-  toggleAsideMenu: PropTypes.func.isRequired,
-  styleAsideMenu: PropTypes.func.isRequired,
-};
-
-
 //
 // Container component
 //
-
-const { logout } = require('../../ducks/user');
 
 const mapStateToProps = () => ({});
 
@@ -122,6 +126,4 @@ const mapDispatchToProps = (dispatch) => ({
   ),
 });
 
-Header = withRouter(ReactRedux.connect(mapStateToProps, mapDispatchToProps)(Header));
-
-module.exports = Header;
+export default withRouter(ReactRedux.connect(mapStateToProps, mapDispatchToProps)(Header));

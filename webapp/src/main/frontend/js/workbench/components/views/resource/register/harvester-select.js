@@ -1,6 +1,6 @@
 import React from 'react';
 import { SelectField, TextField } from '../../../helpers/forms/form-fields/';
-import validateUrl from '../../../../util/validate-url';
+import { validateUrl } from '../../../../util';
 
 const harvesters = [
   { value: 'OSM', label: 'OSM Harvester' },
@@ -17,8 +17,8 @@ export const validator = (value) => {
     errors.type = 'Type required';
   }
   return validateUrl(value.url)
-    .then(() => { if (Object.keys(errors).length) { throw errors; }})
-    .catch((err) => { errors.url = err; throw errors;});
+    .then(() => { if (Object.keys(errors).length) { throw errors; } })
+    .catch((err) => { errors.url = err; throw errors; });
 };
 
 export const Component = (props) => {

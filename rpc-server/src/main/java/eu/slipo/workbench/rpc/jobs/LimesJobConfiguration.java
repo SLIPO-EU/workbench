@@ -35,7 +35,6 @@ import org.springframework.util.StringUtils;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
-import com.spotify.docker.client.DockerClient;
 
 import eu.slipo.workbench.common.model.tool.EnumConfigurationFormat;
 import eu.slipo.workbench.common.model.tool.InvalidConfigurationException;
@@ -47,7 +46,7 @@ import eu.slipo.workbench.rpc.jobs.tasklet.docker.CreateContainerTasklet;
 import eu.slipo.workbench.rpc.jobs.tasklet.docker.RunContainerTasklet;
 
 @Component
-public class LimesJobConfiguration extends BaseJobConfiguration
+public class LimesJobConfiguration extends ContainerBasedJobConfiguration
 {
     private static final String JOB_NAME = "limes";
 
@@ -61,33 +60,19 @@ public class LimesJobConfiguration extends BaseJobConfiguration
      */
     public static final long DEFAULT_CHECK_INTERVAL = 1000L;
 
-    /**
-     * A list of keys of parameters that should be ignored (blacklisted) as conflicting with
-     * <tt>input</tt> parameter.
-     */
-    private static final List<String> blacklistedParameterKeys =
-        ImmutableList.of("source.endpoint", "target.endpoint");
-
-    @Autowired
-    private DockerClient docker;
-
-    private long runTimeout = -1L;
-
-    private long checkInterval = -1L;
+    public static final long DEFAULT_MEMORY_LIMIT = 536870912L;
 
     /**
-     * The root directory on a container, under which directories/files will be bind-mounted
-     * (eg. <tt>/var/local/limes</tt>).
+     * A list of keys of parameters to be ignored (blacklisted) as conflicting with <tt>input</tt> parameter.
      */
-    private Path containerDataDir;
+    private static final List<String> blacklistedParameterKeys = ImmutableList.of("source.endpoint", "target.endpoint");
 
+    @Override
     @Autowired
-    private void setContainerDataDirectory(
+    protected void setContainerDataDirectory(
         @Value("${slipo.rpc-server.tools.limes.docker.container-data-dir}") String dir)
     {
-        Path dirPath = Paths.get(dir);
-        Assert.isTrue(dirPath.isAbsolute(), "Expected an absolute path (inside a container)");
-        this.containerDataDir = dirPath;
+        super.setContainerDataDirectory(dir);
     }
 
     @Autowired
@@ -102,6 +87,27 @@ public class LimesJobConfiguration extends BaseJobConfiguration
         @Value("${slipo.rpc-server.tools.limes.check-interval-millis:}") Integer checkInterval)
     {
         this.checkInterval = checkInterval == null? DEFAULT_CHECK_INTERVAL : checkInterval.longValue();
+    }
+
+    @Autowired
+    private void setMemoryLimit(
+        @Value("${slipo.rpc-server.tools.limes.container.memory.memory-limit-kbytes:}") Long kbytes)
+    {
+        this.memoryLimit = kbytes == null? DEFAULT_MEMORY_LIMIT : (kbytes.longValue() * 1024L);
+    }
+
+    @Autowired
+    private void setMemorySwapLimit(
+        @Value("${slipo.rpc-server.tools.limes.container.memory.memoryswap-limit-kbytes:}") Long kbytes)
+    {
+        this.memorySwapLimit = kbytes == null? -1L : kbytes.longValue() * 1024;
+    }
+
+    @PostConstruct
+    private void setMemoryLimitsIfNeeded()
+    {
+        if (this.memorySwapLimit < 0)
+            this.memorySwapLimit = 2L * this.memoryLimit;
     }
 
     @PostConstruct
@@ -249,12 +255,16 @@ public class LimesJobConfiguration extends BaseJobConfiguration
                 .volume(Paths.get(inputDir), containerInputDir, true)
                 .volume(Paths.get(outputDir), containerOutputDir)
                 .volume(configPath, containerConfigDir.resolve("config.xml"), true)
+                // Set environment
                 .env("SOURCE_FILE", containerInputDir.resolve(sourceFileName))
                 .env("TARGET_FILE", containerInputDir.resolve(targetFileName))
                 .env("CONFIG_FILE", containerConfigDir.resolve("config.xml"))
                 .env("OUTPUT_DIR", containerOutputDir)
                 .env("ACCEPTED_NAME", acceptedName)
-                .env("REVIEW_NAME", reviewName))
+                .env("REVIEW_NAME", reviewName)
+                // Set resource limits
+                .memory(memoryLimit)
+                .memoryAndSwap(memorySwapLimit))
             .build();
     }
 

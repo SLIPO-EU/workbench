@@ -14,4 +14,4 @@ class Aside extends React.Component {
 
 }
 
-module.exports = Aside;
+export default Aside;

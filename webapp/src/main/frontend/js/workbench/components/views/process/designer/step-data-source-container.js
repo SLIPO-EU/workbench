@@ -7,8 +7,6 @@ import * as processService from '../../../../service/process';
 import {
   EnumToolboxItem,
   EnumDragSource,
-  EnumInputType,
-  EnumResourceType,
   EnumSelection,
 } from '../../../../model/process-designer';
 

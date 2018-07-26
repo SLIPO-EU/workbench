@@ -22,6 +22,13 @@ export const addStep = function (group, step, appConfiguration) {
   };
 };
 
+export const cloneStep = function (step) {
+  return {
+    type: Types.CLONE_STEP,
+    step,
+  };
+};
+
 export const moveStep = function (dragOrder, hoverOrder) {
   return {
     type: Types.MOVE_STEP,
@@ -173,6 +180,15 @@ export const configureStepDataSourceEnd = function (step, dataSource, configurat
     type: Types.CONFIGURE_DATA_SOURCE_END,
     step,
     dataSource,
+    configuration,
+    errors,
+  };
+};
+
+export const setConfiguration = function (step, configuration, errors) {
+  return {
+    type: Types.SET_STEP_CONFIGURATION,
+    step,
     configuration,
     errors,
   };

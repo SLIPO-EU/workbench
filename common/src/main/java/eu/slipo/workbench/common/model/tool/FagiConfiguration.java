@@ -504,6 +504,11 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
         }
     }
     
+    /**
+     * A profile for setting default configuration values
+     */
+    private String _profile;
+    
     private String lang = "en";
     
     private Similarity similarity;
@@ -555,6 +560,19 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
     public Class<Fagi> getToolType()
     {
         return Fagi.class;
+    }
+    
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonProperty("profile")
+    public String getProfile()
+    {
+        return _profile;
+    }
+    
+    @JsonProperty("profile")
+    public void setProfile(String profile)
+    {
+        this._profile = profile;
     }
     
     @JsonIgnore

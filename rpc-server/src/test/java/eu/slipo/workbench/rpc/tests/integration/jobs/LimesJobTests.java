@@ -130,13 +130,13 @@ public class LimesJobTests extends AbstractJobTests
     // Tests
     //
 
-    @Test(timeout = 10 * 1000L)
+    @Test(timeout = 15 * 1000L)
     public void test1() throws Exception
     {
         testWithFixture(fixtures.get(0), this::extractInputParameters);
     }
 
-    @Test(timeout = 10 * 1000L)
+    @Test(timeout = 15 * 1000L)
     public void test1_singleInputParameter() throws Exception
     {
         testWithFixture(fixtures.get(0), this::extractInputParametersAsSingletonMap);

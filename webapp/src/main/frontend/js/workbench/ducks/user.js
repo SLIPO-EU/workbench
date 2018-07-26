@@ -1,8 +1,8 @@
 // user.js
-const _ = require('lodash');
-const moment = require('moment');
+import _ from 'lodash';
+import moment from '../moment-localized';
 
-const userService = require('../service/user');
+import { default as userService } from '../service/user';
 
 // Actions
 export const LOGIN = 'user/LOGIN';

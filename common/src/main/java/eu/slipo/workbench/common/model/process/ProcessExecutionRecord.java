@@ -183,7 +183,7 @@ public class ProcessExecutionRecord implements Serializable
 
     public void setSteps(List<ProcessExecutionStepRecord> steps)
     {
-        this.steps = new ArrayList(steps);
+        this.steps = new ArrayList<>(steps);
     }
     
     public void addStep(ProcessExecutionStepRecord s)

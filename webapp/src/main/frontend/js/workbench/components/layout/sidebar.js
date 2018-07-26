@@ -6,7 +6,7 @@ import * as  PropTypes from 'prop-types';
 import { NavLink } from 'react-router-dom';
 import { toggleMenu } from '../../ducks/ui/menu';
 import * as Roles from '../../model/role';
-import { StaticRoutes, DynamicRoutes, buildPath } from '../../model/routes';
+import { StaticRoutes, DynamicRoutes } from '../../model/routes';
 
 import SecureContent from '../helpers/secure-content';
 

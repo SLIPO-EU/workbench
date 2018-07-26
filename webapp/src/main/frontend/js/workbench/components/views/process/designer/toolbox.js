@@ -1,7 +1,6 @@
 import * as React from 'react';
 import * as ReactRedux from 'react-redux';
 import { bindActionCreators } from 'redux';
-import { FormattedTime } from 'react-intl';
 import {
   TabContent,
   TabPane,
