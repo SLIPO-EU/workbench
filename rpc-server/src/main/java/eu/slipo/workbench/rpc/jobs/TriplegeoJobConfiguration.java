@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -42,7 +41,6 @@ import org.springframework.util.StringUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.spotify.docker.client.DockerClient;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.tool.EnumConfigurationFormat;
@@ -56,46 +54,33 @@ import eu.slipo.workbench.rpc.jobs.tasklet.docker.RunContainerTasklet;
 import jersey.repackaged.com.google.common.collect.Iterables;
 
 @Component
-public class TriplegeoJobConfiguration extends BaseJobConfiguration
+public class TriplegeoJobConfiguration extends ContainerBasedJobConfiguration
 {
     private static final String JOB_NAME = "triplegeo";
 
     /**
      * The default timeout (milliseconds) for a container run
      */
-    public static final long DEFAULT_RUN_TIMEOUT = 30 * 1000L;
+    public static final long DEFAULT_RUN_TIMEOUT = 60 * 1000L;
 
     /**
      * The default interval (milliseconds) for polling a container
      */
     public static final long DEFAULT_CHECK_INTERVAL = 1000L;
 
+    public static final long DEFAULT_MEMORY_LIMIT = 268435456L;
+
     /**
-     * A list of keys of parameters that should be ignored (blacklisted) as conflicting with
-     * <tt>input</tt> parameter.
+     * A list of keys of parameters to be ignored (blacklisted) as conflicting with <tt>input</tt> parameter.
      */
     private static final List<String> blacklistedParameterKeys = ImmutableList.of("inputFiles");
 
+    @Override
     @Autowired
-    private DockerClient docker;
-
-    /**
-     * The root directory on a container, under which directories/files will be bind-mounted
-     * (eg. <tt>/var/local/triplegeo</tt>).
-     */
-    private Path containerDataDir;
-
-    private long runTimeout = -1L;
-
-    private long checkInterval = -1L;
-
-    @Autowired
-    private void setContainerDataDirectory(
+    protected void setContainerDataDirectory(
         @Value("${slipo.rpc-server.tools.triplegeo.docker.container-data-dir}") String dir)
     {
-        Path dirPath = Paths.get(dir);
-        Assert.isTrue(dirPath.isAbsolute(), "Expected an absolute path (inside a container)");
-        this.containerDataDir = dirPath;
+        super.setContainerDataDirectory(dir);
     }
 
     @Autowired
@@ -110,6 +95,27 @@ public class TriplegeoJobConfiguration extends BaseJobConfiguration
         @Value("${slipo.rpc-server.tools.triplegeo.check-interval-millis:}") Integer checkInterval)
     {
         this.checkInterval = checkInterval == null? DEFAULT_CHECK_INTERVAL : checkInterval.longValue();
+    }
+
+    @Autowired
+    private void setMemoryLimit(
+        @Value("${slipo.rpc-server.tools.triplegeo.container.memory.memory-limit-kbytes:}") Long kbytes)
+    {
+        this.memoryLimit = kbytes == null? DEFAULT_MEMORY_LIMIT : (kbytes.longValue() * 1024L);
+    }
+
+    @Autowired
+    private void setMemorySwapLimit(
+        @Value("${slipo.rpc-server.tools.triplegeo.container.memory.memoryswap-limit-kbytes:}") Long kbytes)
+    {
+        this.memorySwapLimit = kbytes == null? -1L : kbytes.longValue() * 1024L;
+    }
+
+    @PostConstruct
+    private void setMemoryLimitsIfNeeded()
+    {
+        if (this.memorySwapLimit < 0)
+            this.memorySwapLimit = 2L * this.memoryLimit;
     }
 
     @PostConstruct
@@ -275,11 +281,15 @@ public class TriplegeoJobConfiguration extends BaseJobConfiguration
                     containerConfigDir.resolve("mappings.yml"), true)
                 .volume(Paths.get(workDir, configFileByName.get("classification")),
                     containerConfigDir.resolve("classification.csv"), true)
+                // Set environment
                 .env("INPUT_FILE", String.join(File.pathSeparator, containerInputPaths))
                 .env("CONFIG_FILE", containerConfigDir.resolve("options.conf"))
                 .env("MAPPINGS_FILE", containerConfigDir.resolve("mappings.yml"))
                 .env("CLASSIFICATION_FILE", containerConfigDir.resolve("classification.csv"))
-                .env("OUTPUT_DIR", containerOutputDir))
+                .env("OUTPUT_DIR", containerOutputDir)
+                // Set resource limits
+                .memory(memoryLimit)
+                .memoryAndSwap(memorySwapLimit))
             .build();
     }
 

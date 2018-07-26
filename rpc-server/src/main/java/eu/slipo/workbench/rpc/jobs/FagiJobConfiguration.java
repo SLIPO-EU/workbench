@@ -39,9 +39,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.spotify.docker.client.DockerClient;
 
-import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.tool.FagiConfiguration;
 import eu.slipo.workbench.common.model.tool.InvalidConfigurationException;
 import eu.slipo.workbench.rpc.jobs.listener.ExecutionContextPromotionListeners;
@@ -51,7 +49,7 @@ import eu.slipo.workbench.rpc.jobs.tasklet.docker.CreateContainerTasklet;
 import eu.slipo.workbench.rpc.jobs.tasklet.docker.RunContainerTasklet;
 
 @Component
-public class FagiJobConfiguration extends BaseJobConfiguration
+public class FagiJobConfiguration extends ContainerBasedJobConfiguration
 {
     private static final String JOB_NAME = "fagi";
 
@@ -65,32 +63,20 @@ public class FagiJobConfiguration extends BaseJobConfiguration
      */
     public static final long DEFAULT_CHECK_INTERVAL = 1000L;
 
+    public static final long DEFAULT_MEMORY_LIMIT = 536870912L;
+
     /**
-     * A list of keys of parameters that should be ignored (blacklisted) as conflicting with
-     * <tt>input</tt> parameter.
+     * A list of keys of parameters to be ignored (blacklisted) as conflicting with <tt>input</tt> parameter.
      */
     private static final List<String> blacklistedParameterKeys =
         ImmutableList.of("left.path", "right.path", "links.path");
 
+    @Override
     @Autowired
-    private DockerClient docker;
-
-    private long runTimeout = -1L;
-
-    private long checkInterval = -1L;
-
-    /**
-     * The root directory on a container, under which directories/files will be bind-mounted
-     */
-    private Path containerDataDir;
-
-    @Autowired
-    private void setContainerDataDirectory(
+    protected void setContainerDataDirectory(
         @Value("${slipo.rpc-server.tools.fagi.docker.container-data-dir}") String dir)
     {
-        Path dirPath = Paths.get(dir);
-        Assert.isTrue(dirPath.isAbsolute(), "Expected an absolute path (inside a container)");
-        this.containerDataDir = dirPath;
+        super.setContainerDataDirectory(dir);
     }
 
     @Autowired
@@ -105,6 +91,27 @@ public class FagiJobConfiguration extends BaseJobConfiguration
         @Value("${slipo.rpc-server.tools.fagi.check-interval-millis:}") Integer checkInterval)
     {
         this.checkInterval = checkInterval == null? DEFAULT_CHECK_INTERVAL : checkInterval.longValue();
+    }
+
+    @Autowired
+    private void setMemoryLimit(
+        @Value("${slipo.rpc-server.tools.fagi.container.memory.memory-limit-kbytes:}") Long kbytes)
+    {
+        this.memoryLimit = kbytes == null? DEFAULT_MEMORY_LIMIT : (kbytes.longValue() * 1024L);
+    }
+
+    @Autowired
+    private void setMemorySwapLimit(
+        @Value("${slipo.rpc-server.tools.fagi.container.memory.memoryswap-limit-kbytes:}") Long kbytes)
+    {
+        this.memorySwapLimit = kbytes == null? -1L : kbytes.longValue() * 1024;
+    }
+
+    @PostConstruct
+    private void setMemoryLimitsIfNeeded()
+    {
+        if (this.memorySwapLimit < 0)
+            this.memorySwapLimit = 2L * this.memoryLimit;
     }
 
     @PostConstruct
@@ -289,7 +296,10 @@ public class FagiJobConfiguration extends BaseJobConfiguration
                     StringUtils.stripFilenameExtension(reviewFileName.toString()))
                 .env("TARGET_STATS_NAME",
                     StringUtils.stripFilenameExtension(statsFileName.toString()))
-                .env("OUTPUT_DIR", containerOutputDir))
+                .env("OUTPUT_DIR", containerOutputDir)
+                // Set resource limits
+                .memory(memoryLimit)
+                .memoryAndSwap(memorySwapLimit))
             .build();
     }
 
