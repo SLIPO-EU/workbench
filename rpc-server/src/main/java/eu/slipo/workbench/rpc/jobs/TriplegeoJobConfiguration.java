@@ -15,6 +15,8 @@ import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.validation.ConstraintViolation;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.Step;
@@ -56,6 +58,8 @@ import jersey.repackaged.com.google.common.collect.Iterables;
 @Component
 public class TriplegeoJobConfiguration extends ContainerBasedJobConfiguration
 {
+    private static final Logger logger = LoggerFactory.getLogger(TriplegeoJobConfiguration.class);
+
     private static final String JOB_NAME = "triplegeo";
 
     /**
@@ -116,6 +120,9 @@ public class TriplegeoJobConfiguration extends ContainerBasedJobConfiguration
     {
         if (this.memorySwapLimit < 0)
             this.memorySwapLimit = 2L * this.memoryLimit;
+
+        logger.info("The memory limits are {}m/{}m",
+            memoryLimit / 1024L / 1024L, memorySwapLimit / 1024L / 1024L);
     }
 
     @PostConstruct
