@@ -885,7 +885,6 @@ public class LimesConfiguration extends InterlinkConfiguration<Limes>
         this.metricExpr = expression;
     }
     
-    @AssertTrue(message = "The metric expression cannot be parsed")
     protected boolean isValidMetricExpression()
     {
         boolean b = true;
