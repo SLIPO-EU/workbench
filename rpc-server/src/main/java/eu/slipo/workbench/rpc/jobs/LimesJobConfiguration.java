@@ -95,14 +95,14 @@ public class LimesJobConfiguration extends ContainerBasedJobConfiguration
 
     @Autowired
     private void setMemoryLimit(
-        @Value("${slipo.rpc-server.tools.limes.container.memory.memory-limit-kbytes:}") Long kbytes)
+        @Value("${slipo.rpc-server.tools.limes.docker.container.memory-limit-kbytes:}") Long kbytes)
     {
         this.memoryLimit = kbytes == null? DEFAULT_MEMORY_LIMIT : (kbytes.longValue() * 1024L);
     }
 
     @Autowired
     private void setMemorySwapLimit(
-        @Value("${slipo.rpc-server.tools.limes.container.memory.memoryswap-limit-kbytes:}") Long kbytes)
+        @Value("${slipo.rpc-server.tools.limes.docker.container.memoryswap-limit-kbytes:}") Long kbytes)
     {
         this.memorySwapLimit = kbytes == null? -1L : kbytes.longValue() * 1024;
     }
