@@ -13,6 +13,8 @@ import java.util.Set;
 import javax.annotation.PostConstruct;
 import javax.validation.ConstraintViolation;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.StepContribution;
@@ -51,6 +53,8 @@ import eu.slipo.workbench.rpc.jobs.tasklet.docker.RunContainerTasklet;
 @Component
 public class FagiJobConfiguration extends ContainerBasedJobConfiguration
 {
+    private static final Logger logger = LoggerFactory.getLogger(FagiJobConfiguration.class);
+
     private static final String JOB_NAME = "fagi";
 
     /**
@@ -112,6 +116,9 @@ public class FagiJobConfiguration extends ContainerBasedJobConfiguration
     {
         if (this.memorySwapLimit < 0)
             this.memorySwapLimit = 2L * this.memoryLimit;
+
+        logger.info("The memory limits are {}m/{}m",
+            memoryLimit / 1024L / 1024L, memorySwapLimit / 1024L / 1024L);
     }
 
     @PostConstruct
