@@ -55,6 +55,8 @@ class UserManager extends React.Component {
   constructor(props) {
     super(props);
 
+    this.setSelected = this.setSelected.bind(this);
+
     this.refreshIntervalId = null;
   }
 
@@ -77,6 +79,10 @@ class UserManager extends React.Component {
     this.props.fetchAccounts({
       query: { ...this.props.filters },
     });
+  }
+
+  setSelected(id) {
+    this.props.setSelected(id);
   }
 
   updateAccount(account) {
@@ -142,7 +148,7 @@ class UserManager extends React.Component {
                       pager={this.props.pager}
                       selected={this.props.selected}
                       setPager={this.props.setPager}
-                      setSelected={this.props.setSelected}
+                      setSelected={this.setSelected}
                     />
                   </Col>
                 </Row>
