@@ -1,13 +1,20 @@
 const downloadBlob = (blob, fileName) => {
   if ((typeof global !== 'undefined') && (global.hasOwnProperty('URL'))) {
-    let a = document.createElement('a');
-    let url = global.URL.createObjectURL(blob);
+    const url = global.URL.createObjectURL(blob);
 
-    a.href = url;
+    const a = document.createElement('a');
     a.download = fileName;
+    a.href = url;
+    a.style = "display: none";
+
+    document.body.appendChild(a);
     a.click();
 
-    global.URL.revokeObjectURL(url);
+    // Cleanup
+    setTimeout(() => {
+      document.body.removeChild(a);
+      global.URL.revokeObjectURL(url);
+    }, 1000);
   }
 };
 
