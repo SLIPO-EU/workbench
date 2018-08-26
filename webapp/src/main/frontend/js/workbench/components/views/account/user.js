@@ -50,9 +50,15 @@ class UserDetails extends React.Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    const { user: { roles } } = nextProps;
+    this.updateStateFromProps(nextProps);
+  }
+
+  updateStateFromProps(props) {
+    const { user: { familyName, givenName, roles } } = props;
 
     this.setState({
+      givenName,
+      familyName,
       roles: [...roles],
     });
   }
@@ -91,13 +97,7 @@ class UserDetails extends React.Component {
   cancel(e) {
     e.preventDefault();
 
-    const { user: { familyName, givenName, roles } } = this.props;
-
-    this.setState({
-      familyName,
-      givenName,
-      roles: [...roles],
-    });
+    this.updateStateFromProps(this.props);
   }
 
   render() {
