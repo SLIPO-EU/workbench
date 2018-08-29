@@ -33,9 +33,15 @@ public enum EnumDataFormat
     GEOJSON("geojson"),
     
     /**
-     * XML - Open Street Maps format
+     * OSM XML - Open Street Maps XML format
      */
-    OSM("xml"),
+    OSM_XML("xml"),
+    
+    /**
+     * OSM PBF - Open Street Maps protocolbuffer format
+     * @see https://wiki.openstreetmap.org/wiki/PBF_Format
+     */
+    OSM_PBF("pbf"),
     
     /**
      * ESRI shape file
