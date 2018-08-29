@@ -1,9 +1,11 @@
 export const inputFormats = [
-  { value: 'SHAPEFILE', label: 'SHAPEFILE' },
   { value: 'CSV', label: 'CSV' },
-  { value: 'GPX', label: 'GPX' },
   { value: 'GEOJSON', label: 'GEOJSON' },
-  { value: 'OSM', label: 'OSM' },
+  { value: 'GPX', label: 'GPX' },
+  { value: 'JSON', label: 'JSON' },
+  { value: 'OSM_PBF', label: 'OSM PBF' },
+  { value: 'OSM_XML', label: 'OSM XML' },
+  { value: 'SHAPEFILE', label: 'SHAPEFILE' },
 ];
 
 export const modes = [
