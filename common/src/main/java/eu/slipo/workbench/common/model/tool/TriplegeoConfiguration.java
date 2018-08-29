@@ -70,10 +70,12 @@ public class TriplegeoConfiguration extends TransformConfiguration<Triplegeo>
     {
         CSV(EnumDataFormat.CSV, "CSV"),
         GEOJSON(EnumDataFormat.GEOJSON, "GEOJSON"),
+        JSON(EnumDataFormat.JSON, "JSON"),
         GPX(EnumDataFormat.GPX, "GPX"),
         N3(EnumDataFormat.N3, "N3"),
         N_TRIPLES(EnumDataFormat.N_TRIPLES, "N-TRIPLES"),
-        OSM(EnumDataFormat.OSM, "OSM"),
+        OSM_XML(EnumDataFormat.OSM_XML, "OSM_XML"),
+        OSM_PBF(EnumDataFormat.OSM_PBF, "OSM_PBF"),
         TURTLE(EnumDataFormat.TURTLE, "TURTLE", "TTL"),
         RDF_XML(EnumDataFormat.RDF_XML, "RDF", "RDF/XML"),
         RDF_XML_ABBREV(EnumDataFormat.RDF_XML_ABBREV, "RDF/XML-ABBREV"),
