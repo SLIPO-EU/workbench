@@ -35,7 +35,7 @@ export function validateConfiguration(config) {
     errors['attrKey'] = 'Required';
   }
 
-  if (config && config.inputFormat !== 'CSV' && !config['attrGeometry']) {
+  if (config && config.inputFormat !== 'CSV' && config.inputFormat !== 'JSON' && !config['attrGeometry']) {
     errors['attrGeometry'] = 'Required';
   }
 
@@ -54,6 +54,15 @@ export function validateConfiguration(config) {
       if (!config['attrY']) {
         errors['attrY'] = 'Required for CSV';
       }
+    }
+  }
+
+  if (config && config.inputFormat === 'JSON') {
+    if (!config['attrX']) {
+      errors['attrX'] = 'Required for JSON';
+    }
+    if (!config['attrY']) {
+      errors['attrY'] = 'Required for JSON';
     }
   }
 

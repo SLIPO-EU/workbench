@@ -1,5 +1,7 @@
 import React from 'react';
 
+import semver from 'semver-compare';
+
 import {
   CheckboxField,
   EnumFileSelectMode,
@@ -21,6 +23,7 @@ import {
 } from '../../../../../model/process-designer/configuration/triplegeo';
 
 import {
+  EnumDataFormat,
   EnumTool,
 } from '../../../../../model/process-designer';
 
@@ -98,7 +101,7 @@ class TripleGeoConfiguration extends React.Component {
     return (
       <div>
 
-        {value.version === '1.4' &&
+        {semver(value.version, '1.2') === 1 &&
           <div>
             <div>
               <h4>Profile {
@@ -269,9 +272,8 @@ class TripleGeoConfiguration extends React.Component {
           </div>
         </div>
 
-        {props.value && props.value.inputFormat === 'CSV' &&
+        {props.value && props.value.inputFormat === EnumDataFormat.CSV &&
           <div>
-
             <div className="row">
               <div className="col">
                 <TextField
@@ -291,7 +293,11 @@ class TripleGeoConfiguration extends React.Component {
                 />
               </div>
             </div>
+          </div>
+        }
 
+        {props.value && (props.value.inputFormat === EnumDataFormat.CSV || props.value.inputFormat === EnumDataFormat.JSON) &&
+          <div>
             <div className="row">
               <div className="col">
                 <TextField
