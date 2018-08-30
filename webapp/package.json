@@ -84,6 +84,7 @@
     "redux": "^3.7.2",
     "redux-logger": "^3.0.6",
     "redux-thunk": "^2.2.0",
+    "semver-compare": "^1.0.0",
     "tether": "^1.4.4",
     "urijs": "^1.19.1",
     "url-search-params": "^0.10.0"
