@@ -429,6 +429,7 @@ class TripleGeoConfiguration extends React.Component {
               label="Source CRS"
               help=""
               options={crs}
+              clearable={true}
             />
           </div>
           <div className="col">
@@ -438,6 +439,7 @@ class TripleGeoConfiguration extends React.Component {
               label="Target CRS"
               help=""
               options={crs}
+              clearable={true}
             />
           </div>
         </div>
