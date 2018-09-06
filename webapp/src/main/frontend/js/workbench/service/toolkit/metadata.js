@@ -12,3 +12,21 @@ export function validateConfiguration(config) {
     throw errors;
   }
 }
+
+export function readConfiguration(config) {
+  const { metadata } = config;
+
+  return {
+    ...metadata,
+  };
+}
+
+export function writeConfiguration(config) {
+  const { ...rest } = config;
+
+  return {
+    metadata: {
+      ...rest,
+    },
+  };
+}

@@ -33,6 +33,7 @@ export const Pages = {
  */
 
 const Dashboard = '/dashboard';
+const UserFileSystem = '/user-files';
 const Profile = '/profile';
 const Settings = '/settings';
 
@@ -51,6 +52,7 @@ const EventViewer = '/admin/event-viewer';
 
 export const StaticRoutes = {
   Dashboard,
+  UserFileSystem,
   HarvesterDataExplorer,
   Profile,
   Settings,
@@ -122,6 +124,12 @@ const routes = {
     title: 'links.dashboard',
     defaultTitle: 'Dashboard',
     links: [ResourceExplorer, ProcessExplorer]
+  },
+  [UserFileSystem]: {
+    description: 'My Files',
+    title: 'links.user-files',
+    defaultTitle: 'My Files',
+    links: [ProcessDesignerCreate]
   },
   [HarvesterDataExplorer]: {
     description: 'Explore Harvester Data',

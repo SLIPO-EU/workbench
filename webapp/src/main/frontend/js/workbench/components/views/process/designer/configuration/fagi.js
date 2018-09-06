@@ -108,7 +108,7 @@ class FagiConfiguration extends React.Component {
     reader.readAsText(file);
     promise
       .then((config) => {
-        const sanitizedConfig = { ...readConfiguration(config), profile: null, rulesSpec: null };
+        const sanitizedConfig = { ...readConfiguration(config), profile: null, };
         try {
           validateConfiguration(sanitizedConfig);
           this.props.setConfiguration(this.props.step, sanitizedConfig, {});

@@ -14,7 +14,8 @@ import decorateField from './form-field';
  */
 export class Checkbox extends React.Component {
 
-  static defaultProps = {
+  static propTypes = {
+    disabled: PropTypes.bool,
     id: PropTypes.string.isRequired,
     label: PropTypes.string,
     help: PropTypes.string,
@@ -25,7 +26,9 @@ export class Checkbox extends React.Component {
     text: PropTypes.string,
   }
 
-
+  static defaultProps = {
+    disabled: false,
+  }
 
   /**
    * Returns true if the component is read-only; Otherwise false
@@ -35,9 +38,9 @@ export class Checkbox extends React.Component {
    */
   get isReadOnly() {
     if (typeof this.props.readOnly === 'function') {
-      return this.props.readOnly(this.props.id);
+      return this.props.readOnly(this.props.id) || this.props.disabled;
     }
-    return this.props.readOnly;
+    return this.props.readOnly || this.props.disabled;
   }
 
   render() {

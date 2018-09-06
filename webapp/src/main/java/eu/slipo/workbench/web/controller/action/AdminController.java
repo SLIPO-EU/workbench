@@ -28,7 +28,6 @@ import eu.slipo.workbench.web.service.AccountService;
  * Actions for administration tasks
  */
 @RestController
-@Secured({ "ROLE_ADMIN" })
 @RequestMapping(produces = "application/json")
 public class AdminController extends BaseController {
 
@@ -44,6 +43,7 @@ public class AdminController extends BaseController {
      * @param data the query to execute
      * @return a list of events
      */
+    @Secured({ "ROLE_ADMIN", "ROLE_DEVELOPER" })
     @RequestMapping(value = "/action/admin/events", method = RequestMethod.POST)
     public RestResponse<QueryResult<EventRecord>> find(@RequestBody EventQueryRequest request) {
 
@@ -64,6 +64,7 @@ public class AdminController extends BaseController {
      * @param data the query to execute
      * @return a list of accounts
      */
+    @Secured({ "ROLE_ADMIN" })
     @RequestMapping(value = "/action/admin/accounts", method = RequestMethod.POST)
     public RestResponse<QueryResult<Account>> find(@RequestBody AccountQueryRequest request) {
 
@@ -85,6 +86,7 @@ public class AdminController extends BaseController {
      * @return an empty response if the update is successful or a list of {@link Error}
      * objects if any errors occur
      */
+    @Secured({ "ROLE_ADMIN" })
     @RequestMapping(value = "/action/admin/account", method = RequestMethod.POST)
     public RestResponse<?> update(@RequestBody Account account) {
 

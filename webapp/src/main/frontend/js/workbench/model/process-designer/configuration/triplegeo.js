@@ -34,7 +34,9 @@ export const crs = [
 
 export const languages = [
   { value: 'en', label: 'English' },
+  { value: 'de', label: 'German' },
   { value: 'el', label: 'Greek' },
+  { value: 'ro', label: 'Romanian' },
 ];
 
 export const serializations = [
@@ -63,7 +65,7 @@ const defaultNamespaces = [{
 }];
 
 export const defaultValues = {
-  classifyByName: true,
+  classifyByName: false,
   defaultLang: languages[0].value,
   delimiter: '|',
   encoding: encodings[3].value,

@@ -45,6 +45,7 @@ export function validateConfiguration(tool, config) {
     case EnumTool.CATALOG:
       return validateMetadata(config);
   }
+  throw new Error(`Tool ${tool} is not supported`);
 }
 
 export function readConfiguration(tool, config) {
@@ -60,6 +61,7 @@ export function readConfiguration(tool, config) {
     case EnumTool.CATALOG:
       return readMetadata(config);
   }
+  throw new Error(`Tool ${tool} is not supported`);
 }
 
 export function writeConfiguration(tool, config) {
@@ -75,4 +77,5 @@ export function writeConfiguration(tool, config) {
     case EnumTool.CATALOG:
       return writeMetadata(config);
   }
+  throw new Error(`Tool ${tool} is not supported`);
 }

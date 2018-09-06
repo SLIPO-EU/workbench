@@ -41,6 +41,7 @@ import {
   ResourceViewer,
   ProcessDesigner,
   ProcessExecutionMapViewer,
+  UserFileSystem,
 } from './views/';
 
 /////////////////////////////////////////////////////////////////
@@ -161,6 +162,7 @@ class Home extends React.Component {
                 <Route path={DynamicRoutes.ProcessExecutionMapViewer} component={ProcessExecutionMapViewer} />
                 {/* Static */}
                 <Route path={StaticRoutes.Dashboard} component={Dashboard} />
+                <Route path={StaticRoutes.UserFileSystem} component={UserFileSystem} />
                 <SecureRoute path={StaticRoutes.HarvesterDataExplorer} component={HarvesterDataExplorer} roles={[Roles.ADMIN]} />
                 <Route path={StaticRoutes.Profile} component={Profile} />
                 <Route path={StaticRoutes.Settings} component={Settings} />
@@ -170,7 +172,7 @@ class Home extends React.Component {
                 <Route path={StaticRoutes.ProcessExecutionExplorer} component={ProcessExecutionExplorer} />
                 <Route path={StaticRoutes.RecipeExplorer} component={RecipeExplorer} />
                 <SecureRoute path={StaticRoutes.UserManager} component={UserManager} roles={[Roles.ADMIN]} />
-                <SecureRoute path={StaticRoutes.EventViewer} component={EventViewer} roles={[Roles.ADMIN]} />
+                <SecureRoute path={StaticRoutes.EventViewer} component={EventViewer} roles={[Roles.ADMIN, Roles.DEVELOPER]} />
                 {/* Default */}
                 <Redirect push={true} to={ErrorPages.NotFound} />
               </Switch>

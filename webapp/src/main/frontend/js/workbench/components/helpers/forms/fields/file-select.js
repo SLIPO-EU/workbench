@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import Dropzone from 'react-dropzone';
 
 import { formatFileSize } from '../../../../util';
+import { default as fileSystem } from '../../../../service/filesystem';
 import decorateField from './form-field';
 
 import {
@@ -57,10 +58,27 @@ function createFileColumns(props) {
     {
       Header: '',
       accessor: 'delete',
-      maxWidth: 30,
-      show: props.allowDelete && !props.readOnly,
+      maxWidth: props.allowDelete && props.allowDownload ? 60 : 30,
+      show: (props.allowDelete || props.allowDownload) && !props.readOnly,
       style: { 'textAlign': 'center' },
-      Cell: props => <i data-action="delete" className='fa fa-trash slipo-table-row-action'></i>
+      Cell: (cell) => {
+        const actions = [];
+        if (props.allowDelete) {
+          actions.push(<i key="delete" data-action="delete" className='fa fa-trash slipo-table-row-action'></i>);
+        }
+        if (props.allowDownload) {
+          if (cell.original.type === 'folder') {
+            actions.push(<i key="no-download" data-action="no-download" className='fa fa-square ml-2 transparent'></i>);
+          } else {
+            actions.push(<i key="download" data-action="download" className='fa fa-cloud-download ml-2 slipo-table-row-action'></i>);
+          }
+        }
+        return (
+          <span>
+            {actions}
+          </span>
+        );
+      }
     },
     {
       Header: '',
@@ -153,9 +171,10 @@ export class FileSelect extends React.Component {
     filesystem: PropTypes.object.isRequired,
     value: PropTypes.any,
     onChange: PropTypes.func.isRequired,
-    allowUpload: PropTypes.bool.isRequired,
-    allowNewFolder: PropTypes.bool.isRequired,
-    allowDelete: PropTypes.bool.isRequired,
+    allowUpload: PropTypes.bool,
+    allowNewFolder: PropTypes.bool,
+    allowDelete: PropTypes.bool,
+    allowDownload: PropTypes.bool,
     createFolder: PropTypes.func,
     uploadFile: PropTypes.func,
     deletePath: PropTypes.func,
@@ -165,6 +184,7 @@ export class FileSelect extends React.Component {
     allowUpload: false,
     allowNewFolder: false,
     allowDelete: false,
+    allowDownload: false,
   }
 
   /**
@@ -303,6 +323,16 @@ export class FileSelect extends React.Component {
     });
   }
 
+  downloadFile(filePath) {
+    fileSystem.download(filePath, filePath.split('/').reverse()[0])
+      .catch(() => {
+        toast.dismiss();
+        toast.error(
+          <ToastTemplate iconClass='fa-cloud-download' text='Failed to download file' />
+        );
+      });
+  }
+
   /**
    * Displays a warning message to the user
    *
@@ -322,6 +352,9 @@ export class FileSelect extends React.Component {
       return;
     }
     switch (e.target.getAttribute('data-action')) {
+      case 'download':
+        this.downloadFile(rowInfo.row.path);
+        break;
       case 'delete':
         this.setState({
           confirmDialogOpen: true,
@@ -490,8 +523,14 @@ export class FileSelect extends React.Component {
           value={this.state.newFolderName || ''}
           autoComplete="off"
           onChange={(e) => this.setFolderName(e.target.value)}
+          onKeyPress={(e) => {
+            if ((!!e.target.value) && (e.key === 'Enter')) {
+              this.createNewFolder();
+            }
+          }}
           placeholder="New folder name"
           valid={!!this.state.newFolderName}
+          autoFocus={true}
         />
         <div className="ml-2" style={{ float: 'left' }}>
           <Button color="success" onClick={(e) => this.createNewFolder()} disabled={!this.state.newFolderName}><i className="fa fa-check" /></Button>
@@ -556,7 +595,7 @@ export class FileSelect extends React.Component {
             if (path.startsWith('/')) {
               path = path.slice(1);
             }
-            this.props.uploadFile({ path, filename: file.name, }, file, )
+            this.props.uploadFile({ path, filename: file.name, }, file)
               .then(fs => {
                 this.setState({
                   folder: this.findFolderFromPath(this.state.folder.path),

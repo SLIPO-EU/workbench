@@ -1,4 +1,5 @@
 import actions from './api/fetch-actions';
+import dom from './api/dom';
 
 function relativePath(path) {
   if (path.startsWith('/')) {
@@ -30,5 +31,13 @@ export default {
 
     return actions.submit('/action/file-system/upload', token, form);
   },
+
+  download: (filePath, fileName) => {
+    const url = `/action/file-system?file=${filePath}`;
+
+    dom.downloadUrl(url, fileName);
+
+    return Promise.resolve();
+  }
 
 };

@@ -10,8 +10,13 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Locale;
 
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -35,6 +40,8 @@ import eu.slipo.workbench.web.model.UploadRequest;
 @Secured({ "ROLE_USER", "ROLE_AUTHOR", "ROLE_ADMIN" })
 @RequestMapping(produces = "application/json")
 public class FileSytemController extends BaseController {
+
+    private static final Logger logger = LoggerFactory.getLogger(FileSytemController.class);
 
     private long maxUserSpace;
 
@@ -87,6 +94,51 @@ public class FileSytemController extends BaseController {
         } catch (IOException ex) {
             return RestResponse.error(BasicErrorCode.IO_ERROR, "An unknown error has occurred");
         }
+    }
+
+    /**
+     * Downloads a file
+     *
+     * @param filePath the path of the file to download
+     * @return the requested file
+     */
+    @RequestMapping(value = "/action/file-system", params = { "file" }, method = RequestMethod.GET)
+    public FileSystemResource downloadFile(@RequestParam("file") String filePath, HttpServletResponse response) throws IOException {
+        try {
+            if (StringUtils.isEmpty(filePath)) {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "A path to the file is required");
+                return null;
+            }
+
+            final int userId = currentUserId();
+            final Path userDir = fileNamingStrategy.getUserDir(userId);
+
+            final Path absolutePath = userDir.resolve(filePath);
+            final File file = absolutePath.toFile();
+
+            if (!file.exists()) {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "File does not exist");
+            } else if (file.isDirectory()) {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "File path is a directory");
+            } else {
+                logger.info("User {} ({}) has downloaded file {}",
+                    this.currentUserName(),
+                    this.currentUserId(),
+                    absolutePath.toString());
+
+                response.setHeader("Content-Disposition", String.format("attachment; filename=%s", file.getName()));
+                return new FileSystemResource(file);
+            }
+        } catch (Exception ex) {
+            logger.warn("Failed to download file [{}] for user {} ({})",
+                filePath,
+                this.currentUserName(),
+                this.currentUserId());
+
+            response.sendError(HttpServletResponse.SC_GONE, "File has been removed");
+        }
+
+        return null;
     }
 
     /**
