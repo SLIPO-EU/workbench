@@ -44,11 +44,11 @@ function getToolboxItems(type) {
     }
   }
 
-  if ((type === EnumToolboxItemGroup.All) || (type === EnumToolboxItemGroup.Harvester)) {
-    for (let key in EnumHarvester) {
-      items.push(<DataSource key={++index} name={HarvesterTitles[key]} source={EnumDataSource.HARVESTER} iconClass={HarvesterIcons[key]} harvester={key} />);
-    }
-  }
+  // if ((type === EnumToolboxItemGroup.All) || (type === EnumToolboxItemGroup.Harvester)) {
+  //   for (let key in EnumHarvester) {
+  //     items.push(<DataSource key={++index} name={HarvesterTitles[key]} source={EnumDataSource.HARVESTER} iconClass={HarvesterIcons[key]} harvester={key} />);
+  //   }
+  // }
 
   if ((type === EnumToolboxItemGroup.All) || (type === EnumToolboxItemGroup.Tools)) {
     for (let key in EnumTool) {
@@ -136,13 +136,13 @@ class Toolbox extends React.Component {
               Data Sources
             </NavLink>
           </NavItem>
-          <NavItem>
+          {/* <NavItem>
             <NavLink
               className={classnames({ active: this.state.activeTab === '4' })}
               onClick={() => { this._toggle('4'); }}>
               Harvesters
             </NavLink>
-          </NavItem>
+          </NavItem> */}
           <NavItem>
             <NavLink
               className={classnames({ active: this.state.activeTab === '5' })}
@@ -161,9 +161,9 @@ class Toolbox extends React.Component {
           <TabPane tabId="3">
             {getToolboxItems(EnumToolboxItemGroup.DataSource)}
           </TabPane>
-          <TabPane tabId="4">
+          {/* <TabPane tabId="4">
             {getToolboxItems(EnumToolboxItemGroup.Harvester)}
-          </TabPane>
+          </TabPane> */}
           <TabPane tabId="5">
             {getToolboxItems(EnumToolboxItemGroup.Misc)}
           </TabPane>
