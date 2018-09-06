@@ -63,7 +63,7 @@ const defaultNamespaces = [{
 }];
 
 export const defaultValues = {
-  classifyByName: true,
+  classifyByName: false,
   defaultLang: languages[0].value,
   delimiter: '|',
   encoding: encodings[3].value,

@@ -89,7 +89,7 @@ class TripleGeoConfiguration extends React.Component {
   render() {
     const props = this.props;
     const { errors, readOnly, setValue, value, appConfiguration, filesystem, ...rest } = props;
-    const { allowDelete, allowNewFolder, allowUpload, createFolder, deletePath, uploadFile } = props;
+    const { createFolder, deletePath, uploadFile } = props;
 
     const inject = {
       errors,
@@ -184,6 +184,7 @@ class TripleGeoConfiguration extends React.Component {
                           id="classifyByName"
                           text="Classify By Name"
                           help="Check if features specify their category based on the actual name of the category"
+                          disabled={!this.props.value['profile']}
                         />
                       </div>
                     </div>

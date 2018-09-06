@@ -10,12 +10,6 @@ function fromEnumValue(value, list) {
 
 export function validateConfiguration(config) {
   const errors = {};
-  if ((!config['mappingSpec']) && (!config['profile'])) {
-    errors['mappingSpec'] = 'Required';
-  }
-  if ((!config['classificationSpec']) && (!config['profile'])) {
-    errors['classificationSpec'] = 'Required';
-  }
   if (!config['inputFormat']) {
     errors['inputFormat'] = 'Required';
   }
