@@ -24,9 +24,9 @@ import {
 } from '../model/process-designer';
 
 import {
-  readConfiguration as readConfigurationTripleGeo,
-  writeConfiguration as writeConfigurationTripleGeo,
-} from './toolkit/triplegeo';
+  readConfiguration,
+  writeConfiguration,
+} from './toolkit';
 
 function buildProcessRequest(action, designer) {
   const allInputOutputResources = designer.steps
@@ -110,25 +110,9 @@ function buildInput(step, steps) {
 }
 
 function buildConfiguration(step) {
-  const config = step.configuration || null;
+  const { configuration = null, tool } = step;
 
-  switch (step.tool) {
-    case EnumTool.TripleGeo:
-      return writeConfigurationTripleGeo(config);
-
-    case EnumTool.CATALOG:
-      return {
-        metadata: config,
-      };
-
-    case EnumTool.LIMES:
-    case EnumTool.FAGI:
-    case EnumTool.DEER:
-      return config;
-
-    default:
-      return null;
-  }
+  return writeConfiguration(tool, configuration);
 }
 
 function buildDataSource(step) {
@@ -207,7 +191,7 @@ function readProcessResponse(result) {
         iconClass: ToolIcons[s.tool],
         input: readInput(s, resources),
         dataSources: readDataSource(s),
-        configuration: readConfiguration(s),
+        configuration: readConfiguration(s.tool, s.configuration),
         errors: {},
         outputKey: s.outputKey !== null ? parseInt(s.outputKey) : null,
         outputFormat: EnumDataFormat.N_TRIPLES,
@@ -235,29 +219,6 @@ function readInput(step, resources) {
   }
 
   return input;
-}
-
-function readConfiguration(step) {
-  const config = step.configuration;
-
-  if (!config) {
-    return null;
-  }
-  switch (step.tool) {
-    case EnumTool.TripleGeo:
-      return readConfigurationTripleGeo(config);
-
-    case EnumTool.LIMES:
-    case EnumTool.FAGI:
-    case EnumTool.DEER:
-      return config;
-
-    case EnumTool.CATALOG:
-      return config.metadata;
-
-    default:
-      return {};
-  }
 }
 
 function readDataSource(step) {
