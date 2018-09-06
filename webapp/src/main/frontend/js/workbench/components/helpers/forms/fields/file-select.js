@@ -77,7 +77,7 @@ function createFileColumns(props) {
           <span>
             {actions}
           </span>
-        )
+        );
       }
     },
     {
