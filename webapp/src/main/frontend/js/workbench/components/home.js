@@ -170,7 +170,7 @@ class Home extends React.Component {
                 <Route path={StaticRoutes.ProcessExecutionExplorer} component={ProcessExecutionExplorer} />
                 <Route path={StaticRoutes.RecipeExplorer} component={RecipeExplorer} />
                 <SecureRoute path={StaticRoutes.UserManager} component={UserManager} roles={[Roles.ADMIN]} />
-                <SecureRoute path={StaticRoutes.EventViewer} component={EventViewer} roles={[Roles.ADMIN]} />
+                <SecureRoute path={StaticRoutes.EventViewer} component={EventViewer} roles={[Roles.ADMIN, Roles.DEVELOPER]} />
                 {/* Default */}
                 <Redirect push={true} to={ErrorPages.NotFound} />
               </Switch>

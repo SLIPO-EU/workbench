@@ -115,22 +115,26 @@ class Sidebar extends React.Component {
               </li>
             </SecureContent>
 
-            <SecureContent roles={[Roles.ADMIN]}>
+            <SecureContent roles={[Roles.ADMIN, Roles.DEVELOPER]}>
               <li className={'nav-item nav-dropdown ' + (expanded(Sections.Admin) ? 'open' : '')}>
                 <a className="nav-link nav-dropdown-toggle" onClick={() => (toggle(Sections.Admin), false)}>
                   {'Admin'}
                 </a>
                 <ul className="nav-dropdown-items">
-                  <li className="nav-item">
-                    <NavLink to={StaticRoutes.UserManager} className="nav-link" activeClassName="active">
-                      <i className="fa fa-users"></i>{'Users'}
-                    </NavLink>
-                  </li>
-                  <li className="nav-item">
-                    <NavLink to={StaticRoutes.EventViewer} className="nav-link" activeClassName="active">
-                      <i className="fa fa-heartbeat"></i>{'Event Log'}
-                    </NavLink>
-                  </li>
+                  <SecureContent roles={[Roles.ADMIN]}>
+                    <li className="nav-item">
+                      <NavLink to={StaticRoutes.UserManager} className="nav-link" activeClassName="active">
+                        <i className="fa fa-users"></i>{'Users'}
+                      </NavLink>
+                    </li>
+                  </SecureContent>
+                  <SecureContent roles={[Roles.ADMIN, Roles.DEVELOPER]}>
+                    <li className="nav-item">
+                      <NavLink to={StaticRoutes.EventViewer} className="nav-link" activeClassName="active">
+                        <i className="fa fa-heartbeat"></i>{'Event Log'}
+                      </NavLink>
+                    </li>
+                  </SecureContent>
                 </ul>
               </li>
             </SecureContent>
