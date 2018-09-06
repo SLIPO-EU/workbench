@@ -34,7 +34,9 @@ export const crs = [
 
 export const languages = [
   { value: 'en', label: 'English' },
+  { value: 'de', label: 'German' },
   { value: 'el', label: 'Greek' },
+  { value: 'ro', label: 'Romanian' },
 ];
 
 export const serializations = [
