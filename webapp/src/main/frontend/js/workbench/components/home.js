@@ -41,6 +41,7 @@ import {
   ResourceViewer,
   ProcessDesigner,
   ProcessExecutionMapViewer,
+  UserFileSystem,
 } from './views/';
 
 /////////////////////////////////////////////////////////////////
@@ -161,6 +162,7 @@ class Home extends React.Component {
                 <Route path={DynamicRoutes.ProcessExecutionMapViewer} component={ProcessExecutionMapViewer} />
                 {/* Static */}
                 <Route path={StaticRoutes.Dashboard} component={Dashboard} />
+                <Route path={StaticRoutes.UserFileSystem} component={UserFileSystem} />
                 <SecureRoute path={StaticRoutes.HarvesterDataExplorer} component={HarvesterDataExplorer} roles={[Roles.ADMIN]} />
                 <Route path={StaticRoutes.Profile} component={Profile} />
                 <Route path={StaticRoutes.Settings} component={Settings} />

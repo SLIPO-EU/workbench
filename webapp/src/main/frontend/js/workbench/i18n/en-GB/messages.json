@@ -5,6 +5,7 @@
   },
   "links": {
     "dashboard": "Dashboard",
+    "user-files": "My Files",
     "resource": {
       "explorer": "Resource Explorer",
       "registration": "Resource Registration",

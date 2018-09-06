@@ -5,6 +5,7 @@
   },
   "links": {
     "dashboard": "Πίνακας Ελέγχου",
+    "user-files": "Αρχεία Χρήστη",
     "resource": {
       "explorer": "Δεδομένα",
       "registration": "Εισαγωγή Δεδομένων",

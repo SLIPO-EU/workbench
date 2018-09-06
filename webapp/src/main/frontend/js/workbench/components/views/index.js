@@ -12,6 +12,7 @@ import ResourceExplorer from './resource-explorer';
 import ResourceRegistration from './resource-registration';
 import ResourceViewer from './resource-viewer';
 import Settings from './settings';
+import UserFileSystem from './user-file-system';
 import UserManager from './user-manager';
 
 export {
@@ -30,4 +31,5 @@ export {
   ProcessDesigner,
   ProcessExecutionMapViewer,
   ContextSidebar,
+  UserFileSystem,
 };

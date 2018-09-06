@@ -59,6 +59,11 @@ class Sidebar extends React.Component {
                     </NavLink>
                   </li>
                 </SecureContent>
+                <li className="nav-item">
+                  <NavLink to={StaticRoutes.UserFileSystem} className="nav-link" activeClassName="active">
+                    <i className="fa fa-folder"></i>{'My Files'}
+                  </NavLink>
+                </li>
               </ul>
             </li>
 

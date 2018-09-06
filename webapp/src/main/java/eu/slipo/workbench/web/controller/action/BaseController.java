@@ -33,6 +33,10 @@ public abstract class BaseController {
         return this.authenticationFacade.getCurrentUserId();
     }
 
+    protected String currentUserName() {
+        return this.authenticationFacade.getCurrentUserName();
+    }
+
     protected Locale currentUserLocale() {
         return authenticationFacade.getCurrentUserLocale();
     }
