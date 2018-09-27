@@ -1,4 +1,5 @@
 import * as React from 'react';
+import * as ReactRedux from 'react-redux';
 import { Link } from 'react-router-dom';
 import { FormattedMessage } from 'react-intl';
 import { Breadcrumb as ReactBreadcrumb, BreadcrumbItem } from 'reactstrap';
@@ -12,7 +13,11 @@ class Breadcrumb extends React.Component {
     super(props);
   }
 
-  checkRoles(routeRoles, userRoles) {
+  checkRoles(routeRoles, userRoles, views) {
+    if (typeof routeRoles === 'function') {
+      return routeRoles(userRoles, views);
+    }
+
     if ((!routeRoles) || (routeRoles.length === 0)) {
       return true;
     }
@@ -29,8 +34,20 @@ class Breadcrumb extends React.Component {
     return false;
   }
 
+  renderItem(path, active, title, locked) {
+    return (
+      <BreadcrumbItem key={path} active={active} className={locked ? 'text-danger' : ''}>
+        {locked &&
+          <i className="fa fa-lock mr-1"></i>
+        }
+        {active || locked ? title : (<Link to={path}>{title}</Link>)}
+      </BreadcrumbItem>
+    );
+  }
+
   render() {
-    const { location, roles = [] } = this.props;
+    const { location, user, views } = this.props;
+    const roles = user ? user.roles : [];
 
     const paths = location.pathname.split('/')
       .slice(1, 1 + MAX_LENGTH)
@@ -45,7 +62,7 @@ class Breadcrumb extends React.Component {
     return (
       <ReactBreadcrumb>
         {paths.map((path) => {
-          const active = location.pathname == path;
+          const active = location.pathname === path;
           const r = getRoute(matchRoute(path));
           if (!r) {
             return null;
@@ -53,15 +70,21 @@ class Breadcrumb extends React.Component {
           const title = (
             <FormattedMessage id={r.title} defaultMessage={r.defaultTitle} />
           );
-          return (
-            <BreadcrumbItem key={path} active={active}>
-              {active || !this.checkRoles(r.roles, roles) ? title : (<Link to={path}>{title}</Link>)}
-            </BreadcrumbItem>
-          );
+          const locked = !this.checkRoles(r.roles, roles, views);
+          return this.renderItem(path, active, title, locked);
         })}
       </ReactBreadcrumb>
     );
   }
 }
 
-export default Breadcrumb;
+//
+// Container component
+//
+
+const mapStateToProps = (state) => ({
+  user: state.user.profile,
+  views: state.ui.views,
+});
+
+export default ReactRedux.connect(mapStateToProps, {})(Breadcrumb);

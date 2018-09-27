@@ -115,6 +115,10 @@
       "POI_DATA": "POI Data",
       "POI_LINKED_DATA": "POI Linked Data"
     },
+    "taskType": {
+      "REGISTRATION": "Registration",
+      "DATA_INTEGRATION": "Data Integration"
+    },
     "tool": {
       "UNDEFINED": "Unknown",
       "REGISTER": "Catalog Manager",

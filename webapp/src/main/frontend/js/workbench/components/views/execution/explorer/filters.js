@@ -1,4 +1,5 @@
 import * as React from 'react';
+import * as PropTypes from 'prop-types';
 
 import {
   Button,
@@ -10,21 +11,10 @@ import {
   EnumTaskType,
 } from '../../../../model/process-designer/enum';
 
-import * as Roles from '../../../../model/role';
-
-import {
-  SecureContent,
-} from '../../../helpers';
-
 import {
   SelectField,
   TextField,
 } from '../../../helpers/forms/fields/';
-
-const supportedTasks = [
-  { value: null, label: 'Select...' },
-  ...Object.keys(EnumTaskType).map(key => ({ value: key, label: EnumTaskType[key] }))
-];
 
 // TODO : Load during configuration
 const supportedStatus = [
@@ -45,6 +35,10 @@ export default class Filters extends React.Component {
     this.search = this.search.bind(this);
   }
 
+  static contextTypes = {
+    intl: PropTypes.object,
+  }
+
   clear() {
     this.props.resetFilters();
     this.props.fetchExecutions({ query: {} });
@@ -62,6 +56,11 @@ export default class Filters extends React.Component {
 
   render() {
     const props = this.props;
+    const _t = this.context.intl.formatMessage;
+    const supportedTasks = [
+      { value: null, label: 'Select...' },
+      ...Object.keys(EnumTaskType).map(key => ({ value: key, label: _t({ id: `enum.taskType.${key}` }) }))
+    ];
 
     return (
       <form onSubmit={this.search}>
@@ -84,15 +83,13 @@ export default class Filters extends React.Component {
             />
           </Col>
           <Col>
-            <SecureContent roles={[Roles.ADMIN]}>
-              <SelectField
-                id="taskType"
-                label="Task"
-                value={props.filters.taskType || ''}
-                onChange={(val) => props.setFilter('taskType', val)}
-                options={supportedTasks}
-              />
-            </SecureContent>
+            <SelectField
+              id="taskType"
+              label="Task"
+              value={props.filters.taskType || ''}
+              onChange={(val) => props.setFilter('taskType', val)}
+              options={supportedTasks}
+            />
           </Col>
           <Col>
             <Button color="warning" onClick={this.clear} style={{ marginTop: 30, float: 'right' }}>Clear</Button>

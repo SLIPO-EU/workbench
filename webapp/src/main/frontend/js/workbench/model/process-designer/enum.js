@@ -217,6 +217,6 @@ export const EnumDeerOutputPart = {
 
 // Supported data integration tasks
 export const EnumTaskType = {
-  REGISTRATION: 'Registration',
-  DATA_INTEGRATION: 'Data Integration',
+  REGISTRATION: 'REGISTRATION',
+  DATA_INTEGRATION: 'DATA_INTEGRATION',
 };

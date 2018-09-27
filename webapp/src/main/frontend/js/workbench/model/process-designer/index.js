@@ -29,6 +29,7 @@ export {
   EnumStepFileType,
   EnumStepFileTypeValue,
   EnumStepProperty,
+  EnumTaskType,
   EnumTool,
   EnumToolboxItem,
   EnumToolboxItemGroup,

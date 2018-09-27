@@ -3,6 +3,7 @@ import * as Types from '../types';
 import {
   EnumInputType,
   EnumSelection,
+  EnumTaskType,
   EnumTool,
 } from '../../../../../model/process-designer';
 
@@ -42,6 +43,7 @@ function load(state, action) {
         description: '',
       },
       errors: {},
+      taskType: EnumTaskType.DATA_INTEGRATION,
     } : {
       id: data.id,
       version: data.version,
@@ -52,6 +54,7 @@ function load(state, action) {
         description: data.description,
       },
       errors: {},
+      taskType: data.taskType,
     };
 
 
