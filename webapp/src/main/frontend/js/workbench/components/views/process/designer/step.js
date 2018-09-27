@@ -135,7 +135,6 @@ const stepTarget = {
  * http://react-dnd.github.io/react-dnd/examples-sortable-simple.html for
  * implementing step reordering.
  *
- *
  * @class Step
  * @extends {React.Component}
  */
@@ -358,7 +357,6 @@ class Step extends React.Component {
 
   render() {
     const {
-      isDragging,
       connectDragSource,
       connectDropTarget,
     } = this.props;
@@ -465,6 +463,7 @@ class Step extends React.Component {
               step={this.props.step}
               resources={this.props.resources}
               addStepInput={this.props.addStepInput}
+              moveStepInput={this.props.moveStepInput}
               removeStepInput={this.props.removeStepInput}
               setActiveStepInput={this.props.setActiveStepInput}
               readOnly={this.props.readOnly}

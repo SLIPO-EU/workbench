@@ -72,6 +72,7 @@ import {
   cloneStep,
   removeStep,
   moveStep,
+  moveStepInput,
   configureStepBegin,
   configureStepValidate,
   configureStepUpdate,
@@ -412,6 +413,7 @@ class ProcessDesigner extends React.Component {
                   showStepExecutionDetails={this.props.showStepExecutionDetails}
                   removeStep={this.props.removeStep}
                   moveStep={this.props.moveStep}
+                  moveStepInput={this.props.moveStepInput}
                   setStepProperty={this.props.setStepProperty}
                   addStepInput={this.props.addStepInput}
                   removeStepInput={this.props.removeStepInput}
@@ -587,6 +589,7 @@ const mapDispatchToProps = (dispatch) => bindActionCreators({
   cloneStep,
   removeStep,
   moveStep,
+  moveStepInput,
   configureStepBegin,
   configureStepValidate,
   configureStepUpdate,

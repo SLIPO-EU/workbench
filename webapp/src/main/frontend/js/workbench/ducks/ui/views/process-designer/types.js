@@ -15,6 +15,7 @@ export const ADD_STEP = 'ui/process-designer/ADD_STEP';
 export const REMOVE_STEP = 'ui/process-designer/REMOVE_STEP';
 export const CLONE_STEP = 'ui/process-designer/CLONE_STEP';
 export const MOVE_STEP = 'ui/process-designer/MOVE_STEP';
+export const MOVE_STEP_INPUT = 'ui/process-designer/MOVE_STEP_INPUT';
 export const CONFIGURE_STEP_BEGIN = 'ui/process-designer/CONFIGURE_STEP_BEGIN';
 export const CONFIGURE_STEP_VALIDATE = 'ui/process-designer/CONFIGURE_STEP_VALIDATE';
 export const CONFIGURE_STEP_UPDATE = 'ui/process-designer/CONFIGURE_STEP_UPDATE';

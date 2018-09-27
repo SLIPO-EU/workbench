@@ -128,6 +128,7 @@ export const EnumDragSource = {
   Operation: 'Operation',
   Resource: 'Resource',
   Step: 'Step',
+  StepInput: 'StepInput',
 };
 
 /**

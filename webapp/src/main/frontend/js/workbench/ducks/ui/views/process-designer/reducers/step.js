@@ -440,6 +440,31 @@ export function moveStepReducer(state, action) {
   return state;
 }
 
+/**
+ * Reorders step inputs
+ *
+ * @param {any} state
+ * @param {any} action
+ * @returns the new state
+ */
+export function moveStepInputReducer(state, action) {
+  if (action.type === Types.MOVE_STEP_INPUT) {
+    // Find step input
+    const steps = [...state.steps];
+    const step = steps.find((s) => s.key === action.step.key);
+    let input = step.input;
+    // Reorder inputs
+    const entry = input.splice(action.dragOrder, 1);
+    input.splice(action.hoverOrder, 0, entry[0]);
+
+    return {
+      ...state,
+      steps,
+    };
+  }
+  return state;
+}
+
 export function stepOutputPartReducer(state, action) {
   switch (action.type) {
     case Types.SET_STEP_INPUT_OUTPUT_PART:

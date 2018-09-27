@@ -89,6 +89,7 @@ import {
 import {
   addStepReducer,
   moveStepReducer,
+  moveStepInputReducer,
   stepOutputPartReducer,
   stepPropertyReducer,
   stepReducer,
@@ -185,6 +186,9 @@ export default (state = initialState, action) => {
 
     case Types.MOVE_STEP:
       return moveStepReducer(state, action);
+
+    case Types.MOVE_STEP_INPUT:
+      return moveStepInputReducer(state, action);
 
     case Types.CONFIGURE_STEP_BEGIN:
       return {
@@ -535,6 +539,7 @@ export {
   addStep,
   cloneStep,
   moveStep,
+  moveStepInput,
   removeStep,
   resetActive,
   setActiveStep,
