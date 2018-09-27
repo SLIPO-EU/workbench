@@ -134,7 +134,7 @@ class StepGroup extends React.Component {
    * @memberof Designer
    */
   renderStep(step) {
-    const resources = this.props.resources.filter((r) => !!step.input.find((i) => i.inputKey === r.key));
+    const resources = step.input.map((i) => this.props.resources.find((r) => i.inputKey === r.key)).filter((r) => !!r) || [];
     const stepExecution = this.props.stepExecutions.find((e) => e.key === step.key) || null;
 
     return (
