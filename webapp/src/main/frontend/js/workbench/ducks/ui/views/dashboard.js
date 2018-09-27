@@ -1,6 +1,8 @@
 import dashboardService from '../../../service/dashboard';
 
 // Actions
+import { LOGOUT } from '../../user';
+
 const REQUEST_DASHBOARD_DATA = 'ui/dashboard/REQUEST_DASHBOARD_DATA';
 const RECEIVE_DASHBOARD_DATA = 'ui/dashboard/RECEIVE_DASHBOARD_DATA';
 const CHANGE_CARD_FILTER = 'ui/dashboard/CHANGE_CARD_FILTER';
@@ -54,6 +56,9 @@ const initialState = {
 
 export default (state = initialState, action) => {
   switch (action.type) {
+    case LOGOUT:
+      return initialState;
+
     case RECEIVE_DASHBOARD_DATA:
       return {
         ...state,

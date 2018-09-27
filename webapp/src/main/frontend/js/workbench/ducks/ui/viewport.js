@@ -1,5 +1,3 @@
-// viewport.js
-
 // Actions
 const SET_SIZE = 'viewport/SET_SIZE';
 
@@ -17,7 +15,7 @@ export default (state = initialState, action) => {
         width: action.width || state.width,
         height: action.height || state.height
       };
-    
+
     default:
       return state;
   }

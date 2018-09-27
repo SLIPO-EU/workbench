@@ -1,14 +1,14 @@
-// config.js
 import configurationService from '../service/configuration';
 import filesystemService from '../service/filesystem';
 
 // Actions
+import { LOGOUT } from './user';
+
 const REQUEST_CONFIGURATION = 'config/REQUEST_CONFIGURATION';
 const LOAD_CONFIGURATION = 'config/LOAD_CONFIGURATION';
 
 const REQUEST_FILESYSTEM = 'config/REQUEST_FILESYSTEM';
 const RECEIVE_FILESYSTEM = 'config/RECEIVE_FILESYSTEM';
-
 
 const initialState = {
   filesystem: {
@@ -19,17 +19,14 @@ const initialState = {
 // Reducer
 export default (state = initialState, action) => {
   switch (action.type) {
-    case REQUEST_CONFIGURATION:
-      return state;
+    case LOGOUT:
+      return initialState;
 
     case LOAD_CONFIGURATION:
       return {
         ...state,
         ...action.configuration,
       };
-
-    case REQUEST_FILESYSTEM:
-      return state;
 
     case RECEIVE_FILESYSTEM:
       return {

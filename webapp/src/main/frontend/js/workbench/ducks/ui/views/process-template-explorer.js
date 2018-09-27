@@ -1,6 +1,8 @@
 import * as processService from '../../../service/process';
 
 // Actions
+import { LOGOUT } from '../../user';
+
 const SET_PAGER = 'ui/process/template/explorer/SET_PAGER';
 const RESET_PAGER = 'ui/process/template/explorer/RESET_PAGER';
 const SET_FILTER = 'ui/process/template/explorer/SET_FILTER';
@@ -29,6 +31,9 @@ const initialState = {
 // Reducer
 export default (state = initialState, action) => {
   switch (action.type) {
+    case LOGOUT:
+      return initialState;
+
     case SET_PAGER:
       return {
         ...state,
