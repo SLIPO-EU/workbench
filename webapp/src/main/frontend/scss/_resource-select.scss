@@ -1,0 +1,70 @@
+$slipo-export-resource-color: #616161 !default;
+
+/*
+ * Catalog resource container
+ */
+
+.slipo-export-resource-container-wrapper {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.slipo-export-resource-container {
+  border-radius: 4px;
+  display: flex;
+  border: dotted 1px $slipo-pd-step-color;
+  padding: 0.25rem;
+  min-height: 150px;
+  flex-grow: 1;
+}
+
+.slipo-export-resource-container-full {
+  border: none;
+  padding: 0px;
+}
+
+/*
+ * Step input resource
+ */
+
+ .slipo-export-resource {
+  min-height: 5rem;
+  border: 1px dotted $slipo-export-resource-color;
+  border-radius: 0.25rem;
+  margin-bottom: 1rem;
+  display: inline-block;
+}
+
+.slipo-export-resource-actions {
+  position: relative;
+  top: 5px;
+}
+
+.slipo-export-resource-action {
+  position: absolute;
+  cursor: pointer;
+}
+
+.slipo-export-resource-delete {
+  right: 5px;
+}
+
+.slipo-export-resource-0 {
+  top: 5px;
+}
+
+.slipo-export-resource-icon {
+  text-align: center;
+  font-size: 2rem;
+}
+
+.slipo-export-resource-label {
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 12.5rem;
+  overflow: hidden;
+  margin: 0px;
+  padding: 0px;
+}

@@ -8,6 +8,7 @@
     "user-files": "My Files",
     "resource": {
       "explorer": "Resource Explorer",
+      "export": "Export Resource",
       "registration": "Resource Registration",
       "viewer": "Resource Viewer"
     },
@@ -117,7 +118,8 @@
     },
     "taskType": {
       "REGISTRATION": "Registration",
-      "DATA_INTEGRATION": "Data Integration"
+      "DATA_INTEGRATION": "Data Integration",
+      "EXPORT": "Export resource"
     },
     "tool": {
       "UNDEFINED": "Unknown",

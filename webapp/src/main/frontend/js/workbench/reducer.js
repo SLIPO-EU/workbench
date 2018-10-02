@@ -22,6 +22,7 @@ import {
   processExplorerReducer,
   processTemplateExplorerReducer,
   resourceExplorerReducer,
+  resourceExportReducer,
   resourceRegistrationReducer,
 } from './ducks/ui/views';
 
@@ -39,6 +40,7 @@ export default Redux.combineReducers({
       harvester: harvesterDataExplorerReducer,
       resources: Redux.combineReducers({
         explorer: resourceExplorerReducer,
+        export: resourceExportReducer,
         registration: resourceRegistrationReducer,
       }),
       process: Redux.combineReducers({

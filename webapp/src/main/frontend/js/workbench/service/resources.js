@@ -21,3 +21,7 @@ export function upload(data, file, token) {
 export function register(data, token) {
   return actions.post('/action/resource/register', token, data);
 }
+
+export function exportResource(data, token) {
+  return actions.post('/action/resource/export', token, data);
+}

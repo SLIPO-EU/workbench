@@ -280,3 +280,9 @@ export const create = (data, file = null) => (dispatch, getState) => {
     return resourceService.register(data, token);
   }
 };
+
+export const exportResource = (data) => (dispatch, getState) => {
+  const { meta: { csrfToken: token } } = getState();
+
+  return resourceService.exportResource(data, token);
+};

@@ -184,7 +184,6 @@ class StepInput extends React.Component {
       connectDropTarget(
         <div
           id={popoverId}
-          className="slipo-pd-step-input"
           className={
             classnames({
               "slipo-pd-step-input": true,

@@ -1,35 +1,17 @@
-import ContextSidebar from './context-sidebar';
-import Dashboard from './dashboard';
-import HarvesterDataExplorer from './harvester-data-explorer';
-import EventViewer from './event-viewer';
-import ProcessDesigner from './process-designer';
-import ProcessExplorer from './process-explorer';
-import ProcessExecutionMapViewer from './process-execution-map-viewer';
-import ProcessExecutionExplorer from './process-execution-explorer';
-import Profile from './profile';
-import RecipeExplorer from './recipe-explorer';
-import ResourceExplorer from './resource-explorer';
-import ResourceRegistration from './resource-registration';
-import ResourceViewer from './resource-viewer';
-import Settings from './settings';
-import UserFileSystem from './user-file-system';
-import UserManager from './user-manager';
-
-export {
-  Dashboard,
-  HarvesterDataExplorer,
-  Profile,
-  Settings,
-  ResourceExplorer,
-  ResourceRegistration,
-  ProcessExplorer,
-  ProcessExecutionExplorer,
-  RecipeExplorer,
-  UserManager,
-  EventViewer,
-  ResourceViewer,
-  ProcessDesigner,
-  ProcessExecutionMapViewer,
-  ContextSidebar,
-  UserFileSystem,
-};
+export { default as ContextSidebar } from './context-sidebar';
+export { default as Dashboard } from './dashboard';
+export { default as HarvesterDataExplorer } from './harvester-data-explorer';
+export { default as EventViewer } from './event-viewer';
+export { default as ProcessDesigner } from './process-designer';
+export { default as ProcessExplorer } from './process-explorer';
+export { default as ProcessExecutionMapViewer } from './process-execution-map-viewer';
+export { default as ProcessExecutionExplorer } from './process-execution-explorer';
+export { default as Profile } from './profile';
+export { default as RecipeExplorer } from './recipe-explorer';
+export { default as ResourceExplorer } from './resource-explorer';
+export { default as ResourceExport } from './resource-export';
+export { default as ResourceRegistration } from './resource-registration';
+export { default as ResourceViewer } from './resource-viewer';
+export { default as Settings } from './settings';
+export { default as UserFileSystem } from './user-file-system';
+export { default as UserManager } from './user-manager';

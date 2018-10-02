@@ -27,6 +27,10 @@ const canDropResource = (props, resource) => {
   if ((resource.inputType !== EnumInputType.OUTPUT) && (props.step.tool === EnumTool.CATALOG)) {
     return false;
   }
+  // Resource export should accept only catalog resources as input
+  if ((resource.inputType !== EnumInputType.CATALOG) && (props.step.tool === EnumTool.ReverseTripleGeo)) {
+    return false;
+  }
   // Do not accept existing input
   if (props.resources.filter((r) => r.key === resource.key).length > 0) {
     return false;

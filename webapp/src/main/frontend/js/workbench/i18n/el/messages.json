@@ -8,6 +8,7 @@
     "user-files": "Αρχεία Χρήστη",
     "resource": {
       "explorer": "Δεδομένα",
+      "export": "Export Resource",
       "registration": "Εισαγωγή Δεδομένων",
       "viewer": "Προβολή Δεδομένων"
     },
@@ -117,7 +118,8 @@
     },
     "taskType": {
       "REGISTRATION": "Registration",
-      "DATA_INTEGRATION": "Data Integration"
+      "DATA_INTEGRATION": "Data Integration",
+      "EXPORT": "Export resource"
     },
     "tool": {
       "UNDEFINED": "Unknown",

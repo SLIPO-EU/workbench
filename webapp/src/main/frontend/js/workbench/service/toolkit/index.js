@@ -32,6 +32,12 @@ import {
   writeConfiguration as writeMetadata,
 } from './metadata';
 
+import {
+  validateConfiguration as validateReverseTripleGeo,
+  readConfiguration as readReverseTripleGeo,
+  writeConfiguration as writeReverseTripleGeo,
+} from './triplegeo-reverse';
+
 export function validateConfiguration(tool, config) {
   switch (tool) {
     case EnumTool.TripleGeo:
@@ -44,6 +50,8 @@ export function validateConfiguration(tool, config) {
       return validateDeer(config);
     case EnumTool.CATALOG:
       return validateMetadata(config);
+    case EnumTool.ReverseTripleGeo:
+      return validateReverseTripleGeo(config);
   }
   throw new Error(`Tool ${tool} is not supported`);
 }
@@ -60,6 +68,8 @@ export function readConfiguration(tool, config) {
       return readDeer(config);
     case EnumTool.CATALOG:
       return readMetadata(config);
+    case EnumTool.ReverseTripleGeo:
+      return readReverseTripleGeo(config);
   }
   throw new Error(`Tool ${tool} is not supported`);
 }
@@ -76,6 +86,8 @@ export function writeConfiguration(tool, config) {
       return writeDeer(config);
     case EnumTool.CATALOG:
       return writeMetadata(config);
+    case EnumTool.ReverseTripleGeo:
+      return writeReverseTripleGeo(config);
   }
   throw new Error(`Tool ${tool} is not supported`);
 }

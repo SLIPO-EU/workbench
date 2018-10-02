@@ -17,6 +17,7 @@ import { default as LimesConfiguration } from '../../process/designer/configurat
 import { default as FagiConfiguration } from '../../process/designer/configuration/fagi';
 import { default as DeerConfiguration } from '../../process/designer/configuration/deer';
 import { default as MetadataConfiguration } from '../../process/designer/configuration/metadata';
+import { default as ReverseTripleGeoConfiguration } from '../../process/designer/configuration/triplegeo-reverse';
 
 import {
   validateConfiguration as validateTripleGeo,
@@ -33,6 +34,9 @@ import {
 import {
   validateConfiguration as validateMetadata,
 } from '../../../../service/toolkit/metadata';
+import {
+  validateConfiguration as validateReverseTripleGeo,
+} from '../../../../service/toolkit/triplegeo-reverse';
 
 /**
  * Presentational component that wraps the step configuration options
@@ -165,6 +169,18 @@ class StepConfig extends React.Component {
           }
           {this.props.step.tool === EnumTool.CATALOG &&
             this.createForm(MetadataConfiguration, validateMetadata)
+          }
+          {this.props.step.tool === EnumTool.ReverseTripleGeo &&
+            this.createForm(ReverseTripleGeoConfiguration, validateReverseTripleGeo, {
+              appConfiguration: this.props.appConfiguration,
+              filesystem: this.props.filesystem,
+              allowUpload: true,
+              allowNewFolder: true,
+              allowDelete: true,
+              createFolder: this.props.createFolder,
+              uploadFile: this.props.uploadFile,
+              deletePath: this.props.deletePath,
+            })
           }
         </CardBody>
       </Card>

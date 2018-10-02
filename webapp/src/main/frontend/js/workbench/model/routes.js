@@ -7,6 +7,7 @@ import pathToRegexp from 'path-to-regexp';
  * Components
  */
 import { ResourceExplorerSidebar } from '../components/views/resource/explorer';
+import { ResourceExportSidebar } from '../components/views/resource/export';
 import { ProcessDesignerSidebar } from '../components/views/process/designer';
 import { ExecutionViewerSidebar } from '../components/views/execution/viewer';
 
@@ -43,6 +44,7 @@ const Settings = '/settings';
 const HarvesterDataExplorer = '/harvester/data/explore';
 
 const ResourceExplorer = '/resource/explore';
+const ResourceExport = '/resource/export';
 const ResourceRegistration = '/resource/register';
 
 const ProcessExplorer = '/process/explore';
@@ -60,6 +62,7 @@ export const StaticRoutes = {
   Profile,
   Settings,
   ResourceExplorer,
+  ResourceExport,
   ResourceRegistration,
   ProcessExplorer,
   ProcessExecutionExplorer,
@@ -182,6 +185,14 @@ const routes = {
     defaultTitle: 'Resource Registration',
     roles: [Roles.ADMIN, Roles.AUTHOR],
     links: defaultLinks
+  },
+  [ResourceExport]: {
+    description: 'Export an existing resource',
+    title: 'links.resource.export',
+    defaultTitle: 'Export Resource',
+    roles: [Roles.ADMIN, Roles.AUTHOR],
+    links: defaultLinks,
+    contextComponent: ResourceExportSidebar,
   },
   [ProcessExplorer]: {
     description: 'Browse system processes',

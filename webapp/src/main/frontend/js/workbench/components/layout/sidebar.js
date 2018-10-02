@@ -59,6 +59,13 @@ class Sidebar extends React.Component {
                     </NavLink>
                   </li>
                 </SecureContent>
+                <SecureContent roles={[Roles.ADMIN, Roles.AUTHOR]}>
+                  <li className="nav-item">
+                    <NavLink to={StaticRoutes.ResourceExport} className="nav-link" activeClassName="active">
+                      <i className="fa fa-cloud-download"></i>{'Export'}
+                    </NavLink>
+                  </li>
+                </SecureContent>
                 <li className="nav-item">
                   <NavLink to={StaticRoutes.UserFileSystem} className="nav-link" activeClassName="active">
                     <i className="fa fa-folder"></i>{'My Files'}

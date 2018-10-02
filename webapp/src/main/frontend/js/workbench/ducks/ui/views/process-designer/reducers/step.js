@@ -7,6 +7,7 @@ import {
   defaultLimesValues,
   defaultFagiValues,
   defaultDeerValues,
+  defaultReverseTripleGeoValues,
   EnumDataFormat,
   EnumInputType,
   EnumResourceType,
@@ -26,10 +27,12 @@ import {
 import {
   validateConfiguration as fagiValidator,
 } from '../../../../../service/toolkit/fagi';
-
 import {
   validateConfiguration as deerValidator,
 } from '../../../../../service/toolkit/deer';
+import {
+  validateConfiguration as reverseTripleGeoValidator,
+} from '../../../../../service/toolkit/triplegeo-reverse';
 
 function createTripleGeoDefaultConfiguration(appConfiguration, effectiveVersion) {
   const configuration = {
@@ -115,6 +118,27 @@ function createDeerDefaultConfiguration(appConfiguration, effectiveVersion) {
   };
 }
 
+function createReverseTripleGeoDefaultConfiguration(appConfiguration, effectiveVersion) {
+  const configuration = {
+    ...defaultReverseTripleGeoValues,
+    version: effectiveVersion || appConfiguration.tripleGeo.version,
+  };
+
+  try {
+    reverseTripleGeoValidator(configuration);
+  } catch (errors) {
+    return {
+      configuration,
+      errors,
+    };
+  }
+
+  return {
+    configuration,
+    errors: {},
+  };
+}
+
 function createDefaultConfiguration(steps, tool, appConfiguration) {
   const effectiveVersion = steps.reduce((version, step) => version ? version : step.configuration ? step.configuration.version : null, null) || null;
 
@@ -130,6 +154,9 @@ function createDefaultConfiguration(steps, tool, appConfiguration) {
 
     case EnumTool.DEER:
       return createDeerDefaultConfiguration(appConfiguration, effectiveVersion);
+
+    case EnumTool.ReverseTripleGeo:
+      return createReverseTripleGeoDefaultConfiguration(appConfiguration, effectiveVersion);
 
     default:
       return {

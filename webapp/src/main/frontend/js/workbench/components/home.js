@@ -32,6 +32,7 @@ import {
   Profile,
   Settings,
   ResourceExplorer,
+  ResourceExport,
   ResourceRegistration,
   ProcessExplorer,
   ProcessExecutionExplorer,
@@ -167,6 +168,7 @@ class Home extends React.Component {
                 <Route path={StaticRoutes.Profile} component={Profile} />
                 <Route path={StaticRoutes.Settings} component={Settings} />
                 <Route path={StaticRoutes.ResourceExplorer} component={ResourceExplorer} />
+                <SecureRoute path={StaticRoutes.ResourceExport} component={ResourceExport} roles={[Roles.ADMIN, Roles.AUTHOR]} />
                 <SecureRoute path={StaticRoutes.ResourceRegistration} component={ResourceRegistration} roles={[Roles.ADMIN, Roles.AUTHOR]} />
                 <Route path={StaticRoutes.ProcessExplorer} component={ProcessExplorer} />
                 <Route path={StaticRoutes.ProcessExecutionExplorer} component={ProcessExecutionExplorer} />

@@ -13,6 +13,7 @@ function resolveVersion(tool, version, appConfiguration) {
   }
   switch (tool) {
     case EnumTool.TripleGeo:
+    case EnumTool.ReverseTripleGeo:
       return appConfiguration.tripleGeo.baselineVersion;
     case EnumTool.LIMES:
       return appConfiguration.limes.baselineVersion;
