@@ -9,11 +9,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import eu.slipo.workbench.common.model.Error;
+import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.resource.EnumDataSourceType;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
+import eu.slipo.workbench.common.model.resource.ResourceRecord;
 import eu.slipo.workbench.common.repository.ResourceRepository;
 import eu.slipo.workbench.web.model.resource.RegistrationRequest;
 import eu.slipo.workbench.web.model.resource.ResourceErrorCode;
+import eu.slipo.workbench.web.model.resource.ResourceExportRequest;
 import eu.slipo.workbench.web.model.resource.ResourceRegistrationRequest;
 
 @Service
@@ -32,7 +35,7 @@ public class DefaultResourceValidationService implements IResourceValidationServ
 
         // File upload is not a valid data source
         if (request.getDataSource().getType() == EnumDataSourceType.UPLOAD) {
-            errors.add(new Error(ResourceErrorCode.DATASOURCE_NOT_SUPPORTED, "Data source of type 'UPLOAD' is not supported."));
+            errors.add(new Error(ResourceErrorCode.DATASOURCE_NOT_SUPPORTED, "Data source of type 'UPLOAD' is not supported"));
         }
 
         return errors;
@@ -48,7 +51,39 @@ public class DefaultResourceValidationService implements IResourceValidationServ
 
         // Check if file exists
         if(!Files.exists(inputPath)) {
-            errors.add(new Error(ResourceErrorCode.FILE_NOT_FOUND, "Input file does not exist."));
+            errors.add(new Error(ResourceErrorCode.FILE_NOT_FOUND, "Input file does not exist"));
+        }
+
+        return errors;
+    }
+
+    @Override
+    public List<Error> validate(ResourceExportRequest request, int userId)
+    {
+        List<Error> errors = new ArrayList<Error>();
+
+        // Check resource
+        if (request.getResource() == null) {
+            errors.add(new Error(ResourceErrorCode.RESOURCE_IS_EMPTY, "The resource is not set"));
+        } else {
+            final ResourceRecord resource = resourceRepository.findOne(request.getResource().getId(), request.getResource().getVersion());
+            if (resource == null) {
+                errors.add(new Error(ResourceErrorCode.RESOURCE_NOT_FOUND, "The resource was not found"));
+            }
+        }
+        // Check output format
+        final EnumDataFormat format = request.getConfiguration().getOutputFormat();
+        if (format == null) {
+            errors.add(new Error(ResourceErrorCode.FORMAT_NOT_SUPPORTED, "Format is not set"));
+        } else {
+            switch (format) {
+                case CSV:
+                case SHAPEFILE:
+                    break;
+                default:
+                    errors.add(new Error(ResourceErrorCode.FORMAT_NOT_SUPPORTED, "Format is not supported"));
+                    break;
+            }
         }
 
         return errors;
@@ -57,7 +92,7 @@ public class DefaultResourceValidationService implements IResourceValidationServ
     private void validateMetadata(ResourceMetadataCreate metadata, int userId, List<Error> errors)
     {
         if (resourceRepository.findOne(metadata.getName(), userId) != null) {
-            errors.add(new Error(ResourceErrorCode.NAME_DUPLICATE, "Resource name already exists."));
+            errors.add(new Error(ResourceErrorCode.NAME_DUPLICATE, "Resource name already exists"));
         }
     }
 

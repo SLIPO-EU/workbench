@@ -33,6 +33,7 @@ import eu.slipo.workbench.common.model.Error;
 import eu.slipo.workbench.common.model.QueryResultPage;
 import eu.slipo.workbench.common.model.RestResponse;
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
+import eu.slipo.workbench.common.model.process.CatalogResource;
 import eu.slipo.workbench.common.model.process.EnumProcessTaskType;
 import eu.slipo.workbench.common.model.process.InvalidProcessDefinitionException;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
@@ -48,12 +49,14 @@ import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataUpdate;
 import eu.slipo.workbench.common.model.resource.ResourceQuery;
 import eu.slipo.workbench.common.model.resource.ResourceRecord;
+import eu.slipo.workbench.common.model.tool.ReverseTriplegeoConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.repository.ProcessRepository;
 import eu.slipo.workbench.common.repository.ResourceRepository;
 import eu.slipo.workbench.web.model.QueryResult;
 import eu.slipo.workbench.web.model.resource.RegistrationRequest;
 import eu.slipo.workbench.web.model.resource.ResourceErrorCode;
+import eu.slipo.workbench.web.model.resource.ResourceExportRequest;
 import eu.slipo.workbench.web.model.resource.ResourceQueryRequest;
 import eu.slipo.workbench.web.model.resource.ResourceRegistrationRequest;
 import eu.slipo.workbench.web.model.resource.ResourceResult;
@@ -135,6 +138,50 @@ public class ResourceController extends BaseController {
     }
 
     /**
+     * Export a catalog resource
+     *
+     * @param resource the catalog resource
+     * @param configuration the configuration needed by TripleGeo to transform into one of
+     * the internally recognized data formats (see {@link EnumDataFormat}).
+     * @return
+     */
+    private RestResponse<?> export(CatalogResource resource, ReverseTriplegeoConfiguration configuration) {
+        ProcessRecord record = null;
+
+        try {
+            Assert.notNull(resource, "A resource is required");
+            Assert.notNull(configuration, "Expected configuration for Triplegeo transformation");
+
+            final String resourceKey = "0";
+            final String outputKey = "1";
+            final String procName = String.format("Resource export: %s", resource.getName());
+
+            ProcessDefinition definition = processDefinitionBuilderFactory.create(procName)
+                .description("Resource export")
+                .resource("resource", resourceKey, resource.getResource())
+                .export("export", stepBuilder -> stepBuilder
+                    .group(0)
+                    .input(resourceKey)
+                    .outputKey(outputKey)
+                    .configuration(configuration))
+                .build();
+
+            record = processService.create(definition, EnumProcessTaskType.EXPORT);
+        } catch (Exception ex) {
+            return this.exceptionToResponse(ex);
+        }
+
+        try {
+            ProcessExecutionRecord executionRecord = processService.start(record.getId(), record.getVersion(), EnumProcessTaskType.EXPORT);
+            logger.info("A request for resource export is submitted as execution #{}: resource = {}", executionRecord.getId(), resource);
+        } catch (Exception ex) {
+            return this.exceptionToResponse(ex, Error.EnumLevel.WARN);
+        }
+
+        return RestResponse.result(record);
+    }
+
+    /**
      * Search for resources
      *
      * @param data the query to execute
@@ -172,6 +219,29 @@ public class ResourceController extends BaseController {
             }
 
             return register(request.getDataSource(), request.getConfiguration(), request.getMetadata());
+        } catch (Exception ex) {
+            return this.exceptionToResponse(ex);
+        }
+    }
+
+    /**
+     * Schedules the execution of a process for exporting a resource
+     *
+     * @param data export data
+     * @return the process configuration
+     * @throws InvalidProcessDefinitionException
+     */
+    @RequestMapping(value = "/action/resource/export", method = RequestMethod.POST)
+    public RestResponse<?> exportResource(@RequestBody ResourceExportRequest request) {
+        try {
+            this.hasAnyRole(EnumRole.ADMIN, EnumRole.AUTHOR);
+
+            List<Error> errors = resourceValidationService.validate(request, currentUserId());
+            if (!errors.isEmpty()) {
+                return RestResponse.error(errors);
+            }
+
+            return export(request.getResource(), request.getConfiguration());
         } catch (Exception ex) {
             return this.exceptionToResponse(ex);
         }
