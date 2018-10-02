@@ -21,6 +21,10 @@ import {
 } from 'react-toastify';
 
 import {
+  StaticRoutes,
+} from '../../model';
+
+import {
   OpenLayers,
   ToastTemplate,
 } from '../helpers';
@@ -40,6 +44,10 @@ import {
 } from '../../ducks/ui/views/resource-explorer';
 
 import {
+  setTemp as setExportResource,
+} from '../../ducks/ui/views/resource-export';
+
+import {
   addResourceToBag,
   removeResourceFromBag,
 } from '../../ducks/ui/views/process-designer';
@@ -56,6 +64,7 @@ class ResourceExplorer extends React.Component {
     super(props);
 
     this.deleteResource = this.deleteResource.bind(this);
+    this.exportResource = this.exportResource.bind(this);
     this.onFeatureSelect = this.onFeatureSelect.bind(this);
   }
 
@@ -101,6 +110,15 @@ class ResourceExplorer extends React.Component {
     );
   }
 
+  exportResource(resource) {
+    this.props.setExportResource(null, {
+      catalog: {
+        resource,
+      }
+    });
+    this.props.history.push(StaticRoutes.ResourceExport);
+  }
+
   render() {
     return (
       <div className="animated fadeIn">
@@ -136,6 +154,7 @@ class ResourceExplorer extends React.Component {
                     <Resources
                       addResourceToBag={this.props.addResourceToBag}
                       deleteResource={this.deleteResource}
+                      exportResource={this.exportResource}
                       fetchResources={this.props.fetchResources}
                       filters={this.props.filters}
                       items={this.props.items}
@@ -211,6 +230,7 @@ const mapDispatchToProps = (dispatch) => bindActionCreators({
   fetchResources,
   removeResourceFromBag,
   resetFilters,
+  setExportResource,
   setFilter,
   setPager,
   setSelectedResource,

@@ -72,7 +72,7 @@ export default function ResourceWizard(props) {
         <resourceSelect.Component
           id="catalog"
           title="Select resource"
-          initialValue={props.initialValues.resource || resourceSelect.initialValue}
+          initialValue={props.initialValues.catalog || resourceSelect.initialValue}
           validate={resourceSelect.validator}
           next={() => 'triplegeo'}
         />
