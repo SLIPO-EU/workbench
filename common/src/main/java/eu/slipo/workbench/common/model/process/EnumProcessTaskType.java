@@ -15,16 +15,21 @@ public enum EnumProcessTaskType {
      * Invalid process task
      */
     UNDEFINED(0),
-    
+
     /**
      * A resource registration process created using the workbench resource wizard
      */
     REGISTRATION(1),
-    
+
     /**
      * A generic data integration process created using the workbench process designer
      */
     DATA_INTEGRATION(2),
+
+    /**
+     * A resource export process created using the workbench export wizard
+     */
+    EXPORT(3),
     ;
 
     private final int value;
@@ -49,8 +54,8 @@ public enum EnumProcessTaskType {
     public static class Deserializer extends JsonDeserializer<EnumProcessTaskType> {
 
         @Override
-        public EnumProcessTaskType deserialize(JsonParser parser, DeserializationContext context) 
-            throws IOException, JsonProcessingException 
+        public EnumProcessTaskType deserialize(JsonParser parser, DeserializationContext context)
+            throws IOException, JsonProcessingException
         {
             return EnumProcessTaskType.fromString(parser.getValueAsString());
         }
