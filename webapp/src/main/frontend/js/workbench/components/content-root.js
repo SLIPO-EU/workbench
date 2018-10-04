@@ -101,7 +101,6 @@ class ContentRoot extends React.Component {
             component={() => (
               <Home
                 user={this.props.user}
-                sidebarOpen={this.props.sidebarOpen}
               />
             )}
           />
@@ -136,7 +135,6 @@ ContentRoot.propTypes = {
 //
 
 const mapStateToProps = (state) => ({
-  sidebarOpen: state.ui.menu.sidebarOpen,
   user: state.user.profile,
 });
 
