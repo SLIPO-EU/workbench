@@ -11,7 +11,7 @@ export const Component = (props) => {
           </div>
           <div className="slipo-pd-item-label">
             Export Resource
-        </div>
+          </div>
         </div>
       </div>
       <div>

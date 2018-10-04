@@ -428,7 +428,7 @@ function validateSteps(action, model, isTemplate, errors, requireSingleOutput) {
 }
 
 function validateResources(action, model, isTemplate, errors) {
-  const { process, steps, resources, ...rest } = model;
+  const { steps, resources } = model;
 
   if (isTemplate) {
     return;

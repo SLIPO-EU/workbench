@@ -14,13 +14,17 @@ import userPropType from '../model/prop-types/user';
 import { resize } from '../ducks/ui/viewport';
 import { getFilesystem } from '../ducks/config';
 
+import {
+  LoginForm,
+  Page403,
+  Page404,
+} from './pages/';
+
+import {
+  Placeholder,
+} from './helpers/';
+
 import Home from './home';
-import LoginForm from './pages/login-form';
-
-import Page403 from './pages/page-403.js';
-import Page404 from './pages/page-404.js';
-
-import Placeholder from './helpers/placeholder';
 
 //
 // Presentational component

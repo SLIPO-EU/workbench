@@ -135,7 +135,7 @@ export const checkFile = (id, version, executionId, fileId, fileName) => {
     const url = `/action/process/${id}/${version}/execution/${executionId}/file/${fileId}/exists`;
 
     return file.exists(url, token)
-      .then(data => {
+      .then(() => {
         dispatch(fileExists(fileId, fileName));
       });
   };
@@ -151,7 +151,6 @@ const filedDownloaded = function (fileId, fileName) {
 
 export const downloadFile = (id, version, executionId, fileId, fileName) => {
   return (dispatch, getState) => {
-    const { meta: { csrfToken: token } } = getState();
     const url = `/action/process/${id}/${version}/execution/${executionId}/file/${fileId}/download`;
 
     dom.downloadUrl(url, fileName);
@@ -159,14 +158,5 @@ export const downloadFile = (id, version, executionId, fileId, fileName) => {
     dispatch(filedDownloaded(fileId, fileName));
 
     return Promise.resolve();
-
-    /*
-    return file.download(url, token)
-      .then(data => {
-        dom.downloadLink(data, fileName);
-
-        dispatch(filedDownloaded(fileId, fileName));
-      });
-    */
   };
 };

@@ -8,7 +8,6 @@ import {
 } from 'redux';
 
 import {
-  Button,
   Col,
   Nav,
   NavItem,
