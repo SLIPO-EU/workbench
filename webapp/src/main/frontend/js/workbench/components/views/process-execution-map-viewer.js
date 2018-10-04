@@ -49,17 +49,18 @@ class ProcessExecutionMapViewer extends React.Component {
   }
 
   get center() {
+    const { defaultCenter, layers } = this.props;
     const extent = Extend.createEmpty();
     const format = new GeoJSON();
 
-    this.props.layers
+    layers
       .filter((l) => l.boundingBox)
       .forEach((l) => {
         const bbox = format.readFeature(l.boundingBox);
         Extend.extend(extent, bbox.getGeometry().getExtent());
       });
 
-    return proj.fromLonLat(Extend.getCenter(extent));
+    return (Extend.isEmpty(extent) ? proj.fromLonLat(defaultCenter) : proj.fromLonLat(Extend.getCenter(extent)));
   }
 
   componentDidMount() {
@@ -145,7 +146,7 @@ class ProcessExecutionMapViewer extends React.Component {
     }
     return (
       <div className="animated fadeIn">
-        <OpenLayers.Map minZoom={13} maxZoom={18} zoom={15} center={this.center} className="slipo-map-container-full-screen">
+        <OpenLayers.Map minZoom={9} maxZoom={18} zoom={19} center={this.center} className="slipo-map-container-full-screen">
           <OpenLayers.Layers>
             {this.getLayers()}
           </OpenLayers.Layers>
@@ -167,6 +168,7 @@ const mapStateToProps = (state) => ({
   bingMaps: state.config.bingMaps,
   layers: state.ui.views.process.designer.execution.layers,
   osm: state.config.osm,
+  defaultCenter: state.config.mapDefaults.center,
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({

@@ -24,6 +24,8 @@ public class ClientConfiguration {
 
     private DeerConfiguration deer;
 
+    private MapDefaults mapDefaults;
+
     public Map<EnumTool, Map<String, ToolConfiguration<?>>> getProfiles() {
         return profiles;
     }
@@ -78,6 +80,14 @@ public class ClientConfiguration {
 
     public void setDeer(DeerConfiguration deer) {
         this.deer = deer;
+    }
+
+    public MapDefaults getMapDefaults() {
+        return mapDefaults;
+    }
+
+    public void setMapDefaults(MapDefaults mapDefaults) {
+        this.mapDefaults = mapDefaults;
     }
 
 }

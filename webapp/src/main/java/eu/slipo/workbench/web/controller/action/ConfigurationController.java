@@ -70,6 +70,7 @@ public class ConfigurationController extends BaseController {
         config.setLimes(toolkitConfiguration.getLimes());
         config.setFagi(toolkitConfiguration.getFagi());
         config.setDeer(toolkitConfiguration.getDeer());
+        config.setMapDefaults(this.mapConfiguration.getDefaults());
 
         return config;
     }
