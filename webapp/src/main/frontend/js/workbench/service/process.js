@@ -482,7 +482,7 @@ export function validate(action, model, isTemplate) {
   validateProcess(action, model, isTemplate, errors);
 
   // Steps
-  validateSteps(action, model, isTemplate, errors, false);
+  validateSteps(action, model, isTemplate, errors, true);
 
   // Resources
   validateResources(action, model, isTemplate, errors);
