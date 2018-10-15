@@ -95,15 +95,15 @@ const tableColumns = [{
       case EnumStepFileType.QA:
         return (
           <span>
-            <i data-action="file-download" className='fa fa-cloud-download slipo-table-row-action p-1'></i>
+            <i data-action="file-download" title="Download" className='fa fa-cloud-download slipo-table-row-action p-1'></i>
           </span>
         );
 
       case EnumStepFileType.KPI:
         return (
           <span>
-            <i data-action="file-download" className='fa fa-cloud-download slipo-table-row-action p-1'></i>
-            <i data-action="kpi-view" className='fa fa-bar-chart slipo-table-row-action p-1'></i>
+            <i data-action="file-download" title="Download" className='fa fa-cloud-download slipo-table-row-action p-1'></i>
+            <i data-action="kpi-view" title="View data" className='fa fa-bar-chart slipo-table-row-action p-1'></i>
           </span>
         );
 

@@ -32,10 +32,10 @@ const processExecutionsColumns = [{
   Cell: props => {
     return (
       <span>
-        <i data-action="view" className='fa fa-search slipo-table-row-action p-1'></i>
-        <i data-action="map" className='fa fa-map-o slipo-table-row-action p-1'></i>
+        <i data-action="view" title="View" className='fa fa-search slipo-table-row-action p-1'></i>
+        <i data-action="map" title="View map" className='fa fa-map-o slipo-table-row-action p-1'></i>
         {props.row.status === 'RUNNING' &&
-          <i data-action="stop" className='fa fa-stop slipo-table-row-action text-danger p-1'></i>
+          <i data-action="stop" title="Stop execution" className='fa fa-stop slipo-table-row-action text-danger p-1'></i>
         }
       </span>
     );

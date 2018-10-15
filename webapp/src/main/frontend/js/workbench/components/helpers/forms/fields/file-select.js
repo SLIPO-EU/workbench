@@ -64,13 +64,13 @@ function createFileColumns(props) {
       Cell: (cell) => {
         const actions = [];
         if (props.allowDelete) {
-          actions.push(<i key="delete" data-action="delete" className='fa fa-trash slipo-table-row-action'></i>);
+          actions.push(<i key="delete" data-action="delete" title="Delete" className='fa fa-trash slipo-table-row-action'></i>);
         }
         if (props.allowDownload) {
           if (cell.original.type === 'folder') {
             actions.push(<i key="no-download" data-action="no-download" className='fa fa-square ml-2 transparent'></i>);
           } else {
-            actions.push(<i key="download" data-action="download" className='fa fa-cloud-download ml-2 slipo-table-row-action'></i>);
+            actions.push(<i key="download" data-action="download" title="Download" className='fa fa-cloud-download ml-2 slipo-table-row-action'></i>);
           }
         }
         return (

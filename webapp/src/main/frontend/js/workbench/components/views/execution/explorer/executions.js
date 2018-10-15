@@ -53,16 +53,16 @@ const executionsColumns = (props) => (
         <span>
           {((isAdmin) || (row.original.taskType !== EnumTaskType.REGISTRATION)) &&
             <SecureContent roles={[Roles.ADMIN, Roles.AUTHOR]}>
-              <i data-action="edit" className='fa fa-pencil slipo-table-row-action p-1'></i>
+              <i data-action="edit" title="Edit" className='fa fa-pencil slipo-table-row-action p-1'></i>
             </SecureContent>
           }
-          <i data-action="view" className='fa fa-search slipo-table-row-action p-1'></i>
-          <i data-action="map" className='fa fa-map-o slipo-table-row-action p-1'></i>
+          <i data-action="view" title="View" className='fa fa-search slipo-table-row-action p-1'></i>
+          <i data-action="map" title="View Map" className='fa fa-map-o slipo-table-row-action p-1'></i>
           {row.original.errorMessage &&
-            <i data-action="error" className='fa fa-warning slipo-table-row-action p-1'></i>
+            <i data-action="error" title="View error message" className='fa fa-warning slipo-table-row-action p-1'></i>
           }
           {row.original.status === 'RUNNING' &&
-            <i data-action="stop" className='fa fa-stop slipo-table-row-action text-danger p-1'></i>
+            <i data-action="stop" title="Stop execution" className='fa fa-stop slipo-table-row-action text-danger p-1'></i>
           }
         </span>
       );

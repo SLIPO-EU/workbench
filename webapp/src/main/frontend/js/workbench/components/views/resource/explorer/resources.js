@@ -50,11 +50,11 @@ const resourceColumns = [{
   Cell: props => {
     if (props.original.selected) {
       return (
-        <i data-action="remove-from-bag" className='fa fa-check-square-o slipo-table-row-action'></i>
+        <i data-action="remove-from-bag" title="Remove from selected resources" className='fa fa-check-square-o slipo-table-row-action'></i>
       );
     } else {
       return (
-        <i data-action="add-to-bag" className='fa fa-square-o slipo-table-row-action'></i>
+        <i data-action="add-to-bag" title="Add to selected resources" className='fa fa-square-o slipo-table-row-action'></i>
       );
     }
   },
@@ -126,11 +126,11 @@ const resourceHistoryColumns = [{
   Cell: props => {
     if (props.original.selected) {
       return (
-        <i data-action="remove-from-bag" className='fa fa-check-square-o slipo-table-row-action'></i>
+        <i data-action="remove-from-bag" title="Add to selected resources" className='fa fa-check-square-o slipo-table-row-action'></i>
       );
     } else {
       return (
-        <i data-action="add-to-bag" className='fa fa-square-o slipo-table-row-action'></i>
+        <i data-action="add-to-bag" title="Remove from selected resources" className='fa fa-square-o slipo-table-row-action'></i>
       );
     }
   },
