@@ -15,13 +15,13 @@ function WizardItem(props) {
             onClick={() => onGoToId(s.id)}
             size={s.active ? 'lg' : 'sm'}
           >
-            Step {s.index+1}: {s.name}
+            Step {s.index + 1}: {s.name}
           </Button>
         ))
       }
       <hr />
       <div className="wizard-child" style={{ minHeight: 340 }}>
-        { children }
+        {children}
       </div>
       <div>
         {
@@ -29,7 +29,7 @@ function WizardItem(props) {
             <Button
               className="prev"
               onClick={onPreviousClicked}
-              style={{float: 'left'}}
+              style={{ float: 'left' }}
             >
               Previous
             </Button>
@@ -41,10 +41,9 @@ function WizardItem(props) {
           className="reset"
           onClick={() => {
             clearTemp();
-            //props.configureStepEnd(1);
             setTimeout(reset, 200);
           }}
-          style={{float: 'left', marginLeft: hasPrevious ? 20 : 0}}
+          style={{ float: 'left', marginLeft: hasPrevious ? 20 : 0 }}
         >
           Cancel
         </Button>
@@ -53,7 +52,7 @@ function WizardItem(props) {
             <Button
               className="next"
               onClick={() => {
-                const newValues = { ...values};
+                const newValues = { ...values };
                 newValues[id] = value;
 
                 onNextClicked()
@@ -64,7 +63,7 @@ function WizardItem(props) {
                     saveTemp(id, newValues);
                   });
               }}
-              style={{float: 'right'}}
+              style={{ float: 'right' }}
             >
               Next
             </Button>
@@ -73,7 +72,7 @@ function WizardItem(props) {
               color="primary"
               className="complete"
               onClick={() => {
-                const newValues = { ...values};
+                const newValues = { ...values };
                 newValues[id] = value;
                 onNextClicked()
                   .then(() => {
@@ -82,10 +81,9 @@ function WizardItem(props) {
                   .catch(() => {
                     saveTemp(id, newValues);
                   });
-                //clearTemp();
                 setTimeout(onComplete, 200);
               }}
-              style={{float: 'right'}}
+              style={{ float: 'right' }}
             >
               Submit
             </Button>

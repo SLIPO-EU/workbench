@@ -217,6 +217,7 @@ class ProcessExecutionExplorer extends React.Component {
                       setPager={this.props.setPager}
                       setSelected={this.props.setSelected}
                       stopExecution={this.stopExecution}
+                      user={this.props.user}
                       viewExecution={this.viewExecution}
                       viewMap={this.viewMap}
                     />
@@ -239,6 +240,7 @@ const mapStateToProps = (state) => ({
   lastUpdate: state.ui.views.execution.explorer.lastUpdate,
   pager: state.ui.views.execution.explorer.pager,
   selected: state.ui.views.execution.explorer.selected,
+  user: state.user.profile,
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({

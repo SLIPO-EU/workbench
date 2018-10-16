@@ -16,6 +16,34 @@ import {
   StepInput,
 } from './';
 
+const canDropResource = (props, resource) => {
+  const counters = processService.getStepInputRequirements(props.step, props.resources);
+
+  // Do not accept owner step output
+  if ((resource.inputType === EnumInputType.OUTPUT) && (resource.stepKey == props.step.key)) {
+    return false;
+  }
+  // Catalog registration should accept only step output as input
+  if ((resource.inputType !== EnumInputType.OUTPUT) && (props.step.tool === EnumTool.CATALOG)) {
+    return false;
+  }
+  // Resource export should accept only catalog resources as input
+  if ((resource.inputType !== EnumInputType.CATALOG) && (props.step.tool === EnumTool.ReverseTripleGeo)) {
+    return false;
+  }
+  // Do not accept existing input
+  if (props.resources.filter((r) => r.key === resource.key).length > 0) {
+    return false;
+  }
+
+  switch (resource.resourceType) {
+    case EnumResourceType.POI:
+      return ((counters.poi > 0) || (counters.any > 0));
+    case EnumResourceType.LINKED:
+      return ((counters.linked != 0) || (counters.any > 0));
+  }
+};
+
 /**
  * Drop target specification
  */
@@ -29,9 +57,15 @@ const containerTarget = {
    */
   drop(props, monitor, component) {
     if (!monitor.didDrop()) {
-      props.addStepInput(props.step, {
-        ...monitor.getItem(),
-      });
+      const item = monitor.getItem();
+
+      switch (item.source) {
+        case EnumDragSource.Resource:
+          props.addStepInput(props.step, {
+            ...item.data,
+          });
+          break;
+      }
     }
   },
 
@@ -43,29 +77,14 @@ const containerTarget = {
    * @returns true if the item is accepted
    */
   canDrop(props, monitor) {
-    const resource = monitor.getItem();
-    const counters = processService.getStepInputRequirements(props.step, props.resources);
+    const item = monitor.getItem();
 
-    // Do not accept owner step output
-    if ((resource.inputType === EnumInputType.OUTPUT) && (resource.stepKey == props.step.key)) {
-      return false;
+    switch (item.source) {
+      case EnumDragSource.Resource:
+        return canDropResource(props, item.data);
+      default:
+        return false;
     }
-    // Catalog registration should accept only step output as input
-    if ((resource.inputType !== EnumInputType.OUTPUT) && (props.step.tool === EnumTool.CATALOG)) {
-      return false;
-    }
-    // Do not accept existing input
-    if (props.resources.filter((r) => r.key === resource.key).length > 0) {
-      return false;
-    }
-
-    switch (resource.resourceType) {
-      case EnumResourceType.POI:
-        return ((counters.poi > 0) || (counters.any > 0));
-      case EnumResourceType.LINKED:
-        return ((counters.linked != 0) || (counters.any > 0));
-    }
-    return false;
   }
 };
 
@@ -79,7 +98,6 @@ const containerTarget = {
 @DropTarget([EnumDragSource.Resource], containerTarget, (connect, monitor) => ({
   connectDropTarget: connect.dropTarget(),
   isOver: monitor.isOver(),
-  canDrop: monitor.canDrop(),
 }))
 class StepInputContainer extends React.Component {
 
@@ -87,10 +105,11 @@ class StepInputContainer extends React.Component {
    * Renders a single {@link StepInput}
    *
    * @param {any} resource
+   * @param {any} index
    * @returns a {@link StepInput} component instance
    * @memberof StepInputContainer
    */
-  renderResource(resource) {
+  renderResource(resource, index) {
     return (
       <StepInput
         key={resource.key}
@@ -99,9 +118,11 @@ class StepInputContainer extends React.Component {
           (this.props.active.step === this.props.step.key) &&
           (this.props.active.item === resource.key)
         }
+        order={index}
         step={this.props.step}
         resource={resource}
         remove={this.props.removeStepInput}
+        moveStepInput={this.props.moveStepInput}
         setActiveStepInput={this.props.setActiveStepInput}
         readOnly={this.props.readOnly}
         selectOutputPart={this.props.selectOutputPart}
@@ -160,7 +181,7 @@ class StepInputContainer extends React.Component {
             'slipo-pd-step-input-container-full': (counters.poi <= 0 && counters.linked <= 0 && counters.any <= 0)
           })}
           style={{ opacity: (this.props.resources.length != 0 || isOver ? 1 : 0.2) }}>
-          {this.props.resources.map((r) => this.renderResource(r))}
+          {this.props.resources.map((r, index) => this.renderResource(r, index))}
         </div>
         {message}
       </div>

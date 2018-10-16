@@ -29,6 +29,7 @@ export {
   EnumStepFileType,
   EnumStepFileTypeValue,
   EnumStepProperty,
+  EnumTaskType,
   EnumTool,
   EnumToolboxItem,
   EnumToolboxItemGroup,
@@ -36,6 +37,7 @@ export {
 
 export {
   defaultValues as defaultTripleGeoValues,
+  defaultReverseValues as defaultReverseTripleGeoValues,
 } from './configuration/triplegeo';
 
 export {

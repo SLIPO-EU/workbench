@@ -557,14 +557,14 @@ public class ProcessDefinitionBuilder
     public class EnrichStepBuilder extends StepBuilder
     {
         private final GenericStepBuilder stepBuilder;
-        
+
         public EnrichStepBuilder(int key, String name)
         {
             this.stepBuilder = ProcessDefinitionBuilder.this.new GenericStepBuilder(key, name, Step::new);
             this.stepBuilder.operation(EnumOperation.ENRICHMENT);
             this.stepBuilder.tool(EnumTool.DEER);
         }
-        
+
         public EnrichStepBuilder group(int groupNumber)
         {
             this.stepBuilder.group(groupNumber);
@@ -576,10 +576,10 @@ public class ProcessDefinitionBuilder
             this.stepBuilder.nodeName(nodeName);
             return this;
         }
-        
+
         public EnrichStepBuilder input(String inputKey)
         {
-            Assert.isTrue(this.stepBuilder.input.isEmpty(), 
+            Assert.isTrue(this.stepBuilder.input.isEmpty(),
                 "The input is already specified (a single input is expected)");
             this.stepBuilder.input(inputKey);
             return this;
@@ -587,12 +587,12 @@ public class ProcessDefinitionBuilder
 
         public EnrichStepBuilder input(String inputKey, OutputPart<? extends AnyTool> part)
         {
-            Assert.isTrue(this.stepBuilder.input.isEmpty(), 
+            Assert.isTrue(this.stepBuilder.input.isEmpty(),
                 "The input is already specified (a single input is expected)");
             this.stepBuilder.input(inputKey, part);
             return this;
         }
-        
+
         public EnrichStepBuilder configuration(EnrichConfiguration<? extends EnrichTool> configuration)
         {
             this.stepBuilder.configuration(configuration);
@@ -610,7 +610,7 @@ public class ProcessDefinitionBuilder
             this.stepBuilder.outputFormat(format);
             return this;
         }
-        
+
         @Override
         protected Step build()
         {
@@ -618,7 +618,7 @@ public class ProcessDefinitionBuilder
             return this.stepBuilder.build();
         }
     }
-    
+
     public class RegisterStepBuilder extends StepBuilder
     {
         private final GenericStepBuilder stepBuilder;
@@ -738,6 +738,72 @@ public class ProcessDefinitionBuilder
         }
     }
 
+    public class ReverseTransformStepBuilder extends StepBuilder
+    {
+        private final GenericStepBuilder stepBuilder;
+
+        protected ReverseTransformStepBuilder(int key, String name)
+        {
+            this.stepBuilder = ProcessDefinitionBuilder.this.new GenericStepBuilder(key, name, Step::new);
+            this.stepBuilder.operation(EnumOperation.TRANSFORM);
+            this.stepBuilder.tool(EnumTool.REVERSE_TRIPLEGEO);
+        }
+
+        public ReverseTransformStepBuilder group(int groupNumber)
+        {
+            this.stepBuilder.group(groupNumber);
+            return this;
+        }
+
+        public ReverseTransformStepBuilder nodeName(String nodeName)
+        {
+            this.stepBuilder.nodeName(nodeName);
+            return this;
+        }
+
+        protected ReverseTransformStepBuilder input(Input p)
+        {
+            Assert.isTrue(this.stepBuilder.input.isEmpty(),
+                "An input key is already specified for this step");
+            this.stepBuilder.input(p);
+            return this;
+        }
+
+        public ReverseTransformStepBuilder input(String inputKey)
+        {
+            return input(Input.of(inputKey));
+        }
+
+        public ReverseTransformStepBuilder input(String inputKey, OutputPart<? extends AnyTool> part)
+        {
+            return input(Input.of(inputKey, part));
+        }
+
+        public ReverseTransformStepBuilder configuration(TransformConfiguration<? extends TransformTool> configuration)
+        {
+            this.stepBuilder.configuration(configuration);
+            return this;
+        }
+
+        public ReverseTransformStepBuilder outputKey(String outputKey)
+        {
+            this.stepBuilder.outputKey(outputKey);
+            return this;
+        }
+
+        public ReverseTransformStepBuilder outputFormat(EnumDataFormat format)
+        {
+            this.stepBuilder.outputFormat(format);
+            return this;
+        }
+
+        @Override
+        protected Step build()
+        {
+            return this.stepBuilder.build();
+        }
+    }
+
     private final ClonerService cloner;
 
     private final String name;
@@ -816,47 +882,47 @@ public class ProcessDefinitionBuilder
             k -> this.new ImportStepBuilder(k, String.format("Import: %s", name), url);
         return this.addStep(b -> b.outputKey(key).outputFormat(dataFormat), stepBuilder);
     }
-    
+
     /**
      * @see ProcessDefinitionBuilder#resource(String, String, URL, EnumDataFormat)
      */
     public ProcessDefinitionBuilder resource(String name, String key, String urlSpec, EnumDataFormat dataFormat)
     {
         Assert.notNull(urlSpec, "A source URL is required");
-        
+
         URL url = null;
         try {
             url = new URL(urlSpec);
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException(e);
         }
-        
+
         return resource(name, key, url, dataFormat);
     }
-    
+
     /**
      * Designate an external source, a file path, as a input available to this process.
-     * 
+     *
      * @param name A user-friendly name for this input resource
      * @param key A resource key for this resource to be referenced as an input
-     * @param path A file path for the source 
+     * @param path A file path for the source
      * @param dataFormat The data format for this resource
      * @return
      */
-    public ProcessDefinitionBuilder resource(String name, String key, Path path, EnumDataFormat dataFormat) 
+    public ProcessDefinitionBuilder resource(String name, String key, Path path, EnumDataFormat dataFormat)
     {
         Assert.notNull(path, "An source path is required");
-        
+
         URL url = null;
         try {
             url = new URL("file", null, path.toString());
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException("The path yields a malformed URL", e);
         }
-        
+
         return resource(name, key, url, dataFormat);
     }
-    
+
     /**
      * Add a generic step to this process.
      *
@@ -916,10 +982,10 @@ public class ProcessDefinitionBuilder
         Assert.notNull(configurer, "Expected a non-null configurer for a step");
         return this.addStep(configurer, k -> this.new FuseStepBuilder(k, name));
     }
-    
+
     /**
      * Add a enrichment step to this process.
-     * 
+     *
      * @param name The user-friendly name for this step
      * @param configurer A function to build the step
      * @return this builder
@@ -1002,6 +1068,22 @@ public class ProcessDefinitionBuilder
         Assert.notNull(metadata, "The resource metadata are required");
         Assert.notNull(target, "A target resource is required");
         return this.register(name, b -> b.resource(resourceKey).metadata(metadata).revisionOf(target));
+    }
+
+    /**
+     * Add a reverse transformation step for an existing catalog resource.
+     *
+     * <p>Currently, this step is always performed by Triplegeo tool.
+     *
+     * @param name The user-friendly name for this step
+     * @param configurer A function to build this step
+     * @return this builder
+     */
+    public ProcessDefinitionBuilder export(String name, Consumer<ReverseTransformStepBuilder> configurer)
+    {
+        Assert.isTrue(!StringUtils.isEmpty(name), "Expected a non-empty name");
+        Assert.notNull(configurer, "Expected a non-null configurer for a step");
+        return this.addStep(configurer, k -> this.new ReverseTransformStepBuilder(k, name));
     }
 
     public ProcessDefinition build()

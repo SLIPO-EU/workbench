@@ -8,6 +8,7 @@
     "user-files": "My Files",
     "resource": {
       "explorer": "Resource Explorer",
+      "export": "Export Resource",
       "registration": "Resource Registration",
       "viewer": "Resource Viewer"
     },
@@ -114,6 +115,11 @@
       "UNDEFINED": "Unknown",
       "POI_DATA": "POI Data",
       "POI_LINKED_DATA": "POI Linked Data"
+    },
+    "taskType": {
+      "REGISTRATION": "Registration",
+      "DATA_INTEGRATION": "Data Integration",
+      "EXPORT": "Export resource"
     },
     "tool": {
       "UNDEFINED": "Unknown",

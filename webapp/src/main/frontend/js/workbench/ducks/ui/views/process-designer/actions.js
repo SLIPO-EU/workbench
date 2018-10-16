@@ -37,6 +37,15 @@ export const moveStep = function (dragOrder, hoverOrder) {
   };
 };
 
+export const moveStepInput = function (step, dragOrder, hoverOrder) {
+  return {
+    type: Types.MOVE_STEP_INPUT,
+    step,
+    dragOrder,
+    hoverOrder,
+  };
+};
+
 export const removeStep = function (step) {
   return {
     type: Types.REMOVE_STEP,

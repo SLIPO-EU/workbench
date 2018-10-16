@@ -8,6 +8,7 @@
     "user-files": "Αρχεία Χρήστη",
     "resource": {
       "explorer": "Δεδομένα",
+      "export": "Export Resource",
       "registration": "Εισαγωγή Δεδομένων",
       "viewer": "Προβολή Δεδομένων"
     },
@@ -114,6 +115,11 @@
       "UNDEFINED": "Unknown",
       "POI_DATA": "POI Data",
       "POI_LINKED_DATA": "POI Linked Data"
+    },
+    "taskType": {
+      "REGISTRATION": "Registration",
+      "DATA_INTEGRATION": "Data Integration",
+      "EXPORT": "Export resource"
     },
     "tool": {
       "UNDEFINED": "Unknown",

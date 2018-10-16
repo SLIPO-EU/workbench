@@ -1,6 +1,6 @@
-// viewport.js
-
 // Actions
+import { LOGOUT } from "../../user";
+
 const SET = 'ui/resource-registration/SET';
 const RESET = 'ui/resource-registration/RESET';
 
@@ -12,14 +12,17 @@ const initialState = {
 
 export default (state = initialState, action) => {
   switch (action.type) {
+    case LOGOUT:
+      return initialState;
+
     case SET:
-      return { 
+      return {
         step: action.id,
-        values: action.values, 
+        values: action.values,
       };
 
     case RESET:
-      return { ...initialState };
+      return initialState;
 
     default:
       return state;

@@ -86,6 +86,7 @@ export const EnumTool = {
   FAGI: 'FAGI',
   DEER: 'DEER',
   CATALOG: 'REGISTER',
+  ReverseTripleGeo: 'REVERSE_TRIPLEGEO',
 };
 
 /**
@@ -128,6 +129,7 @@ export const EnumDragSource = {
   Operation: 'Operation',
   Resource: 'Resource',
   Step: 'Step',
+  StepInput: 'StepInput',
 };
 
 /**
@@ -196,6 +198,11 @@ export const EnumTriplegeoOutputPart = {
   classification: 'Classification',
 };
 
+export const EnumReverseTriplegeoOutputPart = {
+  [DEFAULT_OUTPUT_PART]: null,
+  transformed: 'Transformed',
+};
+
 export const EnumLimesOutputPart = {
   [DEFAULT_OUTPUT_PART]: null,
   accepted: 'Accepted',
@@ -216,6 +223,7 @@ export const EnumDeerOutputPart = {
 
 // Supported data integration tasks
 export const EnumTaskType = {
-  REGISTRATION: 'Registration',
-  DATA_INTEGRATION: 'Data Integration',
+  REGISTRATION: 'REGISTRATION',
+  DATA_INTEGRATION: 'DATA_INTEGRATION',
+  EXPORT: 'EXPORT',
 };

@@ -94,6 +94,7 @@ class StepGroup extends React.Component {
     cloneStep: PropTypes.func.isRequired,
     removeStep: PropTypes.func.isRequired,
     moveStep: PropTypes.func.isRequired,
+    moveStepInput: PropTypes.func.isRequired,
     configureStepBegin: PropTypes.func.isRequired,
     showStepExecutionDetails: PropTypes.func.isRequired,
     setStepProperty: PropTypes.func.isRequired,
@@ -134,7 +135,7 @@ class StepGroup extends React.Component {
    * @memberof Designer
    */
   renderStep(step) {
-    const resources = this.props.resources.filter((r) => !!step.input.find((i) => i.inputKey === r.key));
+    const resources = step.input.map((i) => this.props.resources.find((r) => i.inputKey === r.key)).filter((r) => !!r) || [];
     const stepExecution = this.props.stepExecutions.find((e) => e.key === step.key) || null;
 
     return (
@@ -145,6 +146,7 @@ class StepGroup extends React.Component {
         resources={resources}
         removeStep={this.props.removeStep}
         moveStep={this.props.moveStep}
+        moveStepInput={this.props.moveStepInput}
         configureStepBegin={this.props.configureStepBegin}
         showStepExecutionDetails={this.props.showStepExecutionDetails}
         setStepProperty={this.props.setStepProperty}

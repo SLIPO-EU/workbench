@@ -1,4 +1,3 @@
-// user.js
 import _ from 'lodash';
 import moment from '../moment-localized';
 
@@ -24,20 +23,16 @@ const initialState = {
 // Reducer
 export default (state = initialState, action) => {
   switch (action.type) {
-    case REQUEST_LOGIN:
-      return state; // no-op
     case LOGIN:
       return {
         username: action.username,
         loggedIn: action.timestamp,
         profile: null,
       };
-    case REQUEST_LOGOUT:
-      return state; // no-op
+
     case LOGOUT:
       return initialState;
-    case REQUEST_PROFILE:
-      return state; // no-op
+
     case SET_PROFILE:
       return {
         ...state,
@@ -47,6 +42,7 @@ export default (state = initialState, action) => {
           _updatedAt: action.timestamp,
         },
       };
+
     case LOAD_PROFILE:
       return {
         ...state,
@@ -56,8 +52,7 @@ export default (state = initialState, action) => {
           _savedAt: action.timestamp, // in sync with server
         },
       };
-    case REQUEST_SAVE_PROFILE:
-      return state; // no-op
+
     case SAVED_PROFILE:
       return {
         ...state,
@@ -66,6 +61,7 @@ export default (state = initialState, action) => {
           _savedAt: state.profile._updatedAt, // in sync again
         },
       };
+
     default:
       return state;
   }

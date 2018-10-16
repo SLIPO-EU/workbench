@@ -133,9 +133,6 @@ public class DefaultProcessService implements ProcessService {
     @Override
     public QueryResultPage<ProcessExecutionRecord> find(ProcessExecutionQuery query, PageRequest pageRequest) {
         query.setCreatedBy(isAdmin() ? null : currentUserId());
-        if (!this.authenticationFacade.isAdmin()) {
-            query.setTaskType(EnumProcessTaskType.DATA_INTEGRATION);
-        }
 
         final QueryResultPage<ProcessExecutionRecord> result = processRepository.queryExecutions(query, pageRequest);
         updateProcessExecutionRecords(result.getItems());
@@ -155,7 +152,7 @@ public class DefaultProcessService implements ProcessService {
             executionRecord.getProcess().getVersion() != version) {
             throw ProcessExecutionNotFoundException.forExecution(executionId);
         }
-        checkProcessAccess(processRecord);
+        checkProcessExecutionAccess(processRecord);
 
         // For catalog resources update bounding box and table name values
         processRecord
@@ -325,7 +322,7 @@ public class DefaultProcessService implements ProcessService {
             throw new ProcessNotFoundException(id, version);
         }
 
-        checkProcessAccess(processRecord);
+        checkProcessExecutionAccess(processRecord);
 
         final Optional<ProcessExecutionStepFileRecord> result = executionRecord
             .getSteps()
@@ -362,7 +359,7 @@ public class DefaultProcessService implements ProcessService {
             throw ProcessExecutionNotFoundException.forExecution(executionId);
         }
 
-        checkProcessAccess(processRecord);
+        checkProcessExecutionAccess(processRecord);
 
         final Optional<Pair<ProcessExecutionStepRecord, ProcessExecutionStepFileRecord>> result = executionRecord
             .getSteps()
@@ -473,6 +470,12 @@ public class DefaultProcessService implements ProcessService {
             throw this.accessDenied();
         }
         if ((!this.authenticationFacade.isAdmin()) && (record.getTaskType() != EnumProcessTaskType.DATA_INTEGRATION)) {
+            throw this.accessDenied();
+        }
+    }
+
+    private void checkProcessExecutionAccess(ProcessRecord record) {
+        if ((!this.authenticationFacade.isAdmin()) && (!this.currentUserId().equals(record.getCreatedBy().getId()))) {
             throw this.accessDenied();
         }
     }

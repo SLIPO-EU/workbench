@@ -136,8 +136,8 @@ ContentRoot.propTypes = {
 //
 
 const mapStateToProps = (state) => ({
-  user: state.user.profile,
   sidebarOpen: state.ui.menu.sidebarOpen,
+  user: state.user.profile,
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({

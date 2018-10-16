@@ -7,6 +7,7 @@ import {
   EnumLimesOutputPart,
   EnumOperation,
   EnumResourceType,
+  EnumReverseTriplegeoOutputPart,
   EnumTool,
   EnumTriplegeoOutputPart,
 } from './enum';
@@ -58,6 +59,7 @@ export const ToolIcons = {
   [EnumTool.FAGI]: 'fa fa-object-ungroup',
   [EnumTool.DEER]: 'fa fa-tags',
   [EnumTool.CATALOG]: 'fa fa-book',
+  [EnumTool.ReverseTripleGeo]: 'fa fa-cloud-download',
 };
 
 /*
@@ -69,6 +71,7 @@ export const ToolTitles = {
   [EnumTool.FAGI]: 'Fuse',
   [EnumTool.DEER]: 'Enrich',
   [EnumTool.CATALOG]: 'Register Resource',
+  [EnumTool.ReverseTripleGeo]: 'Export',
 };
 
 /**
@@ -80,6 +83,7 @@ export const ToolDefaultOperation = {
   [EnumTool.FAGI]: EnumOperation.Fusion,
   [EnumTool.DEER]: EnumOperation.Enrichment,
   [EnumTool.CATALOG]: EnumOperation.Registration,
+  [EnumTool.ReverseTripleGeo]: EnumOperation.Transform,
 };
 
 /**
@@ -135,7 +139,17 @@ export const ToolConfigurationSettings = {
     outputParts: null,
     allowClone: false,
     allowExport: false,
-  }
+  },
+  [EnumTool.ReverseTripleGeo]: {
+    source: 0,
+    poi: 1,
+    linked: 0,
+    any: 0,
+    editable: true,
+    outputParts: EnumReverseTriplegeoOutputPart,
+    allowClone: false,
+    allowExport: true,
+  },
 };
 
 /**

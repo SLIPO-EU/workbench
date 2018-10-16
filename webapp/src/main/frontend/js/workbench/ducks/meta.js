@@ -1,5 +1,3 @@
-// meta.js
-
 import { LOGIN, LOGOUT } from './user';
 
 // Actions

@@ -1,8 +1,8 @@
-// viewport.js
-
 import * as Immutable from 'immutable';
 
 // Actions
+import { LOGOUT } from '../user';
+
 const TOGGLE_MENU = 'menu/TOGGLE_MENU';
 
 // Reducer
@@ -13,6 +13,9 @@ const initialState = {
 
 export default (state = initialState, action) => {
   switch (action.type) {
+    case LOGOUT:
+      return initialState;
+
     case TOGGLE_MENU:
       return {
         ...state,

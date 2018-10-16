@@ -7,4 +7,5 @@ export { default as processExecutionReducer } from './process-execution-explorer
 export { default as processExplorerReducer } from './process-explorer';
 export { default as processTemplateExplorerReducer } from './process-template-explorer';
 export { default as resourceExplorerReducer } from './resource-explorer';
+export { default as resourceExportReducer } from './resource-export';
 export { default as resourceRegistrationReducer } from './resource-registration';

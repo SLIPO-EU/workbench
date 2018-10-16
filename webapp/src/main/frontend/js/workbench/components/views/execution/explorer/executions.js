@@ -15,85 +15,95 @@ import {
 } from '../../../../model';
 
 import {
+  EnumTaskType,
+} from '../../../../model/process-designer/enum';
+
+import {
   JobStatus,
   SecureContent,
   Table,
 } from '../../../helpers';
 
-const executionsColumns = [{
-  Header: 'id',
-  accessor: 'id',
-  maxWidth: 30,
-  show: false,
-}, {
-  Header: 'Status',
-  accessor: 'status',
-  maxWidth: 120,
-  Cell: row => {
-    return (
-      <JobStatus status={row.value} />
-    );
-  },
-  headerStyle: { 'textAlign': 'center' },
-  style: { 'textAlign': 'center' },
-}, {
-  expander: true,
-  Header: 'Actions',
-  id: 'actions',
-  width: 110,
-  Expander: (props) => {
-    return (
-      <span>
-        <SecureContent roles={[Roles.ADMIN, Roles.AUTHOR]}>
-          <i data-action="edit" className='fa fa-pencil slipo-table-row-action p-1'></i>
-        </SecureContent>
-        <i data-action="view" className='fa fa-search slipo-table-row-action p-1'></i>
-        <i data-action="map" className='fa fa-map-o slipo-table-row-action p-1'></i>
-        {props.original.errorMessage &&
-          <i data-action="error" className='fa fa-warning slipo-table-row-action p-1'></i>
-        }
-        {props.original.status === 'RUNNING' &&
-          <i data-action="stop" className='fa fa-stop slipo-table-row-action text-danger p-1'></i>
-        }
-      </span>
-    );
-  },
-}, {
-  Header: 'Name',
-  id: 'name',
-  accessor: r => r.name,
-  headerStyle: { 'textAlign': 'left' },
-}, {
-  Header: 'Submitted By',
-  id: 'submittedBy',
-  accessor: r => (r.submittedBy ? r.submittedBy.name : '-'),
-  headerStyle: { 'textAlign': 'center' },
-  style: { 'textAlign': 'center' },
-}, {
-  Header: 'Submitted On',
-  id: 'submittedOn',
-  accessor: r => <FormattedTime value={r.submittedOn} day='numeric' month='numeric' year='numeric' />,
-  headerStyle: { 'textAlign': 'center' },
-  style: { 'textAlign': 'center' },
-}, {
-  Header: 'Started',
-  id: 'startedOn',
-  accessor: r => (r.startedOn ? <FormattedTime value={r.startedOn} day='numeric' month='numeric' year='numeric' /> : '-'),
-  headerStyle: { 'textAlign': 'center' },
-  style: { 'textAlign': 'center' },
-}, {
-  Header: 'End',
-  id: 'completedOn',
-  accessor: r => (r.completedOn ? <FormattedTime value={r.completedOn} day='numeric' month='numeric' year='numeric' /> : '-'),
-  headerStyle: { 'textAlign': 'center' },
-  style: { 'textAlign': 'center' },
-}, {
-  Header: 'Duration',
-  id: 'dur',
-  accessor: r => (r.startedOn && r.completedOn ? moment.duration(r.startedOn - r.completedOn).humanize() : '-'),
-  headerStyle: { 'textAlign': 'center' },
-  style: { 'textAlign': 'center' },
-}];
+const executionsColumns = (props) => (
+  [{
+    Header: 'id',
+    accessor: 'id',
+    maxWidth: 30,
+    show: false,
+  }, {
+    Header: 'Status',
+    accessor: 'status',
+    maxWidth: 120,
+    Cell: row => {
+      return (
+        <JobStatus status={row.value} />
+      );
+    },
+    headerStyle: { 'textAlign': 'center' },
+    style: { 'textAlign': 'center' },
+  }, {
+    expander: true,
+    Header: 'Actions',
+    id: 'actions',
+    width: 110,
+    Expander: (row) => {
+      const isAdmin = props.user.roles.indexOf(Roles.ADMIN) !== -1;
+
+      return (
+        <span>
+          {((isAdmin) || (row.original.taskType !== EnumTaskType.REGISTRATION)) &&
+            <SecureContent roles={[Roles.ADMIN, Roles.AUTHOR]}>
+              <i data-action="edit" className='fa fa-pencil slipo-table-row-action p-1'></i>
+            </SecureContent>
+          }
+          <i data-action="view" className='fa fa-search slipo-table-row-action p-1'></i>
+          <i data-action="map" className='fa fa-map-o slipo-table-row-action p-1'></i>
+          {row.original.errorMessage &&
+            <i data-action="error" className='fa fa-warning slipo-table-row-action p-1'></i>
+          }
+          {row.original.status === 'RUNNING' &&
+            <i data-action="stop" className='fa fa-stop slipo-table-row-action text-danger p-1'></i>
+          }
+        </span>
+      );
+    },
+  }, {
+    Header: 'Name',
+    id: 'name',
+    accessor: r => r.name,
+    headerStyle: { 'textAlign': 'left' },
+  }, {
+    Header: 'Submitted By',
+    id: 'submittedBy',
+    accessor: r => (r.submittedBy ? r.submittedBy.name : '-'),
+    headerStyle: { 'textAlign': 'center' },
+    style: { 'textAlign': 'center' },
+  }, {
+    Header: 'Submitted On',
+    id: 'submittedOn',
+    accessor: r => <FormattedTime value={r.submittedOn} day='numeric' month='numeric' year='numeric' />,
+    headerStyle: { 'textAlign': 'center' },
+    style: { 'textAlign': 'center' },
+  }, {
+    Header: 'Started',
+    id: 'startedOn',
+    accessor: r => (r.startedOn ? <FormattedTime value={r.startedOn} day='numeric' month='numeric' year='numeric' /> : '-'),
+    headerStyle: { 'textAlign': 'center' },
+    style: { 'textAlign': 'center' },
+  }, {
+    Header: 'End',
+    id: 'completedOn',
+    accessor: r => (r.completedOn ? <FormattedTime value={r.completedOn} day='numeric' month='numeric' year='numeric' /> : '-'),
+    headerStyle: { 'textAlign': 'center' },
+    style: { 'textAlign': 'center' },
+  }, {
+    Header: 'Duration',
+    id: 'dur',
+    accessor: r => (r.startedOn && r.completedOn ? moment.duration(r.startedOn - r.completedOn).humanize() : '-'),
+    headerStyle: { 'textAlign': 'center' },
+    style: { 'textAlign': 'center' },
+  }]
+);
 
 
 const ExecutionDetails = (props) => {
@@ -160,7 +170,7 @@ export default class ProcessExecutions extends React.Component {
       <Table
         name="Workflow execution explorer"
         id="workflow-execution-explorer"
-        columns={executionsColumns}
+        columns={executionsColumns(this.props)}
         data={this.props.items}
         defaultPageSize={10}
         showPageSizeOptions={false}

@@ -143,7 +143,7 @@ function buildDataSource(step) {
 }
 
 function readProcessResponse(result) {
-  const { id, version, template, definition } = result;
+  const { definition, id, taskType, template, version } = result;
 
   const resources = definition.resources
     .map((r) => {
@@ -201,10 +201,11 @@ function readProcessResponse(result) {
   return {
     ...definition,
     id,
-    version,
-    template,
     resources,
     steps,
+    taskType,
+    template,
+    version,
   };
 }
 

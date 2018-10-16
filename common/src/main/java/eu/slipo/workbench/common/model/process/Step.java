@@ -32,6 +32,7 @@ import eu.slipo.workbench.common.model.tool.FagiConfiguration;
 import eu.slipo.workbench.common.model.tool.ImportDataConfiguration;
 import eu.slipo.workbench.common.model.tool.LimesConfiguration;
 import eu.slipo.workbench.common.model.tool.RegisterToCatalogConfiguration;
+import eu.slipo.workbench.common.model.tool.ReverseTriplegeoConfiguration;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
@@ -43,12 +44,12 @@ public class Step implements Serializable
     private static final long serialVersionUID = 1L;
 
     protected static final Slugify slugify = new Slugify();
-    
+
     protected static String slugifyName(String name)
     {
         return slugify.slugify(name);
     }
-    
+
     /**
      * A deserialization converter for a {@link Step}
      */
@@ -60,65 +61,65 @@ public class Step implements Serializable
             // Initialize step in-place
             step.initialize();
             return step;
-        }   
+        }
     }
-    
+
     /**
-     * An input descriptor for a {@link Step}. 
-     * 
+     * An input descriptor for a {@link Step}.
+     *
      * <p>This is not identical to a {@link ProcessInput} because a step may be interested only in a
-     * part of an available process-wide resource (i.e. a part of the output of another step). 
+     * part of an available process-wide resource (i.e. a part of the output of another step).
      */
     public final static class Input implements Serializable
     {
         private static final long serialVersionUID = 1L;
-       
+
         protected final String inputKey;
-        
+
         @Nullable
         protected final String partKey;
-        
+
         @JsonIgnore
         @Nullable
         protected final OutputPart<? extends AnyTool> part;
-        
+
         private Input(String inputKey, String partKey)
         {
             this.inputKey = inputKey;
             this.partKey = partKey;
             this.part = null;
         }
-        
+
         private Input(String inputKey, OutputPart<? extends AnyTool> part)
         {
             this.inputKey = inputKey;
             this.partKey = part.key();
             this.part = part;
         }
-        
+
         @JsonProperty("inputKey")
         public String inputKey()
         {
             return inputKey;
         }
-        
+
         @JsonProperty("partKey")
         public String partKey()
         {
             return partKey;
         }
-        
+
         protected OutputPart<? extends AnyTool> part()
         {
             return part;
         }
-        
+
         protected static Input of(String inputKey)
         {
             Assert.isTrue(!StringUtils.isEmpty(inputKey), "An non-empty input key is expected");
             return new Input(inputKey, (String) null);
         }
-        
+
         @JsonCreator
         protected static Input of(
             @JsonProperty("inputKey") String inputKey, @JsonProperty("partKey") String partKey)
@@ -126,25 +127,25 @@ public class Step implements Serializable
             Assert.isTrue(!StringUtils.isEmpty(inputKey), "An non-empty input key is expected");
             return new Input(inputKey, partKey);
         }
-        
+
         protected static Input of(String inputKey, OutputPart<? extends AnyTool> part)
         {
             Assert.isTrue(!StringUtils.isEmpty(inputKey), "An non-empty input key is expected");
             Assert.notNull(part, "An output part is required");
-            
+
             if (part.outputType() != EnumOutputType.OUTPUT) {
                 throw new IllegalArgumentException(
                     String.format("A step may receive as input only parts of output of type [%s], not [%s]",
                         EnumOutputType.OUTPUT, part.outputType()));
             }
-            
+
             return new Input(inputKey, part);
         }
 
         @Override
         public String toString()
         {
-            return String.format("input:%s%s", 
+            return String.format("input:%s%s",
                 inputKey, partKey != null? ("/" + partKey) : (""));
         }
 
@@ -161,17 +162,20 @@ public class Step implements Serializable
         @Override
         public boolean equals(Object obj)
         {
-            if (this == obj)
+            if (this == obj) {
                 return true;
-            if (!(obj instanceof Input))
+            }
+            if (!(obj instanceof Input)) {
                 return false;
+            }
             Input other = (Input) obj;
-            if (!inputKey.equals(other.inputKey))
+            if (!inputKey.equals(other.inputKey)) {
                 return false;
+            }
             return partKey == null? (other.partKey == null): (partKey.equals(other.partKey));
         }
     }
-    
+
     @JsonProperty("key")
     protected int key;
 
@@ -180,7 +184,7 @@ public class Step implements Serializable
 
     @JsonProperty("name")
     protected String name;
-    
+
     @JsonProperty("nodeName")
     protected String nodeName;
 
@@ -200,7 +204,7 @@ public class Step implements Serializable
 
     @JsonProperty("outputKey")
     protected String outputKey;
-    
+
     @JsonProperty("outputFormat")
     protected EnumDataFormat outputFormat;
 
@@ -216,7 +220,8 @@ public class Step implements Serializable
         @Type(name = "FAGI", value = FagiConfiguration.class),
         @Type(name = "DEER", value = DeerConfiguration.class),
         @Type(name = "IMPORTER", value = ImportDataConfiguration.class),
-        @Type(name = "REGISTER", value = RegisterToCatalogConfiguration.class)
+        @Type(name = "REGISTER", value = RegisterToCatalogConfiguration.class),
+        @Type(name = "REVERSE_TRIPLEGEO", value = ReverseTriplegeoConfiguration.class)
     })
     protected ToolConfiguration<? extends AnyTool> configuration;
 
@@ -225,18 +230,18 @@ public class Step implements Serializable
      */
     @JsonIgnore
     private ToolConfiguration<? extends AnyTool> _configuration = null;
-    
+
     protected Step() {}
 
     protected Step(int key)
     {
         this.key = key;
     }
-    
+
     protected static Step of(int key, Step other)
     {
         Step step = new Step(key);
-        
+
         step.name = other.name;
         step.nodeName = other.nodeName;
         step.group = other.group;
@@ -247,33 +252,33 @@ public class Step implements Serializable
         step.configuration = other.configuration;
         step.outputFormat = other.outputFormat;
         step.outputKey = other.outputKey;
-        
+
         step.initialize();
         return step;
     }
-    
+
     /**
-     * A hook to perform post-construct initialization. 
+     * A hook to perform post-construct initialization.
      * <p>This post-processing is idempotent, but not thread-safe!
      */
     protected void initialize()
     {
         // If nodeName is absent, compute it from name
-        
+
         if (StringUtils.isEmpty(this.nodeName) && !StringUtils.isEmpty(this.name)) {
             this.nodeName = Step.slugifyName(this.name);
         }
-        
+
         // Create an unmodifiable view of configuration
-        
+
         if (this._configuration == null) {
             @SuppressWarnings("unchecked")
-            ToolConfiguration<? extends AnyTool> configuration = 
+            ToolConfiguration<? extends AnyTool> configuration =
                 (ToolConfiguration<? extends AnyTool>) ImmutableBean.create(this.configuration);
             this._configuration = configuration;
         }
     }
-    
+
     /**
      * The unique key for this step
      */
@@ -281,7 +286,7 @@ public class Step implements Serializable
     {
         return key;
     }
-    
+
     /**
      * The human-friendly name of this step
      */
@@ -289,7 +294,7 @@ public class Step implements Serializable
     {
         return name;
     }
-    
+
     /**
      * The workflow-friendly name of this step
      */
@@ -333,7 +338,7 @@ public class Step implements Serializable
     {
         return _configuration;
     }
-    
+
     /**
      * The unique resource key of an {@link ProcessOutput} that is the output of
      * this step
@@ -352,7 +357,7 @@ public class Step implements Serializable
     {
         return Collections.unmodifiableList(input);
     }
-    
+
     /**
      * The keys of input resources that should be provided to this step.
      */
@@ -369,12 +374,12 @@ public class Step implements Serializable
     {
         return Collections.unmodifiableList(sources);
     }
-    
+
     public EnumDataFormat outputFormat()
     {
         return outputFormat;
     }
-    
+
     /**
      * A list of available output parts ({@link OutputPart}) provided by this step.
      */
@@ -382,19 +387,19 @@ public class Step implements Serializable
     {
         return tool.getOutputParts();
     }
-    
+
     /**
      * Get an output part ({@link OutputPart}).
-     * 
-     * @param partKey The part key to search by; may be <tt>null</tt>, and in such a case it 
+     *
+     * @param partKey The part key to search by; may be <tt>null</tt>, and in such a case it
      *   will be behave exactly as {@link Step#defaultOutputPart()}
      */
     public OutputPart<? extends AnyTool> outputPart(String partKey)
     {
-        return StringUtils.isEmpty(partKey)? 
+        return StringUtils.isEmpty(partKey)?
             tool.getDefaultOutputPart() : tool.getOutputPart(partKey).orElse(null);
     }
-    
+
     /**
      * Get the default output part ({@link OutputPart}) of this this step (may be <tt>null</tt>
      * if this step doesn't produce any output).
@@ -403,12 +408,12 @@ public class Step implements Serializable
     {
         return tool.getDefaultOutputPart();
     }
-    
+
     @Override
     public String toString()
     {
         return String.format(
-            "Step [key=%s, nodeName=%s, operation=%s, tool=%s, outputFormat=%s]", 
+            "Step [key=%s, nodeName=%s, operation=%s, tool=%s, outputFormat=%s]",
             key, nodeName, operation, tool, outputFormat);
     }
 }

@@ -1,6 +1,8 @@
 import * as resourceService from '../../../service/resources';
 
 // Actions
+import { LOGOUT } from '../../user';
+
 const SET_PAGER = 'ui/resource/explorer/SET_PAGER';
 const RESET_PAGER = 'ui/resource/explorer/RESET_PAGER';
 const SET_FILTER = 'ui/resource/explorer/SET_FILTER';
@@ -89,6 +91,9 @@ const initialState = {
 // Reducer
 export default (state = initialState, action) => {
   switch (action.type) {
+    case LOGOUT:
+      return initialState;
+
     case SET_PAGER:
       return {
         ...state,
@@ -274,4 +279,10 @@ export const create = (data, file = null) => (dispatch, getState) => {
   } else {
     return resourceService.register(data, token);
   }
+};
+
+export const exportResource = (data) => (dispatch, getState) => {
+  const { meta: { csrfToken: token } } = getState();
+
+  return resourceService.exportResource(data, token);
 };

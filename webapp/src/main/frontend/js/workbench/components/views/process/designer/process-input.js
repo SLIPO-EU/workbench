@@ -35,7 +35,10 @@ const resourceSource = {
    */
   beginDrag(props) {
     return {
-      ...props.resource,
+      source: EnumDragSource.Resource,
+      data: {
+        ...props.resource,
+      },
     };
   }
 };

@@ -8,6 +8,11 @@ export const inputFormats = [
   { value: 'SHAPEFILE', label: 'SHAPEFILE' },
 ];
 
+export const outputFormats = [
+  { value: 'CSV', label: 'CSV' },
+  { value: 'SHAPEFILE', label: 'SHAPEFILE' },
+];
+
 export const modes = [
   { value: 'GRAPH', label: 'GRAPH' },
   { value: 'STREAM', label: 'STREAM' },
@@ -84,4 +89,14 @@ export const defaultValues = {
   sourceCRS: crs[1].value,
   targetCRS: crs[1].value,
   targetGeoOntology: ontologies[0].value,
+};
+
+export const defaultReverseValues = {
+  defaultLang: languages[0].value,
+  delimiter: '|',
+  encoding: encodings[3].value,
+  quote: '"',
+  serialization: serializations[2].value,
+  sourceCRS: crs[1].value,
+  targetCRS: crs[1].value,
 };

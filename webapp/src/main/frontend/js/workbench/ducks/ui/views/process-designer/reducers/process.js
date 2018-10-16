@@ -3,6 +3,7 @@ import * as Types from '../types';
 import {
   EnumInputType,
   EnumSelection,
+  EnumTaskType,
   EnumTool,
 } from '../../../../../model/process-designer';
 
@@ -12,6 +13,7 @@ function resolveVersion(tool, version, appConfiguration) {
   }
   switch (tool) {
     case EnumTool.TripleGeo:
+    case EnumTool.ReverseTripleGeo:
       return appConfiguration.tripleGeo.baselineVersion;
     case EnumTool.LIMES:
       return appConfiguration.limes.baselineVersion;
@@ -42,6 +44,7 @@ function load(state, action) {
         description: '',
       },
       errors: {},
+      taskType: EnumTaskType.DATA_INTEGRATION,
     } : {
       id: data.id,
       version: data.version,
@@ -52,6 +55,7 @@ function load(state, action) {
         description: data.description,
       },
       errors: {},
+      taskType: data.taskType,
     };
 
 

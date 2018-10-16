@@ -29,6 +29,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 
@@ -45,6 +46,7 @@ import eu.slipo.workbench.common.model.tool.output.OutputSpec;
  *
  * @see https://github.com/SLIPO-EU/TripleGeo/blob/master/config/file_options.conf.template
  */
+@JsonPropertyOrder(alphabetic=true)
 public class TriplegeoConfiguration extends TransformConfiguration<Triplegeo>
 {
     private static final long serialVersionUID = 2L;
@@ -166,48 +168,48 @@ public class TriplegeoConfiguration extends TransformConfiguration<Triplegeo>
         }
     }
 
-    public class OutputNameMapper implements InputToOutputNameMapper<Triplegeo> 
+    public class OutputNameMapper implements InputToOutputNameMapper<Triplegeo>
     {
         private OutputNameMapper() {};
-        
+
         @Override
         public Multimap<OutputPart<Triplegeo>, OutputSpec> applyToPath(List<Path> inputList)
         {
             Assert.state(outputFormat != null, "The output format is not specified");
-            
+
             final String extension = outputFormat.getFilenameExtension();
-            final ImmutableMultimap.Builder<OutputPart<Triplegeo>, OutputSpec> outputMapBuilder = 
+            final ImmutableMultimap.Builder<OutputPart<Triplegeo>, OutputSpec> outputMapBuilder =
                 ImmutableMultimap.builder();
-            
+
             // Each input yields an RDF output and a JSON metadata file
-            
+
             for (Path inputPath: inputList) {
                 String inputName = stripFilenameExtension(inputPath.getFileName().toString());
-                outputMapBuilder.put(EnumTriplegeoOutputPart.TRANSFORMED, 
+                outputMapBuilder.put(EnumTriplegeoOutputPart.TRANSFORMED,
                     OutputSpec.of(inputName + "." + extension, outputFormat));
-                outputMapBuilder.put(EnumTriplegeoOutputPart.TRANSFORMED_METADATA, 
+                outputMapBuilder.put(EnumTriplegeoOutputPart.TRANSFORMED_METADATA,
                     OutputSpec.of(inputName + "_metadata" + ".json"));
                 if (registerFeatures) {
                     // An additional CSV is generated as a registration request payload
-                    outputMapBuilder.put(EnumTriplegeoOutputPart.REGISTRATION_REQUEST, 
+                    outputMapBuilder.put(EnumTriplegeoOutputPart.REGISTRATION_REQUEST,
                         OutputSpec.of(inputName + ".csv", EnumDataFormat.CSV));
                 }
             }
-            
+
             // An output file with classification (in RDF format) is always produced, even if a
             // classification spec is not directly provided (as configuration)
-            
+
             outputMapBuilder.put(EnumTriplegeoOutputPart.CLASSIFICATION,
                 OutputSpec.of("classification" + "." + extension, outputFormat));
             outputMapBuilder.put(EnumTriplegeoOutputPart.CLASSIFICATION_METADATA,
                 OutputSpec.of("classification_metadata" + ".json"));
-            
+
             // Done
-            
+
             return outputMapBuilder.build();
-        }   
+        }
     }
-    
+
     //
     // Member data
     //
@@ -216,7 +218,7 @@ public class TriplegeoConfiguration extends TransformConfiguration<Triplegeo>
      * A profile for setting default configuration values
      */
     private String _profile;
-    
+
     private Mode mode = Mode.STREAM;
 
     private EnumSpatialOntology targetGeoOntology = EnumSpatialOntology.GEOSPARQL;
@@ -361,7 +363,7 @@ public class TriplegeoConfiguration extends TransformConfiguration<Triplegeo>
      * Indicates whether to export a CSV file with records for the SLIPO Registry
      */
     private boolean registerFeatures = true;
-    
+
     /**
      * A default constructor
      */
@@ -433,14 +435,14 @@ public class TriplegeoConfiguration extends TransformConfiguration<Triplegeo>
     {
         this._profile = profile;
     }
-    
+
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonProperty("profile")
     public String getProfile()
     {
         return _profile;
     }
-    
+
     @JsonIgnore
     @Override
     public EnumDataFormat getInputFormat()
@@ -576,14 +578,14 @@ public class TriplegeoConfiguration extends TransformConfiguration<Triplegeo>
     {
         return tmpDir;
     }
-    
+
     @JsonIgnore
     @Override
     public InputToOutputNameMapper<Triplegeo> getOutputNameMapper()
     {
         return new OutputNameMapper();
     }
-    
+
     @JsonProperty("mode")
     public void setMode(Mode mode)
     {
@@ -1015,13 +1017,13 @@ public class TriplegeoConfiguration extends TransformConfiguration<Triplegeo>
     {
         this.quote = quote;
     }
-    
+
     @JsonProperty("registerFeatures")
     public boolean getRegisterFeatures()
     {
         return registerFeatures;
     }
-    
+
     @JsonProperty("registerFeatures")
     public void setRegisterFeatures(boolean registerFeatures)
     {

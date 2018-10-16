@@ -1,6 +1,8 @@
 import adminService from '../../../service/admin';
 
 // Actions
+import { LOGOUT } from '../../user';
+
 const SET_PAGER = 'ui/events/SET_PAGER';
 const RESET_PAGER = 'ui/events/RESET_PAGER';
 const SET_FILTER = 'ui/events/SET_FILTER';
@@ -33,6 +35,8 @@ const initialState = {
 // Reducer
 export default (state = initialState, action) => {
   switch (action.type) {
+    case LOGOUT:
+      return initialState;
 
     case SET_PAGER:
       return {

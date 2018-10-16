@@ -7,6 +7,7 @@ import pathToRegexp from 'path-to-regexp';
  * Components
  */
 import { ResourceExplorerSidebar } from '../components/views/resource/explorer';
+import { ResourceExportSidebar } from '../components/views/resource/export';
 import { ProcessDesignerSidebar } from '../components/views/process/designer';
 import { ExecutionViewerSidebar } from '../components/views/execution/viewer';
 
@@ -14,6 +15,9 @@ import { ExecutionViewerSidebar } from '../components/views/execution/viewer';
  * Model
  */
 import * as Roles from './role';
+import {
+  EnumTaskType,
+} from '../model/process-designer/enum';
 
 /**
  * Routes for utility pages
@@ -40,6 +44,7 @@ const Settings = '/settings';
 const HarvesterDataExplorer = '/harvester/data/explore';
 
 const ResourceExplorer = '/resource/explore';
+const ResourceExport = '/resource/export';
 const ResourceRegistration = '/resource/register';
 
 const ProcessExplorer = '/process/explore';
@@ -57,6 +62,7 @@ export const StaticRoutes = {
   Profile,
   Settings,
   ResourceExplorer,
+  ResourceExport,
   ResourceRegistration,
   ProcessExplorer,
   ProcessExecutionExplorer,
@@ -100,6 +106,22 @@ const NotFound = '/error/404';
 export const ErrorPages = {
   Forbidden,
   NotFound,
+};
+
+// Guards
+const processRouteGuard = (roles, views) => {
+  const { process: { designer: { process = null } } } = views;
+
+  if (!process) {
+    return false;
+  }
+  if (roles.indexOf(Roles.ADMIN) !== -1) {
+    return true;
+  }
+  if ((roles.indexOf(Roles.AUTHOR) !== -1) && (process.taskType !== EnumTaskType.REGISTRATION)) {
+    return true;
+  }
+  return false;
 };
 
 /**
@@ -164,6 +186,14 @@ const routes = {
     roles: [Roles.ADMIN, Roles.AUTHOR],
     links: defaultLinks
   },
+  [ResourceExport]: {
+    description: 'Export an existing resource',
+    title: 'links.resource.export',
+    defaultTitle: 'Export Resource',
+    roles: [Roles.ADMIN, Roles.AUTHOR],
+    links: defaultLinks,
+    contextComponent: ResourceExportSidebar,
+  },
   [ProcessExplorer]: {
     description: 'Browse system processes',
     title: 'links.process.explorer',
@@ -215,7 +245,7 @@ const routes = {
     description: 'Update a data integration workflow',
     title: 'links.process.designer.edit',
     defaultTitle: 'Edit',
-    roles: [Roles.ADMIN, Roles.AUTHOR],
+    roles: processRouteGuard,
     links: defaultLinks,
     contextComponent: ProcessDesignerSidebar,
   },
@@ -231,6 +261,7 @@ const routes = {
     description: 'View a data integration workflow',
     title: 'links.process.designer.view',
     defaultTitle: 'View',
+    roles: processRouteGuard,
     links: defaultLinks,
     contextComponent: ProcessDesignerSidebar,
   },

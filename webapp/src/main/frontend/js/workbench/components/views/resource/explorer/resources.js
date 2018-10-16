@@ -88,7 +88,10 @@ const resourceColumns = [{
   id: 'actions',
   Cell: props => {
     return (
-      <i data-action="delete" className='fa fa-trash slipo-table-row-action'></i>
+      <span>
+        <i data-action="delete" className='fa fa-trash slipo-table-row-action mr-2' title="Delete"></i>
+        <i data-action="export" className='fa fa-archive slipo-table-row-action' title="Export"></i>
+      </span>
     );
   },
   style: { 'textAlign': 'center' },
@@ -147,7 +150,10 @@ const resourceHistoryColumns = [{
   id: 'actions',
   Cell: props => {
     return (
-      <i data-action="delete" className='fa fa-trash slipo-table-row-action'></i>
+      <span>
+        <i data-action="delete" className='fa fa-trash slipo-table-row-action mr-2' title="Delete"></i>
+        <i data-action="export" className='fa fa-archive slipo-table-row-action' title="Export"></i>
+      </span>
     );
   },
   style: { 'textAlign': 'center' },
@@ -193,6 +199,9 @@ export default class Resources extends React.Component {
         break;
       case 'delete':
         this.props.deleteResource(rowInfo.original.id, rowInfo.original.version);
+        break;
+      case 'export':
+        this.props.exportResource(createResource(rowInfo));
         break;
       default:
         if (handleOriginal) {

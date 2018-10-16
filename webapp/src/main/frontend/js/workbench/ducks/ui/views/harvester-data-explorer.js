@@ -1,6 +1,8 @@
 import actions from '../../../service/api/fetch-actions';
 
 // Actions
+import { LOGOUT } from '../../user';
+
 const SIMPLE_ACTION = 'ui/harvester/data/explorer/SIMPLE_ACTION';
 const THUNK_BEFORE = 'ui/harvester/data/explorer/THUNK_BEFORE';
 const THUNK_AFTER = 'ui/harvester/data/explorer/THUNK_AFTER';
@@ -22,6 +24,9 @@ const initialState = {
 
 export default (state = initialState, action) => {
   switch (action.type) {
+    case LOGOUT:
+      return initialState;
+
     case SIMPLE_ACTION:
       return {
         ...state,

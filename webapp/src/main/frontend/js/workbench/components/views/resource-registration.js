@@ -52,7 +52,6 @@ class ResourceRegistration extends React.Component {
       </Row>
     );
   }
-
 }
 
 const mapStateToProps = (state) => ({

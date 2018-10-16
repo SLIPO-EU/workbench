@@ -1,4 +1,5 @@
 import * as React from 'react';
+import * as PropTypes from 'prop-types';
 
 import {
   Button,
@@ -21,11 +22,6 @@ import {
   TextField,
 } from '../../../helpers/forms/fields/';
 
-const supportedTasks = [
-  { value: null, label: 'Select...' },
-  ...Object.keys(EnumTaskType).map(key => ({ value: key, label: EnumTaskType[key] }))
-];
-
 export default class Filters extends React.Component {
 
   constructor(props) {
@@ -33,6 +29,10 @@ export default class Filters extends React.Component {
 
     this.clear = this.clear.bind(this);
     this.search = this.search.bind(this);
+  }
+
+  static contextTypes = {
+    intl: PropTypes.object,
   }
 
   clear() {
@@ -52,6 +52,11 @@ export default class Filters extends React.Component {
 
   render() {
     const props = this.props;
+    const _t = this.context.intl.formatMessage;
+    const supportedTasks = [
+      { value: null, label: 'Select...' },
+      ...Object.keys(EnumTaskType).map(key => ({ value: key, label: _t({ id: `enum.taskType.${key}` }) }))
+    ];
 
     return (
       <form onSubmit={this.search}
