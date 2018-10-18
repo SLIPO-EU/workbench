@@ -20,6 +20,7 @@ import {
 export const processDataMapper = (processes) => processes.map(proc => ({
   process: proc.process,
   executionId: proc.id,
+  exported: proc.exported,
   name: proc.name,
   submittedBy: proc.submittedBy ? proc.submittedBy.name : '-',
   startedOn: moment(proc.startedOn).toDate(),
@@ -35,20 +36,16 @@ export const ProcessExecutionGridColumns = [{
   accessor: 'process',
   Cell: props => {
     return (
-      props.original.completedOn ?
+      props.original.status === 'COMPLETED' && props.original.exported ?
         <Link style={{ color: '#263238' }} to={buildPath(DynamicRoutes.ProcessExecutionMapViewer, [props.original.process.id, props.original.process.version, props.original.executionId])}>
-          <i className='fa fa-map-o'></i>
+          <i className='fa fa-map-o' title="View map"></i>
         </Link>
         :
-        null
+        <i data-action="export" title="Export map data" className='fa fa-database slipo-table-row-action p-1'></i>
     );
   },
   style: { 'textAlign': 'center' },
   minWidth: 60,
-}, {
-  Header: 'Workflow Id',
-  accessor: 'processId',
-  show: false
 }, {
   Header: 'Execution Id',
   accessor: 'executionId',

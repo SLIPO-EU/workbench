@@ -94,13 +94,15 @@ class Execution extends React.Component {
               }
             </Col>
           </Row>
-          <Row>
-            <Col>
-              <div className="float-right">
-                <Button color="primary" onClick={this.props.viewMap} className="float-left"><i className="fa fa-map-o mr-1"></i> View Map</Button>
-              </div>
-            </Col>
-          </Row>
+          {e.exported &&
+            <Row>
+              <Col>
+                <div className="float-right">
+                  <Button color="primary" onClick={this.props.viewMap} className="float-left"><i className="fa fa-map-o mr-1"></i> View Map</Button>
+                </div>
+              </Col>
+            </Row>
+          }
         </CardBody>
       </Card>
     );

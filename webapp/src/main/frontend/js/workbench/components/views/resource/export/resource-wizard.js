@@ -19,7 +19,7 @@ import {
 } from '../../../../service/toolkit/triplegeo-reverse';
 
 const resourceToInput = (r) => ({
-  key: r.key !== null ? r.key.toString() : null,
+  key: "0",
   inputType: r.inputType,
   resourceType: r.resourceType,
   name: r.name,

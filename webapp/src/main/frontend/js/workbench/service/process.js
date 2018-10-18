@@ -508,3 +508,7 @@ export function start(id, version, token) {
 export function stop(id, version, token) {
   return actions.post(`/action/process/${id}/${version}/stop`, token);
 }
+
+export function exportMap(id, version, execution, token) {
+  return actions.post(`/action/process/${id}/${version}/export/${execution}`, token);
+}

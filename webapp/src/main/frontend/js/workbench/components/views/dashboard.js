@@ -6,8 +6,8 @@ import {
 } from 'redux';
 
 import {
-  Link,
-} from 'react-router-dom';
+  toast
+} from 'react-toastify';
 
 import {
   injectIntl,
@@ -20,6 +20,7 @@ import {
 } from 'reactstrap';
 
 import {
+  EnumErrorLevel,
   Roles,
   UPDATE_INTERVAL_SECONDS,
 } from '../../model';
@@ -29,6 +30,7 @@ import {
   DashboardCard,
   SecureContent,
   Table,
+  ToastTemplate,
 } from '../helpers';
 
 import {
@@ -37,6 +39,10 @@ import {
   resetSelectedEvent,
   selectEvent,
 } from '../../ducks/ui/views/dashboard';
+
+import {
+  exportMap,
+} from '../../ducks/ui/views/process-explorer';
 
 import * as CardConfig from '../helpers/card-config';
 import * as TableConfig from '../helpers/table-config';
@@ -62,6 +68,49 @@ class Dashboard extends React.Component {
     if (this.refreshIntervalId) {
       clearInterval(this.refreshIntervalId);
       this.refreshIntervalId = null;
+    }
+  }
+
+  handleProcessRowAction(rowInfo, e, handleOriginal) {
+    switch (e.target.getAttribute('data-action')) {
+      case 'export':
+        this.props.exportMap(
+          rowInfo.original.process.id,
+          rowInfo.original.process.version,
+          rowInfo.original.executionId,
+        ).then(() => {
+          this.displayMessage('Process execution export has started successfully', EnumErrorLevel.INFO);
+        }).catch((err) => {
+          this.displayMessage(err.message);
+        });
+        break;
+      default:
+        if (handleOriginal) {
+          handleOriginal();
+        }
+        break;
+    }
+  }
+
+  displayMessage(message, level = EnumErrorLevel.ERROR) {
+    toast.dismiss();
+
+    switch (level) {
+      case EnumErrorLevel.WARN:
+        toast.warn(
+          <ToastTemplate iconClass='fa-warning' text={message} />
+        );
+        break;
+      case EnumErrorLevel.INFO:
+        toast.info(
+          <ToastTemplate iconClass='fa-info-circle' text={message} />
+        );
+        break;
+      default:
+        toast.error(
+          <ToastTemplate iconClass='fa-exclamation-circle' text={message} />
+        );
+        break;
     }
   }
 
@@ -119,6 +168,9 @@ class Dashboard extends React.Component {
                 columns={TableConfig.ProcessExecutionGridColumns}
                 minRows={10}
                 showPagination={true}
+                getTdProps={(state, rowInfo, column) => ({
+                  onClick: this.handleProcessRowAction.bind(this, rowInfo)
+                })}
               />
             </DashboardCard>
           </Col>
@@ -190,6 +242,7 @@ const mapStateToProps = (state) => ({
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
   changeDashboardFilter,
+  exportMap,
   fetchDashboardData,
   resetSelectedEvent,
   selectEvent,

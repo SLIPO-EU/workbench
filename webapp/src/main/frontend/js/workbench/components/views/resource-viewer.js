@@ -21,6 +21,8 @@ import {
 } from 'react-toastify';
 
 import {
+  DynamicRoutes,
+  buildPath,
   StaticRoutes,
 } from '../../model';
 
@@ -51,6 +53,7 @@ class ResourceViewer extends React.Component {
     this.onFetchError = this.onFetchError.bind(this);
     this.onFetchSuccess = this.onFetchSuccess.bind(this);
     this.onFeatureSelect = this.onFeatureSelect.bind(this);
+    this.viewMap = this.viewMap.bind(this);
   }
 
   componentDidMount() {
@@ -86,6 +89,12 @@ class ResourceViewer extends React.Component {
     console.log(features);
   }
 
+  viewMap(id, version) {
+    const path = buildPath(DynamicRoutes.ResourceMapViewer, [id, version]);
+
+    this.props.history.push(path);
+  }
+
   render() {
     const { resource } = this.props;
     const icon = '\uf08d';
@@ -100,7 +109,7 @@ class ResourceViewer extends React.Component {
                 <CardBody className="card-body">
                   <ResourceDetails
                     resource={resource}
-                    version={resource.version}
+                    viewMap={this.viewMap}
                   />
                 </CardBody>
               </Card>

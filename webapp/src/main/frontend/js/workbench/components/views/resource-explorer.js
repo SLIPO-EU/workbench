@@ -21,6 +21,7 @@ import {
 } from 'react-toastify';
 
 import {
+  EnumErrorLevel,
   StaticRoutes,
 } from '../../model';
 
@@ -52,6 +53,10 @@ import {
   removeResourceFromBag,
 } from '../../ducks/ui/views/process-designer';
 
+import {
+  exportMap,
+} from '../../ducks/ui/views/process-explorer';
+
 /**
  * Browse and manage resources
  *
@@ -64,6 +69,7 @@ class ResourceExplorer extends React.Component {
     super(props);
 
     this.deleteResource = this.deleteResource.bind(this);
+    this.exportMap = this.exportMap.bind(this);
     this.exportResource = this.exportResource.bind(this);
     this.onFeatureSelect = this.onFeatureSelect.bind(this);
   }
@@ -119,6 +125,37 @@ class ResourceExplorer extends React.Component {
     this.props.history.push(StaticRoutes.ResourceExport);
   }
 
+  exportMap(id, version, executionId) {
+    this.props.exportMap(id, version, executionId)
+      .then((result) => {
+        this.displayMessage('Process execution export has started successfully', EnumErrorLevel.INFO);
+      }).catch((err) => {
+        this.displayMessage(err.message);
+      });
+  }
+
+  displayMessage(message, level = EnumErrorLevel.ERROR) {
+    toast.dismiss();
+
+    switch (level) {
+      case EnumErrorLevel.WARN:
+        toast.warn(
+          <ToastTemplate iconClass='fa-warning' text={message} />
+        );
+        break;
+      case EnumErrorLevel.INFO:
+        toast.info(
+          <ToastTemplate iconClass='fa-info-circle' text={message} />
+        );
+        break;
+      default:
+        toast.error(
+          <ToastTemplate iconClass='fa-exclamation-circle' text={message} />
+        );
+        break;
+    }
+  }
+
   render() {
     return (
       <div className="animated fadeIn">
@@ -154,6 +191,7 @@ class ResourceExplorer extends React.Component {
                     <Resources
                       addResourceToBag={this.props.addResourceToBag}
                       deleteResource={this.deleteResource}
+                      exportMap={this.exportMap}
                       exportResource={this.exportResource}
                       fetchResources={this.props.fetchResources}
                       filters={this.props.filters}
@@ -227,6 +265,7 @@ const mapStateToProps = (state) => ({
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
   addResourceToBag,
+  exportMap,
   fetchResources,
   removeResourceFromBag,
   resetFilters,

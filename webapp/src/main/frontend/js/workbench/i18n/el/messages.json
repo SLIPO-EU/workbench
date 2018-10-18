@@ -10,7 +10,8 @@
       "explorer": "Δεδομένα",
       "export": "Export Resource",
       "registration": "Εισαγωγή Δεδομένων",
-      "viewer": "Προβολή Δεδομένων"
+      "viewer": "Προβολή Δεδομένων",
+      "map-viewer": "Προβολή Χάρτη"
     },
     "process": {
       "explorer": "Διεργασίες",

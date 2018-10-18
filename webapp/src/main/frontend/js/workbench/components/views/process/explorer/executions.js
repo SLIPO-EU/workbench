@@ -33,8 +33,13 @@ const processExecutionsColumns = [{
     return (
       <span>
         <i data-action="view" title="View" className='fa fa-search slipo-table-row-action p-1'></i>
-        <i data-action="map" title="View map" className='fa fa-map-o slipo-table-row-action p-1'></i>
-        {props.row.status === 'RUNNING' &&
+        {props.original.status === 'COMPLETED' && props.original.exported &&
+          <i data-action="map" title="View Map" className='fa fa-map-o slipo-table-row-action p-1'></i>
+        }
+        {props.original.status === 'COMPLETED' && !props.original.exported &&
+          <i data-action="export-map" title="Export map data" className='fa fa-database slipo-table-row-action p-1'></i>
+        }
+        {props.original.status === 'RUNNING' &&
           <i data-action="stop" title="Stop execution" className='fa fa-stop slipo-table-row-action text-danger p-1'></i>
         }
       </span>
@@ -97,6 +102,9 @@ export default class ProcessExecutions extends React.Component {
         break;
       case 'stop':
         this.props.stopExecution(this.props.selected.id, this.props.selected.version);
+        break;
+      case 'export-map':
+        this.props.exportMap(rowInfo.original.process.id, rowInfo.original.process.version, rowInfo.original.id);
         break;
       default:
         if (handleOriginal) {

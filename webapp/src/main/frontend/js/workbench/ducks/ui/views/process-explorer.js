@@ -20,6 +20,8 @@ const SET_SELECTED_EXECUTION = 'ui/process/explorer/SET_SELECTED_EXECUTION';
 const START_PROCESS = 'ui/process/explorer/START_PROCESS';
 const STOP_PROCESS = 'ui/process/explorer/STOP_PROCESS';
 
+const EXPORT_MAP = 'ui/process/explorer/EXPORT_MAP';
+
 // Initial state
 const initialState = {
   filters: {
@@ -238,5 +240,18 @@ export const stop = (id, version) => (dispatch, getState) => {
   return processService.stop(id, version, token)
     .then(() => {
       processExecutionStopped();
+    });
+};
+
+const exportMapStarted = () => ({
+  type: EXPORT_MAP,
+});
+
+export const exportMap = (id, version, execution) => (dispatch, getState) => {
+  const { meta: { csrfToken: token } } = getState();
+
+  return processService.exportMap(id, version, execution, token)
+    .then(() => {
+      exportMapStarted();
     });
 };

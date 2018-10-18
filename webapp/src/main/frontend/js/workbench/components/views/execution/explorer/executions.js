@@ -57,7 +57,12 @@ const executionsColumns = (props) => (
             </SecureContent>
           }
           <i data-action="view" title="View" className='fa fa-search slipo-table-row-action p-1'></i>
-          <i data-action="map" title="View Map" className='fa fa-map-o slipo-table-row-action p-1'></i>
+          {row.original.status === 'COMPLETED' && row.original.exported &&
+            <i data-action="map" title="View Map" className='fa fa-map-o slipo-table-row-action p-1'></i>
+          }
+          {row.original.status === 'COMPLETED' && !row.original.exported &&
+            <i data-action="export-map" title="Export map data" className='fa fa-database slipo-table-row-action p-1'></i>
+          }
           {row.original.errorMessage &&
             <i data-action="error" title="View error message" className='fa fa-warning slipo-table-row-action p-1'></i>
           }
@@ -141,6 +146,9 @@ export default class ProcessExecutions extends React.Component {
         break;
       case 'stop':
         this.props.stopExecution(rowInfo.original.process.id, rowInfo.original.process.version);
+        break;
+      case 'export-map':
+        this.props.exportMap(rowInfo.original.process.id, rowInfo.original.process.version, rowInfo.original.id);
         break;
       case 'map':
         this.props.viewMap(rowInfo.original.process.id, rowInfo.original.process.version, rowInfo.original.id);

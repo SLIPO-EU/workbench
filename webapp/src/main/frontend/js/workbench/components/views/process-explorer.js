@@ -42,6 +42,7 @@ import {
 
 
 import {
+  exportMap,
   fetchProcessExecutions,
   fetchProcesses,
   resetFilters,
@@ -65,6 +66,7 @@ class ProcessExplorer extends React.Component {
     super(props);
 
     this.editProcess = this.editProcess.bind(this);
+    this.exportMap = this.exportMap.bind(this);
     this.viewProcess = this.viewProcess.bind(this);
     this.viewExecution = this.viewExecution.bind(this);
     this.viewMap = this.viewMap.bind(this);
@@ -99,6 +101,15 @@ class ProcessExplorer extends React.Component {
     this.props.fetchProcesses({
       query: { ...this.props.filters },
     });
+  }
+
+  exportMap(id, version, executionId) {
+    this.props.exportMap(id, version, executionId)
+      .then(() => {
+        this.displayMessage('Process execution export has started successfully', EnumErrorLevel.INFO);
+      }).catch((err) => {
+        this.displayMessage(err.message);
+      });
   }
 
   /**
@@ -270,6 +281,7 @@ class ProcessExplorer extends React.Component {
                     <Col>
                       <ProcessExecutions
                         executions={this.props.executions}
+                        exportMap={this.exportMap}
                         selected={this.props.selected}
                         stopExecution={this.stopExecution}
                         viewExecution={this.viewExecution}
@@ -299,6 +311,7 @@ const mapStateToProps = (state) => ({
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
+  exportMap,
   fetchProcesses,
   fetchProcessExecutions,
   resetFilters,

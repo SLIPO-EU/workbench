@@ -9,7 +9,7 @@ import pathToRegexp from 'path-to-regexp';
 import { ResourceExplorerSidebar } from '../components/views/resource/explorer';
 import { ResourceExportSidebar } from '../components/views/resource/export';
 import { ProcessDesignerSidebar } from '../components/views/process/designer';
-import { ExecutionViewerSidebar } from '../components/views/execution/viewer';
+import { MapViewerSideBar } from '../components/views/execution/viewer';
 
 /**
  * Model
@@ -75,6 +75,7 @@ export const StaticRoutes = {
  * Dynamic routes
  */
 
+const ResourceMapViewer = '/resource/view/:id/:version/map';
 const ResourceViewer = '/resource/view/:id/:version';
 
 const ProcessDesignerCreate = '/workflow/designer';
@@ -87,6 +88,7 @@ const ProcessExecutionViewer = '/workflow/designer/:id/:version/execution/:execu
 const ProcessExecutionMapViewer = '/workflow/designer/:id/:version/execution/:execution/map';
 
 export const DynamicRoutes = {
+  ResourceMapViewer,
   ResourceViewer,
   ProcessDesignerCreate,
   ProcessDesignerEdit,
@@ -227,6 +229,13 @@ const routes = {
     links: [Dashboard, UserManager],
   },
   // Dynamic
+  [ResourceMapViewer]: {
+    description: 'View a resource map data',
+    title: 'links.resource.map-viewer',
+    defaultTitle: 'Map Viewer',
+    links: defaultLinks,
+    contextComponent: MapViewerSideBar,
+  },
   [ResourceViewer]: {
     description: 'View/Update an existing resource',
     title: 'links.resource.viewer',
@@ -277,7 +286,7 @@ const routes = {
     title: 'links.process.execution.map-viewer',
     defaultTitle: 'Map Viewer',
     links: defaultLinks,
-    contextComponent: ExecutionViewerSidebar,
+    contextComponent: MapViewerSideBar,
   },
   // Error Pages
   [Forbidden]: {

@@ -154,6 +154,7 @@ class Home extends React.Component {
               <Switch>
                 <Redirect from="/" to={StaticRoutes.Dashboard} exact />
                 {/* Dynamic */}
+                <Route path={DynamicRoutes.ResourceMapViewer} component={ProcessExecutionMapViewer} />
                 <Route path={DynamicRoutes.ResourceViewer} component={ResourceViewer} />
                 <Route path={DynamicRoutes.ProcessDesignerView} component={ProcessDesigner} exact />
                 <SecureRoute path={DynamicRoutes.ProcessDesignerEditTemplate} component={ProcessDesigner} exact roles={[Roles.ADMIN, Roles.AUTHOR]} />

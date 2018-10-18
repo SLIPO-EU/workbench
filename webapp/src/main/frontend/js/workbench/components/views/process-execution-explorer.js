@@ -40,6 +40,7 @@ import {
 } from "./execution/explorer";
 
 import {
+  exportMap,
   stop,
 } from '../../ducks/ui/views/process-explorer';
 
@@ -64,6 +65,7 @@ class ProcessExecutionExplorer extends React.Component {
     super(props);
 
     this.editProcess = this.editProcess.bind(this);
+    this.exportMap = this.exportMap.bind(this);
     this.stopExecution = this.stopExecution.bind(this);
     this.viewExecution = this.viewExecution.bind(this);
     this.viewMap = this.viewMap.bind(this);
@@ -163,6 +165,15 @@ class ProcessExecutionExplorer extends React.Component {
     }
   }
 
+  exportMap(id, version, executionId) {
+    this.props.exportMap(id, version, executionId)
+      .then(() => {
+        this.displayMessage('Process execution export has started successfully', EnumErrorLevel.INFO);
+      }).catch((err) => {
+        this.displayMessage(err.message);
+      });
+  }
+
   /**
    * Render a map with input/output data
    *
@@ -208,6 +219,7 @@ class ProcessExecutionExplorer extends React.Component {
                     <ProcessExecutions
                       expanded={this.props.expanded}
                       editProcess={this.editProcess}
+                      exportMap={this.exportMap}
                       fetchExecutions={this.props.fetchExecutions}
                       filters={this.props.filters}
                       items={this.props.items}
@@ -245,6 +257,7 @@ const mapStateToProps = (state) => ({
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
   fetchExecutions,
+  exportMap,
   resetFilters,
   setExpanded,
   setFilter,

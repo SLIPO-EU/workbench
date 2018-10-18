@@ -10,7 +10,8 @@
       "explorer": "Resource Explorer",
       "export": "Export Resource",
       "registration": "Resource Registration",
-      "viewer": "Resource Viewer"
+      "viewer": "Resource Viewer",
+      "map-viewer": "Map Viewer"
     },
     "process": {
       "explorer": "Workflow Explorer",

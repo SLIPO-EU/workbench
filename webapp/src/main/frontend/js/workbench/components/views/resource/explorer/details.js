@@ -2,6 +2,7 @@ import * as React from 'react';
 import * as PropTypes from 'prop-types';
 
 import {
+  Button,
   Col,
   Row,
 } from 'reactstrap';
@@ -27,14 +28,13 @@ class ResourceDetails extends React.Component {
   }
 
   static propTypes = {
-    resource: PropTypes.object.isRequired,
-    version: PropTypes.number,
     intl: intlShape.isRequired,
+    resource: PropTypes.object.isRequired,
+    viewMap: PropTypes.func.isRequired,
   }
 
   render() {
-    const { resource, version, intl } = this.props;
-    const r = (resource.version === version) ? resource : resource.revisions.find((v) => v.version === version);
+    const { resource: r, intl } = this.props;
 
     return (
       <div>
@@ -51,7 +51,7 @@ class ResourceDetails extends React.Component {
             <TextField
               id="version"
               label="Version"
-              value={version.toString()}
+              value={r.version.toString()}
               readOnly={true}
             />
           </Col>
@@ -59,7 +59,7 @@ class ResourceDetails extends React.Component {
             <TextField
               id="versionCount"
               label="# of Versions"
-              value={(resource.revisions.length || 1).toString()}
+              value={(r.revisions.length || 1).toString()}
               readOnly={true}
             />
           </Col>
@@ -157,6 +157,15 @@ class ResourceDetails extends React.Component {
             />
           </Col>
         </Row>
+        {r.mapExported &&
+          <Row>
+            <Col>
+              <div className="float-right">
+                <Button color="primary" onClick={() => this.props.viewMap(r.id, r.version)} className="float-left"><i className="fa fa-map-o mr-1"></i> View Map</Button>
+              </div>
+            </Col>
+          </Row>
+        }
       </div>
     );
   }
