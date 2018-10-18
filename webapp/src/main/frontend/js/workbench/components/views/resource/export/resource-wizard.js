@@ -1,7 +1,4 @@
 import React from 'react';
-import { toast } from 'react-toastify';
-
-import ToastTemplate from '../../../helpers/toast-template';
 
 import { MultiStep } from '../../../helpers/forms/';
 import { EnumErrorLevel } from '../../../../model/error';
@@ -17,6 +14,10 @@ import {
   validateConfiguration as validateConfigurationTripleGeo,
   writeConfiguration as writeConfigurationTripleGeo,
 } from '../../../../service/toolkit/triplegeo-reverse';
+
+import {
+  message,
+} from '../../../../service';
 
 const resourceToInput = (r) => ({
   key: "0",
@@ -40,26 +41,19 @@ export default function ResourceWizard(props) {
             configuration: values.triplegeo ? writeConfigurationTripleGeo(values.triplegeo) : null,
             resource: values.catalog.resource ? resourceToInput(values.catalog.resource) : null,
           };
-          toast.dismiss();
           props.exportResource(data)
             .then(() => {
-              toast.success(
-                <ToastTemplate iconClass='fa-book' text='Resource export task has been initialized successfully!' />
-              );
+              message.success('Resource export task has been initialized successfully!', 'fa-book');
               props.goTo(StaticRoutes.ResourceExplorer);
             })
             .catch((err) => {
               switch (err.level) {
                 case EnumErrorLevel.WARN:
-                  toast.warn(
-                    <ToastTemplate iconClass='fa-warning' text={err.message} />
-                  );
+                  message.warn(err.message, 'fa-warning');
                   props.goTo(StaticRoutes.ResourceExplorer);
                   break;
                 default:
-                  toast.error(
-                    <ToastTemplate iconClass='fa-warning' text={err.message} />
-                  );
+                  message.error(err.message, 'fa-warning');
                   break;
               }
             });

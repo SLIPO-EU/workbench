@@ -1,7 +1,4 @@
 import React from 'react';
-import { toast } from 'react-toastify';
-
-import ToastTemplate from '../../../helpers/toast-template';
 
 import { MultiStep } from '../../../helpers/forms/';
 import { EnumErrorLevel } from '../../../../model/error';
@@ -30,6 +27,10 @@ import {
 
 import { writeConfiguration as writeConfigurationTripleGeo } from '../../../../service/toolkit/triplegeo';
 
+import {
+  message,
+} from '../../../../service';
+
 export default function ResourceWizard(props) {
   return (
     <div className="animated fadeIn">
@@ -51,26 +52,19 @@ export default function ResourceWizard(props) {
             }
             const file = values.upload && values.upload.file || null;
 
-            toast.dismiss();
             props.createResource(data, file)
               .then(() => {
-                toast.success(
-                  <ToastTemplate iconClass='fa-book' text='Resource registration has been initialized successfully!' />
-                );
+                message.success('Resource registration has been initialized successfully!', 'fa-book');
                 props.goTo(StaticRoutes.ResourceExplorer);
               })
               .catch((err) => {
                 switch (err.level) {
                   case EnumErrorLevel.WARN:
-                    toast.warn(
-                      <ToastTemplate iconClass='fa-warning' text={err.message} />
-                    );
+                    message.warn(err.message, 'fa-warning');
                     props.goTo(StaticRoutes.ResourceExplorer);
                     break;
                   default:
-                    toast.error(
-                      <ToastTemplate iconClass='fa-warning' text={err.message} />
-                    );
+                    message.error(err.message, 'fa-warning');
                     break;
                 }
               });

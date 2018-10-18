@@ -6,10 +6,6 @@ import {
 } from 'redux';
 
 import {
-  toast
-} from 'react-toastify';
-
-import {
   injectIntl,
 } from 'react-intl';
 
@@ -30,7 +26,6 @@ import {
   DashboardCard,
   SecureContent,
   Table,
-  ToastTemplate,
 } from '../helpers';
 
 import {
@@ -43,6 +38,10 @@ import {
 import {
   exportMap,
 } from '../../ducks/ui/views/process-explorer';
+
+import {
+  message,
+} from '../../service';
 
 import * as CardConfig from '../helpers/card-config';
 import * as TableConfig from '../helpers/table-config';
@@ -79,37 +78,15 @@ class Dashboard extends React.Component {
           rowInfo.original.process.version,
           rowInfo.original.executionId,
         ).then(() => {
-          this.displayMessage('Process execution export has started successfully', EnumErrorLevel.INFO);
+          message.info('Process execution export has started successfully');
         }).catch((err) => {
-          this.displayMessage(err.message);
+          message.error(err.message);
         });
         break;
       default:
         if (handleOriginal) {
           handleOriginal();
         }
-        break;
-    }
-  }
-
-  displayMessage(message, level = EnumErrorLevel.ERROR) {
-    toast.dismiss();
-
-    switch (level) {
-      case EnumErrorLevel.WARN:
-        toast.warn(
-          <ToastTemplate iconClass='fa-warning' text={message} />
-        );
-        break;
-      case EnumErrorLevel.INFO:
-        toast.info(
-          <ToastTemplate iconClass='fa-info-circle' text={message} />
-        );
-        break;
-      default:
-        toast.error(
-          <ToastTemplate iconClass='fa-exclamation-circle' text={message} />
-        );
         break;
     }
   }

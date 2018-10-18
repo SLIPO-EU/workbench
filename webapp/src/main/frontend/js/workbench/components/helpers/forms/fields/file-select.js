@@ -11,10 +11,6 @@ import {
 } from 'react-intl';
 
 import {
-  toast,
-} from 'react-toastify';
-
-import {
   Button,
   Input,
 } from 'reactstrap';
@@ -22,8 +18,11 @@ import {
 import {
   Dialog,
   Table,
-  ToastTemplate,
 } from '../../';
+
+import {
+  message,
+} from '../../../../service';
 
 /**
  * Presentation modes for {@link FileSelect} component
@@ -294,7 +293,7 @@ export class FileSelect extends React.Component {
           });
         })
         .catch(err => {
-          this.displayToast(err.message);
+          message.error(err.message);
         });
     }
   }
@@ -326,25 +325,8 @@ export class FileSelect extends React.Component {
   downloadFile(filePath) {
     fileSystem.download(filePath, filePath.split('/').reverse()[0])
       .catch(() => {
-        toast.dismiss();
-        toast.error(
-          <ToastTemplate iconClass='fa-cloud-download' text='Failed to download file' />
-        );
+        message.error('Failed to download file', 'fa-cloud-download');
       });
-  }
-
-  /**
-   * Displays a warning message to the user
-   *
-   * @param {string} message - The message to display
-   * @memberof FileSelect
-   */
-  displayToast(message) {
-    toast.dismiss();
-
-    toast.error(
-      <ToastTemplate iconClass='fa-warning' text={message} />
-    );
   }
 
   handleRowAction(rowInfo, e, handleOriginal) {
@@ -393,7 +375,7 @@ export class FileSelect extends React.Component {
             });
           })
           .catch(err => {
-            this.displayToast(err.message);
+            message.error(err.message);
           });
         break;
 
@@ -605,7 +587,7 @@ export class FileSelect extends React.Component {
                 });
               })
               .catch(err => {
-                this.displayToast(err.message);
+                message.error(err.message);
                 this.setState({
                   isUploading: false,
                 });

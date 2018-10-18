@@ -10,12 +10,7 @@ import {
 } from 'redux';
 
 import {
-  toast
-} from 'react-toastify';
-
-import {
   OpenLayers,
-  ToastTemplate,
 } from '../../components/helpers';
 
 import {
@@ -27,6 +22,10 @@ import {
 import {
   StaticRoutes,
 } from '../../model';
+
+import {
+  message,
+} from '../../service';
 
 /**
  * Browse POI data and POI data integration workflow results
@@ -77,23 +76,13 @@ class ProcessExecutionMapViewer extends React.Component {
   }
 
   onFetchError(err) {
-    this.error(err.message);
+    message.error(err.message, 'fa-warning');
+
+    setTimeout(() => this.props.history.push(StaticRoutes.ProcessExecutionExplorer), 500);
   }
 
   onFeatureSelect(features) {
     this.props.selectFeatures(features);
-  }
-
-  error(message, redirect) {
-    toast.dismiss();
-
-    toast.error(
-      <ToastTemplate iconClass='fa-warning' text={message} />
-    );
-
-    if ((typeof redirect === 'undefined') || (redirect)) {
-      setTimeout(() => this.props.history.push(StaticRoutes.ProcessExecutionExplorer), 500);
-    }
   }
 
   getLayers() {

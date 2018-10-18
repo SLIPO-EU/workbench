@@ -6,10 +6,6 @@ import {
 } from 'redux';
 
 import {
-  toast
-} from 'react-toastify';
-
-import {
   Card,
   CardBody,
   Col,
@@ -26,13 +22,8 @@ import {
 } from '../../model/routes';
 
 import {
-  EnumErrorLevel,
   UPDATE_INTERVAL_SECONDS,
 } from '../../model';
-
-import {
-  ToastTemplate,
-} from '../helpers';
 
 import {
   Filters,
@@ -51,6 +42,10 @@ import {
   start,
   stop,
 } from '../../ducks/ui/views/process-explorer';
+
+import {
+  message,
+} from '../../service';
 
 // TODO: Add i18n support
 
@@ -106,9 +101,9 @@ class ProcessExplorer extends React.Component {
   exportMap(id, version, executionId) {
     this.props.exportMap(id, version, executionId)
       .then(() => {
-        this.displayMessage('Process execution export has started successfully', EnumErrorLevel.INFO);
+        message.info('Process execution export has started successfully');
       }).catch((err) => {
-        this.displayMessage(err.message);
+        message.error(err.message);
       });
   }
 
@@ -176,10 +171,10 @@ class ProcessExplorer extends React.Component {
   startExecution(id, version) {
     this.props.start(id, version)
       .then((data) => {
-        this.displayMessage('Process execution has started successfully', EnumErrorLevel.INFO);
+        message.info('Process execution has started successfully');
       })
       .catch((err) => {
-        this.displayMessage(err.message);
+        message.error(err.message);
       })
       .finally(() => {
         this.search();
@@ -196,33 +191,11 @@ class ProcessExplorer extends React.Component {
   stopExecution(id, version) {
     this.props.stop(id, version)
       .catch((err) => {
-        this.displayMessage(err.message);
+        message.error(err.message);
       })
       .finally(() => {
         this.search();
       });
-  }
-
-  displayMessage(message, level = EnumErrorLevel.ERROR) {
-    toast.dismiss();
-
-    switch (level) {
-      case EnumErrorLevel.WARN:
-        toast.warn(
-          <ToastTemplate iconClass='fa-warning' text={message} />
-        );
-        break;
-      case EnumErrorLevel.INFO:
-        toast.info(
-          <ToastTemplate iconClass='fa-info-circle' text={message} />
-        );
-        break;
-      default:
-        toast.error(
-          <ToastTemplate iconClass='fa-exclamation-circle' text={message} />
-        );
-        break;
-    }
   }
 
   render() {

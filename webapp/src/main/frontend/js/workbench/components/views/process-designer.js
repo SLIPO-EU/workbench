@@ -6,10 +6,6 @@ import {
 } from 'redux';
 
 import {
-  toast,
-} from 'react-toastify';
-
-import {
   Button,
   ButtonDropdown,
   ButtonGroup,
@@ -38,7 +34,6 @@ import {
 
 import {
   Dialog,
-  ToastTemplate,
 } from '../helpers';
 
 import {
@@ -102,6 +97,10 @@ import {
   selectFile,
   selectOutputPart,
 } from '../../ducks/ui/views/process-designer';
+
+import {
+  message,
+} from '../../service';
 
 /**
  * Component actions
@@ -211,19 +210,14 @@ class ProcessDesigner extends React.Component {
     return ((this.props.process.id !== id) || (this.props.process.version !== version));
   }
 
-  error(message, redirect) {
+  error(text) {
     const isTemplate = this.props.process.template;
 
-    toast.dismiss();
-    toast.error(
-      <ToastTemplate iconClass='fa-warning' text={message} />
-    );
+    message.error(text, 'fa-warning');
 
-    if ((typeof redirect === 'undefined') || (redirect)) {
-      setTimeout(() => {
-        this.props.history.push(isTemplate ? StaticRoutes.RecipeExplorer : StaticRoutes.ProcessExplorer);
-      }, 500);
-    }
+    setTimeout(() => {
+      this.props.history.push(isTemplate ? StaticRoutes.RecipeExplorer : StaticRoutes.ProcessExplorer);
+    }, 500);
   }
 
   resume() {
@@ -296,34 +290,25 @@ class ProcessDesigner extends React.Component {
   save(action) {
     const isTemplate = this.props.process.template || action === EnumComponentAction.SaveAsTemplate;
 
-    toast.dismiss();
     this.props.save(this.mapToSaveAction(action), this.props.designer, isTemplate)
       .then((result) => {
         const text = `${isTemplate ? "Template" : "Process"} has been saved successfully!`;
-        toast.success(
-          <ToastTemplate iconClass='fa-save' text={text} />
-        );
+        message.success(text, 'fa-save');
         this.reset();
         this.props.history.push(isTemplate ? StaticRoutes.RecipeExplorer : StaticRoutes.ProcessExplorer);
       })
       .catch((err) => {
         switch (err.level) {
           case EnumErrorLevel.INFO:
-            toast.info(
-              <ToastTemplate iconClass='fa-warning' text={err.message} />
-            );
+            message.info(err.message, 'fa-warning');
             this.props.history.push(StaticRoutes.ProcessExplorer);
             break;
           case EnumErrorLevel.WARN:
-            toast.warn(
-              <ToastTemplate iconClass='fa-warning' text={err.message} />
-            );
+            message.warn(err.message, 'fa-warning');
             this.props.history.push(StaticRoutes.ProcessExplorer);
             break;
           default:
-            toast.error(
-              <ToastTemplate iconClass='fa-warning' text={err.message} />
-            );
+            message.error(err.message, 'fa-warning');
             break;
         }
       });
@@ -334,9 +319,7 @@ class ProcessDesigner extends React.Component {
 
     this.props.fetchExecutionKpiData(Number.parseInt(id), Number.parseInt(version), Number.parseInt(execution), file, mode)
       .catch(err => {
-        toast.error(
-          <ToastTemplate iconClass='fa-warning' text={`Failed to load KPI data. ${err.message}`} />
-        );
+        message.error(`Failed to load KPI data. ${err.message}`, 'fa-warning');
       });
   }
 

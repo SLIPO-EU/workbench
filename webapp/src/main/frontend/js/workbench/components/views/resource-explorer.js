@@ -17,17 +17,13 @@ import {
 } from 'react-intl';
 
 import {
-  toast
-} from 'react-toastify';
-
-import {
-  EnumErrorLevel,
+  DynamicRoutes,
+  buildPath,
   StaticRoutes,
 } from '../../model';
 
 import {
   OpenLayers,
-  ToastTemplate,
 } from '../helpers';
 
 import {
@@ -57,6 +53,10 @@ import {
   exportMap,
 } from '../../ducks/ui/views/process-explorer';
 
+import {
+  message,
+} from '../../service';
+
 /**
  * Browse and manage resources
  *
@@ -72,6 +72,7 @@ class ResourceExplorer extends React.Component {
     this.exportMap = this.exportMap.bind(this);
     this.exportResource = this.exportResource.bind(this);
     this.onFeatureSelect = this.onFeatureSelect.bind(this);
+    this.viewMap = this.viewMap.bind(this);
   }
 
   /**
@@ -109,13 +110,15 @@ class ResourceExplorer extends React.Component {
    * @memberof ResourceExplorer
    */
   deleteResource(id, version) {
-    toast.dismiss();
-
-    toast.error(
-      <ToastTemplate iconClass='fa-warning' text='error.NOT_IMPLEMENTED' />
-    );
+    message.error('error.NOT_IMPLEMENTED', 'fa-warning');
   }
 
+  /**
+   * Exports the selected resource to a file using TripleGeo
+   * reverse transformation
+   *
+   * @param {*} resource
+   */
   exportResource(resource) {
     this.props.setExportResource(null, {
       catalog: {
@@ -125,40 +128,50 @@ class ResourceExplorer extends React.Component {
     this.props.history.push(StaticRoutes.ResourceExport);
   }
 
+  /**
+   * Exports process execution data to a relation database
+   * for rendering a map with input/output datasets as layers
+   *
+   * @param {*} id
+   * @param {*} version
+   * @param {*} executionId
+   * @memberof ResourceExplorer
+   */
   exportMap(id, version, executionId) {
     this.props.exportMap(id, version, executionId)
-      .then((result) => {
-        this.displayMessage('Process execution export has started successfully', EnumErrorLevel.INFO);
+      .then(() => {
+        message.info('Process execution export has started successfully');
       }).catch((err) => {
-        this.displayMessage(err.message);
+        message.error(err.message);
       });
   }
 
-  displayMessage(message, level = EnumErrorLevel.ERROR) {
-    toast.dismiss();
+  /**
+   * Renders a map with the input/output datasets of the process
+   * execution instance that created the specific resource version
+   *
+   * @param {*} id
+   * @param {*} version
+   * @param {*} execution
+   * @memberof ResourceExplorer
+   */
+  viewMap(id, version, execution) {
+    const path = buildPath(DynamicRoutes.ProcessExecutionMapViewer, [id, version, execution]);
 
-    switch (level) {
-      case EnumErrorLevel.WARN:
-        toast.warn(
-          <ToastTemplate iconClass='fa-warning' text={message} />
-        );
-        break;
-      case EnumErrorLevel.INFO:
-        toast.info(
-          <ToastTemplate iconClass='fa-info-circle' text={message} />
-        );
-        break;
-      default:
-        toast.error(
-          <ToastTemplate iconClass='fa-exclamation-circle' text={message} />
-        );
-        break;
-    }
+    this.props.history.push(path);
   }
 
   render() {
+    const { items, selected: selection } = this.props;
+
+    let resource = null;
+    if (selection) {
+      resource = items.find((r) => r.id === selection.id);
+      resource = resource ? resource.revisions.find((r) => r.version === selection.version) : null;
+    }
+
     return (
-      <div className="animated fadeIn">
+      <div className="animated fadeIn" >
         <Row>
           <Col className="col-12">
             <Card>
@@ -234,11 +247,11 @@ class ResourceExplorer extends React.Component {
                   {!this.props.selected &&
                     <span className="text-muted">Select a resource to view details ...</span>
                   }
-                  {this.props.selected &&
+                  {resource &&
                     <Col xs={6}>
                       <ResourceDetails
-                        resource={this.props.items.find((r) => this.props.selected && r.id === this.props.selected.id)}
-                        version={this.props.selected ? this.props.selected.version : null}
+                        resource={resource}
+                        viewMap={this.viewMap}
                       />
                     </Col>
                   }

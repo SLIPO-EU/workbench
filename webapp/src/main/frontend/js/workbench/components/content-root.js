@@ -24,6 +24,10 @@ import {
   Placeholder,
 } from './helpers/';
 
+import {
+  message,
+} from '../service';
+
 import Home from './home';
 
 //
@@ -59,11 +63,7 @@ class ContentRoot extends React.Component {
   _getFileSystem() {
     this.props.getFilesystem()
       .catch(() => {
-        toast.dismiss();
-
-        toast.error(
-          <ToastTemplate iconClass='fa-folder' text='error.FILESYSTEM_LOAD' />
-        );
+        message.error('error.FILESYSTEM_LOAD', 'fa-folder');
       });
   }
 

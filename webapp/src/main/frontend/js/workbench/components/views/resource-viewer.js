@@ -17,10 +17,6 @@ import {
 } from 'reactstrap';
 
 import {
-  toast,
-} from 'react-toastify';
-
-import {
   DynamicRoutes,
   buildPath,
   StaticRoutes,
@@ -28,12 +24,15 @@ import {
 
 import {
   OpenLayers,
-  ToastTemplate,
 } from '../helpers';
 
 import {
   ResourceDetails,
 } from './resource/explorer/';
+
+import {
+  message,
+} from '../../service';
 
 /**
  * Resource metadata viewer
@@ -69,20 +68,11 @@ class ResourceViewer extends React.Component {
   }
 
   onFetchError(err) {
-    this.error(err.message);
-  }
+    message.error(err.message, 'fa-warning');
 
-  error(message, redirect) {
-    toast.dismiss();
-    toast.error(
-      <ToastTemplate iconClass='fa-warning' text={message} />
-    );
-
-    if ((typeof redirect === 'undefined') || (redirect)) {
-      setTimeout(() => {
-        this.props.history.push(StaticRoutes.ResourceExplorer);
-      }, 500);
-    }
+    setTimeout(() => {
+      this.props.history.push(StaticRoutes.ResourceExplorer);
+    }, 500);
   }
 
   onFeatureSelect(features) {

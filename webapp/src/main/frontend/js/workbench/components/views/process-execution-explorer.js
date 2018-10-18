@@ -17,10 +17,6 @@ import {
 } from 'react-intl';
 
 import {
-  toast
-} from 'react-toastify';
-
-import {
   DynamicRoutes,
   buildPath
 } from '../../model/routes';
@@ -29,10 +25,6 @@ import {
   EnumErrorLevel,
   UPDATE_INTERVAL_SECONDS,
 } from '../../model';
-
-import {
-  ToastTemplate,
-} from '../helpers';
 
 import {
   Filters,
@@ -52,6 +44,10 @@ import {
   setPager,
   setSelected,
 } from '../../ducks/ui/views/process-execution-explorer';
+
+import {
+  message,
+} from '../../service';
 
 /**
  * Browse and manage process executions
@@ -136,41 +132,19 @@ class ProcessExecutionExplorer extends React.Component {
   stopExecution(id, version) {
     this.props.stop(id, version)
       .catch((err) => {
-        this.displayMessage(err.message);
+        message.error(err.message);
       })
       .finally(() => {
         this.search();
       });
   }
 
-  displayMessage(message, level = EnumErrorLevel.ERROR) {
-    toast.dismiss();
-
-    switch (level) {
-      case EnumErrorLevel.WARN:
-        toast.warn(
-          <ToastTemplate iconClass='fa-warning' text={message} />
-        );
-        break;
-      case EnumErrorLevel.INFO:
-        toast.info(
-          <ToastTemplate iconClass='fa-info-circle' text={message} />
-        );
-        break;
-      default:
-        toast.error(
-          <ToastTemplate iconClass='fa-exclamation-circle' text={message} />
-        );
-        break;
-    }
-  }
-
   exportMap(id, version, executionId) {
     this.props.exportMap(id, version, executionId)
       .then(() => {
-        this.displayMessage('Process execution export has started successfully', EnumErrorLevel.INFO);
+        message.info('Process execution export has started successfully');
       }).catch((err) => {
-        this.displayMessage(err.message);
+        message.error(err.message);
       });
   }
 
