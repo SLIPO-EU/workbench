@@ -398,7 +398,7 @@ public class ResourceController extends BaseController {
      */
     private ProcessExecutionRecord getExecution(ResourceRecord resource) {
 
-        final Long id = (resource != null ? resource.getProcessExecutionId() : null);
+        final Long id = (resource != null && resource.getExecution() != null ? resource.getExecution().getExecutionId() : null);
         return (id != null ? processRepository.findExecution(id) : null);
     }
 
@@ -412,7 +412,7 @@ public class ResourceController extends BaseController {
         }
 
         if (ex instanceof ProcessNotFoundException) {
-            return RestResponse.error(ProcessErrorCode.NOT_FOUND, "Process was not found", level);
+            return RestResponse.error(ProcessErrorCode.PROCESS_NOT_FOUND, "Process was not found", level);
         }
         if (ex instanceof ProcessExecutionStartException) {
             return RestResponse.error(ProcessErrorCode.FAILED_TO_START, "Process execution has failed to start", level);

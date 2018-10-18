@@ -321,8 +321,9 @@ public class DefaultProcessOperatorTests
                 for (int index = 0; index < inputNames.size(); ++index) {
                     String inputName = inputNames.get(index);
                     Path inputPath = inputNameToTempPath.get(inputName);
-                    if (!mappingsPath.isPresent() || !classificationPath.isPresent())
+                    if (!mappingsPath.isPresent() || !classificationPath.isPresent()) {
                         continue;
+                    }
                     TransformFixture fixture = newTransformFixtureBuilder()
                         .name("file-" + inputNameToTempName.get(inputName) + "-b")
                         .stagingDir(userDir)
@@ -364,8 +365,9 @@ public class DefaultProcessOperatorTests
                     String inputName = inputNames.get(index);
                     String fixtureName = "url-" + inputNameToTempName.get(inputName) + "-b";
                     URL url = new URL(resourcesUrl, inputName);
-                    if (!mappingsPath.isPresent() || !classificationPath.isPresent())
+                    if (!mappingsPath.isPresent() || !classificationPath.isPresent()) {
                         continue;
+                    }
                     TransformFixture fixture = newTransformFixtureBuilder()
                         .name(fixtureName)
                         .inputUri(new URL(url, "#" + fixtureName.substring(1 + inputName.length())))
@@ -771,7 +773,8 @@ public class DefaultProcessOperatorTests
         assertNotNull(transformedResourceIdentifier);
         ResourceRecord transformedResourceRecord = resourceRepository.findOne(transformedResourceIdentifier);
         assertNotNull(transformedResourceRecord);
-        assertEquals(Long.valueOf(executionId), transformedResourceRecord.getProcessExecutionId());
+        assertNotNull(transformedResourceRecord.getExecution());
+        assertEquals(executionId, transformedResourceRecord.getExecution().getExecutionId());
 
         ResourceRecord classificationResourceRecord = null;
         if (expectClassificationResult) {
@@ -779,7 +782,8 @@ public class DefaultProcessOperatorTests
             assertNotNull(classificationResourceIdentifier);
             classificationResourceRecord = resourceRepository.findOne(classificationResourceIdentifier);
             assertNotNull(classificationResourceRecord);
-            assertEquals(Long.valueOf(executionId), classificationResourceRecord.getProcessExecutionId());
+            assertNotNull(classificationResourceRecord.getExecution());
+            assertEquals(executionId, classificationResourceRecord.getExecution().getExecutionId());
         }
 
         // Check status of registration step(s)
@@ -1001,7 +1005,8 @@ public class DefaultProcessOperatorTests
             assertNotNull(outfileResourceIdentifier);
             ResourceRecord outfileResourceRecord = resourceRepository.findOne(outfileResourceIdentifier);
             assertNotNull(outfileResourceRecord);
-            assertEquals(Long.valueOf(executionId), outfileResourceRecord.getProcessExecutionId());
+            assertNotNull(outfileResourceRecord.getExecution());
+            assertEquals(executionId, outfileResourceRecord.getExecution().getExecutionId());
         }
 
         ProcessExecutionStepRecord interlinkStepRecord = executionRecord.getStepByName("Link 1 with 2");
@@ -1015,7 +1020,8 @@ public class DefaultProcessOperatorTests
         assertNotNull(linksResourceIdentifier);
         ResourceRecord linksResourceRecord = resourceRepository.findOne(linksResourceIdentifier);
         assertNotNull(linksResourceRecord);
-        assertEquals(Long.valueOf(executionId), linksResourceRecord.getProcessExecutionId());
+        assertNotNull(linksResourceRecord.getExecution());
+        assertEquals(executionId, linksResourceRecord.getExecution().getExecutionId());
 
 
         for (String name: Arrays.asList("Register 1", "Register 2", "Register links")) {
@@ -1163,7 +1169,8 @@ public class DefaultProcessOperatorTests
         assertNotNull(linksResourceIdentifier);
         ResourceRecord linksResourceRecord = resourceRepository.findOne(linksResourceIdentifier);
         assertNotNull(linksResourceRecord);
-        assertEquals(Long.valueOf(executionId), linksResourceRecord.getProcessExecutionId());
+        assertNotNull(linksResourceRecord.getExecution());
+        assertEquals(executionId, linksResourceRecord.getExecution().getExecutionId());
 
         ProcessExecutionStepRecord fuseStepRecord = executionRecord.getStepByName("Fuse 1 with 2");
         assertNotNull(fuseStepRecord);
@@ -1181,7 +1188,8 @@ public class DefaultProcessOperatorTests
         assertNotNull(fusedResourceIdentifier);
         ResourceRecord fusedResourceRecord = resourceRepository.findOne(fusedResourceIdentifier);
         assertNotNull(fusedResourceRecord);
-        assertEquals(Long.valueOf(executionId), fusedResourceRecord.getProcessExecutionId());
+        assertNotNull(fusedResourceRecord.getExecution());
+        assertEquals(executionId, fusedResourceRecord.getExecution().getExecutionId());
 
         ResourceIdentifier remainingResourceIdentifier = null;
         ResourceRecord remainingResourceRecord = null;
@@ -1190,7 +1198,8 @@ public class DefaultProcessOperatorTests
             assertNotNull(remainingResourceIdentifier);
             remainingResourceRecord = resourceRepository.findOne(remainingResourceIdentifier);
             assertNotNull(remainingResourceRecord);
-            assertEquals(Long.valueOf(executionId), remainingResourceRecord.getProcessExecutionId());
+            assertNotNull(remainingResourceRecord.getExecution());
+            assertEquals(executionId, remainingResourceRecord.getExecution().getExecutionId());
         }
 
         ProcessExecutionStepRecord registerLinksStepRecord = executionRecord.getStepByName("Register links");
@@ -1306,7 +1315,8 @@ public class DefaultProcessOperatorTests
         assertNotNull(outfileResourceIdentifier);
         ResourceRecord outfileResourceRecord = resourceRepository.findOne(outfileResourceIdentifier);
         assertNotNull(outfileResourceRecord);
-        assertEquals(Long.valueOf(executionId), outfileResourceRecord.getProcessExecutionId());
+        assertNotNull(outfileResourceRecord.getExecution());
+        assertEquals(executionId, outfileResourceRecord.getExecution().getExecutionId());
 
         ProcessExecutionStepRecord registerStepRecord = executionRecord.getStepByName("Register links");
         assertNotNull(registerStepRecord);

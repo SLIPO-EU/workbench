@@ -10,9 +10,11 @@ public enum ProcessErrorCode implements ErrorCode
     UNKNOWN,
     INVALID,
     NAME_DUPLICATE,
-    NOT_FOUND,
+    PROCESS_NOT_FOUND,
+    EXECUTION_NOT_FOUND,
     QUERY_IS_EMPTY,
     FAILED_TO_START,
+    FAILED_TO_STOP,
     RPC_SERVER_UNREACHABLE,
     ;
 

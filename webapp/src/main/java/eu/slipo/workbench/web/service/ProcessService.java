@@ -153,6 +153,18 @@ public interface ProcessService {
     void stop(long id, long version) throws ProcessNotFoundException, ProcessExecutionStopException;
 
     /**
+     * Exports process execution data to a relational database for rendering maps.
+     *
+     * @param id The process id
+     * @param version The version of the process (revision)
+     * @param executionId The unique id of the process execution instance
+     *
+     * @throws ProcessNotFoundException if no matching revision entity is found
+     * @throws ProcessExecutionNotFoundException if no matching execution entity is found
+     */
+    void exportMap(long id, long version, long executionId) throws ProcessNotFoundException, ProcessExecutionNotFoundException;
+
+    /**
      * Returns the file with the given {@code fileId} for the selected process revision execution.
      *
      * @param id the process id

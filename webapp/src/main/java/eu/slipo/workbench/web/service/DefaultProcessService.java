@@ -99,6 +99,10 @@ public class DefaultProcessService implements ProcessService {
         return this.authenticationFacade.isAdmin();
     }
 
+    private ApplicationException wrapAndFormatException(ErrorCode errorCode) {
+        return ApplicationException.fromPattern(errorCode).withFormattedMessage(messageSource, currentUserLocale());
+    }
+
     private ApplicationException wrapAndFormatException(Exception ex, ErrorCode errorCode, String message) {
         return ApplicationException.fromMessage(ex, errorCode, message).withFormattedMessage(messageSource, currentUserLocale());
     }
@@ -305,6 +309,28 @@ public class DefaultProcessService implements ProcessService {
             this.processOperator.stop(id, version);
         } else {
             throw ApplicationException.fromMessage("Process is not running");
+        }
+    }
+
+    @Override
+    public void exportMap(
+        long id, long version, long executionId
+    ) throws ProcessNotFoundException, ProcessExecutionNotFoundException {
+        final ProcessRecord processRecord = this.processRepository.findOne(id, version);
+
+        if (processRecord == null) {
+            throw new ProcessNotFoundException(id, version);
+        }
+
+        checkProcessAccess(processRecord);
+
+        final ProcessExecutionRecord executionRecord = this.processRepository.findExecution(executionId);
+        if ((executionRecord == null) ||
+            (executionRecord.getProcess().getId() != id) ||
+            (executionRecord.getProcess().getVersion() != version)) {
+            throw ProcessExecutionNotFoundException.forExecution(executionId);
+        } else {
+            throw wrapAndFormatException(BasicErrorCode.NOT_IMPLEMENTED);
         }
     }
 

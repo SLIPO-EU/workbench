@@ -181,12 +181,13 @@ public class ProcessController extends BaseController {
      * @param executionId the execution id
      * @param fileId the file id
      * @return a list of {@link ProcessExecutionRecord}
-     * @throws IOException  if process or file is not found
+     * @throws IOException if process or file is not found
      */
     @RequestMapping(value = "/action/process/{id}/{version}/execution/{executionId}/file/{fileId}/exists", method = RequestMethod.GET)
     public RestResponse<?> processExecutionFileExists(
         @PathVariable long id, @PathVariable long version, @PathVariable long executionId, @PathVariable long fileId,
-        HttpServletResponse response) throws IOException {
+        HttpServletResponse response
+    ) throws IOException {
 
         final File file;
         try {
@@ -212,12 +213,13 @@ public class ProcessController extends BaseController {
      * @param executionId the execution id
      * @param fileId the file id
      * @return an instance of {@link FileSystemResource}
-     * @throws IOException  if an I/O exception has occurred
+     * @throws IOException if an I/O exception has occurred
      */
     @RequestMapping(value = "/action/process/{id}/{version}/execution/{executionId}/file/{fileId}/download", method = RequestMethod.GET)
     public FileSystemResource downloadProcessExecutionFile(
         @PathVariable long id, @PathVariable long version, @PathVariable long executionId, @PathVariable long fileId,
-        HttpServletResponse response) throws IOException {
+        HttpServletResponse response
+    ) throws IOException {
 
         final File file;
         try {
@@ -247,7 +249,7 @@ public class ProcessController extends BaseController {
         try {
             ProcessRecord record = processService.findOne(id);
             if (record == null) {
-                return RestResponse.error(new Error(ProcessErrorCode.NOT_FOUND, "Process was not found"));
+                return RestResponse.error(new Error(ProcessErrorCode.PROCESS_NOT_FOUND, "Process was not found"));
             }
             if (record.getDefinition() == null) {
                 return RestResponse.error(new Error(ProcessErrorCode.INVALID, "Failed to parse process definition"));
@@ -269,7 +271,7 @@ public class ProcessController extends BaseController {
         try {
             ProcessRecord record = processService.findOne(id, version);
             if (record == null) {
-                return RestResponse.error(new Error(ProcessErrorCode.NOT_FOUND, "Process was not found"));
+                return RestResponse.error(new Error(ProcessErrorCode.PROCESS_NOT_FOUND, "Process was not found"));
             }
             if (record.getDefinition() == null) {
                 return RestResponse.error(new Error(ProcessErrorCode.INVALID, "Failed to parse process definition"));
@@ -339,6 +341,24 @@ public class ProcessController extends BaseController {
     }
 
     /**
+     * Exports process execution data to relational database for rendering maps.
+     *
+     * @param id the id of the process
+     * @param version the process version
+     * @param execution the unique id of the process execution instance to export
+     * @return an empty response if operation was successful
+     */
+    @RequestMapping(value = "/action/process/{id}/{version}/export/{execution}", method = RequestMethod.POST)
+    public RestResponse<?> exportMap(@PathVariable long id, @PathVariable long version, @PathVariable long execution) {
+        try {
+            this.processService.exportMap(id, version, execution);
+        } catch (Exception ex) {
+            return this.exceptionToResponse(ex);
+        }
+        return RestResponse.success();
+    }
+
+    /**
      * Create/Update a new/existing process definition
      *
      * @param id process id for updating an existing process
@@ -387,13 +407,16 @@ public class ProcessController extends BaseController {
         }
 
         if (ex instanceof ProcessNotFoundException) {
-            return RestResponse.error(ProcessErrorCode.NOT_FOUND, "Process was not found", level);
+            return RestResponse.error(ProcessErrorCode.PROCESS_NOT_FOUND, "Process was not found", level);
         }
         if (ex instanceof ProcessExecutionStartException) {
             return RestResponse.error(ProcessErrorCode.FAILED_TO_START, "Process execution has failed to start", level);
         }
         if (ex instanceof ProcessExecutionStopException) {
-            return RestResponse.error(ProcessErrorCode.FAILED_TO_START, "Process execution has failed to stop", level);
+            return RestResponse.error(ProcessErrorCode.FAILED_TO_STOP, "Process execution has failed to stop", level);
+        }
+        if (ex instanceof ProcessExecutionNotFoundException) {
+            return RestResponse.error(ProcessErrorCode.EXECUTION_NOT_FOUND, "Process execution was not found");
         }
 
         if (ex instanceof InvalidProcessDefinitionException) {
@@ -405,7 +428,8 @@ public class ProcessController extends BaseController {
             return RestResponse.error(typedEx.toError());
         }
         if (ex instanceof RemoteConnectFailureException) {
-            return RestResponse.error(ProcessErrorCode.RPC_SERVER_UNREACHABLE, "Process execution has failed to start. RPC server is unreachable", level);
+            return RestResponse.error(ProcessErrorCode.RPC_SERVER_UNREACHABLE,
+                "Process execution has failed to start. RPC server is unreachable", level);
         }
 
         logger.error(ex.getMessage(), ex);

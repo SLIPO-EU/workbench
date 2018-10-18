@@ -25,13 +25,13 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.annotations.Type;
 import org.hibernate.validator.constraints.NotBlank;
 
 import com.vividsolutions.jts.geom.Geometry;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumResourceType;
+import eu.slipo.workbench.common.model.process.ProcessExecutionIdentifier;
 import eu.slipo.workbench.common.model.resource.EnumDataSourceType;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataView;
 import eu.slipo.workbench.common.model.resource.ResourceRecord;
@@ -39,7 +39,7 @@ import eu.slipo.workbench.common.model.resource.ResourceRecord;
 
 @Entity(name = "Resource")
 @Table(schema = "public", name = "resource")
-public class ResourceEntity 
+public class ResourceEntity
 {
     @Id
     @Column(name = "id", updatable = false)
@@ -128,8 +128,8 @@ public class ResourceEntity
     @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     List<ResourceRevisionEntity> revisions = new ArrayList<>();
 
-    public ResourceEntity() {}    
-    
+    public ResourceEntity() {}
+
     public long getVersion()
     {
         return version;
@@ -305,7 +305,7 @@ public class ResourceEntity
         return this.id;
     }
 
-    public List<ResourceRevisionEntity> getRevisions() 
+    public List<ResourceRevisionEntity> getRevisions()
     {
         return this.revisions;
     }
@@ -321,12 +321,12 @@ public class ResourceEntity
         this.name = metadata.getName();
         this.description = metadata.getDescription();
     }
-    
+
     public ResourceRecord toResourceRecord()
     {
         return toResourceRecord(true);
     }
-    
+
     public ResourceRecord toResourceRecord(boolean includeRevisions)
     {
         ResourceRecord record = new ResourceRecord(id, version);
@@ -335,7 +335,7 @@ public class ResourceEntity
         record.setCreatedBy(createdBy.getId(), createdBy.getFullName());
         record.setUpdatedOn(updatedOn);
         record.setUpdatedBy(updatedBy.getId(), updatedBy.getFullName());
-        
+
         record.setType(type);
         record.setSourceType(sourceType);
         record.setInputFormat(inputFormat);
@@ -343,7 +343,16 @@ public class ResourceEntity
         record.setFilePath(filePath);
         record.setFileSize(fileSize);
         record.setMetadata(name, description);
-        record.setProcessExecutionId(processExecution != null ? processExecution.getId() : null);
+
+        if (processExecution != null) {
+            record.setExecution(
+                ProcessExecutionIdentifier.of(
+                    processExecution.getProcess().getParent().getId(),
+                    processExecution.getProcess().getVersion(),
+                    processExecution.getId())
+            );
+            record.setMapExported(processExecution.getExportedOn() != null);
+        }
         record.setBoundingBox(boundingBox);
         record.setNumberOfEntities(numberOfEntities);
         record.setTableName(tableName);
@@ -353,7 +362,7 @@ public class ResourceEntity
                 .sorted(Comparator.comparingLong(ResourceRevisionEntity::getVersion))
                 .forEach((h) -> record.addRevision(h.toResourceRecord()));
         }
-        
+
         return record;
     }
 
