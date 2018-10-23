@@ -15,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.remoting.RemoteConnectFailureException;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,8 +25,6 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import eu.slipo.workbench.common.model.ApplicationException;
-import eu.slipo.workbench.common.model.BasicErrorCode;
 import eu.slipo.workbench.common.model.EnumRole;
 import eu.slipo.workbench.common.model.Error;
 import eu.slipo.workbench.common.model.QueryResultPage;
@@ -38,10 +35,7 @@ import eu.slipo.workbench.common.model.process.EnumProcessTaskType;
 import eu.slipo.workbench.common.model.process.InvalidProcessDefinitionException;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.ProcessDefinitionBuilderFactory;
-import eu.slipo.workbench.common.model.process.ProcessErrorCode;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
-import eu.slipo.workbench.common.model.process.ProcessExecutionStartException;
-import eu.slipo.workbench.common.model.process.ProcessNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
 import eu.slipo.workbench.common.model.resource.DataSource;
 import eu.slipo.workbench.common.model.resource.FileSystemDataSource;
@@ -51,7 +45,6 @@ import eu.slipo.workbench.common.model.resource.ResourceQuery;
 import eu.slipo.workbench.common.model.resource.ResourceRecord;
 import eu.slipo.workbench.common.model.tool.ReverseTriplegeoConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
-import eu.slipo.workbench.common.repository.ProcessRepository;
 import eu.slipo.workbench.common.repository.ResourceRepository;
 import eu.slipo.workbench.web.model.QueryResult;
 import eu.slipo.workbench.web.model.resource.RegistrationRequest;
@@ -59,7 +52,6 @@ import eu.slipo.workbench.web.model.resource.ResourceErrorCode;
 import eu.slipo.workbench.web.model.resource.ResourceExportRequest;
 import eu.slipo.workbench.web.model.resource.ResourceQueryRequest;
 import eu.slipo.workbench.web.model.resource.ResourceRegistrationRequest;
-import eu.slipo.workbench.web.model.resource.ResourceResult;
 import eu.slipo.workbench.web.service.IResourceValidationService;
 import eu.slipo.workbench.web.service.ProcessService;
 
@@ -75,9 +67,6 @@ public class ResourceController extends BaseController {
 
     @Autowired
     private ResourceRepository resourceRepository;
-
-    @Autowired
-    private ProcessRepository processRepository;
 
     @Autowired
     private IResourceValidationService resourceValidationService;
@@ -290,14 +279,10 @@ public class ResourceController extends BaseController {
     public RestResponse<?> getResource(@PathVariable long id) {
         try {
             final ResourceRecord resource = resourceRepository.findOne(id);
+
             this.checkResourceAccess(resource);
 
-            ProcessExecutionRecord execution = null;
-            if (this.isAdmin()) {
-                execution = this.getExecution(resource);
-            }
-
-            return RestResponse.result(new ResourceResult(resource, execution));
+            return RestResponse.result(resource);
         } catch (Exception ex) {
             return this.exceptionToResponse(ex);
         }
@@ -314,14 +299,10 @@ public class ResourceController extends BaseController {
 
         try {
             final ResourceRecord resource = resourceRepository.findOne(id, version);
+
             this.checkResourceAccess(resource);
 
-            ProcessExecutionRecord execution = null;
-            if (this.isAdmin()) {
-                execution = this.getExecution(resource);
-            }
-
-            return RestResponse.result(new ResourceResult(resource, execution));
+            return RestResponse.result(resource);
         } catch (Exception ex) {
             return this.exceptionToResponse(ex);
         }
@@ -390,48 +371,9 @@ public class ResourceController extends BaseController {
         return dir.relativize(path);
     }
 
-    /**
-     * Finds the process execution that created the given {@link @ResourceRecord} instance
-     *
-     * @param resource the resource instance
-     * @return an instance of {@link ProcessExecutionRecord} or null if no record is found
-     */
-    private ProcessExecutionRecord getExecution(ResourceRecord resource) {
-
-        final Long id = (resource != null && resource.getExecution() != null ? resource.getExecution().getExecutionId() : null);
-        return (id != null ? processRepository.findExecution(id) : null);
-    }
-
     private RestResponse<?> exceptionToResponse(Exception ex) {
-        return exceptionToResponse(ex, Error.EnumLevel.ERROR);
-    }
-
-    private RestResponse<?> exceptionToResponse(Exception ex, Error.EnumLevel level) {
-        if (ex instanceof IOException) {
-            return RestResponse.error(BasicErrorCode.IO_ERROR, "An unknown error has occurred", level);
-        }
-
-        if (ex instanceof ProcessNotFoundException) {
-            return RestResponse.error(ProcessErrorCode.PROCESS_NOT_FOUND, "Process was not found", level);
-        }
-        if (ex instanceof ProcessExecutionStartException) {
-            return RestResponse.error(ProcessErrorCode.FAILED_TO_START, "Process execution has failed to start", level);
-        }
-
-        if (ex instanceof InvalidProcessDefinitionException) {
-            InvalidProcessDefinitionException typedEx = (InvalidProcessDefinitionException) ex;
-            return RestResponse.error(typedEx.getErrors());
-        }
-        if (ex instanceof ApplicationException) {
-            ApplicationException typedEx = (ApplicationException) ex;
-            return RestResponse.error(typedEx.toError());
-        }
-        if (ex instanceof RemoteConnectFailureException) {
-            return RestResponse.error(ProcessErrorCode.RPC_SERVER_UNREACHABLE, "Process execution has failed to start. RPC server is unreachable", level);
-        }
-
         logger.error(ex.getMessage(), ex);
-        return RestResponse.error(BasicErrorCode.UNKNOWN, "An unknown error has occurred", level);
+        return exceptionToResponse(ex, Error.EnumLevel.ERROR);
     }
 
 }

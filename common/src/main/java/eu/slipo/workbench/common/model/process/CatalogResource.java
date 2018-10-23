@@ -8,6 +8,7 @@ import com.vividsolutions.jts.geom.Geometry;
 
 import eu.slipo.workbench.common.model.poi.EnumResourceType;
 import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
+import eu.slipo.workbench.common.model.resource.ResourceRecord;
 
 /**
  * A process input resource that already exists in the catalog
@@ -93,6 +94,11 @@ public class CatalogResource extends ProcessInput
 
     public void setBoundingBox(Geometry boundingBox) {
         this.boundingBox = boundingBox;
+    }
+
+    public void refresh(ResourceRecord r) {
+        this.tableName = r.getTableName();
+        this.boundingBox = r.getBoundingBox();
     }
 
     @Override

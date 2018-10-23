@@ -137,7 +137,7 @@ public class DefaultResourceRepository implements ResourceRepository
     @Override
     public ResourceRecord findOne(long id) {
         ResourceEntity r = entityManager.find(ResourceEntity.class, id);
-        return r == null? null : r.toResourceRecord(false);
+        return r == null? null : r.toResourceRecord(true);
     }
 
     @Transactional(readOnly = true)

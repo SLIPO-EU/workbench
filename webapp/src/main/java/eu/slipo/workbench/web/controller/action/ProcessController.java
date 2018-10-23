@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.remoting.RemoteConnectFailureException;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,20 +18,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import eu.slipo.workbench.common.model.ApplicationException;
 import eu.slipo.workbench.common.model.BasicErrorCode;
 import eu.slipo.workbench.common.model.Error;
 import eu.slipo.workbench.common.model.QueryResultPage;
 import eu.slipo.workbench.common.model.RestResponse;
 import eu.slipo.workbench.common.model.process.EnumProcessTaskType;
-import eu.slipo.workbench.common.model.process.InvalidProcessDefinitionException;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.ProcessErrorCode;
 import eu.slipo.workbench.common.model.process.ProcessExecutionNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessExecutionQuery;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
-import eu.slipo.workbench.common.model.process.ProcessExecutionStartException;
-import eu.slipo.workbench.common.model.process.ProcessExecutionStopException;
 import eu.slipo.workbench.common.model.process.ProcessNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessQuery;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
@@ -398,42 +393,8 @@ public class ProcessController extends BaseController {
     }
 
     private RestResponse<?> exceptionToResponse(Exception ex) {
-        return exceptionToResponse(ex, Error.EnumLevel.ERROR);
-    }
-
-    private RestResponse<?> exceptionToResponse(Exception ex, Error.EnumLevel level) {
-        if (ex instanceof IOException) {
-            return RestResponse.error(BasicErrorCode.IO_ERROR, "An unknown error has occurred", level);
-        }
-
-        if (ex instanceof ProcessNotFoundException) {
-            return RestResponse.error(ProcessErrorCode.PROCESS_NOT_FOUND, "Process was not found", level);
-        }
-        if (ex instanceof ProcessExecutionStartException) {
-            return RestResponse.error(ProcessErrorCode.FAILED_TO_START, "Process execution has failed to start", level);
-        }
-        if (ex instanceof ProcessExecutionStopException) {
-            return RestResponse.error(ProcessErrorCode.FAILED_TO_STOP, "Process execution has failed to stop", level);
-        }
-        if (ex instanceof ProcessExecutionNotFoundException) {
-            return RestResponse.error(ProcessErrorCode.EXECUTION_NOT_FOUND, "Process execution was not found");
-        }
-
-        if (ex instanceof InvalidProcessDefinitionException) {
-            InvalidProcessDefinitionException typedEx = (InvalidProcessDefinitionException) ex;
-            return RestResponse.error(typedEx.getErrors());
-        }
-        if (ex instanceof ApplicationException) {
-            ApplicationException typedEx = (ApplicationException) ex;
-            return RestResponse.error(typedEx.toError());
-        }
-        if (ex instanceof RemoteConnectFailureException) {
-            return RestResponse.error(ProcessErrorCode.RPC_SERVER_UNREACHABLE,
-                "Process execution has failed to start. RPC server is unreachable", level);
-        }
-
         logger.error(ex.getMessage(), ex);
-        return RestResponse.error(BasicErrorCode.UNKNOWN, "An unknown error has occurred", level);
+        return exceptionToResponse(ex, Error.EnumLevel.ERROR);
     }
 
 }
