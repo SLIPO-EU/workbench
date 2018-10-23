@@ -17,6 +17,7 @@ import {
   dashboardReducer,
   eventReducer,
   harvesterDataExplorerReducer,
+  mapViewerReducer,
   processDesignerReducer,
   processExecutionReducer,
   processExplorerReducer,
@@ -37,21 +38,22 @@ export default Redux.combineReducers({
       account: accountReducer,
       dashboard: dashboardReducer,
       event: eventReducer,
+      execution: Redux.combineReducers({
+        explorer: processExecutionReducer,
+      }),
       harvester: harvesterDataExplorerReducer,
+      map: mapViewerReducer,
+      process: Redux.combineReducers({
+        designer: processDesignerReducer,
+        explorer: processExplorerReducer,
+      }),
       resources: Redux.combineReducers({
         explorer: resourceExplorerReducer,
         export: resourceExportReducer,
         registration: resourceRegistrationReducer,
       }),
-      process: Redux.combineReducers({
-        designer: processDesignerReducer,
-        explorer: processExplorerReducer,
-      }),
       template: Redux.combineReducers({
         explorer: processTemplateExplorerReducer,
-      }),
-      execution: Redux.combineReducers({
-        explorer: processExecutionReducer,
       }),
     }),
   }),

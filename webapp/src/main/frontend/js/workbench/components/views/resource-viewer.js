@@ -76,7 +76,6 @@ class ResourceViewer extends React.Component {
   }
 
   onFeatureSelect(features) {
-    console.log(features);
   }
 
   viewMap(id, version) {

@@ -18,25 +18,19 @@ import {
 } from 'reactstrap';
 
 import {
-  FeaturePropertyViewer,
   Layer,
 } from './';
 
 import {
   SelectField,
-} from '../../../helpers/forms/fields';
-
-import {
-  buildPath,
-  DynamicRoutes,
-} from '../../../../model';
+} from '../../helpers/forms/fields';
 
 import {
   selectLayer,
   setBaseLayer,
   setLayerColor,
   toggleLayer,
-} from '../../../../ducks/ui/views/process-designer';
+} from '../../../ducks/ui/views/map-viewer';
 
 /**
  * A connected component for rendering execution selected files available to map
@@ -98,12 +92,6 @@ class Sidebar extends React.Component {
     );
   }
 
-  componentWillReceiveProps(nextProps) {
-    if (this.props.selectedFeatures !== nextProps.selectedFeatures) {
-      this.toggle('1');
-    }
-  }
-
   render() {
     return (
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -146,21 +134,6 @@ class Sidebar extends React.Component {
                 </div>
               </Col>
             </Row>
-            <Row>
-              <Col>
-                <div className="small text-muted" style={{ padding: '0px 10px 10px' }}>Hold Shift to select multiple features</div>
-                {this.props.selectedFeatures.length > 1 &&
-                  <div className="small text-muted" style={{ padding: '0px 10px 10px' }}>{this.props.selectedFeatures.length} features selected</div>
-                }
-                <div className="slipo-pd-sidebar-feature-list">
-                  {this.props.selectedFeatures.length > 0 &&
-                    <FeaturePropertyViewer
-                      features={this.props.selectedFeatures}
-                    />
-                  }
-                </div>
-              </Col>
-            </Row>
           </TabPane>
           <TabPane tabId="2">
             <Row>
@@ -185,12 +158,12 @@ class Sidebar extends React.Component {
 }
 
 const mapStateToProps = (state) => ({
-  baseLayer: state.ui.views.process.designer.execution.baseLayer,
+  baseLayer: state.ui.views.map.config.baseLayer,
   bingMaps: state.config.bingMaps,
-  layers: state.ui.views.process.designer.execution.layers,
+  layers: state.ui.views.map.config.layers,
   osm: state.config.osm,
-  selectedLayer: state.ui.views.process.designer.execution.selectedLayer,
-  selectedFeatures: state.ui.views.process.designer.execution.selectedFeatures,
+  selectedLayer: state.ui.views.map.config.selectedLayer,
+  selectedFeatures: state.ui.views.map.config.selectedFeatures,
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({

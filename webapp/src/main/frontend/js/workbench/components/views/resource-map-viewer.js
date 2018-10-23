@@ -6,7 +6,7 @@ import {
 } from 'redux';
 
 import {
-  fetchExecutionMapData,
+  fetchResourceMapData,
   reset,
   selectFeatures,
 } from '../../ducks/ui/views/map-viewer';
@@ -20,13 +20,13 @@ import {
 } from './map-viewer';
 
 /**
- * Renders a map from the input/output datasets of a single process
- * execution instance
+ * Renders a map from the input/output datasets of the process execution
+ * instance that generated the selected resource revision
  *
- * @class ProcessExecutionMapViewer
+ * @class ResourceMapViewer
  * @extends {React.Component}
  */
-class ProcessExecutionMapViewer extends React.Component {
+class ResourceMapViewer extends React.Component {
 
   constructor(props) {
     super(props);
@@ -41,22 +41,21 @@ class ProcessExecutionMapViewer extends React.Component {
   }
 
   get params() {
-    const { id, version, execution } = this.props.match.params;
+    const { id, version } = this.props.match.params;
 
     return {
-      processId: Number.parseInt(id),
-      processVersion: Number.parseInt(version),
-      executionId: Number.parseInt(execution),
+      id: Number.parseInt(id),
+      version: Number.parseInt(version),
     };
   }
 
   componentDidMount() {
     const params = this.params;
-    const { execution } = this.props;
+    const { resource, version } = this.props;
 
-    if ((!execution) || (execution.id !== params.executionId)) {
+    if ((!resource) || (resource.id !== params.id) || (version !== params.version)) {
       this.props.reset();
-      this.props.fetchExecutionMapData(params.processId, params.processVersion, params.executionId)
+      this.props.fetchResourceMapData(params.id, params.version)
         .then(this.onFetchSuccess)
         .catch(this.onFetchError);
     } else {
@@ -104,14 +103,15 @@ const mapStateToProps = (state) => ({
   baseLayer: state.ui.views.map.config.baseLayer,
   bingMaps: state.config.bingMaps,
   defaultCenter: state.config.mapDefaults.center,
-  execution: state.ui.views.map.data.execution,
   layers: state.ui.views.map.config.layers,
   osm: state.config.osm,
+  resource: state.ui.views.map.data.resource,
   selectedFeatures: state.ui.views.map.config.selectedFeatures,
+  version: state.ui.views.map.data.version,
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
-  fetchExecutionMapData,
+  fetchResourceMapData,
   reset,
   selectFeatures,
 }, dispatch);
@@ -124,4 +124,4 @@ const mergeProps = (stateProps, dispatchProps, ownProps) => {
   };
 };
 
-export default ReactRedux.connect(mapStateToProps, mapDispatchToProps, mergeProps)(ProcessExecutionMapViewer);
+export default ReactRedux.connect(mapStateToProps, mapDispatchToProps, mergeProps)(ResourceMapViewer);

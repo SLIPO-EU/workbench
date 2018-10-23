@@ -53,7 +53,6 @@ const containerTarget = {
   }
 };
 
-
 @DropTarget([EnumDragSource.Resource], containerTarget, (connect, monitor) => ({
   connectDropTarget: connect.dropTarget(),
   isOver: monitor.isOver(),

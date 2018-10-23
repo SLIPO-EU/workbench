@@ -121,9 +121,9 @@ class StepGroup extends React.Component {
     appConfiguration: PropTypes.object.isRequired,
 
     // Injected by React DnD
-    connectDropTarget: PropTypes.func.isRequired,
-    isOver: PropTypes.bool.isRequired,
-    canDrop: PropTypes.bool.isRequired,
+    connectDropTarget: PropTypes.func,
+    isOver: PropTypes.bool,
+    canDrop: PropTypes.bool,
 
   };
 

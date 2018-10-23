@@ -1,5 +1,4 @@
 export {
-  Colors,
   DataSourceIcons,
   DataSourceTitles,
   HarvesterIcons,

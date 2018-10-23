@@ -143,7 +143,7 @@ export default (state = initialState, action) => {
     case FIND_ONE_SUCCESS:
       return {
         ...state,
-        resource: action.result.resource || null,
+        resource: action.result || null,
       };
 
     case SEARCH_INIT:

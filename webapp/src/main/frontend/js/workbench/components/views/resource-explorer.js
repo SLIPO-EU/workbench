@@ -155,8 +155,8 @@ class ResourceExplorer extends React.Component {
    * @param {*} execution
    * @memberof ResourceExplorer
    */
-  viewMap(id, version, execution) {
-    const path = buildPath(DynamicRoutes.ProcessExecutionMapViewer, [id, version, execution]);
+  viewMap(id, version) {
+    const path = buildPath(DynamicRoutes.ResourceMapViewer, [id, version]);
 
     this.props.history.push(path);
   }

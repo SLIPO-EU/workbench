@@ -4,7 +4,7 @@ import classnames from 'classnames';
 
 import {
   Colors,
-} from '../../../../model/process-designer';
+} from '../../../model/constants';
 
 import {
   LayerColor,

@@ -9,7 +9,7 @@ import pathToRegexp from 'path-to-regexp';
 import { ResourceExplorerSidebar } from '../components/views/resource/explorer';
 import { ResourceExportSidebar } from '../components/views/resource/export';
 import { ProcessDesignerSidebar } from '../components/views/process/designer';
-import { MapViewerSideBar } from '../components/views/execution/viewer';
+import { MapViewerSideBar, MapViewerToolBar } from '../components/views/map-viewer';
 
 /**
  * Model
@@ -84,8 +84,8 @@ const ProcessDesignerView = '/workflow/designer/:id/:version';
 
 const ProcessDesignerEditTemplate = '/workflow/template/designer/:id';
 
-const ProcessExecutionViewer = '/workflow/designer/:id/:version/execution/:execution';
 const ProcessExecutionMapViewer = '/workflow/designer/:id/:version/execution/:execution/map';
+const ProcessExecutionViewer = '/workflow/designer/:id/:version/execution/:execution';
 
 export const DynamicRoutes = {
   ResourceMapViewer,
@@ -235,6 +235,7 @@ const routes = {
     defaultTitle: 'Map Viewer',
     links: defaultLinks,
     contextComponent: MapViewerSideBar,
+    toolbarComponent: MapViewerToolBar,
   },
   [ResourceViewer]: {
     description: 'View/Update an existing resource',
@@ -287,6 +288,7 @@ const routes = {
     defaultTitle: 'Map Viewer',
     links: defaultLinks,
     contextComponent: MapViewerSideBar,
+    toolbarComponent: MapViewerToolBar,
   },
   // Error Pages
   [Forbidden]: {

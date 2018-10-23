@@ -142,7 +142,7 @@ function buildDataSource(step) {
   return null;
 }
 
-function readProcessResponse(result) {
+export function readProcessResponse(result) {
   const { definition, id, taskType, template, version } = result;
 
   const resources = definition.resources
@@ -482,7 +482,7 @@ export function validate(action, model, isTemplate) {
   validateProcess(action, model, isTemplate, errors);
 
   // Steps
-  validateSteps(action, model, isTemplate, errors, true);
+  validateSteps(action, model, isTemplate, errors, false);
 
   // Resources
   validateResources(action, model, isTemplate, errors);
