@@ -4,6 +4,8 @@ import ReactSelect from 'react-select';
 
 import decorateField from './form-field';
 
+import { styles } from './select-shared';
+
 /**
  * A functional component for rendering a drop down list. The component is
  * based on the ReactSelect component
@@ -31,6 +33,7 @@ export function Select(props) {
       }}
       options={options}
       disabled={props.readOnly}
+      styles={styles}
     />
   );
 }
