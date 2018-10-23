@@ -52,7 +52,7 @@ class Map extends React.Component {
   }
 
   componentDidMount() {
-    let map = new OpenLayersMap({
+    const map = new OpenLayersMap({
       layers: [],
       target: this._el,
       view: new View({
@@ -61,8 +61,18 @@ class Map extends React.Component {
         maxZoom: this.props.maxZoom,
         zoom: this.props.zoom,
         projection: 'EPSG:3857',
-      })
+      }),
     });
+
+    if (typeof this.props.onMoveEnd === 'function') {
+      map.on('moveend', (e) => {
+        const data = {
+          center: e.map.getView().getCenter(),
+          zoom: e.map.getView().getZoom(),
+        };
+        this.props.onMoveEnd(data);
+      }, this);
+    }
 
     this.setState({ map });
     this.resize();
