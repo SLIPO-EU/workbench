@@ -50,3 +50,4 @@ jspm_packages
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+/.apt_generated_tests/
