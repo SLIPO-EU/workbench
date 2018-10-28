@@ -1,6 +1,7 @@
 package eu.slipo.workbench.rpc.tests.unit.model;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -30,8 +31,13 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
+import eu.slipo.workbench.common.model.tool.ReverseTriplegeo;
+import eu.slipo.workbench.common.model.tool.ReverseTriplegeoConfiguration;
+import eu.slipo.workbench.common.model.tool.TransformConfiguration;
+import eu.slipo.workbench.common.model.tool.TransformTool;
 import eu.slipo.workbench.common.model.tool.Triplegeo;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
+import eu.slipo.workbench.common.model.tool.output.EnumReverseTriplegeoOutputPart;
 import eu.slipo.workbench.common.model.tool.output.EnumTriplegeoOutputPart;
 import eu.slipo.workbench.common.model.tool.output.OutputPart;
 import eu.slipo.workbench.common.model.tool.output.OutputSpec;
@@ -138,6 +144,22 @@ public class TriplegeoConfigurationTests
             config.setRegisterFeatures(true);
             return config;
         }
+
+        @Bean
+        public ReverseTriplegeoConfiguration config1R()
+        {
+            ReverseTriplegeoConfiguration config = new ReverseTriplegeoConfiguration();
+            config.setInputFormat("N-TRIPLES");
+            config.setInput(Arrays.asList(
+                "/var/local/triplegeo/input/classification.nt",
+                "/var/local/triplegeo/input/part1.nt",
+                "/var/local/triplegeo/input/part2.nt"));
+            config.setSparqlFile("/var/local/triplegeo/query.sparql");
+            config.setOutputFormat("CSV");
+            config.setOutputDir("/var/local/triplegeo/output");
+            config.setDelimiter(";");
+            return config;
+        }
     }
 
     @Autowired
@@ -161,7 +183,10 @@ public class TriplegeoConfigurationTests
     @Autowired
     TriplegeoConfiguration config2b;
 
-    void checkEquals(TriplegeoConfiguration expected, TriplegeoConfiguration actual)
+    @Autowired
+    ReverseTriplegeoConfiguration config1R;
+
+    private void checkEquals(TriplegeoConfiguration expected, TriplegeoConfiguration actual)
     {
         assertEquals(expected.getMode(), actual.getMode());
         assertEquals(expected.getInputFormat(), actual.getInputFormat());
@@ -201,13 +226,44 @@ public class TriplegeoConfigurationTests
         assertEquals(expected.getTmpDir(), actual.getTmpDir());
     }
 
-    private void serializeAsJson(TriplegeoConfiguration configuration) throws Exception
+    private void checkEquals(ReverseTriplegeoConfiguration expected, ReverseTriplegeoConfiguration actual)
+    {
+        assertEquals(expected.getInputFormat(), actual.getInputFormat());
+        assertEquals(expected.getInput(), actual.getInput());
+        assertEquals(expected.getOutputFormat(), actual.getOutputFormat());
+        assertEquals(expected.getSerializationFormat(), actual.getSerializationFormat());
+        assertEquals(expected.getOutputDir(), actual.getOutputDir());
+        assertEquals(expected.getSparqlFile(), actual.getSparqlFile());
+
+        assertEquals(expected.getDelimiter(), actual.getDelimiter());
+        assertEquals(expected.getQuote(), actual.getQuote());
+
+        assertEquals(expected.getSourceCRS(), actual.getSourceCRS());
+        assertEquals(expected.getTargetCRS(), actual.getTargetCRS());
+
+        assertEquals(expected.getTmpDir(), actual.getTmpDir());
+    }
+
+    private void checkEquals(Object expected, Object actual)
+    {
+        if (expected instanceof TriplegeoConfiguration) {
+            assertTrue(actual instanceof TriplegeoConfiguration);
+            checkEquals((TriplegeoConfiguration) expected, (TriplegeoConfiguration) actual);
+        } else if (expected instanceof ReverseTriplegeoConfiguration) {
+            assertTrue(actual instanceof ReverseTriplegeoConfiguration);
+            checkEquals((ReverseTriplegeoConfiguration) expected, (ReverseTriplegeoConfiguration) actual);
+        } else {
+            assertTrue("Expected objects of certain type", false);
+        }
+    }
+
+    private <T extends TransformConfiguration<?>> void serializeAsJson(
+        T configuration, Class<T> configurationType) throws Exception
     {
         String s1 = objectMapper.writerWithDefaultPrettyPrinter()
             .writeValueAsString(configuration);
 
-        TriplegeoConfiguration deserializedConfiguration =
-            objectMapper.readValue(s1, TriplegeoConfiguration.class);
+        T deserializedConfiguration = objectMapper.readValue(s1, configurationType);
         checkEquals(configuration, deserializedConfiguration);
 
         String s1a = objectMapper.writerWithDefaultPrettyPrinter()
@@ -215,13 +271,13 @@ public class TriplegeoConfigurationTests
         assertEquals(s1, s1a);
     }
 
-    private void serializeAsXml(TriplegeoConfiguration configuration) throws Exception
+    private <T extends TransformConfiguration<?>> void serializeAsXml(
+        T configuration, Class<T> configurationType) throws Exception
     {
         String s1 = xmlMapper.writerWithDefaultPrettyPrinter()
             .writeValueAsString(configuration);
 
-        TriplegeoConfiguration deserializedConfiguration =
-            xmlMapper.readValue(s1, TriplegeoConfiguration.class);
+        T deserializedConfiguration = xmlMapper.readValue(s1, configurationType);
         checkEquals(configuration, deserializedConfiguration);
 
         String s1a = xmlMapper.writerWithDefaultPrettyPrinter()
@@ -229,15 +285,16 @@ public class TriplegeoConfigurationTests
         assertEquals(s1, s1a);
     }
 
-    private void serializeAsProperties(TriplegeoConfiguration configuration) throws Exception
+    private <T extends TransformConfiguration<?>> void serializeAsProperties(
+        T configuration, Class<T> configurationType) throws Exception
     {
         Properties p1 = propertiesConverter.valueToProperties(configuration);
-        TriplegeoConfiguration deserializedConfiguration =
-            propertiesConverter.propertiesToValue(p1, TriplegeoConfiguration.class);
+        T deserializedConfiguration = propertiesConverter.propertiesToValue(p1, configurationType);
         checkEquals(configuration, deserializedConfiguration);
     }
 
-    private void serializeDefault(TriplegeoConfiguration configuration) throws Exception
+    private <T extends TransformConfiguration<?>> void serializeDefault(
+        T configuration, Class<T> configurationType) throws Exception
     {
         byte[] serializedData = null;
         try (ByteArrayOutputStream dataStream = new ByteArrayOutputStream()) {
@@ -248,66 +305,66 @@ public class TriplegeoConfigurationTests
         }
 
         ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(serializedData));
-        TriplegeoConfiguration deserializedConfiguration = (TriplegeoConfiguration) in.readObject();
+        T deserializedConfiguration = configurationType.cast(in.readObject());
         checkEquals(configuration, deserializedConfiguration);
     }
 
-    private void validate(TriplegeoConfiguration configuration)
+    private <T extends TransformConfiguration<?>> void validate(T configuration)
     {
-        Set<ConstraintViolation<TriplegeoConfiguration>> violations = validator.validate(configuration);
+        Set<ConstraintViolation<T>> violations = validator.validate(configuration);
         assertEquals(Collections.emptySet(), violations);
     }
 
     //
-    // Tests
+    // Tests (Triplegeo)
     //
 
     @Test
     public void test1_serializeAsJson() throws Exception
     {
-        serializeAsJson(config1);
+        serializeAsJson(config1, TriplegeoConfiguration.class);
     }
 
     @Test
     public void test2a_serializeAsJson() throws Exception
     {
-        serializeAsJson(config2a);
+        serializeAsJson(config2a, TriplegeoConfiguration.class);
     }
 
     @Test
     public void test1_serializeAsXml() throws Exception
     {
-        serializeAsXml(config1);
+        serializeAsXml(config1, TriplegeoConfiguration.class);
     }
 
     @Test
     public void test2a_serializeAsXml() throws Exception
     {
-        serializeAsXml(config2a);
+        serializeAsXml(config2a, TriplegeoConfiguration.class);
     }
 
     @Test
     public void test1_serializeAsProperties() throws Exception
     {
-        serializeAsProperties(config1);
+        serializeAsProperties(config1, TriplegeoConfiguration.class);
     }
 
     @Test
     public void test2a_serializeAsProperties() throws Exception
     {
-        serializeAsProperties(config2a);
+        serializeAsProperties(config2a, TriplegeoConfiguration.class);
     }
 
     @Test
     public void test1_serializeDefault() throws Exception
     {
-        serializeDefault(config1);
+        serializeDefault(config1, TriplegeoConfiguration.class);
     }
 
     @Test
     public void test2a_serializeDefault() throws Exception
     {
-        serializeDefault(config2a);
+        serializeDefault(config2a, TriplegeoConfiguration.class);
     }
 
     @Test
@@ -392,5 +449,52 @@ public class TriplegeoConfigurationTests
             outputNames.get(EnumTriplegeoOutputPart.CLASSIFICATION_METADATA));
         assertEquals(Arrays.asList("p1.csv", "p2.csv"),
             outputNames.get(EnumTriplegeoOutputPart.REGISTRATION_REQUEST));
+    }
+
+
+    //
+    // Tests (reverse Triplegeo)
+    //
+
+    @Test
+    public void test1R_serializeAsJson() throws Exception
+    {
+        serializeAsJson(config1R, ReverseTriplegeoConfiguration.class);
+    }
+
+    @Test
+    public void test1R_serializeAsXml() throws Exception
+    {
+        serializeAsXml(config1R, ReverseTriplegeoConfiguration.class);
+    }
+
+    @Test
+    public void test1R_serializeAsProperties() throws Exception
+    {
+        serializeAsProperties(config1R, ReverseTriplegeoConfiguration.class);
+    }
+
+    @Test
+    public void test1R_serializeDefault() throws Exception
+    {
+        serializeDefault(config1R, ReverseTriplegeoConfiguration.class);
+    }
+
+    @Test
+    public void test1R_validate() throws Exception
+    {
+        validate(config1R);
+    }
+
+    @Test
+    public void test1R_getOutputNames() throws Exception
+    {
+        Multimap<OutputPart<ReverseTriplegeo>, OutputSpec> outputMap = config1R.getOutputNameMapper()
+            .apply(Arrays.asList("/data/p1.nt", "/data/p2.nt"));
+        Multimap<OutputPart<ReverseTriplegeo>, String> outputNames =
+            Multimaps.transformValues(outputMap, OutputSpec::fileName);
+
+        assertEquals(Arrays.asList("points.csv"),
+            outputNames.get(EnumReverseTriplegeoOutputPart.TRANSFORMED));
     }
 }

@@ -62,4 +62,11 @@ public class OutputSpec
     {
         return of(path, null);
     }
+
+    @Override
+    public String toString()
+    {
+        return String.format(
+            "OutputSpec [fileName=`%s`, dataFormat=%s]", fileName, dataFormat);
+    }
 }

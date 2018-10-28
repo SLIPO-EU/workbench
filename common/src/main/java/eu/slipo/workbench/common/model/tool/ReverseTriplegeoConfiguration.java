@@ -1,7 +1,5 @@
 package eu.slipo.workbench.common.model.tool;
 
-import static org.springframework.util.StringUtils.stripFilenameExtension;
-
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -45,8 +43,6 @@ public class ReverseTriplegeoConfiguration extends TransformConfiguration<Revers
      */
     public static final String VERSION = "1.5";
 
-    // TODO: Check/Update implementation
-
     public class OutputNameMapper implements InputToOutputNameMapper<ReverseTriplegeo>
     {
         private OutputNameMapper() {};
@@ -55,22 +51,13 @@ public class ReverseTriplegeoConfiguration extends TransformConfiguration<Revers
         public Multimap<OutputPart<ReverseTriplegeo>, OutputSpec> applyToPath(List<Path> inputList)
         {
             Assert.state(outputFormat != null, "The output format is not specified");
-
+            
+            // The reverse transformation produces a single output (e.g. points.csv)
+            
             final String extension = outputFormat.getFilenameExtension();
-            final ImmutableMultimap.Builder<OutputPart<ReverseTriplegeo>, OutputSpec> outputMapBuilder =
-                ImmutableMultimap.builder();
-
-            // Each input yields an RDF output and a JSON metadata file
-
-            for (Path inputPath: inputList) {
-                String inputName = stripFilenameExtension(inputPath.getFileName().toString());
-                outputMapBuilder.put(EnumReverseTriplegeoOutputPart.TRANSFORMED,
-                    OutputSpec.of(inputName + "." + extension, outputFormat));
-            }
-
-            // Done
-
-            return outputMapBuilder.build();
+            OutputSpec outputSpec = OutputSpec.of("points" + "." + extension, outputFormat);
+            
+            return ImmutableMultimap.of(EnumReverseTriplegeoOutputPart.TRANSFORMED, outputSpec);
         }
     }
 
@@ -91,13 +78,12 @@ public class ReverseTriplegeoConfiguration extends TransformConfiguration<Revers
     private String sparqlFile;
 
     /**
-     * A field delimiter for records (meaningful only for CSV input).
+     * A field delimiter for records (meaningful only for CSV output).
      */
     private String delimiter = ";";
 
     /**
-     * Mandatory for CSV input only (case-insensitive): specify quote character for string
-     * values; Remove for any other types of input data. quote = "
+     * A quote character for records (meaningful only for CSV output)
      */
     private String quote= "\"";
 
@@ -166,7 +152,7 @@ public class ReverseTriplegeoConfiguration extends TransformConfiguration<Revers
     @Override
     public EnumDataFormat getInputFormat()
     {
-        return EnumDataFormat.N_TRIPLES;
+        return inputFormat;
     }
 
     @JsonIgnore
@@ -176,19 +162,29 @@ public class ReverseTriplegeoConfiguration extends TransformConfiguration<Revers
         this.inputFormat = EnumDataFormat.N_TRIPLES;
     }
 
-    @JsonProperty("inputFormat")
+    @JsonIgnore
     @NotEmpty
     public String getInputFormatAsString()
     {
-        return TriplegeoConfiguration.DataFormat.N_TRIPLES.key();
+        DataFormat dataFormat = inputFormat == null? null : DataFormat.from(inputFormat);
+        return dataFormat == null? null : dataFormat.key();
     }
 
-    @JsonProperty("inputFormat")
+    @JsonProperty("serialization")
+    @JsonAlias({ "inputFormat" })
     public void setInputFormat(String inputFormat)
     {
-        setInputFormat(TriplegeoConfiguration.DataFormat.N_TRIPLES.dataFormat());
+        DataFormat f = DataFormat.from(inputFormat);
+        Assert.notNull(f, "The key [" + inputFormat + "] does not map to a data format");
+        setInputFormat(f.dataFormat());
     }
 
+    @JsonProperty("serialization")
+    public String getSerializationFormat()
+    {
+        return getInputFormatAsString();
+    }
+    
     @JsonIgnore
     @Override
     public void setInput(List<String> input)
@@ -266,19 +262,6 @@ public class ReverseTriplegeoConfiguration extends TransformConfiguration<Revers
         DataFormat f = DataFormat.from(outputFormat);
         Assert.notNull(f, "The key [" + outputFormat + "] does not map to a data format");
         setOutputFormat(f.dataFormat());
-    }
-
-    @JsonProperty("serialization")
-    @NotEmpty
-    public String getSerializationFormat()
-    {
-        return TriplegeoConfiguration.DataFormat.N_TRIPLES.key();
-    }
-
-    @JsonProperty("serialization")
-    protected void setSerializationFormat(String serializationFormat)
-    {
-        // Ignore property
     }
 
     @Override
@@ -401,5 +384,4 @@ public class ReverseTriplegeoConfiguration extends TransformConfiguration<Revers
     {
         this.quote = quote;
     }
-
 }
