@@ -27,8 +27,16 @@ public class JobRegistrar
     JobFactory triplegeoJobFactory;
 
     @Autowired
+    @Qualifier("reverseTriplegeo.jobFactory")
+    JobFactory reverseTriplegeoJobFactory;
+
+    @Autowired
     @Qualifier("limes.jobFactory")
     JobFactory limesJobFactory;
+
+    @Autowired
+    @Qualifier("fagi.jobFactory")
+    JobFactory fagiJobFactory;
 
     /**
      * Register basic job factories ({@link JobFactory}).
@@ -43,6 +51,8 @@ public class JobRegistrar
     {
         registry.register(greetingJobFactory);
         registry.register(triplegeoJobFactory);
+        registry.register(reverseTriplegeoJobFactory);
         registry.register(limesJobFactory);
+        registry.register(fagiJobFactory);
     }
 }
