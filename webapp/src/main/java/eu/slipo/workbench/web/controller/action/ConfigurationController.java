@@ -67,6 +67,7 @@ public class ConfigurationController extends BaseController {
         config.setOsm(this.mapConfiguration.getOsm());
         config.setBingMaps(this.mapConfiguration.getBingMaps());
         config.setTripleGeo(toolkitConfiguration.getTriplegeo());
+        config.setReverseTripleGeo(toolkitConfiguration.getReverseTriplegeo());
         config.setLimes(toolkitConfiguration.getLimes());
         config.setFagi(toolkitConfiguration.getFagi());
         config.setDeer(toolkitConfiguration.getDeer());

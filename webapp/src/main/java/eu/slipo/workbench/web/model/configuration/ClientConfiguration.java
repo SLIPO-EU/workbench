@@ -18,6 +18,8 @@ public class ClientConfiguration {
 
     private TripleGeoConfiguration tripleGeo;
 
+    private ReverseTripleGeoConfiguration reverseTripleGeo;
+
     private LimesConfiguration limes;
 
     private FagiConfiguration fagi;
@@ -56,6 +58,14 @@ public class ClientConfiguration {
 
     public void setTripleGeo(TripleGeoConfiguration tripleGeo) {
         this.tripleGeo = tripleGeo;
+    }
+
+    public ReverseTripleGeoConfiguration getReverseTripleGeo() {
+        return reverseTripleGeo;
+    }
+
+    public void setReverseTripleGeo(ReverseTripleGeoConfiguration reverseTripleGeo) {
+        this.reverseTripleGeo = reverseTripleGeo;
     }
 
     public LimesConfiguration getLimes() {
