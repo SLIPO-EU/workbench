@@ -22,11 +22,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.google.common.base.CaseFormat;
+
 import eu.slipo.workbench.common.model.RestResponse;
 import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.tool.DeerConfiguration;
 import eu.slipo.workbench.common.model.tool.FagiConfiguration;
 import eu.slipo.workbench.common.model.tool.LimesConfiguration;
+import eu.slipo.workbench.common.model.tool.ReverseTriplegeoConfiguration;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.service.util.PropertiesConverterService;
@@ -97,7 +100,8 @@ public class ConfigurationController extends BaseController {
             .forEach(pair -> {
                 Matcher m = pattern.matcher(pair.getLeft().toString());
                 if (m.matches()) {
-                    EnumTool tool = EnumTool.fromName(m.group(1).toUpperCase());
+                    String name = CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_UNDERSCORE, m.group(1));
+                    EnumTool tool = EnumTool.fromName(name);
                     String profile = m.group(2);
                     ToolConfiguration<?> conf = null;
 
@@ -118,6 +122,9 @@ public class ConfigurationController extends BaseController {
                                 break;
                             case DEER:
                                 conf = propertiesConverter.propertiesToValue(pair.getRight(), DeerConfiguration.class);
+                                break;
+                            case REVERSE_TRIPLEGEO:
+                                conf = propertiesConverter.propertiesToValue(pair.getRight(), ReverseTriplegeoConfiguration.class);
                                 break;
                             default:
                                 return;

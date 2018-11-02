@@ -182,7 +182,7 @@ function addStep(state, action) {
     outputKey: null,
     ...createDefaultConfiguration(state.steps.filter(s => s.tool === action.step.tool), action.step.tool, action.appConfiguration),
   };
-  if (step.tool !== EnumTool.CATALOG) {
+  if ((step.tool !== EnumTool.CATALOG) && (step.tool !== EnumTool.ReverseTripleGeo)) {
     step.outputKey = resourceKey;
     step.outputFormat = EnumDataFormat.N_TRIPLES;
   }
@@ -239,6 +239,7 @@ function addStep(state, action) {
 
   switch (action.step.tool) {
     case EnumTool.CATALOG:
+    case EnumTool.ReverseTripleGeo:
       // Ignore
       break;
     case EnumTool.TripleGeo:

@@ -452,7 +452,8 @@ public class DefaultProcessRepository implements ProcessRepository
     public ProcessRecord create(ProcessDefinition definition, int userId, EnumProcessTaskType taskType, boolean isTemplate)
     {
         Assert.isTrue((taskType == EnumProcessTaskType.REGISTRATION && !isTemplate) ||
-                      (taskType == EnumProcessTaskType.DATA_INTEGRATION),
+                      (taskType == EnumProcessTaskType.DATA_INTEGRATION) ||
+                      (taskType == EnumProcessTaskType.EXPORT && !isTemplate),
                       "Registration process definition cannot be a template");
 
         AccountEntity createdBy = entityManager.find(AccountEntity.class, userId);

@@ -83,7 +83,7 @@ class TripleGeoReverseConfiguration extends React.Component {
 
   render() {
     const props = this.props;
-    const { errors, readOnly, setValue, value, appConfiguration, filesystem, } = props;
+    const { errors, readOnly, setValue, value, filesystem, } = props;
     const { createFolder, deletePath, uploadFile } = props;
 
     const inject = {
