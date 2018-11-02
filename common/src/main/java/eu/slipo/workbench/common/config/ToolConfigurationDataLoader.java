@@ -7,6 +7,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.validation.constraints.NotNull;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.beans.ImmutableBean;
 import org.springframework.context.annotation.Bean;
@@ -19,6 +21,7 @@ import org.springframework.core.io.support.ResourcePatternResolver;
 import eu.slipo.workbench.common.model.tool.DeerConfiguration;
 import eu.slipo.workbench.common.model.tool.FagiConfiguration;
 import eu.slipo.workbench.common.model.tool.LimesConfiguration;
+import eu.slipo.workbench.common.model.tool.ReverseTriplegeoConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.service.util.PropertiesConverterService;
 import eu.slipo.workbench.common.service.util.PropertiesConverterService.ConversionFailedException;
@@ -65,6 +68,28 @@ public class ToolConfigurationDataLoader
             config.setClassificationSpec("classpath:" + rootPath + "/" + profileName + "/classification.csv");
             // Register this configuration profile 
             profiles.put(profileName.toLowerCase(), (TriplegeoConfiguration) ImmutableBean.create(config));
+        }
+        
+        return Collections.unmodifiableMap(profiles);
+    }
+    
+    @Bean("reverseTriplegeo.configurationProfiles")
+    public Map<String, ReverseTriplegeoConfiguration> configurationProfilesForReverseTriplegeo()
+        throws IOException, ConversionFailedException
+    {
+        final String rootPath = "common/vendor/reverseTriplegeo/config/profiles";
+        final Map<String, ReverseTriplegeoConfiguration> profiles = new HashMap<>();
+        
+        for (Resource r: resourceResolver.getResources("classpath:" + rootPath + "/*/config.properties")) {
+            Path path = resourcePath(r);
+            String profileName = path.getParent().getFileName().toString();
+            // Convert properties to target configuration
+            ReverseTriplegeoConfiguration config = propertiesConverter
+                .propertiesToValue(r, ReverseTriplegeoConfiguration.class);
+            // Set query file for this configuration
+            config.setSparqlFile("classpath:" + rootPath + "/" + profileName + "/query.sparql");
+            // Register this configuration profile 
+            profiles.put(profileName.toLowerCase(), (ReverseTriplegeoConfiguration) ImmutableBean.create(config));
         }
         
         return Collections.unmodifiableMap(profiles);

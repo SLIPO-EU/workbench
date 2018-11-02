@@ -1,0 +1,30 @@
+PREFIX slipo: <http://slipo.eu/def#> 
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+PREFIX sf: <http://www.opengis.net/ont/sf#>
+SELECT ?osm_id ?shape ?type ?name ?timestamp
+WHERE { 
+		OPTIONAL {
+			?uri slipo:source ?poiSourceInfo .
+			?poiSourceInfo slipo:poiRef ?osm_id .
+		}
+
+		OPTIONAL {
+			?uri slipo:category ?category .
+			?category slipo:value ?type .
+		}
+		
+		OPTIONAL {
+			?uri geo:hasGeometry ?geometry .
+			?geometry geo:asWKT ?shape .
+		}
+		
+		OPTIONAL {
+			?uri slipo:name ?fName . 
+			?fName slipo:nameType "official" .
+			?fName slipo:nameValue ?name .
+		}
+		
+		OPTIONAL {
+			?uri slipo:lastUpdated ?timestamp .
+		}
+}

@@ -55,13 +55,16 @@ import org.springframework.test.context.junit4.SpringRunner;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.MoreCollectors;
 
 import eu.slipo.workbench.common.domain.AccountEntity;
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumResourceType;
 import eu.slipo.workbench.common.model.process.EnumProcessExecutionStatus;
+import eu.slipo.workbench.common.model.process.EnumStepFile;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
+import eu.slipo.workbench.common.model.process.ProcessDefinitionBuilder;
 import eu.slipo.workbench.common.model.process.ProcessDefinitionBuilderFactory;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepFileRecord;
@@ -72,9 +75,12 @@ import eu.slipo.workbench.common.model.resource.DataSource;
 import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
 import eu.slipo.workbench.common.model.resource.ResourceRecord;
+import eu.slipo.workbench.common.model.tool.ReverseTriplegeoConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.model.tool.output.EnumFagiOutputPart;
 import eu.slipo.workbench.common.model.tool.output.EnumLimesOutputPart;
+import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
+import eu.slipo.workbench.common.model.tool.output.EnumReverseTriplegeoOutputPart;
 import eu.slipo.workbench.common.model.tool.output.EnumTriplegeoOutputPart;
 import eu.slipo.workbench.common.model.user.Account;
 import eu.slipo.workbench.common.repository.AccountRepository;
@@ -148,6 +154,8 @@ public class DefaultProcessOperatorTests
 
         private Map<String, TransformFixture> transformFixtures = new HashMap<>();
 
+        private Map<String, ReverseTransformFixture> reverseTransformFixtures = new HashMap<>();
+
         private Map<String, InterlinkFixture> interlinkFixtures = new HashMap<>();
 
         private Map<String, FuseFixture> fuseFixtures = new HashMap<>();
@@ -155,6 +163,11 @@ public class DefaultProcessOperatorTests
         private TransformFixture.Builder newTransformFixtureBuilder()
         {
             return TransformFixture.newBuilder(propertiesConverter);
+        }
+
+        private ReverseTransformFixture.Builder newReverseTransformFixtureBuilder()
+        {
+            return ReverseTransformFixture.newBuilder(propertiesConverter);
         }
 
         private InterlinkFixture.Builder newInterlinkFixtureBuilder()
@@ -187,6 +200,10 @@ public class DefaultProcessOperatorTests
 
             setupTransformFixtures(userDir);
 
+            // Setup fixtures for reverse transformation operations (triplegeo)
+
+            setupReverseTransformFixtures(userDir);
+
             // Setup fixtures for interlinking operations (triplegeo+limes)
 
             setupInterlinkFixtures(userDir);
@@ -202,6 +219,12 @@ public class DefaultProcessOperatorTests
         public Map<String, TransformFixture> transformFixtures()
         {
             return Collections.unmodifiableMap(transformFixtures);
+        }
+
+        @Bean
+        public Map<String, ReverseTransformFixture> reverseTransformFixtures()
+        {
+            return Collections.unmodifiableMap(reverseTransformFixtures);
         }
 
         @Bean
@@ -384,6 +407,58 @@ public class DefaultProcessOperatorTests
             }
         }
 
+        private void setupReverseTransformFixtures(Path userDir) throws Exception
+        {
+            List<String> dirPaths = Arrays.asList(
+                "reverseTriplegeo/1", "reverseTriplegeo/1a");
+
+            for (String dirPath: dirPaths) {
+                final Resource dir = baseResource.createRelative(dirPath + "/");
+                final String dirName = Paths.get(dirPath).getFileName().toString();
+
+                final Path inputDir = Paths.get(dir.createRelative("input").getURI());
+                final Path resultsDir = Paths.get(dir.createRelative("output").getURI());
+
+                final List<String> inputNames = Files.list(inputDir)
+                    .filter(Files::isRegularFile)
+                    .sorted()
+                    .map(p -> p.getFileName().toString())
+                    .collect(Collectors.toList());
+
+                final Properties options = readProperties(dir.createRelative("options.conf"));
+
+                final Resource queryResource = dir.createRelative("query.sparql");
+                final Optional<Path> queryPath = queryResource.exists()?
+                    Optional.of(Paths.get(queryResource.getURI())) : Optional.empty();
+
+                // Copy query file into user's data directory
+                Optional<Path> queryTempPath =
+                    queryPath.map(p -> copyTempIntoDirectory(p, "query-", ".sparql", userDir));
+
+                // Copy inputs into user's data directory
+                final BiMap<String, String> inputNameToTempName = HashBiMap.create();
+                final BiMap<String, Path> inputNameToTempPath = HashBiMap.create();
+                for (String inputName : inputNames) {
+                    Path path = copyTempIntoDirectory(inputDir.resolve(inputName), null, ".nt", userDir);
+                    inputNameToTempPath.put(inputName, path);
+                    inputNameToTempName.put(inputName,
+                        stripFilenameExtension(userDir.relativize(path).toString()));
+                }
+
+                // Add fixture for input as a local file, query given as user-relative path
+
+                ReverseTransformFixture fixture = newReverseTransformFixtureBuilder()
+                    .name("file-" + inputNameToTempName.get(inputNames.get(0)) + "-a")
+                    .stagingDir(userDir)
+                    .inputList(Iterables.transform(inputNameToTempPath.values(), Path::toUri))
+                    .configuration(options, queryTempPath.map(p -> userDir.relativize(p).toString()))
+                    .expectedResult(resultsDir.resolve("points.csv"))
+                    .build();
+                String key = String.format("file-%s-a", dirName);
+                reverseTransformFixtures.put(key, fixture);
+            }
+        }
+
         private void setupInterlinkFixtures(Path userDir) throws Exception
         {
             for (String dirPath: Arrays.asList("limes/1")) {
@@ -562,7 +637,14 @@ public class DefaultProcessOperatorTests
     private Path catalogDataDir;
 
     @Autowired
+    @Qualifier("workflowDataDirectory")
+    private Path workflowDataDir;
+
+    @Autowired
     private Map<String, TransformFixture> transformFixtures;
+
+    @Autowired
+    private Map<String, ReverseTransformFixture> reverseTransformFixtures;
 
     @Autowired
     private Map<String, InterlinkFixture> interlinkFixtures;
@@ -830,6 +912,81 @@ public class DefaultProcessOperatorTests
         }
 
         return transformedResourceRecord;
+    }
+
+    private ProcessDefinition buildDefinition(
+        String procName, final ReverseTransformFixture fixture, String resourceName)
+    {
+        ProcessDefinitionBuilder definitionBuilder = processDefinitionBuilderFactory.create(procName);
+
+        final List<URI> inputs = fixture.inputList();
+        final int n = inputs.size();
+
+        final List<String> inputKeys = Lists.transform(inputs,
+            uri -> "res-" + Integer.toHexString(uri.hashCode()));
+
+        for (int i = 0; i < n; ++i) {
+            URL url = null;
+            try {
+                url = inputs.get(i).toURL();
+            } catch (MalformedURLException e) {
+                throw new IllegalStateException(e);
+            }
+            String key = inputKeys.get(i);
+            definitionBuilder.resource(key, key, url, EnumDataFormat.N_TRIPLES);
+        }
+
+        definitionBuilder.export("Reverse Triplegeo", builder -> builder
+            .group(1)
+            .configuration(fixture.configuration())
+            .outputFormat(EnumDataFormat.CSV)
+            .outputKey("exported")
+            .input(inputKeys)
+        );
+
+        return definitionBuilder.build();
+    }
+
+    private void reverseTransform(
+            String procName, ReverseTransformFixture transformFixture, Account creator)
+        throws Exception
+    {
+        reverseTransform(procName, transformFixture, creator, this::buildDefinition);
+    }
+
+    private void reverseTransform(
+            String procName, ReverseTransformFixture transformFixture, Account creator,
+            ReverseTransformToDefinition transformToDefinition)
+        throws Exception
+    {
+        logger.debug("reverseTransform: procName={} fixture={}", procName, transformFixture);
+
+        final int creatorId = creator.getId();
+
+        // Define the process
+
+        final String resourceName = procName + "." + transformFixture.name();
+        final ProcessDefinition definition =
+            transformToDefinition.buildDefinition(procName, transformFixture, resourceName);
+
+        final ProcessExecutionRecord executionRecord = executeDefinition(definition, creator);
+        final long executionId = executionRecord.getId();
+
+        assertEquals(EnumProcessExecutionStatus.COMPLETED, executionRecord.getStatus());
+        assertNotNull(executionRecord.getCompletedOn());
+
+        ProcessExecutionStepRecord transformStepRecord = executionRecord.getStepByName("Reverse Triplegeo");
+        assertNotNull(transformStepRecord);
+
+        ProcessExecutionStepFileRecord outfileRecord = transformStepRecord.getFiles().stream()
+            .filter(f -> f.getType() == EnumStepFile.OUTPUT)
+            .filter(f -> EnumReverseTriplegeoOutputPart.TRANSFORMED.key().equals(f.getOutputPartKey()))
+            .collect(MoreCollectors.toOptional()).orElse(null);
+        assertNotNull(outfileRecord);
+
+        Path outfile = workflowDataDir.resolve(outfileRecord.getFilePath());
+        assertTrue(Files.exists(outfile) && Files.isReadable(outfile));
+        AssertFile.assertFileEquals(transformFixture.expectedResult().toFile(), outfile.toFile());
     }
 
     private ProcessDefinition buildDefinition(
@@ -1535,6 +1692,18 @@ public class DefaultProcessOperatorTests
     public void test5T_downloadAndTransformAndRegister1a() throws Exception
     {
         transformAndRegister("url-5-1-a", transformFixtures.get("url-5-1-a"), user);
+    }
+
+    @Test(timeout = 40 * 1000L)
+    public void test1T_reverseTransform() throws Exception
+    {
+        reverseTransform("file-1-a", reverseTransformFixtures.get("file-1-a"), user);
+    }
+
+    @Test(timeout = 40 * 1000L)
+    public void test1aT_reverseTransform() throws Exception
+    {
+        reverseTransform("file-1a-a", reverseTransformFixtures.get("file-1a-a"), user);
     }
 
     @Test(timeout = 40 * 1000L)

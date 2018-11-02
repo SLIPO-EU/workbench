@@ -5,3 +5,4 @@
 
 /src/main/resources/config/*.properties
 /src/main/resources/config/*.xml
+/.apt_generated_tests/
