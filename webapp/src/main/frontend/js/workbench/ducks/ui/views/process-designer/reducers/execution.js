@@ -1,28 +1,19 @@
 import * as Types from '../types';
 
-import {
-  resourceToLayers,
-} from '../util';
-
-
 export function executionReducer(state, action) {
   switch (action.type) {
     case Types.REQUEST_EXECUTION_DATA:
       return {
         ...state.execution,
         data: null,
-        layers: [],
         selectedFile: null,
         selectedKpi: null,
-        selectedLayer: null,
-        selectedFeatures: [],
       };
 
     case Types.RECEIVE_EXECUTION_DATA:
       return {
         ...state.execution,
         data: { ...action.data },
-        layers: resourceToLayers(state.steps, state.resources, action.data),
         lastUpdate: new Date(),
       };
 
@@ -65,54 +56,7 @@ export function executionReducer(state, action) {
         selectedKpi: null,
       };
 
-    case Types.TOGGLE_LAYER:
-      return {
-        ...state.execution,
-        layers: state.execution.layers.map((l) => {
-          if (l.tableName === action.tableName) {
-            return {
-              ...l,
-              hidden: !l.hidden,
-            };
-          }
-          return l;
-        }),
-      };
-
-    case Types.SELECT_LAYER:
-      return {
-        ...state.execution,
-        selectedLayer: action.tableName,
-      };
-
-    case Types.SET_BASE_LAYER:
-      return {
-        ...state.execution,
-        baseLayer: action.layer,
-      };
-
-    case Types.SET_LAYER_COLOR:
-      return {
-        ...state.execution,
-        selectedFeatures: [],
-        layers: state.execution.layers.map((l) => {
-          if (l.tableName === action.tableName) {
-            return {
-              ...l,
-              color: action.color,
-            };
-          }
-          return l;
-        }),
-      };
-
-    case Types.SET_SELECTED_FEATURES:
-      return {
-        ...state.execution,
-        selectedFeatures: action.features || [],
-      };
-
-    default:
+      default:
       return state;
   }
 }

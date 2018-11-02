@@ -6,10 +6,6 @@ import {
 } from 'redux';
 
 import {
-  toast
-} from 'react-toastify';
-
-import {
   Card,
   CardBody,
   Col,
@@ -24,10 +20,6 @@ import {
   DynamicRoutes,
   buildPath
 } from '../../model/routes';
-
-import {
-  ToastTemplate,
-} from '../helpers';
 
 import {
   Filters,
@@ -46,6 +38,10 @@ import {
   setPager,
   setSelected,
 } from '../../ducks/ui/views/process-template-explorer';
+
+import {
+  message,
+} from '../../service';
 
 /**
  * Browse and manage process templates
@@ -101,17 +97,8 @@ class TemplateExplorer extends React.Component {
         this.props.history.push(path);
       })
       .catch(err => {
-        this.error(err.message);
+        message.error(err.message, 'fa-warning');
       });
-  }
-
-  error(message) {
-    toast.dismiss();
-
-    toast.error(
-      <ToastTemplate iconClass='fa-warning' text={message} />
-    );
-
   }
 
   render() {

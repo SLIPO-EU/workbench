@@ -65,13 +65,3 @@ export const RESET_SELECTED_KPI = 'ui/process/execution/viewer/RESET_SELECTED_KP
 
 export const FILE_EXISTS_RESPONSE = 'ui/process/execution/viewer/FILE_EXISTS_RESPONSE';
 export const FILE_DOWNLOAD_RESPONSE = 'ui/process/execution/viewer/FILE_DOWNLOAD_RESPONSE';
-
-/*
- * Layers
- */
-
-export const SELECT_LAYER = 'ui/process/execution/viewer/SELECT_LAYER';
-export const TOGGLE_LAYER = 'ui/process/execution/viewer/TOGGLE_LAYER';
-export const SET_BASE_LAYER = 'ui/process/execution/viewer/SET_BASE_LAYER';
-export const SET_LAYER_COLOR = 'ui/process/execution/viewer/SET_LAYER_COLOR';
-export const SET_SELECTED_FEATURES = 'ui/process/execution/viewer/SET_SELECTED_FEATURES';

@@ -141,6 +141,10 @@ module.exports = function (grunt) {
       options: {
         banner: '/*! Package: <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> */\n',
         sourceMap: true,
+        compress: {
+          // Workaround for https://github.com/mishoo/UglifyJS2/issues/3274
+          collapse_vars: false,
+        },
       },
       'workbench': {
         files: {
@@ -158,12 +162,12 @@ module.exports = function (grunt) {
     // Generate API documentation
     apidoc: {
       'webapp-action': {
-        src: "apidoc/src/webapp-action",
-        dest: "apidoc/docs/webapp-action",
-        template: "apidoc/template",
+        src: 'apidoc/src/webapp-action',
+        dest: 'apidoc/docs/webapp-action',
+        template: 'apidoc/template',
         options: {
           debug: false,
-          includeFilters: [".*\\.js$"]
+          includeFilters: ['.*\\.js$']
         }
       }
     },

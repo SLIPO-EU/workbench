@@ -43,8 +43,8 @@ const templateColumns = [{
     return (
       <SecureContent roles={[Roles.ADMIN, Roles.AUTHOR]}>
         <span>
-          <i data-action="edit" className='fa fa-pencil slipo-table-row-action mr-1'></i>
-          <i data-action="clone" className='fa fa-magic slipo-table-row-action'></i>
+          <i data-action="edit" title="Edit" className='fa fa-pencil slipo-table-row-action mr-1'></i>
+          <i data-action="clone" title="Copy" className='fa fa-magic slipo-table-row-action'></i>
         </span>
       </SecureContent>
     );

@@ -17,21 +17,22 @@ import {
 } from 'reactstrap';
 
 import {
-  toast,
-} from 'react-toastify';
-
-import {
+  DynamicRoutes,
+  buildPath,
   StaticRoutes,
 } from '../../model';
 
 import {
   OpenLayers,
-  ToastTemplate,
 } from '../helpers';
 
 import {
   ResourceDetails,
 } from './resource/explorer/';
+
+import {
+  message,
+} from '../../service';
 
 /**
  * Resource metadata viewer
@@ -51,6 +52,7 @@ class ResourceViewer extends React.Component {
     this.onFetchError = this.onFetchError.bind(this);
     this.onFetchSuccess = this.onFetchSuccess.bind(this);
     this.onFeatureSelect = this.onFeatureSelect.bind(this);
+    this.viewMap = this.viewMap.bind(this);
   }
 
   componentDidMount() {
@@ -66,24 +68,20 @@ class ResourceViewer extends React.Component {
   }
 
   onFetchError(err) {
-    this.error(err.message);
-  }
+    message.error(err.message, 'fa-warning');
 
-  error(message, redirect) {
-    toast.dismiss();
-    toast.error(
-      <ToastTemplate iconClass='fa-warning' text={message} />
-    );
-
-    if ((typeof redirect === 'undefined') || (redirect)) {
-      setTimeout(() => {
-        this.props.history.push(StaticRoutes.ResourceExplorer);
-      }, 500);
-    }
+    setTimeout(() => {
+      this.props.history.push(StaticRoutes.ResourceExplorer);
+    }, 500);
   }
 
   onFeatureSelect(features) {
-    console.log(features);
+  }
+
+  viewMap(id, version) {
+    const path = buildPath(DynamicRoutes.ResourceMapViewer, [id, version]);
+
+    this.props.history.push(path);
   }
 
   render() {
@@ -100,7 +98,7 @@ class ResourceViewer extends React.Component {
                 <CardBody className="card-body">
                   <ResourceDetails
                     resource={resource}
-                    version={resource.version}
+                    viewMap={this.viewMap}
                   />
                 </CardBody>
               </Card>

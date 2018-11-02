@@ -142,7 +142,7 @@ function buildDataSource(step) {
   return null;
 }
 
-function readProcessResponse(result) {
+export function readProcessResponse(result) {
   const { definition, id, taskType, template, version } = result;
 
   const resources = definition.resources
@@ -428,7 +428,7 @@ function validateSteps(action, model, isTemplate, errors, requireSingleOutput) {
 }
 
 function validateResources(action, model, isTemplate, errors) {
-  const { process, steps, resources, ...rest } = model;
+  const { steps, resources } = model;
 
   if (isTemplate) {
     return;
@@ -507,4 +507,8 @@ export function start(id, version, token) {
 
 export function stop(id, version, token) {
   return actions.post(`/action/process/${id}/${version}/stop`, token);
+}
+
+export function exportMap(id, version, execution, token) {
+  return actions.post(`/action/process/${id}/${version}/export/${execution}`, token);
 }

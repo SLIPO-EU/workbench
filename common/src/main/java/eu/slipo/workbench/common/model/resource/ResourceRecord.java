@@ -13,6 +13,7 @@ import com.vividsolutions.jts.geom.Geometry;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumResourceType;
+import eu.slipo.workbench.common.model.process.ProcessExecutionIdentifier;
 import eu.slipo.workbench.common.model.user.AccountInfo;
 
 public class ResourceRecord implements Serializable
@@ -33,7 +34,7 @@ public class ResourceRecord implements Serializable
 
     private EnumDataFormat format;
 
-    private Long processExecutionId;
+    private ProcessExecutionIdentifier execution;
 
     private ResourceMetadataView metadata;
 
@@ -56,6 +57,8 @@ public class ResourceRecord implements Serializable
     private Integer numberOfEntities;
 
     private List<ResourceRecord> revisions;
+
+    private boolean mapExported;
 
     public ResourceRecord() {}
 
@@ -89,7 +92,7 @@ public class ResourceRecord implements Serializable
         return type;
     }
 
-    public void setType(EnumResourceType type) 
+    public void setType(EnumResourceType type)
     {
         this.type = type;
     }
@@ -124,14 +127,14 @@ public class ResourceRecord implements Serializable
         this.format = format;
     }
 
-    public Long getProcessExecutionId()
+    public ProcessExecutionIdentifier getExecution()
     {
-        return processExecutionId;
+        return execution;
     }
 
-    public void setProcessExecutionId(Long processExecutionId)
+    public void setExecution(ProcessExecutionIdentifier execution)
     {
-        this.processExecutionId = processExecutionId;
+        this.execution = execution;
     }
 
     public ResourceMetadataView getMetadata()
@@ -154,7 +157,7 @@ public class ResourceRecord implements Serializable
     {
         return metadata == null? null : metadata.getName();
     }
-    
+
     @JsonIgnore
     public String getDescription()
     {
@@ -200,7 +203,7 @@ public class ResourceRecord implements Serializable
         return updatedBy;
     }
 
-    public void setUpdatedBy(AccountInfo updatedBy) 
+    public void setUpdatedBy(AccountInfo updatedBy)
     {
         this.updatedBy = updatedBy;
     }
@@ -253,24 +256,35 @@ public class ResourceRecord implements Serializable
     {
         this.tableName = tableName;
     }
-    
+
     public Geometry getBoundingBox()
     {
         return boundingBox;
     }
-    
+
     public void setBoundingBox(Geometry boundingBox)
     {
         this.boundingBox = boundingBox;
     }
-    
+
     public Integer getNumberOfEntities()
     {
         return numberOfEntities;
     }
-    
+
     public void setNumberOfEntities(Integer numberOfEntities)
     {
         this.numberOfEntities = numberOfEntities;
     }
+
+    public boolean isMapExported()
+    {
+        return mapExported;
+    }
+
+    public void setMapExported(boolean mapExported)
+    {
+        this.mapExported = mapExported;
+    }
+
 }

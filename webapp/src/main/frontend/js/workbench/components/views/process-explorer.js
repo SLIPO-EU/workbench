@@ -6,10 +6,6 @@ import {
 } from 'redux';
 
 import {
-  toast
-} from 'react-toastify';
-
-import {
   Card,
   CardBody,
   Col,
@@ -26,13 +22,8 @@ import {
 } from '../../model/routes';
 
 import {
-  EnumErrorLevel,
   UPDATE_INTERVAL_SECONDS,
 } from '../../model';
-
-import {
-  ToastTemplate,
-} from '../helpers';
 
 import {
   Filters,
@@ -42,6 +33,7 @@ import {
 
 
 import {
+  exportMap,
   fetchProcessExecutions,
   fetchProcesses,
   resetFilters,
@@ -50,6 +42,10 @@ import {
   start,
   stop,
 } from '../../ducks/ui/views/process-explorer';
+
+import {
+  message,
+} from '../../service';
 
 // TODO: Add i18n support
 
@@ -65,6 +61,7 @@ class ProcessExplorer extends React.Component {
     super(props);
 
     this.editProcess = this.editProcess.bind(this);
+    this.exportMap = this.exportMap.bind(this);
     this.viewProcess = this.viewProcess.bind(this);
     this.viewExecution = this.viewExecution.bind(this);
     this.viewMap = this.viewMap.bind(this);
@@ -99,6 +96,15 @@ class ProcessExplorer extends React.Component {
     this.props.fetchProcesses({
       query: { ...this.props.filters },
     });
+  }
+
+  exportMap(id, version, executionId) {
+    this.props.exportMap(id, version, executionId)
+      .then(() => {
+        message.info('Process execution export has started successfully');
+      }).catch((err) => {
+        message.error(err.message);
+      });
   }
 
   /**
@@ -165,10 +171,10 @@ class ProcessExplorer extends React.Component {
   startExecution(id, version) {
     this.props.start(id, version)
       .then((data) => {
-        this.displayMessage('Process execution has started successfully', EnumErrorLevel.INFO);
+        message.info('Process execution has started successfully');
       })
       .catch((err) => {
-        this.displayMessage(err.message);
+        message.error(err.message);
       })
       .finally(() => {
         this.search();
@@ -185,33 +191,11 @@ class ProcessExplorer extends React.Component {
   stopExecution(id, version) {
     this.props.stop(id, version)
       .catch((err) => {
-        this.displayMessage(err.message);
+        message.error(err.message);
       })
       .finally(() => {
         this.search();
       });
-  }
-
-  displayMessage(message, level = EnumErrorLevel.ERROR) {
-    toast.dismiss();
-
-    switch (level) {
-      case EnumErrorLevel.WARN:
-        toast.warn(
-          <ToastTemplate iconClass='fa-warning' text={message} />
-        );
-        break;
-      case EnumErrorLevel.INFO:
-        toast.info(
-          <ToastTemplate iconClass='fa-info-circle' text={message} />
-        );
-        break;
-      default:
-        toast.error(
-          <ToastTemplate iconClass='fa-exclamation-circle' text={message} />
-        );
-        break;
-    }
   }
 
   render() {
@@ -270,6 +254,7 @@ class ProcessExplorer extends React.Component {
                     <Col>
                       <ProcessExecutions
                         executions={this.props.executions}
+                        exportMap={this.exportMap}
                         selected={this.props.selected}
                         stopExecution={this.stopExecution}
                         viewExecution={this.viewExecution}
@@ -299,6 +284,7 @@ const mapStateToProps = (state) => ({
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
+  exportMap,
   fetchProcesses,
   fetchProcessExecutions,
   resetFilters,

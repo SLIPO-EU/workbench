@@ -14,12 +14,7 @@ import {
 } from 'reactstrap';
 
 import {
-  toast,
-} from 'react-toastify';
-
-import {
   Table,
-  ToastTemplate,
 } from '../../../helpers';
 
 import {
@@ -37,6 +32,10 @@ import {
   KpiFagiView,
   KpiTripleGeoView,
 } from './';
+
+import {
+  message,
+} from '../../../../service';
 
 function isMapSupported(tool, type, table) {
   if (!table) {
@@ -95,15 +94,15 @@ const tableColumns = [{
       case EnumStepFileType.QA:
         return (
           <span>
-            <i data-action="file-download" className='fa fa-cloud-download slipo-table-row-action p-1'></i>
+            <i data-action="file-download" title="Download" className='fa fa-cloud-download slipo-table-row-action p-1'></i>
           </span>
         );
 
       case EnumStepFileType.KPI:
         return (
           <span>
-            <i data-action="file-download" className='fa fa-cloud-download slipo-table-row-action p-1'></i>
-            <i data-action="kpi-view" className='fa fa-bar-chart slipo-table-row-action p-1'></i>
+            <i data-action="file-download" title="Download" className='fa fa-cloud-download slipo-table-row-action p-1'></i>
+            <i data-action="kpi-view" title="View data" className='fa fa-bar-chart slipo-table-row-action p-1'></i>
           </span>
         );
 
@@ -187,19 +186,11 @@ export default class ExecutionStepDetails extends React.Component {
       .then(() => {
         this.props.downloadFile(this.props.process.id, this.props.process.version, this.props.execution.id, fileId, fileName)
           .catch(err => {
-            toast.dismiss();
-
-            toast.error(
-              <ToastTemplate iconClass='fa-cloud-download' text='Failed to download file' />
-            );
+            message.error('Failed to download file', 'fa-cloud-download');
           });
       })
       .catch(err => {
-        toast.dismiss();
-
-        toast.error(
-          <ToastTemplate iconClass='fa-cloud-download' text={err.message} />
-        );
+        message.error(err.message, 'fa-cloud-download');
       });
   }
 

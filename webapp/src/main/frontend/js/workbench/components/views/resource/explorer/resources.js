@@ -50,11 +50,11 @@ const resourceColumns = [{
   Cell: props => {
     if (props.original.selected) {
       return (
-        <i data-action="remove-from-bag" className='fa fa-check-square-o slipo-table-row-action'></i>
+        <i data-action="remove-from-bag" title="Remove from selected resources" className='fa fa-check-square-o slipo-table-row-action'></i>
       );
     } else {
       return (
-        <i data-action="add-to-bag" className='fa fa-square-o slipo-table-row-action'></i>
+        <i data-action="add-to-bag" title="Add to selected resources" className='fa fa-square-o slipo-table-row-action'></i>
       );
     }
   },
@@ -87,15 +87,23 @@ const resourceColumns = [{
   Header: 'Actions',
   id: 'actions',
   Cell: props => {
+    const record = props.original;
     return (
       <span>
         <i data-action="delete" className='fa fa-trash slipo-table-row-action mr-2' title="Delete"></i>
-        <i data-action="export" className='fa fa-archive slipo-table-row-action' title="Export"></i>
+        <i data-action="export-to-file" className='fa fa-archive slipo-table-row-action mr-2' title="Export to file"></i>
+        {record.mapExported ?
+          <Link style={{ color: '#263238' }} to={buildPath(DynamicRoutes.ResourceMapViewer, [record.id, record.version])}>
+            <i className='fa fa-map-o' title="View map"></i>
+          </Link>
+          :
+          <i data-action="export-map" title="Export map data" className='fa fa-database slipo-table-row-action'></i>
+        }
       </span>
     );
   },
   style: { 'textAlign': 'center' },
-  maxWidth: 60,
+  maxWidth: 90,
 }, {
   Header: 'Name',
   id: 'name',
@@ -103,7 +111,7 @@ const resourceColumns = [{
   Cell: props => {
     return (
       <Link to={buildPath(DynamicRoutes.ResourceViewer, [props.row.id, props.row.version])}>
-        <i className={ResourceTypeIcons[props.original.type] + ' mr-2'}></i>{props.value}
+        {props.value}
       </Link>
     );
   },
@@ -126,11 +134,11 @@ const resourceHistoryColumns = [{
   Cell: props => {
     if (props.original.selected) {
       return (
-        <i data-action="remove-from-bag" className='fa fa-check-square-o slipo-table-row-action'></i>
+        <i data-action="remove-from-bag" title="Add to selected resources" className='fa fa-check-square-o slipo-table-row-action'></i>
       );
     } else {
       return (
-        <i data-action="add-to-bag" className='fa fa-square-o slipo-table-row-action'></i>
+        <i data-action="add-to-bag" title="Remove from selected resources" className='fa fa-square-o slipo-table-row-action'></i>
       );
     }
   },
@@ -149,10 +157,18 @@ const resourceHistoryColumns = [{
   Header: 'Actions',
   id: 'actions',
   Cell: props => {
+    const record = props.original;
     return (
       <span>
         <i data-action="delete" className='fa fa-trash slipo-table-row-action mr-2' title="Delete"></i>
-        <i data-action="export" className='fa fa-archive slipo-table-row-action' title="Export"></i>
+        <i data-action="export-to-file" className='fa fa-archive slipo-table-row-action' title="Export"></i>
+        {record.mapExported ?
+          <Link style={{ color: '#263238' }} to={buildPath(DynamicRoutes.ResourceMapViewer, [record.id, record.version])}>
+            <i className='fa fa-map-o' title="View map"></i>
+          </Link>
+          :
+          <i data-action="export-map" title="Export map data" className='fa fa-database slipo-table-row-action p-1'></i>
+        }
       </span>
     );
   },
@@ -200,8 +216,15 @@ export default class Resources extends React.Component {
       case 'delete':
         this.props.deleteResource(rowInfo.original.id, rowInfo.original.version);
         break;
-      case 'export':
+      case 'export-to-file':
         this.props.exportResource(createResource(rowInfo));
+        break;
+      case 'export-map':
+        this.props.exportMap(
+          rowInfo.original.execution.id,
+          rowInfo.original.execution.version,
+          rowInfo.original.execution.execution,
+        );
         break;
       default:
         if (handleOriginal) {

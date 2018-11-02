@@ -6,10 +6,6 @@ import {
 } from 'redux';
 
 import {
-  toast,
-} from 'react-toastify';
-
-import {
   Card,
   CardBody,
   Col,
@@ -34,15 +30,14 @@ import {
 } from '../../ducks/ui/views/account';
 
 import {
-  ToastTemplate,
-} from '../helpers';
-
-import {
   Filters,
   User,
   Users,
 } from "./account";
 
+import {
+  message,
+} from '../../service';
 
 /**
  * Browse and manage user accounts
@@ -88,21 +83,12 @@ class UserManager extends React.Component {
   updateAccount(account) {
     this.props.updateAccount(account)
       .then(() => {
-        toast.dismiss();
-        toast.success(
-          <ToastTemplate iconClass='fa-user' text='Account has been updated successfully' />
-        );
-
+        message.success('Account has been updated successfully', 'fa-user');
         this.search();
       })
       .catch((err) => {
         const reason = err.errors.map((e) => e.description + '<br>').join('');
-        toast.dismiss();
-        toast.error(
-          <ToastTemplate
-            iconClass='fa-user'
-            html={`Account update has failed. Reason${err.errors.length > 1 ? 's' : ''}:<br>${reason} `} />
-        );
+        message.errorHtml(`Account update has failed. Reason${err.errors.length > 1 ? 's' : ''}:<br>${reason} `, 'fa-user');
       });
   }
 

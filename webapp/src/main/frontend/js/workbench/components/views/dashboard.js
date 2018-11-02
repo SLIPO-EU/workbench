@@ -6,10 +6,6 @@ import {
 } from 'redux';
 
 import {
-  Link,
-} from 'react-router-dom';
-
-import {
   injectIntl,
 } from 'react-intl';
 
@@ -20,6 +16,7 @@ import {
 } from 'reactstrap';
 
 import {
+  EnumErrorLevel,
   Roles,
   UPDATE_INTERVAL_SECONDS,
 } from '../../model';
@@ -37,6 +34,14 @@ import {
   resetSelectedEvent,
   selectEvent,
 } from '../../ducks/ui/views/dashboard';
+
+import {
+  exportMap,
+} from '../../ducks/ui/views/process-explorer';
+
+import {
+  message,
+} from '../../service';
 
 import * as CardConfig from '../helpers/card-config';
 import * as TableConfig from '../helpers/table-config';
@@ -62,6 +67,27 @@ class Dashboard extends React.Component {
     if (this.refreshIntervalId) {
       clearInterval(this.refreshIntervalId);
       this.refreshIntervalId = null;
+    }
+  }
+
+  handleProcessRowAction(rowInfo, e, handleOriginal) {
+    switch (e.target.getAttribute('data-action')) {
+      case 'export':
+        this.props.exportMap(
+          rowInfo.original.process.id,
+          rowInfo.original.process.version,
+          rowInfo.original.executionId,
+        ).then(() => {
+          message.info('Process execution export has started successfully');
+        }).catch((err) => {
+          message.error(err.message);
+        });
+        break;
+      default:
+        if (handleOriginal) {
+          handleOriginal();
+        }
+        break;
     }
   }
 
@@ -119,6 +145,9 @@ class Dashboard extends React.Component {
                 columns={TableConfig.ProcessExecutionGridColumns}
                 minRows={10}
                 showPagination={true}
+                getTdProps={(state, rowInfo, column) => ({
+                  onClick: this.handleProcessRowAction.bind(this, rowInfo)
+                })}
               />
             </DashboardCard>
           </Col>
@@ -190,6 +219,7 @@ const mapStateToProps = (state) => ({
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
   changeDashboardFilter,
+  exportMap,
   fetchDashboardData,
   resetSelectedEvent,
   selectEvent,

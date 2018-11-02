@@ -1,35 +1,27 @@
 import * as React from 'react';
 import * as ReactRedux from 'react-redux';
 
-import Extend from 'ol/extent';
-import GeoJSON from 'ol/format/geojson';
-import proj from 'ol/proj';
-
 import {
   bindActionCreators
 } from 'redux';
 
 import {
-  toast
-} from 'react-toastify';
-
-import {
-  OpenLayers,
-  ToastTemplate,
-} from '../../components/helpers';
-
-import {
-  fetchExecutionDetails,
+  fetchExecutionMapData,
   reset,
   selectFeatures,
-} from '../../ducks/ui/views/process-designer';
+} from '../../ducks/ui/views/map-viewer';
 
 import {
-  StaticRoutes,
-} from '../../model';
+  message,
+} from '../../service';
+
+import {
+  MapViewer,
+} from './map-viewer';
 
 /**
- * Browse POI data and POI data integration workflow results
+ * Renders a map from the input/output datasets of a single process
+ * execution instance
  *
  * @class ProcessExecutionMapViewer
  * @extends {React.Component}
@@ -45,30 +37,31 @@ class ProcessExecutionMapViewer extends React.Component {
 
     this.onFetchError = this.onFetchError.bind(this);
     this.onFetchSuccess = this.onFetchSuccess.bind(this);
-    this.onFeatureSelect = this.onFeatureSelect.bind(this);
+    this.onMoveEnd = this.onMoveEnd.bind(this);
   }
 
-  get center() {
-    const extent = Extend.createEmpty();
-    const format = new GeoJSON();
+  get params() {
+    const { id, version, execution } = this.props.match.params;
 
-    this.props.layers
-      .filter((l) => l.boundingBox)
-      .forEach((l) => {
-        const bbox = format.readFeature(l.boundingBox);
-        Extend.extend(extent, bbox.getGeometry().getExtent());
-      });
-
-    return proj.fromLonLat(Extend.getCenter(extent));
+    return {
+      processId: Number.parseInt(id),
+      processVersion: Number.parseInt(version),
+      executionId: Number.parseInt(execution),
+    };
   }
 
   componentDidMount() {
-    const { id, version, execution, ...rest } = this.props.match.params;
+    const params = this.params;
+    const { execution } = this.props;
 
-    this.props.reset();
-    this.props.fetchExecutionDetails(Number.parseInt(id), Number.parseInt(version), Number.parseInt(execution))
-      .then(this.onFetchSuccess)
-      .catch(this.onFetchError);
+    if ((!execution) || (execution.id !== params.executionId)) {
+      this.props.reset();
+      this.props.fetchExecutionMapData(params.processId, params.processVersion, params.executionId)
+        .then(this.onFetchSuccess)
+        .catch(this.onFetchError);
+    } else {
+      this.onFetchSuccess();
+    }
   }
 
   onFetchSuccess() {
@@ -76,101 +69,49 @@ class ProcessExecutionMapViewer extends React.Component {
   }
 
   onFetchError(err) {
-    this.error(err.message);
+    message.error(err.message, 'fa-warning');
+
+    setTimeout(() => this.props.history.goBack(), 500);
   }
 
-  onFeatureSelect(features) {
-    this.props.selectFeatures(features);
-  }
-
-  error(message, redirect) {
-    toast.dismiss();
-
-    toast.error(
-      <ToastTemplate iconClass='fa-warning' text={message} />
-    );
-
-    if ((typeof redirect === 'undefined') || (redirect)) {
-      setTimeout(() => this.props.history.push(StaticRoutes.ProcessExecutionExplorer), 500);
-    }
-  }
-
-  getLayers() {
-    const layers = [];
-
-    switch (this.props.baseLayer) {
-      case 'OSM':
-        layers.push(
-          <OpenLayers.Layer.OSM
-            key="osm"
-            url={this.props.osm.url}
-          />
-        );
-        break;
-      case 'BingMaps-Road':
-      case 'BingMaps-Aerial':
-        if (this.props.bingMaps.applicationKey) {
-          layers.push(
-            <OpenLayers.Layer.BingMaps
-              key={this.props.baseLayer === 'BingMaps-Road' ? 'bing-maps-road' : 'bing-maps-aerial'}
-              applicationKey={this.props.bingMaps.applicationKey}
-              imagerySet={this.props.baseLayer === 'BingMaps-Road' ? 'Road' : 'Aerial'}
-            />
-          );
-        }
-        break;
-    }
-
-    this.props.layers
-      .filter((l) => !l.hidden)
-      .forEach((l) => {
-        layers.push(
-          <OpenLayers.Layer.WFS
-            key={`${l.tableName}-${l.color}-${l.icon || ''}`}
-            url="/action/proxy/service/wfs"
-            version="1.1.0"
-            typename={`slipo_eu:${l.tableName}`}
-            color={l.color}
-            icon={l.icon}
-          />
-        );
-      });
-
-    return layers;
+  onMoveEnd(data) {
   }
 
   render() {
+    const { baseLayer, bingMaps, defaultCenter, layers, osm } = this.props;
+
     if (this.state.isLoading) {
       return null;
     }
     return (
       <div className="animated fadeIn">
-        <OpenLayers.Map minZoom={13} maxZoom={18} zoom={15} center={this.center} className="slipo-map-container-full-screen">
-          <OpenLayers.Layers>
-            {this.getLayers()}
-          </OpenLayers.Layers>
-          <OpenLayers.Interactions>
-            <OpenLayers.Interaction.Select
-              onFeatureSelect={this.onFeatureSelect}
-              multi={true}
-              width={2}
-            />
-          </OpenLayers.Interactions>
-        </OpenLayers.Map>
-      </div>
+        <MapViewer
+          baseLayer={baseLayer}
+          bingMaps={bingMaps}
+          defaultCenter={defaultCenter}
+          layers={layers}
+          osm={osm}
+          onFeatureSelect={(features) => this.props.selectFeatures(features)}
+          onMoveEnd={this.onMoveEnd}
+          selectedFeatures={this.props.selectedFeatures}
+        />
+      </div >
     );
   }
 }
 
 const mapStateToProps = (state) => ({
-  baseLayer: state.ui.views.process.designer.execution.baseLayer,
+  baseLayer: state.ui.views.map.config.baseLayer,
   bingMaps: state.config.bingMaps,
-  layers: state.ui.views.process.designer.execution.layers,
+  defaultCenter: state.config.mapDefaults.center,
+  execution: state.ui.views.map.data.execution,
+  layers: state.ui.views.map.config.layers,
   osm: state.config.osm,
+  selectedFeatures: state.ui.views.map.config.selectedFeatures,
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
-  fetchExecutionDetails,
+  fetchExecutionMapData,
   reset,
   selectFeatures,
 }, dispatch);

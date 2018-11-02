@@ -27,7 +27,7 @@ class AsideToggle extends React.Component {
   }
 
   componentDidMount() {
-    this.props.setAsideMenuVisibility(this._getComponent());
+    this.props.setAsideMenuVisibility(!!this._getComponent());
   }
 
   render() {

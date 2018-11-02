@@ -39,10 +39,16 @@ public class ProcessExecutionRecord implements Serializable
 
     private String errorMessage;
 
+    private AccountInfo exportedBy;
+
+    private ZonedDateTime exportedOn;
+
     @JsonIgnore
     private boolean isRunning;
 
     private List<ProcessExecutionStepRecord> steps;
+
+    private List<ProcessExecutionTableRecord> tables;
 
     public ProcessExecutionRecord() {}
 
@@ -82,11 +88,16 @@ public class ProcessExecutionRecord implements Serializable
         this.status = record.status;
         this.taskType = record.getTaskType();
         this.errorMessage = record.errorMessage;
-        this.steps = copyDeep?
+        this.steps = copyDeep ?
             (record.steps.stream()
                 .map(s -> new ProcessExecutionStepRecord(s, true))
-                .collect(Collectors.toList())):
+                .collect(Collectors.toList())) :
             (new ArrayList<>(record.steps));
+        this.tables = copyDeep ?
+            (record.tables.stream()
+                .map(s -> new ProcessExecutionTableRecord(s))
+                .collect(Collectors.toList())) :
+            (new ArrayList<>(record.tables));
     }
 
     public String getName() {
@@ -131,6 +142,26 @@ public class ProcessExecutionRecord implements Serializable
 
     public void setCompletedOn(ZonedDateTime completedOn) {
         this.completedOn = completedOn;
+    }
+
+    public AccountInfo getExportedBy() {
+        return exportedBy;
+    }
+
+    public void setExportedBy(AccountInfo exportedBy) {
+        this.exportedBy = exportedBy;
+    }
+
+    public void setExportedBy(int id, String name) {
+        this.exportedBy = new AccountInfo(id, name);
+    }
+
+    public ZonedDateTime getExportedOn() {
+        return exportedOn;
+    }
+
+    public void setExportedOn(ZonedDateTime exportedOn) {
+        this.exportedOn = exportedOn;
     }
 
     public EnumProcessExecutionStatus getStatus() {
@@ -185,7 +216,7 @@ public class ProcessExecutionRecord implements Serializable
     {
         this.steps = new ArrayList<>(steps);
     }
-    
+
     public void addStep(ProcessExecutionStepRecord s)
     {
         if (this.steps == null) {
@@ -236,4 +267,37 @@ public class ProcessExecutionRecord implements Serializable
         }
         return null;
     }
+
+    public List<ProcessExecutionTableRecord> getTables()
+    {
+        return tables == null ?
+            Collections.emptyList() : Collections.unmodifiableList(tables);
+    }
+
+    public void addTable(ProcessExecutionTableRecord t)
+    {
+        if (this.tables == null) {
+            this.tables = new ArrayList<>();
+        }
+        this.tables.add(t);
+    }
+
+    public ProcessExecutionTableRecord getTable(int outputKey)
+    {
+        if (this.tables == null) {
+            return null;
+        }
+        for (ProcessExecutionTableRecord r: this.tables) {
+            if (r.getOutputKey() == outputKey) {
+                return r;
+            }
+        }
+        return null;
+    }
+
+    public boolean isExported()
+    {
+        return (exportedOn != null);
+    }
+
 }

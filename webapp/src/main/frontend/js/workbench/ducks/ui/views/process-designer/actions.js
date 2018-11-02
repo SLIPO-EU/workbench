@@ -295,32 +295,3 @@ export const selectOutputPart = (step, resource, partKey) => ({
   resource,
   partKey,
 });
-
-/*
- * Layers
- */
-export const selectLayer = (tableName) => ({
-  type: Types.SELECT_LAYER,
-  tableName,
-});
-
-export const toggleLayer = (tableName) => ({
-  type: Types.TOGGLE_LAYER,
-  tableName,
-});
-
-export const setBaseLayer = (layer) => ({
-  type: Types.SET_BASE_LAYER,
-  layer,
-});
-
-export const setLayerColor = (tableName, color) => ({
-  type: Types.SET_LAYER_COLOR,
-  tableName,
-  color,
-});
-
-export const selectFeatures = (features) => ({
-  type: Types.SET_SELECTED_FEATURES,
-  features,
-});

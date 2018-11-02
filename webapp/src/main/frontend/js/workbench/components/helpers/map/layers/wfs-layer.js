@@ -17,6 +17,12 @@ import VectorLayer from 'ol/layer/vector';
 
 import URI from 'urijs';
 
+import {
+  FEATURE_LAYER_PROPERTY,
+  FEATURE_COLOR_PROPERTY,
+  FEATURE_ICON_PROPERTY,
+} from '../model/constants';
+
 /**
  * WFS layer
  *
@@ -145,9 +151,9 @@ class WfsLayer extends React.Component {
       });
 
       source.on('addfeature', (e) => {
-        e.feature.set('__layer', this.props.typename, true);
-        e.feature.set('__color', this.props.color || null, true);
-        e.feature.set('__icon', this.props.icon || null, true);
+        e.feature.set(FEATURE_LAYER_PROPERTY, this.props.typename, true);
+        e.feature.set(FEATURE_COLOR_PROPERTY, this.props.color || null, true);
+        e.feature.set(FEATURE_ICON_PROPERTY, this.props.icon || null, true);
       }, this);
 
       const style = this.buildStyleFunction();

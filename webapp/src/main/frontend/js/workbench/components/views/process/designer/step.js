@@ -190,9 +190,9 @@ class Step extends React.Component {
     readOnly: PropTypes.bool.isRequired,
 
     // Injected by React DnD
-    connectDragSource: PropTypes.func.isRequired,
-    connectDropTarget: PropTypes.func.isRequired,
-    isDragging: PropTypes.bool.isRequired,
+    connectDragSource: PropTypes.func,
+    connectDropTarget: PropTypes.func,
+    isDragging: PropTypes.bool,
   };
 
   /**

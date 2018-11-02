@@ -3,10 +3,6 @@ import React from 'react';
 import { FormGroup, FormText, Label } from 'reactstrap';
 
 import {
-  toast,
-} from 'react-toastify';
-
-import {
   defaultValues as defaultLimesValues,
 } from '../../../../../model/process-designer/configuration/limes';
 
@@ -25,7 +21,6 @@ import {
 
 import {
   SecureContent,
-  ToastTemplate,
 } from '../../../../helpers';
 
 import {
@@ -35,6 +30,10 @@ import {
 import {
   FileDrop,
 } from '../../../../helpers/forms/fields/file-drop';
+
+import {
+  message,
+} from '../../../../../service';
 
 class LimesConfiguration extends React.Component {
 
@@ -105,14 +104,10 @@ class LimesConfiguration extends React.Component {
         } catch (errors) {
           this.props.setConfiguration(this.props.step, sanitizedConfig, errors);
         }
-        toast.success(
-          <ToastTemplate iconClass='fa-wrench' text={'Configuration has been loaded successfully'} />
-        );
+        message.success('Configuration has been loaded successfully', 'fa-wrench');
       })
       .catch((reason) => {
-        toast.error(
-          <ToastTemplate iconClass='fa-warning' text={'Failed to read configuration file. Reason: ' + reason} />
-        );
+        message.error('Failed to read configuration file. Reason: ' + reason, 'fa-warning');
       });
   }
 

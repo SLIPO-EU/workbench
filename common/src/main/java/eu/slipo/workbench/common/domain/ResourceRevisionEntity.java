@@ -20,13 +20,13 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.annotations.Type;
 import org.hibernate.validator.constraints.NotBlank;
 
 import com.vividsolutions.jts.geom.Geometry;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumResourceType;
+import eu.slipo.workbench.common.model.process.ProcessExecutionIdentifier;
 import eu.slipo.workbench.common.model.resource.EnumDataSourceType;
 import eu.slipo.workbench.common.model.resource.ResourceRecord;
 
@@ -119,12 +119,12 @@ public class ResourceRevisionEntity {
     UUID tableName;
 
     protected ResourceRevisionEntity() {}
-    
+
     public ResourceRevisionEntity(ResourceEntity parent)
     {
         this.parent = parent;
         this.version = parent.version;
-        
+
         this.updatedBy = parent.updatedBy;
         this.updatedOn = parent.updatedOn;
         this.filePath = parent.filePath;
@@ -141,26 +141,26 @@ public class ResourceRevisionEntity {
         this.boundingBox = parent.boundingBox;
     }
 
-    public long getId() 
+    public long getId()
     {
         return id;
     }
-    
-    public ResourceEntity getParent() 
+
+    public ResourceEntity getParent()
     {
         return parent;
     }
-    
+
     public void setParent(ResourceEntity parent)
     {
         this.parent = parent;
     }
-    
+
     public long getVersion()
     {
         return version;
     }
-    
+
     public void setVersion(long version)
     {
         this.version = version;
@@ -190,7 +190,7 @@ public class ResourceRevisionEntity {
     {
         return processExecution;
     }
-    
+
     public void setProcessExecution(ProcessExecutionEntity processExecution)
     {
         this.processExecution = processExecution;
@@ -220,7 +220,7 @@ public class ResourceRevisionEntity {
     {
         return boundingBox;
     }
-    
+
     public void setBoundingBox(Geometry boundingBox)
     {
         this.boundingBox = boundingBox;
@@ -230,7 +230,7 @@ public class ResourceRevisionEntity {
     {
         return numberOfEntities;
     }
-    
+
     public void setNumberOfEntities(Integer numberOfEntities)
     {
         this.numberOfEntities = numberOfEntities;
@@ -250,7 +250,7 @@ public class ResourceRevisionEntity {
     {
         return tableName;
     }
-    
+
     public void setTableName(UUID tableName)
     {
         this.tableName = tableName;
@@ -264,7 +264,7 @@ public class ResourceRevisionEntity {
         record.setCreatedBy(parent.createdBy.getId(), parent.createdBy.getFullName());
         record.setUpdatedOn(updatedOn);
         record.setUpdatedBy(updatedBy.getId(), updatedBy.getFullName());
-        
+
         record.setType(type);
         record.setSourceType(sourceType);
         record.setInputFormat(inputFormat);
@@ -275,10 +275,17 @@ public class ResourceRevisionEntity {
         record.setTableName(tableName);
         record.setBoundingBox(boundingBox);
         record.setNumberOfEntities(numberOfEntities);
-        
-        if (processExecution != null)
-            record.setProcessExecutionId(processExecution.getId());
-        
+
+        if(processExecution!=null) {
+            record.setExecution(
+                ProcessExecutionIdentifier.of(
+                    processExecution.getProcess().getParent().getId(),
+                    processExecution.getProcess().getVersion(),
+                    processExecution.getId())
+            );
+            record.setMapExported(processExecution.getExportedOn() != null);
+        }
+
         return record;
     }
 }

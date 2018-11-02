@@ -20,3 +20,5 @@ docker-compose.yml
 
 ScratchController.java
 ScratchTests.java
+Scratch*Tests.java
+/.apt_generated_tests/

@@ -2,6 +2,7 @@ export { default as accountReducer } from './account';
 export { default as dashboardReducer } from './dashboard';
 export { default as eventReducer } from './event';
 export { default as harvesterDataExplorerReducer } from './harvester-data-explorer';
+export { default as mapViewerReducer } from './map-viewer';
 export { default as processDesignerReducer } from './process-designer';
 export { default as processExecutionReducer } from './process-execution-explorer';
 export { default as processExplorerReducer } from './process-explorer';

@@ -24,7 +24,7 @@ function toFeatures(resources) {
     .filter((r) => {
       return (r !== null);
     })
-    .map((r, index) => {
+    .map((r) => {
       if (r.boundingBox) {
         return {
           type: 'Feature',
@@ -143,7 +143,7 @@ export default (state = initialState, action) => {
     case FIND_ONE_SUCCESS:
       return {
         ...state,
-        resource: action.result.resource || null,
+        resource: action.result || null,
       };
 
     case SEARCH_INIT:

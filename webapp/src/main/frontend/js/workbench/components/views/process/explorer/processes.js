@@ -42,15 +42,15 @@ const processColumns = [{
   Cell: props => {
     return (
       <span>
-        <i data-action="view" className='fa fa-search slipo-table-row-action p-1'></i>
+        <i data-action="view" title="View" className='fa fa-search slipo-table-row-action p-1'></i>
         <SecureContent roles={[Roles.ADMIN, Roles.AUTHOR]}>
-          <i data-action="edit" className='fa fa-pencil slipo-table-row-action p-1'></i>
+          <i data-action="edit" title="Edit" className='fa fa-pencil slipo-table-row-action p-1'></i>
         </SecureContent>
         {!props.original.running &&
-          <i data-action="play" className='fa fa-play slipo-table-row-action text-success p-1'></i>
+          <i data-action="play" title="Start execution" className='fa fa-play slipo-table-row-action text-success p-1'></i>
         }
         {props.original.running &&
-          <i data-action="stop" className='fa fa-stop slipo-table-row-action text-danger p-1'></i>
+          <i data-action="stop" title="Stop execution" className='fa fa-stop slipo-table-row-action text-danger p-1'></i>
         }
       </span>
     );
@@ -99,16 +99,16 @@ function getProcessHistoryColumns(parent) {
             parent.row.version === props.row.version
               ?
               <SecureContent roles={[Roles.ADMIN, Roles.AUTHOR]}>
-                <i data-action="edit" className='fa fa-pencil slipo-table-row-action p-1'></i>
+                <i data-action="edit" title="Edit" className='fa fa-pencil slipo-table-row-action p-1'></i>
               </SecureContent>
               :
-              <i data-action="view" className='fa fa-search slipo-table-row-action p-1'></i>
+              <i data-action="view" title="View" className='fa fa-search slipo-table-row-action p-1'></i>
           }
           {!props.original.running &&
-            <i data-action="play" className='fa fa-play slipo-table-row-action text-success p-1'></i>
+            <i data-action="play" title="Start execution" className='fa fa-play slipo-table-row-action text-success p-1'></i>
           }
           {props.original.running &&
-            <i data-action="stop" className='fa fa-stop slipo-table-row-action text-danger p-1'></i>
+            <i data-action="stop" title="Stop execution" className='fa fa-stop slipo-table-row-action text-danger p-1'></i>
           }
         </span>
       );

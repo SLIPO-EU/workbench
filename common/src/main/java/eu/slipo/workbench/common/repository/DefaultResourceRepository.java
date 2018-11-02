@@ -39,6 +39,7 @@ import eu.slipo.workbench.common.model.poi.EnumOperation;
 import eu.slipo.workbench.common.model.poi.EnumResourceType;
 import eu.slipo.workbench.common.model.process.EnumStepFile;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
+import eu.slipo.workbench.common.model.process.ProcessExecutionIdentifier;
 import eu.slipo.workbench.common.model.resource.DataSource;
 import eu.slipo.workbench.common.model.resource.EnumDataSourceType;
 import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
@@ -136,7 +137,7 @@ public class DefaultResourceRepository implements ResourceRepository
     @Override
     public ResourceRecord findOne(long id) {
         ResourceEntity r = entityManager.find(ResourceEntity.class, id);
-        return r == null? null : r.toResourceRecord(false);
+        return r == null? null : r.toResourceRecord(true);
     }
 
     @Transactional(readOnly = true)
@@ -209,10 +210,10 @@ public class DefaultResourceRepository implements ResourceRepository
             entity.setMetadata(record.getMetadata());
         }
 
-        Long executionId = record.getProcessExecutionId();
-        if (executionId != null) {
+        ProcessExecutionIdentifier execution = record.getExecution();
+        if (execution != null) {
             entity.setProcessExecution(
-                entityManager.find(ProcessExecutionEntity.class, executionId));
+                entityManager.find(ProcessExecutionEntity.class, execution.getExecutionId()));
         }
 
         ResourceRevisionEntity revisionEntity = new ResourceRevisionEntity(entity);
@@ -431,10 +432,10 @@ public class DefaultResourceRepository implements ResourceRepository
             entity.setMetadata(record.getMetadata());
         }
 
-        Long executionId = record.getProcessExecutionId();
-        if (executionId != null) {
+        ProcessExecutionIdentifier execution = record.getExecution();
+        if (execution != null) {
             entity.setProcessExecution(
-                entityManager.find(ProcessExecutionEntity.class, executionId));
+                entityManager.find(ProcessExecutionEntity.class, execution.getExecutionId()));
         } else {
             entity.setProcessExecution(null);
         }

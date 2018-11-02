@@ -102,8 +102,8 @@ class ProcessInput extends React.Component {
     setActiveResource: PropTypes.func.isRequired,
 
     // Injected by React DnD
-    connectDragSource: PropTypes.func.isRequired,
-    isDragging: PropTypes.bool.isRequired
+    connectDragSource: PropTypes.func,
+    isDragging: PropTypes.bool,
   };
 
   static defaultProps = {

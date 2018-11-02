@@ -17,10 +17,6 @@ import {
 } from 'react-intl';
 
 import {
-  toast
-} from 'react-toastify';
-
-import {
   DynamicRoutes,
   buildPath
 } from '../../model/routes';
@@ -31,15 +27,12 @@ import {
 } from '../../model';
 
 import {
-  ToastTemplate,
-} from '../helpers';
-
-import {
   Filters,
   ProcessExecutions,
 } from "./execution/explorer";
 
 import {
+  exportMap,
   stop,
 } from '../../ducks/ui/views/process-explorer';
 
@@ -51,6 +44,10 @@ import {
   setPager,
   setSelected,
 } from '../../ducks/ui/views/process-execution-explorer';
+
+import {
+  message,
+} from '../../service';
 
 /**
  * Browse and manage process executions
@@ -64,6 +61,7 @@ class ProcessExecutionExplorer extends React.Component {
     super(props);
 
     this.editProcess = this.editProcess.bind(this);
+    this.exportMap = this.exportMap.bind(this);
     this.stopExecution = this.stopExecution.bind(this);
     this.viewExecution = this.viewExecution.bind(this);
     this.viewMap = this.viewMap.bind(this);
@@ -134,33 +132,20 @@ class ProcessExecutionExplorer extends React.Component {
   stopExecution(id, version) {
     this.props.stop(id, version)
       .catch((err) => {
-        this.displayMessage(err.message);
+        message.error(err.message);
       })
       .finally(() => {
         this.search();
       });
   }
 
-  displayMessage(message, level = EnumErrorLevel.ERROR) {
-    toast.dismiss();
-
-    switch (level) {
-      case EnumErrorLevel.WARN:
-        toast.warn(
-          <ToastTemplate iconClass='fa-warning' text={message} />
-        );
-        break;
-      case EnumErrorLevel.INFO:
-        toast.info(
-          <ToastTemplate iconClass='fa-info-circle' text={message} />
-        );
-        break;
-      default:
-        toast.error(
-          <ToastTemplate iconClass='fa-exclamation-circle' text={message} />
-        );
-        break;
-    }
+  exportMap(id, version, executionId) {
+    this.props.exportMap(id, version, executionId)
+      .then(() => {
+        message.info('Process execution export has started successfully');
+      }).catch((err) => {
+        message.error(err.message);
+      });
   }
 
   /**
@@ -208,6 +193,7 @@ class ProcessExecutionExplorer extends React.Component {
                     <ProcessExecutions
                       expanded={this.props.expanded}
                       editProcess={this.editProcess}
+                      exportMap={this.exportMap}
                       fetchExecutions={this.props.fetchExecutions}
                       filters={this.props.filters}
                       items={this.props.items}
@@ -245,6 +231,7 @@ const mapStateToProps = (state) => ({
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
   fetchExecutions,
+  exportMap,
   resetFilters,
   setExpanded,
   setFilter,

@@ -66,12 +66,26 @@ public class ProcessExecutionEntity
     @Column(name = "error_message", length = 2048)
     private String errorMessage;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "exported_by", updatable = true)
+    AccountEntity exportedBy;
+
+    @Column(name = "exported_on", nullable = true, updatable = true)
+    ZonedDateTime exportedOn;
+
     @OneToMany(
         mappedBy = "execution",
         fetch = FetchType.LAZY,
         cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH },
         orphanRemoval = false)
     List<ProcessExecutionStepEntity> steps = new ArrayList<>();
+
+    @OneToMany(
+        mappedBy = "execution",
+        fetch = FetchType.LAZY,
+        cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH },
+        orphanRemoval = false)
+    List<ProcessExecutionTableEntity> tables = new ArrayList<>();
 
     public static final Comparator<ProcessExecutionEntity> ORDER_BY_STARTED =
         Comparator.comparing(e -> e.getStartedOn());
@@ -147,6 +161,26 @@ public class ProcessExecutionEntity
         this.completedOn = completedOn;
     }
 
+    public AccountEntity getExportedBy()
+    {
+        return exportedBy;
+    }
+
+    public void setExportedBy(AccountEntity exportedBy)
+    {
+        this.exportedBy = exportedBy;
+    }
+
+    public ZonedDateTime getExportedOn()
+    {
+        return exportedOn;
+    }
+
+    public void setExportedOn(ZonedDateTime exportedOn)
+    {
+        this.exportedOn = exportedOn;
+    }
+
     public EnumProcessExecutionStatus getStatus()
     {
         return status;
@@ -171,18 +205,18 @@ public class ProcessExecutionEntity
     {
         return status.isTerminated();
     }
-    
+
     public boolean isTerminated(boolean deep)
     {
         // An execution may report as terminated although some steps may still report as
         // running. This is because workflow listeners that actually mark a step/execution
         // are not synchronized (and do not have to be). The overall status will eventually
         // be consistent, so usually this is not a problem.
-        
-        // If you want to be sure that an execution has settled down (i.e execution and steps 
+
+        // If you want to be sure that an execution has settled down (i.e execution and steps
         // report as terminated) you can use deep=true to check both own status and all statuses
         // from steps.
-        
+
         if (!deep) {
             return status.isTerminated();
         } else {
@@ -243,11 +277,22 @@ public class ProcessExecutionEntity
         return null;
     }
 
+    public List<ProcessExecutionTableEntity> getTables()
+    {
+        return tables;
+    }
+
+    public void addTable(ProcessExecutionTableEntity processExecutionTableEntity)
+    {
+        processExecutionTableEntity.setExecution(this);
+        tables.add(processExecutionTableEntity);
+    }
+
     public ProcessExecutionRecord toProcessExecutionRecord()
     {
         return toProcessExecutionRecord(true, false);
     }
-    
+
     public ProcessExecutionRecord toProcessExecutionRecord(boolean includeSteps)
     {
         return toProcessExecutionRecord(includeSteps, false);
@@ -268,12 +313,19 @@ public class ProcessExecutionEntity
         record.setTaskType(process.getParent().getTaskType());
         record.setName(process.getName());
         record.setErrorMessage(errorMessage);
-        
+        if (exportedBy != null) {
+            record.setExportedBy(exportedBy.getId(), exportedBy.getFullName());
+        }
+        record.setExportedOn(exportedOn);
+
         record.setRunning(!isTerminated(true));
-        
+
         if (includeSteps) {
             for (ProcessExecutionStepEntity s: steps) {
                 record.addStep(s.toProcessExecutionStepRecord(includeNonVerifiedFiles));
+            }
+            for (ProcessExecutionTableEntity t : tables) {
+                record.addTable(t.toProcessExecutionTableRecord());
             }
         }
 

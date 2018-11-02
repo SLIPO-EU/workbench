@@ -16,7 +16,7 @@
 
     <properties>
         <frontend.skip>false</frontend.skip>
-        <node.version>v8.11.1</node.version>
+        <node.version>v8.12.0</node.version>
         <node.env>production</node.env>
         <apache.csv.version>1.5</apache.csv.version>
     </properties>

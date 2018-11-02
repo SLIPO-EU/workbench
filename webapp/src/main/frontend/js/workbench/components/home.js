@@ -28,21 +28,22 @@ import SecureRoute from './helpers/secure-route';
 
 import {
   Dashboard,
+  EventViewer,
   HarvesterDataExplorer,
+  ProcessDesigner,
+  ProcessExecutionExplorer,
+  ProcessExecutionMapViewer,
+  ProcessExplorer,
   Profile,
-  Settings,
+  RecipeExplorer,
   ResourceExplorer,
   ResourceExport,
+  ResourceMapViewer,
   ResourceRegistration,
-  ProcessExplorer,
-  ProcessExecutionExplorer,
-  RecipeExplorer,
-  UserManager,
-  EventViewer,
   ResourceViewer,
-  ProcessDesigner,
-  ProcessExecutionMapViewer,
+  Settings,
   UserFileSystem,
+  UserManager,
 } from './views/';
 
 /////////////////////////////////////////////////////////////////
@@ -76,6 +77,7 @@ class Home extends React.Component {
     this._toggleSidebar = this._toggleSidebar.bind(this);
     this._styleSidebar = this._styleSidebar.bind(this);
     this._setAsideMenuVisibility = this._setAsideMenuVisibility.bind(this);
+    this._setSideBarVisibility = this._setSideBarVisibility.bind(this);
     this._toggleAsideMenu = this._toggleAsideMenu.bind(this);
     this._styleAsideMenu = this._styleAsideMenu.bind(this);
 
@@ -102,6 +104,10 @@ class Home extends React.Component {
     }
 
     this.setState({ sidebarStyle: style });
+  }
+
+  _setSideBarVisibility(value) {
+    this.setState({ sidebarOpen: value });
   }
 
   _setAsideMenuVisibility(value) {
@@ -149,11 +155,16 @@ class Home extends React.Component {
         <div className="app-body">
           <Route path="/" component={Sidebar} />
           <div className="main">
-            <Route path="/" component={Breadcrumb} />
+            <Route
+              path="/"
+              render={(props) =>
+                <Breadcrumb {...props} setAsideMenuVisibility={this._setAsideMenuVisibility} setSidebarVisibility={this._setSideBarVisibility} />}
+            />
             <Container fluid className="slipo-container">
               <Switch>
                 <Redirect from="/" to={StaticRoutes.Dashboard} exact />
                 {/* Dynamic */}
+                <Route path={DynamicRoutes.ResourceMapViewer} component={ResourceMapViewer} />
                 <Route path={DynamicRoutes.ResourceViewer} component={ResourceViewer} />
                 <Route path={DynamicRoutes.ProcessDesignerView} component={ProcessDesigner} exact />
                 <SecureRoute path={DynamicRoutes.ProcessDesignerEditTemplate} component={ProcessDesigner} exact roles={[Roles.ADMIN, Roles.AUTHOR]} />

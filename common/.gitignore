@@ -9,3 +9,4 @@
 !/vendor/triplegeo/config/profiles/OSM_Europe/
 !/vendor/limes/config/profiles/SLIPO_MatchByName/
 !/vendor/limes/config/profiles/SLIPO_equiMatchByNameAndDistance/
+/.apt_generated_tests/

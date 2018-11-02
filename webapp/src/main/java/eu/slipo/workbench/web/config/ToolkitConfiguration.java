@@ -11,6 +11,7 @@ import eu.slipo.workbench.web.model.configuration.AbstractToolConfiguration;
 import eu.slipo.workbench.web.model.configuration.DeerConfiguration;
 import eu.slipo.workbench.web.model.configuration.FagiConfiguration;
 import eu.slipo.workbench.web.model.configuration.LimesConfiguration;
+import eu.slipo.workbench.web.model.configuration.ReverseTripleGeoConfiguration;
 import eu.slipo.workbench.web.model.configuration.TripleGeoConfiguration;
 
 @Configuration
@@ -19,6 +20,8 @@ import eu.slipo.workbench.web.model.configuration.TripleGeoConfiguration;
 public class ToolkitConfiguration implements InitializingBean {
 
     private TripleGeoConfiguration triplegeo;
+
+    private ReverseTripleGeoConfiguration reverseTriplegeo;
 
     private LimesConfiguration limes;
 
@@ -32,6 +35,14 @@ public class ToolkitConfiguration implements InitializingBean {
 
     public void setTriplegeo(TripleGeoConfiguration triplegeo) {
         this.triplegeo = triplegeo;
+    }
+
+    public ReverseTripleGeoConfiguration getReverseTriplegeo() {
+        return reverseTriplegeo;
+    }
+
+    public void setReverseTriplegeo(ReverseTripleGeoConfiguration reverseTriplegeo) {
+        this.reverseTriplegeo = reverseTriplegeo;
     }
 
     public LimesConfiguration getLimes() {
@@ -61,6 +72,7 @@ public class ToolkitConfiguration implements InitializingBean {
     @Override
     public void afterPropertiesSet() throws Exception {
         this.CheckConfiguration("TripleGeo", this.triplegeo);
+        this.CheckConfiguration("Reverse TripleGeo", this.reverseTriplegeo);
         this.CheckConfiguration("LIMES", this.limes);
         this.CheckConfiguration("FAGI", this.fagi);
         this.CheckConfiguration("DEER", this.deer);

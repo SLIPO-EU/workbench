@@ -41,6 +41,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -53,7 +54,7 @@ import eu.slipo.workbench.rpc.jobs.listener.LoggingJobExecutionListener;
 import eu.slipo.workbench.rpc.jobs.tasklet.PrepareWorkingDirectoryTasklet;
 import eu.slipo.workbench.rpc.jobs.tasklet.docker.CreateContainerTasklet;
 import eu.slipo.workbench.rpc.jobs.tasklet.docker.RunContainerTasklet;
-import jersey.repackaged.com.google.common.collect.Iterables;
+
 
 @Component
 public class TriplegeoJobConfiguration extends ContainerBasedJobConfiguration

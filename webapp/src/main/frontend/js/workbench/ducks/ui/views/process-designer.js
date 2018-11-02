@@ -495,11 +495,6 @@ export default (state = initialState, action) => {
     case Types.RECEIVE_EXECUTION_KPI_DATA:
     case Types.RESET_SELECTED_FILE:
     case Types.RESET_SELECTED_KPI:
-    case Types.SELECT_LAYER:
-    case Types.TOGGLE_LAYER:
-    case Types.SET_BASE_LAYER:
-    case Types.SET_LAYER_COLOR:
-    case Types.SET_SELECTED_FEATURES:
       return {
         ...state,
         execution: executionReducer(state, action),
@@ -575,11 +570,6 @@ export {
   selectFile,
   resetSelectedFile,
   resetSelectedKpi,
-  selectLayer,
-  toggleLayer,
-  setBaseLayer,
-  setLayerColor,
-  selectFeatures,
   selectOutputPart,
 } from './process-designer/actions';
 

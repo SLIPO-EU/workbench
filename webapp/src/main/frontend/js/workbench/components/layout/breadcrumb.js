@@ -13,6 +13,14 @@ class Breadcrumb extends React.Component {
     super(props);
   }
 
+  _getComponent() {
+    let route = getRoute(matchRoute(this.props.location.pathname));
+    if ((route) && (route.toolbarComponent)) {
+      return route.toolbarComponent;
+    }
+    return null;
+  }
+
   checkRoles(routeRoles, userRoles, views) {
     if (typeof routeRoles === 'function') {
       return routeRoles(userRoles, views);
@@ -46,6 +54,7 @@ class Breadcrumb extends React.Component {
   }
 
   render() {
+    const ToolbarComponent = this._getComponent();
     const { location, user, views } = this.props;
     const roles = user ? user.roles : [];
 
@@ -60,20 +69,28 @@ class Breadcrumb extends React.Component {
       }, ["/"]);
 
     return (
-      <ReactBreadcrumb>
-        {paths.map((path) => {
-          const active = location.pathname === path;
-          const r = getRoute(matchRoute(path));
-          if (!r) {
-            return null;
+      <React.Fragment>
+        <ReactBreadcrumb>
+          {paths.map((path) => {
+            const active = location.pathname === path;
+            const r = getRoute(matchRoute(path));
+            if (!r) {
+              return null;
+            }
+            const title = (
+              <FormattedMessage id={r.title} defaultMessage={r.defaultTitle} />
+            );
+            const locked = !this.checkRoles(r.roles, roles, views);
+            return this.renderItem(path, active, title, locked);
+          })}
+          {ToolbarComponent &&
+            <ToolbarComponent
+              setAsideMenuVisibility={this.props.setAsideMenuVisibility}
+              setSidebarVisibility={this.props.setSidebarVisibility}
+            />
           }
-          const title = (
-            <FormattedMessage id={r.title} defaultMessage={r.defaultTitle} />
-          );
-          const locked = !this.checkRoles(r.roles, roles, views);
-          return this.renderItem(path, active, title, locked);
-        })}
-      </ReactBreadcrumb>
+        </ReactBreadcrumb>
+      </React.Fragment>
     );
   }
 }
