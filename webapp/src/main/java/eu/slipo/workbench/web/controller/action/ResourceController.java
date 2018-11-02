@@ -141,17 +141,15 @@ public class ResourceController extends BaseController {
             Assert.notNull(resource, "A resource is required");
             Assert.notNull(configuration, "Expected configuration for Triplegeo transformation");
 
-            final String resourceKey = "0";
-            final String outputKey = "1";
+            final String resourceKey = "1";
             final String procName = String.format("Resource export: %s", resource.getName());
 
             ProcessDefinition definition = processDefinitionBuilderFactory.create(procName)
                 .description("Resource export")
-                .resource("resource", resourceKey, resource.getResource())
+                .resource(resource.getName(), resourceKey, resource.getResource())
                 .export("export", stepBuilder -> stepBuilder
                     .group(0)
                     .input(resourceKey)
-                    .outputKey(outputKey)
                     .configuration(configuration))
                 .build();
 

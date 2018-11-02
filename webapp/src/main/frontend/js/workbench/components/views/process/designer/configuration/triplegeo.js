@@ -88,7 +88,7 @@ class TripleGeoConfiguration extends React.Component {
 
   render() {
     const props = this.props;
-    const { errors, readOnly, setValue, value, appConfiguration, filesystem, ...rest } = props;
+    const { errors, readOnly, setValue, value, appConfiguration, filesystem, } = props;
     const { createFolder, deletePath, uploadFile } = props;
 
     const inject = {

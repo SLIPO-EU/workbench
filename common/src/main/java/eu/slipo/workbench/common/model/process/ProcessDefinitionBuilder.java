@@ -262,7 +262,9 @@ public class ProcessDefinitionBuilder
             Assert.state(this.operation != null, "The operation must be specified");
             Assert.state(this.tool != null, "The tool must be specified");
             Assert.state(this.configuration != null, "The tool configuration must be provided");
-            Assert.state(this.operation == EnumOperation.REGISTER || !StringUtils.isEmpty(this.outputKey),
+            Assert.state(this.operation == EnumOperation.REGISTER ||
+                         (this.operation == EnumOperation.TRANSFORM && this.tool == EnumTool.REVERSE_TRIPLEGEO) ||
+                         !StringUtils.isEmpty(this.outputKey),
                 "A non-empty output key is required for a non-registration step");
             Assert.state(this.operation == EnumOperation.REGISTER || this.outputFormat != null,
                 "An output format is required for a non-registration step");
@@ -771,12 +773,13 @@ public class ProcessDefinitionBuilder
         {
             return this.input(Input.of(inputKey));
         }
-        
+
         public ReverseTransformStepBuilder input(List<String> inputKeys)
         {
             Assert.notNull(inputKeys, "An non-null list of inputs is expected");
-            for (String inputKey: inputKeys)
+            for (String inputKey: inputKeys) {
                 this.input(inputKey);
+            }
             return this;
         }
 

@@ -23,9 +23,9 @@ public class ProcessExecutionStepRecord implements Serializable
     private String name;
 
     private String nodeName;
-    
+
     private long jobExecutionId = -1L;
-    
+
     private EnumProcessExecutionStatus status = EnumProcessExecutionStatus.UNKNOWN;
 
     private EnumTool tool;
@@ -41,25 +41,25 @@ public class ProcessExecutionStepRecord implements Serializable
     private List<ProcessExecutionStepFileRecord> files;
 
     protected ProcessExecutionStepRecord() {}
-    
-    public ProcessExecutionStepRecord(long id, int key) 
+
+    public ProcessExecutionStepRecord(long id, int key)
     {
         this.id = id;
         this.key = key;
         this.files = new ArrayList<>();
     }
-    
+
     public ProcessExecutionStepRecord(int key)
     {
-        this(-1L, key); 
+        this(-1L, key);
     }
-    
+
     public ProcessExecutionStepRecord(ProcessExecutionStepRecord record)
     {
         this(record, true);
     }
-    
-    public ProcessExecutionStepRecord(ProcessExecutionStepRecord record, boolean copyFileRecords) 
+
+    public ProcessExecutionStepRecord(ProcessExecutionStepRecord record, boolean copyFileRecords)
     {
         this.id = record.id;
         this.key = record.key;
@@ -72,33 +72,33 @@ public class ProcessExecutionStepRecord implements Serializable
         this.startedOn = record.startedOn;
         this.completedOn = record.completedOn;
         this.errorMessage = record.errorMessage;
-        this.files = copyFileRecords? 
+        this.files = copyFileRecords?
             (record.files.stream()
                 .map(ProcessExecutionStepFileRecord::new)
                 .collect(Collectors.toList())) :
             (new ArrayList<>(record.files));
     }
-    
-    public long getId() 
+
+    public long getId()
     {
         return id;
     }
 
-    public int getKey() 
+    public int getKey()
     {
         return key;
     }
 
-    public String getName() 
+    public String getName()
     {
         return name;
     }
-    
+
     public void setName(String name)
     {
         this.name = name;
     }
-    
+
     public String getNodeName()
     {
         return nodeName;
@@ -108,7 +108,7 @@ public class ProcessExecutionStepRecord implements Serializable
     {
         this.nodeName = nodeName;
     }
-    
+
     public long getJobExecutionId()
     {
         return jobExecutionId;
@@ -118,7 +118,7 @@ public class ProcessExecutionStepRecord implements Serializable
     {
         this.jobExecutionId = jobExecutionId;
     }
-    
+
     public EnumProcessExecutionStatus getStatus() {
         return status;
     }
@@ -171,22 +171,29 @@ public class ProcessExecutionStepRecord implements Serializable
     {
         return this.files.size();
     }
-    
-    public List<ProcessExecutionStepFileRecord> getFiles() 
+
+    public List<ProcessExecutionStepFileRecord> getFiles()
     {
         return Collections.unmodifiableList(files);
     }
 
-    public void addFile(ProcessExecutionStepFileRecord f) 
+    public ProcessExecutionStepFileRecord getFile(EnumStepFile type, String outputPartKey) {
+        return this.files.stream()
+            .filter(f -> f.getType() == type && f.getOutputPartKey().equals(outputPartKey))
+            .findFirst()
+            .orElse(null);
+    }
+
+    public void addFile(ProcessExecutionStepFileRecord f)
     {
         this.files.add(f);
     }
-    
-    public void addFiles(List<ProcessExecutionStepFileRecord> files) 
+
+    public void addFiles(List<ProcessExecutionStepFileRecord> files)
     {
         this.files.addAll(files);
     }
-    
+
     public void clearFiles()
     {
         this.files.clear();
@@ -194,11 +201,11 @@ public class ProcessExecutionStepRecord implements Serializable
 
     public void setFile(int index, ProcessExecutionStepFileRecord f)
     {
-        Assert.isTrue(index < this.files.size(), 
+        Assert.isTrue(index < this.files.size(),
             "The given index does not correspond to a file record");
         this.files.set(index, f);
     }
-    
+
     @Override
     public String toString()
     {

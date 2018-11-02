@@ -95,6 +95,7 @@ export const defaultReverseValues = {
   defaultLang: languages[0].value,
   delimiter: '|',
   encoding: encodings[3].value,
+  profile: null,
   quote: '"',
   serialization: serializations[2].value,
   sourceCRS: crs[1].value,
