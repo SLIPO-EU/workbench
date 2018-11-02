@@ -148,7 +148,7 @@ public class ResourceController extends BaseController {
                 .description("Resource export")
                 .resource(resource.getName(), resourceKey, resource.getResource())
                 .export("export", stepBuilder -> stepBuilder
-                    .group(0)
+                    .group(1)
                     .input(resourceKey)
                     .configuration(configuration))
                 .build();
