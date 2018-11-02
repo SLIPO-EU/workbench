@@ -51,6 +51,7 @@ import eu.slipo.workbench.common.model.tool.FagiConfiguration;
 import eu.slipo.workbench.common.model.tool.ImportDataConfiguration;
 import eu.slipo.workbench.common.model.tool.LimesConfiguration;
 import eu.slipo.workbench.common.model.tool.RegisterToCatalogConfiguration;
+import eu.slipo.workbench.common.model.tool.ReverseTriplegeoConfiguration;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.model.tool.output.EnumImportDataOutputPart;
@@ -95,6 +96,14 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
     @Autowired
     @Qualifier("triplegeo.configurationProfiles")
     private Map<String, TriplegeoConfiguration> triplegeoConfigurationProfiles;
+
+    @Autowired
+    @Qualifier("reverseTriplegeo.flow")
+    private Flow reverseTriplegeoFlow;
+
+    @Autowired
+    @Qualifier("reverseTriplegeo.configurationProfiles")
+    private Map<String, ReverseTriplegeoConfiguration> reverseTriplegeoConfigurationProfiles;
 
     @Autowired
     @Qualifier("limes.flow")
@@ -340,6 +349,13 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
                     flow = triplegeoFlow;
                 }
                 break;
+            case REVERSE_TRIPLEGEO:
+                {
+                    Assert.state(inputNames.size() >= 1, "A reverse transformation step expects an input");
+                    parametersMap = buildParameters(definition, (ReverseTriplegeoConfiguration) configuration, createdBy);
+                    flow = reverseTriplegeoFlow;
+                }
+                break;
             case LIMES:
                 {
                     Assert.state(inputNames.size() == 2, "A interlinking step expects a pair (L, R) of inputs");
@@ -412,7 +428,7 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
     {
         final Properties parametersMap = propertiesConverter.valueToProperties(config);
 
-        // If derives from a configuration profile, draw missing parts from profile
+        // Check if configuration is based on a known profile
         final String profileName = parametersMap.getProperty("profile");
         if (!StringUtils.isEmpty(profileName)) {
             TriplegeoConfiguration profile = triplegeoConfigurationProfiles.get(profileName.toLowerCase());
@@ -440,11 +456,39 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
         return parametersMap;
     }
 
+    private Properties buildParameters(ProcessDefinition def, ReverseTriplegeoConfiguration config, int userId)
+    {
+        final Properties parametersMap = propertiesConverter.valueToProperties(config);
+
+        // Check if configuration is based on a known profile
+        final String profileName = parametersMap.getProperty("profile");
+        if (!StringUtils.isEmpty(profileName)) {
+            ReverseTriplegeoConfiguration profile =
+                reverseTriplegeoConfigurationProfiles.get(profileName.toLowerCase());
+            Assert.state(profile != null, "No such profile for reverseTriplegeo configuration");
+            // Use profile defaults to populate missing properties
+            if (StringUtils.isEmpty(parametersMap.getProperty("sparqlFile")))
+                parametersMap.setProperty("sparqlFile", profile.getSparqlFile());
+            // Clear profile (everything useful is expanded into parameters)
+            parametersMap.remove("profile");
+        }
+
+        // Resolve location of query file to an absolute URI (if needed)
+
+        final String location = parametersMap.getProperty("sparqlFile");
+        if (!StringUtils.isEmpty(location)) {
+            URI uri = resolveToAbsoluteUri(location, userId);
+            parametersMap.put("sparqlFile", uri.toString());
+        }
+
+        return parametersMap;
+    }
+
     private Properties buildParameters(ProcessDefinition def, LimesConfiguration config, int userId)
     {
         final Properties parametersMap = propertiesConverter.valueToProperties(config);
 
-        // If derives from a configuration profile, draw missing parts from profile
+        // Check if configuration is based on a known profile
         final String profileName = parametersMap.getProperty("profile");
         if (!StringUtils.isEmpty(profileName)) {
             LimesConfiguration profile = limesConfigurationProfiles.get(profileName.toLowerCase());
@@ -459,7 +503,7 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
     {
         final Properties parametersMap = propertiesConverter.valueToProperties(config);
 
-        // If derives from a configuration profile, draw missing parts from profile
+        // Check if configuration is based on a known profile
         final String profileName = parametersMap.getProperty("profile");
         if (!StringUtils.isEmpty(profileName)) {
             FagiConfiguration profile = fagiConfigurationProfiles.get(profileName.toLowerCase());
@@ -484,7 +528,7 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
     {
         final Properties parametersMap = propertiesConverter.valueToProperties(config);
 
-        // If derives from a configuration profile, draw missing parts from profile
+        // Check if configuration is based on a known profile
         final String profileName = parametersMap.getProperty("profile");
         if (!StringUtils.isEmpty(profileName)) {
             DeerConfiguration profile = deerConfigurationProfiles.get(profileName.toLowerCase());

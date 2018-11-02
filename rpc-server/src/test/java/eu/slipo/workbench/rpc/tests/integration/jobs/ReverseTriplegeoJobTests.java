@@ -53,7 +53,6 @@ public class ReverseTriplegeoJobTests extends AbstractJobTests
         @Bean
         public List<Fixture> fixtures() throws IOException
         {
-            // Fixme
             final Resource root = resourceLoader.getResource("classpath:testcases/reverseTriplegeo/");
 
             final List<Fixture> fixtures = new ArrayList<>();

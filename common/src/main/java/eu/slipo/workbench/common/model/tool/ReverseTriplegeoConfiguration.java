@@ -115,6 +115,7 @@ public class ReverseTriplegeoConfiguration extends TransformConfiguration<Revers
     {
         this._version = VERSION;
         this.inputFormat = EnumDataFormat.N_TRIPLES;
+        this.outputFormat = EnumDataFormat.CSV;
     }
 
     @JsonIgnore
@@ -304,7 +305,7 @@ public class ReverseTriplegeoConfiguration extends TransformConfiguration<Revers
     }
 
     @JsonProperty("sparqlFile")
-    @NotNull
+    @NotEmpty
     public String getSparqlFile()
     {
         return sparqlFile;

@@ -22,7 +22,7 @@ import eu.slipo.workbench.common.service.util.PropertiesConverterService;
 import eu.slipo.workbench.common.service.util.PropertiesConverterService.ConversionFailedException;
 
 /**
- * A test fixture that represents a basic to-RDF operation (using Triplegeo).
+ * A test fixture that represents a transformation (to RDF) operation (using Triplegeo).
  */
 @AutoValue
 abstract class TransformFixture extends BaseFixture
@@ -31,7 +31,8 @@ abstract class TransformFixture extends BaseFixture
 
     abstract TriplegeoConfiguration configuration();
 
-    abstract @Nullable Path expectedClassificationResult();
+    @Nullable
+    abstract Path expectedClassificationResult();
 
     DataSource inputAsDataSource() throws MalformedURLException
     {

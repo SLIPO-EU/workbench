@@ -763,20 +763,26 @@ public class ProcessDefinitionBuilder
 
         protected ReverseTransformStepBuilder input(Input p)
         {
-            Assert.isTrue(this.stepBuilder.input.isEmpty(),
-                "An input key is already specified for this step");
             this.stepBuilder.input(p);
             return this;
         }
 
         public ReverseTransformStepBuilder input(String inputKey)
         {
-            return input(Input.of(inputKey));
+            return this.input(Input.of(inputKey));
+        }
+        
+        public ReverseTransformStepBuilder input(List<String> inputKeys)
+        {
+            Assert.notNull(inputKeys, "An non-null list of inputs is expected");
+            for (String inputKey: inputKeys)
+                this.input(inputKey);
+            return this;
         }
 
         public ReverseTransformStepBuilder input(String inputKey, OutputPart<? extends AnyTool> part)
         {
-            return input(Input.of(inputKey, part));
+            return this.input(Input.of(inputKey, part));
         }
 
         public ReverseTransformStepBuilder configuration(TransformConfiguration<? extends TransformTool> configuration)
