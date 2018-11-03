@@ -264,7 +264,8 @@ public class DefaultProcessService implements ProcessService {
             }
             switch (task) {
                 case REGISTRATION:
-                    // Registration tasks can only be initiated by authors
+                case EXPORT:
+                    // Registration/Export tasks can only be initiated by authors
                     if (!this.authenticationFacade.hasRole(EnumRole.AUTHOR)) {
                         throw this.accessDenied();
                     }
