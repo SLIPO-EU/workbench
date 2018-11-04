@@ -1,0 +1,135 @@
+<http://slipo.eu/id/poi/89b19ee9-d335-3373-9dfe-98770a9c6b7a> <http://www.opengis.net/ont/geosparql#hasGeometry> <http://slipo.eu/id/poi/89b19ee9-d335-3373-9dfe-98770a9c6b7a/geom> .
+<http://slipo.eu/id/poi/89b19ee9-d335-3373-9dfe-98770a9c6b7a/geom> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/sf#POINT> .
+<http://slipo.eu/id/poi/89b19ee9-d335-3373-9dfe-98770a9c6b7a/geom> <http://www.opengis.net/ont/geosparql#asWKT> "<http://www.opengis.net/def/crs/EPSG/0/4326> POINT (37.2074648 55.9950817)"^^<http://www.opengis.net/ont/geosparql#wktLiteral> .
+<http://slipo.eu/id/poi/89b19ee9-d335-3373-9dfe-98770a9c6b7a> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/geosparql#Feature> .
+<http://slipo.eu/id/poi/89b19ee9-d335-3373-9dfe-98770a9c6b7a> <http://slipo.eu/def#source> <http://slipo.eu/id/poi/89b19ee9-d335-3373-9dfe-98770a9c6b7a/sourceInfo> .
+<http://slipo.eu/id/poi/89b19ee9-d335-3373-9dfe-98770a9c6b7a/sourceInfo> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/def#sourceInfo> .
+<http://slipo.eu/id/poi/89b19ee9-d335-3373-9dfe-98770a9c6b7a/sourceInfo> <http://slipo.eu/def#poiRef> "N1000" .
+<http://slipo.eu/id/poi/89b19ee9-d335-3373-9dfe-98770a9c6b7a> <http://slipo.eu/def#category> <http://slipo.eu/id/term/e82fc69c-1b4f-3a6c-8c7e-57021cb7eef8> .
+<http://slipo.eu/id/poi/89b19ee9-d335-3373-9dfe-98770a9c6b7a> <http://slipo.eu/def#name> <http://slipo.eu/id/poi/89b19ee9-d335-3373-9dfe-98770a9c6b7a/name> .
+<http://slipo.eu/id/poi/89b19ee9-d335-3373-9dfe-98770a9c6b7a/name> <http://slipo.eu/def#nameValue> "Десяточка"@en .
+<http://slipo.eu/id/poi/89b19ee9-d335-3373-9dfe-98770a9c6b7a/name> <http://slipo.eu/def#language> "en" .
+<http://slipo.eu/id/poi/89b19ee9-d335-3373-9dfe-98770a9c6b7a/name> <http://slipo.eu/def#nameType> "official" .
+<http://slipo.eu/id/poi/89b19ee9-d335-3373-9dfe-98770a9c6b7a/name> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/def#name> .
+<http://slipo.eu/id/poi/89b19ee9-d335-3373-9dfe-98770a9c6b7a> <http://www.w3.org/2003/01/geo/wgs84_pos#long> "37.2074648"^^<http://www.w3.org/2001/XMLSchema#float> .
+<http://slipo.eu/id/poi/89b19ee9-d335-3373-9dfe-98770a9c6b7a> <http://www.w3.org/2003/01/geo/wgs84_pos#lat> "55.9950817"^^<http://www.w3.org/2001/XMLSchema#float> .
+<http://slipo.eu/id/poi/e9dfc7c0-1092-306f-b843-92cff48ade00> <http://www.opengis.net/ont/geosparql#hasGeometry> <http://slipo.eu/id/poi/e9dfc7c0-1092-306f-b843-92cff48ade00/geom> .
+<http://slipo.eu/id/poi/e9dfc7c0-1092-306f-b843-92cff48ade00/geom> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/sf#POINT> .
+<http://slipo.eu/id/poi/e9dfc7c0-1092-306f-b843-92cff48ade00/geom> <http://www.opengis.net/ont/geosparql#asWKT> "<http://www.opengis.net/def/crs/EPSG/0/4326> POINT (10.7641113 59.9478741)"^^<http://www.opengis.net/ont/geosparql#wktLiteral> .
+<http://slipo.eu/id/poi/e9dfc7c0-1092-306f-b843-92cff48ade00> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/geosparql#Feature> .
+<http://slipo.eu/id/poi/e9dfc7c0-1092-306f-b843-92cff48ade00> <http://slipo.eu/def#source> <http://slipo.eu/id/poi/e9dfc7c0-1092-306f-b843-92cff48ade00/sourceInfo> .
+<http://slipo.eu/id/poi/e9dfc7c0-1092-306f-b843-92cff48ade00/sourceInfo> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/def#sourceInfo> .
+<http://slipo.eu/id/poi/e9dfc7c0-1092-306f-b843-92cff48ade00/sourceInfo> <http://slipo.eu/def#poiRef> "N79248" .
+<http://slipo.eu/id/poi/e9dfc7c0-1092-306f-b843-92cff48ade00> <http://slipo.eu/def#category> <http://slipo.eu/id/term/22f71735-1f7f-3df2-a1e2-59413802c965> .
+<http://slipo.eu/id/poi/e9dfc7c0-1092-306f-b843-92cff48ade00> <http://slipo.eu/def#name> <http://slipo.eu/id/poi/e9dfc7c0-1092-306f-b843-92cff48ade00/name> .
+<http://slipo.eu/id/poi/e9dfc7c0-1092-306f-b843-92cff48ade00/name> <http://slipo.eu/def#nameValue> "Nydalsveien"@en .
+<http://slipo.eu/id/poi/e9dfc7c0-1092-306f-b843-92cff48ade00/name> <http://slipo.eu/def#language> "en" .
+<http://slipo.eu/id/poi/e9dfc7c0-1092-306f-b843-92cff48ade00/name> <http://slipo.eu/def#nameType> "official" .
+<http://slipo.eu/id/poi/e9dfc7c0-1092-306f-b843-92cff48ade00/name> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/def#name> .
+<http://slipo.eu/id/poi/e9dfc7c0-1092-306f-b843-92cff48ade00> <http://www.w3.org/2003/01/geo/wgs84_pos#long> "10.7641113"^^<http://www.w3.org/2001/XMLSchema#float> .
+<http://slipo.eu/id/poi/e9dfc7c0-1092-306f-b843-92cff48ade00> <http://www.w3.org/2003/01/geo/wgs84_pos#lat> "59.9478741"^^<http://www.w3.org/2001/XMLSchema#float> .
+<http://slipo.eu/id/poi/c5706adb-43ce-346e-8c47-124225041730> <http://www.opengis.net/ont/geosparql#hasGeometry> <http://slipo.eu/id/poi/c5706adb-43ce-346e-8c47-124225041730/geom> .
+<http://slipo.eu/id/poi/c5706adb-43ce-346e-8c47-124225041730/geom> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/sf#POINT> .
+<http://slipo.eu/id/poi/c5706adb-43ce-346e-8c47-124225041730/geom> <http://www.opengis.net/ont/geosparql#asWKT> "<http://www.opengis.net/def/crs/EPSG/0/4326> POINT (10.675326 59.9278853)"^^<http://www.opengis.net/ont/geosparql#wktLiteral> .
+<http://slipo.eu/id/poi/c5706adb-43ce-346e-8c47-124225041730> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/geosparql#Feature> .
+<http://slipo.eu/id/poi/c5706adb-43ce-346e-8c47-124225041730> <http://slipo.eu/def#source> <http://slipo.eu/id/poi/c5706adb-43ce-346e-8c47-124225041730/sourceInfo> .
+<http://slipo.eu/id/poi/c5706adb-43ce-346e-8c47-124225041730/sourceInfo> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/def#sourceInfo> .
+<http://slipo.eu/id/poi/c5706adb-43ce-346e-8c47-124225041730/sourceInfo> <http://slipo.eu/def#poiRef> "N79349" .
+<http://slipo.eu/id/poi/c5706adb-43ce-346e-8c47-124225041730> <http://slipo.eu/def#category> <http://slipo.eu/id/term/22f71735-1f7f-3df2-a1e2-59413802c965> .
+<http://slipo.eu/id/poi/c5706adb-43ce-346e-8c47-124225041730> <http://slipo.eu/def#name> <http://slipo.eu/id/poi/c5706adb-43ce-346e-8c47-124225041730/name> .
+<http://slipo.eu/id/poi/c5706adb-43ce-346e-8c47-124225041730/name> <http://slipo.eu/def#nameValue> "Hoff terrasse"@en .
+<http://slipo.eu/id/poi/c5706adb-43ce-346e-8c47-124225041730/name> <http://slipo.eu/def#language> "en" .
+<http://slipo.eu/id/poi/c5706adb-43ce-346e-8c47-124225041730/name> <http://slipo.eu/def#nameType> "official" .
+<http://slipo.eu/id/poi/c5706adb-43ce-346e-8c47-124225041730/name> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/def#name> .
+<http://slipo.eu/id/poi/c5706adb-43ce-346e-8c47-124225041730> <http://www.w3.org/2003/01/geo/wgs84_pos#long> "10.675326"^^<http://www.w3.org/2001/XMLSchema#float> .
+<http://slipo.eu/id/poi/c5706adb-43ce-346e-8c47-124225041730> <http://www.w3.org/2003/01/geo/wgs84_pos#lat> "59.9278853"^^<http://www.w3.org/2001/XMLSchema#float> .
+<http://slipo.eu/id/poi/7663d1e0-3550-35bb-a7b3-ee2ba36e1d50> <http://www.opengis.net/ont/geosparql#hasGeometry> <http://slipo.eu/id/poi/7663d1e0-3550-35bb-a7b3-ee2ba36e1d50/geom> .
+<http://slipo.eu/id/poi/7663d1e0-3550-35bb-a7b3-ee2ba36e1d50/geom> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/sf#POINT> .
+<http://slipo.eu/id/poi/7663d1e0-3550-35bb-a7b3-ee2ba36e1d50/geom> <http://www.opengis.net/ont/geosparql#asWKT> "<http://www.opengis.net/def/crs/EPSG/0/4326> POINT (10.6402566 59.9144675)"^^<http://www.opengis.net/ont/geosparql#wktLiteral> .
+<http://slipo.eu/id/poi/7663d1e0-3550-35bb-a7b3-ee2ba36e1d50> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/geosparql#Feature> .
+<http://slipo.eu/id/poi/7663d1e0-3550-35bb-a7b3-ee2ba36e1d50> <http://slipo.eu/def#source> <http://slipo.eu/id/poi/7663d1e0-3550-35bb-a7b3-ee2ba36e1d50/sourceInfo> .
+<http://slipo.eu/id/poi/7663d1e0-3550-35bb-a7b3-ee2ba36e1d50/sourceInfo> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/def#sourceInfo> .
+<http://slipo.eu/id/poi/7663d1e0-3550-35bb-a7b3-ee2ba36e1d50/sourceInfo> <http://slipo.eu/def#poiRef> "N79400" .
+<http://slipo.eu/id/poi/7663d1e0-3550-35bb-a7b3-ee2ba36e1d50> <http://slipo.eu/def#category> <http://slipo.eu/id/term/22f71735-1f7f-3df2-a1e2-59413802c965> .
+<http://slipo.eu/id/poi/7663d1e0-3550-35bb-a7b3-ee2ba36e1d50> <http://slipo.eu/def#name> <http://slipo.eu/id/poi/7663d1e0-3550-35bb-a7b3-ee2ba36e1d50/name> .
+<http://slipo.eu/id/poi/7663d1e0-3550-35bb-a7b3-ee2ba36e1d50/name> <http://slipo.eu/def#nameValue> "Lysaker bru"@en .
+<http://slipo.eu/id/poi/7663d1e0-3550-35bb-a7b3-ee2ba36e1d50/name> <http://slipo.eu/def#language> "en" .
+<http://slipo.eu/id/poi/7663d1e0-3550-35bb-a7b3-ee2ba36e1d50/name> <http://slipo.eu/def#nameType> "official" .
+<http://slipo.eu/id/poi/7663d1e0-3550-35bb-a7b3-ee2ba36e1d50/name> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/def#name> .
+<http://slipo.eu/id/poi/7663d1e0-3550-35bb-a7b3-ee2ba36e1d50> <http://www.w3.org/2003/01/geo/wgs84_pos#long> "10.6402566"^^<http://www.w3.org/2001/XMLSchema#float> .
+<http://slipo.eu/id/poi/7663d1e0-3550-35bb-a7b3-ee2ba36e1d50> <http://www.w3.org/2003/01/geo/wgs84_pos#lat> "59.9144675"^^<http://www.w3.org/2001/XMLSchema#float> .
+<http://slipo.eu/id/poi/f08a7a8f-2a84-3180-b40f-6e873a4d28c2> <http://www.opengis.net/ont/geosparql#hasGeometry> <http://slipo.eu/id/poi/f08a7a8f-2a84-3180-b40f-6e873a4d28c2/geom> .
+<http://slipo.eu/id/poi/f08a7a8f-2a84-3180-b40f-6e873a4d28c2/geom> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/sf#POINT> .
+<http://slipo.eu/id/poi/f08a7a8f-2a84-3180-b40f-6e873a4d28c2/geom> <http://www.opengis.net/ont/geosparql#asWKT> "<http://www.opengis.net/def/crs/EPSG/0/4326> POINT (10.7613053 59.9307562)"^^<http://www.opengis.net/ont/geosparql#wktLiteral> .
+<http://slipo.eu/id/poi/f08a7a8f-2a84-3180-b40f-6e873a4d28c2> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/geosparql#Feature> .
+<http://slipo.eu/id/poi/f08a7a8f-2a84-3180-b40f-6e873a4d28c2> <http://slipo.eu/def#source> <http://slipo.eu/id/poi/f08a7a8f-2a84-3180-b40f-6e873a4d28c2/sourceInfo> .
+<http://slipo.eu/id/poi/f08a7a8f-2a84-3180-b40f-6e873a4d28c2/sourceInfo> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/def#sourceInfo> .
+<http://slipo.eu/id/poi/f08a7a8f-2a84-3180-b40f-6e873a4d28c2/sourceInfo> <http://slipo.eu/def#poiRef> "N79463" .
+<http://slipo.eu/id/poi/f08a7a8f-2a84-3180-b40f-6e873a4d28c2> <http://slipo.eu/def#category> <http://slipo.eu/id/term/22f71735-1f7f-3df2-a1e2-59413802c965> .
+<http://slipo.eu/id/poi/f08a7a8f-2a84-3180-b40f-6e873a4d28c2> <http://slipo.eu/def#name> <http://slipo.eu/id/poi/f08a7a8f-2a84-3180-b40f-6e873a4d28c2/name> .
+<http://slipo.eu/id/poi/f08a7a8f-2a84-3180-b40f-6e873a4d28c2/name> <http://slipo.eu/def#nameValue> "Biermanns gate"@en .
+<http://slipo.eu/id/poi/f08a7a8f-2a84-3180-b40f-6e873a4d28c2/name> <http://slipo.eu/def#language> "en" .
+<http://slipo.eu/id/poi/f08a7a8f-2a84-3180-b40f-6e873a4d28c2/name> <http://slipo.eu/def#nameType> "official" .
+<http://slipo.eu/id/poi/f08a7a8f-2a84-3180-b40f-6e873a4d28c2/name> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/def#name> .
+<http://slipo.eu/id/poi/f08a7a8f-2a84-3180-b40f-6e873a4d28c2> <http://www.w3.org/2003/01/geo/wgs84_pos#long> "10.7613053"^^<http://www.w3.org/2001/XMLSchema#float> .
+<http://slipo.eu/id/poi/f08a7a8f-2a84-3180-b40f-6e873a4d28c2> <http://www.w3.org/2003/01/geo/wgs84_pos#lat> "59.9307562"^^<http://www.w3.org/2001/XMLSchema#float> .
+<http://slipo.eu/id/poi/dbd7a61f-e9f7-3154-af33-f832e202b8aa> <http://www.opengis.net/ont/geosparql#hasGeometry> <http://slipo.eu/id/poi/dbd7a61f-e9f7-3154-af33-f832e202b8aa/geom> .
+<http://slipo.eu/id/poi/dbd7a61f-e9f7-3154-af33-f832e202b8aa/geom> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/sf#POINT> .
+<http://slipo.eu/id/poi/dbd7a61f-e9f7-3154-af33-f832e202b8aa/geom> <http://www.opengis.net/ont/geosparql#asWKT> "<http://www.opengis.net/def/crs/EPSG/0/4326> POINT (15.6377601 58.415078)"^^<http://www.opengis.net/ont/geosparql#wktLiteral> .
+<http://slipo.eu/id/poi/dbd7a61f-e9f7-3154-af33-f832e202b8aa> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/geosparql#Feature> .
+<http://slipo.eu/id/poi/dbd7a61f-e9f7-3154-af33-f832e202b8aa> <http://slipo.eu/def#source> <http://slipo.eu/id/poi/dbd7a61f-e9f7-3154-af33-f832e202b8aa/sourceInfo> .
+<http://slipo.eu/id/poi/dbd7a61f-e9f7-3154-af33-f832e202b8aa/sourceInfo> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/def#sourceInfo> .
+<http://slipo.eu/id/poi/dbd7a61f-e9f7-3154-af33-f832e202b8aa/sourceInfo> <http://slipo.eu/def#poiRef> "N81048" .
+<http://slipo.eu/id/poi/dbd7a61f-e9f7-3154-af33-f832e202b8aa> <http://slipo.eu/def#category> <http://slipo.eu/id/term/22f71735-1f7f-3df2-a1e2-59413802c965> .
+<http://slipo.eu/id/poi/dbd7a61f-e9f7-3154-af33-f832e202b8aa> <http://slipo.eu/def#name> <http://slipo.eu/id/poi/dbd7a61f-e9f7-3154-af33-f832e202b8aa/name> .
+<http://slipo.eu/id/poi/dbd7a61f-e9f7-3154-af33-f832e202b8aa/name> <http://slipo.eu/def#nameValue> "Anders Ljungstedts gymnasium"@en .
+<http://slipo.eu/id/poi/dbd7a61f-e9f7-3154-af33-f832e202b8aa/name> <http://slipo.eu/def#language> "en" .
+<http://slipo.eu/id/poi/dbd7a61f-e9f7-3154-af33-f832e202b8aa/name> <http://slipo.eu/def#nameType> "official" .
+<http://slipo.eu/id/poi/dbd7a61f-e9f7-3154-af33-f832e202b8aa/name> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/def#name> .
+<http://slipo.eu/id/poi/dbd7a61f-e9f7-3154-af33-f832e202b8aa> <http://www.w3.org/2003/01/geo/wgs84_pos#long> "15.6377601"^^<http://www.w3.org/2001/XMLSchema#float> .
+<http://slipo.eu/id/poi/dbd7a61f-e9f7-3154-af33-f832e202b8aa> <http://www.w3.org/2003/01/geo/wgs84_pos#lat> "58.415078"^^<http://www.w3.org/2001/XMLSchema#float> .
+<http://slipo.eu/id/poi/503e6060-0923-351e-9a49-ae79bb53fe41> <http://www.opengis.net/ont/geosparql#hasGeometry> <http://slipo.eu/id/poi/503e6060-0923-351e-9a49-ae79bb53fe41/geom> .
+<http://slipo.eu/id/poi/503e6060-0923-351e-9a49-ae79bb53fe41/geom> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/sf#POINT> .
+<http://slipo.eu/id/poi/503e6060-0923-351e-9a49-ae79bb53fe41/geom> <http://www.opengis.net/ont/geosparql#asWKT> "<http://www.opengis.net/def/crs/EPSG/0/4326> POINT (15.6541936 58.4179992)"^^<http://www.opengis.net/ont/geosparql#wktLiteral> .
+<http://slipo.eu/id/poi/503e6060-0923-351e-9a49-ae79bb53fe41> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/geosparql#Feature> .
+<http://slipo.eu/id/poi/503e6060-0923-351e-9a49-ae79bb53fe41> <http://slipo.eu/def#source> <http://slipo.eu/id/poi/503e6060-0923-351e-9a49-ae79bb53fe41/sourceInfo> .
+<http://slipo.eu/id/poi/503e6060-0923-351e-9a49-ae79bb53fe41/sourceInfo> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/def#sourceInfo> .
+<http://slipo.eu/id/poi/503e6060-0923-351e-9a49-ae79bb53fe41/sourceInfo> <http://slipo.eu/def#poiRef> "N81062" .
+<http://slipo.eu/id/poi/503e6060-0923-351e-9a49-ae79bb53fe41> <http://slipo.eu/def#category> <http://slipo.eu/id/term/22f71735-1f7f-3df2-a1e2-59413802c965> .
+<http://slipo.eu/id/poi/503e6060-0923-351e-9a49-ae79bb53fe41> <http://slipo.eu/def#name> <http://slipo.eu/id/poi/503e6060-0923-351e-9a49-ae79bb53fe41/name> .
+<http://slipo.eu/id/poi/503e6060-0923-351e-9a49-ae79bb53fe41/name> <http://slipo.eu/def#nameValue> "Hagalundsvägen"@en .
+<http://slipo.eu/id/poi/503e6060-0923-351e-9a49-ae79bb53fe41/name> <http://slipo.eu/def#language> "en" .
+<http://slipo.eu/id/poi/503e6060-0923-351e-9a49-ae79bb53fe41/name> <http://slipo.eu/def#nameType> "official" .
+<http://slipo.eu/id/poi/503e6060-0923-351e-9a49-ae79bb53fe41/name> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/def#name> .
+<http://slipo.eu/id/poi/503e6060-0923-351e-9a49-ae79bb53fe41> <http://www.w3.org/2003/01/geo/wgs84_pos#long> "15.6541936"^^<http://www.w3.org/2001/XMLSchema#float> .
+<http://slipo.eu/id/poi/503e6060-0923-351e-9a49-ae79bb53fe41> <http://www.w3.org/2003/01/geo/wgs84_pos#lat> "58.4179992"^^<http://www.w3.org/2001/XMLSchema#float> .
+<http://slipo.eu/id/poi/6e81e24c-3832-3c30-98c2-a7f4cea08c63> <http://www.opengis.net/ont/geosparql#hasGeometry> <http://slipo.eu/id/poi/6e81e24c-3832-3c30-98c2-a7f4cea08c63/geom> .
+<http://slipo.eu/id/poi/6e81e24c-3832-3c30-98c2-a7f4cea08c63/geom> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/sf#POINT> .
+<http://slipo.eu/id/poi/6e81e24c-3832-3c30-98c2-a7f4cea08c63/geom> <http://www.opengis.net/ont/geosparql#asWKT> "<http://www.opengis.net/def/crs/EPSG/0/4326> POINT (15.6133128 58.4028714)"^^<http://www.opengis.net/ont/geosparql#wktLiteral> .
+<http://slipo.eu/id/poi/6e81e24c-3832-3c30-98c2-a7f4cea08c63> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/geosparql#Feature> .
+<http://slipo.eu/id/poi/6e81e24c-3832-3c30-98c2-a7f4cea08c63> <http://slipo.eu/def#source> <http://slipo.eu/id/poi/6e81e24c-3832-3c30-98c2-a7f4cea08c63/sourceInfo> .
+<http://slipo.eu/id/poi/6e81e24c-3832-3c30-98c2-a7f4cea08c63/sourceInfo> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/def#sourceInfo> .
+<http://slipo.eu/id/poi/6e81e24c-3832-3c30-98c2-a7f4cea08c63/sourceInfo> <http://slipo.eu/def#poiRef> "N81186" .
+<http://slipo.eu/id/poi/6e81e24c-3832-3c30-98c2-a7f4cea08c63> <http://slipo.eu/def#category> <http://slipo.eu/id/term/22f71735-1f7f-3df2-a1e2-59413802c965> .
+<http://slipo.eu/id/poi/6e81e24c-3832-3c30-98c2-a7f4cea08c63> <http://slipo.eu/def#name> <http://slipo.eu/id/poi/6e81e24c-3832-3c30-98c2-a7f4cea08c63/name> .
+<http://slipo.eu/id/poi/6e81e24c-3832-3c30-98c2-a7f4cea08c63/name> <http://slipo.eu/def#nameValue> "Kaserngatan"@en .
+<http://slipo.eu/id/poi/6e81e24c-3832-3c30-98c2-a7f4cea08c63/name> <http://slipo.eu/def#language> "en" .
+<http://slipo.eu/id/poi/6e81e24c-3832-3c30-98c2-a7f4cea08c63/name> <http://slipo.eu/def#nameType> "official" .
+<http://slipo.eu/id/poi/6e81e24c-3832-3c30-98c2-a7f4cea08c63/name> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/def#name> .
+<http://slipo.eu/id/poi/6e81e24c-3832-3c30-98c2-a7f4cea08c63> <http://www.w3.org/2003/01/geo/wgs84_pos#long> "15.6133128"^^<http://www.w3.org/2001/XMLSchema#float> .
+<http://slipo.eu/id/poi/6e81e24c-3832-3c30-98c2-a7f4cea08c63> <http://www.w3.org/2003/01/geo/wgs84_pos#lat> "58.4028714"^^<http://www.w3.org/2001/XMLSchema#float> .
+<http://slipo.eu/id/poi/0e623a3b-8c8b-3c51-b9df-375e7e6a5287> <http://www.opengis.net/ont/geosparql#hasGeometry> <http://slipo.eu/id/poi/0e623a3b-8c8b-3c51-b9df-375e7e6a5287/geom> .
+<http://slipo.eu/id/poi/0e623a3b-8c8b-3c51-b9df-375e7e6a5287/geom> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/sf#POINT> .
+<http://slipo.eu/id/poi/0e623a3b-8c8b-3c51-b9df-375e7e6a5287/geom> <http://www.opengis.net/ont/geosparql#asWKT> "<http://www.opengis.net/def/crs/EPSG/0/4326> POINT (15.5663324 58.3898178)"^^<http://www.opengis.net/ont/geosparql#wktLiteral> .
+<http://slipo.eu/id/poi/0e623a3b-8c8b-3c51-b9df-375e7e6a5287> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/geosparql#Feature> .
+<http://slipo.eu/id/poi/0e623a3b-8c8b-3c51-b9df-375e7e6a5287> <http://slipo.eu/def#source> <http://slipo.eu/id/poi/0e623a3b-8c8b-3c51-b9df-375e7e6a5287/sourceInfo> .
+<http://slipo.eu/id/poi/0e623a3b-8c8b-3c51-b9df-375e7e6a5287/sourceInfo> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/def#sourceInfo> .
+<http://slipo.eu/id/poi/0e623a3b-8c8b-3c51-b9df-375e7e6a5287/sourceInfo> <http://slipo.eu/def#poiRef> "N81267" .
+<http://slipo.eu/id/poi/0e623a3b-8c8b-3c51-b9df-375e7e6a5287> <http://slipo.eu/def#category> <http://slipo.eu/id/term/22f71735-1f7f-3df2-a1e2-59413802c965> .
+<http://slipo.eu/id/poi/0e623a3b-8c8b-3c51-b9df-375e7e6a5287> <http://slipo.eu/def#name> <http://slipo.eu/id/poi/0e623a3b-8c8b-3c51-b9df-375e7e6a5287/name> .
+<http://slipo.eu/id/poi/0e623a3b-8c8b-3c51-b9df-375e7e6a5287/name> <http://slipo.eu/def#nameValue> "Isberget"@en .
+<http://slipo.eu/id/poi/0e623a3b-8c8b-3c51-b9df-375e7e6a5287/name> <http://slipo.eu/def#language> "en" .
+<http://slipo.eu/id/poi/0e623a3b-8c8b-3c51-b9df-375e7e6a5287/name> <http://slipo.eu/def#nameType> "official" .
+<http://slipo.eu/id/poi/0e623a3b-8c8b-3c51-b9df-375e7e6a5287/name> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/def#name> .
+<http://slipo.eu/id/poi/0e623a3b-8c8b-3c51-b9df-375e7e6a5287> <http://www.w3.org/2003/01/geo/wgs84_pos#long> "15.5663324"^^<http://www.w3.org/2001/XMLSchema#float> .
+<http://slipo.eu/id/poi/0e623a3b-8c8b-3c51-b9df-375e7e6a5287> <http://www.w3.org/2003/01/geo/wgs84_pos#lat> "58.3898178"^^<http://www.w3.org/2001/XMLSchema#float> .

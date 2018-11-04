@@ -2,13 +2,18 @@ package eu.slipo.workbench.rpc.jobs;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import javax.annotation.PostConstruct;
 import javax.validation.ConstraintViolation;
@@ -165,12 +170,12 @@ public class ReverseTriplegeoJobConfiguration extends ContainerBasedJobConfigura
             }
 
             // Check if input/output formats are supported
-            // The only supported input format is NT (N-TRIPLES): this is a limitation applied by
-            // workbench (i.e. not by Triplegeo) because all normal Triplegeo operations result
-            // in NT.
+            // The only supported input format is NT (N-TRIPLES): this is a limitation applied by workbench
+            // (i.e. not by Triplegeo) because all normal Triplegeo operations result in N-TRIPLES.
             Assert.state(configuration.getInputFormat() == EnumDataFormat.N_TRIPLES,
                 "The given input format is not supported (inside SLIPO workbench)");
-            Assert.state(configuration.getOutputFormat() == EnumDataFormat.CSV,
+            EnumDataFormat outputFormat = configuration.getOutputFormat();
+            Assert.state(outputFormat == EnumDataFormat.CSV || outputFormat == EnumDataFormat.SHAPEFILE,
                 "The given output format is not supported");
 
             // Update execution context
@@ -326,6 +331,76 @@ public class ReverseTriplegeoJobConfiguration extends ContainerBasedJobConfigura
             .build();
     }
 
+    @Bean("reverseTriplegeo.createOutputArchiveTasklet")
+    @JobScope
+    public Tasklet createOutputArchiveTasklet(
+        @Value("#{jobExecutionContext['outputFormat']}") final String outputFormatName,
+        @Value("#{jobExecutionContext['outputDir']}") final String outputDir)
+    {
+        final EnumDataFormat outputFormat = EnumDataFormat.valueOf(outputFormatName);
+        final String outputName = ReverseTriplegeoConfiguration.OUTPUT_NAME + ".zip";
+
+        final Path archivePath = Paths.get(outputDir, outputName);
+
+        // Collect the files to be packaged into the archive
+
+        List<String> fileNames = null;
+        switch (outputFormat) {
+        case SHAPEFILE:
+            fileNames = Arrays.asList("points.shp", "points.shx", "points.dbf", "points.prj");
+            break;
+        case CSV:
+        default:
+            fileNames = Arrays.asList("points.csv");
+            break;
+        }
+
+        final List<Path> files = Lists.transform(fileNames, Paths.get(outputDir)::resolve);
+
+        // Return a tasklet to carry out this step
+
+        return new Tasklet()
+        {
+            @Override
+            public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext)
+                throws Exception
+            {
+                // Create a flat ZIP archive with everything regarded as output
+
+                try (
+                    OutputStream out = Files.newOutputStream(archivePath);
+                    ZipOutputStream zout = new ZipOutputStream(out))
+                {
+                    for (Path file: files) {
+                        String entryName = file.getFileName().toString();
+                        ZipEntry entry = new ZipEntry(entryName);
+                        zout.putNextEntry(entry);
+                        Files.copy(file, zout);
+                    }
+                }
+
+                logger.info("Created output archive: {}", archivePath);
+
+                // Cleanup: delete original output files (a single archive will be exported)
+
+                for (Path file: files)
+                    Files.delete(file);
+
+                return null;
+            }
+        };
+    }
+
+    @Bean("reverseTriplegeo.createOutputArchiveStep")
+    public Step createOutputArchiveStep(
+        @Qualifier("reverseTriplegeo.createOutputArchiveTasklet") Tasklet tasklet)
+        throws Exception
+    {
+        return stepBuilderFactory.get("reverseTriplegeo.createOutputArchive")
+            .tasklet(tasklet)
+            .build();
+    }
+
     /**
      * Create flow for a job expecting and reading configuration via normal {@link JobParameters}.
      */
@@ -334,13 +409,15 @@ public class ReverseTriplegeoJobConfiguration extends ContainerBasedJobConfigura
         @Qualifier("reverseTriplegeo.configureStep") Step configureStep,
         @Qualifier("reverseTriplegeo.prepareWorkingDirectoryStep") Step prepareWorkingDirectoryStep,
         @Qualifier("reverseTriplegeo.createContainerStep") Step createContainerStep,
-        @Qualifier("reverseTriplegeo.runContainerStep") Step runContainerStep)
+        @Qualifier("reverseTriplegeo.runContainerStep") Step runContainerStep,
+        @Qualifier("reverseTriplegeo.createOutputArchiveStep") Step createOutputArchiveStep)
     {
         return new FlowBuilder<Flow>("reverseTriplegeo.flow")
             .start(configureStep)
             .next(prepareWorkingDirectoryStep)
             .next(createContainerStep)
             .next(runContainerStep)
+            .next(createOutputArchiveStep)
             .build();
     }
 

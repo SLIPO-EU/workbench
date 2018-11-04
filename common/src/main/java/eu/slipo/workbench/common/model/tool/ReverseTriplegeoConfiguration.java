@@ -43,6 +43,11 @@ public class ReverseTriplegeoConfiguration extends TransformConfiguration<Revers
      */
     public static final String VERSION = "1.5";
 
+    /**
+     * The output name (without any file extension)
+     */
+    public static final String OUTPUT_NAME = "points";
+    
     public class OutputNameMapper implements InputToOutputNameMapper<ReverseTriplegeo>
     {
         private OutputNameMapper() {};
@@ -52,12 +57,12 @@ public class ReverseTriplegeoConfiguration extends TransformConfiguration<Revers
         {
             Assert.state(outputFormat != null, "The output format is not specified");
             
-            // The reverse transformation produces a single output (e.g. points.csv)
+            // The reverse transformation produces a single output (e.g. points.zip)
+           
+            final String outputFileName = OUTPUT_NAME + ".zip";
             
-            final String extension = outputFormat.getFilenameExtension();
-            OutputSpec outputSpec = OutputSpec.of("points" + "." + extension, outputFormat);
-            
-            return ImmutableMultimap.of(EnumReverseTriplegeoOutputPart.TRANSFORMED, outputSpec);
+            return ImmutableMultimap.of(
+                EnumReverseTriplegeoOutputPart.TRANSFORMED, OutputSpec.of(outputFileName, outputFormat));
         }
     }
 

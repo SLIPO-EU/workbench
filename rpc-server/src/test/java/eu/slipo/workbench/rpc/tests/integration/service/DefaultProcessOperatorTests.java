@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import static org.springframework.util.StringUtils.getFilenameExtension;
 import static org.springframework.util.StringUtils.stripFilenameExtension;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -24,9 +25,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Random;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import javax.annotation.PostConstruct;
 
@@ -51,9 +56,13 @@ import org.springframework.data.util.Pair;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.util.StringUtils;
 
+import com.github.slugify.Slugify;
+import com.google.common.base.Predicates;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.MoreCollectors;
@@ -75,11 +84,9 @@ import eu.slipo.workbench.common.model.resource.DataSource;
 import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
 import eu.slipo.workbench.common.model.resource.ResourceMetadataCreate;
 import eu.slipo.workbench.common.model.resource.ResourceRecord;
-import eu.slipo.workbench.common.model.tool.ReverseTriplegeoConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.model.tool.output.EnumFagiOutputPart;
 import eu.slipo.workbench.common.model.tool.output.EnumLimesOutputPart;
-import eu.slipo.workbench.common.model.tool.output.EnumOutputType;
 import eu.slipo.workbench.common.model.tool.output.EnumReverseTriplegeoOutputPart;
 import eu.slipo.workbench.common.model.tool.output.EnumTriplegeoOutputPart;
 import eu.slipo.workbench.common.model.user.Account;
@@ -410,7 +417,8 @@ public class DefaultProcessOperatorTests
         private void setupReverseTransformFixtures(Path userDir) throws Exception
         {
             List<String> dirPaths = Arrays.asList(
-                "reverseTriplegeo/1", "reverseTriplegeo/1a");
+                "reverseTriplegeo/1", "reverseTriplegeo/1a",
+                "reverseTriplegeo/2", "reverseTriplegeo/2a");
 
             for (String dirPath: dirPaths) {
                 final Resource dir = baseResource.createRelative(dirPath + "/");
@@ -447,12 +455,15 @@ public class DefaultProcessOperatorTests
 
                 // Add fixture for input as a local file, query given as user-relative path
 
+                final String outputExtension =  "SHAPEFILE".equalsIgnoreCase(options.getProperty("outputFormat"))?
+                    "shp" : "csv";
+
                 ReverseTransformFixture fixture = newReverseTransformFixtureBuilder()
                     .name("file-" + inputNameToTempName.get(inputNames.get(0)) + "-a")
                     .stagingDir(userDir)
                     .inputList(Iterables.transform(inputNameToTempPath.values(), Path::toUri))
                     .configuration(options, queryTempPath.map(p -> userDir.relativize(p).toString()))
-                    .expectedResult(resultsDir.resolve("points.csv"))
+                    .expectedResult(resultsDir.resolve("points" + "." + outputExtension))
                     .build();
                 String key = String.format("file-%s-a", dirName);
                 reverseTransformFixtures.put(key, fixture);
@@ -616,6 +627,8 @@ public class DefaultProcessOperatorTests
         }
     }
 
+    private Slugify slugify = new Slugify();
+
     @Autowired
     private ProcessDefinitionBuilderFactory processDefinitionBuilderFactory;
 
@@ -692,6 +705,39 @@ public class DefaultProcessOperatorTests
                 throw new IllegalStateException("runnable has failed", e);
             }
         }
+    }
+
+    private Path extractFileFromArchive(Path archivePath, String entryName)
+        throws IOException
+    {
+        String extension = StringUtils.getFilenameExtension(entryName);
+        String outputPrefix = slugify.slugify(StringUtils.stripFilenameExtension(entryName));
+
+        Path outputPath = Files.createTempFile(outputPrefix + '.', '.' + extension);
+
+        try (ZipFile zipfile = new ZipFile(archivePath.toFile())) {
+            ZipEntry entry = zipfile.getEntry(entryName);
+            try (InputStream in = new BufferedInputStream(zipfile.getInputStream(entry))) {
+                Files.copy(in, outputPath, StandardCopyOption.REPLACE_EXISTING);
+            }
+        }
+
+        return outputPath;
+    }
+
+    private List<String> listFilesOfArchive(Path archivePath)
+        throws IOException
+    {
+        List<String> entryNames = null;
+
+        try (ZipFile zipfile = new ZipFile(archivePath.toFile())) {
+            entryNames = Collections.list(zipfile.entries()).stream()
+                .filter(Predicates.not(ZipEntry::isDirectory))
+                .map(ZipEntry::getName)
+                .collect(Collectors.toList());
+        }
+
+        return entryNames;
     }
 
     private ProcessExecutionRecord executeDefinition(ProcessDefinition definition, Account creator)
@@ -939,7 +985,6 @@ public class DefaultProcessOperatorTests
         definitionBuilder.export("Reverse Triplegeo", builder -> builder
             .group(1)
             .configuration(fixture.configuration())
-            .outputFormat(EnumDataFormat.CSV)
             .outputKey("exported")
             .input(inputKeys)
         );
@@ -960,8 +1005,6 @@ public class DefaultProcessOperatorTests
         throws Exception
     {
         logger.debug("reverseTransform: procName={} fixture={}", procName, transformFixture);
-
-        final int creatorId = creator.getId();
 
         // Define the process
 
@@ -984,9 +1027,37 @@ public class DefaultProcessOperatorTests
             .collect(MoreCollectors.toOptional()).orElse(null);
         assertNotNull(outfileRecord);
 
-        Path outfile = workflowDataDir.resolve(outfileRecord.getFilePath());
-        assertTrue(Files.exists(outfile) && Files.isReadable(outfile));
-        AssertFile.assertFileEquals(transformFixture.expectedResult().toFile(), outfile.toFile());
+        // Check output is present
+
+        Path outputFile = workflowDataDir.resolve(outfileRecord.getFilePath());
+        assertTrue(Files.exists(outputFile) && Files.isReadable(outputFile));
+        String outputName = outputFile.getFileName().toString();
+        assertEquals("zip", StringUtils.getFilenameExtension(outputName));
+
+        // Check contents of output
+
+        EnumDataFormat outputFormat = transformFixture.configuration().getOutputFormat();
+        switch (outputFormat) {
+        case SHAPEFILE:
+            {
+                // Check that output archive contains expected entries.
+                // The contents of a shapefile are binary, so we don't make any further checks
+                Set<String> entryNames = new TreeSet<>(listFilesOfArchive(outputFile));
+                Set<String> expectedEntryNames = ImmutableSet.of(
+                    "points.shp", "points.shx", "points.dbf", "points.prj");
+                assertEquals(expectedEntryNames, entryNames);
+            }
+            break;
+        case CSV:
+        default:
+            {
+                // Check that CSV contents are identical to expected result
+                Path csvDataFile = extractFileFromArchive(outputFile, "points.csv");
+                AssertFile.assertFileEquals(
+                    transformFixture.expectedResult().toFile(), csvDataFile.toFile());
+            }
+            break;
+        }
     }
 
     private ProcessDefinition buildDefinition(
@@ -1704,6 +1775,18 @@ public class DefaultProcessOperatorTests
     public void test1aT_reverseTransform() throws Exception
     {
         reverseTransform("file-1a-a", reverseTransformFixtures.get("file-1a-a"), user);
+    }
+
+    @Test(timeout = 40 * 1000L)
+    public void test2T_reverseTransform() throws Exception
+    {
+        reverseTransform("file-2-a", reverseTransformFixtures.get("file-2-a"), user);
+    }
+
+    @Test(timeout = 40 * 1000L)
+    public void test2aT_reverseTransform() throws Exception
+    {
+        reverseTransform("file-2a-a", reverseTransformFixtures.get("file-2a-a"), user);
     }
 
     @Test(timeout = 40 * 1000L)

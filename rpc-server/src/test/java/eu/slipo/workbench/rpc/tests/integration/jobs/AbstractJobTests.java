@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,7 @@ import org.springframework.batch.test.AssertFile;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 public abstract class AbstractJobTests
 {
@@ -198,7 +200,23 @@ public abstract class AbstractJobTests
         for (Path expectedResult: expectedResults) {
             Path fileName = expectedResult.getFileName();
             Path result = outputDir.resolve(fileName);
-            AssertFile.assertFileEquals(expectedResult.toFile(), result.toFile());
+            checkResultFile(expectedResult, result);
+        }
+    }
+
+    private static List<String> extensionsOfTextFormats = Arrays.asList("csv", "nt");
+
+    private void checkResultFile(Path expectedResult, Path actualResult) throws Exception
+    {
+        String extension = StringUtils.getFilenameExtension(actualResult.getFileName().toString());
+
+        if (extensionsOfTextFormats.contains(extension)) {
+            // For text results, use AssertFile to perform a line-ny-line check that contents are equal
+            AssertFile.assertFileEquals(expectedResult.toFile(), actualResult.toFile());
+        } else {
+            // For binary files, just check it actual result exists with non-zero size
+            assertTrue(Files.isReadable(actualResult));
+            assertTrue(Files.size(actualResult) > 0);
         }
     }
 }

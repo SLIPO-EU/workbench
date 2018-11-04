@@ -494,7 +494,7 @@ public class TriplegeoConfigurationTests
         Multimap<OutputPart<ReverseTriplegeo>, String> outputNames =
             Multimaps.transformValues(outputMap, OutputSpec::fileName);
 
-        assertEquals(Arrays.asList("points.csv"),
+        assertEquals(Arrays.asList("points.zip"),
             outputNames.get(EnumReverseTriplegeoOutputPart.TRANSFORMED));
     }
 }
