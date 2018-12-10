@@ -37,6 +37,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import eu.slipo.workbench.web.config.MapConfiguration;
 
+// TODO: Check access to process data
+
 @RestController
 @Secured({ "ROLE_USER", "ROLE_AUTHOR", "ROLE_ADMIN" })
 @RequestMapping(produces = "application/json")
@@ -55,6 +57,12 @@ public class ProxyController implements InitializingBean {
     private final String PARAMETER_TYPE_NAME = "typeName";
 
     private final String CONTENT_TYPE_HEADER = "Content-Type";
+
+    @Value("${vector-data.default.schema:spatial}")
+    private String defaultSchema;
+
+    @Value("${vector-data.default.id-column:id}")
+    private String defaultIdColumn;
 
     @Value("${vector-data.default.geometry-column:the_geom}")
     private String defaultGeometryColumn;
@@ -75,7 +83,7 @@ public class ProxyController implements InitializingBean {
     }
 
     @RequestMapping(value = "/action/proxy/service/wfs", method = RequestMethod.GET)
-    public void geoserverProxy(HttpServletRequest request, HttpServletResponse response) {
+    public void wfs(HttpServletRequest request, HttpServletResponse response) {
         try {
             if(mapConfiguration.getGeoServer().isEnabled()) {
                 proxyRequest(request, response, mapConfiguration.getGeoServer().getServices().getWfs());
@@ -175,17 +183,18 @@ public class ProxyController implements InitializingBean {
             String dataQuery =
                 "select row_to_json(fc) " +
                 "from   ( " +
-                "    select 'FeatureCollection' As type, array_to_json(array_agg(f)) As features " +
+                "    select 'FeatureCollection' As type, COALESCE(array_to_json(array_agg(f)), '[]') As features " +
                 "    from   (" +
                 "               select 'Feature' As type, " +
-                "                      ST_AsGeoJSON(dt.the_geom)::json As geometry," +
-                "                      row_to_json((select columns FROM (SELECT %1$s) As columns)) As properties " +
-                "               from   spatial.\"%2$s\" As dt" +
-                "               where   ST_Intersects(ST_Transform(ST_MakeEnvelope(%3$s, 3857), 4326), the_geom) = true " +
+                "                      ST_AsGeoJSON(dt.\"%6$s\")::json As geometry," +
+                "                      row_to_json((select columns FROM (SELECT %3$s) As columns)) As properties, " +
+                "                      \"%5$s\" as id " +
+                "               from   \"%1$s\".\"%2$s\" As dt" +
+                "               where   ST_Intersects(ST_Transform(ST_MakeEnvelope(%4$s, 3857), 4326), \"%6$s\") = true " +
                 "    ) As f " +
                 ")  As fc";
 
-            dataQuery = String.format(dataQuery, columns, tableName, boundingBox);
+            dataQuery = String.format(dataQuery, defaultSchema, tableName,  columns, boundingBox, defaultIdColumn, defaultGeometryColumn);
 
             String output = jdbcTemplate.queryForObject(dataQuery, String.class);
 
