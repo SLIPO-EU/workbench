@@ -188,7 +188,7 @@ public class ProxyController implements InitializingBean {
                 "               select 'Feature' As type, " +
                 "                      ST_AsGeoJSON(dt.\"%6$s\")::json As geometry," +
                 "                      row_to_json((select columns FROM (SELECT %3$s) As columns)) As properties, " +
-                "                      \"%5$s\" as id " +
+                "                      '%2$s::' || \"%5$s\" as id " +
                 "               from   \"%1$s\".\"%2$s\" As dt" +
                 "               where   ST_Intersects(ST_Transform(ST_MakeEnvelope(%4$s, 3857), 4326), \"%6$s\") = true " +
                 "    ) As f " +
