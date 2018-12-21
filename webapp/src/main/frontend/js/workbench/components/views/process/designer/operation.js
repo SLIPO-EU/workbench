@@ -76,8 +76,8 @@ class Operation extends React.Component {
     },
 
     // Injected by React DnD
-    connectDragSource: PropTypes.func.isRequired,
-    isDragging: PropTypes.bool.isRequired
+    connectDragSource: PropTypes.func,
+    isDragging: PropTypes.bool,
   };
 
   render() {
