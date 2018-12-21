@@ -26,11 +26,19 @@ import {
 } from '../../helpers/forms/fields';
 
 import {
+  EnumLayerType,
+} from '../../../model/map-viewer';
+
+import {
   selectLayer,
   setBaseLayer,
-  setLayerColor,
   toggleLayer,
+  toggleLayerConfiguration,
 } from '../../../ducks/ui/views/map-viewer';
+
+import {
+  RevisionHistory,
+} from './';
 
 /**
  * A connected component for rendering execution selected files available to map
@@ -47,7 +55,7 @@ class Sidebar extends React.Component {
     this.toggle = this.toggle.bind(this);
 
     this.state = {
-      activeTab: '1'
+      activeTab: '1',
     };
   }
 
@@ -86,13 +94,16 @@ class Sidebar extends React.Component {
         layer={layer}
         toggle={this.props.toggleLayer}
         select={this.props.selectLayer}
-        selected={this.props.selectedLayer === layer.tableName}
-        setLayerColor={this.props.setLayerColor}
+        selected={this.props.selectedLayer !== null && this.props.selectedLayer.tableName === layer.tableName}
+        toggleLayerConfiguration={this.props.toggleLayerConfiguration}
       />
     );
   }
 
   render() {
+    const inputLayers = this.props.layers.filter((l) => l.type === EnumLayerType.Input);
+    const outputLayers = this.props.layers.filter((l) => l.type === EnumLayerType.Output);
+
     return (
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <Nav tabs style={{ height: '2.75rem' }}>
@@ -119,17 +130,26 @@ class Sidebar extends React.Component {
           <TabPane tabId="1">
             <Row>
               <Col>
-                <div className={
-                  classnames({
-                    "slipo-pd-sidebar-map-layer-list": true,
-                    "slipo-pd-sidebar-map-layer-list-empty": (this.props.layers.length === 0),
-                  })
-                }>
-                  {this.props.layers.length > 0 &&
-                    this.props.layers.map((l) => this.renderLayer(l))
+                <div style={{ borderBottom: '1px solid #cfd8dc', padding: 11 }}>
+                  Input
+                </div>
+                <div className="slipo-pd-sidebar-map-layer-list">
+                  {inputLayers.length > 0 &&
+                    inputLayers.map((l) => this.renderLayer(l))
                   }
-                  {this.props.layers.length === 0 &&
-                    <div className="text-muted slipo-pd-tip" style={{ paddingLeft: 1 }}>No layers selected</div>
+                  {inputLayers.length === 0 &&
+                    <div className="text-muted slipo-pd-tip" style={{ paddingLeft: 1 }}>No input layers found</div>
+                  }
+                </div>
+                <div style={{ borderBottom: '1px solid #cfd8dc', borderTop: '1px solid #cfd8dc', padding: 11 }}>
+                  Output
+                </div>
+                <div className="slipo-pd-sidebar-map-layer-list">
+                  {outputLayers.length > 0 &&
+                    outputLayers.map((l) => this.renderLayer(l))
+                  }
+                  {outputLayers.length === 0 &&
+                    <div className="text-muted slipo-pd-tip" style={{ paddingLeft: 1 }}>No output layers found</div>
                   }
                 </div>
               </Col>
@@ -151,6 +171,7 @@ class Sidebar extends React.Component {
             </Row>
           </TabPane>
         </TabContent>
+        <RevisionHistory resource={this.props.data.resource} version={this.props.data.version} />
       </div >
     );
   }
@@ -160,17 +181,18 @@ class Sidebar extends React.Component {
 const mapStateToProps = (state) => ({
   baseLayer: state.ui.views.map.config.baseLayer,
   bingMaps: state.config.bingMaps,
+  data: state.ui.views.map.data,
   layers: state.ui.views.map.config.layers,
   osm: state.config.osm,
-  selectedLayer: state.ui.views.map.config.selectedLayer,
   selectedFeatures: state.ui.views.map.config.selectedFeatures,
+  selectedLayer: state.ui.views.map.config.selectedLayer,
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
   selectLayer,
   setBaseLayer,
-  setLayerColor,
   toggleLayer,
+  toggleLayerConfiguration,
 }, dispatch);
 
 const mergeProps = (stateProps, dispatchProps, ownProps) => {

@@ -1,7 +1,13 @@
 import * as mapService from '../../../service/map';
+import * as provenanceService from '../../../service/provenance';
+
+import {
+  EnumPane,
+} from '../../../model/map-viewer';
 
 import {
   processExecutionToLayers,
+  provenanceToTable,
 } from './map-viewer/util';
 
 /*
@@ -15,15 +21,25 @@ import {
 const Types = {
   LOGOUT,
   RESET: 'ui/map/viewer/RESET',
+
   REQUEST_EXECUTION_MAP_DATA: 'ui/map/viewer/REQUEST_EXECUTION_MAP_DATA',
   RECEIVE_EXECUTION_MAP_DATA: 'ui/map/viewer/RECEIVE_EXECUTION_MAP_DATA',
   REQUEST_RESOURCE_MAP_DATA: 'ui/map/viewer/REQUEST_RESOURCE_MAP_DATA',
   RECEIVE_RESOURCE_MAP_DATA: 'ui/map/viewer/RECEIVE_RESOURCE_MAP_DATA',
+  REQUEST_FEATURE_TIMELINE: 'ui/map/viewer/REQUEST_FEATURE_TIMELINE',
+  RECEIVE_FEATURE_TIMELINE: 'ui/map/viewer/RECEIVE_FEATURE_TIMELINE',
+
   SELECT_LAYER: 'ui/map/viewer/SELECT_LAYER',
   TOGGLE_LAYER: 'ui/map/viewer/TOGGLE_LAYER',
+  TOGGLE_LAYER_CONFIG: 'ui/map/viewer/TOGGLE_LAYER_CONFIG',
   SET_BASE_LAYER: 'ui/map/viewer/SET_BASE_LAYER',
   SET_LAYER_COLOR: 'ui/map/viewer/SET_LAYER_COLOR',
+  SET_LAYER_STYLE: 'ui/map/viewer/SET_LAYER_STYLE',
   SET_SELECTED_FEATURES: 'ui/map/viewer/SET_SELECTED_FEATURES',
+  SET_CENTER: 'ui/map/viewer/SET_CENTER',
+  SET_ITEM_POSITION: 'ui/map/viewer/SET_ITEM_POSITION',
+
+  SELECT_FEATURE: 'ui/map/viewer/SELECT_FEATURE',
 };
 
 /*
@@ -31,6 +47,7 @@ const Types = {
  */
 
 const initialState = {
+  loading: false,
   data: {
     resource: null,
     process: null,
@@ -38,10 +55,25 @@ const initialState = {
     version: null,
   },
   config: {
+    layerConfigVisible: false,
     layers: [],
     baseLayer: 'BingMaps-Road',
     selectedLayer: null,
     selectedFeatures: [],
+    selectedFeature: null,
+    provenance: null,
+    center: null,
+    zoom: null,
+    draggable: {
+      [EnumPane.FeatureCollection]: {
+        left: 220,
+        top: 120,
+      },
+      [EnumPane.FeatureProvenance]: {
+        left: 520,
+        top: 120,
+      },
+    },
   },
 };
 
@@ -54,9 +86,8 @@ const dataReducer = (state, action) => {
     case Types.RECEIVE_EXECUTION_MAP_DATA:
       return {
         ...state,
-        // Preserve existing resource and version values
-        process: action.data.process,
-        execution: action.data.execution,
+        // Update all values
+        ...action.data,
       };
 
     case Types.RECEIVE_RESOURCE_MAP_DATA:
@@ -73,6 +104,25 @@ const dataReducer = (state, action) => {
 
 const configReducer = (state, action) => {
   switch (action.type) {
+    case Types.SET_CENTER:
+      return {
+        ...state,
+        center: action.center,
+        zoom: action.zoom,
+      };
+
+    case Types.SET_ITEM_POSITION:
+      return {
+        ...state,
+        draggable: {
+          ...state.draggable,
+          [action.id]: {
+            left: action.left,
+            top: action.top,
+          },
+        },
+      };
+
     case Types.TOGGLE_LAYER:
       return {
         ...state,
@@ -87,10 +137,16 @@ const configReducer = (state, action) => {
         }),
       };
 
+    case Types.TOGGLE_LAYER_CONFIG:
+      return {
+        ...state,
+        layerConfigVisible: !state.layerConfigVisible,
+      };
+
     case Types.SELECT_LAYER:
       return {
         ...state,
-        selectedLayer: action.tableName,
+        selectedLayer: state.layers.find(l => l.tableName === action.tableName) || null,
       };
 
     case Types.SET_BASE_LAYER:
@@ -114,10 +170,27 @@ const configReducer = (state, action) => {
         }),
       };
 
+    case Types.SET_LAYER_STYLE:
+      return {
+        ...state,
+        selectedFeatures: [],
+        layers: state.layers.map((l) => {
+          if (l.tableName === action.tableName) {
+            return {
+              ...l,
+              style: action.style,
+            };
+          }
+          return l;
+        }),
+      };
+
     case Types.SET_SELECTED_FEATURES:
       return {
         ...state,
         selectedFeatures: action.features || [],
+        provenance: null,
+        selectedFeature: null,
       };
 
     case Types.RECEIVE_EXECUTION_MAP_DATA:
@@ -127,6 +200,23 @@ const configReducer = (state, action) => {
         layers: processExecutionToLayers(action.data.process, action.data.execution),
         selectedLayer: null,
         selectedFeatures: [],
+        provenance: null,
+        selectedFeature: null,
+      };
+
+    case Types.RECEIVE_FEATURE_TIMELINE:
+      return {
+        ...state,
+        provenance: provenanceToTable(action.data),
+      };
+
+    case Types.SELECT_FEATURE:
+      return {
+        ...state,
+        selectedFeature: {
+          outputKey: action.outputKey,
+          featureId: action.featureId,
+        }
       };
 
     default:
@@ -141,11 +231,19 @@ export default (state = initialState, action) => {
       return initialState;
 
     case Types.REQUEST_EXECUTION_MAP_DATA:
-    case Types.RECEIVE_EXECUTION_MAP_DATA:
     case Types.REQUEST_RESOURCE_MAP_DATA:
-    case Types.RECEIVE_RESOURCE_MAP_DATA:
+    case Types.REQUEST_FEATURE_TIMELINE:
       return {
         ...state,
+        loading: true,
+      };
+
+    case Types.RECEIVE_EXECUTION_MAP_DATA:
+    case Types.RECEIVE_RESOURCE_MAP_DATA:
+    case Types.RECEIVE_FEATURE_TIMELINE:
+      return {
+        ...state,
+        loading: false,
         config: configReducer(state.config, action),
         data: dataReducer(state.data, action),
       };
@@ -153,8 +251,13 @@ export default (state = initialState, action) => {
     case Types.SET_BASE_LAYER:
     case Types.SELECT_LAYER:
     case Types.TOGGLE_LAYER:
+    case Types.TOGGLE_LAYER_CONFIG:
     case Types.SET_LAYER_COLOR:
+    case Types.SET_LAYER_STYLE:
     case Types.SET_SELECTED_FEATURES:
+    case Types.SET_CENTER:
+    case Types.SET_ITEM_POSITION:
+    case Types.SELECT_FEATURE:
       return {
         ...state,
         config: configReducer(state.config, action),
@@ -207,12 +310,74 @@ export const fetchResourceMapData = (id, version) => (dispatch, getState) => {
     });
 };
 
+const requestFeatureProvenance = () => ({
+  type: Types.REQUEST_FEATURE_TIMELINE,
+});
+
+const receiveFeatureProvenance = (data) => ({
+  type: Types.RECEIVE_FEATURE_TIMELINE,
+  data,
+});
+
+const selectFeature = (outputKey, featureId) => ({
+  type: Types.SELECT_FEATURE,
+  outputKey,
+  featureId,
+});
+
+export const fetchFeatureProvenance = (processId, processVersion, executionId, outputKey, featureId, featureUri) => (dispatch, getState) => {
+  const { meta: { csrfToken: token } } = getState();
+
+  dispatch(selectFeature(outputKey, featureId));
+  dispatch(requestFeatureProvenance());
+
+  return provenanceService.fetchFeatureProvenance(processId, processVersion, executionId, outputKey, featureId, featureUri, token)
+    .then((data) => {
+      dispatch(receiveFeatureProvenance(data));
+    });
+};
+
+
+const updateStyle = (tableName, style) => ({
+  type: Types.SET_LAYER_STYLE,
+  tableName,
+  style,
+});
+
+export const setLayerStyle = (tableName, style) => (dispatch, getState) => {
+  const { meta: { csrfToken: token }, ui: { views: { map: { config: { layers = [] } } } } } = getState();
+  const layer = layers.find(l => l.tableName === tableName);
+
+  if (!layer) {
+    return Promise.resolve();
+  }
+
+  dispatch(updateStyle(tableName, style));
+
+  return layer.file ?
+    mapService.setFileStyle(layer.file, style, token) :
+    mapService.setResourceRevisionStyle(layer.resource.id, layer.resource.version, style, token);
+};
+
 /*
  * Action creators
  */
 
 export const reset = () => ({
   type: Types.RESET,
+});
+
+export const setItemPosition = (id, left, top) => ({
+  type: Types.SET_ITEM_POSITION,
+  id,
+  left,
+  top,
+});
+
+export const setCenter = (center, zoom) => ({
+  type: Types.SET_CENTER,
+  center,
+  zoom,
 });
 
 export const selectLayer = (tableName) => ({
@@ -223,6 +388,10 @@ export const selectLayer = (tableName) => ({
 export const toggleLayer = (tableName) => ({
   type: Types.TOGGLE_LAYER,
   tableName,
+});
+
+export const toggleLayerConfiguration = () => ({
+  type: Types.TOGGLE_LAYER_CONFIG,
 });
 
 export const setBaseLayer = (layer) => ({

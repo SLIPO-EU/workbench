@@ -1,24 +1,42 @@
 import * as React from 'react';
+import Draggable from 'react-draggable';
 
 import Extend from 'ol/extent';
 import GeoJSON from 'ol/format/geojson';
 import proj from 'ol/proj';
 
 import {
+  ResizableBox,
+} from 'react-resizable';
+
+import {
+  addClass,
+  removeClass,
+} from '../../../util';
+
+import {
   OpenLayers,
 } from '../../helpers';
 
 import {
-  default as ItemContainer,
-} from './item-container';
+  FEATURE_NAME,
+  FEATURE_OUTPUT_KEY,
+  FEATURE_LAYER_PROPERTY,
+} from '../../helpers/map/model/constants';
 
 import {
-  default as DraggableItem,
-} from './draggable-item';
+  EnumPane,
+} from '../../../model/map-viewer';
 
 import {
-  default as FeaturePropertyViewer,
-} from './feature-property-viewer';
+  FeaturePropertyViewer,
+  FeatureTimeLineViewer,
+  LayerConfig,
+} from './';
+
+const styleToKey = (style) => {
+  return `${style.symbol}-${style.fill.color}-${style.stroke.color}-${style.stroke.width}-${style.size}-${style.opacity}`;
+};
 
 /**
  * Renders a map from the input/output datasets of a single process
@@ -33,6 +51,16 @@ class MapViewer extends React.Component {
     super(props);
 
     this.onFeatureSelect = this.onFeatureSelect.bind(this);
+  }
+
+  componentDidMount() {
+    const body = document.getElementsByTagName('body').item(0);
+    addClass(body, 'slipo-map-body');
+  }
+
+  componentWillUnmount() {
+    const body = document.getElementsByTagName('body').item(0);
+    removeClass(body, 'slipo-map-body');
   }
 
   get center() {
@@ -85,12 +113,17 @@ class MapViewer extends React.Component {
       .forEach((l) => {
         layers.push(
           <OpenLayers.Layer.WFS
-            key={`${l.tableName}-${l.color}-${l.icon || ''}`}
+            key={`${l.tableName}-${l.color}-${styleToKey(l.style) || ''}`}
             url="/action/proxy/service/wfs"
             version="1.1.0"
             typename={`slipo_eu:${l.tableName}`}
             color={l.color}
-            icon={l.icon}
+            extra={{
+              [FEATURE_LAYER_PROPERTY]: l.tableName,
+              [FEATURE_NAME]: l.step ? l.step.name : l.resource.name,
+              [FEATURE_OUTPUT_KEY]: l.step ? l.step.outputKey : null,
+            }}
+            style={l.style}
           />
         );
       });
@@ -98,38 +131,79 @@ class MapViewer extends React.Component {
     return layers;
   }
 
+  onStop(e, id) {
+    this.props.setItemPosition(id, e.screenX, e.screenY);
+  }
+
   render() {
-    const { selectedFeatures: features = [] } = this.props;
+    const { draggable, layers, selectedFeature, selectedFeatures: features = [], provenance, selectedLayer } = this.props;
+
+    const styles = layers.reduce((result, layer) => ({ ...result, [layer.tableName]: layer.style }), {});
 
     return (
-      <div>
-        <ItemContainer>
-          <OpenLayers.Map
-            minZoom={9}
-            maxZoom={18}
-            zoom={19}
-            center={this.center}
-            className="slipo-map-container-full-screen"
-            onMoveEnd={(e) => this.props.onMoveEnd(e)}
-          >
-            <OpenLayers.Layers>
-              {this.getLayers()}
-            </OpenLayers.Layers>
-            <OpenLayers.Interactions>
-              <OpenLayers.Interaction.Select
-                onFeatureSelect={this.props.onFeatureSelect}
-                multi={true}
-                width={2}
-              />
-            </OpenLayers.Interactions>
-          </OpenLayers.Map>
-          <DraggableItem id="FeatureTable" left={220} top={120}>
-            <FeaturePropertyViewer
-              features={features}
+      <React.Fragment>
+        <LayerConfig
+          layer={selectedLayer}
+          toggle={this.props.toggleLayerConfiguration}
+          visible={this.props.layerConfigVisible}
+          setLayerStyle={this.props.setLayerStyle}
+        />
+        <OpenLayers.Map
+          minZoom={7}
+          maxZoom={19}
+          zoom={this.props.initialZoom ? this.props.initialZoom : 13}
+          center={this.props.initialCenter ? this.props.initialCenter : this.center}
+          className="slipo-map-container-full-screen"
+          onMoveEnd={(e) => this.props.onMoveEnd(e)}
+        >
+          <OpenLayers.Layers>
+            {this.getLayers()}
+          </OpenLayers.Layers>
+          <OpenLayers.Interactions>
+            <OpenLayers.Interaction.Select
+              onFeatureSelect={this.props.onFeatureSelect}
+              styles={styles}
             />
-          </DraggableItem>
-        </ItemContainer>
-      </div>
+          </OpenLayers.Interactions>
+        </OpenLayers.Map>
+
+        {features && features.length !== 0 &&
+          <Draggable
+            defaultPosition={{ x: draggable[EnumPane.FeatureCollection].left, y: draggable[EnumPane.FeatureCollection].top }}
+            onStop={(e) => this.onStop(e, EnumPane.FeatureCollection)}
+            handle=".handle"
+            offsetParent={document.getElementById('root')}
+          >
+            <div style={{ pointerEvents: 'none' }}>
+              <ResizableBox width={600} height={380} axis="x">
+                <FeaturePropertyViewer
+                  features={features}
+                  layers={layers}
+                  selectedFeature={selectedFeature}
+                  fetchFeatureProvenance={this.props.fetchFeatureProvenance}
+                />
+              </ResizableBox>
+            </div>
+          </Draggable>
+        }
+
+        {provenance &&
+          <Draggable
+            defaultPosition={{ x: draggable[EnumPane.FeatureProvenance].left, y: draggable[EnumPane.FeatureProvenance].top }}
+            onStop={(e) => this.onStop(e, EnumPane.FeatureProvenance)}
+            handle=".handle"
+          >
+            <div style={{ pointerEvents: 'none' }}>
+              <ResizableBox width={600} height={556} axis="x">
+                <FeatureTimeLineViewer
+                  provenance={provenance}
+                />
+              </ResizableBox>
+            </div>
+          </Draggable>
+        }
+
+      </React.Fragment>
     );
   }
 }

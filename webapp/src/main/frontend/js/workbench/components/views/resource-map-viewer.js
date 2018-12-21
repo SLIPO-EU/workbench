@@ -6,9 +6,14 @@ import {
 } from 'redux';
 
 import {
+  fetchFeatureProvenance,
   fetchResourceMapData,
   reset,
   selectFeatures,
+  setCenter,
+  setItemPosition,
+  setLayerStyle,
+  toggleLayerConfiguration,
 } from '../../ducks/ui/views/map-viewer';
 
 import {
@@ -74,27 +79,54 @@ class ResourceMapViewer extends React.Component {
   }
 
   onMoveEnd(data) {
+    this.props.setCenter(data.center, data.zoom);
   }
 
   render() {
-    const { baseLayer, bingMaps, defaultCenter, layers, osm } = this.props;
-
     if (this.state.isLoading) {
       return null;
     }
+
+    const {
+      baseLayer,
+      bingMaps,
+      defaultCenter,
+      fetchFeatureProvenance,
+      layers,
+      osm,
+      resource: { execution },
+    } = this.props;
+
     return (
-      <div className="animated fadeIn">
-        <MapViewer
-          baseLayer={baseLayer}
-          bingMaps={bingMaps}
-          defaultCenter={defaultCenter}
-          layers={layers}
-          osm={osm}
-          onFeatureSelect={(features) => this.props.selectFeatures(features)}
-          onMoveEnd={this.onMoveEnd}
-          selectedFeatures={this.props.selectedFeatures}
-        />
-      </div >
+      <MapViewer
+        baseLayer={baseLayer}
+        bingMaps={bingMaps}
+        defaultCenter={defaultCenter}
+        draggable={this.props.draggable}
+        fetchFeatureProvenance={
+          (outputKey, featureId, featureUri) => fetchFeatureProvenance(
+            execution.id,
+            execution.version,
+            execution.execution,
+            outputKey,
+            featureId,
+            featureUri)
+        }
+        initialCenter={this.props.initialCenter}
+        initialZoom={this.props.initialZoom}
+        layerConfigVisible={this.props.layerConfigVisible}
+        layers={layers}
+        onFeatureSelect={(features) => this.props.selectFeatures(features)}
+        onMoveEnd={this.onMoveEnd}
+        osm={osm}
+        provenance={this.props.provenance}
+        selectedFeature={this.props.selectedFeature}
+        selectedFeatures={this.props.selectedFeatures}
+        selectedLayer={this.props.selectedLayer}
+        setItemPosition={this.props.setItemPosition}
+        setLayerStyle={this.props.setLayerStyle}
+        toggleLayerConfiguration={this.props.toggleLayerConfiguration}
+      />
     );
   }
 }
@@ -103,17 +135,29 @@ const mapStateToProps = (state) => ({
   baseLayer: state.ui.views.map.config.baseLayer,
   bingMaps: state.config.bingMaps,
   defaultCenter: state.config.mapDefaults.center,
+  draggable: state.ui.views.map.config.draggable,
+  initialCenter: state.ui.views.map.config.center,
+  initialZoom: state.ui.views.map.config.zoom,
+  layerConfigVisible: state.ui.views.map.config.layerConfigVisible,
   layers: state.ui.views.map.config.layers,
   osm: state.config.osm,
+  provenance: state.ui.views.map.config.provenance,
   resource: state.ui.views.map.data.resource,
+  selectedFeature: state.ui.views.map.config.selectedFeature,
   selectedFeatures: state.ui.views.map.config.selectedFeatures,
+  selectedLayer: state.ui.views.map.config.selectedLayer,
   version: state.ui.views.map.data.version,
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
+  fetchFeatureProvenance,
   fetchResourceMapData,
   reset,
   selectFeatures,
+  setCenter,
+  setItemPosition,
+  setLayerStyle,
+  toggleLayerConfiguration,
 }, dispatch);
 
 const mergeProps = (stateProps, dispatchProps, ownProps) => {

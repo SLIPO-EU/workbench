@@ -13,14 +13,23 @@ import {
 } from '../../helpers';
 
 import {
-  FEATURE_PROPERTY_PREFIX,
-  FEATURE_LAYER_PROPERTY,
   FEATURE_COLOR_PROPERTY,
   FEATURE_ICON_PROPERTY,
+  FEATURE_LAYER_PROPERTY,
+  FEATURE_NAME,
+  FEATURE_OUTPUT_KEY,
+  FEATURE_PROPERTY_PREFIX,
+  FEATURE_ID,
+  FEATURE_URI,
 } from '../../helpers/map/model/constants';
 
+import {
+  LayerLegend,
+} from './';
+
 const createColumns = (props) => {
-  const { features } = props;
+  const { layers, features } = props;
+
   const metadata = features.reduce((result, f) => {
     const properties = f.getProperties();
     if (!result.layers[properties[FEATURE_LAYER_PROPERTY]]) {
@@ -34,24 +43,69 @@ const createColumns = (props) => {
       };
     }
     return result;
-  }, { layers: {}, keys: [FEATURE_ICON_PROPERTY] });
+  }, { layers: {}, keys: [] });
 
-  return metadata.keys.map((key) => {
+  return [FEATURE_OUTPUT_KEY, FEATURE_ICON_PROPERTY, FEATURE_NAME, ...metadata.keys].map((key) => {
     switch (key) {
-      case FEATURE_ICON_PROPERTY:
+      case FEATURE_OUTPUT_KEY:
         return {
+          expander: true,
           Header: '',
-          accessor: key,
-          maxWidth: 30,
+          id: 'actions',
           style: { 'textAlign': 'center' },
+          width: 30,
+          Expander: (cell) => {
+            return cell.original[FEATURE_OUTPUT_KEY] ?
+              <span>
+                <i data-action="provenance" title="View POI provenance" className="fa fa-search slipo-table-row-action" />
+              </span> : null;
+          },
+        };
+
+      case FEATURE_NAME:
+        return {
+          Header: key,
+          accessor: key,
+          show: false,
+        };
+
+      case FEATURE_ICON_PROPERTY: {
+        return {
+          Header: 'Source',
+          accessor: key,
+          maxWidth: 100,
+          className: 'd-flex',
           Cell: (cell) => {
+            const layer = layers.find(l => l.tableName === cell.original[FEATURE_LAYER_PROPERTY]);
+            const { style } = layer;
+
             return (
-              <span style={{ color: cell.original[FEATURE_COLOR_PROPERTY], font: 'normal 16px FontAwesome' }}>
-                {cell.original[FEATURE_ICON_PROPERTY]}
-              </span>
+              <React.Fragment>
+                {cell.original[FEATURE_ICON_PROPERTY] &&
+                  <div style={{ color: cell.original[FEATURE_COLOR_PROPERTY], font: 'normal 16px FontAwesome' }}>
+                    {cell.original[FEATURE_ICON_PROPERTY]}
+                  </div>
+                }
+                {!cell.original[FEATURE_ICON_PROPERTY] && style &&
+                  <div>
+                    <LayerLegend
+                      height={22}
+                      width={22}
+                      symbol={style.symbol}
+                      size={16}
+                      fillColor={style.fill.color}
+                      strokeWidth={style.stroke.width}
+                      strokeColor={style.stroke.color}
+                      opacity={style.opacity}
+                    />
+                  </div>
+                }
+                <div className="pl-2">{cell.original[FEATURE_NAME]}</div>
+              </React.Fragment>
             );
           }
         };
+      }
 
       default:
 
@@ -81,6 +135,33 @@ class FeaturePropertyViewer extends React.Component {
     features: PropTypes.arrayOf(PropTypes.object).isRequired,
   }
 
+  handleRowAction(rowInfo, e, handleOriginal) {
+    switch (e.target.getAttribute('data-action')) {
+      case 'provenance':
+        this.props.fetchFeatureProvenance(
+          rowInfo.original[FEATURE_OUTPUT_KEY],
+          rowInfo.original[FEATURE_ID],
+          rowInfo.original[FEATURE_URI],
+        );
+        break;
+      default:
+        if (handleOriginal) {
+          handleOriginal();
+        }
+        break;
+    }
+  }
+
+
+  isSelected(rowInfo) {
+    if (!rowInfo || !this.props.selectedFeature) {
+      return false;
+    }
+    const { outputKey, featureId } = this.props.selectedFeature;
+
+    return (outputKey === rowInfo.original[FEATURE_OUTPUT_KEY]) && (featureId === rowInfo.original[FEATURE_ID]);
+  }
+
   render() {
     const { features } = this.props;
 
@@ -89,8 +170,8 @@ class FeaturePropertyViewer extends React.Component {
     }
 
     return (
-      <Card style={{ maxWidth: 600, maxHeight: 380 }}>
-        <CardHeader>
+      <Card style={{ maxHeight: 380 }}>
+        <CardHeader className="handle">
           <i className="fa fa-map-o"></i>
           <span>{features.length > 1 ? `${features.length} features selected` : '1 feature selected'}</span>
         </CardHeader>
@@ -104,7 +185,13 @@ class FeaturePropertyViewer extends React.Component {
             noDataText="No features selected"
             showPagination={false}
             defaultPageSize={Number.MAX_VALUE}
-            style={{ maxWidth: 600, maxHeight: 300 }}
+            style={{ maxHeight: 300 }}
+            getTdProps={(state, rowInfo, column) => ({
+              onClick: this.handleRowAction.bind(this, rowInfo)
+            })}
+            getTrProps={(state, rowInfo) => ({
+              className: (this.isSelected(rowInfo) ? 'slipo-react-table-selected' : null),
+            })}
           />
         </CardBody>
       </Card>
