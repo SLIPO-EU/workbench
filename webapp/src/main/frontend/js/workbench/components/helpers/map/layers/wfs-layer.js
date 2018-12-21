@@ -3,12 +3,6 @@ import * as PropTypes from 'prop-types';
 
 import OpenLayersMap from 'ol/map';
 
-import Style from 'ol/style/style';
-import Text from 'ol/style/text';
-import Circle from 'ol/style/circle';
-import Stroke from 'ol/style/stroke';
-import Fill from 'ol/style/fill';
-
 import VectorSource from 'ol/source/vector';
 import GeoJSON from 'ol/format/geojson';
 import LoadingStrategy from 'ol/loadingstrategy';
@@ -18,10 +12,13 @@ import VectorLayer from 'ol/layer/vector';
 import URI from 'urijs';
 
 import {
-  FEATURE_LAYER_PROPERTY,
   FEATURE_COLOR_PROPERTY,
   FEATURE_ICON_PROPERTY,
 } from '../model/constants';
+
+import {
+  createStyle,
+} from '../shared/utils';
 
 /**
  * WFS layer
@@ -34,8 +31,10 @@ class WfsLayer extends React.Component {
   constructor(props) {
     super(props);
 
+    const { icon, color, style: layerStyle } = props;
+
     this.layer = null;
-    this.styles = this.buildStyles();
+    this.styles = createStyle(icon, color, layerStyle);
   }
 
   static propTypes = {
@@ -48,6 +47,8 @@ class WfsLayer extends React.Component {
     srsName: PropTypes.string,
     icon: PropTypes.string,
     color: PropTypes.string,
+    extra: PropTypes.object,
+    style: PropTypes.object,
   }
 
   static defaultProps = {
@@ -72,72 +73,6 @@ class WfsLayer extends React.Component {
       .toString();
   }
 
-  buildStyles() {
-    const image = new Circle({
-      radius: 5,
-      fill: new Fill({
-        color: this.props.color + '4D',
-      }),
-      stroke: new Stroke({
-        color: this.props.color,
-        width: 2
-      }),
-    });
-
-    const stroke = new Stroke({
-      color: this.props.color,
-      width: 1
-    });
-
-    const fill = new Fill({
-      color: this.props.color + '4D',
-    });
-
-    const style = new Style({
-      fill,
-      stroke,
-    });
-
-    const styles = {
-      'Point': (
-        this.props.icon ?
-          new Style({
-            text: new Text({
-              text: this.props.icon,
-              font: 'normal 32px FontAwesome',
-              fill: new Fill({
-                color: this.props.color,
-              }),
-            }),
-          })
-          :
-          new Style({
-            image: image,
-          })),
-      'MultiPoint': (
-        this.props.icon ?
-          new Style({
-            text: new Text({
-              text: this.props.icon,
-              font: 'normal 32px FontAwesome',
-              fill: new Fill({
-                color: this.props.color,
-              }),
-            }),
-          })
-          :
-          new Style({
-            image: image,
-          })),
-      'LineString': style,
-      'MultiLineString': style,
-      'Polygon': style,
-      'MultiPolygon': style,
-    };
-
-    return styles;
-  }
-
   buildStyleFunction() {
     return ((feature) => (this.styles[feature.getGeometry().getType()] || this.styles['Point']));
   }
@@ -151,9 +86,13 @@ class WfsLayer extends React.Component {
       });
 
       source.on('addfeature', (e) => {
-        e.feature.set(FEATURE_LAYER_PROPERTY, this.props.typename, true);
         e.feature.set(FEATURE_COLOR_PROPERTY, this.props.color || null, true);
         e.feature.set(FEATURE_ICON_PROPERTY, this.props.icon || null, true);
+        if (this.props.extra) {
+          Object.keys(this.props.extra).map((key) => {
+            e.feature.set(key, this.props.extra[key] || null, true);
+          });
+        }
       }, this);
 
       const style = this.buildStyleFunction();
