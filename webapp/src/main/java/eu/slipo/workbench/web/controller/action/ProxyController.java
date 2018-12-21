@@ -67,6 +67,9 @@ public class ProxyController implements InitializingBean {
     @Value("${vector-data.default.geometry-column:the_geom}")
     private String defaultGeometryColumn;
 
+    @Value("${vector-data.default.geometry-simple-column:the_geom_simple}")
+    private String defaultGeometrySimpleColumn;
+
     private final Map<String, String> tableColumns = new HashMap<String, String>();
 
     @Autowired
@@ -194,7 +197,7 @@ public class ProxyController implements InitializingBean {
                 "    ) As f " +
                 ")  As fc";
 
-            dataQuery = String.format(dataQuery, defaultSchema, tableName,  columns, boundingBox, defaultIdColumn, defaultGeometryColumn);
+            dataQuery = String.format(dataQuery, defaultSchema, tableName,  columns, boundingBox, defaultIdColumn, defaultGeometrySimpleColumn);
 
             String output = jdbcTemplate.queryForObject(dataQuery, String.class);
 
@@ -221,7 +224,7 @@ public class ProxyController implements InitializingBean {
             List<Map<String, Object>> rows = jdbcTemplate.queryForList(columnQuery);
             List<String> columns = rows.stream()
                 .map(r -> (String) r.get("column_name"))
-                .filter(c -> !c.equalsIgnoreCase(defaultGeometryColumn))
+                .filter(c -> !c.equalsIgnoreCase(defaultGeometryColumn) && !c.equalsIgnoreCase(defaultGeometrySimpleColumn))
                 .collect(Collectors.toList());
             String result =  String.join(",", columns);
 
