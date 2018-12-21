@@ -157,7 +157,6 @@ class ResourceExplorer extends React.Component {
    */
   viewMap(id, version) {
     const path = buildPath(DynamicRoutes.ResourceMapViewer, [id, version]);
-
     this.props.history.push(path);
   }
 
@@ -215,6 +214,7 @@ class ResourceExplorer extends React.Component {
                       selectedResources={this.props.selectedResources}
                       setPager={this.props.setPager}
                       setSelectedResource={this.props.setSelectedResource}
+                      viewMap={this.viewMap}
                     />
                   </Col>
                 </Row>
