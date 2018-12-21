@@ -22,6 +22,7 @@ import javax.validation.constraints.NotNull;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.validator.constraints.NotBlank;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.vividsolutions.jts.geom.Geometry;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
@@ -117,6 +118,9 @@ public class ResourceRevisionEntity {
 
     @Column(name = "table_name", columnDefinition = "uuid")
     UUID tableName;
+
+    @Column(name = "layer_style", updatable = true, nullable = true)
+    JsonNode style;
 
     protected ResourceRevisionEntity() {}
 
@@ -256,6 +260,16 @@ public class ResourceRevisionEntity {
         this.tableName = tableName;
     }
 
+    public JsonNode getStyle()
+    {
+        return style;
+    }
+
+    public void setStyle(JsonNode style)
+    {
+        this.style = style;
+    }
+
     public ResourceRecord toResourceRecord()
     {
         ResourceRecord record = new ResourceRecord(parent.id, version);
@@ -275,6 +289,7 @@ public class ResourceRevisionEntity {
         record.setTableName(tableName);
         record.setBoundingBox(boundingBox);
         record.setNumberOfEntities(numberOfEntities);
+        record.setStyle(style);
 
         if(processExecution!=null) {
             record.setExecution(

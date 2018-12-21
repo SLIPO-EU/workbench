@@ -48,3 +48,13 @@ export function fetchExecutionMapData(id, version, execution, token) {
       };
     });
 }
+
+export function setResourceRevisionStyle(id, version, style, token) {
+  return actions
+    .post(`/action/map/style/resource/${id}/${version}`, token, style);
+}
+
+export function setFileStyle(id, style, token) {
+  return actions
+    .post(`/action/map/style/file/${id}`, token, style);
+}

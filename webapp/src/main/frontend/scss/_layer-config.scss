@@ -1,0 +1,18 @@
+.layer-config-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  min-width: 400px;
+  input[type="range"] {
+    padding: 0.5rem 0rem;
+  }
+  .layer-config-options {
+    flex-basis: 45%;
+  }
+  .layer-config-preview {
+    flex-basis: 45%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+}

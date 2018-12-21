@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.vividsolutions.jts.geom.Geometry;
 
 import eu.slipo.workbench.common.model.poi.EnumResourceType;
@@ -24,6 +25,9 @@ public class CatalogResource extends ProcessInput
     private UUID tableName;
 
     private Geometry boundingBox;
+
+    @JsonIgnore
+    private JsonNode style;
 
     protected CatalogResource()
     {
@@ -96,9 +100,15 @@ public class CatalogResource extends ProcessInput
         this.boundingBox = boundingBox;
     }
 
+    @JsonProperty()
+    public JsonNode getStyle() {
+        return style;
+    }
+
     public void refresh(ResourceRecord r) {
         this.tableName = r.getTableName();
         this.boundingBox = r.getBoundingBox();
+        this.style = r.getStyle();
     }
 
     @Override

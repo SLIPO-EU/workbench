@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.vividsolutions.jts.geom.Geometry;
 
@@ -59,6 +60,8 @@ public class ResourceRecord implements Serializable
     private List<ResourceRecord> revisions;
 
     private boolean mapExported;
+
+    private JsonNode style;
 
     public ResourceRecord() {}
 
@@ -285,6 +288,16 @@ public class ResourceRecord implements Serializable
     public void setMapExported(boolean mapExported)
     {
         this.mapExported = mapExported;
+    }
+
+    public JsonNode getStyle()
+    {
+        return style;
+    }
+
+    public void setStyle(JsonNode style)
+    {
+        this.style = style;
     }
 
 }

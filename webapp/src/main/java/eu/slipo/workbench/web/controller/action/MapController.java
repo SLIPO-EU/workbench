@@ -5,9 +5,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 import eu.slipo.workbench.common.model.Error;
 import eu.slipo.workbench.common.model.RestResponse;
@@ -18,6 +22,7 @@ import eu.slipo.workbench.common.model.process.ProcessExecutionIdentifier;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
 import eu.slipo.workbench.common.model.resource.ResourceRecord;
+import eu.slipo.workbench.common.repository.ProcessRepository;
 import eu.slipo.workbench.common.repository.ResourceRepository;
 import eu.slipo.workbench.web.model.process.ProcessExecutionRecordView;
 import eu.slipo.workbench.web.model.resource.MapDataResult;
@@ -36,6 +41,9 @@ public class MapController extends BaseController {
 
     @Autowired
     private ResourceRepository resourceRepository;
+
+    @Autowired
+    private ProcessRepository processRepository;
 
     @Autowired
     private ProcessService processService;
@@ -104,12 +112,38 @@ public class MapController extends BaseController {
     ) {
 
         try {
-            final ProcessExecutionRecordView view = this.processService.getProcessExecution(id, version, executionId);
+            // Check if a resource is associated to the requested execution
+            final ResourceRecord resource = this.resourceRepository.findOneByExecutionId(executionId);
+            if (resource == null) {
+                final ProcessExecutionRecordView view = this.processService.getProcessExecution(id, version, executionId);
+                this.loadProcessCatalogResources(view.getProcess());
+                return RestResponse.result(new MapDataResult(view.getProcess(), view.getExecution()));
+            } else {
+                return this.getResource(resource.getId(), resource.getVersion());
+            }
 
-            this.loadProcessCatalogResources(view.getProcess());
+        } catch (Exception ex) {
+            return this.exceptionToResponse(ex);
+        }
+    }
 
-            return RestResponse.result(new MapDataResult(view.getProcess(), view.getExecution()));
+    @PostMapping(value = "/action/map/style/resource/{id}/{version}")
+    public RestResponse<?> setResourceRevisionStyle(
+        @PathVariable long id, @PathVariable long version, @RequestBody JsonNode style
+    ) {
+        try {
+            resourceRepository.setResourceRevisionStyle(id, version, style);
+            return RestResponse.success();
+        } catch (Exception ex) {
+            return this.exceptionToResponse(ex);
+        }
+    }
 
+    @PostMapping(value = "/action/map/style/file/{id}")
+    public RestResponse<?> setProcessStepFileStyle(@PathVariable long id, @RequestBody JsonNode style) {
+        try {
+            processRepository.setExecutionStepFileStyle(id, style);
+            return RestResponse.success();
         } catch (Exception ex) {
             return this.exceptionToResponse(ex);
         }
