@@ -593,26 +593,33 @@ export class FileSelect extends React.Component {
                 });
               });
           }}
-          style={{
-            textAlign: 'center',
-            fontSize: '3em',
-            color: '#656565',
-            border: '1px dotted #656565',
-            height: '12rem',
-          }}
           disableClick={false}
           multiple={false}
           disabled={this.state.isUploading}
         >
-          {this.state.isUploading ?
-            <div style={{ paddingTop: '3rem' }}>
-              <i className="fa fa-refresh fa-spin"></i>
-            </div>
-            :
-            <div>
-              <i className="fa fa-cloud-upload fa-4x"></i>
-            </div>
-          }
+          {({ getRootProps, getInputProps, isDragActive }) => {
+            return (
+              <div {...getRootProps()} style={{
+                textAlign: 'center',
+                fontSize: '3em',
+                color: '#656565',
+                border: '1px dotted #656565',
+                height: '12rem',
+                paddingTop: '1rem',
+              }}>
+                <input {...getInputProps()} />
+                {this.state.isUploading ?
+                  <div style={{ paddingTop: '3rem' }}>
+                    <i className="fa fa-refresh fa-spin"></i>
+                  </div>
+                  :
+                  <div>
+                    <i className="fa fa-cloud-upload fa-4x"></i>
+                  </div>
+                }
+              </div>
+            );
+          }}
         </Dropzone>
         <div>
           {this.state.file && this.state.file.name}
