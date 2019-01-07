@@ -37,13 +37,6 @@ export const crs = [
   { value: 'EPSG:4326', label: 'EPSG:4326' },
 ];
 
-export const languages = [
-  { value: 'en', label: 'English' },
-  { value: 'de', label: 'German' },
-  { value: 'el', label: 'Greek' },
-  { value: 'ro', label: 'Romanian' },
-];
-
 export const serializations = [
   { value: 'RDF_XML', label: 'RDF/XML' },
   { value: 'RDF_XML_ABBREV', label: 'RDF/XML-ABBREV' },
@@ -71,7 +64,7 @@ const defaultNamespaces = [{
 
 export const defaultValues = {
   classifyByName: false,
-  defaultLang: languages[0].value,
+  defaultLang: 'en',
   delimiter: '|',
   encoding: encodings[3].value,
   mode: modes[1].value,
@@ -92,7 +85,7 @@ export const defaultValues = {
 };
 
 export const defaultReverseValues = {
-  defaultLang: languages[0].value,
+  defaultLang: 'en',
   delimiter: '|',
   encoding: encodings[3].value,
   profile: null,

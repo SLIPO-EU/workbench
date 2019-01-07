@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import React from 'react';
 
 import semver from 'semver-compare';
@@ -10,10 +11,13 @@ import {
 } from '../../../../helpers/forms/form-fields';
 
 import {
+  langs,
+} from '../../../../../util/i18n';
+
+import {
   crs,
   defaultReverseValues as defaultTripleGeoValues,
   encodings,
-  languages,
   outputFormats,
 } from '../../../../../model/process-designer/configuration/triplegeo';
 
@@ -25,6 +29,8 @@ import {
 import {
   readConfiguration,
 } from '../../../../../service/toolkit/triplegeo-reverse';
+
+const languages = _.orderBy(langs.map(l => ({ value: l.alpha2, label: l.English })), ['label'], ['asc']);
 
 class TripleGeoReverseConfiguration extends React.Component {
 

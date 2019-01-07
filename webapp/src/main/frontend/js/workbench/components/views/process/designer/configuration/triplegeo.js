@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import React from 'react';
 
 import semver from 'semver-compare';
@@ -12,11 +13,14 @@ import {
 } from '../../../../helpers/forms/form-fields';
 
 import {
+  langs,
+} from '../../../../../util/i18n';
+
+import {
   crs,
   defaultValues as defaultTripleGeoValues,
   encodings,
   inputFormats,
-  languages,
   modes,
   ontologies,
   serializations,
@@ -30,6 +34,8 @@ import {
 import {
   readConfiguration,
 } from '../../../../../service/toolkit/triplegeo';
+
+const languages = _.orderBy(langs.map(l => ({ value: l.alpha2, label: l.English })), ['label'], ['asc']);
 
 class TripleGeoConfiguration extends React.Component {
 
