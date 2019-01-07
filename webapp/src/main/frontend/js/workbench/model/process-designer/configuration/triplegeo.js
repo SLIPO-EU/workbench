@@ -32,11 +32,6 @@ export const ontologies = [
   { value: 'WGS84', label: 'WGS84' },
 ];
 
-export const crs = [
-  { value: 'EPSG:2100', label: 'EPSG:2100' },
-  { value: 'EPSG:4326', label: 'EPSG:4326' },
-];
-
 export const serializations = [
   { value: 'RDF_XML', label: 'RDF/XML' },
   { value: 'RDF_XML_ABBREV', label: 'RDF/XML-ABBREV' },
@@ -79,8 +74,8 @@ export const defaultValues = {
   quote: '"',
   registerFeatures: true,
   serialization: serializations[2].value,
-  sourceCRS: crs[1].value,
-  targetCRS: crs[1].value,
+  sourceCRS: 4326,
+  targetCRS: 4326,
   targetGeoOntology: ontologies[0].value,
 };
 
@@ -91,6 +86,6 @@ export const defaultReverseValues = {
   profile: null,
   quote: '"',
   serialization: serializations[2].value,
-  sourceCRS: crs[1].value,
-  targetCRS: crs[1].value,
+  sourceCRS: 4326,
+  targetCRS: 4326,
 };

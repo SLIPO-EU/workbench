@@ -24,10 +24,15 @@ export class Text extends React.Component {
     value: PropTypes.string,
     state: PropTypes.oneOf(['success', 'warning', 'danger']),
     onChange: PropTypes.func,
+    onKeyDown: PropTypes.func,
     readOnly: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
     maxLength: PropTypes.number,
+    type: PropTypes.oneOf(['text', 'number',]),
   }
 
+  static defaultProps = {
+    type: 'text',
+  }
 
   /**
    * Returns true if the component is read-only; Otherwise false
@@ -46,12 +51,13 @@ export class Text extends React.Component {
     const props = this.props;
     return (
       <Input
-        type="text"
+        type={props.type}
         name={props.id}
         id={props.id}
         state={props.state}
         value={props.value || ''}
         autoComplete="off"
+        onKeyDown={e => typeof props.onKeyDown === 'function' ? props.onKeyDown(e) : null}
         onChange={e => typeof props.onChange === 'function' ? props.onChange(e.target.value) : null}
         readOnly={this.isReadOnly}
         maxLength={this.props.maxLength || ''}

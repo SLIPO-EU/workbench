@@ -22,6 +22,7 @@ import {
   buildPath,
   DynamicRoutes,
   EnumErrorLevel,
+  ServerError,
   StaticRoutes,
 } from '../../model';
 
@@ -287,11 +288,19 @@ class ProcessDesigner extends React.Component {
     }
   }
 
+  formatErrors(err) {
+    if (err instanceof ServerError) {
+      return err.errors.map(e => e.description).join('<br/>');
+    } else {
+      return err.message;
+    }
+  }
+
   save(action) {
     const isTemplate = this.props.process.template || action === EnumComponentAction.SaveAsTemplate;
 
     this.props.save(this.mapToSaveAction(action), this.props.designer, isTemplate)
-      .then((result) => {
+      .then(() => {
         const text = `${isTemplate ? "Template" : "Process"} has been saved successfully!`;
         message.success(text, 'fa-save');
         this.reset();
@@ -300,15 +309,15 @@ class ProcessDesigner extends React.Component {
       .catch((err) => {
         switch (err.level) {
           case EnumErrorLevel.INFO:
-            message.info(err.message, 'fa-warning');
+            message.infoHtml(this.formatErrors(err), 'fa-warning');
             this.props.history.push(StaticRoutes.ProcessExplorer);
             break;
           case EnumErrorLevel.WARN:
-            message.warn(err.message, 'fa-warning');
+            message.warnHtml(this.formatErrors(err), 'fa-warning');
             this.props.history.push(StaticRoutes.ProcessExplorer);
             break;
           default:
-            message.error(err.message, 'fa-warning');
+            message.errorHtml(this.formatErrors(err), 'fa-warning');
             break;
         }
       });

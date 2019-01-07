@@ -30,21 +30,25 @@ export function validateConfiguration(config) {
 }
 
 export function readConfiguration(config) {
-  const { profile = null, serialization, ...rest } = config;
+  const { profile = null, serialization, sourceCRS = null, targetCRS = null, ...rest } = config;
 
   return {
     ...rest,
     profile,
     serialization: fromEnumValue(serialization, serializations),
+    sourceCRS: sourceCRS ? sourceCRS.split(':')[1] : null,
+    targetCRS: targetCRS ? targetCRS.split(':')[1] : null,
   };
 }
 
 export function writeConfiguration(config) {
-  const { quote, sparqlFile, ...rest } = config;
+  const { quote, sparqlFile, sourceCRS = null, targetCRS = null, ...rest } = config;
 
   return {
     ...rest,
     sparqlFile: sparqlFile ? typeof sparqlFile === 'object' ? sparqlFile.path : sparqlFile : null,
     quote: quote || '',
+    sourceCRS: sourceCRS ? 'EPSG:' + sourceCRS : null,
+    targetCRS: targetCRS ? 'EPSG:' + targetCRS : null,
   };
 }

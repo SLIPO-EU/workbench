@@ -15,7 +15,6 @@ import {
 } from '../../../../../util/i18n';
 
 import {
-  crs,
   defaultReverseValues as defaultTripleGeoValues,
   encodings,
   outputFormats,
@@ -224,23 +223,33 @@ class TripleGeoReverseConfiguration extends React.Component {
 
         <div className="row">
           <div className="col">
-            <SelectField
+            <TextField
               {...inject}
               id="sourceCRS"
               label="Source CRS"
-              help=""
-              options={crs}
-              clearable={true}
+              help="Specify the EPSG numeric code for the source CRS"
+              type="number"
+              onKeyDown={(e) => {
+                // Prevent decimals
+                if (e.keyCode === 188 || e.keyCode === 190) {
+                  e.preventDefault();
+                }
+              }}
             />
           </div>
           <div className="col">
-            <SelectField
+            <TextField
               {...inject}
               id="targetCRS"
               label="Target CRS"
-              help=""
-              options={crs}
-              clearable={true}
+              help="Specify the EPSG numeric code for the target CRS"
+              type="number"
+              onKeyDown={(e) => {
+                // Prevent decimals
+                if (e.keyCode === 188 || e.keyCode === 190) {
+                  e.preventDefault();
+                }
+              }}
             />
           </div>
         </div>

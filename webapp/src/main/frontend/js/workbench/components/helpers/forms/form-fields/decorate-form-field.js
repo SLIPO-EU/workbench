@@ -11,8 +11,9 @@ export default function decorateFormField(Field) {
           if (typeof props.onChange === 'function') {
             // Parent component is explicitly handling the onChange event
             // Do not propagate any side effects
-            props.onChange(val);
-            return;
+            if (!props.onChange(val)) {
+              return;
+            }
           }
           const newVal = { ...props.value };
           newVal[props.id] = val;
