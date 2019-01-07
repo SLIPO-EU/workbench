@@ -6,6 +6,9 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
@@ -64,6 +67,8 @@ import eu.slipo.workbench.web.service.ProcessService;
 public class ResourceController extends BaseController {
 
     private static final Logger logger = LoggerFactory.getLogger(ResourceController.class);
+
+    private static DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 
     @Autowired
     private ResourceRepository resourceRepository;
@@ -142,7 +147,7 @@ public class ResourceController extends BaseController {
             Assert.notNull(configuration, "Expected configuration for Triplegeo transformation");
 
             final String resourceKey = "1";
-            final String procName = String.format("Resource export: %s", resource.getName());
+            final String procName = String.format("Resource export: %s %s", resource.getName(), dateFormat.format(new Date()));
 
             ProcessDefinition definition = processDefinitionBuilderFactory.create(procName)
                 .description("Resource export")
