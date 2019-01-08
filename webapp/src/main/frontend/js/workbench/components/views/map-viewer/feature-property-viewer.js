@@ -175,7 +175,9 @@ class FeaturePropertyViewer extends React.Component {
           <div style={{ display: 'flex' }}>
             <div style={{ flex: '0 0 25px' }}><i className="fa fa-map-o"></i></div>
             <div style={{ flex: '1 1 100%' }}>{features.length > 1 ? `${features.length} features selected` : '1 feature selected'}</div>
-            <div style={{ cursor: 'pointer' }}><i className="fa fa-remove" onClick={(e) => this.props.close(e)}></i></div>
+            <div style={{ cursor: 'pointer' }}>
+              <i className="fa fa-remove" onClick={(e) => this.props.close(e)} title="Close"></i>
+            </div>
           </div>
         </CardHeader>
         <CardBody>

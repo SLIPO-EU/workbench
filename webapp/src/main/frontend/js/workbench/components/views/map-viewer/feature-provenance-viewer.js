@@ -147,6 +147,10 @@ class FeatureProvenanceViewer extends React.Component {
 
   constructor(props) {
     super(props);
+
+    this.state = {
+      filterable: false,
+    }
   }
 
   static propTypes = {
@@ -249,7 +253,14 @@ class FeatureProvenanceViewer extends React.Component {
     );
   }
 
+  toggleFilterable() {
+    this.setState({
+      filterable: !this.state.filterable,
+    });
+  }
+
   render() {
+    const { filterable } = this.state;
     const { provenance } = this.props;
 
     if (!provenance) {
@@ -262,12 +273,18 @@ class FeatureProvenanceViewer extends React.Component {
           <div style={{ display: 'flex' }}>
             <div style={{ flex: '0 0 25px' }}><i className="fa fa-map-marker"></i></div>
             <div style={{ flex: '1 1 100%' }}>{`${provenance.layer} - ${provenance.featureId}`}</div>
-            <div style={{ cursor: 'pointer' }}><i className="fa fa-remove" onClick={(e) => this.props.close(e)}></i></div>
+            <div style={{ cursor: 'pointer', opacity: filterable ? 1 : 0.5 }}>
+              <i className="fa fa-filter pr-2 " onClick={() => this.toggleFilterable()} title="Filter attributes"></i>
+            </div>
+            <div style={{ cursor: 'pointer' }}>
+              <i className="fa fa-remove" onClick={(e) => this.props.close(e)} title="Close"></i>
+            </div>
           </div>
         </CardHeader>
         <CardBody>
           <Table
             className="slipo-provenance-table"
+            filterable={filterable}
             id={'provenance'}
             name={'provenance'}
             minRows={provenance.properties.length}
