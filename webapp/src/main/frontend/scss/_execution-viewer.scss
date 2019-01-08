@@ -110,36 +110,3 @@ $slipo-ev-layer-color: #616161 !default;
 .slipo-ev-layer-active .slipo-ev-layer-actions {
   display: block;
 }
-
-/*
- * Features
- */
-
-.slipo-tl-table {
-  margin: 10px 0px;
-}
-
-.slipo-tl-step {
-  white-space: nowrap;
-}
-
-.slipo-tl-selected {
-  font-weight: bold;
-}
-
-.slipo-tl-cell {
-  border: 1px solid #cdcdcd;
-  padding: 5px;
-}
-
-.slipo-tl-cell-odd {
-  background: none;
-}
-
-.slipo-tl-cell-even {
-  background: #eceff1;
-}
-
-.slipo-tl-image {
-  max-width: 100%;
-}

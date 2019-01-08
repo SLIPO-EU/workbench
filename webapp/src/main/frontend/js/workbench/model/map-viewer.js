@@ -32,3 +32,10 @@ export const Symbols = [{
   value: EnumSymbol.Triangle,
   label: 'Triangle',
 }];
+
+export const EnumCellValueType = {
+  Text: 'Text',
+  Email: 'Email',
+  Image: 'Image',
+  Link: 'Link',
+};

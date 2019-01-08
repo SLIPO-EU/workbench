@@ -192,7 +192,7 @@ export function provenanceToTable(provenance) {
 
   // Steps
   const steps = provenance.operations
-    .map((o) => {
+    .map((o, index) => {
       switch (o.tool) {
         case EnumTool.DEER: {
           const step = {
@@ -203,6 +203,7 @@ export function provenanceToTable(provenance) {
             input: o.input,
           };
           stepRow.push({
+            index: index + 1,
             iconClass: step.iconClass,
             value: step.name,
           });
@@ -228,6 +229,7 @@ export function provenanceToTable(provenance) {
           };
           stepRow.push({
             colSpan: 4,
+            index: index + 1,
             iconClass: step.iconClass,
             value: step.name,
           });
@@ -274,7 +276,7 @@ export function provenanceToTable(provenance) {
     });
 
   // Properties
-  properties.map((property) => {
+  properties.forEach((property) => {
     const cells = [{
       value: property,
       step: 0,
@@ -297,15 +299,15 @@ export function provenanceToTable(provenance) {
             {
               value: cell.left,
               step: index + 1,
-              property: null,
+              property,
             }, {
               value: cell.right,
               step: index + 1,
-              property: null,
+              property,
             }, {
               value: cell.operation,
               step: index + 1,
-              property: null,
+              property,
             }, {
               value: cell.value,
               selected: !!cell.value,
@@ -322,8 +324,8 @@ export function provenanceToTable(provenance) {
     dataRows.push(cells);
   });
 
-  const result = {
-    stepName: provenance.stepName,
+  return {
+    layer: provenance.stepName,
     featureId: provenance.featureId,
     featureUri: provenance.featureUri,
     steps,
@@ -333,6 +335,4 @@ export function provenanceToTable(provenance) {
     inputRow,
     dataRows,
   };
-
-  return result;
 }

@@ -30,7 +30,7 @@ import {
 
 import {
   FeaturePropertyViewer,
-  FeatureTimeLineViewer,
+  FeatureProvenanceViewer,
   LayerConfig,
 } from './';
 
@@ -194,8 +194,8 @@ class MapViewer extends React.Component {
             handle=".handle"
           >
             <div style={{ pointerEvents: 'none' }}>
-              <ResizableBox width={600} height={556} axis="x">
-                <FeatureTimeLineViewer
+              <ResizableBox width={600} height={568} axis="x">
+                <FeatureProvenanceViewer
                   provenance={provenance}
                 />
               </ResizableBox>
