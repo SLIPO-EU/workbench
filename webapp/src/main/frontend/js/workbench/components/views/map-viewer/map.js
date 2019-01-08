@@ -131,12 +131,76 @@ class MapViewer extends React.Component {
     return layers;
   }
 
-  onStop(e, id) {
-    this.props.setItemPosition(id, e.screenX, e.screenY);
+  onStop(data, id) {
+    this.props.setItemPosition(id, data.x, data.y);
+  }
+
+  renderPanels() {
+    const {
+      draggable, draggableOrder, layers, selectedFeature, selectedFeatures: features = [], provenance
+    } = this.props;
+
+    const panels = [];
+
+    draggableOrder.forEach(id => {
+      switch (id) {
+        case EnumPane.FeatureCollection:
+          if (features && features.length !== 0) {
+            panels.push(
+              <div key={id} onClick={() => this.props.bringToFront(id)}>
+                <Draggable
+                  defaultPosition={{ x: draggable[id].left, y: draggable[id].top }}
+                  onStop={(e, data) => this.onStop(data, id)}
+                  handle=".handle"
+                  bounds={{ left: 0, top: 100 }}
+                >
+                  <div style={{ pointerEvents: 'none' }}>
+                    <ResizableBox width={600} height={380} axis="x">
+                      <FeaturePropertyViewer
+                        features={features}
+                        layers={layers}
+                        selectedFeature={selectedFeature}
+                        fetchFeatureProvenance={this.props.fetchFeatureProvenance}
+                        close={() => this.props.clearSelectedFeatures()}
+                      />
+                    </ResizableBox>
+                  </div>
+                </Draggable>
+              </div>
+            );
+          }
+          break;
+        case EnumPane.FeatureProvenance:
+
+          if (provenance) {
+            panels.push(
+              <div key={id} onClick={() => this.props.bringToFront(id)}>
+                <Draggable
+                  defaultPosition={{ x: draggable[id].left, y: draggable[id].top }}
+                  onStop={(e, data) => this.onStop(data, id)}
+                  handle=".handle"
+                  bounds={{ left: 0, top: 100 }}
+                >
+                  <div style={{ pointerEvents: 'none' }}>
+                    <ResizableBox width={600} height={568} axis="x">
+                      <FeatureProvenanceViewer
+                        provenance={provenance}
+                        close={() => this.props.hideProvenance()}
+                      />
+                    </ResizableBox>
+                  </div>
+                </Draggable>
+              </div>
+            );
+          }
+      }
+    });
+
+    return panels;
   }
 
   render() {
-    const { draggable, layers, selectedFeature, selectedFeatures: features = [], provenance, selectedLayer } = this.props;
+    const { layers, selectedLayer } = this.props;
 
     const styles = layers.reduce((result, layer) => ({ ...result, [layer.tableName]: layer.style }), {});
 
@@ -167,41 +231,7 @@ class MapViewer extends React.Component {
           </OpenLayers.Interactions>
         </OpenLayers.Map>
 
-        {features && features.length !== 0 &&
-          <Draggable
-            defaultPosition={{ x: draggable[EnumPane.FeatureCollection].left, y: draggable[EnumPane.FeatureCollection].top }}
-            onStop={(e) => this.onStop(e, EnumPane.FeatureCollection)}
-            handle=".handle"
-            offsetParent={document.getElementById('root')}
-          >
-            <div style={{ pointerEvents: 'none' }}>
-              <ResizableBox width={600} height={380} axis="x">
-                <FeaturePropertyViewer
-                  features={features}
-                  layers={layers}
-                  selectedFeature={selectedFeature}
-                  fetchFeatureProvenance={this.props.fetchFeatureProvenance}
-                />
-              </ResizableBox>
-            </div>
-          </Draggable>
-        }
-
-        {provenance &&
-          <Draggable
-            defaultPosition={{ x: draggable[EnumPane.FeatureProvenance].left, y: draggable[EnumPane.FeatureProvenance].top }}
-            onStop={(e) => this.onStop(e, EnumPane.FeatureProvenance)}
-            handle=".handle"
-          >
-            <div style={{ pointerEvents: 'none' }}>
-              <ResizableBox width={600} height={568} axis="x">
-                <FeatureProvenanceViewer
-                  provenance={provenance}
-                />
-              </ResizableBox>
-            </div>
-          </Draggable>
-        }
+        {this.renderPanels()}
 
       </React.Fragment>
     );

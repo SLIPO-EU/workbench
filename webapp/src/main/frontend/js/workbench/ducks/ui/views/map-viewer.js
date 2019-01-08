@@ -26,8 +26,11 @@ const Types = {
   RECEIVE_EXECUTION_MAP_DATA: 'ui/map/viewer/RECEIVE_EXECUTION_MAP_DATA',
   REQUEST_RESOURCE_MAP_DATA: 'ui/map/viewer/REQUEST_RESOURCE_MAP_DATA',
   RECEIVE_RESOURCE_MAP_DATA: 'ui/map/viewer/RECEIVE_RESOURCE_MAP_DATA',
-  REQUEST_FEATURE_TIMELINE: 'ui/map/viewer/REQUEST_FEATURE_TIMELINE',
-  RECEIVE_FEATURE_TIMELINE: 'ui/map/viewer/RECEIVE_FEATURE_TIMELINE',
+  REQUEST_FEATURE_PROVENANCE: 'ui/map/viewer/REQUEST_FEATURE_PROVENANCE',
+  RECEIVE_FEATURE_PROVENANCE: 'ui/map/viewer/RECEIVE_FEATURE_PROVENANCE',
+
+  HIDE_PROVENANCE: 'ui/map/viewer/HIDE_PROVENANCE',
+  BRING_PANEL_TO_FRONT: 'ui/map/viewer/BRING_PANEL_TO_FRONT',
 
   SELECT_LAYER: 'ui/map/viewer/SELECT_LAYER',
   TOGGLE_LAYER: 'ui/map/viewer/TOGGLE_LAYER',
@@ -36,6 +39,7 @@ const Types = {
   SET_LAYER_COLOR: 'ui/map/viewer/SET_LAYER_COLOR',
   SET_LAYER_STYLE: 'ui/map/viewer/SET_LAYER_STYLE',
   SET_SELECTED_FEATURES: 'ui/map/viewer/SET_SELECTED_FEATURES',
+  CLEAR_SELECTED_FEATURES: 'ui/map/viewer/CLEAR_SELECTED_FEATURES',
   SET_CENTER: 'ui/map/viewer/SET_CENTER',
   SET_ITEM_POSITION: 'ui/map/viewer/SET_ITEM_POSITION',
 
@@ -64,6 +68,7 @@ const initialState = {
     provenance: null,
     center: null,
     zoom: null,
+    draggableOrder: [EnumPane.FeatureCollection, EnumPane.FeatureProvenance],
     draggable: {
       [EnumPane.FeatureCollection]: {
         left: 220,
@@ -189,8 +194,27 @@ const configReducer = (state, action) => {
       return {
         ...state,
         selectedFeatures: action.features || [],
-        provenance: null,
         selectedFeature: null,
+        draggableOrder: [...state.draggableOrder.filter(id => id != EnumPane.FeatureCollection), EnumPane.FeatureCollection],
+      };
+
+    case Types.CLEAR_SELECTED_FEATURES:
+      return {
+        ...state,
+        selectedFeatures: [],
+        selectedFeature: null,
+      }
+
+    case Types.HIDE_PROVENANCE:
+      return {
+        ...state,
+        provenance: null,
+      };
+
+    case Types.BRING_PANEL_TO_FRONT:
+      return {
+        ...state,
+        draggableOrder: [...state.draggableOrder.filter(id => id != action.id), action.id],
       };
 
     case Types.RECEIVE_EXECUTION_MAP_DATA:
@@ -204,7 +228,7 @@ const configReducer = (state, action) => {
         selectedFeature: null,
       };
 
-    case Types.RECEIVE_FEATURE_TIMELINE:
+    case Types.RECEIVE_FEATURE_PROVENANCE:
       return {
         ...state,
         provenance: provenanceToTable(action.data),
@@ -232,7 +256,7 @@ export default (state = initialState, action) => {
 
     case Types.REQUEST_EXECUTION_MAP_DATA:
     case Types.REQUEST_RESOURCE_MAP_DATA:
-    case Types.REQUEST_FEATURE_TIMELINE:
+    case Types.REQUEST_FEATURE_PROVENANCE:
       return {
         ...state,
         loading: true,
@@ -240,7 +264,7 @@ export default (state = initialState, action) => {
 
     case Types.RECEIVE_EXECUTION_MAP_DATA:
     case Types.RECEIVE_RESOURCE_MAP_DATA:
-    case Types.RECEIVE_FEATURE_TIMELINE:
+    case Types.RECEIVE_FEATURE_PROVENANCE:
       return {
         ...state,
         loading: false,
@@ -255,6 +279,9 @@ export default (state = initialState, action) => {
     case Types.SET_LAYER_COLOR:
     case Types.SET_LAYER_STYLE:
     case Types.SET_SELECTED_FEATURES:
+    case Types.CLEAR_SELECTED_FEATURES:
+    case Types.HIDE_PROVENANCE:
+    case Types.BRING_PANEL_TO_FRONT:
     case Types.SET_CENTER:
     case Types.SET_ITEM_POSITION:
     case Types.SELECT_FEATURE:
@@ -311,11 +338,11 @@ export const fetchResourceMapData = (id, version) => (dispatch, getState) => {
 };
 
 const requestFeatureProvenance = () => ({
-  type: Types.REQUEST_FEATURE_TIMELINE,
+  type: Types.REQUEST_FEATURE_PROVENANCE,
 });
 
 const receiveFeatureProvenance = (data) => ({
-  type: Types.RECEIVE_FEATURE_TIMELINE,
+  type: Types.RECEIVE_FEATURE_PROVENANCE,
   data,
 });
 
@@ -334,6 +361,7 @@ export const fetchFeatureProvenance = (processId, processVersion, executionId, o
   return provenanceService.fetchFeatureProvenance(processId, processVersion, executionId, outputKey, featureId, featureUri, token)
     .then((data) => {
       dispatch(receiveFeatureProvenance(data));
+      dispatch(bringToFront(EnumPane.FeatureProvenance));
     });
 };
 
@@ -408,4 +436,17 @@ export const setLayerColor = (tableName, color) => ({
 export const selectFeatures = (features) => ({
   type: Types.SET_SELECTED_FEATURES,
   features,
+});
+
+export const clearSelectedFeatures = () => ({
+  type: Types.CLEAR_SELECTED_FEATURES,
+});
+
+export const hideProvenance = () => ({
+  type: Types.HIDE_PROVENANCE,
+})
+
+export const bringToFront = (id) => ({
+  type: Types.BRING_PANEL_TO_FRONT,
+  id,
 });

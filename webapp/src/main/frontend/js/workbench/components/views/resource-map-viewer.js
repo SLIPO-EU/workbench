@@ -6,8 +6,11 @@ import {
 } from 'redux';
 
 import {
+  bringToFront,
+  clearSelectedFeatures,
   fetchFeatureProvenance,
   fetchResourceMapData,
+  hideProvenance,
   reset,
   selectFeatures,
   setCenter,
@@ -101,8 +104,11 @@ class ResourceMapViewer extends React.Component {
       <MapViewer
         baseLayer={baseLayer}
         bingMaps={bingMaps}
+        bringToFront={this.props.bringToFront}
+        clearSelectedFeatures={this.props.clearSelectedFeatures}
         defaultCenter={defaultCenter}
         draggable={this.props.draggable}
+        draggableOrder={this.props.draggableOrder}
         fetchFeatureProvenance={
           (outputKey, featureId, featureUri) => fetchFeatureProvenance(
             execution.id,
@@ -112,6 +118,7 @@ class ResourceMapViewer extends React.Component {
             featureId,
             featureUri)
         }
+        hideProvenance={this.props.hideProvenance}
         initialCenter={this.props.initialCenter}
         initialZoom={this.props.initialZoom}
         layerConfigVisible={this.props.layerConfigVisible}
@@ -136,6 +143,7 @@ const mapStateToProps = (state) => ({
   bingMaps: state.config.bingMaps,
   defaultCenter: state.config.mapDefaults.center,
   draggable: state.ui.views.map.config.draggable,
+  draggableOrder: state.ui.views.map.config.draggableOrder,
   initialCenter: state.ui.views.map.config.center,
   initialZoom: state.ui.views.map.config.zoom,
   layerConfigVisible: state.ui.views.map.config.layerConfigVisible,
@@ -150,8 +158,11 @@ const mapStateToProps = (state) => ({
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
+  bringToFront,
+  clearSelectedFeatures,
   fetchFeatureProvenance,
   fetchResourceMapData,
+  hideProvenance,
   reset,
   selectFeatures,
   setCenter,

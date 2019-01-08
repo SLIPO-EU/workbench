@@ -259,8 +259,11 @@ class FeatureProvenanceViewer extends React.Component {
     return (
       <Card>
         <CardHeader className="handle">
-          <i className="fa fa-map-marker"></i>
-          <span>{`${provenance.layer} - ${provenance.featureId}`}</span>
+          <div style={{ display: 'flex' }}>
+            <div style={{ flex: '0 0 25px' }}><i className="fa fa-map-marker"></i></div>
+            <div style={{ flex: '1 1 100%' }}>{`${provenance.layer} - ${provenance.featureId}`}</div>
+            <div style={{ cursor: 'pointer' }}><i className="fa fa-remove" onClick={(e) => this.props.close(e)}></i></div>
+          </div>
         </CardHeader>
         <CardBody>
           <Table
