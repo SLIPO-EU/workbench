@@ -107,18 +107,18 @@ const createRows = (props) => {
       inputRow.filter(i => i.step === step.index).map((input, inputIndex) => {
         const id = `Input-${step.index}-${inputIndex}`;
         const cell = data[rowIndex][++columnIndex];
-        row[id] = cell.value
+        row[id] = cell.value;
       });
     });
     return row;
   });
-}
+};
 
 const isLink = (value) => {
   const urlRegEx = /^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([-.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$/gi;
 
-  return urlRegEx.test(value);;
-}
+  return urlRegEx.test(value);
+};
 
 const renderCell = (cell) => {
   const propertyType = PropertyTypeMapping.find(p => p.id === cell.property);
@@ -150,7 +150,7 @@ class FeatureProvenanceViewer extends React.Component {
 
     this.state = {
       filterable: false,
-    }
+    };
   }
 
   static propTypes = {

@@ -203,7 +203,7 @@ const configReducer = (state, action) => {
         ...state,
         selectedFeatures: [],
         selectedFeature: null,
-      }
+      };
 
     case Types.HIDE_PROVENANCE:
       return {
@@ -444,7 +444,7 @@ export const clearSelectedFeatures = () => ({
 
 export const hideProvenance = () => ({
   type: Types.HIDE_PROVENANCE,
-})
+});
 
 export const bringToFront = (id) => ({
   type: Types.BRING_PANEL_TO_FRONT,
