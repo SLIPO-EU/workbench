@@ -27,7 +27,8 @@ import {
   LayerLegend,
 } from './';
 
-const createColumns = (props) => {
+const createColumns = (state, props) => {
+  const { filterable } = state;
   const { layers, features } = props;
 
   const metadata = features.reduce((result, f) => {
@@ -112,6 +113,7 @@ const createColumns = (props) => {
         return {
           Header: key,
           accessor: key,
+          filterable,
         };
     }
   });
@@ -129,6 +131,10 @@ class FeaturePropertyViewer extends React.Component {
 
   constructor(props) {
     super(props);
+
+    this.state = {
+      filterable: false,
+    };
   }
 
   static propTypes = {
@@ -152,7 +158,6 @@ class FeaturePropertyViewer extends React.Component {
     }
   }
 
-
   isSelected(rowInfo) {
     if (!rowInfo || !this.props.selectedFeature) {
       return false;
@@ -162,7 +167,14 @@ class FeaturePropertyViewer extends React.Component {
     return (outputKey === rowInfo.original[FEATURE_OUTPUT_KEY]) && (featureId === rowInfo.original[FEATURE_ID]);
   }
 
+  toggleFilterable() {
+    this.setState({
+      filterable: !this.state.filterable,
+    });
+  }
+
   render() {
+    const { filterable } = this.state;
     const { features } = this.props;
 
     if (!features.length) {
@@ -175,6 +187,9 @@ class FeaturePropertyViewer extends React.Component {
           <div style={{ display: 'flex' }}>
             <div style={{ flex: '0 0 25px' }}><i className="fa fa-map-o"></i></div>
             <div style={{ flex: '1 1 100%' }}>{features.length > 1 ? `${features.length} features selected` : '1 feature selected'}</div>
+            <div style={{ cursor: 'pointer', opacity: filterable ? 1 : 0.5 }}>
+              <i className="fa fa-filter pr-2 " onClick={() => this.toggleFilterable()} title="Filter attributes"></i>
+            </div>
             <div style={{ cursor: 'pointer' }}>
               <i className="fa fa-remove" onClick={(e) => this.props.close(e)} title="Close"></i>
             </div>
@@ -184,19 +199,19 @@ class FeaturePropertyViewer extends React.Component {
           <Table
             id={'features'}
             name={'features'}
-            minRows={10}
-            columns={createColumns(this.props)}
+            columns={createColumns(this.state, this.props)}
             data={createRows(this.props)}
-            noDataText="No features selected"
-            showPagination={false}
             defaultPageSize={Number.MAX_VALUE}
-            style={{ maxHeight: 300 }}
             getTdProps={(state, rowInfo, column) => ({
               onClick: this.handleRowAction.bind(this, rowInfo)
             })}
             getTrProps={(state, rowInfo) => ({
               className: (this.isSelected(rowInfo) ? 'slipo-react-table-selected' : null),
             })}
+            minRows={10}
+            noDataText="No features selected"
+            showPagination={false}
+            style={{ maxHeight: 300 }}
           />
         </CardBody>
       </Card>

@@ -283,16 +283,15 @@ class FeatureProvenanceViewer extends React.Component {
         </CardHeader>
         <CardBody>
           <Table
-            className="slipo-provenance-table"
-            filterable={filterable}
             id={'provenance'}
             name={'provenance'}
-            minRows={provenance.properties.length}
+            className="slipo-provenance-table"
             columns={createColumns(this.props)}
             data={createRows(this.props)}
+            defaultPageSize={Number.MAX_VALUE}
+            minRows={provenance.properties.length}
             noDataText="No data found"
             showPagination={false}
-            defaultPageSize={Number.MAX_VALUE}
             style={{ maxHeight: 480 }}
           />
           {/* {this.renderTable()} */}
