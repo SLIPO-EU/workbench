@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -18,6 +19,8 @@ import javax.sql.DataSource;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -56,6 +59,8 @@ public class ProxyController implements InitializingBean {
 
     private final String PARAMETER_TYPE_NAME = "typeName";
 
+    private final String PARAMETER_FILTER_PREFIX = "filter-";
+
     private final String CONTENT_TYPE_HEADER = "Content-Type";
 
     @Value("${vector-data.default.schema:spatial}")
@@ -70,7 +75,7 @@ public class ProxyController implements InitializingBean {
     @Value("${vector-data.default.geometry-simple-column:the_geom_simple}")
     private String defaultGeometrySimpleColumn;
 
-    private final Map<String, String> tableColumns = new HashMap<String, String>();
+    private final Map<String, List<String>> tableColumns = new HashMap<String, List<String>>();
 
     @Autowired
     private MapConfiguration mapConfiguration;
@@ -155,32 +160,57 @@ public class ProxyController implements InitializingBean {
     }
 
     private void loadFeatures(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // Get type name and bounding box
         Map<String, String[]> parameterMap = request.getParameterMap();
 
+        // Get bounding box
         String boundingBox = parameterMap.keySet().stream()
             .filter(p -> p.equalsIgnoreCase(PARAMETER_BBOX))
             .map(p -> parameterMap.get(p)[0])
             .findFirst()
             .orElse(null);
 
+        // Get type name
         String typeName = parameterMap.keySet().stream()
             .filter(p -> p.equalsIgnoreCase(PARAMETER_TYPE_NAMES) || p.equalsIgnoreCase(PARAMETER_TYPE_NAME))
             .map(p -> parameterMap.get(p)[0])
             .findFirst()
             .orElse(null);
 
+        // Get filters
+        List<Triple<String, String, String>> filters = parameterMap.keySet().stream()
+            .filter(p -> p.startsWith(PARAMETER_FILTER_PREFIX))
+            .map(param-> {
+                String[] tokens = param.split("-");
+                if (tokens.length != 3) {
+                    return null;
+                }
+                String[] values = parameterMap.get(param);
+                if (values.length != 1) {
+                    return null;
+                }
+                return Triple.<String, String, String>of(tokens[1], tokens[2], values[0]);
+            })
+            .filter(f -> f != null)
+            .collect(Collectors.toList());
+
+
         if ((boundingBox != null) && (typeName != null)) {
             String[] typeNameParts = StringUtils.split(typeName, ":");
             String tableName = (typeNameParts.length == 2) ? typeNameParts[1] : typeName;
 
             String[] boundingBoxParts = StringUtils.split(boundingBox, ",");
+            // Ignore CRS from bounding box
             if (boundingBoxParts.length == 5) {
                 boundingBox = String.join(",", ArrayUtils.remove(boundingBoxParts, 4));
             }
 
             // Get table schema
-            String columns = getColumns(tableName);
+            List<String> columns = getColumns(tableName);
+
+            // Create where clause
+            Pair<String, Object[]> filterAndArguments = this.getWhereClauseAndArguments(columns, filters);
+
+            String where = "ST_Intersects(ST_Transform(ST_MakeEnvelope(%4$s, 3857), 4326), \"%6$s\") = true " + filterAndArguments.getLeft();
 
             // Get data as GeoJson
             String dataQuery =
@@ -193,13 +223,15 @@ public class ProxyController implements InitializingBean {
                 "                      row_to_json((select columns FROM (SELECT %3$s) As columns)) As properties, " +
                 "                      '%2$s::' || \"%5$s\" as id " +
                 "               from   \"%1$s\".\"%2$s\" As dt" +
-                "               where   ST_Intersects(ST_Transform(ST_MakeEnvelope(%4$s, 3857), 4326), \"%6$s\") = true " +
+                "               where  " + where +
                 "    ) As f " +
                 ")  As fc";
 
-            dataQuery = String.format(dataQuery, defaultSchema, tableName,  columns, boundingBox, defaultIdColumn, defaultGeometrySimpleColumn);
+            dataQuery = String.format(
+                dataQuery, defaultSchema, tableName,  String.join(",", columns), boundingBox, defaultIdColumn, defaultGeometrySimpleColumn
+            );
 
-            String output = jdbcTemplate.queryForObject(dataQuery, String.class);
+            String output = jdbcTemplate.queryForObject(dataQuery, filterAndArguments.getRight(), String.class);
 
             response.addHeader(CONTENT_TYPE_HEADER,"application/json; charset=UTF-8");
             response.setCharacterEncoding("UTF-8");
@@ -209,7 +241,66 @@ public class ProxyController implements InitializingBean {
         response.setStatus(HttpServletResponse.SC_OK);
     }
 
-    private String getColumns(String tableName) {
+    private Pair<String, Object[]> getWhereClauseAndArguments(List<String> columns, List<Triple<String, String, String>> filters) {
+        String where = "";
+
+        List<Object> arguments = new ArrayList<Object>();
+
+        if (!filters.isEmpty()) {
+            for (Triple<String, String, String> filter : filters) {
+                if (columns.contains(filter.getLeft())) {
+                    String clause = " and ";
+                    switch (filter.getMiddle()) {
+                        case "null":
+                            clause += "(" + filter.getLeft() + " is null or " + filter.getLeft() + " = '')";
+                            break;
+                        case "notNull":
+                            clause += "(" + filter.getLeft() + " is not null and " + filter.getLeft() + " <> '')";
+                            break;
+                        case "contains":
+                            clause += filter.getLeft() + " like ? ";
+                            arguments.add("%" + filter.getRight() + "%");
+                            break;
+                        case "startsWith":
+                            clause += filter.getLeft() + " like ? ";
+                            arguments.add(filter.getRight() + "%");
+                            break;
+                        case "endsWith":
+                            clause += filter.getLeft() + " like ? ";
+                            arguments.add("%" + filter.getRight());
+                            break;
+                        case "equal":
+                            clause += filter.getLeft() + " = ? ";
+                            arguments.add(filter.getRight());
+                            break;
+                        case "less":
+                            clause += filter.getLeft() + " < ? ";
+                            arguments.add(filter.getRight());
+                            break;
+                        case "lessOrEqual":
+                            clause += filter.getLeft() + " <= ? ";
+                            arguments.add(filter.getRight());
+                            break;
+                        case "greater":
+                            clause += filter.getLeft() + " > ? ";
+                            arguments.add(filter.getRight());
+                            break;
+                        case "greaterOrEqual":
+                            clause += filter.getLeft() + " >= ? ";
+                            arguments.add(filter.getRight());
+                            break;
+                        default:
+                            continue;
+                    }
+                    where += clause;
+                }
+            }
+        }
+
+        return Pair.<String, Object[]>of(where, arguments.toArray(new Object[0]));
+    }
+
+    private List<String> getColumns(String tableName) {
         if (tableColumns.containsKey(tableName)) {
             return tableColumns.get(tableName);
         }
@@ -224,12 +315,12 @@ public class ProxyController implements InitializingBean {
             List<Map<String, Object>> rows = jdbcTemplate.queryForList(columnQuery);
             List<String> columns = rows.stream()
                 .map(r -> (String) r.get("column_name"))
-                .filter(c -> !c.equalsIgnoreCase(defaultGeometryColumn) && !c.equalsIgnoreCase(defaultGeometrySimpleColumn))
+                .filter(c -> !c.equalsIgnoreCase(defaultGeometryColumn) &&
+                             !c.equalsIgnoreCase(defaultGeometrySimpleColumn))
                 .collect(Collectors.toList());
-            String result =  String.join(",", columns);
 
-            tableColumns.put(tableName, result);
-            return result;
+            tableColumns.put(tableName, columns);
+            return columns;
 
         }
     }

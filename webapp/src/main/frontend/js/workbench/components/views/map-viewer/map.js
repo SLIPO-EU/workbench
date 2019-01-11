@@ -32,10 +32,15 @@ import {
   FeaturePropertyViewer,
   FeatureProvenanceViewer,
   LayerConfig,
+  FilterForm,
 } from './';
 
 const styleToKey = (style) => {
   return `${style.symbol}-${style.fill.color}-${style.stroke.color}-${style.stroke.width}-${style.size}-${style.opacity}`;
+};
+
+const filtersToKey = (filters) => {
+  return 'filters-' + filters.map(f => `${f.attribute}-${f.type}-${f.value}`).join('-');
 };
 
 /**
@@ -83,37 +88,40 @@ class MapViewer extends React.Component {
   }
 
   getLayers() {
-    const layers = [];
+    const { filters = [], baseLayer, bingMaps, osm, layers } = this.props;
+    const result = [];
 
-    switch (this.props.baseLayer) {
+    switch (baseLayer) {
       case 'OSM':
-        layers.push(
+        result.push(
           <OpenLayers.Layer.OSM
             key="osm"
-            url={this.props.osm.url}
+            url={osm.url}
           />
         );
         break;
       case 'BingMaps-Road':
       case 'BingMaps-Aerial':
-        if (this.props.bingMaps.applicationKey) {
-          layers.push(
+        if (bingMaps.applicationKey) {
+          result.push(
             <OpenLayers.Layer.BingMaps
-              key={this.props.baseLayer === 'BingMaps-Road' ? 'bing-maps-road' : 'bing-maps-aerial'}
-              applicationKey={this.props.bingMaps.applicationKey}
-              imagerySet={this.props.baseLayer === 'BingMaps-Road' ? 'Road' : 'Aerial'}
+              key={baseLayer === 'BingMaps-Road' ? 'bing-maps-road' : 'bing-maps-aerial'}
+              applicationKey={bingMaps.applicationKey}
+              imagerySet={baseLayer === 'BingMaps-Road' ? 'Road' : 'Aerial'}
             />
           );
         }
         break;
     }
 
-    this.props.layers
+    layers
       .filter((l) => !l.hidden)
       .forEach((l) => {
-        layers.push(
+        const key = `${l.tableName}-${l.color}-${styleToKey(l.style) || ''}-${filtersToKey(filters) || ''}`;
+
+        result.push(
           <OpenLayers.Layer.WFS
-            key={`${l.tableName}-${l.color}-${styleToKey(l.style) || ''}`}
+            key={key}
             url="/action/proxy/service/wfs"
             version="1.1.0"
             typename={`slipo_eu:${l.tableName}`}
@@ -123,12 +131,13 @@ class MapViewer extends React.Component {
               [FEATURE_NAME]: l.step ? l.step.name : l.resource.name,
               [FEATURE_OUTPUT_KEY]: l.step ? l.step.outputKey : null,
             }}
+            filters={filters.filter(f => f.layer === l.tableName)}
             style={l.style}
           />
         );
       });
 
-    return layers;
+    return result;
   }
 
   onStop(data, id) {
@@ -211,6 +220,13 @@ class MapViewer extends React.Component {
           toggle={this.props.toggleLayerConfiguration}
           visible={this.props.layerConfigVisible}
           setLayerStyle={this.props.setLayerStyle}
+        />
+        <FilterForm
+          filters={this.props.filters}
+          layers={layers}
+          toggle={this.props.toggleFilterForm}
+          search={this.props.setFilter}
+          visible={this.props.filterFormVisible}
         />
         <OpenLayers.Map
           minZoom={7}

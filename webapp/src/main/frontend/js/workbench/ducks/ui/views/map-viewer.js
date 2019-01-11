@@ -20,6 +20,7 @@ import {
 
 const Types = {
   LOGOUT,
+
   RESET: 'ui/map/viewer/RESET',
 
   REQUEST_EXECUTION_MAP_DATA: 'ui/map/viewer/REQUEST_EXECUTION_MAP_DATA',
@@ -44,6 +45,9 @@ const Types = {
   SET_ITEM_POSITION: 'ui/map/viewer/SET_ITEM_POSITION',
 
   SELECT_FEATURE: 'ui/map/viewer/SELECT_FEATURE',
+
+  FILTER_TOGGLE: 'ui/map/viewer/FILTER_TOGGLE',
+  FILTER_SET: 'ui/map/viewer/FILTER_SET',
 };
 
 /*
@@ -80,6 +84,10 @@ const initialState = {
       },
     },
   },
+  search: {
+    visible: false,
+    filters: [],
+  }
 };
 
 /*
@@ -248,6 +256,27 @@ const configReducer = (state, action) => {
   }
 };
 
+const filterReducer = (state, action) => {
+  switch (action.type) {
+    case Types.FILTER_TOGGLE:
+      return {
+        ...state,
+        visible: action.value != null ? action.value : !state.visible,
+      };
+
+    case Types.FILTER_SET:
+      return {
+        ...state,
+        visible: false,
+        filters: action.filters || [],
+      };
+
+    default:
+      return state;
+  }
+};
+
+
 export default (state = initialState, action) => {
   switch (action.type) {
     case Types.LOGOUT:
@@ -288,6 +317,13 @@ export default (state = initialState, action) => {
       return {
         ...state,
         config: configReducer(state.config, action),
+      };
+
+    case Types.FILTER_TOGGLE:
+    case Types.FILTER_SET:
+      return {
+        ...state,
+        search: filterReducer(state.search, action),
       };
 
     default:
@@ -449,4 +485,16 @@ export const hideProvenance = () => ({
 export const bringToFront = (id) => ({
   type: Types.BRING_PANEL_TO_FRONT,
   id,
+});
+
+// Search
+
+export const toggleFilter = (value = null) => ({
+  type: Types.FILTER_TOGGLE,
+  value,
+});
+
+export const setFilter = (filters = []) => ({
+  type: Types.FILTER_SET,
+  filters,
 });

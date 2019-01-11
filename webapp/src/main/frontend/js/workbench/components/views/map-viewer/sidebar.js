@@ -30,6 +30,7 @@ import {
 } from '../../../model/map-viewer';
 
 import {
+  toggleFilter,
   selectLayer,
   setBaseLayer,
   toggleLayer,
@@ -101,8 +102,13 @@ class Sidebar extends React.Component {
   }
 
   render() {
-    const inputLayers = this.props.layers.filter((l) => l.type === EnumLayerType.Input);
-    const outputLayers = this.props.layers.filter((l) => l.type === EnumLayerType.Output);
+    const { filters = [], layers } = this.props;
+
+    const inputLayers = layers.filter((l) => l.type === EnumLayerType.Input);
+    const outputLayers = layers.filter((l) => l.type === EnumLayerType.Output);
+
+    const inputFiltered = inputLayers.find(l => filters.find(f => f.layer === l.tableName));
+    const outputFiltered = outputLayers.find(l => filters.find(f => f.layer === l.tableName));
 
     return (
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -132,6 +138,13 @@ class Sidebar extends React.Component {
               <Col>
                 <div style={{ borderBottom: '1px solid #cfd8dc', padding: 11 }}>
                   Input
+                  {inputFiltered &&
+                    <i
+                      className="fa fa-filter pl-1 slipo-action-icon"
+                      onClick={() => this.props.toggleFilter(true)}
+                      title="One or more filters are set"
+                    />
+                  }
                 </div>
                 <div className="slipo-pd-sidebar-map-layer-list">
                   {inputLayers.length > 0 &&
@@ -143,6 +156,13 @@ class Sidebar extends React.Component {
                 </div>
                 <div style={{ borderBottom: '1px solid #cfd8dc', borderTop: '1px solid #cfd8dc', padding: 11 }}>
                   Output
+                  {outputFiltered &&
+                    <i
+                      className="fa fa-filter pl-1 slipo-action-icon"
+                      onClick={() => this.props.toggleFilter(true)}
+                      title="One or more filters are set"
+                    />
+                  }
                 </div>
                 <div className="slipo-pd-sidebar-map-layer-list">
                   {outputLayers.length > 0 &&
@@ -182,6 +202,7 @@ const mapStateToProps = (state) => ({
   baseLayer: state.ui.views.map.config.baseLayer,
   bingMaps: state.config.bingMaps,
   data: state.ui.views.map.data,
+  filters: state.ui.views.map.search.filters,
   layers: state.ui.views.map.config.layers,
   osm: state.config.osm,
   selectedFeatures: state.ui.views.map.config.selectedFeatures,
@@ -189,6 +210,7 @@ const mapStateToProps = (state) => ({
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
+  toggleFilter,
   selectLayer,
   setBaseLayer,
   toggleLayer,

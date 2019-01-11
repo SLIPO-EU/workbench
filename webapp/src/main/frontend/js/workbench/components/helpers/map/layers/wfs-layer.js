@@ -48,6 +48,7 @@ class WfsLayer extends React.Component {
     icon: PropTypes.string,
     color: PropTypes.string,
     extra: PropTypes.object,
+    filters: PropTypes.arrayOf(PropTypes.object),
     style: PropTypes.object,
   }
 
@@ -58,17 +59,24 @@ class WfsLayer extends React.Component {
   }
 
   buildRequest(extent) {
-    const typenameParameter = (this.props.version.startsWith('2') ? 'typeNames' : 'typeName');
+    const { filters, outputFormat, url, srsName, typename, version } = this.props;
+    const typenameParameter = (version.startsWith('2') ? 'typeNames' : 'typeName');
 
-    return URI(this.props.url)
+    return URI(url)
       .query({
         service: 'WFS',
-        version: this.props.version,
+        version,
         request: 'GetFeature',
-        [typenameParameter]: this.props.typename,
-        outputFormat: this.props.outputFormat,
-        srsName: this.props.srsName,
-        bbox: extent.join(',') + ',' + this.props.srsName,
+        [typenameParameter]: typename,
+        outputFormat,
+        srsName,
+        bbox: extent.join(',') + ',' + srsName,
+        ...filters.reduce((result, filter) => {
+          const name = `filter-${filter.attribute}-${filter.type}`;
+          const value = filter.value;
+          result[name] = value;
+          return result;
+        }, {}),
       })
       .toString();
   }

@@ -12,6 +12,8 @@ import {
   fetchExecutionMapData,
   hideProvenance,
   reset,
+  setFilter,
+  toggleFilter,
   selectFeatures,
   setCenter,
   setItemPosition,
@@ -119,6 +121,8 @@ class ProcessExecutionMapViewer extends React.Component {
             featureId,
             featureUri)
         }
+        filterFormVisible={this.props.filterFormVisible}
+        filters={this.props.filters}
         hideProvenance={this.props.hideProvenance}
         initialCenter={this.props.initialCenter}
         initialZoom={this.props.initialZoom}
@@ -131,8 +135,10 @@ class ProcessExecutionMapViewer extends React.Component {
         selectedFeature={this.props.selectedFeature}
         selectedFeatures={this.props.selectedFeatures}
         selectedLayer={this.props.selectedLayer}
+        setFilter={this.props.setFilter}
         setItemPosition={this.props.setItemPosition}
         setLayerStyle={this.props.setLayerStyle}
+        toggleFilterForm={this.props.toggleFilter}
         toggleLayerConfiguration={this.props.toggleLayerConfiguration}
       />
     );
@@ -146,6 +152,8 @@ const mapStateToProps = (state) => ({
   draggable: state.ui.views.map.config.draggable,
   draggableOrder: state.ui.views.map.config.draggableOrder,
   execution: state.ui.views.map.data.execution,
+  filterFormVisible: state.ui.views.map.search.visible,
+  filters: state.ui.views.map.search.filters,
   initialCenter: state.ui.views.map.config.center,
   initialZoom: state.ui.views.map.config.zoom,
   layerConfigVisible: state.ui.views.map.config.layerConfigVisible,
@@ -164,6 +172,8 @@ const mapDispatchToProps = (dispatch) => bindActionCreators({
   fetchExecutionMapData,
   hideProvenance,
   reset,
+  setFilter,
+  toggleFilter,
   selectFeatures,
   setCenter,
   setItemPosition,

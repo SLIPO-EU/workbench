@@ -19,6 +19,10 @@ import {
   DynamicRoutes,
 } from '../../../model';
 
+import {
+  toggleFilter,
+} from '../../../ducks/ui/views/map-viewer';
+
 /**
  * A connected component for rendering execution selected files available to map
  * viewer
@@ -41,6 +45,10 @@ class ToolBar extends React.Component {
     this.props.setAsideMenuVisibility(false);
   }
 
+  search() {
+    this.props.toggleFilter(true);
+  }
+
   render() {
     const { data: { resource } } = this.props;
 
@@ -61,6 +69,17 @@ class ToolBar extends React.Component {
             </Label>
           }
           <Label
+            key={'search'}
+            htmlFor={'search'}
+            className={"btn btn-outline-secondary"}
+            check={true}
+            style={{ border: 'none', padding: '0.5rem 0.7rem' }}
+            title={"Search features"}
+          >
+            <Input type="radio" name="search" id={'search'} onClick={() => this.search()} />
+            <i className={'fa fa-search'}></i>
+          </Label>
+          <Label
             key={'maximize'}
             htmlFor={'maximize'}
             className={"btn btn-outline-secondary"}
@@ -68,7 +87,7 @@ class ToolBar extends React.Component {
             style={{ border: 'none', padding: '0.5rem 0.7rem' }}
             title={"Maximize"}
           >
-            <Input type="radio" name="resourceFilter" id={'maximize'} onClick={() => this.collapse()} />
+            <Input type="radio" name="maximize" id={'maximize'} onClick={() => this.collapse()} />
             <i className={'fa fa-expand'}></i>
           </Label>
         </ButtonGroup>
@@ -83,6 +102,7 @@ const mapStateToProps = (state) => ({
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
+  toggleFilter,
 }, dispatch);
 
 const mergeProps = (stateProps, dispatchProps, ownProps) => {
