@@ -123,7 +123,7 @@ public class FagiJobTests extends AbstractJobTests
     // Tests
     //
 
-    @Test //(timeout = 15 * 1000L)
+    @Test(timeout = 15 * 1000L)
     public void test1() throws Exception
     {
         testWithFixture(fixtures.get(0), this::extractInputParameters);

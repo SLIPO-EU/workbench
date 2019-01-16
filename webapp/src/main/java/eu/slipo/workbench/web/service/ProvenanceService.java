@@ -124,7 +124,7 @@ public class ProvenanceService implements InitializingBean {
         String partKey = this.getDefaultPartKey(step.tool());
 
         // Add POI feature to the result
-        ProcessExecutionStepFileRecord fileRecord = stepRecord.getFile(EnumStepFile.OUTPUT, partKey);
+        ProcessExecutionStepFileRecord fileRecord = stepRecord.getOutputFile(EnumStepFile.OUTPUT, partKey);
         if (fileRecord.getTableName() != null) {
             queries.add(FeatureQuery.of(level, step.name(), fileRecord.getTableName().toString(), uri));
         }
@@ -160,7 +160,7 @@ public class ProvenanceService implements InitializingBean {
         switch (step.tool()) {
             case TRIPLEGEO:
                 // For TripleGeo steps, retrieve feature if a table exists
-                f = stepRecord.getFile(EnumStepFile.OUTPUT, partKey);
+                f = stepRecord.getOutputFile(EnumStepFile.OUTPUT, partKey);
                 if (f.getTableName() != null) {
                     queries.add(FeatureQuery.of(level, step.name(), f.getTableName().toString(), featureUri));
                 }
@@ -190,7 +190,7 @@ public class ProvenanceService implements InitializingBean {
                 break;
 
             case FAGI:
-                f = stepRecord.getFile(EnumStepFile.OUTPUT, partKey);
+                f = stepRecord.getOutputFile(EnumStepFile.OUTPUT, partKey);
                 if (f.getTableName() != null) {
                     Assert.equals(step.input().size(), 3);
 

@@ -52,7 +52,8 @@ public enum EnumStepFile
             this == EnumStepFile.OUTPUT || 
             this == EnumStepFile.KPI ||
             this == EnumStepFile.QA || 
-            this == EnumStepFile.SAMPLE);
+            this == EnumStepFile.SAMPLE ||
+            this == EnumStepFile.LOG);
     }
     
     public EnumOutputType toOutputType()

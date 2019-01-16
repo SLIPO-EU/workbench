@@ -9,8 +9,13 @@ import java.util.stream.Collectors;
 
 import org.springframework.util.Assert;
 
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
 import eu.slipo.workbench.common.model.poi.EnumOperation;
 import eu.slipo.workbench.common.model.poi.EnumTool;
+import eu.slipo.workbench.common.model.tool.AnyTool;
+import eu.slipo.workbench.common.model.tool.output.OutputPart;
 
 public class ProcessExecutionStepRecord implements Serializable
 {
@@ -177,13 +182,31 @@ public class ProcessExecutionStepRecord implements Serializable
         return Collections.unmodifiableList(files);
     }
 
-    public ProcessExecutionStepFileRecord getFile(EnumStepFile type, String outputPartKey) {
-        return this.files.stream()
+    public Iterable<ProcessExecutionStepFileRecord> getFile(EnumStepFile type) 
+    {
+        Assert.notNull(type, "Expected a non-null type (EnumStepFile)");
+        return Iterables.filter(files, f -> f.getType() == type);
+    }
+
+    public ProcessExecutionStepFileRecord getOutputFile(EnumStepFile type, String outputPartKey)
+    {
+        Assert.notNull(type, "Expected a non-null type (EnumStepFile)");
+        Assert.notNull(outputPartKey, "Expected a non-null key for an output part");
+        Assert.isTrue(type.isOfOutputType(), "The given type does not map to an output type");
+        return files.stream()
             .filter(f -> f.getType() == type && f.getOutputPartKey().equals(outputPartKey))
             .findFirst()
             .orElse(null);
     }
-
+    
+    public ProcessExecutionStepFileRecord getOutputFile(EnumStepFile type, OutputPart<? extends AnyTool> outputPart)
+    {
+        Assert.notNull(outputPart, "Expected a non-null output part");
+        Assert.isTrue(tool.getOutputPartEnumeration().isInstance(outputPart), 
+            "The output part must be one of the parts defined by underlying tool");
+        return getOutputFile(type, outputPart.key());
+    }
+    
     public void addFile(ProcessExecutionStepFileRecord f)
     {
         this.files.add(f);
