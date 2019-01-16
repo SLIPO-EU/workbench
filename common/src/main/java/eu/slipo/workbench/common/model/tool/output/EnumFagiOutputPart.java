@@ -10,7 +10,9 @@ public enum EnumFagiOutputPart implements OutputPart<Fagi>
     
     REVIEW("review", EnumOutputType.OUTPUT),
     
-    STATS("stats", EnumOutputType.KPI);
+    STATS("stats", EnumOutputType.KPI),
+    
+    LOG("actions", EnumOutputType.LOG);
 
     private final String key;
 

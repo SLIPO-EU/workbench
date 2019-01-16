@@ -27,5 +27,10 @@ public enum EnumOutputType
      * A collection of Quality-Assurance (QA) metadata that accompany the program's basic 
      * output.
      */
-    QA;
+    QA,
+    
+    /**
+     * A log of actions performed by the program (to be used for tracing or debugging purposes).
+     */
+    LOG;
 }
