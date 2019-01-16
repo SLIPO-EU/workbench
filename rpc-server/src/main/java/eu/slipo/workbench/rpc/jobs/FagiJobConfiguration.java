@@ -278,6 +278,7 @@ public class FagiJobConfiguration extends ContainerBasedJobConfiguration
                 .volume(Paths.get(workDir, configFileByName.get("rules")),
                     containerConfigDir.resolve("rules.xml"), true)
                 // Set environment
+                .env("VERBOSE", spec.isVerbose())
                 .env("LOCALE", spec.getLang())
                 .env("INPUT_FORMAT", spec.getInputFormatAsString())
                 .env("OUTPUT_FORMAT", spec.getOutputFormatAsString())
@@ -293,6 +294,7 @@ public class FagiJobConfiguration extends ContainerBasedJobConfiguration
                     .map(LocalDate::toString).orElse(""))
                 .env("LINKS_ID", linksSpec.getId())
                 .env("LINKS_FILE", containerInputDir.resolve(linksFileName))
+                .env("LINKS_FORMAT", "nt")
                 .env("TARGET_ID", targetSpec.getId())
                 .env("TARGET_MODE", targetSpec.getModeAsString())
                 .env("TARGET_FUSED_NAME",
