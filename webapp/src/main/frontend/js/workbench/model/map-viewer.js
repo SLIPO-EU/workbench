@@ -39,3 +39,74 @@ export const EnumCellValueType = {
   Image: 'Image',
   Link: 'Link',
 };
+
+export const FilterTypes = [{
+  label: 'Empty',
+  value: 'null'
+}, {
+  label: 'Not Empty',
+  value: 'notNull'
+}, {
+  label: 'Starts With',
+  value: 'startsWith'
+}, {
+  label: 'Ends With',
+  value: 'endsWith'
+}, {
+  label: 'Contains',
+  value: 'contains'
+}, {
+  label: '=',
+  value: 'equal'
+}, {
+  label: '<',
+  value: 'less'
+}, {
+  label: '<=',
+  value: 'lessOrEqual'
+}, {
+  label: '>',
+  value: 'greater'
+}, {
+  label: '>=',
+  value: 'greaterOrEqual'
+}];
+
+// TODO : Replace with attributes from SLIPO ontology
+export const Attributes = [{
+  text: 'Country',
+  key: 'country',
+  editable: true,
+}, {
+  text: 'Description',
+  key: 'description',
+  editable: true,
+}, {
+  text: 'Email',
+  key: 'email',
+  editable: true,
+}, {
+  text: 'Fax',
+  key: 'fax',
+  editable: true,
+}, {
+  text: 'Name',
+  key: 'name',
+  editable: true,
+}, {
+  text: 'Phone',
+  key: 'phone',
+  editable: true,
+}, {
+  text: 'Postcode',
+  key: 'postcode',
+  editable: true,
+}, {
+  text: 'Type',
+  key: 'type',
+  editable: true,
+}, {
+  text: 'Image',
+  key: 'image',
+  editable: true,
+}];

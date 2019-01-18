@@ -8,6 +8,11 @@ import {
   FormGroup, Input, Row, Col
 } from 'reactstrap';
 
+import {
+  Attributes,
+  FilterTypes,
+} from '../../../model/map-viewer';
+
 const selectStyle = {
   control: (base) => {
     return {
@@ -60,66 +65,7 @@ const selectInvalidStyle = {
 };
 
 // TODO : Replace with attributes from SLIPO ontology
-const attributes = _.orderBy([{
-  label: 'Country',
-  value: 'country',
-}, {
-  label: 'Description',
-  value: 'description',
-}, {
-  label: 'Email',
-  value: 'email',
-}, {
-  label: 'Fax',
-  value: 'fax',
-}, {
-  label: 'Name',
-  value: 'name',
-}, {
-  label: 'Phone',
-  value: 'phone',
-}, {
-  label: 'Postcode',
-  value: 'postcode',
-}, {
-  label: 'Type',
-  value: 'type',
-}, {
-  label: 'Image',
-  value: 'image',
-}], ['label'], ['asc']);
-
-const types = [{
-  label: 'Empty',
-  value: 'null'
-}, {
-  label: 'Not Empty',
-  value: 'notNull'
-}, {
-  label: 'Starts With',
-  value: 'startsWith'
-}, {
-  label: 'Ends With',
-  value: 'endsWith'
-}, {
-  label: 'Contains',
-  value: 'contains'
-}, {
-  label: '=',
-  value: 'equal'
-}, {
-  label: '<',
-  value: 'less'
-}, {
-  label: '<=',
-  value: 'lessOrEqual'
-}, {
-  label: '>',
-  value: 'greater'
-}, {
-  label: '>=',
-  value: 'greaterOrEqual'
-}];
+const attributes = _.orderBy(Attributes.map(a => ({ label: a.text, value: a.key })), ['label'], ['asc']);
 
 class FilterRow extends React.Component {
 
@@ -184,13 +130,13 @@ class FilterRow extends React.Component {
             <ReactSelect
               name="type"
               id="type"
-              value={types.find(opt => opt.value === filter.type) || null}
+              value={FilterTypes.find(opt => opt.value === filter.type) || null}
               onChange={(option) => this.props.onChange({
                 ...filter,
                 type: option.value,
                 value: option.value === 'null' || option.value === 'notNull' ? '' : filter.value
               })}
-              options={types}
+              options={FilterTypes}
               styles={filter.type === null ? selectInvalidStyle : selectStyle}
             />
           </FormGroup>
@@ -200,7 +146,6 @@ class FilterRow extends React.Component {
             <Input
               type="text"
               maxLength="50"
-              step={1}
               name="value"
               id="value"
               value={filter.value}
