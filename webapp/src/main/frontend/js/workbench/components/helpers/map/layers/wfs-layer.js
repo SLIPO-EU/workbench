@@ -59,7 +59,7 @@ class WfsLayer extends React.Component {
   }
 
   buildRequest(extent) {
-    const { filters, outputFormat, url, srsName, typename, version } = this.props;
+    const { filters = [], outputFormat, url, srsName, typename, version } = this.props;
     const typenameParameter = (version.startsWith('2') ? 'typeNames' : 'typeName');
 
     return URI(url)
