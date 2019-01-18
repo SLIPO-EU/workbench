@@ -291,14 +291,19 @@ public class ResourceRevisionEntity {
         record.setNumberOfEntities(numberOfEntities);
         record.setStyle(style);
 
-        if(processExecution!=null) {
+        if (processExecution != null) {
             record.setExecution(
                 ProcessExecutionIdentifier.of(
                     processExecution.getProcess().getParent().getId(),
                     processExecution.getProcess().getVersion(),
                     processExecution.getId())
             );
-            record.setMapExported(processExecution.getExportedOn() != null);
+            ProcessExecutionMapExportEntity map = processExecution.getMap();
+            if (map != null) {
+                record.setExportedBy(map.getCreatedBy().getId(), map.getCreatedBy().getFullName());
+                record.setExportedOn(map.getCreatedOn());
+                record.setExportStatus(map.getStatus());
+            }
         }
 
         return record;

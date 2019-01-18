@@ -25,6 +25,7 @@ import org.hibernate.validator.constraints.Email;
 
 import eu.slipo.workbench.common.model.EnumRole;
 import eu.slipo.workbench.common.model.user.Account;
+import eu.slipo.workbench.common.model.user.AccountInfo;
 
 
 @Entity(name = "Account")
@@ -243,5 +244,10 @@ public class AccountEntity
         a.setRoles(getRoles());
 
         return a;
+    }
+
+    public AccountInfo toAccountInfo()
+    {
+        return new AccountInfo(id, this.getFullName());
     }
 }

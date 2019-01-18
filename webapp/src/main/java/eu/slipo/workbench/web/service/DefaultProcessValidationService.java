@@ -49,11 +49,15 @@ public class DefaultProcessValidationService implements IProcessValidationServic
 
     @Override
     public void validate(Long id, ProcessDefinition definition, boolean isTemplate) throws InvalidProcessDefinitionException {
+        this.validate(id, definition, isTemplate, currentUserId());
+    }
 
+    @Override
+    public void validate(Long id, ProcessDefinition definition, boolean isTemplate, int userId) throws InvalidProcessDefinitionException {
         List<Error> errors = new ArrayList<Error>();
 
         // Process name must be unique
-        if ((id == null) && (processRepository.findOne(definition.name(), currentUserId()) != null)) {
+        if ((id == null) && (processRepository.findOne(definition.name(), userId) != null)) {
             errors.add(new Error(ProcessErrorCode.NAME_DUPLICATE, "Workflow name already exists."));
         }
 
@@ -69,6 +73,7 @@ public class DefaultProcessValidationService implements IProcessValidationServic
         if (!errors.isEmpty()) {
             throw new InvalidProcessDefinitionException(errors);
         }
+
     }
 
     private void ValidateTripleGeo(Step step, List<Error> errors) {

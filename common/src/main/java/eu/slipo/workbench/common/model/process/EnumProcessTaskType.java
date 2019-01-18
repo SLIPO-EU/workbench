@@ -30,6 +30,10 @@ public enum EnumProcessTaskType {
      * A resource export process created using the workbench export wizard
      */
     EXPORT(3),
+    /**
+     * Export map data
+     */
+    EXPORT_MAP(4),
     ;
 
     private final int value;

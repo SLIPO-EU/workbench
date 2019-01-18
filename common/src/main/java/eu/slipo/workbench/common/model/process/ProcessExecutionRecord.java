@@ -13,6 +13,7 @@ import org.springframework.util.StringUtils;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import eu.slipo.workbench.common.model.etl.EnumMapExportStatus;
 import eu.slipo.workbench.common.model.user.AccountInfo;
 
 public class ProcessExecutionRecord implements Serializable
@@ -42,6 +43,8 @@ public class ProcessExecutionRecord implements Serializable
     private AccountInfo exportedBy;
 
     private ZonedDateTime exportedOn;
+
+    private EnumMapExportStatus exportStatus = EnumMapExportStatus.NONE;
 
     @JsonIgnore
     private boolean isRunning;
@@ -142,26 +145,6 @@ public class ProcessExecutionRecord implements Serializable
 
     public void setCompletedOn(ZonedDateTime completedOn) {
         this.completedOn = completedOn;
-    }
-
-    public AccountInfo getExportedBy() {
-        return exportedBy;
-    }
-
-    public void setExportedBy(AccountInfo exportedBy) {
-        this.exportedBy = exportedBy;
-    }
-
-    public void setExportedBy(int id, String name) {
-        this.exportedBy = new AccountInfo(id, name);
-    }
-
-    public ZonedDateTime getExportedOn() {
-        return exportedOn;
-    }
-
-    public void setExportedOn(ZonedDateTime exportedOn) {
-        this.exportedOn = exportedOn;
     }
 
     public EnumProcessExecutionStatus getStatus() {
@@ -295,9 +278,36 @@ public class ProcessExecutionRecord implements Serializable
         return null;
     }
 
-    public boolean isExported()
-    {
-        return (exportedOn != null);
+    public AccountInfo getExportedBy() {
+        return exportedBy;
+    }
+
+    public void setExportedBy(AccountInfo exportedBy) {
+        this.exportedBy = exportedBy;
+    }
+
+    public void setExportedBy(int id, String name) {
+        this.exportedBy = new AccountInfo(id, name);
+    }
+
+    public ZonedDateTime getExportedOn() {
+        return exportedOn;
+    }
+
+    public void setExportedOn(ZonedDateTime exportedOn) {
+        this.exportedOn = exportedOn;
+    }
+
+    public EnumMapExportStatus getExportStatus() {
+        return exportStatus;
+    }
+
+    public void setExportStatus(EnumMapExportStatus exportStatus) {
+        this.exportStatus = exportStatus;
+    }
+
+    public boolean isExported() {
+        return this.exportStatus != EnumMapExportStatus.NONE;
     }
 
 }

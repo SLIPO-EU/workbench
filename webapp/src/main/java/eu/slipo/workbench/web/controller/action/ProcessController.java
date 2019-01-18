@@ -361,8 +361,10 @@ public class ProcessController extends BaseController {
      * @return the created or updated process model
      */
     private RestResponse<?> createOrUpdateProcess(Long id, ProcessCreateRequest request) {
-        ProcessRecord record = null;
+        ProcessRecord process = null;
+        ProcessExecutionRecord execution = null;
 
+        // Save
         try {
             final ProcessDefinition definition = request.getDefinition();
             if (definition == null) {
@@ -373,23 +375,35 @@ public class ProcessController extends BaseController {
             final boolean isTemplate = request.getAction() == EnumProcessSaveActionType.SAVE_TEMPLATE;
 
             if (id == null) {
-                record = processService.create(normalizedDefinition, isTemplate);
+                process = processService.create(normalizedDefinition, isTemplate);
             } else {
-                record = processService.update(id, normalizedDefinition, isTemplate);
+                process = processService.update(id, normalizedDefinition, isTemplate);
             }
         } catch (Exception ex) {
             return this.exceptionToResponse(ex);
         }
 
+        // Execute
         try {
-            if (request.getAction() == EnumProcessSaveActionType.SAVE_AND_EXECUTE) {
-                this.processService.start(record.getId(), record.getVersion(), EnumProcessTaskType.DATA_INTEGRATION);
+            if ((request.getAction() == EnumProcessSaveActionType.SAVE_AND_EXECUTE) ||
+                (request.getAction() == EnumProcessSaveActionType.SAVE_AND_EXECUTE_AND_MAP)){
+                execution = this.processService.start(process.getId(), process.getVersion(), EnumProcessTaskType.DATA_INTEGRATION);
             }
         } catch (Exception ex) {
             return this.exceptionToResponse(ex, Error.EnumLevel.WARN);
         }
 
-        return RestResponse.result(new ProcessRecordView(record));
+        // Schedule map creation
+        try {
+            if (request.getAction() == EnumProcessSaveActionType.SAVE_AND_EXECUTE_AND_MAP) {
+                this.processService.exportMap(execution);
+            }
+        } catch (Exception ex) {
+            logger.error(ex.getMessage(), ex);
+            return RestResponse.error(BasicErrorCode.UNKNOWN, "Failed to scheduler map creation.", Error.EnumLevel.WARN);
+        }
+
+        return RestResponse.result(new ProcessRecordView(process));
     }
 
     private RestResponse<?> exceptionToResponse(Exception ex) {

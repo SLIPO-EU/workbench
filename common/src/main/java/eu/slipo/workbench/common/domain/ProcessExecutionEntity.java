@@ -17,6 +17,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.validation.constraints.AssertTrue;
@@ -66,13 +67,6 @@ public class ProcessExecutionEntity
     @Column(name = "error_message", length = 2048)
     private String errorMessage;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "exported_by", updatable = true)
-    AccountEntity exportedBy;
-
-    @Column(name = "exported_on", nullable = true, updatable = true)
-    ZonedDateTime exportedOn;
-
     @OneToMany(
         mappedBy = "execution",
         fetch = FetchType.LAZY,
@@ -86,6 +80,12 @@ public class ProcessExecutionEntity
         cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH },
         orphanRemoval = false)
     List<ProcessExecutionTableEntity> tables = new ArrayList<>();
+
+    @OneToOne(
+        mappedBy = "workflow",
+        fetch = FetchType.EAGER,
+        cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH })
+    ProcessExecutionMapExportEntity map;
 
     public static final Comparator<ProcessExecutionEntity> ORDER_BY_STARTED =
         Comparator.comparing(e -> e.getStartedOn());
@@ -159,26 +159,6 @@ public class ProcessExecutionEntity
     public void setCompletedOn(ZonedDateTime completedOn)
     {
         this.completedOn = completedOn;
-    }
-
-    public AccountEntity getExportedBy()
-    {
-        return exportedBy;
-    }
-
-    public void setExportedBy(AccountEntity exportedBy)
-    {
-        this.exportedBy = exportedBy;
-    }
-
-    public ZonedDateTime getExportedOn()
-    {
-        return exportedOn;
-    }
-
-    public void setExportedOn(ZonedDateTime exportedOn)
-    {
-        this.exportedOn = exportedOn;
     }
 
     public EnumProcessExecutionStatus getStatus()
@@ -298,6 +278,16 @@ public class ProcessExecutionEntity
         return toProcessExecutionRecord(includeSteps, false);
     }
 
+    public ProcessExecutionMapExportEntity getMap()
+    {
+        return map;
+    }
+
+    public void setMap(ProcessExecutionMapExportEntity map)
+    {
+        this.map = map;
+    }
+
     public ProcessExecutionRecord toProcessExecutionRecord(boolean includeSteps, boolean includeNonVerifiedFiles)
     {
         ProcessExecutionRecord record =
@@ -313,12 +303,13 @@ public class ProcessExecutionEntity
         record.setTaskType(process.getParent().getTaskType());
         record.setName(process.getName());
         record.setErrorMessage(errorMessage);
-        if (exportedBy != null) {
-            record.setExportedBy(exportedBy.getId(), exportedBy.getFullName());
-        }
-        record.setExportedOn(exportedOn);
-
         record.setRunning(!isTerminated(true));
+
+        if (this.map != null) {
+            record.setExportedBy(this.map.getCreatedBy().getId(), this.map.getCreatedBy().getFullName());
+            record.setExportedOn(this.map.getCreatedOn());
+            record.setExportStatus(this.map.getStatus());
+        }
 
         if (includeSteps) {
             for (ProcessExecutionStepEntity s: steps) {

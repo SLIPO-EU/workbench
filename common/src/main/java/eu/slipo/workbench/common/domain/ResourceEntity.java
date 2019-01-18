@@ -351,7 +351,12 @@ public class ResourceEntity
                     processExecution.getProcess().getVersion(),
                     processExecution.getId())
             );
-            record.setMapExported(processExecution.getExportedOn() != null);
+            ProcessExecutionMapExportEntity map = processExecution.getMap();
+            if (map != null) {
+                record.setExportedBy(map.getCreatedBy().getId(), map.getCreatedBy().getFullName());
+                record.setExportedOn(map.getCreatedOn());
+                record.setExportStatus(map.getStatus());
+            }
         }
         record.setBoundingBox(boundingBox);
         record.setNumberOfEntities(numberOfEntities);

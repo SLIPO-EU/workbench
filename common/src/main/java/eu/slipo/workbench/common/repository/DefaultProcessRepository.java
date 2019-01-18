@@ -454,7 +454,8 @@ public class DefaultProcessRepository implements ProcessRepository
     {
         Assert.isTrue((taskType == EnumProcessTaskType.REGISTRATION && !isTemplate) ||
                       (taskType == EnumProcessTaskType.DATA_INTEGRATION) ||
-                      (taskType == EnumProcessTaskType.EXPORT && !isTemplate),
+                      (taskType == EnumProcessTaskType.EXPORT && !isTemplate) ||
+                      (taskType == EnumProcessTaskType.EXPORT_MAP && !isTemplate),
                       "Registration process definition cannot be a template");
 
         AccountEntity createdBy = entityManager.find(AccountEntity.class, userId);
