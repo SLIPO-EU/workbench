@@ -10,6 +10,11 @@ import {
   Table,
 } from '../../../helpers';
 
+import {
+  EnumMapExportStatus,
+  EnumTaskType,
+} from '../../../../model/process-designer';
+
 const processExecutionsColumns = [{
   Header: 'id',
   accessor: 'id',
@@ -30,15 +35,32 @@ const processExecutionsColumns = [{
   Header: 'Actions',
   id: 'actions',
   Cell: props => {
+    if (props.original.taskType === EnumTaskType.EXPORT_MAP) {
+      return null;
+    }
+    let exportAction = null;
+    if ((props.original.status === 'COMPLETED') && (props.original.taskType !== EnumTaskType.EXPORT)) {
+      switch (props.original.exportStatus) {
+        case EnumMapExportStatus.COMPLETED:
+          exportAction = <i data-action="map" title="View Map" className='fa fa-map-o slipo-table-row-action p-1'></i>;
+          break;
+        case EnumMapExportStatus.FAILED:
+          exportAction = (
+            <i data-action="export-map" title="Export map data. Last execution has failed" className='fa fa-database slipo-table-row-action invalid-feedback p-1'></i>
+          );
+          break;
+        case EnumMapExportStatus.NONE:
+          exportAction = <i data-action="export-map" title="Export map data" className='fa fa-database slipo-table-row-action p-1'></i>;
+          break;
+        default:
+          exportAction = <i title="Export operation in progress ..." className='fa fa-cogs p-1'></i>;
+          break;
+      }
+    }
     return (
       <span>
         <i data-action="view" title="View" className='fa fa-search slipo-table-row-action p-1'></i>
-        {props.original.status === 'COMPLETED' && props.original.exported &&
-          <i data-action="map" title="View Map" className='fa fa-map-o slipo-table-row-action p-1'></i>
-        }
-        {props.original.status === 'COMPLETED' && !props.original.exported &&
-          <i data-action="export-map" title="Export map data" className='fa fa-database slipo-table-row-action p-1'></i>
-        }
+        {exportAction}
         {props.original.status === 'RUNNING' &&
           <i data-action="stop" title="Stop execution" className='fa fa-stop slipo-table-row-action text-danger p-1'></i>
         }

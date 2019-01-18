@@ -120,7 +120,8 @@
     "taskType": {
       "REGISTRATION": "Registration",
       "DATA_INTEGRATION": "Data Integration",
-      "EXPORT": "Export resource"
+      "EXPORT": "Export resource",
+      "EXPORT_MAP": "Export map"
     },
     "tool": {
       "UNDEFINED": "Unknown",

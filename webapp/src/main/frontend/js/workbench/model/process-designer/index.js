@@ -22,6 +22,7 @@ export {
   EnumHarvester,
   EnumInputType,
   EnumKpiViewMode,
+  EnumMapExportStatus,
   EnumOperation,
   EnumResourceType,
   EnumSelection,

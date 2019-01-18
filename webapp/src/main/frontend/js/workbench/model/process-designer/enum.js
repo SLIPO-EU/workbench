@@ -176,6 +176,7 @@ export const EnumDesignerSaveAction = {
   None: null,
   Save: 'SAVE',
   SaveAndExecute: 'SAVE_AND_EXECUTE',
+  SaveAndExecuteAndMap: 'SAVE_AND_EXECUTE_AND_MAP',
   SaveAsTemplate: 'SAVE_TEMPLATE',
 };
 
@@ -226,4 +227,14 @@ export const EnumTaskType = {
   REGISTRATION: 'REGISTRATION',
   DATA_INTEGRATION: 'DATA_INTEGRATION',
   EXPORT: 'EXPORT',
+  EXPORT_MAP: 'EXPORT_MAP',
+};
+
+// Map export status
+export const EnumMapExportStatus = {
+  NONE: 'NONE',
+  PENDING: 'PENDING',
+  RUNNING: 'RUNNING',
+  FAILED: 'FAILED',
+  COMPLETED: 'COMPLETED',
 };

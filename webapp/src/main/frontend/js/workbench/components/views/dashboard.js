@@ -72,13 +72,14 @@ class Dashboard extends React.Component {
 
   handleProcessRowAction(rowInfo, e, handleOriginal) {
     switch (e.target.getAttribute('data-action')) {
-      case 'export':
+      case 'export-map':
         this.props.exportMap(
           rowInfo.original.process.id,
           rowInfo.original.process.version,
           rowInfo.original.executionId,
         ).then(() => {
-          message.info('Process execution export has started successfully');
+          message.info('Export task has started successfully');
+          this.props.fetchDashboardData();
         }).catch((err) => {
           message.error(err.message);
         });

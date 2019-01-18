@@ -140,7 +140,11 @@ class ResourceExplorer extends React.Component {
   exportMap(id, version, executionId) {
     this.props.exportMap(id, version, executionId)
       .then(() => {
-        message.info('Process execution export has started successfully');
+        message.info('Export task has started successfully');
+        this.props.fetchResources({
+          query: { ...this.props.filters },
+          pagingOptions: { pageIndex: this.props.pager.index, pageSize: this.props.pager.size }
+        });
       }).catch((err) => {
         message.error(err.message);
       });

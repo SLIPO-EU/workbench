@@ -107,11 +107,8 @@ import {
  * Component actions
  */
 const EnumComponentAction = {
-  'Save': 'Save',
-  'SaveAndExecute': 'SaveAndExecute',
-  'SaveAsTemplate': 'SaveAsTemplate',
-  'Discard': 'Discard',
-  'CloseCancelDialog': 'CloseCancelDialog',
+  Discard: 'Discard',
+  CloseCancelDialog: 'CloseCancelDialog',
 };
 
 /**
@@ -234,18 +231,6 @@ class ProcessDesigner extends React.Component {
     this.error(err.message);
   }
 
-  mapToSaveAction(action) {
-    switch (action) {
-      case EnumComponentAction.Save:
-        return EnumDesignerSaveAction.Save;
-      case EnumComponentAction.SaveAndExecute:
-        return EnumDesignerSaveAction.SaveAndExecute;
-      case EnumComponentAction.SaveAsTemplate:
-        return EnumDesignerSaveAction.SaveAsTemplate;
-    }
-    return null;
-  }
-
   toggleSaveButtonDropdown() {
     this.setState({ saveDropdownOpen: !this.state.saveDropdownOpen });
   }
@@ -297,9 +282,9 @@ class ProcessDesigner extends React.Component {
   }
 
   save(action) {
-    const isTemplate = this.props.process.template || action === EnumComponentAction.SaveAsTemplate;
+    const isTemplate = this.props.process.template || action === EnumDesignerSaveAction.SaveAsTemplate;
 
-    this.props.save(this.mapToSaveAction(action), this.props.designer, isTemplate)
+    this.props.save(action, this.props.designer, isTemplate)
       .then(() => {
         const text = `${isTemplate ? "Template" : "Process"} has been saved successfully!`;
         message.success(text, 'fa-save');
@@ -370,16 +355,17 @@ class ProcessDesigner extends React.Component {
                   <Button color="default" onClick={this.props.undoAction} className="float-left ml-3" disabled={this.props.undo.length === 1}>Undo</Button>
                   <Button color="default" onClick={this.props.redoAction} className="float-left ml-3" disabled={this.props.redo.length === 0}>Redo</Button>
                   <ButtonGroup className="float-right">
-                    <Button color="primary" onClick={this.save.bind(this, EnumComponentAction.Save)}>Save</Button>
+                    <Button color="primary" onClick={this.save.bind(this, EnumDesignerSaveAction.Save)}>Save</Button>
                     {!this.props.process.template &&
-                      <ButtonDropdown isOpen={this.state.saveDropdownOpen} toggle={this.toggleSaveButtonDropdown}>
+                      <ButtonDropdown isOpen={this.state.saveDropdownOpen} toggle={this.toggleSaveButtonDropdown} direction={'down'}>
                         <DropdownToggle caret>
                           More ...
-                      </DropdownToggle>
+                        </DropdownToggle>
                         <DropdownMenu>
-                          <DropdownItem onClick={this.save.bind(this, EnumComponentAction.SaveAndExecute)}>Save & Execute</DropdownItem>
+                          <DropdownItem onClick={this.save.bind(this, EnumDesignerSaveAction.SaveAndExecute)}>Save and Execute</DropdownItem>
+                          <DropdownItem onClick={this.save.bind(this, EnumDesignerSaveAction.SaveAndExecuteAndMap)}>Save, Execute and Create Map</DropdownItem>
                           {!this.props.process.id &&
-                            <DropdownItem onClick={this.save.bind(this, EnumComponentAction.SaveAsTemplate)}>Save Recipe </DropdownItem>
+                            <DropdownItem onClick={this.save.bind(this, EnumDesignerSaveAction.SaveAsTemplate)}>Save Recipe </DropdownItem>
                           }
                         </DropdownMenu>
                       </ButtonDropdown>

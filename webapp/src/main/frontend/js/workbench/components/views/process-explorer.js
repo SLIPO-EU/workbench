@@ -101,7 +101,8 @@ class ProcessExplorer extends React.Component {
   exportMap(id, version, executionId) {
     this.props.exportMap(id, version, executionId)
       .then(() => {
-        message.info('Process execution export has started successfully');
+        message.info('Export task has started successfully');
+        this.props.fetchProcessExecutions(id, version);
       }).catch((err) => {
         message.error(err.message);
       });

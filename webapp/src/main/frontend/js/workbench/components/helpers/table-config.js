@@ -14,18 +14,24 @@ import {
   JobStatus,
 } from './';
 
+import {
+  EnumMapExportStatus,
+  EnumTaskType,
+} from '../../model/process-designer';
+
 /**
  * Process data mapper
  */
 export const processDataMapper = (processes) => processes.map(proc => ({
   process: proc.process,
   executionId: proc.id,
-  exported: proc.exported,
+  exportStatus: proc.exportStatus,
   name: proc.name,
   submittedBy: proc.submittedBy ? proc.submittedBy.name : '-',
   startedOn: moment(proc.startedOn).toDate(),
   completedOn: !proc.completedOn ? '' : moment(proc.completedOn).toDate(),
   status: proc.status,
+  taskType: proc.taskType,
 }));
 
 /**
@@ -35,14 +41,32 @@ export const ProcessExecutionGridColumns = [{
   Header: 'Actions',
   accessor: 'process',
   Cell: props => {
-    return (
-      props.original.status === 'COMPLETED' && props.original.exported ?
-        <Link style={{ color: '#263238' }} to={buildPath(DynamicRoutes.ProcessExecutionMapViewer, [props.original.process.id, props.original.process.version, props.original.executionId])}>
-          <i className='fa fa-map-o' title="View map"></i>
-        </Link>
-        :
-        <i data-action="export" title="Export map data" className='fa fa-database slipo-table-row-action p-1'></i>
-    );
+    if (props.original.taskType !== EnumTaskType.DATA_INTEGRATION) {
+      return null;
+    }
+    if (props.original.status === 'COMPLETED') {
+      switch (props.original.exportStatus) {
+        case EnumMapExportStatus.COMPLETED:
+          return (
+            <Link style={{ color: '#263238' }} to={buildPath(DynamicRoutes.ProcessExecutionMapViewer, [props.original.process.id, props.original.process.version, props.original.executionId])}>
+              <i className='fa fa-map-o' title="View map"></i>
+            </Link>
+          );
+        case EnumMapExportStatus.NONE:
+          return (
+            <i data-action="export-map" title="Export map data" className='fa fa-database slipo-table-row-action p-1'></i>
+          );
+        case EnumMapExportStatus.FAILED:
+          return (
+            <i data-action="export-map" title="Export map data. Last execution has failed" className='fa fa-database slipo-table-row-action invalid-feedback p-1'></i>
+          );
+        default:
+          return (
+            <i title="Export operation in progress ..." className='fa fa-cogs p-1'></i>
+          );
+      }
+    }
+    return null;
   },
   style: { 'textAlign': 'center' },
   minWidth: 60,
@@ -55,8 +79,13 @@ export const ProcessExecutionGridColumns = [{
   accessor: 'name',
   minWidth: 200,
   Cell: props => {
+    if (props.original.taskType === EnumTaskType.EXPORT_MAP) {
+      return (<span>{props.value}</span>);
+    }
     return (
-      <Link to={buildPath(DynamicRoutes.ProcessExecutionViewer, [props.original.process.id, props.original.process.version, props.original.executionId])}>{props.value}</Link>
+      <Link to={buildPath(DynamicRoutes.ProcessExecutionViewer, [props.original.process.id, props.original.process.version, props.original.executionId])}>
+        {props.value}
+      </Link>
     );
   }
 }, {
