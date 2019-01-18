@@ -1,21 +1,25 @@
 PREFIX slipo: <http://slipo.eu/def#> 
 PREFIX geo: <http://www.opengis.net/ont/geosparql#>
 PREFIX sf: <http://www.opengis.net/ont/sf#>
-SELECT ?osm_id ?shape ?type ?name ?timestamp
+SELECT ?uri ?id ?the_geom ?type ?name ?timestamp ?street_num ?postCode ?locality ?country ?description ?homepage ?phone ?fax ?email ?wikipedia ?image ?open_hours
 WHERE { 
 		OPTIONAL {
 			?uri slipo:source ?poiSourceInfo .
-			?poiSourceInfo slipo:poiRef ?osm_id .
+			?poiSourceInfo slipo:poiRef ?id .
+		}
+
+		OPTIONAL {
+			?uri slipo:lastUpdated ?timestamp .
+		}
+		
+		OPTIONAL {
+			?uri geo:hasGeometry ?geometry .
+			?geometry geo:asWKT ?the_geom .
 		}
 
 		OPTIONAL {
 			?uri slipo:category ?category .
 			?category slipo:value ?type .
-		}
-		
-		OPTIONAL {
-			?uri geo:hasGeometry ?geometry .
-			?geometry geo:asWKT ?shape .
 		}
 		
 		OPTIONAL {
@@ -25,6 +29,40 @@ WHERE {
 		}
 		
 		OPTIONAL {
-			?uri slipo:lastUpdated ?timestamp .
+				?uri slipo:address ?address .
+
+		OPTIONAL { ?address slipo:number ?street_num . }
+		OPTIONAL { ?address slipo:postcode ?postCode . }
+		OPTIONAL { ?address slipo:locality ?locality . }
+		OPTIONAL { ?address slipo:country ?country . }
+		}
+
+		OPTIONAL {?uri slipo:description ?description . }
+
+		OPTIONAL {?uri slipo:homepage ?homepage . }
+
+		OPTIONAL {
+			?uri slipo:phone ?phone_uri .
+			?phone_uri slipo:contactValue ?phone .
+		}
+		
+		OPTIONAL {
+			?uri slipo:fax ?fax_uri .
+			?fax_uri slipo:contactValue ?fax .
+		}
+		
+		OPTIONAL {
+			?uri slipo:email ?email_uri .
+			?email_uri slipo:contactValue ?email .
+		}
+
+		OPTIONAL {?uri slipo:openingHours ?slot_uri .
+		     ?slot_uri slipo:concat ?open_hours .
+		}
+
+		OPTIONAL {?uri slipo:otherLink ?wikipedia . }
+
+		OPTIONAL {?uri slipo:media ?media_uri .
+		     ?media_uri slipo:url ?image .
 		}
 }
