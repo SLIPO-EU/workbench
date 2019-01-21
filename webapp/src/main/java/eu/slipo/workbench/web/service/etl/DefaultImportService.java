@@ -13,7 +13,9 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
@@ -23,6 +25,7 @@ import javax.sql.DataSource;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -95,6 +98,15 @@ public class DefaultImportService implements ImportService, InitializingBean {
 
     @Value("${fagi-data.default.schema:fagi}")
     private String defaultFagiSchema;
+
+    @Value("${map-export.use-copy:false}")
+    private boolean useCopy;
+
+    @Value("${map-export.quote:\"}")
+    private String defaultQuote;
+
+    @Value("${map-export.delimiter:;}")
+    private String defaultDelimiter;
 
     @Autowired
     @Qualifier("defaultWebFileNamingStrategry")
@@ -437,8 +449,8 @@ public class DefaultImportService implements ImportService, InitializingBean {
 
         config.setProfile(DEFAULT_REVERSE_TRIPLEGEO_PROFILE);
         config.setOutputFormat(EnumDataFormat.CSV);
-        config.setQuote("");
-        config.setDelimiter(";");
+        config.setQuote(this.defaultQuote);
+        config.setDelimiter(this.defaultDelimiter);
         config.setEncoding("UTF-8");
 
         return config;
@@ -552,7 +564,10 @@ public class DefaultImportService implements ImportService, InitializingBean {
         }
     }
 
-    private void updateResource(ProcessRecord process, ProcessExecutionRecord execution, long id, long version, Path path) throws Exception {
+    private void updateResource(
+        ProcessRecord process, ProcessExecutionRecord execution, long id, long version, Path path
+    ) throws Exception {
+
         File csv = null;
         try {
             // Check if resource revision instance has already been exported
@@ -566,7 +581,7 @@ public class DefaultImportService implements ImportService, InitializingBean {
             String tableName = UUID.randomUUID().toString();
 
             // Import CSV data to table
-            this.importCsvFile(this.defaultGeometrySchema, tableName, csv.toString(), this.defaultGeometryColumn);
+            this.importCsvFile(this.defaultGeometrySchema, tableName, csv.toString(), this.defaultGeometryColumn, this.useCopy);
 
             // Update resource record
             String updateSql = String.format(
@@ -579,6 +594,7 @@ public class DefaultImportService implements ImportService, InitializingBean {
             jdbcTemplate.execute(updateSql);
         } catch(Exception ex) {
             logger.error(String.format("Failed to import data for resource %d-%d (id-version)", id, version), ex);
+            throw ex;
         } finally {
             if (csv != null) {
                 FileUtils.deleteQuietly(csv.getParentFile());
@@ -586,7 +602,10 @@ public class DefaultImportService implements ImportService, InitializingBean {
         }
     }
 
-    private void updateStep(ProcessRecord process, ProcessExecutionRecord execution, int stepKey, long fileId, Path path) {
+    private void updateStep(
+        ProcessRecord process, ProcessExecutionRecord execution, int stepKey, long fileId, Path path
+    ) throws Exception {
+
         File csv = null;
         try {
             // Get CSV file
@@ -594,7 +613,7 @@ public class DefaultImportService implements ImportService, InitializingBean {
             String tableName = UUID.randomUUID().toString();
 
             // Import CSV data to table
-            this.importCsvFile(defaultGeometrySchema, tableName, csv.toString(), defaultGeometryColumn);
+            this.importCsvFile(defaultGeometrySchema, tableName, csv.toString(), defaultGeometryColumn, this.useCopy);
 
             // Get step file
             ProcessExecutionStepFileRecord file = execution.getSteps()
@@ -620,6 +639,7 @@ public class DefaultImportService implements ImportService, InitializingBean {
             jdbcTemplate.execute(updateSql);
         } catch(Exception ex) {
             logger.error(String.format("Failed to import data for step file %d-%d-%d (execution-step key-file id)", execution.getId(), stepKey, fileId), ex);
+            throw ex;
         } finally {
             if (csv != null) {
                 FileUtils.deleteQuietly(csv.getParentFile());
@@ -675,25 +695,61 @@ public class DefaultImportService implements ImportService, InitializingBean {
     }
 
     private void importCsvFile(
-        String schema, String tableName, String fileName, String geomColumn
+        String schema, String tableName, String fileName, String geomColumn, boolean useCopy
     ) throws Exception {
 
         // Create table
-        String creteTableSql = this.generateGeometryCreateTableScript(schema, tableName, fileName);
+        String creteTableSql = this.createSpatialTableScript(schema, tableName, fileName);
         jdbcTemplate.execute(creteTableSql);
 
         // Import data
-        String copySql = String.format(
-            "COPY \"%s\".\"%s\" FROM '%s' CSV HEADER DELIMITER '%s' QUOTE '%s' NULL '' ENCODING '%s';",
-            schema, tableName, fileName, ";", '"', "UTF-8");
+        if(useCopy) {
+            String copySql = String.format(
+                    "COPY \"%s\".\"%s\" FROM '%s' CSV HEADER DELIMITER '%s' QUOTE '%s' NULL '' ENCODING '%s';",
+                    schema, tableName, fileName, this.defaultDelimiter, this.defaultQuote, "UTF-8");
 
-        jdbcTemplate.execute(copySql);
+            jdbcTemplate.execute(copySql);
+        } else {
+            this.insertRowsFromFile(schema, tableName, fileName);
+        }
 
         // Add simplified geometry column
         this.addSimplifiedGeometryColumn(schema, tableName);
 
         // Add indexes
         this.addGeometryIndexes(schema, tableName);
+    }
+
+    private void insertRowsFromFile(
+        String schema, String tableName, String fileName
+    ) throws Exception {
+        String insertSql = this.createInsertRowScript(schema, tableName, fileName);
+
+        // Helper variables
+        CSVFormat format = CSVFormat.DEFAULT
+            .withIgnoreEmptyLines()
+            .withFirstRecordAsHeader()
+            .withDelimiter(this.defaultDelimiter.charAt(0))
+            .withQuote(this.defaultQuote.charAt(0))
+            .withTrim();
+
+        try (
+            Reader reader = Files.newBufferedReader(Paths.get(fileName), Charset.forName("UTF-8"));
+            CSVParser parser = new CSVParser(reader, format);
+        ) {
+            for (final CSVRecord record : parser) {
+                List<Object> params = new ArrayList<Object>();
+
+                record.forEach(value -> {
+                    params.add(value);
+                });
+
+                jdbcTemplate.update(insertSql, params.toArray(new Object[params.size()]));
+            }
+        } catch (Exception ex) {
+            logger.error(String.format("Failed to insert rows from file [%s]", fileName), ex);
+            throw ex;
+        }
     }
 
     private void addSimplifiedGeometryColumn(String schema, String tableName) {
@@ -724,7 +780,7 @@ public class DefaultImportService implements ImportService, InitializingBean {
         jdbcTemplate.execute(createIndexGeomSimplified);
     }
 
-    private String generateGeometryCreateTableScript(
+    private String createSpatialTableScript(
         String schema, String tableName, String fileName
     ) throws Exception {
 
@@ -789,20 +845,50 @@ public class DefaultImportService implements ImportService, InitializingBean {
         return script.toString();
     }
 
+    private String createInsertRowScript(String schema, String tableName, String fileName) {
+        List<String> columns = this.getColumns(tableName);
+        List<String> values = new ArrayList<String>();
+
+        for (String c : columns) {
+            if (c.equals(defaultGeometryColumn)) {
+                values.add("ST_GeomFromEWKT(?)");
+            } else {
+                values.add("?");
+            }
+        }
+
+        return String.format("insert into \"%1$s\".\"%2$s\" (%3$s) values (%4$s);",
+            schema,
+            tableName,
+            String.join(",", columns),
+            String.join(",", values));
+    }
+
+    private List<String> getColumns(String tableName) {
+        String columnQuery = "select column_name from information_schema.columns where table_name = ?";
+
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(columnQuery, new Object[] { tableName });
+        List<String> columns = rows.stream()
+            .map(r -> (String) r.get("column_name"))
+            .collect(Collectors.toList());
+
+        return columns;
+    }
+
     private void importFusionLog(
         int userId, long executionId, ProcessExecutionStepRecord step, String schema, String fileName
     ) throws Exception {
         final String tableNamePrefix = UUID.randomUUID().toString();
 
         // Create table
-        String creteTableSql = this.generateFusionLogCreateTableScript(schema, tableNamePrefix);
+        String creteTableSql = this.createFusionLogTableScript(schema, tableNamePrefix);
         jdbcTemplate.execute(creteTableSql);
 
         this.importFagiFusionLog(fileName, schema, tableNamePrefix);
         this.updateFagiStepFile(executionId, step, schema, tableNamePrefix);
     }
 
-    private String generateFusionLogCreateTableScript(String schema, String tableNamePrefix) throws Exception {
+    private String createFusionLogTableScript(String schema, String tableNamePrefix) throws Exception {
         String sql = String.format(
             "CREATE TABLE \"%1$s\".\"%2$s\" (\n" +
             "   id bigint,\n" +
