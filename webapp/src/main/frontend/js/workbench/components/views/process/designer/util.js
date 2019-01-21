@@ -14,6 +14,8 @@ export const stepFileTypeToText = (value) => {
       return 'Sample';
     case EnumStepFileType.KPI:
       return 'KPI';
+    case EnumStepFileType.LOG:
+      return 'Log';
     case EnumStepFileType.QA:
       return 'Q&A';
     default:

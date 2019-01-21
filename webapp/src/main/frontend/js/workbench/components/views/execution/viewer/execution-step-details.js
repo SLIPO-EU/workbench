@@ -92,6 +92,7 @@ const tableColumns = [{
       case EnumStepFileType.OUTPUT:
       case EnumStepFileType.CONFIGURATION:
       case EnumStepFileType.QA:
+      case EnumStepFileType.LOG:
         return (
           <span>
             <i data-action="file-download" title="Download" className='fa fa-cloud-download slipo-table-row-action p-1'></i>

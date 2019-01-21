@@ -109,6 +109,7 @@ export const EnumStepFileType = {
   OUTPUT: 'OUTPUT',
   SAMPLE: 'SAMPLE',
   KPI: 'KPI',
+  LOG: 'LOG',
   QA: 'QA',
 };
 
