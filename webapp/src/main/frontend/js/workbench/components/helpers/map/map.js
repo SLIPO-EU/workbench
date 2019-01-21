@@ -98,6 +98,34 @@ class Map extends React.Component {
     }
   }
 
+  moveTo(center, zoom = 17, duration = 1500) {
+    const { map } = this.state;
+    if (map) {
+      const view = map.getView();
+      view.animate({
+        center,
+        zoom,
+        duration,
+      });
+    }
+  }
+
+  get center() {
+    const { map } = this.state;
+    if (map) {
+      return map.getView().getCenter();
+    }
+    return null;
+  }
+
+  get zoom() {
+    const { map } = this.state;
+    if (map) {
+      return map.getView().getZoom();
+    }
+    return null;
+  }
+
   render() {
     const children = this.props.children;
     const map = this.state.map;

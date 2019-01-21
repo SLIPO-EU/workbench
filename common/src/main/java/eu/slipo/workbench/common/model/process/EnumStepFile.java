@@ -38,6 +38,12 @@ public enum EnumStepFile
      * Tool specific QA data
      */
     QA,
+    
+    /**
+     * Logs recorded during step execution  
+     */
+    LOG,
+    
     ;
 
     public boolean isOfOutputType()
@@ -46,7 +52,8 @@ public enum EnumStepFile
             this == EnumStepFile.OUTPUT || 
             this == EnumStepFile.KPI ||
             this == EnumStepFile.QA || 
-            this == EnumStepFile.SAMPLE);
+            this == EnumStepFile.SAMPLE ||
+            this == EnumStepFile.LOG);
     }
     
     public EnumOutputType toOutputType()
@@ -91,6 +98,9 @@ public enum EnumStepFile
             break;
         case QA:
             e = EnumStepFile.QA;
+            break;
+        case LOG:
+            e = EnumStepFile.LOG;
             break;
         default:
             Assert.state(false, "Did not expect an outputType of [" + outputType + "]");

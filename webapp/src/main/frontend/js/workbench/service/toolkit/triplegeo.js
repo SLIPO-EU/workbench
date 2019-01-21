@@ -66,7 +66,9 @@ export function validateConfiguration(config) {
 }
 
 export function readConfiguration(config) {
-  const { prefixes, namespaces, profile = null, serialization, targetGeoOntology, ...rest } = config;
+  const {
+    prefixes, namespaces, profile = null, serialization, targetGeoOntology, sourceCRS = null, targetCRS = null, ...rest
+  } = config;
   const prefixArr = prefixes ? prefixes.split(',').map(v => v.trim()) : [];
   const namespaceArr = namespaces ? namespaces.split(',').map(v => v.trim()) : [];
 
@@ -87,11 +89,13 @@ export function readConfiguration(config) {
         .filter((item) => {
           return item !== null;
         }) : [],
+    sourceCRS: sourceCRS ? sourceCRS.split(':')[1] : null,
+    targetCRS: targetCRS ? targetCRS.split(':')[1] : null,
   };
 }
 
 export function writeConfiguration(config) {
-  const { quote, prefixes, mappingSpec, classificationSpec, ...rest } = config;
+  const { quote, prefixes, mappingSpec, classificationSpec, sourceCRS = null, targetCRS = null, ...rest } = config;
 
   return {
     ...rest,
@@ -101,6 +105,8 @@ export function writeConfiguration(config) {
     classificationSpec: classificationSpec ? typeof classificationSpec === 'object' ? classificationSpec.path : classificationSpec : null,
     registerFeatures: true,
     quote: quote || '',
+    sourceCRS: sourceCRS ? 'EPSG:' + sourceCRS : null,
+    targetCRS: targetCRS ? 'EPSG:' + targetCRS : null,
   };
 }
 

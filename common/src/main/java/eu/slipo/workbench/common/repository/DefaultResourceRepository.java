@@ -23,6 +23,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.MoreCollectors;
 import com.vividsolutions.jts.geom.Geometry;
 
@@ -161,6 +162,24 @@ public class DefaultResourceRepository implements ResourceRepository
             .setParameter("userId", userId);
 
         ResourceEntity entity = null;
+        try {
+            entity = query.getSingleResult();
+        } catch (NoResultException ex) {
+            entity = null;
+        }
+
+        return entity == null? null : entity.toResourceRecord();
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public ResourceRecord findOneByExecutionId(long id) {
+        String qlString = "FROM ResourceRevision r WHERE r.processExecution.id = :id";
+        TypedQuery<ResourceRevisionEntity> query = entityManager
+            .createQuery(qlString, ResourceRevisionEntity.class)
+            .setParameter("id", id);
+
+        ResourceRevisionEntity entity = null;
         try {
             entity = query.getSingleResult();
         } catch (NoResultException ex) {
@@ -447,6 +466,25 @@ public class DefaultResourceRepository implements ResourceRepository
 
         entityManager.flush();
         return entity.toResourceRecord();
+    }
+
+    @Override
+    public void setResourceRevisionStyle(long id, long version, JsonNode style) {
+        String queryString =
+                "FROM ResourceRevision r WHERE r.parent.id = :id and r.version = :version";
+
+            TypedQuery<ResourceRevisionEntity> query = entityManager
+                .createQuery(queryString, ResourceRevisionEntity.class)
+                .setParameter("id", id)
+                .setParameter("version", version);
+
+            ResourceRevisionEntity r = null;
+            try {
+                r = query.getSingleResult();
+                r.setStyle(style);
+            } catch (NoResultException ex) {
+                r = null;
+            }
     }
 
     private ResourceRevisionEntity findRevision(long id, long version) {

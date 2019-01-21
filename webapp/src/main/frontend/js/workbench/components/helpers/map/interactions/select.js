@@ -4,13 +4,20 @@ import * as PropTypes from 'prop-types';
 import OpenLayersMap from 'ol/map';
 
 import Style from 'ol/style/style';
-import Text from 'ol/style/text';
 import Circle from 'ol/style/circle';
 import Stroke from 'ol/style/stroke';
 import Fill from 'ol/style/fill';
 
 import GeoJSON from 'ol/format/geojson';
 import Select from 'ol/interaction/select';
+
+import {
+  FEATURE_LAYER_PROPERTY,
+} from '../model/constants';
+
+import {
+  createStyle,
+} from '../shared/utils';
 
 /**
  * Select interaction
@@ -24,10 +31,12 @@ class SelectInteraction extends React.Component {
     super(props);
 
     this.interaction = null;
-    this.styles = this.buildStyles();
+    this.defaultStyles = this.buildDefaultStyles();
+    this.styles = this.buildStyles(props.styles);
   }
 
   static propTypes = {
+    active: PropTypes.bool,
     map: PropTypes.instanceOf(OpenLayersMap),
     onFeatureSelect: PropTypes.func,
     selected: PropTypes.object,
@@ -35,9 +44,11 @@ class SelectInteraction extends React.Component {
     width: PropTypes.number,
     hitTolerance: PropTypes.number,
     multi: PropTypes.bool,
+    styles: PropTypes.object,
   }
 
   static defaultProps = {
+    active: true,
     width: 1,
     color: '#0D47A1',
     hitTolerance: 5,
@@ -61,35 +72,7 @@ class SelectInteraction extends React.Component {
     }
   }
 
-  buildPointStyle(color, icon, width) {
-    const stroke = new Stroke({
-      color,
-      width,
-    });
-    const fill = new Fill({
-      color: color + '80',
-    });
-
-    return (icon ?
-      new Style({
-        text: new Text({
-          text: icon,
-          font: 'normal 32px FontAwesome',
-          fill,
-          stroke,
-        }),
-      })
-      :
-      new Style({
-        image: new Circle({
-          radius: width,
-          fill,
-          stroke,
-        }),
-      }));
-  }
-
-  buildStyles() {
+  buildDefaultStyles() {
     const stroke = new Stroke({
       color: this.props.color,
       width: this.props.width,
@@ -126,48 +109,56 @@ class SelectInteraction extends React.Component {
     return styles;
   }
 
-  buildStyleFunction() {
-    return ((feature) => {
-      const type = feature.getGeometry().getType();
-      const style = this.styles[type];
-      const color = feature.get('__color') || this.props.color;
-      const icon = feature.get('__icon') || null;
+  buildStyles(styles) {
+    const { icon, color } = this.props;
+    const result = {};
 
-      if (type === 'Point') {
-        return this.buildPointStyle(color, icon, this.props.width);
-      } else {
-        if (style.getFill()) {
-          style.getFill().setColor(color + '80');
-        }
-        if (style.getStroke()) {
-          style.getStroke().setColor(color);
-        }
-      }
+    if (!styles) {
+      return result;
+    }
 
-      return style;
+    Object.keys(styles).forEach(key => {
+      const layerStyle = styles[key];
+
+      result[key] = createStyle(icon, color, layerStyle, true, 1.4);
     });
+
+    return result;
   }
 
 
+  buildStyleFunction() {
+    return ((feature) => {
+      const type = feature.getGeometry().getType();
+      const layer = feature.get(FEATURE_LAYER_PROPERTY);
+      const styleMap = this.styles[layer];
+
+      return (styleMap ? styleMap[type] : this.defaultStyles[type]);
+    });
+  }
+
   componentDidMount() {
-    if (this.props.map) {
+    const { active, hitTolerance, map, multi, onFeatureSelect, selected } = this.props;
+
+    if (map) {
       const style = this.buildStyleFunction();
 
       this.interaction = new Select({
-        multi: this.props.multi,
-        hitTolerance: this.props.hitTolerance,
+        multi,
+        hitTolerance,
         style,
       });
 
-      this.parseFeatures(this.props.selected);
+      this.parseFeatures(selected);
 
-      this.interaction.on('select', (e) => {
-        if (typeof this.props.onFeatureSelect === 'function') {
-          this.props.onFeatureSelect([...this.interaction.getFeatures().getArray()]);
+      this.interaction.on('select', () => {
+        if (typeof onFeatureSelect === 'function') {
+          onFeatureSelect([...this.interaction.getFeatures().getArray()]);
         }
       }, this);
 
-      this.props.map.addInteraction(this.interaction);
+      map.addInteraction(this.interaction);
+      this.interaction.setActive(active);
     }
   }
 
@@ -175,6 +166,10 @@ class SelectInteraction extends React.Component {
     if (this.props.selected != nextProps.selected) {
       this.parseFeatures(nextProps.selected);
     }
+    if (this.props.active != nextProps.active) {
+      this.interaction.setActive(nextProps.active);
+    }
+    this.styles = nextProps.styles ? this.buildStyles(nextProps.styles) : this.styles;
   }
 
   componentWillUnmount() {
@@ -187,6 +182,7 @@ class SelectInteraction extends React.Component {
   render() {
     return null;
   }
+
 }
 
 export default SelectInteraction;

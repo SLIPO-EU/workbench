@@ -26,6 +26,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.Iterables;
 
 import eu.slipo.workbench.common.domain.AccountEntity;
@@ -453,7 +454,8 @@ public class DefaultProcessRepository implements ProcessRepository
     {
         Assert.isTrue((taskType == EnumProcessTaskType.REGISTRATION && !isTemplate) ||
                       (taskType == EnumProcessTaskType.DATA_INTEGRATION) ||
-                      (taskType == EnumProcessTaskType.EXPORT && !isTemplate),
+                      (taskType == EnumProcessTaskType.EXPORT && !isTemplate) ||
+                      (taskType == EnumProcessTaskType.EXPORT_MAP && !isTemplate),
                       "Registration process definition cannot be a template");
 
         AccountEntity createdBy = entityManager.find(AccountEntity.class, userId);
@@ -841,6 +843,25 @@ public class DefaultProcessRepository implements ProcessRepository
     public boolean discardExecution(long executionId) throws ProcessExecutionNotFoundException
     {
         return ProcessRepository.super.discardExecution(executionId);
+    }
+
+    @Override
+    public void setExecutionStepFileStyle(long id, JsonNode style)
+    {
+        String queryString =
+                "FROM ProcessExecutionStepFile f WHERE f.id = :id";
+
+            TypedQuery<ProcessExecutionStepFileEntity> query = entityManager
+                .createQuery(queryString, ProcessExecutionStepFileEntity.class)
+                .setParameter("id", id);
+
+            ProcessExecutionStepFileEntity r = null;
+            try {
+                r = query.getSingleResult();
+                r.setStyle(style);
+            } catch (NoResultException ex) {
+                r = null;
+            }
     }
 
     private void setFindParameters(ProcessQuery processQuery, Query query)

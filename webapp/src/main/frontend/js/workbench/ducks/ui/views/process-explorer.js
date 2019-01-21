@@ -226,7 +226,7 @@ export const start = (id, version) => (dispatch, getState) => {
 
   return processService.start(id, version, token)
     .then(() => {
-      processExecutionStarted();
+      dispatch(processExecutionStarted());
     });
 };
 
@@ -239,7 +239,7 @@ export const stop = (id, version) => (dispatch, getState) => {
 
   return processService.stop(id, version, token)
     .then(() => {
-      processExecutionStopped();
+      dispatch(processExecutionStopped());
     });
 };
 
@@ -249,9 +249,8 @@ const exportMapStarted = () => ({
 
 export const exportMap = (id, version, execution) => (dispatch, getState) => {
   const { meta: { csrfToken: token } } = getState();
-
   return processService.exportMap(id, version, execution, token)
     .then(() => {
-      exportMapStarted();
+      dispatch(exportMapStarted());
     });
 };

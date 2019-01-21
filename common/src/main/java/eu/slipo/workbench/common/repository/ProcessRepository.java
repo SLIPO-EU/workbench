@@ -6,6 +6,8 @@ import java.util.UUID;
 
 import org.springframework.data.domain.PageRequest;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 import eu.slipo.workbench.common.domain.ProcessExecutionEntity;
 import eu.slipo.workbench.common.domain.ProcessRevisionEntity;
 import eu.slipo.workbench.common.model.QueryResultPage;
@@ -121,25 +123,25 @@ public interface ProcessRepository
     ProcessRecord findOne(String name, int createdBy);
 
     /**
-     * Map a workflow identifier to a process identifier (i.e. a pair of (id, version) 
+     * Map a workflow identifier to a process identifier (i.e. a pair of (id, version)
      * identifying a process revision entity).
-     * 
+     *
      * @param workflowId
      * @return a process identifier, or <tt>null</tt> if given workflow id is not mapped to
      *   a process revision entity.
      */
     ProcessIdentifier mapToProcessIdentifier(UUID workflowId);
-    
+
     /**
      * Map a process identifier to a workflow identifier (if any).
-     * 
+     *
      * @param id The process id
      * @param version The process version
      * @return a workflow identifier, or <tt>null</tt> if no workflow is associated with
      *   given process revision entity.
      */
     UUID mapToWorkflowIdentifier(long id, long version);
-    
+
     /**
      * @see ProcessRepository#mapToWorkflowIdentifier(long, long)
      */
@@ -147,7 +149,7 @@ public interface ProcessRepository
     {
         return mapToWorkflowIdentifier(processIdentifier.getId(), processIdentifier.getVersion());
     }
-    
+
     /**
      * Create a new process entity
      *
@@ -179,7 +181,7 @@ public interface ProcessRepository
     {
         return create(definition, createdBy, EnumProcessTaskType.DATA_INTEGRATION, false);
     }
-    
+
     /**
      * Update an existing process entity
      *
@@ -231,14 +233,14 @@ public interface ProcessRepository
      * @return A record representing the execution entity
      */
     ProcessExecutionRecord findLatestExecution(long id, long version);
-    
+
     /**
-     * Get a compact view of the execution of a process of a given id and version. 
-     * 
+     * Get a compact view of the execution of a process of a given id and version.
+     *
      * <p>A compact view of the execution is an execution comprised of the latest execution of each step,
      * successful or not (of course, a successful execution of a step will always be the latest,
      * because it will never attempt to re-execute).
-     * 
+     *
      * @param id The process id
      * @param version The version of a specific revision of a process
      * @return A record presenting a compact execution of given process revision
@@ -353,7 +355,7 @@ public interface ProcessRepository
      */
     ProcessExecutionRecord updateExecutionStepAddingFile(long executionId, int stepKey, ProcessExecutionStepFileRecord record)
         throws ProcessExecutionNotFoundException, ProcessExecutionNotActiveException;
-    
+
     /**
      * Discard (i.e delete) an execution entity.
      *
@@ -370,6 +372,15 @@ public interface ProcessRepository
     {
         return discardExecution(executionId, false);
     }
+
+    /**
+     * Sets a custom style for rendering a map layer for the specific process execution
+     * step file.
+     *
+     * @param id The id of the process execution step file
+     * @param style A JSON representation of the style
+     */
+    void setExecutionStepFileStyle(long id, JsonNode style);
 
     /**
      * Fix status of running executions. This is only for recovery purposes, e.g. after a non-graceful

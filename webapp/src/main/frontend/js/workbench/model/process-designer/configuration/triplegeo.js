@@ -32,18 +32,6 @@ export const ontologies = [
   { value: 'WGS84', label: 'WGS84' },
 ];
 
-export const crs = [
-  { value: 'EPSG:2100', label: 'EPSG:2100' },
-  { value: 'EPSG:4326', label: 'EPSG:4326' },
-];
-
-export const languages = [
-  { value: 'en', label: 'English' },
-  { value: 'de', label: 'German' },
-  { value: 'el', label: 'Greek' },
-  { value: 'ro', label: 'Romanian' },
-];
-
 export const serializations = [
   { value: 'RDF_XML', label: 'RDF/XML' },
   { value: 'RDF_XML_ABBREV', label: 'RDF/XML-ABBREV' },
@@ -71,7 +59,7 @@ const defaultNamespaces = [{
 
 export const defaultValues = {
   classifyByName: false,
-  defaultLang: languages[0].value,
+  defaultLang: 'en',
   delimiter: '|',
   encoding: encodings[3].value,
   mode: modes[1].value,
@@ -86,18 +74,18 @@ export const defaultValues = {
   quote: '"',
   registerFeatures: true,
   serialization: serializations[2].value,
-  sourceCRS: crs[1].value,
-  targetCRS: crs[1].value,
+  sourceCRS: 4326,
+  targetCRS: 4326,
   targetGeoOntology: ontologies[0].value,
 };
 
 export const defaultReverseValues = {
-  defaultLang: languages[0].value,
+  defaultLang: 'en',
   delimiter: '|',
   encoding: encodings[3].value,
   profile: null,
   quote: '"',
   serialization: serializations[2].value,
-  sourceCRS: crs[1].value,
-  targetCRS: crs[1].value,
+  sourceCRS: 4326,
+  targetCRS: 4326,
 };

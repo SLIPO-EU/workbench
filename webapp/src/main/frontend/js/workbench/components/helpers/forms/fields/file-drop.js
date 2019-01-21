@@ -27,15 +27,6 @@ export class FileDrop extends React.Component {
     onChange: PropTypes.func.isRequired,
   }
 
-  static defaultProps = {
-    style: {
-      textAlign: 'center',
-      fontSize: '3em',
-      color: '#656565',
-      border: '1px dotted #656565'
-    },
-  }
-
   componentWillMount() {
     if (this.props.value) {
       this.setState({ file: this.props.value });
@@ -43,7 +34,7 @@ export class FileDrop extends React.Component {
   }
 
   render() {
-    const { onChange, style } = this.props;
+    const { onChange } = this.props;
     return (
       <div>
         <Dropzone
@@ -58,11 +49,24 @@ export class FileDrop extends React.Component {
               onChange(file);
             }
           }}
-          style={style}
           disableClick={false}
           multiple={false}
         >
-          <i className="fa fa-cloud-upload fa-4x"></i>
+          {({ getRootProps, getInputProps, isDragActive }) => {
+            return (
+              <div {...getRootProps()} style={{
+                textAlign: 'center',
+                fontSize: '3em',
+                color: '#656565',
+                border: '1px dotted #656565',
+                height: '12rem',
+                paddingTop: '1rem',
+              }}>
+                <input {...getInputProps()} />
+                <i className="fa fa-cloud-upload fa-4x"></i>
+              </div>
+            );
+          }}
         </Dropzone>
         {this.state.file && this.state.file.name}
         {this.state.file && ` (${formatFileSize(this.state.file.size)})`}

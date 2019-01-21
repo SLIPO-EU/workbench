@@ -1,13 +1,19 @@
 package eu.slipo.workbench.web.controller.action;
 
+import java.util.UUID;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 import eu.slipo.workbench.common.model.Error;
 import eu.slipo.workbench.common.model.RestResponse;
@@ -18,10 +24,13 @@ import eu.slipo.workbench.common.model.process.ProcessExecutionIdentifier;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
 import eu.slipo.workbench.common.model.resource.ResourceRecord;
+import eu.slipo.workbench.common.repository.ProcessRepository;
 import eu.slipo.workbench.common.repository.ResourceRepository;
 import eu.slipo.workbench.web.model.process.ProcessExecutionRecordView;
+import eu.slipo.workbench.web.model.provenance.Feature;
 import eu.slipo.workbench.web.model.resource.MapDataResult;
 import eu.slipo.workbench.web.model.resource.ResourceErrorCode;
+import eu.slipo.workbench.web.repository.FeatureRepository;
 import eu.slipo.workbench.web.service.ProcessService;
 
 /**
@@ -36,6 +45,12 @@ public class MapController extends BaseController {
 
     @Autowired
     private ResourceRepository resourceRepository;
+
+    @Autowired
+    private ProcessRepository processRepository;
+
+    @Autowired
+    private FeatureRepository featureRepository;
 
     @Autowired
     private ProcessService processService;
@@ -104,12 +119,50 @@ public class MapController extends BaseController {
     ) {
 
         try {
-            final ProcessExecutionRecordView view = this.processService.getProcessExecution(id, version, executionId);
+            // Check if a resource is associated to the requested execution
+            final ResourceRecord resource = this.resourceRepository.findOneByExecutionId(executionId);
+            if (resource == null) {
+                final ProcessExecutionRecordView view = this.processService.getProcessExecution(id, version, executionId);
+                this.loadProcessCatalogResources(view.getProcess());
+                return RestResponse.result(new MapDataResult(view.getProcess(), view.getExecution()));
+            } else {
+                return this.getResource(resource.getId(), resource.getVersion());
+            }
 
-            this.loadProcessCatalogResources(view.getProcess());
+        } catch (Exception ex) {
+            return this.exceptionToResponse(ex);
+        }
+    }
 
-            return RestResponse.result(new MapDataResult(view.getProcess(), view.getExecution()));
+    @PostMapping(value = "/action/map/style/resource/{id}/{version}")
+    public RestResponse<?> setResourceRevisionStyle(
+        @PathVariable long id, @PathVariable long version, @RequestBody JsonNode style
+    ) {
+        try {
+            resourceRepository.setResourceRevisionStyle(id, version, style);
+            return RestResponse.success();
+        } catch (Exception ex) {
+            return this.exceptionToResponse(ex);
+        }
+    }
 
+    @PostMapping(value = "/action/map/style/file/{id}")
+    public RestResponse<?> setProcessStepFileStyle(@PathVariable long id, @RequestBody JsonNode style) {
+        try {
+            processRepository.setExecutionStepFileStyle(id, style);
+            return RestResponse.success();
+        } catch (Exception ex) {
+            return this.exceptionToResponse(ex);
+        }
+    }
+
+    @PostMapping(value = "/action/map/feature/{tableName}/{id}")
+    public RestResponse<?> updateFeature(
+        @PathVariable UUID tableName, @PathVariable String id, @RequestBody Feature feature
+    ) {
+        try {
+            featureRepository.update(tableName, id, feature.getProperties(), feature.getGeometry());
+            return RestResponse.success();
         } catch (Exception ex) {
             return this.exceptionToResponse(ex);
         }

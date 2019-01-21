@@ -6,6 +6,7 @@ import WfsLayer from './layers/wfs-layer';
 import GeoJsonLayer from './layers/geojson-layer';
 import Interactions from './interactions/interactions';
 import Select from './interactions/select';
+import Modify from './interactions/modify';
 
 export default {
   Map,
@@ -19,5 +20,6 @@ export default {
   Interactions,
   Interaction: {
     Select,
+    Modify,
   }
 };

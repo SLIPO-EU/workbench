@@ -19,6 +19,7 @@ import {
 
 import {
   EnumInputType,
+  EnumMapExportStatus,
   ResourceTypeIcons,
 } from '../../../../model/process-designer';
 
@@ -86,23 +87,37 @@ const resourceColumns = [{
 }, {
   Header: 'Actions',
   id: 'actions',
+  className: 'd-flex',
   Cell: props => {
     const record = props.original;
+
+    let action = null;
+    switch (record.exportStatus) {
+      case EnumMapExportStatus.NONE:
+        action = <i data-action="export-map" title="Export map data" className='fa fa-database slipo-table-row-action'></i>;
+        break;
+      case EnumMapExportStatus.FAILED:
+        action = (
+          <i data-action="export-map" title="Export map data. Last execution has failed" className='fa fa-database slipo-table-row-action invalid-feedback'></i>
+        );
+        break;
+      case EnumMapExportStatus.COMPLETED:
+        action = <i data-action="view-map" title="View Map" className='fa fa-map-o slipo-table-row-action'></i>;
+        break;
+      default:
+        action = <i title="Export operation in progress ..." className='fa fa-cogs'></i>;
+        break;
+    }
+
     return (
-      <span>
+      <React.Fragment>
         <i data-action="delete" className='fa fa-trash slipo-table-row-action mr-2' title="Delete"></i>
         <i data-action="export-to-file" className='fa fa-archive slipo-table-row-action mr-2' title="Export to file"></i>
-        {record.mapExported ?
-          <Link style={{ color: '#263238' }} to={buildPath(DynamicRoutes.ResourceMapViewer, [record.id, record.version])}>
-            <i className='fa fa-map-o' title="View map"></i>
-          </Link>
-          :
-          <i data-action="export-map" title="Export map data" className='fa fa-database slipo-table-row-action'></i>
-        }
-      </span>
+        {action}
+      </React.Fragment>
     );
   },
-  style: { 'textAlign': 'center' },
+  style: { 'justifyContent': 'center' },
   maxWidth: 90,
 }, {
   Header: 'Name',
@@ -156,23 +171,37 @@ const resourceHistoryColumns = [{
 }, {
   Header: 'Actions',
   id: 'actions',
+  className: 'd-flex',
   Cell: props => {
     const record = props.original;
+
+    let action = null;
+    switch (record.exportStatus) {
+      case EnumMapExportStatus.NONE:
+        action = <i data-action="export-map" title="Export map data" className='fa fa-database slipo-table-row-action p-1'></i>;
+        break;
+      case EnumMapExportStatus.FAILED:
+        action = (
+          <i data-action="export-map" title="Export map data. Last execution has failed" className='fa fa-database slipo-table-row-action invalid-feedback p-1'></i>
+        );
+        break;
+      case EnumMapExportStatus.COMPLETED:
+        action = <i data-action="view-map" title="View Map" className='fa fa-map-o slipo-table-row-action p-1'></i>;
+        break;
+      default:
+        action = <i title="Export operation in progress ..." className='fa fa-cogs p-1'></i>;
+        break;
+    }
+
     return (
-      <span>
+      <React.Fragment>
         <i data-action="delete" className='fa fa-trash slipo-table-row-action mr-2' title="Delete"></i>
         <i data-action="export-to-file" className='fa fa-archive slipo-table-row-action' title="Export"></i>
-        {record.mapExported ?
-          <Link style={{ color: '#263238' }} to={buildPath(DynamicRoutes.ResourceMapViewer, [record.id, record.version])}>
-            <i className='fa fa-map-o' title="View map"></i>
-          </Link>
-          :
-          <i data-action="export-map" title="Export map data" className='fa fa-database slipo-table-row-action p-1'></i>
-        }
-      </span>
+        {action}
+      </React.Fragment>
     );
   },
-  style: { 'textAlign': 'center' },
+  style: { 'justifyContent': 'center' },
   maxWidth: 60,
 }, {
   Header: 'Size',
@@ -224,6 +253,12 @@ export default class Resources extends React.Component {
           rowInfo.original.execution.id,
           rowInfo.original.execution.version,
           rowInfo.original.execution.execution,
+        );
+        break;
+      case 'view-map':
+        this.props.viewMap(
+          rowInfo.original.id,
+          rowInfo.original.version,
         );
         break;
       default:

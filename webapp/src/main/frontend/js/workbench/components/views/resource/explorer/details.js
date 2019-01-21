@@ -157,7 +157,7 @@ class ResourceDetails extends React.Component {
             />
           </Col>
         </Row>
-        {r.mapExported &&
+        {r.exported &&
           <Row>
             <Col>
               <div className="float-right">

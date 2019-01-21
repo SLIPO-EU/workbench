@@ -1,8 +1,14 @@
+import GeoJSON from 'ol/format/geojson';
+
 import actions from './api/fetch-actions';
 
 import {
   readProcessResponse,
 } from './process';
+
+import {
+  Attributes,
+} from '../model/map-viewer';
 
 /**
  * Loads data for a resource and the process execution instance that
@@ -47,4 +53,36 @@ export function fetchExecutionMapData(id, version, execution, token) {
         process: readProcessResponse(result.process),
       };
     });
+}
+
+export function setResourceRevisionStyle(id, version, style, token) {
+  return actions
+    .post(`/action/map/style/resource/${id}/${version}`, token, style);
+}
+
+export function setFileStyle(id, style, token) {
+  return actions
+    .post(`/action/map/style/file/${id}`, token, style);
+}
+
+export function updateFeature(table, id, properties, feature, token) {
+  // Feature is an OpenLayers object and must be converted to GeoJSON
+  const format = new GeoJSON();
+  const geometry = format.writeGeometryObject(feature.getGeometry(), {
+    featureProjection: 'EPSG:3857',
+    dataProjection: 'EPSG:4326',
+  });
+
+
+  const data = {
+    // Filter out any custom/helper properties
+    properties: Attributes.reduce((result, attr) => {
+      result[attr.key] = properties[attr.key];
+      return result;
+    }, {}),
+    geometry,
+  };
+
+  return actions
+    .post(`/action/map/feature/${table}/${id}`, token, data);
 }

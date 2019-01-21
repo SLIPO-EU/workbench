@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import React from 'react';
 
 import semver from 'semver-compare';
@@ -10,10 +11,12 @@ import {
 } from '../../../../helpers/forms/form-fields';
 
 import {
-  crs,
+  langs,
+} from '../../../../../util/i18n';
+
+import {
   defaultReverseValues as defaultTripleGeoValues,
   encodings,
-  languages,
   outputFormats,
 } from '../../../../../model/process-designer/configuration/triplegeo';
 
@@ -25,6 +28,8 @@ import {
 import {
   readConfiguration,
 } from '../../../../../service/toolkit/triplegeo-reverse';
+
+const languages = _.orderBy(langs.map(l => ({ value: l.alpha2, label: l.English })), ['label'], ['asc']);
 
 class TripleGeoReverseConfiguration extends React.Component {
 
@@ -218,23 +223,33 @@ class TripleGeoReverseConfiguration extends React.Component {
 
         <div className="row">
           <div className="col">
-            <SelectField
+            <TextField
               {...inject}
               id="sourceCRS"
               label="Source CRS"
-              help=""
-              options={crs}
-              clearable={true}
+              help="Specify the EPSG numeric code for the source CRS"
+              type="number"
+              onKeyDown={(e) => {
+                // Prevent decimals
+                if (e.keyCode === 188 || e.keyCode === 190) {
+                  e.preventDefault();
+                }
+              }}
             />
           </div>
           <div className="col">
-            <SelectField
+            <TextField
               {...inject}
               id="targetCRS"
               label="Target CRS"
-              help=""
-              options={crs}
-              clearable={true}
+              help="Specify the EPSG numeric code for the target CRS"
+              type="number"
+              onKeyDown={(e) => {
+                // Prevent decimals
+                if (e.keyCode === 188 || e.keyCode === 190) {
+                  e.preventDefault();
+                }
+              }}
             />
           </div>
         </div>

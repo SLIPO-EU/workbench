@@ -18,6 +18,19 @@ public interface IProcessValidationService {
     void validate(Long id, ProcessDefinition definition, boolean isTemplate) throws InvalidProcessDefinitionException;
 
     /**
+     * Validates a process definition
+     *
+     * @param id the process id if the process definition already exists; Otherwise
+     * {@code null}.
+     * @param definition the process definition
+     * @param isTemplate {@code true} if the process definition is a template; Otherwise
+     * {@code false}
+     * @param userId the user id who created the process definition
+     * @throws InvalidProcessDefinitionException if validation fails
+     */
+    void validate(Long id, ProcessDefinition definition, boolean isTemplate, int userId) throws InvalidProcessDefinitionException;
+
+    /**
      * Validates a new process definition
      *
      * @param definition the process definition

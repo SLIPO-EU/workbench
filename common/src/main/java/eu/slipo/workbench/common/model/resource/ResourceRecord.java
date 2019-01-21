@@ -8,9 +8,11 @@ import java.util.List;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.vividsolutions.jts.geom.Geometry;
 
+import eu.slipo.workbench.common.model.etl.EnumMapExportStatus;
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumResourceType;
 import eu.slipo.workbench.common.model.process.ProcessExecutionIdentifier;
@@ -58,7 +60,13 @@ public class ResourceRecord implements Serializable
 
     private List<ResourceRecord> revisions;
 
-    private boolean mapExported;
+    private AccountInfo exportedBy;
+
+    private ZonedDateTime exportedOn;
+
+    private EnumMapExportStatus exportStatus = EnumMapExportStatus.NONE;
+
+    private JsonNode style;
 
     public ResourceRecord() {}
 
@@ -277,14 +285,46 @@ public class ResourceRecord implements Serializable
         this.numberOfEntities = numberOfEntities;
     }
 
-    public boolean isMapExported()
-    {
-        return mapExported;
+    public AccountInfo getExportedBy() {
+        return exportedBy;
     }
 
-    public void setMapExported(boolean mapExported)
+    public void setExportedBy(AccountInfo exportedBy) {
+        this.exportedBy = exportedBy;
+    }
+
+    public void setExportedBy(int id, String name) {
+        this.exportedBy = new AccountInfo(id, name);
+    }
+
+    public ZonedDateTime getExportedOn() {
+        return exportedOn;
+    }
+
+    public void setExportedOn(ZonedDateTime exportedOn) {
+        this.exportedOn = exportedOn;
+    }
+
+    public EnumMapExportStatus getExportStatus() {
+        return exportStatus;
+    }
+
+    public void setExportStatus(EnumMapExportStatus exportStatus) {
+        this.exportStatus = exportStatus;
+    }
+
+    public boolean isExported() {
+        return this.exportStatus != EnumMapExportStatus.NONE;
+    }
+
+    public JsonNode getStyle()
     {
-        this.mapExported = mapExported;
+        return style;
+    }
+
+    public void setStyle(JsonNode style)
+    {
+        this.style = style;
     }
 
 }

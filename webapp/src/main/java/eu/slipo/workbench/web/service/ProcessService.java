@@ -99,6 +99,17 @@ public interface ProcessService {
      * Create a new process given an {@link ProcessDefinition} instance
      *
      * @param definition the process definition
+     * @param taskType the process task type
+     * @param userId the process owner id
+     * @return an instance of {@link ProcessRecord} for the new process
+     * @throws InvalidProcessDefinitionException if the given definition is invalid
+     */
+    ProcessRecord create(ProcessDefinition definition, EnumProcessTaskType taskType, int userId) throws InvalidProcessDefinitionException;
+
+    /**
+     * Create a new process given an {@link ProcessDefinition} instance
+     *
+     * @param definition the process definition
      * @param isTemplate {@code true} if process definition should be saved as a template
      * @return an instance of {@link ProcessRecord} for the new process
      * @throws InvalidProcessDefinitionException if the given definition is invalid
@@ -123,6 +134,24 @@ public interface ProcessService {
      * an empty list is returned
      */
     List<ProcessExecutionRecord> findExecutions(long id, long version);
+
+    /**
+     * Start the execution of a process revision. A revision will be identified as the
+     * {@link ProcessRevisionEntity} with the given id and version. For such an entity,
+     * the application will enforce a single execution running at a given point of time.
+     *
+     * @param id The process id
+     * @param version The version of the process (revision)
+     * @param task The {@link EnumProcessTaskType} of the required operation.
+     * @param userId The user that starts the process execution
+     *
+     * @throws ProcessNotFoundException if no matching revision entity is found
+     * @throws ProcessExecutionStartException if the execution failed to start
+     * @throws IOException if an I/O error has occurred
+     */
+    public ProcessExecutionRecord start(
+        long id, long version, EnumProcessTaskType task, Integer userId
+    ) throws ProcessNotFoundException, ProcessExecutionStartException, IOException;
 
     /**
      * Start the execution of a process revision. A revision will be identified as the
@@ -161,8 +190,18 @@ public interface ProcessService {
      *
      * @throws ProcessNotFoundException if no matching revision entity is found
      * @throws ProcessExecutionNotFoundException if no matching execution entity is found
+     * @throws Exception If database update operation fails.
      */
-    void exportMap(long id, long version, long executionId) throws ProcessNotFoundException, ProcessExecutionNotFoundException;
+    void exportMap(long id, long version, long executionId) throws ProcessNotFoundException, ProcessExecutionNotFoundException, Exception;
+
+    /**
+     * Exports process execution data to a relational database for rendering maps.
+     *
+     * @param execution The process execution instance
+     *
+     * @throws Exception If database update operation fails.
+     */
+    void exportMap(ProcessExecutionRecord execution) throws Exception;
 
     /**
      * Returns the file with the given {@code fileId} for the selected process revision execution.

@@ -42,7 +42,7 @@ import eu.slipo.workbench.common.model.tool.output.OutputSpec;
  * Configuration for FAGI
  */
 @JsonPropertyOrder({
-    "inputFormat", "outputFormat", "locale", "similarity", "rulesLocation",
+    "inputFormat", "outputFormat", "locale", "similarity", "verbose", "rulesLocation",
     "left", "right", "links", "target"
 })
 @JacksonXmlRootElement(localName = "specification")
@@ -156,6 +156,34 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
             for (DataFormat e: DataFormat.values())
                 if (e.dataFormat == dataFormat)
                     return e;
+            return null;
+        }
+    }
+    
+    public enum LinkFormat
+    {
+        NT("nt"), 
+        CSV("csv"), 
+        CSV_UNIQUE_LINKS("csv-unique-links");
+        
+        private final String key;
+        
+        private LinkFormat(String key)
+        {
+            this.key = key;
+        }
+        
+        public String key()
+        {
+            return this.key;
+        }
+        
+        public static LinkFormat fromKey(String key)
+        {
+            Assert.isTrue(!StringUtils.isEmpty(key), "Expected a non-empty key to search for");
+            for (LinkFormat f: LinkFormat.values())
+                if (f.key.equals(key))
+                    return f;
             return null;
         }
     }
@@ -276,6 +304,8 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
         
         String id;
         
+        LinkFormat format = LinkFormat.NT;
+        
         LinksSpec() {}
         
         LinksSpec(String id)
@@ -284,7 +314,7 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
         }
     }
     
-    @JsonPropertyOrder({ "id", "file" })
+    @JsonPropertyOrder({ "id", "linksFormat", "file" })
     public static class Links implements Serializable
     {
         private static final long serialVersionUID = 1L;
@@ -303,6 +333,25 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
         {
             this.path = path;
             this.spec = new LinksSpec(id);
+        }
+        
+        @JsonProperty("linksFormat")
+        public String getLinksFormatAsString()
+        {
+            return this.spec.format.key();
+        }
+        
+        @JsonProperty("linksFormat")
+        public void setLinksFormat(String key)
+        {
+            setLinksFormat(LinkFormat.fromKey(key));
+        }
+        
+        @JsonIgnore
+        public void setLinksFormat(LinkFormat format)
+        {
+            Assert.notNull(format, "Expected a non-null link format");
+            this.spec.format = format;
         }
         
         @JsonProperty("file")
@@ -332,13 +381,15 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
     }
     
     @JsonPropertyOrder({ 
-        "id", "mode", "outputDir", "fused", "remaining", "ambiguous", "statistics" 
+        "id", "mode", "outputDir", "fused", "remaining", "ambiguous", "statistics", "fusionLog" 
     })
     public static class Output implements Serializable
     {
         private static final long serialVersionUID = 1L;
         
         private static final String DEFAULT_STATS_PATH = "stats.json";
+        
+        private static final String DEFAULT_FUSION_LOG_PATH = "fusion.log";
         
         String id;
         
@@ -354,16 +405,18 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
         
         String statsPath;
         
+        String fusionLogPath;
+        
         Output() {}
 
         Output(String id, Mode mode)
         {
-            this(id, mode, null, null, null, null, DEFAULT_STATS_PATH);
+            this(id, mode, null, null, null, null);
         }
         
         Output(
             String id, Mode mode, String dir, 
-            String fusedPath, String remainingPath, String reviewPath, String statsPath)
+            String fusedPath, String remainingPath, String reviewPath)
         {
             this.id = id;
             this.mode = mode;
@@ -371,7 +424,8 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
             this.fusedPath = fusedPath;
             this.remainingPath = remainingPath;
             this.reviewPath = reviewPath;
-            this.statsPath = statsPath;
+            this.statsPath = DEFAULT_STATS_PATH;
+            this.fusionLogPath = DEFAULT_FUSION_LOG_PATH;
         }
         
         @JsonProperty("id")
@@ -475,7 +529,20 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
         public void setStatsPath(String statsPath)
         {
             this.statsPath = statsPath;
-        }        
+        }
+        
+        @JsonProperty("fusionLog")
+        @NotEmpty
+        public String getFusionLogPath()
+        {
+            return fusionLogPath;
+        }
+
+        @JsonProperty("fusionLog")
+        public void setFusionLogPath(String fusionLogPath)
+        {
+            this.fusionLogPath = fusionLogPath;
+        }
     }
   
     public class OutputNameMapper implements InputToOutputNameMapper<Fagi>
@@ -500,6 +567,8 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
                     OutputSpec.of(Paths.get(target.reviewPath).getFileName(), outputFormat))
                 .put(EnumFagiOutputPart.STATS, 
                     OutputSpec.of(Paths.get(target.statsPath).getFileName()))
+                .put(EnumFagiOutputPart.LOG,
+                    OutputSpec.of(Paths.get(target.fusionLogPath).getFileName()))
                 .build();
         }
     }
@@ -509,10 +578,15 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
      */
     private String _profile;
     
-    private String lang = "en";
+    private String lang;
     
     private Similarity similarity;
-  
+    
+    /**
+     * A flag that controls whether an action log should be generated (see target)
+     */
+    private boolean verbose;
+    
     /**
      * The resource location for the XML file holding the ruleset for fusion
      */
@@ -541,7 +615,11 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
     public FagiConfiguration() 
     {
         this._version = VERSION;
-                
+        
+        this.verbose = false;
+        
+        this.lang = "en";
+        
         this.input = new ArrayList<>(Collections.nCopies(3, null));
         this.inputFormat = EnumDataFormat.N_TRIPLES;
         this.outputFormat = EnumDataFormat.N_TRIPLES;
@@ -573,6 +651,18 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
     public void setProfile(String profile)
     {
         this._profile = profile;
+    }
+    
+    @JsonProperty("verbose")
+    public void setVerbose(boolean verbose)
+    {
+        this.verbose = verbose;
+    }
+    
+    @JsonProperty("verbose")
+    public boolean isVerbose()
+    {
+        return verbose;
     }
     
     @JsonIgnore
@@ -923,6 +1013,7 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
     {
         Assert.notNull(r, "An input descriptor is required");
         this.linksSpec.id = r.spec.id;
+        this.linksSpec.format = r.spec.format;
         
         if (!StringUtils.isEmpty(r.path))
             this.input.set(LINKS_INDEX, r.path);

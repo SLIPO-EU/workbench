@@ -2,6 +2,8 @@ package eu.slipo.workbench.common.repository;
 
 import org.springframework.data.domain.PageRequest;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 import eu.slipo.workbench.common.model.QueryResultPage;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepRecord;
 import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
@@ -51,6 +53,14 @@ public interface ResourceRepository
      * @return an instance of {@link ResourceRecord} if it exists, else <tt>null</tt>
      */
     ResourceRecord findOne(String resourceName, Integer createdBy);
+
+    /**
+     * Find a single resource identified by the process execution that created it.
+     *
+     * @param id The process execution id.
+     * @return an instance of {@link ResourceRecord} if it exists, else <tt>null</tt>
+     */
+    ResourceRecord findOneByExecutionId(long id);
 
     /**
      * Create a new resource entity.
@@ -109,6 +119,15 @@ public interface ResourceRepository
      * @return a resource record for the updated entity
      */
     void setProcessExecution(long id, long version, long executionId, Integer stepKey, String partKey);
+
+    /**
+     * Sets a custom style for rendering a map layer for the specific resource revision.
+     *
+     * @param id The id of the parent resource
+     * @param version The version of the resource revision
+     * @param style A JSON representation of the style
+     */
+    void setResourceRevisionStyle(long id, long version, JsonNode style);
 
     default void setProcessExecution(long id, long version, long executionId)
     {

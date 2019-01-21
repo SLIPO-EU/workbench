@@ -160,6 +160,7 @@ export function readProcessResponse(result) {
             description: r.description,
             boundingBox: r.boundingBox,
             tableName: r.tableName,
+            style: r.style,
           };
         case EnumInputType.OUTPUT:
           return {

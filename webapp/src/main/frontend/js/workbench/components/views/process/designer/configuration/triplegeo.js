@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import React from 'react';
 
 import semver from 'semver-compare';
@@ -12,11 +13,13 @@ import {
 } from '../../../../helpers/forms/form-fields';
 
 import {
-  crs,
+  langs,
+} from '../../../../../util/i18n';
+
+import {
   defaultValues as defaultTripleGeoValues,
   encodings,
   inputFormats,
-  languages,
   modes,
   ontologies,
   serializations,
@@ -30,6 +33,8 @@ import {
 import {
   readConfiguration,
 } from '../../../../../service/toolkit/triplegeo';
+
+const languages = _.orderBy(langs.map(l => ({ value: l.alpha2, label: l.English })), ['label'], ['asc']);
 
 class TripleGeoConfiguration extends React.Component {
 
@@ -423,23 +428,33 @@ class TripleGeoConfiguration extends React.Component {
 
         <div className="row">
           <div className="col">
-            <SelectField
+            <TextField
               {...inject}
               id="sourceCRS"
               label="Source CRS"
-              help=""
-              options={crs}
-              clearable={true}
+              help="Specify the EPSG numeric code for the source CRS"
+              type="number"
+              onKeyDown={(e) => {
+                // Prevent decimals
+                if (e.keyCode === 188 || e.keyCode === 190) {
+                  e.preventDefault();
+                }
+              }}
             />
           </div>
           <div className="col">
-            <SelectField
+            <TextField
               {...inject}
               id="targetCRS"
               label="Target CRS"
-              help=""
-              options={crs}
-              clearable={true}
+              help="Specify the EPSG numeric code for the target CRS"
+              type="number"
+              onKeyDown={(e) => {
+                // Prevent decimals
+                if (e.keyCode === 188 || e.keyCode === 190) {
+                  e.preventDefault();
+                }
+              }}
             />
           </div>
         </div>

@@ -32,6 +32,7 @@ class LayerColor extends React.Component {
 
   handleChange(color) {
     this.props.onColorChange(color);
+    this.handleClose();
   }
 
   render() {
@@ -53,7 +54,7 @@ class LayerColor extends React.Component {
       popover: {
         position: 'absolute',
         zIndex: '2',
-        left: '47px',
+        left: '14px',
         marginTop: '2px',
       },
       cover: {
@@ -78,7 +79,7 @@ class LayerColor extends React.Component {
                 color={this.props.color}
                 colors={this.props.colors}
                 onChangeComplete={this.handleChange}
-                triangle={'top-right'}
+                triangle={'top-left'}
               />
             </div>
             :

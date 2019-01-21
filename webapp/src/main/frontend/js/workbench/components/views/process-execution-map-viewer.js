@@ -6,9 +6,20 @@ import {
 } from 'redux';
 
 import {
+  bringToFront,
+  clearSelectedFeatures,
+  fetchFeatureProvenance,
   fetchExecutionMapData,
+  hideProvenance,
   reset,
+  setFilter,
+  toggleFilter,
   selectFeatures,
+  setCenter,
+  setItemPosition,
+  setLayerStyle,
+  toggleEditor,
+  toggleLayerConfiguration,
 } from '../../ducks/ui/views/map-viewer';
 
 import {
@@ -75,27 +86,64 @@ class ProcessExecutionMapViewer extends React.Component {
   }
 
   onMoveEnd(data) {
+    this.props.setCenter(data.center, data.zoom);
   }
 
   render() {
-    const { baseLayer, bingMaps, defaultCenter, layers, osm } = this.props;
-
     if (this.state.isLoading) {
       return null;
     }
+
+    const {
+      baseLayer,
+      bingMaps,
+      defaultCenter,
+      execution,
+      fetchFeatureProvenance,
+      layers,
+      osm,
+    } = this.props;
+
     return (
-      <div className="animated fadeIn">
-        <MapViewer
-          baseLayer={baseLayer}
-          bingMaps={bingMaps}
-          defaultCenter={defaultCenter}
-          layers={layers}
-          osm={osm}
-          onFeatureSelect={(features) => this.props.selectFeatures(features)}
-          onMoveEnd={this.onMoveEnd}
-          selectedFeatures={this.props.selectedFeatures}
-        />
-      </div >
+      <MapViewer
+        baseLayer={baseLayer}
+        bingMaps={bingMaps}
+        bringToFront={this.props.bringToFront}
+        clearSelectedFeatures={this.props.clearSelectedFeatures}
+        defaultCenter={defaultCenter}
+        draggable={this.props.draggable}
+        draggableOrder={this.props.draggableOrder}
+        editActive={this.props.editActive}
+        editFeature={this.props.editFeature}
+        fetchFeatureProvenance={
+          (feature) => fetchFeatureProvenance(
+            execution.process.id,
+            execution.process.version,
+            execution.id,
+            feature)
+        }
+        filterFormVisible={this.props.filterFormVisible}
+        filters={this.props.filters}
+        hideProvenance={this.props.hideProvenance}
+        initialCenter={this.props.initialCenter}
+        initialZoom={this.props.initialZoom}
+        layerConfigVisible={this.props.layerConfigVisible}
+        layers={layers}
+        onFeatureSelect={(features) => this.props.selectFeatures(features)}
+        onMoveEnd={this.onMoveEnd}
+        osm={osm}
+        provenance={this.props.provenance}
+        selectedFeature={this.props.selectedFeature}
+        selectedFeatures={this.props.selectedFeatures}
+        selectedLayer={this.props.selectedLayer}
+        setFilter={this.props.setFilter}
+        setItemPosition={this.props.setItemPosition}
+        setLayerStyle={this.props.setLayerStyle}
+        toggleEditor={this.props.toggleEditor}
+        toggleFilterForm={this.props.toggleFilter}
+        toggleLayerConfiguration={this.props.toggleLayerConfiguration}
+        viewport={this.props.viewport}
+      />
     );
   }
 }
@@ -104,16 +152,40 @@ const mapStateToProps = (state) => ({
   baseLayer: state.ui.views.map.config.baseLayer,
   bingMaps: state.config.bingMaps,
   defaultCenter: state.config.mapDefaults.center,
+  draggable: state.ui.views.map.config.draggable,
+  draggableOrder: state.ui.views.map.config.draggableOrder,
+  editActive: state.ui.views.map.edit.active,
+  editFeature: state.ui.views.map.edit.feature,
   execution: state.ui.views.map.data.execution,
+  filterFormVisible: state.ui.views.map.search.visible,
+  filters: state.ui.views.map.search.filters,
+  initialCenter: state.ui.views.map.config.center,
+  initialZoom: state.ui.views.map.config.zoom,
+  layerConfigVisible: state.ui.views.map.config.layerConfigVisible,
   layers: state.ui.views.map.config.layers,
   osm: state.config.osm,
+  provenance: state.ui.views.map.config.provenance,
+  selectedFeature: state.ui.views.map.config.selectedFeature,
   selectedFeatures: state.ui.views.map.config.selectedFeatures,
+  selectedLayer: state.ui.views.map.config.selectedLayer,
+  viewport: state.ui.viewport,
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
+  bringToFront,
+  clearSelectedFeatures,
+  fetchFeatureProvenance,
   fetchExecutionMapData,
+  hideProvenance,
   reset,
+  setFilter,
+  toggleFilter,
   selectFeatures,
+  setCenter,
+  setItemPosition,
+  setLayerStyle,
+  toggleEditor,
+  toggleLayerConfiguration,
 }, dispatch);
 
 const mergeProps = (stateProps, dispatchProps, ownProps) => {

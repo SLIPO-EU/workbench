@@ -15,6 +15,7 @@ import {
 } from '../../../../model';
 
 import {
+  EnumMapExportStatus,
   EnumTaskType,
 } from '../../../../model/process-designer/enum';
 
@@ -47,7 +48,32 @@ const executionsColumns = (props) => (
     id: 'actions',
     width: 110,
     Expander: (row) => {
+      // Ignore map export tasks
+      if (row.original.taskType === EnumTaskType.EXPORT_MAP) {
+        return null;
+      }
+
       const isAdmin = props.user.roles.indexOf(Roles.ADMIN) !== -1;
+
+      let exportAction = null;
+      if ((row.original.status === 'COMPLETED') && (row.original.taskType !== EnumTaskType.EXPORT)) {
+        switch (row.original.exportStatus) {
+          case EnumMapExportStatus.COMPLETED:
+            exportAction = <i data-action="map" title="View Map" className='fa fa-map-o slipo-table-row-action p-1'></i>;
+            break;
+          case EnumMapExportStatus.FAILED:
+            exportAction = (
+              <i data-action="export-map" title="Export map data. Last execution has failed" className='fa fa-database slipo-table-row-action invalid-feedback p-1'></i>
+            );
+            break;
+          case EnumMapExportStatus.NONE:
+            exportAction = <i data-action="export-map" title="Export map data" className='fa fa-database slipo-table-row-action p-1'></i>;
+            break;
+          default:
+            exportAction = <i title="Export operation in progress ..." className='fa fa-cogs p-1'></i>;
+            break;
+        }
+      }
 
       return (
         <span>
@@ -57,12 +83,7 @@ const executionsColumns = (props) => (
             </SecureContent>
           }
           <i data-action="view" title="View" className='fa fa-search slipo-table-row-action p-1'></i>
-          {row.original.status === 'COMPLETED' && row.original.exported &&
-            <i data-action="map" title="View Map" className='fa fa-map-o slipo-table-row-action p-1'></i>
-          }
-          {row.original.status === 'COMPLETED' && !row.original.exported &&
-            <i data-action="export-map" title="Export map data" className='fa fa-database slipo-table-row-action p-1'></i>
-          }
+          {exportAction}
           {row.original.errorMessage &&
             <i data-action="error" title="View error message" className='fa fa-warning slipo-table-row-action p-1'></i>
           }

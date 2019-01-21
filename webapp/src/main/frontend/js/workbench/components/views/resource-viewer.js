@@ -1,6 +1,9 @@
 import * as React from 'react';
 import * as ReactRedux from 'react-redux';
 
+import Extend from 'ol/extent';
+import GeoJSON from 'ol/format/geojson';
+
 import {
   bindActionCreators
 } from 'redux';
@@ -33,6 +36,14 @@ import {
 import {
   message,
 } from '../../service';
+
+import {
+  Colors,
+} from '../../model/constants';
+
+import {
+  EnumSymbol,
+} from '../../model/map-viewer';
 
 /**
  * Resource metadata viewer
@@ -84,10 +95,40 @@ class ResourceViewer extends React.Component {
     this.props.history.push(path);
   }
 
+  getLayerStyle() {
+    return {
+      symbol: EnumSymbol.Square,
+      fill: {
+        color: Colors[0],
+      },
+      stroke: {
+        color: Colors[0],
+        width: 2,
+      },
+      size: 20,
+      opacity: 50,
+    };
+  }
+
+  getCenter() {
+    const { defaultCenter, resource: { boundingBox } } = this.props;
+
+    if (boundingBox) {
+      const format = new GeoJSON();
+      const geometry = format.readGeometry(boundingBox, {
+        dataProjection: 'EPSG:4326',
+        featureProjection: 'EPSG:3857',
+      });
+      const extent = geometry.getExtent();
+      const center = Extend.getCenter(extent);
+
+      return center || defaultCenter;
+    }
+    return defaultCenter;
+  }
+
   render() {
     const { resource } = this.props;
-    const icon = '\uf08d';
-    const color = '#B80000';
 
     return (
       <div className="animated fadeIn">
@@ -108,7 +149,7 @@ class ResourceViewer extends React.Component {
         {resource && resource.tableName &&
           <Row>
             <Col>
-              <OpenLayers.Map minZoom={13} maxZoom={18} zoom={15} center={[1545862.48, 6026906.87]}>
+              <OpenLayers.Map minZoom={12} maxZoom={18} zoom={14} center={this.getCenter()}>
                 <OpenLayers.Layers>
                   <OpenLayers.Layer.BingMaps
                     key="bing-maps-road"
@@ -116,22 +157,13 @@ class ResourceViewer extends React.Component {
                     imagerySet="Road"
                   />
                   <OpenLayers.Layer.WFS
-                    key={`${resource.tableName}-${color}-${icon}`}
+                    key={`${resource.tableName}`}
                     url="/action/proxy/service/wfs"
                     version="1.1.0"
                     typename={`slipo_eu:${resource.tableName}`}
-                    color={color}
-                    icon={icon}
+                    style={resource.style || this.getLayerStyle()}
                   />
                 </OpenLayers.Layers>
-                <OpenLayers.Interactions>
-                  <OpenLayers.Interaction.Select
-                    onFeatureSelect={this.onFeatureSelect}
-                    multi={true}
-                    width={2}
-                  />
-
-                </OpenLayers.Interactions>
               </OpenLayers.Map>
             </Col>
           </Row>
@@ -143,9 +175,10 @@ class ResourceViewer extends React.Component {
 }
 
 const mapStateToProps = (state) => ({
-  resource: state.ui.views.resources.explorer.resource,
   bingMaps: state.config.bingMaps,
+  defaultCenter: state.config.mapDefaults.center,
   osm: state.config.osm,
+  resource: state.ui.views.resources.explorer.resource,
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({

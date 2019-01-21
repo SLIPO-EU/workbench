@@ -20,6 +20,8 @@ export function writeConfiguration(config) {
 
   return {
     ...rest,
+    // Verbose option must always be true
+    verbose: true,
     rulesSpec: rulesSpec ? typeof rulesSpec === 'object' ? rulesSpec.path : rulesSpec : null,
   };
 }

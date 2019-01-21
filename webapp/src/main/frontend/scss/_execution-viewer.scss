@@ -3,7 +3,6 @@
  */
 
 $slipo-ev-layer-color: #616161 !default;
-
 /*
  * Sidebar (layers)
  */
@@ -16,8 +15,10 @@ $slipo-ev-layer-color: #616161 !default;
   margin-right: -18px;
 }
 
-.slipo-pd-sidebar-map-layer-list-empty {
-  border: none;
+.slipo-pd-sidebar-map-layer-list-category {
+  border-bottom: 1px solid #cfd8dc;
+  padding: 11;
+  font-weight: 600;
 }
 
 .slipo-pd-sidebar-map-settings {
@@ -35,30 +36,53 @@ $slipo-ev-layer-color: #616161 !default;
   margin-left: -1px;
 }
 
-
 /*
  * Layer
  */
 
 .slipo-ev-layer {
   width: 100%;
-  padding: 5px 0px;
+  padding: 5px 0px 3px 0px;
   border: 1px dotted $slipo-ev-layer-color;
   border-radius: 0.25rem;
   margin: 0.25rem 0rem;
-  display: inline-block;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: space-between;
   opacity: 1;
+  &.slipo-ev-layer-active {
+    background: #EEEEEE;
+    border: 1px solid #EEEEEE;
+  }
 }
 
 .slipo-layer-toggle {
-  padding: 5px;
-  font-size: 1.2em;
-  cursor: pointer;
+  margin-top: 0px;
+  i {
+    padding: 5px;
+    font-size: 1.2em;
+    cursor: pointer;
+  }
 }
 
-.slipo-ev-layer-active {
-  background: #EEEEEE;
-  border: 1px solid #EEEEEE;
+.slipo-layer-config {
+  margin-top: 1px;
+  i {
+    padding: 5px;
+    font-size: 1.4em;
+    cursor: pointer;
+  }
+}
+
+.slipo-layer-title {
+  margin-top: 2px;
+  flex-grow: 1;
+}
+
+.slipo-layer-legend {
+  height: 30px;
+  width: 30px;
 }
 
 .slipo-ev-layer-actions {

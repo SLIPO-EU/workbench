@@ -1403,14 +1403,17 @@ public class DefaultProcessOperatorTests
         ProcessExecutionStepRecord fuseStepRecord = executionRecord.getStepByName("Fuse 1 with 2");
         assertNotNull(fuseStepRecord);
         assertEquals(EnumProcessExecutionStatus.COMPLETED, fuseStepRecord.getStatus());
-        ProcessExecutionStepFileRecord fusedFileRecord = fuseStepRecord.getFiles().stream()
-            .filter(f -> EnumFagiOutputPart.FUSED.key().equals(f.getOutputPartKey()))
-            .collect(MoreCollectors.toOptional()).orElse(null);
+
+        ProcessExecutionStepFileRecord fusedFileRecord =
+            fuseStepRecord.getOutputFile(EnumStepFile.OUTPUT, EnumFagiOutputPart.FUSED);
         assertNotNull(fusedFileRecord);
-        ProcessExecutionStepFileRecord remainingFileRecord = fuseStepRecord.getFiles().stream()
-            .filter(f -> EnumFagiOutputPart.REMAINING.key().equals(f.getOutputPartKey()))
-            .collect(MoreCollectors.toOptional()).orElse(null);
+        ProcessExecutionStepFileRecord remainingFileRecord =
+            fuseStepRecord.getOutputFile(EnumStepFile.OUTPUT, EnumFagiOutputPart.REMAINING);
         assertNotNull(remainingFileRecord);
+
+        ProcessExecutionStepFileRecord fusionLogFileRecord =
+            fuseStepRecord.getOutputFile(EnumStepFile.LOG, EnumFagiOutputPart.LOG);
+        assertNotNull(fusionLogFileRecord);
 
         ResourceIdentifier fusedResourceIdentifier = fusedFileRecord.getResource();
         assertNotNull(fusedResourceIdentifier);
