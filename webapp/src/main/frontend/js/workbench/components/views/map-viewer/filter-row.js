@@ -65,7 +65,7 @@ const selectInvalidStyle = {
 };
 
 // TODO : Replace with attributes from SLIPO ontology
-const attributes = _.orderBy(Attributes.map(a => ({ label: a.text, value: a.key })), ['label'], ['asc']);
+const attributes = _.orderBy(Attributes.map(a => ({ label: a.title, value: a.key })), ['label'], ['asc']);
 
 class FilterRow extends React.Component {
 
