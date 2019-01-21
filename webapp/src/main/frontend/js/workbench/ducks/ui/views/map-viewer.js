@@ -18,6 +18,18 @@ import {
   LOGOUT,
 } from '../../user';
 
+import {
+  EnumErrorLevel,
+  ServerError,
+} from '../../../model/error';
+
+import {
+  FEATURE_ID,
+  FEATURE_LAYER_PROPERTY,
+  FEATURE_OUTPUT_KEY,
+  FEATURE_URI,
+} from '../../../components/helpers/map/model/constants';
+
 const Types = {
   LOGOUT,
 
@@ -48,11 +60,32 @@ const Types = {
 
   FILTER_TOGGLE: 'ui/map/viewer/FILTER_TOGGLE',
   FILTER_SET: 'ui/map/viewer/FILTER_SET',
+
+  EDIT_TOGGLE: 'ui/map/viewer/EDIT_TOGGLE',
+  EDIT_COMMIT_BEGIN: 'ui/map/viewer/EDIT_COMMIT_BEGIN',
+  EDIT_COMMIT_COMPLETE: 'ui/map/viewer/EDIT_COMMIT_COMPLETE',
+  EDIT_CANCEL: 'ui/map/viewer/EDIT_CANCEL',
+  EDIT_UPDATE_PROPERTY: 'ui/map/viewer/EDIT_UPDATE_PROPERTY',
 };
 
 /*
  * Initial state
  */
+
+const initialEditState = {
+  id: null,
+  table: null,
+  feature: null,
+  initial: {
+    properties: null,
+    geometry: null,
+  },
+  current: {
+    properties: null,
+  },
+  loading: false,
+  active: false,
+};
 
 const initialState = {
   loading: false,
@@ -84,10 +117,11 @@ const initialState = {
       },
     },
   },
+  edit: initialEditState,
   search: {
     visible: false,
     filters: [],
-  }
+  },
 };
 
 /*
@@ -202,7 +236,6 @@ const configReducer = (state, action) => {
       return {
         ...state,
         selectedFeatures: action.features || [],
-        selectedFeature: null,
         draggableOrder: [...state.draggableOrder.filter(id => id != EnumPane.FeatureCollection), EnumPane.FeatureCollection],
       };
 
@@ -210,13 +243,13 @@ const configReducer = (state, action) => {
       return {
         ...state,
         selectedFeatures: [],
-        selectedFeature: null,
       };
 
     case Types.HIDE_PROVENANCE:
       return {
         ...state,
         provenance: null,
+        selectedFeature: null,
       };
 
     case Types.BRING_PANEL_TO_FRONT:
@@ -246,8 +279,10 @@ const configReducer = (state, action) => {
       return {
         ...state,
         selectedFeature: {
+          feature: action.feature,
           outputKey: action.outputKey,
           featureId: action.featureId,
+          featureUri: action.featureUri,
         }
       };
 
@@ -276,6 +311,70 @@ const filterReducer = (state, action) => {
   }
 };
 
+const editReducer = (state, action, global) => {
+  switch (action.type) {
+    case Types.EDIT_TOGGLE: {
+      const feature = action.feature;
+
+      return {
+        ...state,
+        id: feature ? feature.getId().split('::')[1] : null,
+        table: feature ? feature.get(FEATURE_LAYER_PROPERTY) : null,
+        feature,
+        initial: {
+          properties: feature ? { ...feature.getProperties() } : null,
+          geometry: feature ? feature.getGeometry().clone() : null,
+        },
+        current: {
+          properties: feature ? { ...feature.getProperties() } : null,
+        },
+        active: feature != null,
+      };
+    }
+
+    case Types.EDIT_COMMIT_BEGIN:
+      return {
+        ...state,
+        loading: true,
+      };
+
+    case Types.EDIT_UPDATE_PROPERTY:
+      return {
+        ...state,
+        current: {
+          properties: { ...state.current.properties, [action.key]: action.value },
+        }
+      };
+
+    case Types.EDIT_COMMIT_COMPLETE: {
+      const feature = global.config.selectedFeature.feature;
+
+      // Update properties
+      const properties = state.current.properties;
+      Object.keys(properties).forEach(key => feature.set(key, properties[key]));
+      // Restore style if modified by the Modify interaction
+      feature.setStyle(null);
+
+      return initialEditState;
+    }
+
+    case Types.EDIT_CANCEL: {
+      const feature = global.config.selectedFeature.feature;
+
+      // Reset selected feature geometry. Setting the geometry here
+      // refreshes OpenLayers map which is not controlled by the React
+      // rendering.
+      feature.setGeometry(state.initial.geometry);
+      // Restore style if modified by the Modify interaction
+      feature.setStyle(null);
+
+      return initialEditState;
+    }
+
+    default:
+      return state;
+  }
+};
 
 export default (state = initialState, action) => {
   switch (action.type) {
@@ -324,6 +423,16 @@ export default (state = initialState, action) => {
       return {
         ...state,
         search: filterReducer(state.search, action),
+      };
+
+    case Types.EDIT_TOGGLE:
+    case Types.EDIT_COMMIT_BEGIN:
+    case Types.EDIT_UPDATE_PROPERTY:
+    case Types.EDIT_COMMIT_COMPLETE:
+    case Types.EDIT_CANCEL:
+      return {
+        ...state,
+        edit: editReducer(state.edit, action, state),
       };
 
     default:
@@ -382,16 +491,57 @@ const receiveFeatureProvenance = (data) => ({
   data,
 });
 
-const selectFeature = (outputKey, featureId) => ({
+const selectFeature = (feature, outputKey, featureId, featureUri) => ({
   type: Types.SELECT_FEATURE,
+  feature,
   outputKey,
   featureId,
+  featureUri,
 });
 
-export const fetchFeatureProvenance = (processId, processVersion, executionId, outputKey, featureId, featureUri) => (dispatch, getState) => {
+export const fetchFeatureProvenance = (processId, processVersion, executionId, feature) => (dispatch, getState) => {
   const { meta: { csrfToken: token } } = getState();
 
-  dispatch(selectFeature(outputKey, featureId));
+  const outputKey = feature.get(FEATURE_OUTPUT_KEY);
+  const featureId = feature.get(FEATURE_ID);
+  const featureUri = feature.get(FEATURE_URI);
+
+  dispatch(selectFeature(feature, outputKey, featureId, featureUri));
+  dispatch(requestFeatureProvenance());
+
+  return provenanceService.fetchFeatureProvenance(processId, processVersion, executionId, outputKey, featureId, featureUri, token)
+    .then((data) => {
+      dispatch(receiveFeatureProvenance(data));
+      dispatch(bringToFront(EnumPane.FeatureProvenance));
+    });
+};
+
+export const refreshFeatureProvenance = () => (dispatch, getState) => {
+  // Get parameters from state
+  const {
+    meta: { csrfToken: token },
+    ui: { views: { map: {
+      config: { selectedFeature },
+      data: { resource, execution },
+    } } },
+  } = getState();
+
+  // A selected feature must already exists
+  if (!selectedFeature) {
+    return Promise.reject(new ServerError([{
+      code: -1,
+      description: 'No feature is selected',
+      level: EnumErrorLevel.ERROR,
+    }]));
+  }
+
+  // A map may be rendered either for a resource or a single execution
+  const processId = resource ? resource.execution.id : execution.process.id;
+  const processVersion = resource ? resource.execution.version : execution.process.version;
+  const executionId = resource ? resource.execution.execution : execution.id;
+
+  const { outputKey, featureId, featureUri } = selectedFeature;
+
   dispatch(requestFeatureProvenance());
 
   return provenanceService.fetchFeatureProvenance(processId, processVersion, executionId, outputKey, featureId, featureUri, token)
@@ -421,6 +571,39 @@ export const setLayerStyle = (tableName, style) => (dispatch, getState) => {
   return layer.file ?
     mapService.setFileStyle(layer.file, style, token) :
     mapService.setResourceRevisionStyle(layer.resource.id, layer.resource.version, style, token);
+};
+
+const updateFeatureBegin = () => ({
+  type: Types.EDIT_COMMIT_BEGIN,
+});
+
+const updateFeatureComplete = () => ({
+  type: Types.EDIT_COMMIT_COMPLETE,
+});
+
+export const updateFeature = () => (dispatch, getState) => {
+  const {
+    meta: { csrfToken: token },
+    ui: { views: { map: {
+      edit: { id, table, current: { properties } },
+      config: { selectedFeature: { feature } },
+    } } },
+  } = getState();
+
+  if (!feature) {
+    return Promise.reject(new ServerError([{
+      code: -1,
+      description: 'No feature is selected',
+      level: EnumErrorLevel.ERROR,
+    }]));
+  }
+
+  dispatch(updateFeatureBegin());
+
+  return mapService.updateFeature(table, id, properties, feature, token)
+    .then(() => {
+      dispatch(updateFeatureComplete());
+    });
 };
 
 /*
@@ -497,4 +680,21 @@ export const toggleFilter = (value = null) => ({
 export const setFilter = (filters = []) => ({
   type: Types.FILTER_SET,
   filters,
+});
+
+// Edit
+
+export const toggleEditor = (feature = null) => ({
+  type: Types.EDIT_TOGGLE,
+  feature,
+});
+
+export const updateFeatureProperty = (key, value) => ({
+  type: Types.EDIT_UPDATE_PROPERTY,
+  key,
+  value,
+});
+
+export const cancelEdit = () => ({
+  type: Types.EDIT_CANCEL,
 });

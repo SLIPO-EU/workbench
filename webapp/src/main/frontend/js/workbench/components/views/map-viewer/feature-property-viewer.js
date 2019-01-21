@@ -20,7 +20,6 @@ import {
   FEATURE_OUTPUT_KEY,
   FEATURE_PROPERTY_PREFIX,
   FEATURE_ID,
-  FEATURE_URI,
 } from '../../helpers/map/model/constants';
 
 import {
@@ -29,7 +28,7 @@ import {
 
 const createColumns = (state, props) => {
   const { filterable } = state;
-  const { layers, features } = props;
+  const { editActive, layers, features } = props;
 
   const metadata = features.reduce((result, f) => {
     const properties = f.getProperties();
@@ -54,11 +53,13 @@ const createColumns = (state, props) => {
           Header: '',
           id: 'actions',
           style: { 'textAlign': 'center' },
-          width: 30,
+          width: 60,
+          show: !editActive,
           Expander: (cell) => {
             return cell.original[FEATURE_OUTPUT_KEY] ?
               <span>
-                <i data-action="provenance" title="View POI provenance" className="fa fa-search slipo-table-row-action" />
+                <i data-action="provenance" title="View POI provenance" className="fa fa-search slipo-table-row-action pr-2" />
+                <i data-action="edit" title="Edit feature" className="fa fa-pencil slipo-table-row-action" />
               </span> : null;
           },
         };
@@ -142,14 +143,23 @@ class FeaturePropertyViewer extends React.Component {
   }
 
   handleRowAction(rowInfo, e, handleOriginal) {
-    switch (e.target.getAttribute('data-action')) {
+    const action = e.target.getAttribute('data-action');
+
+    switch (action) {
       case 'provenance':
-        this.props.fetchFeatureProvenance(
-          rowInfo.original[FEATURE_OUTPUT_KEY],
-          rowInfo.original[FEATURE_ID],
-          rowInfo.original[FEATURE_URI],
-        );
+      case 'edit': {
+        const id = rowInfo.original[FEATURE_LAYER_PROPERTY] + '::' + rowInfo.original[FEATURE_ID];
+        const outputKey = rowInfo.original[FEATURE_OUTPUT_KEY];
+
+        const feature = this.props.features.find(f => f.getId() === id && f.get(FEATURE_OUTPUT_KEY) === outputKey);
+        this.props.fetchFeatureProvenance(feature).then(() => {
+          if (action === 'edit') {
+            this.props.toggleEditor();
+          }
+        });
         break;
+      }
+
       default:
         if (handleOriginal) {
           handleOriginal();

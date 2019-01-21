@@ -18,6 +18,7 @@ import {
   setCenter,
   setItemPosition,
   setLayerStyle,
+  toggleEditor,
   toggleLayerConfiguration,
 } from '../../ducks/ui/views/map-viewer';
 
@@ -111,14 +112,14 @@ class ResourceMapViewer extends React.Component {
         defaultCenter={defaultCenter}
         draggable={this.props.draggable}
         draggableOrder={this.props.draggableOrder}
+        editActive={this.props.editActive}
+        editFeature={this.props.editFeature}
         fetchFeatureProvenance={
-          (outputKey, featureId, featureUri) => fetchFeatureProvenance(
+          (feature) => fetchFeatureProvenance(
             execution.id,
             execution.version,
             execution.execution,
-            outputKey,
-            featureId,
-            featureUri)
+            feature)
         }
         filterFormVisible={this.props.filterFormVisible}
         filters={this.props.filters}
@@ -137,8 +138,10 @@ class ResourceMapViewer extends React.Component {
         setFilter={this.props.setFilter}
         setItemPosition={this.props.setItemPosition}
         setLayerStyle={this.props.setLayerStyle}
+        toggleEditor={this.props.toggleEditor}
         toggleFilterForm={this.props.toggleFilter}
         toggleLayerConfiguration={this.props.toggleLayerConfiguration}
+        viewport={this.props.viewport}
       />
     );
   }
@@ -150,6 +153,8 @@ const mapStateToProps = (state) => ({
   defaultCenter: state.config.mapDefaults.center,
   draggable: state.ui.views.map.config.draggable,
   draggableOrder: state.ui.views.map.config.draggableOrder,
+  editActive: state.ui.views.map.edit.active,
+  editFeature: state.ui.views.map.edit.feature,
   filterFormVisible: state.ui.views.map.search.visible,
   filters: state.ui.views.map.search.filters,
   initialCenter: state.ui.views.map.config.center,
@@ -163,6 +168,7 @@ const mapStateToProps = (state) => ({
   selectedFeatures: state.ui.views.map.config.selectedFeatures,
   selectedLayer: state.ui.views.map.config.selectedLayer,
   version: state.ui.views.map.data.version,
+  viewport: state.ui.viewport,
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
@@ -178,6 +184,7 @@ const mapDispatchToProps = (dispatch) => bindActionCreators({
   setCenter,
   setItemPosition,
   setLayerStyle,
+  toggleEditor,
   toggleLayerConfiguration,
 }, dispatch);
 

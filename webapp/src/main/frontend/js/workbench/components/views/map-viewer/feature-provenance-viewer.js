@@ -24,7 +24,8 @@ const PropertyTypeMapping = [{
   type: EnumCellValueType.Image,
 }];
 
-const createColumns = (props) => {
+const createColumns = (state, props) => {
+  const { filterable } = state;
   const { provenance: { stepRow, inputRow, properties, dataRows: data } } = props;
   const columns = [];
 
@@ -38,6 +39,7 @@ const createColumns = (props) => {
   columns.push({
     id: 'attribute',
     accessor: 'attribute',
+    filterable,
     maxWidth: 120,
     Header: (cell) => {
       return (<span />);
@@ -261,7 +263,7 @@ class FeatureProvenanceViewer extends React.Component {
 
   render() {
     const { filterable } = this.state;
-    const { provenance } = this.props;
+    const { editActive, provenance } = this.props;
 
     if (!provenance) {
       return null;
@@ -273,12 +275,19 @@ class FeatureProvenanceViewer extends React.Component {
           <div style={{ display: 'flex' }}>
             <div style={{ flex: '0 0 25px' }}><i className="fa fa-map-marker"></i></div>
             <div style={{ flex: '1 1 100%' }}>{`${provenance.layer} - ${provenance.featureId}`}</div>
+            {!editActive &&
+              <div style={{ cursor: 'pointer' }}>
+                <i className="fa fa-pencil pr-2 " onClick={() => this.props.toggleEditor()} title="Edit feature"></i>
+              </div>
+            }
             <div style={{ cursor: 'pointer', opacity: filterable ? 1 : 0.5 }}>
               <i className="fa fa-filter pr-2 " onClick={() => this.toggleFilterable()} title="Filter attributes"></i>
             </div>
-            <div style={{ cursor: 'pointer' }}>
-              <i className="fa fa-remove" onClick={(e) => this.props.close(e)} title="Close"></i>
-            </div>
+            {!editActive &&
+              <div style={{ cursor: 'pointer' }}>
+                <i className="fa fa-remove" onClick={(e) => this.props.close(e)} title="Close"></i>
+              </div>
+            }
           </div>
         </CardHeader>
         <CardBody>
@@ -286,7 +295,7 @@ class FeatureProvenanceViewer extends React.Component {
             id={'provenance'}
             name={'provenance'}
             className="slipo-provenance-table"
-            columns={createColumns(this.props)}
+            columns={createColumns(this.state, this.props)}
             data={createRows(this.props)}
             defaultPageSize={Number.MAX_VALUE}
             minRows={provenance.properties.length}

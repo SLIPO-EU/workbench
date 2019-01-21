@@ -125,7 +125,6 @@ class MapViewer extends React.Component {
             url="/action/proxy/service/wfs"
             version="1.1.0"
             typename={`slipo_eu:${l.tableName}`}
-            color={l.color}
             extra={{
               [FEATURE_LAYER_PROPERTY]: l.tableName,
               [FEATURE_NAME]: l.step ? l.step.name : l.resource.name,
@@ -144,12 +143,24 @@ class MapViewer extends React.Component {
     this.props.setItemPosition(id, data.x, data.y);
   }
 
+  toggleEditor(feature = null) {
+    if (feature) {
+      // Zoom to feature
+      const extent = feature.getGeometry().getExtent();
+      const center = Extend.getCenter(extent);
+      this._map.moveTo(center, 15);
+      // Enable modify interaction
+      this.props.toggleEditor(feature);
+    }
+  }
+
   renderPanels() {
     const {
-      draggable, draggableOrder, layers, selectedFeature, selectedFeatures: features = [], provenance
+      draggable, draggableOrder, editActive, layers, selectedFeature, selectedFeatures: features = [], provenance, viewport
     } = this.props;
 
     const panels = [];
+    const bounds = { left: 0, top: 100, right: viewport.width - 250, bottom: viewport.height - 250 };
 
     draggableOrder.forEach(id => {
       switch (id) {
@@ -161,16 +172,18 @@ class MapViewer extends React.Component {
                   defaultPosition={{ x: draggable[id].left, y: draggable[id].top }}
                   onStop={(e, data) => this.onStop(data, id)}
                   handle=".handle"
-                  bounds={{ left: 0, top: 100 }}
+                  bounds={bounds}
                 >
                   <div style={{ pointerEvents: 'none' }}>
-                    <ResizableBox width={600} height={380} axis="x">
+                    <ResizableBox width={600} height={380} axis="x" minConstraints={[600, 380]}>
                       <FeaturePropertyViewer
+                        editActive={editActive}
                         features={features}
                         layers={layers}
                         selectedFeature={selectedFeature}
                         fetchFeatureProvenance={this.props.fetchFeatureProvenance}
                         close={() => this.props.clearSelectedFeatures()}
+                        toggleEditor={() => this.toggleEditor(selectedFeature.feature)}
                       />
                     </ResizableBox>
                   </div>
@@ -188,13 +201,15 @@ class MapViewer extends React.Component {
                   defaultPosition={{ x: draggable[id].left, y: draggable[id].top }}
                   onStop={(e, data) => this.onStop(data, id)}
                   handle=".handle"
-                  bounds={{ left: 0, top: 100 }}
+                  bounds={bounds}
                 >
                   <div style={{ pointerEvents: 'none' }}>
-                    <ResizableBox width={600} height={568} axis="x">
+                    <ResizableBox width={600} height={568} axis="x" minConstraints={[600, 568]}>
                       <FeatureProvenanceViewer
-                        provenance={provenance}
                         close={() => this.props.hideProvenance()}
+                        editActive={editActive}
+                        provenance={provenance}
+                        toggleEditor={() => this.toggleEditor(selectedFeature.feature)}
                       />
                     </ResizableBox>
                   </div>
@@ -210,7 +225,6 @@ class MapViewer extends React.Component {
 
   render() {
     const { layers, selectedLayer } = this.props;
-
     const styles = layers.reduce((result, layer) => ({ ...result, [layer.tableName]: layer.style }), {});
 
     return (
@@ -229,6 +243,7 @@ class MapViewer extends React.Component {
           visible={this.props.filterFormVisible}
         />
         <OpenLayers.Map
+          ref={(component) => { this._map = component; }}
           minZoom={7}
           maxZoom={19}
           zoom={this.props.initialZoom ? this.props.initialZoom : 13}
@@ -241,8 +256,13 @@ class MapViewer extends React.Component {
           </OpenLayers.Layers>
           <OpenLayers.Interactions>
             <OpenLayers.Interaction.Select
+              active={!this.props.editActive}
               onFeatureSelect={this.props.onFeatureSelect}
               styles={styles}
+            />
+            <OpenLayers.Interaction.Modify
+              active={this.props.editActive}
+              feature={this.props.editFeature}
             />
           </OpenLayers.Interactions>
         </OpenLayers.Map>

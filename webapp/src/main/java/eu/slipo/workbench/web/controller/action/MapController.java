@@ -1,5 +1,7 @@
 package eu.slipo.workbench.web.controller.action;
 
+import java.util.UUID;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,8 +27,10 @@ import eu.slipo.workbench.common.model.resource.ResourceRecord;
 import eu.slipo.workbench.common.repository.ProcessRepository;
 import eu.slipo.workbench.common.repository.ResourceRepository;
 import eu.slipo.workbench.web.model.process.ProcessExecutionRecordView;
+import eu.slipo.workbench.web.model.provenance.Feature;
 import eu.slipo.workbench.web.model.resource.MapDataResult;
 import eu.slipo.workbench.web.model.resource.ResourceErrorCode;
+import eu.slipo.workbench.web.repository.FeatureRepository;
 import eu.slipo.workbench.web.service.ProcessService;
 
 /**
@@ -44,6 +48,9 @@ public class MapController extends BaseController {
 
     @Autowired
     private ProcessRepository processRepository;
+
+    @Autowired
+    private FeatureRepository featureRepository;
 
     @Autowired
     private ProcessService processService;
@@ -143,6 +150,18 @@ public class MapController extends BaseController {
     public RestResponse<?> setProcessStepFileStyle(@PathVariable long id, @RequestBody JsonNode style) {
         try {
             processRepository.setExecutionStepFileStyle(id, style);
+            return RestResponse.success();
+        } catch (Exception ex) {
+            return this.exceptionToResponse(ex);
+        }
+    }
+
+    @PostMapping(value = "/action/map/feature/{tableName}/{id}")
+    public RestResponse<?> updateFeature(
+        @PathVariable UUID tableName, @PathVariable String id, @RequestBody Feature feature
+    ) {
+        try {
+            featureRepository.update(tableName, id, feature.getProperties(), feature.getGeometry());
             return RestResponse.success();
         } catch (Exception ex) {
             return this.exceptionToResponse(ex);

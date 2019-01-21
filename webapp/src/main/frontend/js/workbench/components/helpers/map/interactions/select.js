@@ -36,6 +36,7 @@ class SelectInteraction extends React.Component {
   }
 
   static propTypes = {
+    active: PropTypes.bool,
     map: PropTypes.instanceOf(OpenLayersMap),
     onFeatureSelect: PropTypes.func,
     selected: PropTypes.object,
@@ -47,6 +48,7 @@ class SelectInteraction extends React.Component {
   }
 
   static defaultProps = {
+    active: true,
     width: 1,
     color: '#0D47A1',
     hitTolerance: 5,
@@ -136,30 +138,36 @@ class SelectInteraction extends React.Component {
   }
 
   componentDidMount() {
-    if (this.props.map) {
+    const { active, hitTolerance, map, multi, onFeatureSelect, selected } = this.props;
+
+    if (map) {
       const style = this.buildStyleFunction();
 
       this.interaction = new Select({
-        multi: this.props.multi,
-        hitTolerance: this.props.hitTolerance,
+        multi,
+        hitTolerance,
         style,
       });
 
-      this.parseFeatures(this.props.selected);
+      this.parseFeatures(selected);
 
-      this.interaction.on('select', (e) => {
-        if (typeof this.props.onFeatureSelect === 'function') {
-          this.props.onFeatureSelect([...this.interaction.getFeatures().getArray()]);
+      this.interaction.on('select', () => {
+        if (typeof onFeatureSelect === 'function') {
+          onFeatureSelect([...this.interaction.getFeatures().getArray()]);
         }
       }, this);
 
-      this.props.map.addInteraction(this.interaction);
+      map.addInteraction(this.interaction);
+      this.interaction.setActive(active);
     }
   }
 
   componentWillReceiveProps(nextProps) {
     if (this.props.selected != nextProps.selected) {
       this.parseFeatures(nextProps.selected);
+    }
+    if (this.props.active != nextProps.active) {
+      this.interaction.setActive(nextProps.active);
     }
     this.styles = nextProps.styles ? this.buildStyles(nextProps.styles) : this.styles;
   }

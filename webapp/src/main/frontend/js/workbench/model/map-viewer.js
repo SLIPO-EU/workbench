@@ -74,39 +74,59 @@ export const FilterTypes = [{
 
 // TODO : Replace with attributes from SLIPO ontology
 export const Attributes = [{
-  text: 'Country',
+  title: 'Country',
   key: 'country',
   editable: true,
 }, {
-  text: 'Description',
+  title: 'Description',
   key: 'description',
   editable: true,
 }, {
-  text: 'Email',
+  title: 'Email',
   key: 'email',
   editable: true,
 }, {
-  text: 'Fax',
+  title: 'Fax',
   key: 'fax',
   editable: true,
 }, {
-  text: 'Name',
+  title: 'Home Page',
+  key: 'homepage',
+  editable: true,
+}, {
+  title: 'Image',
+  key: 'image',
+  editable: true,
+}, {
+  title: 'Locality',
+  key: 'locality',
+  editable: true,
+}, {
+  title: 'Name',
   key: 'name',
   editable: true,
 }, {
-  text: 'Phone',
+  title: 'Open Hours',
+  key: 'open_hours',
+  editable: true,
+}, {
+  title: 'Phone',
   key: 'phone',
   editable: true,
 }, {
-  text: 'Postcode',
+  title: 'Postcode',
   key: 'postcode',
   editable: true,
 }, {
-  text: 'Type',
+  title: 'Street Number',
+  key: 'street_num',
+  editable: true,
+}, {
+  title: 'Type',
   key: 'type',
   editable: true,
 }, {
-  text: 'Image',
-  key: 'image',
+  title: 'Wikipedia',
+  key: 'wikipedia',
   editable: true,
 }];
