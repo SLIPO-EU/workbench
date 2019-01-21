@@ -324,9 +324,9 @@ public class ProvenanceService implements InitializingBean {
                 return tableColumns.get(tableName);
             }
 
-            String columnQuery = String.format("select column_name from information_schema.columns where table_name='%s'", tableName);
+            String columnQuery = "select column_name from information_schema.columns where table_name= ?";
 
-            List<Map<String, Object>> rows = jdbcTemplate.queryForList(columnQuery);
+            List<Map<String, Object>> rows = jdbcTemplate.queryForList(columnQuery, new Object[] { tableName });
             List<String> columns = rows.stream()
                 .map(r -> (String) r.get("column_name"))
                 .filter(c -> !c.equalsIgnoreCase(defaultGeometryColumn) && !c.equalsIgnoreCase(defaultGeometrySimpleColumn))
