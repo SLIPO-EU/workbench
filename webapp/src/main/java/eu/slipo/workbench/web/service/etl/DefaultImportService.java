@@ -27,6 +27,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -107,6 +108,9 @@ public class DefaultImportService implements ImportService, InitializingBean {
 
     @Value("${map-export.delimiter:;}")
     private String defaultDelimiter;
+
+    @Value("${map-export.batch-size:100}")
+    private int batchSize;
 
     @Autowired
     @Qualifier("defaultWebFileNamingStrategry")
@@ -723,7 +727,10 @@ public class DefaultImportService implements ImportService, InitializingBean {
     private void insertRowsFromFile(
         String schema, String tableName, String fileName
     ) throws Exception {
-        String insertSql = this.createInsertRowScript(schema, tableName, fileName);
+        final String insertSql = this.createInsertRowScript(schema, tableName, fileName);
+        final List<Object> params = new ArrayList<Object>();
+
+        int size = 0;
 
         // Helper variables
         CSVFormat format = CSVFormat.DEFAULT
@@ -738,13 +745,21 @@ public class DefaultImportService implements ImportService, InitializingBean {
             CSVParser parser = new CSVParser(reader, format);
         ) {
             for (final CSVRecord record : parser) {
-                List<Object> params = new ArrayList<Object>();
+                size++;
 
                 record.forEach(value -> {
                     params.add(value);
                 });
 
-                jdbcTemplate.update(insertSql, params.toArray(new Object[params.size()]));
+                if (size == this.batchSize) {
+                    jdbcTemplate.update(StringUtils.repeat(insertSql, size), params.toArray(new Object[0]));
+                    size = 0;
+                    params.clear();
+                }
+            }
+            // Insert remaining rows
+            if (size != 0) {
+                jdbcTemplate.update(StringUtils.repeat(insertSql, size), params.toArray(new Object[0]));
             }
         } catch (Exception ex) {
             logger.error(String.format("Failed to insert rows from file [%s]", fileName), ex);
