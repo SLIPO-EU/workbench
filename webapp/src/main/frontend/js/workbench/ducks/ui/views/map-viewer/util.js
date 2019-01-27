@@ -41,6 +41,7 @@ function createEnrichedCell(step, property, features) {
   const enriched = features.find((f) => f.properties[FEATURE_URI] === step.uri && f.source === step.name);
 
   return {
+    initial: initial ? initial.properties[property] : '-',
     value: enriched ? enriched.properties[property] : '-',
     modified: enriched && initial ? enriched.properties[property] !== initial.properties[property] : false,
   };
@@ -65,13 +66,16 @@ function createFusedCell(step, property, features) {
     features.push(fusedFeature);
   }
   // Add properties incrementally
-  fusedFeature.properties[property] = action ? action.value : step.selectedUri === step.left.uri ? left.properties[property] : right.properties[property];
+  // TODO: Check default action
+  const value = action ? action.value : step.selectedUri === step.left.uri ? left.properties[property] : right.properties[property];
+  fusedFeature.properties[property] = value;
 
   return {
     left: left.properties[property] || null,
     right: right.properties[property] || null,
     operation: action ? action.operation : null,
-    value: action ? action.value : null,
+    value,
+    isDefault: !action,
   };
 }
 
@@ -175,10 +179,6 @@ export function processExecutionToLayers(process, execution) {
 export function provenanceToTable(provenance) {
   const features = provenance.features.features;
 
-  const stepRow = [{
-    rowSpan: 2,
-    value: '',
-  }];
   const inputRow = [];
   const dataRows = [];
 
@@ -196,25 +196,23 @@ export function provenanceToTable(provenance) {
       switch (o.tool) {
         case EnumTool.DEER: {
           const step = {
-            tool: o.tool,
-            name: o.stepName,
             iconClass: ToolIcons[o.tool],
-            uri: o.uri,
-            input: o.input,
-          };
-          stepRow.push({
             index: index + 1,
-            iconClass: step.iconClass,
-            value: step.name,
-          });
+            input: o.input,
+            name: o.stepName,
+            tool: o.tool,
+            uri: o.uri,
+          };
           return step;
         }
         case EnumTool.FAGI: {
           const step = {
-            tool: o.tool,
-            name: o.stepName,
+            actions: o.actions,
+            confidenceScore: o.confidenceScore,
+            defaultAction: o.defaultAction,
             iconClass: ToolIcons[o.tool],
-            selectedUri: o.selectedUri,
+            index: index + 1,
+            name: `${o.stepName} ${o.confidenceScore ? ` (Confidence Score : ${o.confidenceScore.toFixed(4)})` : ''}`,
             left: {
               uri: o.leftUri,
               input: o.leftInput,
@@ -225,14 +223,9 @@ export function provenanceToTable(provenance) {
               input: o.rightInput,
               feature: provenance.features.features.find((f) => f.properties[FEATURE_URI] === o.rightUri) || null,
             },
-            actions: o.actions,
+            selectedUri: o.selectedUri,
+            tool: o.tool,
           };
-          stepRow.push({
-            colSpan: 4,
-            index: index + 1,
-            iconClass: step.iconClass,
-            value: step.name,
-          });
           return step;
         }
         default:
@@ -246,23 +239,30 @@ export function provenanceToTable(provenance) {
     .map((step, index) => {
       switch (step.tool) {
         case EnumTool.DEER:
-          inputRow.push({
-            value: step.input,
-            step: index + 1,
-          });
+          inputRow.push(
+            // If only a single enrichment step is present, add input column
+            steps.length === 1 ? {
+              value: step.input,
+              step: index + 1,
+            } : null,
+            {
+              value: steps.length === 1 ? 'Output' : step.input,
+              step: index + 1,
+            },
+          );
           break;
         case EnumTool.FAGI:
           inputRow.push(
             {
               selected: step.left.uri === step.selectedUri,
-              value: step.left.input,
+              value: `Left Input: ${step.left.input}`,
               step: index + 1,
             }, {
               selected: step.right.uri === step.selectedUri,
-              value: step.right.input,
+              value: `Right Input : ${step.right.input}`,
               step: index + 1,
             }, {
-              value: 'Operation',
+              value: `Action (Default : ${step.defaultAction})`,
               step: index + 1,
             }, {
               value: 'Value',
@@ -275,22 +275,30 @@ export function provenanceToTable(provenance) {
       }
     });
 
-  // Properties
+  // Data rows
   properties.forEach((property) => {
+    // Attribute columns
     const cells = [{
       value: property,
       step: 0,
     }];
+
     steps.forEach((step, index) => {
       switch (step.tool) {
         case EnumTool.DEER: {
           const cell = createEnrichedCell(step, property, features);
-          cells.push({
-            value: cell.value,
-            step: index + 1,
-            property,
-            modified: cell.modified,
-          });
+          cells.push(
+            // If only a single enrichment step is present, add input column
+            steps.length === 1 ? {
+              value: cell.initial,
+              step: index + 1,
+            } : null,
+            {
+              value: cell.value,
+              step: index + 1,
+              property,
+              modified: cell.modified,
+            });
           break;
         }
         case EnumTool.FAGI: {
@@ -310,7 +318,7 @@ export function provenanceToTable(provenance) {
               property,
             }, {
               value: cell.value,
-              selected: !!cell.value,
+              selected: cell.operation && !!cell.value,
               step: index + 1,
               property,
             },
@@ -321,7 +329,8 @@ export function provenanceToTable(provenance) {
         // Do nothing
       }
     });
-    dataRows.push(cells);
+    // Filter out empty data cells (may occur due to enrichment operations)
+    dataRows.push(cells.filter(c => c));
   });
 
   return {
@@ -331,8 +340,8 @@ export function provenanceToTable(provenance) {
     steps,
     properties,
     features,
-    stepRow,
-    inputRow,
+    // Filter out empty input cells (may occur due to enrichment operations)
+    inputRow: inputRow.filter(i => i),
     dataRows,
   };
 }

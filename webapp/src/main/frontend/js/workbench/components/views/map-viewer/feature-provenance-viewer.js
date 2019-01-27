@@ -13,8 +13,13 @@ import {
 } from '../../helpers';
 
 import {
+  Attributes,
   EnumCellValueType
 } from '../../../model/map-viewer';
+
+import {
+  EnumTool
+} from '../../../model/process-designer';
 
 const PropertyTypeMapping = [{
   id: 'homepage',
@@ -26,7 +31,7 @@ const PropertyTypeMapping = [{
 
 const createColumns = (state, props) => {
   const { filterable } = state;
-  const { provenance: { stepRow, inputRow, properties, dataRows: data } } = props;
+  const { provenance: { inputRow, properties, steps, dataRows: data } } = props;
   const columns = [];
 
   // Column to index map
@@ -41,28 +46,26 @@ const createColumns = (state, props) => {
     accessor: 'attribute',
     filterable,
     maxWidth: 120,
-    Header: (cell) => {
+    Header: () => {
       return (<span />);
     },
     Cell: (cell) => {
-      return (<span>{properties[cell.index]}</span>);
+      const attr = Attributes.find(a => a.key === properties[cell.index]);
+      return (<span>{attr ? attr.title : properties[cell.index]}</span>);
     },
   });
 
   // Add steps
-  stepRow.forEach((step, stepIndex) => {
-    // Ignore attribute column
-    if (stepIndex === 0) {
-      return;
-    }
+  steps.forEach((step, stepIndex) => {
     columns.push({
       id: `Step-${step.index}`,
       Header: () => {
-        return (<span><i className={`${step.iconClass || ''} pr-2`} />{step.value}</span>);
+        return (<span><i className={`${step.iconClass || ''} pr-2`} />{step.name}</span>);
       },
       headerStyle: {
         textAlign: 'left',
       },
+      headerClassName: 'slipo-th-level-1',
       // Add step input
       columns: inputRow.filter(i => i.step === step.index).map((input, inputIndex) => {
         const id = `Input-${step.index}-${inputIndex}`;
@@ -70,16 +73,31 @@ const createColumns = (state, props) => {
         return {
           id,
           accessor: id,
-          minWidth: 200,
+          minWidth: 250,
           Header: () => {
             return (<span className={input.selected ? 'slipo-tl-selected' : ''}>{input.value}</span>);
           },
           headerStyle: {
             textAlign: 'left',
           },
+          headerClassName: inputIndex === 0 ? 'slipo-th-level-2' : '',
           className: classnames({
-            'slipo-tl-cell-odd': step.index % 2 === 1,
-            'slipo-tl-cell-even': step.index % 2 === 0,
+            'slipo-tl-cell-default': step.index % 2 === 1,
+            'slipo-tl-cell-fuse-input-1': step.tool === EnumTool.FAGI && inputIndex % 4 === 0,
+            'slipo-tl-cell-fuse-input-2': step.tool === EnumTool.FAGI && inputIndex % 4 === 1,
+            'slipo-tl-cell-fuse-action': step.tool === EnumTool.FAGI && inputIndex % 4 === 2,
+            'slipo-tl-cell-fuse-value': step.tool === EnumTool.FAGI && inputIndex % 4 === 3,
+            'slipo-tl-cell-enrich':
+              (step.tool === EnumTool.DEER) &&
+              (steps.length !== 1 || inputIndex !== 0),
+            'slipo-tl-step-separator':
+              // FAGI first input
+              (step.tool === EnumTool.FAGI && inputIndex % 4 === 0) ||
+              // Single DEER operation
+              (steps.length === 1 && step.tool === EnumTool.DEER && inputIndex === 0) ||
+              // DEER operation
+              (steps.length !== 1 && step.tool === EnumTool.DEER),
+
           }),
           Cell: (props) => {
             const cell = data[props.index][mappings[props.column.id]];
@@ -94,18 +112,15 @@ const createColumns = (state, props) => {
 };
 
 const createRows = (props) => {
-  const { provenance: { stepRow, inputRow, properties, dataRows: data } } = props;
+  const { provenance: { steps, inputRow, properties, dataRows: data } } = props;
 
-  return properties.map((attr, rowIndex) => {
+  return properties.map((prop, rowIndex) => {
     let columnIndex = 0;
+    const attr = Attributes.find(a => a.key === prop);
     const row = {
-      'attribute': attr
+      'attribute': attr.title
     };
-    stepRow.forEach((step, index) => {
-      // Ignore attribute column
-      if (index === 0) {
-        return;
-      }
+    steps.forEach((step, index) => {
       inputRow.filter(i => i.step === step.index).map((input, inputIndex) => {
         const id = `Input-${step.index}-${inputIndex}`;
         const cell = data[rowIndex][++columnIndex];
@@ -169,92 +184,6 @@ class FeatureProvenanceViewer extends React.Component {
     }
   }
 
-  renderTable() {
-    const { provenance } = this.props;
-
-    return (
-      <div style={{ overflow: 'auto', height: 480 }}>
-        <table className="slipo-tl-table">
-          <tbody>
-            {/* Steps */}
-            <tr key="pivot-row">
-              {
-                provenance.stepRow.map((cell, index) => {
-                  return (
-                    <td
-                      key={`step-${index}`}
-                      rowSpan={cell.rowSpan || 1}
-                      colSpan={cell.colSpan || 1}
-                      className={classnames({
-                        'slipo-tl-step': true,
-                        'slipo-tl-cell': index !== 0,
-                        'slipo-tl-cell-odd': index !== 0 && index % 2 === 1,
-                        'slipo-tl-cell-even': index !== 0 && index % 2 === 0,
-                        'slipo-tl-selected': cell.selected === true,
-                      })}
-                    >
-                      <i className={`${cell.iconClass || ''} pr-2`} />{cell.value}
-                    </td>
-                  );
-                })
-              }
-            </tr>
-            {/* Inputs */}
-            <tr key="input-row">
-              {
-                provenance.inputRow.map((cell, index) => {
-                  return (
-                    <td
-                      key={`input-${index}`}
-                      rowSpan={cell.rowSpan || 1}
-                      colSpan={cell.colSpan || 1}
-                      className={classnames({
-                        'slipo-tl-cell': true,
-                        'slipo-tl-cell-odd': cell.step % 2 === 1,
-                        'slipo-tl-cell-even': cell.step % 2 === 0,
-                        'slipo-tl-selected': cell.selected === true,
-                      })}
-                    >
-                      {cell.value}
-                    </td>
-                  );
-                })
-              }
-            </tr>
-            {/* Values */}
-            {
-              provenance.dataRows.map((row, rowIndex) => {
-                return (
-                  <tr key={`row-${rowIndex}`}>
-                    {
-                      row.map((cell, cellIndex) => {
-                        return (
-                          <td
-                            key={`cell-${rowIndex}-${cellIndex}`}
-                            rowSpan={cell.rowSpan || 1}
-                            colSpan={cell.colSpan || 1}
-                            className={classnames({
-                              'slipo-tl-cell': true,
-                              'slipo-tl-cell-odd': cellIndex !== 0 && cell.step % 2 === 1,
-                              'slipo-tl-cell-even': cellIndex !== 0 && cell.step % 2 === 0,
-                              'slipo-tl-selected': cell.selected || cell.modified === true,
-                            })}
-                          >
-                            {renderCell(cell)}
-                          </td>
-                        );
-                      })
-                    }
-                  </tr>
-                );
-              })
-            }
-          </tbody>
-        </table>
-      </div>
-    );
-  }
-
   toggleFilterable() {
     this.setState({
       filterable: !this.state.filterable,
@@ -303,7 +232,6 @@ class FeatureProvenanceViewer extends React.Component {
             showPagination={false}
             style={{ maxHeight: 480 }}
           />
-          {/* {this.renderTable()} */}
         </CardBody>
       </Card>
     );

@@ -11,6 +11,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.sql.DataSource;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Triple;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -120,14 +121,6 @@ public class ProvenanceService implements InitializingBean {
         List<Operation> actions = new ArrayList<Operation>();
 
         Step step = definition.stepByResourceKey(outputKey);
-        ProcessExecutionStepRecord stepRecord = execution.getStep(step.key());
-        String partKey = this.getDefaultPartKey(step.tool());
-
-        // Add POI feature to the result
-        ProcessExecutionStepFileRecord fileRecord = stepRecord.getOutputFile(EnumStepFile.OUTPUT, partKey);
-        if (fileRecord.getTableName() != null) {
-            queries.add(FeatureQuery.of(level, step.name(), fileRecord.getTableName().toString(), uri));
-        }
 
         // Search execution for inputs and operations
         this.search(level, definition, execution, outputKey, null, uri, queries, actions);
@@ -137,7 +130,7 @@ public class ProvenanceService implements InitializingBean {
         return Provenance.of(step.name(), features, actions, outputKey, id, uri);
     }
 
-    protected void search(
+    protected String search(
         int level,
         ProcessDefinition definition,
         ProcessExecutionRecord execution,
@@ -164,30 +157,41 @@ public class ProvenanceService implements InitializingBean {
                 if (f.getTableName() != null) {
                     queries.add(FeatureQuery.of(level, step.name(), f.getTableName().toString(), featureUri));
                 }
-                break;
+                return step.name();
 
             case DEER:
                 Assert.equals(step.input().size(), 1);
 
-                // If input is a resource, select feature; Otherwise search input
+                definition.stepByResourceKey(step.input().get(0).inputKey());
+
+                // Input name
+                String inputName = null;
+
+                // Check if input is a resource
                 Input input = step.input().get(0);
                 ResourceRecord resource = this.getResource(level, definition, input, queries, featureUri);
 
+                // If input is not a resource, search input step
                 if (resource == null) {
-                    this.search(
+                    // Add POI feature to the result
+                    ProcessExecutionStepFileRecord fileRecord = stepRecord.getOutputFile(EnumStepFile.OUTPUT, partKey);
+                    if (fileRecord.getTableName() != null) {
+                        queries.add(FeatureQuery.of(level, step.name(), fileRecord.getTableName().toString(), featureUri));
+                    }
+
+                    inputName = this.search(
                         level + 1, definition, execution, input.inputKey(), input.partKey(), featureUri, queries, actions
                     );
                 }
 
                 // Add enrichment operation to the result
-                Step inputStep = definition.stepByResourceKey(step.input().get(0).inputKey());
                 actions.add(
                     EnrichOperation.of(level, step.tool(),
                     step.name(),
-                    inputStep != null ? inputStep.name() : resource != null ? resource.getName() : null,
+                    inputName,
                     featureUri)
                 );
-                break;
+                return step.name();
 
             case FAGI:
                 f = stepRecord.getOutputFile(EnumStepFile.OUTPUT, partKey);
@@ -195,19 +199,20 @@ public class ProvenanceService implements InitializingBean {
                     Assert.equals(step.input().size(), 3);
 
                     // Find link if any exists
-                    Triple<Long, String, String> link = this.findLink(f.getTableName().toString() + FAGI_LINK_SUFFIX, featureUri);
+                    Object[] link = this.findLink(f.getTableName().toString() + FAGI_LINK_SUFFIX, featureUri);
                     if (link != null) {
                         // If a link exists, load actions
-                        List<Triple<String, String, String>> linkActions = this.findActions(f.getTableName().toString() + FAGI_COLUMN_SUFFIX, link.getLeft());
+                        List<Triple<String, String, String>> linkActions =
+                            this.findActions(f.getTableName().toString() + FAGI_COLUMN_SUFFIX, (Long) link[0]);
 
                         // Check if inputs are resources and add features to the result
                         Input leftInput = step.input().get(0);
                         Step leftInputStep = definition.stepByResourceKey(leftInput.inputKey());
-                        ResourceRecord leftResource = this.getResource(level, definition, leftInput, queries, link.getMiddle());
+                        ResourceRecord leftResource = this.getResource(level, definition, leftInput, queries, (String) link[1]);
 
                         Input rightInput = step.input().get(1);
                         Step rightInputStep = definition.stepByResourceKey(rightInput.inputKey());
-                        ResourceRecord rightResource = this.getResource(level, definition, rightInput, queries, link.getRight());
+                        ResourceRecord rightResource = this.getResource(level, definition, rightInput, queries, (String) link[2]);
 
                         // Add operation to the result
                         FuseOperation a = FuseOperation.of(
@@ -238,7 +243,12 @@ public class ProvenanceService implements InitializingBean {
                         }
 
                         actions.add(a);
+
+                        return step.name();
                     } else {
+                        String leftInputName = null;
+                        String rightInputName = null;
+
                         // If no link is found, search inputs for the current URI. Check if inputs are resources
                         Input leftInput = step.input().get(0);
                         Step leftInputStep = definition.stepByResourceKey(leftInput.inputKey());
@@ -249,18 +259,27 @@ public class ProvenanceService implements InitializingBean {
                         ResourceRecord rightResource = this.getResource(level, definition, rightInput, queries, featureUri);
 
                         // Fuse operation returned no results for the specific URI. Search both input steps
-                        if ((leftInputStep != null) && (leftResource == null)) {
-                            this.search(
+                        if (leftResource != null) {
+                            leftInputName = leftResource.getName();
+                        } else if (leftInputStep != null) {
+                            leftInputName = this.search(
                                 level + 1, definition, execution, leftInput.inputKey(), leftInput.partKey(), featureUri, queries, actions
                             );
                         }
-                        if ((rightInputStep != null) && (rightResource == null)) {
-                            this.search(
+
+                        if (rightResource != null) {
+                            rightInputName = rightResource.getName();
+                        } else if (rightInputStep != null) {
+                            rightInputName = this.search(
                                 level + 1, definition, execution, rightInput.inputKey(), rightInput.partKey(), featureUri, queries, actions
                             );
                         }
+
+                        return leftInputName != null ? leftInputName : rightInputName;
                     }
                 }
+                // Cannot resolve provenance history
+                break;
 
             case LIMES:
             case REVERSE_TRIPLEGEO:
@@ -271,20 +290,29 @@ public class ProvenanceService implements InitializingBean {
             default:
                 throw new RuntimeException(String.format("Tool [%s] is not supported", step.tool().toString()));
         }
+
+        return null;
     }
 
     // TODO: After upgrading to Spring Boot 2+ (and Hibernate 5.2+) update code with
     // javax.persistence.Tuple results. See https://hibernate.atlassian.net/browse/HHH-11897
 
-    private Triple<Long, String, String> findLink(String tableName, String featureUri) {
+    private Object[] findLink(String tableName, String featureUri) {
         String query = String.format(
-            "SELECT t.id, t.left_uri, t.right_uri " + "FROM fagi.\"%1$s\" t " +
-            "WHERE left_uri = ? or right_uri = ?",
+            "SELECT t.* " +
+            "FROM   fagi.\"%1$s\" t " +
+            "WHERE  left_uri = ? or right_uri = ?",
             tableName);
 
         List<Map<String, Object>> rows = jdbcTemplate.queryForList(query, new Object[] { featureUri, featureUri });
         return rows.stream()
-            .map(r -> Triple.of((Long) r.get("id"), (String) r.get("left_uri"), (String) r.get("right_uri")))
+            .map(r -> new Object[] {
+                (Long) r.get("id"),
+                (String) r.get("left_uri"),
+                (String) r.get("right_uri"),
+                (String) r.get("default_fusion_action"),
+                StringUtils.isBlank((String) r.get("confidence_score")) ? null : Float.parseFloat((String) r.get("confidence_score"))
+            })
             .findFirst().orElse(null);
     }
 
@@ -304,12 +332,21 @@ public class ProvenanceService implements InitializingBean {
     ) {
         ResourceIdentifier id = definition.resourceIdentifierByResourceKey(input.inputKey());
         if (id != null) {
+            boolean featureFound = false;
+
             ResourceRecord resource = this.resourceRepository.findOne(id);
             // If the selected input is a resource, add feature to the result
             if (resource.getTableName() != null) {
-                queries.add(FeatureQuery.of(level, resource.getName(), resource.getTableName().toString(), featureUri));
+                FeatureQuery query = FeatureQuery.of(
+                    level, resource.getName(), resource.getTableName().toString(), featureUri
+                );
+
+                featureFound = this.featureExists(query);
+                if (featureFound) {
+                    queries.add(query);
+                }
             }
-            return resource;
+            return featureFound ? resource : null;
         }
         return null;
     }
@@ -337,6 +374,19 @@ public class ProvenanceService implements InitializingBean {
             return result;
 
         }
+    }
+
+    private boolean featureExists(FeatureQuery query) {
+        String dataQuery =
+            "select count(t) " +
+            "from   spatial.\"%1$s\" As t " +
+            "where   %2$s = ? ";
+
+        dataQuery = String.format(dataQuery, query.tableName, defaultUriColumn);
+
+        Long count = jdbcTemplate.queryForObject(dataQuery, new Object[] { query.featureUri }, Long.class);
+
+        return count > 0;
     }
 
     private JsonNode getFeatures(List<FeatureQuery> queries) throws IOException {
@@ -488,6 +538,10 @@ public class ProvenanceService implements InitializingBean {
 
         public String selectedUri;
 
+        public String defaultAction;
+
+        public Float confidenceScore;
+
         public List<PropertyAction> actions = new ArrayList<PropertyAction>();
 
         private FuseOperation() {
@@ -498,7 +552,7 @@ public class ProvenanceService implements InitializingBean {
             int level,
             EnumTool tool,
             String stepName,
-            Triple<Long, String, String> link,
+            Object[] link,
             String featureUri,
             String leftInput,
             String rightInput
@@ -507,11 +561,13 @@ public class ProvenanceService implements InitializingBean {
             fo.level = level;
             fo.tool = tool;
             fo.stepName = stepName;
-            fo.leftUri = link.getMiddle();
-            fo.rightUri = link.getRight();
+            fo.leftUri = (String) link[1];
+            fo.rightUri = (String) link[2];
             fo.selectedUri = fo.leftUri.equals(featureUri) ? fo.leftUri : fo.rightUri;
             fo.leftInput = leftInput;
             fo.rightInput = rightInput;
+            fo.defaultAction = (String) link[3];
+            fo.confidenceScore = (Float) link[4];
             return fo;
         }
 

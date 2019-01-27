@@ -1,4 +1,19 @@
 .slipo-provenance-table {
+  .rt-thead.-headerGroups {
+    border-bottom: none !important;
+  }
+  .rt-tr-group {
+    border-bottom: none !important;
+  }
+  .rt-tr {
+    border-bottom: 1px solid #bdbdbd !important;
+  }
+  .slipo-th-level-1 {
+    border-left: 2px solid #bdbdbd;
+  }
+  .slipo-th-level-2 {
+    border-left: 2px solid #bdbdbd;
+  }
   .slipo-tl-selected {
     font-weight: bold;
   }
@@ -6,12 +21,23 @@
     border: 1px solid #cdcdcd;
     padding: 5px;
   }
-  .slipo-tl-cell-odd {
+  .slipo-tl-cell-default {
     background: none;
   }
-  .slipo-tl-cell-even {
+  .slipo-tl-cell-fuse-input-1 {
+    background: #fff9c4;
+  }
+  .slipo-tl-cell-fuse-input-2 {
+    background: #c8e6c9;
+  }
+  .slipo-tl-cell-fuse-action {
+    background: none;
+  }
+  .slipo-tl-cell-fuse-value {
+    background: #bbdefb;
+  }
+  .slipo-tl-cell-enrich {
     background: #eceff1;
-    border-bottom: 1px solid #eceff1;
   }
   .slipo-tl-image {
     max-width: 100%;
@@ -21,5 +47,8 @@
   }
   .slipo-tl-step {
     white-space: nowrap;
+  }
+  .slipo-tl-step-separator {
+    border-left: 2px solid #bdbdbd;
   }
 }

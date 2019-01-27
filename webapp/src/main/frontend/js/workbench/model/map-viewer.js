@@ -94,6 +94,10 @@ export const Attributes = [{
   key: 'homepage',
   editable: true,
 }, {
+  title: 'Id',
+  key: 'id',
+  editable: false,
+}, {
   title: 'Image',
   key: 'image',
   editable: true,
@@ -128,5 +132,13 @@ export const Attributes = [{
 }, {
   title: 'Wikipedia',
   key: 'wikipedia',
+  editable: true,
+}, {
+  title: 'URI',
+  key: 'uri',
+  editable: false,
+}, {
+  title: 'Timestamp',
+  key: 'timestamp',
   editable: true,
 }];
