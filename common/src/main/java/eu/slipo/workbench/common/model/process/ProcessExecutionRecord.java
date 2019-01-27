@@ -51,8 +51,6 @@ public class ProcessExecutionRecord implements Serializable
 
     private List<ProcessExecutionStepRecord> steps;
 
-    private List<ProcessExecutionTableRecord> tables;
-
     public ProcessExecutionRecord() {}
 
     public ProcessExecutionRecord(long executionId, long processId, long processVersion)
@@ -96,11 +94,6 @@ public class ProcessExecutionRecord implements Serializable
                 .map(s -> new ProcessExecutionStepRecord(s, true))
                 .collect(Collectors.toList())) :
             (new ArrayList<>(record.steps));
-        this.tables = copyDeep ?
-            (record.tables.stream()
-                .map(s -> new ProcessExecutionTableRecord(s))
-                .collect(Collectors.toList())) :
-            (new ArrayList<>(record.tables));
     }
 
     public String getName() {
@@ -245,33 +238,6 @@ public class ProcessExecutionRecord implements Serializable
         }
         for (ProcessExecutionStepRecord r: this.steps) {
             if (r.getNodeName().equals(nodeName)) {
-                return r;
-            }
-        }
-        return null;
-    }
-
-    public List<ProcessExecutionTableRecord> getTables()
-    {
-        return tables == null ?
-            Collections.emptyList() : Collections.unmodifiableList(tables);
-    }
-
-    public void addTable(ProcessExecutionTableRecord t)
-    {
-        if (this.tables == null) {
-            this.tables = new ArrayList<>();
-        }
-        this.tables.add(t);
-    }
-
-    public ProcessExecutionTableRecord getTable(int outputKey)
-    {
-        if (this.tables == null) {
-            return null;
-        }
-        for (ProcessExecutionTableRecord r: this.tables) {
-            if (r.getOutputKey() == outputKey) {
                 return r;
             }
         }
