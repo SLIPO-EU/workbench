@@ -30,9 +30,9 @@ install:
 - sudo apt-get install -y ruby ruby-dev
 - sudo gem install sass --version "=3.4.24"
 
-- docker pull athenarc/triplegeo:1.4
+- docker pull athenarc/triplegeo:1.6
 - docker pull athenarc/fagi:1.2
-- docker pull athenarc/limes:1.3
+- docker pull athenarc/limes:1.5
 
 before_script:
 
@@ -57,10 +57,12 @@ script:
 - set -e
 - mvn clean install
 
-- (cd rpc-server && mvn test -Dtest=eu.slipo.workbench.rpc.tests.integration.jobs.TriplegeoJobTests)
-- (cd rpc-server && mvn test -Dtest=eu.slipo.workbench.rpc.tests.integration.jobs.LimesJobTests)
-- (cd rpc-server && mvn test -Dtest=eu.slipo.workbench.rpc.tests.integration.jobs.FagiJobTests)
-- (cd rpc-server && mvn test -Dtest=eu.slipo.workbench.rpc.tests.integration.repository.DefaultProcessRepositoryTests)
-- (cd rpc-server && mvn test -Dtest=eu.slipo.workbench.rpc.tests.integration.repository.DefaultResourceRepositoryTests)
-- (cd rpc-server && mvn test -Dtest=eu.slipo.workbench.rpc.tests.integration.service.DefaultProcessOperatorTests)
+# Integration Tests
+
+#- (cd rpc-server && mvn test -Dtest=eu.slipo.workbench.rpc.tests.integration.jobs.TriplegeoJobTests)
+#- (cd rpc-server && mvn test -Dtest=eu.slipo.workbench.rpc.tests.integration.jobs.LimesJobTests)
+#- (cd rpc-server && mvn test -Dtest=eu.slipo.workbench.rpc.tests.integration.jobs.FagiJobTests)
+#- (cd rpc-server && mvn test -Dtest=eu.slipo.workbench.rpc.tests.integration.repository.DefaultProcessRepositoryTests)
+#- (cd rpc-server && mvn test -Dtest=eu.slipo.workbench.rpc.tests.integration.repository.DefaultResourceRepositoryTests)
+#- (cd rpc-server && mvn test -Dtest=eu.slipo.workbench.rpc.tests.integration.service.DefaultProcessOperatorTests)
 
