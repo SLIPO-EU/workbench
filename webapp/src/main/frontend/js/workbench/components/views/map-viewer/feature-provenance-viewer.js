@@ -1,6 +1,7 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
 import classnames from 'classnames';
+import moment from '../../../moment-localized';
 
 import {
   Card,
@@ -55,12 +56,19 @@ const createColumns = (state, props) => {
     },
   });
 
+  // Count actual steps (ignore update steps for which tool property is null)
+  const stepCount = steps.filter(s => s.tool != null).length;
+
   // Add steps
   steps.forEach((step, stepIndex) => {
     columns.push({
       id: `Step-${step.index}`,
       Header: () => {
-        return (<span><i className={`${step.iconClass || ''} pr-2`} />{step.name}</span>);
+        if (step.tool === null) {
+          return (<span><i className="fa fa-clock-o pr-2" />{moment(step.updatedOn).format('DD/MM/YYYY h:mm:ss a')}</span>);
+        } else {
+          return (<span><i className={`${step.iconClass || ''} pr-2`} />{step.name}</span>);
+        }
       },
       headerStyle: {
         textAlign: 'left',
@@ -75,7 +83,11 @@ const createColumns = (state, props) => {
           accessor: id,
           minWidth: 250,
           Header: () => {
-            return (<span className={input.selected ? 'slipo-tl-selected' : ''}>{input.value}</span>);
+            if (step.tool === null) {
+              return (<span><i className="fa fa-user pr-2" />{input.updatedBy}</span>);
+            } else {
+              return (<span className={input.selected ? 'slipo-tl-selected' : ''}>{input.value}</span>);
+            }
           },
           headerStyle: {
             textAlign: 'left',
@@ -89,15 +101,16 @@ const createColumns = (state, props) => {
             'slipo-tl-cell-fuse-value': step.tool === EnumTool.FAGI && inputIndex % 4 === 3,
             'slipo-tl-cell-enrich':
               (step.tool === EnumTool.DEER) &&
-              (steps.length !== 1 || inputIndex !== 0),
+              (stepCount !== 1 || inputIndex !== 0),
             'slipo-tl-step-separator':
               // FAGI first input
               (step.tool === EnumTool.FAGI && inputIndex % 4 === 0) ||
               // Single DEER operation
-              (steps.length === 1 && step.tool === EnumTool.DEER && inputIndex === 0) ||
+              (stepCount === 1 && step.tool === EnumTool.DEER && inputIndex === 0) ||
               // DEER operation
-              (steps.length !== 1 && step.tool === EnumTool.DEER),
-
+              (stepCount !== 1 && step.tool === EnumTool.DEER) ||
+              // Update
+              (step.tool === null),
           }),
           Cell: (props) => {
             const cell = data[props.index][mappings[props.column.id]];
@@ -144,19 +157,39 @@ const renderCell = (cell) => {
     switch (propertyType.type) {
       case EnumCellValueType.Link:
         return (
-          <span className={cell.selected || cell.modified ? 'slipo-tl-selected' : ''}>
+          <span
+            className={classnames({
+              'slipo-tl-output': cell.output,
+              'slipo-tl-modified': cell.modified,
+            })}
+          >
             <a href={cell.value} target="_blank">{cell.value}</a>
           </span>
         );
       case EnumCellValueType.Image:
         return (
-          <img className="slipo-tl-image" src={cell.value} />
+          <div
+            className={classnames({
+              'slipo-tl-image-container': true,
+              'slipo-tl-output': cell.output,
+              'slipo-tl-modified': cell.modified,
+            })}
+          >
+            <img className="slipo-tl-image" src={cell.value} />
+          </div>
         );
     }
   }
 
   return (
-    <span className={cell.selected || cell.modified ? 'slipo-tl-selected' : ''}>{cell.value}</span>
+    <span
+      className={classnames({
+        'slipo-tl-output': cell.output,
+        'slipo-tl-modified': cell.modified,
+      })}
+    >
+      {cell.value}
+    </span>
   );
 };
 

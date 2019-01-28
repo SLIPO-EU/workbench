@@ -17,6 +17,14 @@
   .slipo-tl-selected {
     font-weight: bold;
   }
+  .slipo-tl-output {
+    font-weight: bold;
+  }
+  .slipo-tl-modified {
+    background: #e57373;
+    padding: 3px;
+    color: white;
+  }
   .slipo-tl-cell {
     border: 1px solid #cdcdcd;
     padding: 5px;
@@ -39,8 +47,19 @@
   .slipo-tl-cell-enrich {
     background: #eceff1;
   }
-  .slipo-tl-image {
-    max-width: 100%;
+  .slipo-tl-image-container {
+    position: relative;
+    .slipo-tl-image {
+      max-width: 100%;
+    }
+    .slipo-tl-image-updated {
+      position: absolute;
+      background: #eceff1;
+      padding: 4px;
+      width: 18px;
+      top: -1px;
+      left: -1px;
+    }
   }
   .slipo-tl-table {
     margin: 10px 0px;

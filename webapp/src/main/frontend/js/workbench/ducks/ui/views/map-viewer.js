@@ -585,7 +585,7 @@ export const updateFeature = () => (dispatch, getState) => {
   const {
     meta: { csrfToken: token },
     ui: { views: { map: {
-      edit: { id, table, current: { properties } },
+      edit: { id, table, current: { properties: current }, initial: { properties: initial } },
       config: { selectedFeature: { feature } },
     } } },
   } = getState();
@@ -597,6 +597,13 @@ export const updateFeature = () => (dispatch, getState) => {
       level: EnumErrorLevel.ERROR,
     }]));
   }
+
+  const properties = Object.keys(initial).reduce((result, key) => {
+    if (initial[key] !== current[key]) {
+      result[key] = current[key];
+    }
+    return result;
+  }, {});
 
   dispatch(updateFeatureBegin());
 
