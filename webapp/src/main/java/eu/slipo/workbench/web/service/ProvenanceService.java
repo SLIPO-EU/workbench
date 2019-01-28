@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -24,6 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vividsolutions.jts.util.Assert;
 
 import eu.slipo.workbench.common.model.poi.EnumTool;
+import eu.slipo.workbench.common.model.poi.FeatureUpdateRecord;
 import eu.slipo.workbench.common.model.process.EnumStepFile;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.ProcessExecutionNotFoundException;
@@ -38,6 +40,7 @@ import eu.slipo.workbench.common.model.tool.output.EnumDeerOutputPart;
 import eu.slipo.workbench.common.model.tool.output.EnumFagiOutputPart;
 import eu.slipo.workbench.common.model.tool.output.EnumTriplegeoOutputPart;
 import eu.slipo.workbench.common.repository.ResourceRepository;
+import eu.slipo.workbench.web.repository.FeatureRepository;
 
 /**
  * Service for querying POI provenance data
@@ -60,7 +63,7 @@ public class ProvenanceService implements InitializingBean {
     @Value("${vector-data.default.geometry-simple-column:the_geom_simple}")
     private String defaultGeometrySimpleColumn;
 
-    private final Map<String, String> tableColumns = new HashMap<String, String>();
+    private final Map<UUID, String> tableColumns = new HashMap<UUID, String>();
 
     @PersistenceContext(unitName = "default")
     private EntityManager entityManager;
@@ -70,6 +73,9 @@ public class ProvenanceService implements InitializingBean {
 
     @Autowired
     private ResourceRepository resourceRepository;
+
+    @Autowired
+    private FeatureRepository featureRepository;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -127,7 +133,10 @@ public class ProvenanceService implements InitializingBean {
 
         JsonNode features = this.getFeatures(queries);
 
-        return Provenance.of(step.name(), features, actions, outputKey, id, uri);
+        // Get updates
+        List<FeatureUpdateRecord> updates = this.featureRepository.getUpdates(queries.get(0).tableName, id);
+
+        return Provenance.of(step.name(), features, actions, outputKey, id, uri, updates);
     }
 
     protected String search(
@@ -155,7 +164,7 @@ public class ProvenanceService implements InitializingBean {
                 // For TripleGeo steps, retrieve feature if a table exists
                 f = stepRecord.getOutputFile(EnumStepFile.OUTPUT, partKey);
                 if (f.getTableName() != null) {
-                    queries.add(FeatureQuery.of(level, step.name(), f.getTableName().toString(), featureUri));
+                    queries.add(FeatureQuery.of(level, step.name(), f.getTableName(), featureUri));
                 }
                 return step.name();
 
@@ -176,7 +185,7 @@ public class ProvenanceService implements InitializingBean {
                     // Add POI feature to the result
                     ProcessExecutionStepFileRecord fileRecord = stepRecord.getOutputFile(EnumStepFile.OUTPUT, partKey);
                     if (fileRecord.getTableName() != null) {
-                        queries.add(FeatureQuery.of(level, step.name(), fileRecord.getTableName().toString(), featureUri));
+                        queries.add(FeatureQuery.of(level, step.name(), fileRecord.getTableName(), featureUri));
                     }
 
                     inputName = this.search(
@@ -338,7 +347,7 @@ public class ProvenanceService implements InitializingBean {
             // If the selected input is a resource, add feature to the result
             if (resource.getTableName() != null) {
                 FeatureQuery query = FeatureQuery.of(
-                    level, resource.getName(), resource.getTableName().toString(), featureUri
+                    level, resource.getName(), resource.getTableName(), featureUri
                 );
 
                 featureFound = this.featureExists(query);
@@ -351,7 +360,7 @@ public class ProvenanceService implements InitializingBean {
         return null;
     }
 
-    private String getColumns(String tableName) {
+    private String getColumns(UUID tableName) {
         if (tableColumns.containsKey(tableName)) {
             return tableColumns.get(tableName);
         }
@@ -363,7 +372,7 @@ public class ProvenanceService implements InitializingBean {
 
             String columnQuery = "select column_name from information_schema.columns where table_name= ?";
 
-            List<Map<String, Object>> rows = jdbcTemplate.queryForList(columnQuery, new Object[] { tableName });
+            List<Map<String, Object>> rows = jdbcTemplate.queryForList(columnQuery, new Object[] { tableName.toString() });
             List<String> columns = rows.stream()
                 .map(r -> (String) r.get("column_name"))
                 .filter(c -> !c.equalsIgnoreCase(defaultGeometryColumn) && !c.equalsIgnoreCase(defaultGeometrySimpleColumn))
@@ -459,8 +468,16 @@ public class ProvenanceService implements InitializingBean {
 
         public List<Operation> operations;
 
+        public List<FeatureUpdateRecord> updates;
+
         public static Provenance of(
-            String stepName, JsonNode features, List<Operation> operations, String outputKey, String featureId, String featureUri
+            String stepName,
+            JsonNode features,
+            List<Operation> operations,
+            String outputKey,
+            String featureId,
+            String featureUri,
+            List<FeatureUpdateRecord> updates
         ) {
             Provenance t = new Provenance();
             t.stepName = stepName;
@@ -469,6 +486,7 @@ public class ProvenanceService implements InitializingBean {
             t.outputKey = outputKey;
             t.featureId = featureId;
             t.featureUri = featureUri;
+            t.updates = updates;
             return t;
         }
     }
@@ -479,11 +497,11 @@ public class ProvenanceService implements InitializingBean {
 
         public String source;
 
-        public String tableName;
+        public UUID tableName;
 
         public String featureUri;
 
-        public static FeatureQuery of(int level, String source, String tableName, String featureUri) {
+        public static FeatureQuery of(int level, String source, UUID tableName, String featureUri) {
             FeatureQuery fq = new FeatureQuery();
             fq.level = level;
             fq.source = source;
