@@ -36,25 +36,68 @@ function createStyle(index) {
   };
 }
 
-function createEnrichedCell(step, property, features) {
-  const initial = features.filter((f) => f.properties[FEATURE_URI] === step.uri && f.source !== step.name).pop();
-  const enriched = features.find((f) => f.properties[FEATURE_URI] === step.uri && f.source === step.name);
-
-  return {
-    value: enriched ? enriched.properties[property] : '-',
-    modified: enriched && initial ? enriched.properties[property] !== initial.properties[property] : false,
-  };
+function projectProperty(property, current, updates = [], index = 0) {
+  for (let i = updates.length - 1; i >= index; i--) {
+    if (updates[i].properties.hasOwnProperty(property)) {
+      current = updates[i].properties[property];
+    }
+  }
+  return current;
 }
 
-function createFusedCell(step, property, features) {
+function createEnrichedCells(step, property, features, updates = []) {
+  const initial = features.filter((f) => f.properties[FEATURE_URI] === step.uri && f.source !== step.name).pop();
+  const current = features.find((f) => f.properties[FEATURE_URI] === step.uri && f.source === step.name);
+
+  const updated = updates && updates.some(u => u.properties.hasOwnProperty(property));
+  const firstUpdate = updated ? updates.filter(u => u.properties.hasOwnProperty(property))[0] : null;
+
+  const result = [
+    // Initial
+    {
+      value: initial ? initial.properties[property] : '-',
+      output: false,
+      updatedBy: null,
+      updatedOn: null,
+    },
+    // Enriched
+    {
+      value: projectProperty(property, current.properties[property], updates, 0),
+      output: current && initial ? firstUpdate ?
+        firstUpdate.properties[property] !== initial.properties[property] :
+        current.properties[property] !== initial.properties[property] : false,
+      updatedBy: null,
+      updatedOn: null,
+    },
+    // Updates
+    ...updates.map((item, index) => ({
+      value: projectProperty(property, current.properties[property], updates, index + 1),
+      output: false,
+      updatedBy: item.updatedBy.name,
+      updatedOn: item.updatedOn,
+    })),
+  ];
+
+  result.forEach((cell, index) => {
+    if (index > 1) {
+      cell.modified = cell.value !== result[index - 1].value;
+    }
+  });
+
+  return result;
+}
+
+function createFusedCells(step, property, features, updates) {
   const left = features.find((f) => f.properties[FEATURE_URI] === step.left.uri && f.source === step.left.input);
   const right = features.find((f) => f.properties[FEATURE_URI] === step.right.uri && f.source === step.right.input);
   const action = step.actions.find((a) => a.property === property);
 
-  // Add feature for fused POI if not already exists
-  let fusedFeature = features.find((f) => f.properties[FEATURE_URI] === step.selectedUri && f.source === step.name);
-  if (!fusedFeature) {
-    fusedFeature = {
+  // Add feature for fused POI if not already exists.
+  // A fused POI may not exist if fusion is not the last step in the workflow.
+  let current = features.find((f) => f.properties[FEATURE_URI] === step.selectedUri && f.source === step.name);
+  if (!current) {
+    // Fused POI is not imported in the database and should be reconstructed by provenance data
+    current = {
       type: 'Feature',
       source: step.name,
       geometry: null,
@@ -62,17 +105,51 @@ function createFusedCell(step, property, features) {
         [FEATURE_URI]: step.selectedUri,
       },
     };
-    features.push(fusedFeature);
+    features.push(current);
   }
-  // Add properties incrementally
-  fusedFeature.properties[property] = action ? action.value : step.selectedUri === step.left.uri ? left.properties[property] : right.properties[property];
+  // Check this is the last operation (property should exist)
+  const isLast = current.properties.hasOwnProperty(property);
 
-  return {
-    left: left.properties[property] || null,
-    right: right.properties[property] || null,
-    operation: action ? action.operation : null,
-    value: action ? action.value : null,
-  };
+  // TODO: Check default action
+  const value = action ? action.value : step.selectedUri === step.left.uri ? left.properties[property] : right.properties[property];
+  // Add properties incrementally
+  if (!isLast) {
+    current.properties[property] = value;
+  }
+
+  const result = [
+    // Left input
+    {
+      value: left.properties[property] || null,
+    },
+    // Right input
+    {
+      value: right.properties[property] || null,
+    },
+    // Operation
+    {
+      value: action ? action.operation : null,
+    },
+    // Fused value
+    {
+      value: isLast ? projectProperty(property, current.properties[property], updates, 0) : value,
+      output: !!action,
+    },
+    // Include updates only if this is the last operation
+    ...(isLast ? updates : []).map((item, index) => ({
+      value: isLast ? projectProperty(property, current.properties[property], updates, index + 1) : value,
+      updatedBy: isLast ? item.updatedBy.name : null,
+      updatedOn: isLast ? item.updatedOn : null,
+    })),
+  ];
+
+  result.forEach((cell, index) => {
+    if ((isLast) && (index > 3)) {
+      cell.modified = cell.value !== result[index - 1].value;
+    }
+  });
+
+  return result;
 }
 
 export function processExecutionToLayers(process, execution) {
@@ -174,16 +251,13 @@ export function processExecutionToLayers(process, execution) {
 
 export function provenanceToTable(provenance) {
   const features = provenance.features.features;
+  const updates = provenance.updates || [];
 
-  const stepRow = [{
-    rowSpan: 2,
-    value: '',
-  }];
   const inputRow = [];
   const dataRows = [];
 
   // Properties
-  const properties = provenance.features.features
+  const properties = features
     .reduce((result, feature) => {
       const keys = Object.keys(feature.properties);
       return _.uniq([...result, ...keys]);
@@ -196,73 +270,88 @@ export function provenanceToTable(provenance) {
       switch (o.tool) {
         case EnumTool.DEER: {
           const step = {
-            tool: o.tool,
-            name: o.stepName,
             iconClass: ToolIcons[o.tool],
-            uri: o.uri,
-            input: o.input,
-          };
-          stepRow.push({
             index: index + 1,
-            iconClass: step.iconClass,
-            value: step.name,
-          });
+            input: o.input,
+            name: o.stepName,
+            tool: o.tool,
+            uri: o.uri,
+          };
           return step;
         }
         case EnumTool.FAGI: {
           const step = {
-            tool: o.tool,
-            name: o.stepName,
+            actions: o.actions,
+            confidenceScore: o.confidenceScore,
+            defaultAction: o.defaultAction,
             iconClass: ToolIcons[o.tool],
-            selectedUri: o.selectedUri,
+            index: index + 1,
+            name: `${o.stepName} ${o.confidenceScore ? ` (Confidence Score : ${o.confidenceScore.toFixed(4)})` : ''}`,
             left: {
               uri: o.leftUri,
               input: o.leftInput,
-              feature: provenance.features.features.find((f) => f.properties[FEATURE_URI] === o.leftUri) || null,
+              feature: features.find((f) => f.properties[FEATURE_URI] === o.leftUri) || null,
             },
             right: {
               uri: o.rightUri,
               input: o.rightInput,
-              feature: provenance.features.features.find((f) => f.properties[FEATURE_URI] === o.rightUri) || null,
+              feature: features.find((f) => f.properties[FEATURE_URI] === o.rightUri) || null,
             },
-            actions: o.actions,
+            selectedUri: o.selectedUri,
+            tool: o.tool,
           };
-          stepRow.push({
-            colSpan: 4,
-            index: index + 1,
-            iconClass: step.iconClass,
-            value: step.name,
-          });
           return step;
         }
         default:
           return null;
       }
     })
+    // Remove null records due to unsupported SLIPO Toolkit components
     .filter((l) => !!l);
+
+  // Add pseudo-steps from updates
+  steps.push(
+    ...updates.map((update, index) => ({
+      iconClass: 'fa fa-pencil',
+      index: provenance.operations.length + index + 1,
+      name: '',
+      tool: null,
+      updatedOn: update.updatedOn,
+      updatedBy: update.updatedBy.name,
+    }))
+  );
 
   // Inputs
   steps
+    // Ignore pseudo-steps
+    .filter(s => s.tool !== null)
     .map((step, index) => {
       switch (step.tool) {
         case EnumTool.DEER:
-          inputRow.push({
-            value: step.input,
-            step: index + 1,
-          });
+          inputRow.push(
+            // If only a single enrichment step is present, add input column (ignore update steps)
+            steps.filter(s => s.tool !== null).length === 1 ? {
+              value: step.input,
+              step: index + 1,
+            } : null,
+            {
+              value: steps.length === 1 ? 'Output' : step.input,
+              step: index + 1,
+            },
+          );
           break;
         case EnumTool.FAGI:
           inputRow.push(
             {
               selected: step.left.uri === step.selectedUri,
-              value: step.left.input,
+              value: `Left Input: ${step.left.input}`,
               step: index + 1,
             }, {
               selected: step.right.uri === step.selectedUri,
-              value: step.right.input,
+              value: `Right Input : ${step.right.input}`,
               step: index + 1,
             }, {
-              value: 'Operation',
+              value: `Action (Default : ${step.defaultAction})`,
               step: index + 1,
             }, {
               value: 'Value',
@@ -275,45 +364,46 @@ export function provenanceToTable(provenance) {
       }
     });
 
-  // Properties
+  // Add pseudo-input from updates
+  inputRow.push(
+    ...updates.map((update, index) => ({
+      step: steps.filter(s => s.tool !== null).length + index + 1,
+      value: '',
+      updatedOn: update.updatedOn,
+      updatedBy: update.updatedBy.name,
+    }))
+  );
+
+  // Data rows
   properties.forEach((property) => {
-    const cells = [{
+    // Attribute columns
+    const values = [{
       value: property,
       step: 0,
     }];
+
     steps.forEach((step, index) => {
       switch (step.tool) {
         case EnumTool.DEER: {
-          const cell = createEnrichedCell(step, property, features);
-          cells.push({
-            value: cell.value,
-            step: index + 1,
-            property,
-            modified: cell.modified,
-          });
+          const cells = createEnrichedCells(step, property, features, updates);
+          values.push(
+            // If only a single operation exists, include initial value
+            ...(provenance.operations.length === 1 ? cells : cells.slice(1)).map(cell => ({
+              ...cell,
+              step: index + 1,
+              property,
+            })),
+          );
           break;
         }
         case EnumTool.FAGI: {
-          const cell = createFusedCell(step, property, features);
-          cells.push(
-            {
-              value: cell.left,
+          const cells = createFusedCells(step, property, features, updates);
+          values.push(
+            ...cells.map(cell => ({
+              ...cell,
               step: index + 1,
               property,
-            }, {
-              value: cell.right,
-              step: index + 1,
-              property,
-            }, {
-              value: cell.operation,
-              step: index + 1,
-              property,
-            }, {
-              value: cell.value,
-              selected: !!cell.value,
-              step: index + 1,
-              property,
-            },
+            })),
           );
           break;
         }
@@ -321,7 +411,9 @@ export function provenanceToTable(provenance) {
         // Do nothing
       }
     });
-    dataRows.push(cells);
+
+    // Filter out empty data cells (may occur due to enrichment operations)
+    dataRows.push(values.filter(c => c));
   });
 
   return {
@@ -331,8 +423,8 @@ export function provenanceToTable(provenance) {
     steps,
     properties,
     features,
-    stepRow,
-    inputRow,
+    // Filter out empty input cells (may occur due to enrichment operations)
+    inputRow: inputRow.filter(i => i),
     dataRows,
   };
 }

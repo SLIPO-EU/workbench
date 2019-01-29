@@ -7,9 +7,10 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import javax.sql.DataSource;
 
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -19,9 +20,12 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vividsolutions.jts.geom.Geometry;
 
+import eu.slipo.workbench.common.domain.FeatureUpdateEntity;
+import eu.slipo.workbench.common.model.poi.FeatureUpdateRecord;
+
 @Repository()
 @Transactional()
-public class DefaultFeatureRepository implements FeatureRepository, InitializingBean {
+public class DefaultFeatureRepository implements FeatureRepository {
 
     @Value("${vector-data.default.schema:spatial}")
     private String defaultGeometrySchema;
@@ -38,58 +42,86 @@ public class DefaultFeatureRepository implements FeatureRepository, Initializing
     @Value("${vector-data.default.geometry-simple-column:the_geom_simple}")
     private String defaultGeometrySimpleColumn;
 
-    @Autowired
-    private DataSource dataSource;
+    @PersistenceContext(unitName = "default")
+    EntityManager entityManager;
 
     @Autowired
     private ObjectMapper objectMapper;
 
-    private JdbcTemplate jdbcTemplate;
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        jdbcTemplate = new JdbcTemplate(dataSource);
+    @Autowired
+    public void setDataSource(DataSource dataSource) {
+        this.jdbcTemplate = new JdbcTemplate(dataSource);
     }
+
+    private JdbcTemplate jdbcTemplate;
 
     private final Map<String, List<String>> tableColumns = new HashMap<String, List<String>>();
 
     @Override
     public void update(
-        UUID tableName, String id, Map<String, String> properties, Geometry geometry
+        Integer userId, UUID tableName, String id, Map<String, String> properties, Geometry geometry
     ) throws Exception {
         List<String> columns = this.getColumns(tableName.toString());
         if (columns.isEmpty()) {
             throw new Exception(String.format("Table %s was not found", tableName.toString()));
         }
 
-        String sql = "update \"%1$s\".\"%2$s\" set \n";
+        // Get current values
+        String query = String.format(
+            "SELECT t.* " +
+            "FROM   \"%1$s\".\"%2$s\" t " +
+            "WHERE  %3$s = ?",
+            this.defaultGeometrySchema, tableName.toString(), this.defaultIdColumn
+        );
 
-        // Set properties
-        List<Object> params = new ArrayList<Object>();
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(query, new Object[] { id });
+        Map<String, String> current = new HashMap<String, String>();
         for (String key : properties.keySet()) {
-            if (columns.contains(key)) {
-                if ((key.equalsIgnoreCase(this.defaultIdColumn)) ||
-                    (key.equalsIgnoreCase(this.defaultUriColumn)) ||
-                    (key.equalsIgnoreCase(this.defaultGeometryColumn)) ||
-                    (key.equalsIgnoreCase(this.defaultGeometrySimpleColumn))) {
-                    throw new Exception(String.format("Column %s is not updatable", key));
-                }
-                sql += key + " = ? ,\n";
-                params.add(properties.get(key));
+            if (columns.contains(key) && this.isUpdatable(key)) {
+                current.put(key, (String) rows.get(0).get(key));
             }
         }
 
-        // Update geometry
-        String geometryAsString = this.objectMapper.writeValueAsString(geometry);
+        // Insert history record
+        List<Object> insertParams = new ArrayList<Object>();
 
-        sql += "\"%3$s\" = ST_SetSRID(ST_GeomFromGeoJSON(?), %6$s), \n";
-        params.add(geometryAsString);
-        sql += "\"%4$s\" = ST_SetSRID(ST_ConvexHull(ST_GeomFromGeoJSON(?)), %6$s) \n";
-        params.add(geometryAsString);
-        sql += "where \"%5$s\" = ?";
-        params.add(id);
+        String insert = String.format(
+            "insert into public.feature_update_history ( " +
+            "table_name, feature_id, properties, the_geom, the_geom_simple, updated_on, updated_by) " +
+            "select ?, ?, ?, the_geom, the_geom_simple, now(), ? " +
+            "from \"%1$s\".\"%2$s\" " +
+            "where %3$s = ?",
+            this.defaultGeometrySchema, tableName.toString(), this.defaultIdColumn);
 
-        sql = String.format(sql,
+        insertParams.add(tableName);
+        insertParams.add(id);
+        insertParams.add(this.objectMapper.writeValueAsString(current));
+        insertParams.add(userId);
+        insertParams.add(id);
+
+        this.jdbcTemplate.update(insert, insertParams.toArray(new Object[insertParams.size()]));
+
+        // Update record
+        List<Object> updateParams = new ArrayList<Object>();
+
+        String update = "update \"%1$s\".\"%2$s\" set \n";
+        for (String key : properties.keySet()) {
+            if (columns.contains(key) && this.isUpdatable(key)) {
+                update += key + " = ? ,\n";
+                updateParams.add(properties.get(key));
+            }
+        }
+
+        String updateGeometryAsString = this.objectMapper.writeValueAsString(geometry);
+
+        update += "\"%3$s\" = ST_SetSRID(ST_GeomFromGeoJSON(?), %6$s), \n";
+        updateParams.add(updateGeometryAsString);
+        update += "\"%4$s\" = ST_SetSRID(ST_ConvexHull(ST_GeomFromGeoJSON(?)), %6$s) \n";
+        updateParams.add(updateGeometryAsString);
+        update += "where \"%5$s\" = ?";
+        updateParams.add(id);
+
+        update = String.format(update,
             this.defaultGeometrySchema,
             tableName.toString(),
             this.defaultGeometryColumn,
@@ -97,7 +129,21 @@ public class DefaultFeatureRepository implements FeatureRepository, Initializing
             this.defaultIdColumn,
             "4326");
 
-        this.jdbcTemplate.update(sql, params.toArray(new Object[params.size()]));
+        this.jdbcTemplate.update(update, updateParams.toArray(new Object[updateParams.size()]));
+    }
+
+    @Override
+    public List<FeatureUpdateRecord> getUpdates(UUID tableName, String id) {
+        String qlString = "FROM FeatureUpdate u WHERE u.tableName = :tableName and u.featureId = :id";
+
+        return entityManager
+            .createQuery(qlString, FeatureUpdateEntity.class)
+            .setParameter("tableName", tableName)
+            .setParameter("id", id)
+            .getResultList()
+            .stream()
+            .map(e -> e.toRecord())
+            .collect(Collectors.toList());
     }
 
     private List<String> getColumns(String tableName) {
@@ -110,7 +156,7 @@ public class DefaultFeatureRepository implements FeatureRepository, Initializing
                 return tableColumns.get(tableName);
             }
 
-            String columnQuery = "select column_name from information_schema.columns where table_name= ?";
+            String columnQuery = "select column_name from information_schema.columns where table_name = ?";
 
             List<Map<String, Object>> rows = jdbcTemplate.queryForList(columnQuery, new Object[] { tableName });
             List<String> columns = rows.stream()
@@ -122,6 +168,13 @@ public class DefaultFeatureRepository implements FeatureRepository, Initializing
 
             return columns;
         }
+    }
+
+    private boolean isUpdatable(String column) {
+        return (!column.equalsIgnoreCase(this.defaultIdColumn)) &&
+               (!column.equalsIgnoreCase(this.defaultUriColumn)) &&
+               (!column.equalsIgnoreCase(this.defaultGeometryColumn)) &&
+               (!column.equalsIgnoreCase(this.defaultGeometrySimpleColumn));
     }
 
 }

@@ -96,12 +96,12 @@ class Sidebar extends React.Component {
 
   updateFeature() {
     this.props.updateFeature()
-    .then(()=> {
-      this.props.refreshFeatureProvenance();
-    })
-    .catch(err => {
-      message.error(err.message);
-    });
+      .then(() => {
+        this.props.refreshFeatureProvenance();
+      })
+      .catch(err => {
+        message.error(err.message);
+      });
   }
 
   onPropertyChange(key, value) {

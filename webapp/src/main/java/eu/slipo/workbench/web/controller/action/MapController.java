@@ -161,7 +161,7 @@ public class MapController extends BaseController {
         @PathVariable UUID tableName, @PathVariable String id, @RequestBody Feature feature
     ) {
         try {
-            featureRepository.update(tableName, id, feature.getProperties(), feature.getGeometry());
+            featureRepository.update(this.currentUserId(), tableName, id, feature.getProperties(), feature.getGeometry());
             return RestResponse.success();
         } catch (Exception ex) {
             return this.exceptionToResponse(ex);

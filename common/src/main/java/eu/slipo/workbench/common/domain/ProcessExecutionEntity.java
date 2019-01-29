@@ -74,13 +74,6 @@ public class ProcessExecutionEntity
         orphanRemoval = false)
     List<ProcessExecutionStepEntity> steps = new ArrayList<>();
 
-    @OneToMany(
-        mappedBy = "execution",
-        fetch = FetchType.LAZY,
-        cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH },
-        orphanRemoval = false)
-    List<ProcessExecutionTableEntity> tables = new ArrayList<>();
-
     @OneToOne(
         mappedBy = "workflow",
         fetch = FetchType.EAGER,
@@ -257,17 +250,6 @@ public class ProcessExecutionEntity
         return null;
     }
 
-    public List<ProcessExecutionTableEntity> getTables()
-    {
-        return tables;
-    }
-
-    public void addTable(ProcessExecutionTableEntity processExecutionTableEntity)
-    {
-        processExecutionTableEntity.setExecution(this);
-        tables.add(processExecutionTableEntity);
-    }
-
     public ProcessExecutionRecord toProcessExecutionRecord()
     {
         return toProcessExecutionRecord(true, false);
@@ -314,9 +296,6 @@ public class ProcessExecutionEntity
         if (includeSteps) {
             for (ProcessExecutionStepEntity s: steps) {
                 record.addStep(s.toProcessExecutionStepRecord(includeNonVerifiedFiles));
-            }
-            for (ProcessExecutionTableEntity t : tables) {
-                record.addTable(t.toProcessExecutionTableRecord());
             }
         }
 
