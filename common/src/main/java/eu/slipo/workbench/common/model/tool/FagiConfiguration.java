@@ -387,9 +387,15 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
     {
         private static final long serialVersionUID = 1L;
         
-        private static final String DEFAULT_STATS_PATH = "stats.json";
+        public static final String DEFAULT_FUSED_NAME = "fused";
         
-        private static final String DEFAULT_FUSION_LOG_PATH = "fusion.log";
+        public static final String DEFAULT_REMAINING_NAME = "remaining";
+        
+        public static final String DEFAULT_REVIEW_NAME = "ambiguous";
+        
+        public static final String DEFAULT_STATS_NAME = "stats";
+        
+        public static final String DEFAULT_FUSION_LOG_NAME = "fusionLog";
         
         String id;
         
@@ -409,9 +415,17 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
         
         Output() {}
 
-        Output(String id, Mode mode)
+        Output(String id, Mode mode, EnumDataFormat outputFormat)
         {
-            this(id, mode, null, null, null, null);
+            final String outputExtension = outputFormat.getFilenameExtension();
+            this.id = id;
+            this.mode = mode;
+            this.outputDir = null;
+            this.fusedPath = DEFAULT_FUSED_NAME + '.' + outputExtension ;
+            this.remainingPath = DEFAULT_REMAINING_NAME + '.' + outputExtension;
+            this.reviewPath = DEFAULT_REVIEW_NAME + '.' + outputExtension;
+            this.statsPath = DEFAULT_STATS_NAME + ".json";
+            this.fusionLogPath = DEFAULT_FUSION_LOG_NAME + ".txt";
         }
         
         Output(
@@ -424,8 +438,8 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
             this.fusedPath = fusedPath;
             this.remainingPath = remainingPath;
             this.reviewPath = reviewPath;
-            this.statsPath = DEFAULT_STATS_PATH;
-            this.fusionLogPath = DEFAULT_FUSION_LOG_PATH;
+            this.statsPath = DEFAULT_STATS_NAME + ".json";
+            this.fusionLogPath = DEFAULT_FUSION_LOG_NAME + ".txt";
         }
         
         @JsonProperty("id")
@@ -630,7 +644,7 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
         this.rightSpec = new InputSpec("b");
         this.linksSpec = new LinksSpec("links");
         
-        this.target = new Output("ab", Mode.AA);
+        this.target = new Output("ab", Mode.AA, this.outputFormat);
     }
     
     @JsonIgnore

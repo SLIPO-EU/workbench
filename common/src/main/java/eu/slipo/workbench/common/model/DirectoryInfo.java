@@ -9,7 +9,9 @@ import java.util.Optional;
 /**
  * A file system entry for a directory
  */
-public class DirectoryInfo extends FileSystemEntry {
+public class DirectoryInfo extends FileSystemEntry 
+{
+    private static final long serialVersionUID = 1L;
 
     private List<FileInfo> files = new ArrayList<FileInfo>();
 
@@ -17,18 +19,18 @@ public class DirectoryInfo extends FileSystemEntry {
 
     public DirectoryInfo(String name, String path, ZonedDateTime modifiedOn) 
     {
-        super(0, name, path, modifiedOn);
+        super(name, path, -1, modifiedOn);
     }
     
     public DirectoryInfo(String name, String path, long modifiedOn) 
     {
-        super(0, name, path, modifiedOn);
+        super(name, path, -1, modifiedOn);
     }
 
     public DirectoryInfo(
         String name, String path, ZonedDateTime modifiedOn, List<FileInfo> files, List<DirectoryInfo> folders)
     {
-        super(0, name, path, modifiedOn);
+        super(name, path, -1, modifiedOn);
         this.files.addAll(files);
         this.folders.addAll(folders);
     }
@@ -36,7 +38,7 @@ public class DirectoryInfo extends FileSystemEntry {
     public DirectoryInfo(
         String name, String path, long modifiedOn, List<FileInfo> files, List<DirectoryInfo> folders)
     {
-        super(0, name, path, modifiedOn);
+        super(name, path, -1, modifiedOn);
         this.files.addAll(files);
         this.folders.addAll(folders);
     }

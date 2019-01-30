@@ -90,6 +90,12 @@ public class ReverseTriplegeoJobConfiguration extends ContainerBasedJobConfigura
     }
 
     @Autowired
+    private void setImage(@Value("${slipo.rpc-server.tools.reverse-triplegeo.docker.image}") String imageName)
+    {
+        this.imageName = imageName;
+    }
+
+    @Autowired
     private void setTimeout(
         @Value("${slipo.rpc-server.tools.reverse-triplegeo.timeout-seconds:}") Integer timeoutSeconds)
     {
@@ -249,7 +255,6 @@ public class ReverseTriplegeoJobConfiguration extends ContainerBasedJobConfigura
     @Bean("reverseTriplegeo.createContainerTasklet")
     @JobScope
     public CreateContainerTasklet createContainerTasklet(
-        @Value("${slipo.rpc-server.tools.reverse-triplegeo.docker.image}") String imageName,
         @Value("#{jobExecution.jobInstance.id}") Long jobId,
         @Value("#{jobExecutionContext['workDir']}") String workDir,
         @Value("#{jobExecutionContext['inputDir']}") String inputDir,

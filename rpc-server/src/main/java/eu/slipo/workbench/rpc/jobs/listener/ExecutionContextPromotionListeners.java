@@ -1,5 +1,10 @@
 package eu.slipo.workbench.rpc.jobs.listener;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map.Entry;
 import java.util.function.Function;
 
 import org.springframework.batch.core.ExitStatus;
@@ -10,6 +15,8 @@ import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.support.PatternMatcher;
 import org.springframework.util.Assert;
 
+import com.google.common.collect.Iterables;
+
 /**
  * Provide static builders for listeners ({@link StepExecutionListener}) that map and promote
  * a part of step-execution context to job-execution context.
@@ -18,7 +25,9 @@ public class ExecutionContextPromotionListeners
 {
     public static class Builder
     {
-        private final String[] keys;
+        private String[] keys;
+
+        private String[] keyPatterns;
 
         private Boolean strict;
 
@@ -26,9 +35,20 @@ public class ExecutionContextPromotionListeners
 
         private Function<String,String> keyMapper;
 
-        private Builder(String[] keys)
+        private Builder() {}
+
+        public Builder keys(String ...keys)
         {
+            Assert.isTrue(keyPatterns == null, "A set of key patterns is already specified!");
             this.keys = keys;
+            return this;
+        }
+
+        public Builder keysMatching(String ...keyPatterns)
+        {
+            Assert.isTrue(keys == null, "A set of keys is already given!");
+            this.keyPatterns = keyPatterns;
+            return this;
         }
 
         /**
@@ -44,8 +64,9 @@ public class ExecutionContextPromotionListeners
         }
 
         /**
-         * Set whether we should fail if a given key is not found in step context.
-         * @return
+         * Set whether we should fail if a given key is not found in step context (this
+         * is meaningful only when a set of keys is given).
+         * @param flag
          */
         public Builder strict(boolean flag)
         {
@@ -77,25 +98,38 @@ public class ExecutionContextPromotionListeners
 
         public StepExecutionListener build()
         {
-            KeyMappingPromotionListener listener = new KeyMappingPromotionListener(keys, keyMapper);
+            Assert.state(this.keys != null || this.keyPatterns != null,
+                "A set of keys (or a key patterns) must be provided!");
 
-            if (statuses != null)
-                listener.setStatuses(statuses);
-            if (strict != null)
-                listener.setStrict(strict);
+            KeyMappingPromotionListener listener = new KeyMappingPromotionListener();
+
+            if (this.keys != null) {
+                listener.keys = new LinkedList<>(Arrays.asList(this.keys));
+            } else {
+                listener.keyPatterns = new LinkedList<>(Arrays.asList(this.keyPatterns));
+            }
+
+            if (this.keyMapper != null)
+                listener.keyMapper = this.keyMapper;
+
+            if (this.statuses != null)
+                listener.statuses = new LinkedList<>(Arrays.asList(this.statuses));
+
+            if (this.strict != null && this.keys != null)
+                listener.strict = this.strict.booleanValue();
 
             return listener;
         }
     }
 
-    public static Builder builder(String ...keys)
+    public static Builder builder()
     {
-        return new Builder(keys);
+        return new Builder();
     }
 
     public static StepExecutionListener fromKeys(String ...keys)
     {
-        return (new Builder(keys)).strict(true).build();
+        return (new Builder()).keys(keys).strict(true).build();
     }
 
     /**
@@ -107,60 +141,60 @@ public class ExecutionContextPromotionListeners
      */
     private static class KeyMappingPromotionListener extends StepExecutionListenerSupport
     {
-        private final String[] keys;
+        private List<String> keyPatterns;
 
-        private final Function<String, String> keyMapper;
+        private List<String> keys;
 
-        private String[] statuses = new String[] { ExitStatus.COMPLETED.getExitCode() };
+        private Function<String, String> keyMapper;
+
+        private List<String> statuses = Collections.singletonList(ExitStatus.COMPLETED.getExitCode());
 
         private boolean strict = true;
 
-        public KeyMappingPromotionListener(String[] keys, Function<String, String> keyMapper)
-        {
-            Assert.notEmpty(keys, "Expected a non empty array of keys");
-            this.keys = keys;
-            this.keyMapper = keyMapper;
-        }
-
-        /**
-         * Set if an exception should be thrown if a key is missing
-         */
-        public void setStrict(boolean strict)
-        {
-            this.strict = strict;
-        }
-
-        /**
-         * Set a list of statuses for which the promotion should occur
-         */
-        public void setStatuses(String[] statuses)
-        {
-            this.statuses = statuses;
-        }
+        private KeyMappingPromotionListener() {}
 
         @Override
         public ExitStatus afterStep(StepExecution stepExecution)
         {
-            ExecutionContext stepContext = stepExecution.getExecutionContext();
-            ExecutionContext jobContext = stepExecution.getJobExecution().getExecutionContext();
+            if (!matchStatus(stepExecution.getExitStatus()))
+                return null; // The status is not matching: promotion is skipped
 
-            String exitCode = stepExecution.getExitStatus().getExitCode();
-            for (String statusPattern : statuses) {
-                if (PatternMatcher.match(statusPattern, exitCode)) {
-                    for (String key : keys) {
-                        if (stepContext.containsKey(key)) {
-                            String key1 = keyMapper != null? keyMapper.apply(key) : key;
-                            if (key1 != null && !key1.isEmpty())
-                                jobContext.put(key1, stepContext.get(key));
-                        } else if (strict) {
-                            throw new IllegalStateException(
-                                "The key [" + key +"] was not found into step context");
-                        }
+            final ExecutionContext stepExecutionContext = stepExecution.getExecutionContext();
+            final ExecutionContext jobExecutionContext = stepExecution.getJobExecution().getExecutionContext();
+
+            if (keys != null) {
+                // Promote given keys (if found in execution context)
+                for (String key : keys) {
+                    if (stepExecutionContext.containsKey(key)) {
+                        String key1 = keyMapper != null ? keyMapper.apply(key) : key;
+                        if (key1 != null && !key1.isEmpty())
+                            jobExecutionContext.put(key1, stepExecutionContext.get(key));
+                    } else if (strict) {
+                        throw new IllegalStateException(
+                            "The key [" + key + "] was not found into step context");
+                    }
+                }
+            } else {
+                // Promote all keys matching a pattern
+                for (Entry<String,Object> entry: stepExecutionContext.entrySet()) {
+                    final String key = entry.getKey();
+                    if (key.startsWith(".batch"))
+                        continue; // ignore keys used internally by Batch
+                    if (Iterables.any(keyPatterns, keyPattern -> PatternMatcher.match(keyPattern, key))) {
+                        String key1 = keyMapper != null ? keyMapper.apply(key) : key;
+                        if (key1 != null && !key1.isEmpty())
+                            jobExecutionContext.put(key1, entry.getValue());
                     }
                 }
             }
+
             return null;
         }
-    }
 
+        private boolean matchStatus(ExitStatus exitStatus)
+        {
+            final String exitCode = exitStatus.getExitCode();
+            return Iterables.any(statuses, status -> PatternMatcher.match(status, exitCode));
+        }
+    }
 }

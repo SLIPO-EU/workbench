@@ -171,8 +171,9 @@ public class GreetingJobConfiguration
         @Qualifier("greeting.createEchoContainerTasklet") CreateContainerTasklet tasklet)
         throws Exception
     {
-        StepExecutionListener stepContextListener = ExecutionContextPromotionListeners
-            .builder("containerId", "containerName").prefix("echo")
+        StepExecutionListener stepContextListener = ExecutionContextPromotionListeners.builder()
+            .keys("containerId", "containerName")
+            .prefix("echo")
             .build();
 
         return stepBuilderFactory.get("createEchoContainer")

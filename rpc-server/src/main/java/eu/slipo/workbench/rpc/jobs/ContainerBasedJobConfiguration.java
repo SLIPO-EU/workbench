@@ -14,6 +14,11 @@ public class ContainerBasedJobConfiguration extends BaseJobConfiguration
     protected DockerClient docker;
 
     /**
+     * The docker image on which the container is based
+     */
+    protected String imageName;
+
+    /**
      * The root directory on a container, under which directories/files will be bind-mounted
      */
     protected Path containerDataDir;

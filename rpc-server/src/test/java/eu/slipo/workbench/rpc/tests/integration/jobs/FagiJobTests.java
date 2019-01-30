@@ -39,7 +39,7 @@ public class FagiJobTests extends AbstractJobTests
 {
     private static Logger logger = LoggerFactory.getLogger(FagiJobTests.class);
 
-    private static final String JOB_NAME = "limes";
+    private static final String JOB_NAME = "fagi";
 
     @TestConfiguration
     public static class Setup

@@ -70,6 +70,12 @@ public class DeerJobConfiguration extends ContainerBasedJobConfiguration
     }
 
     @Autowired
+    private void setImage(@Value("${slipo.rpc-server.tools.deer.docker.image}") String imageName)
+    {
+        this.imageName = imageName;
+    }
+
+    @Autowired
     private void setTimeout(
         @Value("${slipo.rpc-server.tools.deer.timeout-seconds:}") Integer timeoutSeconds)
     {
@@ -214,7 +220,6 @@ public class DeerJobConfiguration extends ContainerBasedJobConfiguration
     @Bean("deer.createContainerTasklet")
     @JobScope
     public CreateContainerTasklet createContainerTasklet(
-        @Value("${slipo.rpc-server.tools.deer.docker.image}") String imageName,
         @Value("#{jobExecution.jobInstance.id}") Long jobId,
         @Value("#{jobExecutionContext['workDir']}") String workDir,
         @Value("#{jobExecutionContext['inputDir']}") String inputDir,

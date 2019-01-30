@@ -80,6 +80,12 @@ public class LimesJobConfiguration extends ContainerBasedJobConfiguration
     }
 
     @Autowired
+    private void setImage(@Value("${slipo.rpc-server.tools.limes.docker.image}") String imageName)
+    {
+        this.imageName = imageName;
+    }
+
+    @Autowired
     private void setTimeout(
         @Value("${slipo.rpc-server.tools.limes.timeout-seconds:}") Integer timeoutSeconds)
     {
@@ -228,7 +234,6 @@ public class LimesJobConfiguration extends ContainerBasedJobConfiguration
     @Bean("limes.createContainerTasklet")
     @JobScope
     public CreateContainerTasklet createContainerTasklet(
-        @Value("${slipo.rpc-server.tools.limes.docker.image}") String imageName,
         @Value("#{jobExecution.jobInstance.id}") Long jobId,
         @Value("#{jobExecutionContext['workDir']}") String workDir,
         @Value("#{jobExecutionContext['inputDir']}") String inputDir,

@@ -53,7 +53,7 @@ public class DefaultDirectoryTraverse implements DirectoryTraverse
             } else if (entry.isFile()) {
                 di.addFile(
                     new FileInfo(
-                        entry.length(), entry.getName(), relativeEntryPath.toString(), entry.lastModified()));
+                        entry.getName(), relativeEntryPath.toString(), entry.length(), entry.lastModified()));
             }
         }
 
