@@ -268,7 +268,6 @@ const configReducer = (state, action, global) => {
       return {
         ...state,
         provenance: null,
-        selectedFeatures: [],
         selectedFeature: null,
       };
     }
