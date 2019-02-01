@@ -72,6 +72,8 @@ export const FilterTypes = [{
   value: 'greaterOrEqual'
 }];
 
+export const ATTRIBUTE_GEOMETRY = '__geometry_update';
+
 // TODO : Replace with attributes from SLIPO ontology
 export const Attributes = [{
   title: 'Country',
@@ -141,4 +143,8 @@ export const Attributes = [{
   title: 'Timestamp',
   key: 'timestamp',
   editable: true,
+}, {
+  title: 'Geometry',
+  key: ATTRIBUTE_GEOMETRY,
+  editable: false,
 }];

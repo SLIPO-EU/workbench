@@ -1,4 +1,5 @@
 export const FEATURE_COLOR_PROPERTY = '__color';
+export const FEATURE_GEOMETRY = 'geometry';
 export const FEATURE_ICON_PROPERTY = '__icon';
 export const FEATURE_ID = 'id';
 export const FEATURE_LAYER_PROPERTY = '__layer';

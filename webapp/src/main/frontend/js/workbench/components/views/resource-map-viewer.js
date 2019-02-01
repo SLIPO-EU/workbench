@@ -15,11 +15,13 @@ import {
   setFilter,
   toggleFilter,
   selectFeatures,
+  selectGeometrySnapshot,
   setCenter,
   setItemPosition,
   setLayerStyle,
   toggleEditor,
   toggleLayerConfiguration,
+  updateFeatureVertex,
 } from '../../ducks/ui/views/map-viewer';
 
 import {
@@ -129,6 +131,8 @@ class ResourceMapViewer extends React.Component {
         layerConfigVisible={this.props.layerConfigVisible}
         layers={layers}
         onFeatureSelect={(features) => this.props.selectFeatures(features)}
+        onGeometryChange={() => this.props.updateFeatureVertex()}
+        onGeometrySnapshotChange={(index, geometry) => this.props.selectGeometrySnapshot(index, geometry)}
         onMoveEnd={this.onMoveEnd}
         osm={osm}
         provenance={this.props.provenance}
@@ -181,11 +185,13 @@ const mapDispatchToProps = (dispatch) => bindActionCreators({
   setFilter,
   toggleFilter,
   selectFeatures,
+  selectGeometrySnapshot,
   setCenter,
   setItemPosition,
   setLayerStyle,
   toggleEditor,
   toggleLayerConfiguration,
+  updateFeatureVertex,
 }, dispatch);
 
 const mergeProps = (stateProps, dispatchProps, ownProps) => {

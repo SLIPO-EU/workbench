@@ -67,16 +67,18 @@ export function setFileStyle(id, style, token) {
 
 export function updateFeature(table, id, properties, feature, token) {
   // Feature is an OpenLayers object and must be converted to GeoJSON
-  const format = new GeoJSON();
-  const geometry = format.writeGeometryObject(feature.getGeometry(), {
-    featureProjection: 'EPSG:3857',
-    dataProjection: 'EPSG:4326',
-  });
-
+  let geometry = null;
+  if (feature) {
+    const format = new GeoJSON();
+    geometry = format.writeGeometryObject(feature.getGeometry(), {
+      featureProjection: 'EPSG:3857',
+      dataProjection: 'EPSG:4326',
+    });
+  }
 
   const data = {
     // Filter out any custom/helper properties
-    properties: Attributes.reduce((result, attr) => {
+    properties: Attributes.filter(a => a.editable).reduce((result, attr) => {
       result[attr.key] = properties[attr.key];
       return result;
     }, {}),

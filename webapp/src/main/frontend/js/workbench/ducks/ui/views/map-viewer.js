@@ -6,6 +6,7 @@ import {
 } from '../../../model/map-viewer';
 
 import {
+  geometryFromObject,
   processExecutionToLayers,
   provenanceToTable,
 } from './map-viewer/util';
@@ -66,6 +67,9 @@ const Types = {
   EDIT_COMMIT_COMPLETE: 'ui/map/viewer/EDIT_COMMIT_COMPLETE',
   EDIT_CANCEL: 'ui/map/viewer/EDIT_CANCEL',
   EDIT_UPDATE_PROPERTY: 'ui/map/viewer/EDIT_UPDATE_PROPERTY',
+  EDIT_VERTEX: 'ui/map/viewer/EDIT_VERTEX',
+
+  SELECT_GEOMETRY_SNAPSHOT: 'ui/map/viewer/SELECT_GEOMETRY_SNAPSHOT',
 };
 
 /*
@@ -85,6 +89,7 @@ const initialEditState = {
   },
   loading: false,
   active: false,
+  updates: 0,
 };
 
 const initialState = {
@@ -149,7 +154,7 @@ const dataReducer = (state, action) => {
   }
 };
 
-const configReducer = (state, action) => {
+const configReducer = (state, action, global) => {
   switch (action.type) {
     case Types.SET_CENTER:
       return {
@@ -245,12 +250,28 @@ const configReducer = (state, action) => {
         selectedFeatures: [],
       };
 
-    case Types.HIDE_PROVENANCE:
+    case Types.HIDE_PROVENANCE: {
+      // Restore geometry snapshot
+      const { updates, dataRows } = state.provenance;
+      if (updates.length !== 0) {
+        const feature = global.config.selectedFeature.feature;
+        // Last row is always the geometry attribute
+        const row = dataRows[dataRows.length - 1];
+        // Last cell is the most recent value
+        const cell = row[row.length - 1];
+        const geometry = geometryFromObject(cell.value);
+        // Set selected feature geometry. OpenLayers map rendering is not
+        // controlled by React.
+        feature.setGeometry(geometry);
+      }
+
       return {
         ...state,
         provenance: null,
+        selectedFeatures: [],
         selectedFeature: null,
       };
+    }
 
     case Types.BRING_PANEL_TO_FRONT:
       return {
@@ -272,8 +293,25 @@ const configReducer = (state, action) => {
     case Types.RECEIVE_FEATURE_PROVENANCE:
       return {
         ...state,
-        provenance: provenanceToTable(action.data),
+        provenance: action.provenance,
       };
+
+    case Types.SELECT_GEOMETRY_SNAPSHOT: {
+      const feature = global.config.selectedFeature.feature;
+      const geometry = geometryFromObject(action.geometry);
+
+      // Set selected feature geometry. OpenLayers map rendering is not
+      // controlled by React.
+      feature.setGeometry(geometry);
+
+      return {
+        ...state,
+        provenance: {
+          ...state.provenance,
+          geometrySnapshotIndex: action.index,
+        },
+      };
+    }
 
     case Types.SELECT_FEATURE:
       return {
@@ -316,20 +354,25 @@ const editReducer = (state, action, global) => {
     case Types.EDIT_TOGGLE: {
       const feature = action.feature;
 
-      return {
-        ...state,
-        id: feature ? feature.getId().split('::')[1] : null,
-        table: feature ? feature.get(FEATURE_LAYER_PROPERTY) : null,
-        feature,
-        initial: {
-          properties: feature ? { ...feature.getProperties() } : null,
-          geometry: feature ? feature.getGeometry().clone() : null,
-        },
-        current: {
-          properties: feature ? { ...feature.getProperties() } : null,
-        },
-        active: feature != null,
-      };
+      if (feature) {
+        const { geometry, ...properties } = feature.getProperties();
+
+        return {
+          ...state,
+          id: feature.getId().split('::')[1],
+          table: feature.get(FEATURE_LAYER_PROPERTY),
+          feature,
+          initial: {
+            properties: { ...properties },
+            geometry: feature.getGeometry().clone(),
+          },
+          current: {
+            properties: { ...properties },
+          },
+          active: true,
+        };
+      }
+      return initialEditState;
     }
 
     case Types.EDIT_COMMIT_BEGIN:
@@ -344,6 +387,12 @@ const editReducer = (state, action, global) => {
         current: {
           properties: { ...state.current.properties, [action.key]: action.value },
         }
+      };
+
+    case Types.EDIT_VERTEX:
+      return {
+        ...state,
+        updates: ++state.updates,
       };
 
     case Types.EDIT_COMMIT_COMPLETE: {
@@ -413,9 +462,10 @@ export default (state = initialState, action) => {
     case Types.SET_CENTER:
     case Types.SET_ITEM_POSITION:
     case Types.SELECT_FEATURE:
+    case Types.SELECT_GEOMETRY_SNAPSHOT:
       return {
         ...state,
-        config: configReducer(state.config, action),
+        config: configReducer(state.config, action, state),
       };
 
     case Types.FILTER_TOGGLE:
@@ -428,6 +478,7 @@ export default (state = initialState, action) => {
     case Types.EDIT_TOGGLE:
     case Types.EDIT_COMMIT_BEGIN:
     case Types.EDIT_UPDATE_PROPERTY:
+    case Types.EDIT_VERTEX:
     case Types.EDIT_COMMIT_COMPLETE:
     case Types.EDIT_CANCEL:
       return {
@@ -486,9 +537,9 @@ const requestFeatureProvenance = () => ({
   type: Types.REQUEST_FEATURE_PROVENANCE,
 });
 
-const receiveFeatureProvenance = (data) => ({
+const receiveFeatureProvenance = (provenance) => ({
   type: Types.RECEIVE_FEATURE_PROVENANCE,
-  data,
+  provenance,
 });
 
 const selectFeature = (feature, outputKey, featureId, featureUri) => ({
@@ -511,8 +562,14 @@ export const fetchFeatureProvenance = (processId, processVersion, executionId, f
 
   return provenanceService.fetchFeatureProvenance(processId, processVersion, executionId, outputKey, featureId, featureUri, token)
     .then((data) => {
-      dispatch(receiveFeatureProvenance(data));
-      dispatch(bringToFront(EnumPane.FeatureProvenance));
+      const provenance = provenanceToTable(data);
+
+      dispatch(receiveFeatureProvenance(provenance));
+      if (provenance) {
+        dispatch(bringToFront(EnumPane.FeatureProvenance));
+      }
+
+      return provenance;
     });
 };
 
@@ -546,8 +603,14 @@ export const refreshFeatureProvenance = () => (dispatch, getState) => {
 
   return provenanceService.fetchFeatureProvenance(processId, processVersion, executionId, outputKey, featureId, featureUri, token)
     .then((data) => {
-      dispatch(receiveFeatureProvenance(data));
-      dispatch(bringToFront(EnumPane.FeatureProvenance));
+      const provenance = provenanceToTable(data);
+
+      dispatch(receiveFeatureProvenance(provenance));
+      if (provenance) {
+        dispatch(bringToFront(EnumPane.FeatureProvenance));
+      }
+
+      return provenance;
     });
 };
 
@@ -585,7 +648,7 @@ export const updateFeature = () => (dispatch, getState) => {
   const {
     meta: { csrfToken: token },
     ui: { views: { map: {
-      edit: { id, table, current: { properties: current }, initial: { properties: initial } },
+      edit: { id, table, current: { properties: current }, initial: { properties: initial }, updates },
       config: { selectedFeature: { feature } },
     } } },
   } = getState();
@@ -607,7 +670,7 @@ export const updateFeature = () => (dispatch, getState) => {
 
   dispatch(updateFeatureBegin());
 
-  return mapService.updateFeature(table, id, properties, feature, token)
+  return mapService.updateFeature(table, id, properties, updates === 0 ? null : feature, token)
     .then(() => {
       dispatch(updateFeatureComplete());
     });
@@ -668,6 +731,12 @@ export const clearSelectedFeatures = () => ({
   type: Types.CLEAR_SELECTED_FEATURES,
 });
 
+export const selectGeometrySnapshot = (index, geometry) => ({
+  type: Types.SELECT_GEOMETRY_SNAPSHOT,
+  index,
+  geometry,
+});
+
 export const hideProvenance = () => ({
   type: Types.HIDE_PROVENANCE,
 });
@@ -700,6 +769,10 @@ export const updateFeatureProperty = (key, value) => ({
   type: Types.EDIT_UPDATE_PROPERTY,
   key,
   value,
+});
+
+export const updateFeatureVertex = () => ({
+  type: Types.EDIT_VERTEX,
 });
 
 export const cancelEdit = () => ({

@@ -179,6 +179,12 @@ class SelectInteraction extends React.Component {
     }
   }
 
+  clear() {
+    if (this.interaction) {
+      this.interaction.getFeatures().clear();
+    }
+  }
+
   render() {
     return null;
   }
