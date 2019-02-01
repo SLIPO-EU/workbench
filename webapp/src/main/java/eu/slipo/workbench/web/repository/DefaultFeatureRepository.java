@@ -140,7 +140,7 @@ public class DefaultFeatureRepository implements FeatureRepository {
 
     @Override
     public List<FeatureUpdateRecord> getUpdates(UUID tableName, String id) {
-        String qlString = "FROM FeatureUpdate u WHERE u.tableName = :tableName and u.featureId = :id";
+        String qlString = "FROM FeatureUpdate u WHERE u.tableName = :tableName and u.featureId = :id order by u.id";
 
         return entityManager
             .createQuery(qlString, FeatureUpdateEntity.class)
