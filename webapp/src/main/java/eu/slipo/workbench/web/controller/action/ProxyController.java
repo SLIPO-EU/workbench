@@ -219,7 +219,7 @@ public class ProxyController implements InitializingBean {
                 "    select 'FeatureCollection' As type, COALESCE(array_to_json(array_agg(f)), '[]') As features " +
                 "    from   (" +
                 "               select 'Feature' As type, " +
-                "                      ST_AsGeoJSON(dt.\"%6$s\")::json As geometry," +
+                "                      ST_AsGeoJSON(dt.\"%7$s\")::json As geometry," +
                 "                      row_to_json((select columns FROM (SELECT %3$s) As columns)) As properties, " +
                 "                      '%2$s::' || \"%5$s\" as id " +
                 "               from   \"%1$s\".\"%2$s\" As dt" +
@@ -228,7 +228,8 @@ public class ProxyController implements InitializingBean {
                 ")  As fc";
 
             dataQuery = String.format(
-                dataQuery, defaultSchema, tableName,  String.join(",", columns), boundingBox, defaultIdColumn, defaultGeometrySimpleColumn
+                dataQuery, defaultSchema, tableName,  String.join(",", columns), boundingBox,
+                defaultIdColumn, defaultGeometrySimpleColumn, defaultGeometryColumn
             );
 
             String output = jdbcTemplate.queryForObject(dataQuery, filterAndArguments.getRight(), String.class);
