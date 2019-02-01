@@ -16,6 +16,68 @@ const opacityToHex = (value = 100) => {
   return opacity[index];
 };
 
+export const createStyleForSymbol = (symbol, strokeColor, strokeWidth, fillColor, size, opacity = 100, scale = 1.0) => {
+  opacity = opacityToHex(opacity);
+
+  const stroke = new Stroke({
+    color: strokeColor,
+    width: strokeWidth,
+  });
+
+  const opacityStroke = new Stroke({
+    color: strokeColor + opacity,
+    width: strokeWidth,
+    lineCap: 'square',
+    lineJoin: 'bevel',
+  });
+
+  const fill = new Fill({
+    color: fillColor + opacity,
+  });
+
+  switch (symbol) {
+    case EnumSymbol.Square:
+      return new RegularShape({
+        fill,
+        stroke,
+        points: 4,
+        radius: scale * size / 2,
+        angle: Math.PI / 4,
+      });
+    case EnumSymbol.Triangle:
+      return new RegularShape({
+        fill,
+        stroke,
+        points: 3,
+        radius: scale * size / 2,
+        angle: 0,
+      });
+    case EnumSymbol.Polygon:
+      return new RegularShape({
+        fill,
+        stroke,
+        points: 8,
+        radius: scale * size / 2,
+        angle: Math.PI / 8,
+      });
+    case EnumSymbol.Cross:
+      return new RegularShape({
+        fill,
+        stroke: opacityStroke,
+        points: 4,
+        radius: scale * size / 2,
+        radius2: 0,
+        angle: 0
+      });
+    default:
+      return new Circle({
+        radius: scale * size / 2,
+        fill,
+        stroke,
+      });
+  }
+};
+
 export const createStyle = (icon, color, layerStyle, dash = false, scale = 1.0) => {
   const opacity = opacityToHex(layerStyle.opacity);
 
@@ -30,64 +92,19 @@ export const createStyle = (icon, color, layerStyle, dash = false, scale = 1.0) 
     lineDash: [5],
   });
 
-  const opacityStroke = new Stroke({
-    color: layerStyle.stroke.color + opacity,
-    width: layerStyle.stroke.width,
-    lineCap: 'square',
-    lineJoin: 'bevel',
-  });
-
   const fill = new Fill({
     color: layerStyle.fill.color + opacity,
   });
 
-  let image = null;
-  switch (layerStyle.symbol) {
-    case EnumSymbol.Square:
-      image = new RegularShape({
-        fill,
-        stroke,
-        points: 4,
-        radius: scale * layerStyle.size / 2,
-        angle: Math.PI / 4,
-      });
-      break;
-    case EnumSymbol.Triangle:
-      image = new RegularShape({
-        fill,
-        stroke,
-        points: 3,
-        radius: scale * layerStyle.size / 2,
-        angle: 0,
-      });
-      break;
-    case EnumSymbol.Polygon:
-      image = new RegularShape({
-        fill,
-        stroke,
-        points: 8,
-        radius: scale * layerStyle.size / 2,
-        angle: Math.PI / 8,
-      });
-      break;
-    case EnumSymbol.Cross:
-      image = new RegularShape({
-        fill,
-        stroke: opacityStroke,
-        points: 4,
-        radius: scale * layerStyle.size / 2,
-        radius2: 0,
-        angle: 0
-      });
-      break;
-    default:
-      image = new Circle({
-        radius: scale * layerStyle.size / 2,
-        fill,
-        stroke,
-      });
-      break;
-  }
+  const image = createStyleForSymbol(
+    layerStyle.symbol,
+    layerStyle.stroke.color,
+    layerStyle.stroke.width,
+    layerStyle.fill.color,
+    layerStyle.size,
+    layerStyle.opacity,
+    scale
+  );
 
   const style = new Style({
     fill,
