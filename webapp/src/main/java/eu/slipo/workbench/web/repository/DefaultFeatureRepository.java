@@ -107,17 +107,23 @@ public class DefaultFeatureRepository implements FeatureRepository {
         String update = "update \"%1$s\".\"%2$s\" set \n";
         for (String key : properties.keySet()) {
             if (columns.contains(key) && this.isUpdatable(key)) {
-                update += key + " = ? ,\n";
+                update += (updateParams.isEmpty() ? "" : ",") + key + " = ? \n";
                 updateParams.add(properties.get(key));
             }
         }
 
-        String updateGeometryAsString = this.objectMapper.writeValueAsString(geometry);
+        if (geometry != null) {
+            String updateGeometryAsString = this.objectMapper.writeValueAsString(geometry);
 
-        update += "\"%3$s\" = ST_SetSRID(ST_GeomFromGeoJSON(?), %6$s), \n";
-        updateParams.add(updateGeometryAsString);
-        update += "\"%4$s\" = ST_SetSRID(ST_ConvexHull(ST_GeomFromGeoJSON(?)), %6$s) \n";
-        updateParams.add(updateGeometryAsString);
+            if (!updateParams.isEmpty()) {
+                update += ",";
+            }
+            update += "\"%3$s\" = ST_SetSRID(ST_GeomFromGeoJSON(?), %6$s), \n";
+            updateParams.add(updateGeometryAsString);
+            update += "\"%4$s\" = ST_SetSRID(ST_ConvexHull(ST_GeomFromGeoJSON(?)), %6$s) \n";
+            updateParams.add(updateGeometryAsString);
+        }
+
         update += "where \"%5$s\" = ?";
         updateParams.add(id);
 
