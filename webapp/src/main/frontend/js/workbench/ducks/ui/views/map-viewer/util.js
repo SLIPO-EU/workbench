@@ -1,10 +1,12 @@
 import _ from 'lodash';
+import GeoJSON from 'ol/format/geojson';
 
 import {
   Colors,
 } from '../../../../model/constants';
 
 import {
+  ATTRIBUTE_GEOMETRY,
   EnumLayerType,
   Symbols,
 } from '../../../../model/map-viewer';
@@ -18,8 +20,16 @@ import {
 } from '../../../../model/process-designer';
 
 import {
+  FEATURE_GEOMETRY,
   FEATURE_URI,
 } from '../../../../components/helpers/map/model/constants';
+
+function undefinedToNull(value) {
+  if (typeof value === 'undefined') {
+    return null;
+  }
+  return value;
+}
 
 function createStyle(index) {
   return {
@@ -36,18 +46,26 @@ function createStyle(index) {
   };
 }
 
-function projectProperty(property, current, updates = [], index = 0) {
+function projectProperty(feature, property, current, updates = [], index = 0) {
+  if (property === ATTRIBUTE_GEOMETRY) {
+    // Set current value to the current geometry
+    current = feature[FEATURE_GEOMETRY];
+  }
+
   for (let i = updates.length - 1; i >= index; i--) {
-    if (updates[i].properties.hasOwnProperty(property)) {
+    if (property === ATTRIBUTE_GEOMETRY) {
+      current = updates[i].geometry;
+    } else if (updates[i].properties.hasOwnProperty(property)) {
       current = updates[i].properties[property];
     }
   }
+
   return current;
 }
 
 function createEnrichedCells(step, property, features, updates = []) {
   const initial = features.filter((f) => f.properties[FEATURE_URI] === step.uri && f.source !== step.name).pop();
-  const current = features.find((f) => f.properties[FEATURE_URI] === step.uri && f.source === step.name);
+  const enriched = features.find((f) => f.properties[FEATURE_URI] === step.uri && f.source === step.name);
 
   const updated = updates && updates.some(u => u.properties.hasOwnProperty(property));
   const firstUpdate = updated ? updates.filter(u => u.properties.hasOwnProperty(property))[0] : null;
@@ -55,23 +73,23 @@ function createEnrichedCells(step, property, features, updates = []) {
   const result = [
     // Initial
     {
-      value: initial ? initial.properties[property] : '-',
+      value: initial ? property === ATTRIBUTE_GEOMETRY ? null : initial.properties[property] : '-',
       output: false,
       updatedBy: null,
       updatedOn: null,
     },
     // Enriched
     {
-      value: projectProperty(property, current.properties[property], updates, 0),
-      output: current && initial ? firstUpdate ?
+      value: projectProperty(enriched, property, enriched.properties[property], updates, 0),
+      output: enriched && initial ? firstUpdate ?
         firstUpdate.properties[property] !== initial.properties[property] :
-        current.properties[property] !== initial.properties[property] : false,
+        enriched.properties[property] !== initial.properties[property] : false,
       updatedBy: null,
       updatedOn: null,
     },
     // Updates
     ...updates.map((item, index) => ({
-      value: projectProperty(property, current.properties[property], updates, index + 1),
+      value: projectProperty(enriched, property, enriched.properties[property], updates, index + 1),
       output: false,
       updatedBy: item.updatedBy.name,
       updatedOn: item.updatedOn,
@@ -94,10 +112,10 @@ function createFusedCells(step, property, features, updates) {
 
   // Add feature for fused POI if not already exists.
   // A fused POI may not exist if fusion is not the last step in the workflow.
-  let current = features.find((f) => f.properties[FEATURE_URI] === step.selectedUri && f.source === step.name);
-  if (!current) {
+  let fused = features.find((f) => f.properties[FEATURE_URI] === step.selectedUri && f.source === step.name);
+  if (!fused) {
     // Fused POI is not imported in the database and should be reconstructed by provenance data
-    current = {
+    fused = {
       type: 'Feature',
       source: step.name,
       geometry: null,
@@ -105,41 +123,41 @@ function createFusedCells(step, property, features, updates) {
         [FEATURE_URI]: step.selectedUri,
       },
     };
-    features.push(current);
+    features.push(fused);
   }
   // Check this is the last operation (property should exist)
-  const isLast = current.properties.hasOwnProperty(property);
+  const isLast = fused.properties.hasOwnProperty(property);
 
   // TODO: Check default action
   const value = action ? action.value : step.selectedUri === step.left.uri ? left.properties[property] : right.properties[property];
   // Add properties incrementally
   if (!isLast) {
-    current.properties[property] = value;
+    fused.properties[property] = value;
   }
 
   const result = [
     // Left input
     {
-      value: left.properties[property] || null,
+      value: property === ATTRIBUTE_GEOMETRY ? null : left.properties[property] || null,
     },
     // Right input
     {
-      value: right.properties[property] || null,
+      value: property === ATTRIBUTE_GEOMETRY ? null : right.properties[property] || null,
     },
     // Operation
     {
-      value: action ? action.operation : null,
+      value: property === ATTRIBUTE_GEOMETRY ? null : action ? action.operation : null,
     },
     // Fused value
     {
-      value: isLast ? projectProperty(property, current.properties[property], updates, 0) : value,
+      value: isLast ? projectProperty(fused, property, fused.properties[property], updates, 0) : undefinedToNull(value),
       output: !!action,
     },
     // Include updates only if this is the last operation
     ...(isLast ? updates : []).map((item, index) => ({
-      value: isLast ? projectProperty(property, current.properties[property], updates, index + 1) : value,
-      updatedBy: isLast ? item.updatedBy.name : null,
-      updatedOn: isLast ? item.updatedOn : null,
+      value: projectProperty(fused, property, fused.properties[property], updates, index + 1),
+      updatedBy: item.updatedBy.name,
+      updatedOn: item.updatedOn,
     })),
   ];
 
@@ -252,6 +270,11 @@ export function processExecutionToLayers(process, execution) {
 export function provenanceToTable(provenance) {
   const features = provenance.features.features;
   const updates = provenance.updates || [];
+  const operations = provenance.operations || [];
+
+  if (operations.length === 0) {
+    return null;
+  }
 
   const inputRow = [];
   const dataRows = [];
@@ -263,9 +286,13 @@ export function provenanceToTable(provenance) {
       return _.uniq([...result, ...keys]);
     }, [])
     .sort();
+  // Add property for geometry updates
+  if (updates.length !== 0) {
+    properties.push(ATTRIBUTE_GEOMETRY);
+  }
 
   // Steps
-  const steps = provenance.operations
+  const steps = operations
     .map((o, index) => {
       switch (o.tool) {
         case EnumTool.DEER: {
@@ -313,13 +340,16 @@ export function provenanceToTable(provenance) {
   steps.push(
     ...updates.map((update, index) => ({
       iconClass: 'fa fa-pencil',
-      index: provenance.operations.length + index + 1,
+      index: operations.length + index + 1,
       name: '',
       tool: null,
       updatedOn: update.updatedOn,
       updatedBy: update.updatedBy.name,
     }))
   );
+
+  // Actual step count
+  const stepCount = steps.filter(s => s.tool !== null).length;
 
   // Inputs
   steps
@@ -328,17 +358,17 @@ export function provenanceToTable(provenance) {
     .map((step, index) => {
       switch (step.tool) {
         case EnumTool.DEER:
-          inputRow.push(
+          if (stepCount === 1) {
             // If only a single enrichment step is present, add input column (ignore update steps)
-            steps.filter(s => s.tool !== null).length === 1 ? {
+            inputRow.push({
               value: step.input,
               step: index + 1,
-            } : null,
-            {
-              value: steps.length === 1 ? 'Output' : step.input,
-              step: index + 1,
-            },
-          );
+            });
+          }
+          inputRow.push({
+            value: stepCount === 1 ? 'Output' : step.input,
+            step: index + 1,
+          });
           break;
         case EnumTool.FAGI:
           inputRow.push(
@@ -367,7 +397,7 @@ export function provenanceToTable(provenance) {
   // Add pseudo-input from updates
   inputRow.push(
     ...updates.map((update, index) => ({
-      step: steps.filter(s => s.tool !== null).length + index + 1,
+      step: stepCount + index + 1,
       value: '',
       updatedOn: update.updatedOn,
       updatedBy: update.updatedBy.name,
@@ -376,10 +406,12 @@ export function provenanceToTable(provenance) {
 
   // Data rows
   properties.forEach((property) => {
+    let columnIndex = 0;
+
     // Attribute columns
     const values = [{
       value: property,
-      step: 0,
+      index: columnIndex,
     }];
 
     steps.forEach((step, index) => {
@@ -388,9 +420,9 @@ export function provenanceToTable(provenance) {
           const cells = createEnrichedCells(step, property, features, updates);
           values.push(
             // If only a single operation exists, include initial value
-            ...(provenance.operations.length === 1 ? cells : cells.slice(1)).map(cell => ({
+            ...(operations.length === 1 ? cells : cells.slice(1)).map(cell => ({
               ...cell,
-              step: index + 1,
+              index: ++columnIndex,
               property,
             })),
           );
@@ -401,7 +433,7 @@ export function provenanceToTable(provenance) {
           values.push(
             ...cells.map(cell => ({
               ...cell,
-              step: index + 1,
+              index: ++columnIndex,
               property,
             })),
           );
@@ -412,19 +444,43 @@ export function provenanceToTable(provenance) {
       }
     });
 
-    // Filter out empty data cells (may occur due to enrichment operations)
-    dataRows.push(values.filter(c => c));
+    dataRows.push(values);
   });
 
-  return {
+  const result = {
     layer: provenance.stepName,
     featureId: provenance.featureId,
     featureUri: provenance.featureUri,
     steps,
     properties,
     features,
-    // Filter out empty input cells (may occur due to enrichment operations)
-    inputRow: inputRow.filter(i => i),
+    inputRow,
     dataRows,
+    updates,
+    geometrySnapshotIndex: dataRows[0].length - 1,
   };
+  return result;
+}
+
+export function compareGeometry(geom1, geom2) {
+  const format = new GeoJSON();
+
+  const geom1AsText = format.writeGeometry(geom1, {
+    featureProjection: 'EPSG:3857',
+    dataProjection: 'EPSG:4326',
+  });
+  const geom2AsText = format.writeGeometry(geom2, {
+    featureProjection: 'EPSG:3857',
+    dataProjection: 'EPSG:4326',
+  });
+
+  return geom1AsText === geom2AsText;
+}
+
+export function geometryFromObject(geometry) {
+  const format = new GeoJSON();
+  return format.readGeometry(geometry, {
+    featureProjection: 'EPSG:3857',
+    dataProjection: 'EPSG:4326',
+  });
 }

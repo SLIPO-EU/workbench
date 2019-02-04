@@ -54,8 +54,6 @@ class MapViewer extends React.Component {
 
   constructor(props) {
     super(props);
-
-    this.onFeatureSelect = this.onFeatureSelect.bind(this);
   }
 
   componentDidMount() {
@@ -81,10 +79,6 @@ class MapViewer extends React.Component {
       });
 
     return (Extend.isEmpty(extent) ? proj.fromLonLat(defaultCenter) : proj.fromLonLat(Extend.getCenter(extent)));
-  }
-
-  onFeatureSelect(features) {
-    this.props.selectFeatures(features);
   }
 
   getLayers() {
@@ -156,7 +150,10 @@ class MapViewer extends React.Component {
 
   renderPanels() {
     const {
-      draggable, draggableOrder, editActive, layers, selectedFeature, selectedFeatures: features = [], provenance, viewport
+      draggable, draggableOrder, editActive, layers,
+      selectedFeature, selectedFeatures: features = [],
+      onGeometrySnapshotChange,
+      provenance, viewport
     } = this.props;
 
     const panels = [];
@@ -182,7 +179,13 @@ class MapViewer extends React.Component {
                         layers={layers}
                         selectedFeature={selectedFeature}
                         fetchFeatureProvenance={this.props.fetchFeatureProvenance}
-                        close={() => this.props.clearSelectedFeatures()}
+                        close={() => {
+                          if (!provenance) {
+                            // If provenance floating panel is hidden, clear selection
+                            this._select.clear();
+                          }
+                          this.props.clearSelectedFeatures();
+                        }}
                         toggleEditor={() => this.toggleEditor(selectedFeature.feature)}
                       />
                     </ResizableBox>
@@ -206,8 +209,15 @@ class MapViewer extends React.Component {
                   <div style={{ pointerEvents: 'none' }}>
                     <ResizableBox width={600} height={568} axis="x" minConstraints={[600, 568]}>
                       <FeatureProvenanceViewer
-                        close={() => this.props.hideProvenance()}
+                        close={() => {
+                          if (!features || features.length === 0) {
+                            // If property viewer floating panel is hidden, clear selection
+                            this._select.clear();
+                          }
+                          this.props.hideProvenance();
+                        }}
                         editActive={editActive}
+                        onGeometrySnapshotChange={onGeometrySnapshotChange}
                         provenance={provenance}
                         toggleEditor={() => this.toggleEditor(selectedFeature.feature)}
                       />
@@ -256,13 +266,16 @@ class MapViewer extends React.Component {
           </OpenLayers.Layers>
           <OpenLayers.Interactions>
             <OpenLayers.Interaction.Select
+              ref={(component) => { this._select = component; }}
               active={!this.props.editActive}
               onFeatureSelect={this.props.onFeatureSelect}
               styles={styles}
             />
             <OpenLayers.Interaction.Modify
               active={this.props.editActive}
+              onGeometryChange={this.props.onGeometryChange}
               feature={this.props.editFeature}
+              styles={styles}
             />
           </OpenLayers.Interactions>
         </OpenLayers.Map>

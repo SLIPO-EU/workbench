@@ -14,8 +14,9 @@ import {
 } from '../../helpers';
 
 import {
+  ATTRIBUTE_GEOMETRY,
   Attributes,
-  EnumCellValueType
+  EnumCellValueType,
 } from '../../../model/map-viewer';
 
 import {
@@ -30,9 +31,9 @@ const PropertyTypeMapping = [{
   type: EnumCellValueType.Image,
 }];
 
-const createColumns = (state, props) => {
+const createColumns = (state, componentProps) => {
   const { filterable } = state;
-  const { provenance: { inputRow, properties, steps, dataRows: data } } = props;
+  const { provenance: { inputRow, properties, steps, dataRows: data } } = componentProps;
   const columns = [];
 
   // Column to index map
@@ -112,9 +113,9 @@ const createColumns = (state, props) => {
               // Update
               (step.tool === null),
           }),
-          Cell: (props) => {
-            const cell = data[props.index][mappings[props.column.id]];
-            return renderCell(cell);
+          Cell: (cellProps) => {
+            const cell = data[cellProps.index][mappings[cellProps.column.id]];
+            return renderCell(cell, data[cellProps.index], cellProps, componentProps);
           }
         };
       })
@@ -150,7 +151,39 @@ const isLink = (value) => {
   return urlRegEx.test(value);
 };
 
-const renderCell = (cell) => {
+const renderCell = (cell, row, cellProps, componentProps) => {
+  const { editActive, provenance: { geometrySnapshotIndex }, onGeometrySnapshotChange } = componentProps;
+
+  // Handle geometry property
+  if (cell.property === ATTRIBUTE_GEOMETRY) {
+    if (editActive) {
+      if (cell.value && cell.index === geometrySnapshotIndex) {
+        return (
+          <div className="badge-pill geometry-active p-1 m-auto w-50 text-center"><i className="fa fa-lock pr-2" />Selected</div>
+        );
+      }
+      return null;
+    }
+    if (cell.value) {
+      if (cell.value && cell.index === geometrySnapshotIndex) {
+        return (
+          <div className="badge-pill geometry-active p-1 m-auto w-50 text-center">Selected</div>
+        );
+      }
+      return (
+        <div
+          className="badge-pill geometry-inactive p-1 m-auto w-50 text-center slipo-action-icon"
+          onClick={() => onGeometrySnapshotChange(cell.index, cell.value)}
+
+        >
+          <i className="fa fa-search pr-2" />View
+        </div>
+      );
+    }
+    return null;
+  }
+
+  // Other properties
   const propertyType = PropertyTypeMapping.find(p => p.id === cell.property);
 
   if (propertyType && isLink(cell.value)) {
