@@ -19,36 +19,48 @@ import com.google.common.collect.Iterables;
 
 /**
  * Provide static builders for listeners ({@link StepExecutionListener}) that map and promote
- * a part of step-execution context to job-execution context.
+ * a part of step-level execution context to job-level execution context.
  */
 public class ExecutionContextPromotionListeners
 {
     public static class Builder
     {
-        private String[] keys;
+        private List<String> keys;
 
-        private String[] keyPatterns;
+        private List<String> keyPatterns;
 
         private Boolean strict;
 
-        private String[] statuses;
+        private List<String> statuses;
 
         private Function<String,String> keyMapper;
 
         private Builder() {}
 
+        public Builder keys(List<String> keys)
+        {
+            Assert.isNull(this.keyPatterns, "A set of key patterns is already specified!");
+            Assert.notEmpty(keys, "Expected a non empty list of keys");
+            this.keys = keys;
+            return this;
+        }
+
         public Builder keys(String ...keys)
         {
-            Assert.isTrue(keyPatterns == null, "A set of key patterns is already specified!");
-            this.keys = keys;
+            return this.keys(Arrays.asList(keys));
+        }
+
+        public Builder keysMatching(List<String> keyPatterns)
+        {
+            Assert.isNull(this.keys, "A set of keys is already given!");
+            Assert.notEmpty(keyPatterns, "Expected a non empty list of key patterns");
+            this.keyPatterns = keyPatterns;
             return this;
         }
 
         public Builder keysMatching(String ...keyPatterns)
         {
-            Assert.isTrue(keys == null, "A set of keys is already given!");
-            this.keyPatterns = keyPatterns;
-            return this;
+            return this.keysMatching(Arrays.asList(keyPatterns));
         }
 
         /**
@@ -58,7 +70,7 @@ public class ExecutionContextPromotionListeners
         public Builder prefix(String prefix)
         {
             Assert.notNull(prefix, "Expected a non-null prefix");
-            Assert.state(keyMapper == null, "The key mapper is already set");
+            Assert.state(this.keyMapper == null, "The key mapper is already set");
             this.keyMapper = key -> prefix + "." + key;
             return this;
         }
@@ -89,11 +101,16 @@ public class ExecutionContextPromotionListeners
         /**
          * Specify a list of statuses for which promotion will occur.
          */
-        public Builder onStatus(String ...statuses)
+        public Builder onStatus(List<String> statuses)
         {
-            Assert.notEmpty(statuses, "Expected a non empty array of exit statuses");
+            Assert.notEmpty(statuses, "Expected a non empty list of exit statuses");
             this.statuses = statuses;
             return this;
+        }
+
+        public Builder onStatus(String ...statuses)
+        {
+            return this.onStatus(Arrays.asList(statuses));
         }
 
         public StepExecutionListener build()
@@ -104,16 +121,16 @@ public class ExecutionContextPromotionListeners
             KeyMappingPromotionListener listener = new KeyMappingPromotionListener();
 
             if (this.keys != null) {
-                listener.keys = new LinkedList<>(Arrays.asList(this.keys));
+                listener.keys = new LinkedList<>(this.keys);
             } else {
-                listener.keyPatterns = new LinkedList<>(Arrays.asList(this.keyPatterns));
+                listener.keyPatterns = new LinkedList<>(this.keyPatterns);
             }
 
             if (this.keyMapper != null)
                 listener.keyMapper = this.keyMapper;
 
             if (this.statuses != null)
-                listener.statuses = new LinkedList<>(Arrays.asList(this.statuses));
+                listener.statuses = new LinkedList<>(this.statuses);
 
             if (this.strict != null && this.keys != null)
                 listener.strict = this.strict.booleanValue();
