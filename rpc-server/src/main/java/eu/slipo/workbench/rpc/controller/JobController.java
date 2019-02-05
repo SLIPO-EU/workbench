@@ -90,8 +90,7 @@ public class JobController
      * @param parametersMap A map of parameters
      */
     @PostMapping(
-        value = { "/api/jobs/{jobName}/submit", "/api/jobs/{jobName}/start"},
-        consumes = "application/json")
+        value = { "/api/jobs/{jobName}/submit", "/api/jobs/{jobName}/start"}, consumes = "application/json")
     public RestResponse<JobExecutionInfo> submit(
         @PathVariable String jobName, @RequestBody Map<String, Object> parametersMap)
     {

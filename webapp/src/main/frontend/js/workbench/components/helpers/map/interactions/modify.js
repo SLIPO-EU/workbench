@@ -14,6 +14,14 @@ import Circle from 'ol/style/circle';
 import Stroke from 'ol/style/stroke';
 import Fill from 'ol/style/fill';
 
+import {
+  FEATURE_LAYER_PROPERTY,
+} from '../model/constants';
+
+import {
+  createStyleForSymbol,
+} from '../shared/utils';
+
 /**
  * Modify interaction
  *
@@ -29,8 +37,6 @@ class ModifyInteraction extends React.Component {
     this.interactions = [];
     // Feature collection for the OpenLayers Modify interaction
     this.features = new Collection();
-    // Custom interaction styles
-    this.styles = this.buildFeatureStyles();
   }
 
   static propTypes = {
@@ -49,7 +55,7 @@ class ModifyInteraction extends React.Component {
   }
 
   componentDidMount() {
-    const { active, feature = null, map, translate } = this.props;
+    const { active, feature = null, map, onGeometryChange, translate } = this.props;
 
     // Wait for map instance to initialize
     if (!map) {
@@ -67,6 +73,12 @@ class ModifyInteraction extends React.Component {
       features: this.features,
       style,
     }));
+
+    this.interactions[0].on('modifyend', (e) => {
+      if (typeof onGeometryChange === 'function') {
+        onGeometryChange();
+      }
+    }, this);
 
     if (translate) {
       this.interactions.push(new Translate({
@@ -104,11 +116,36 @@ class ModifyInteraction extends React.Component {
     }
   }
 
-  buildFeatureStyles() {
-    var styles = {};
-    var white = [255, 255, 255, 1];
-    var black = [66, 66, 66, 1];
-    var width = 3;
+  buildFeatureStyles(feature) {
+    const styles = {};
+
+    const white = '#ffffff';
+    const black = '#424242';
+    const width = 3;
+
+    const { styles: layerStyles } = this.props;
+    const layerName = feature.get(FEATURE_LAYER_PROPERTY);
+    const layerStyle = layerStyles ? layerStyles[layerName] : null;
+
+    const image = layerStyle ?
+      createStyleForSymbol(
+        layerStyle.symbol,
+        black,
+        3,
+        white,
+        layerStyle.size,
+        50,
+      ) :
+      new Circle({
+        radius: width * 2,
+        fill: new Fill({
+          color: black
+        }),
+        stroke: new Stroke({
+          color: white,
+          width: width / 2
+        })
+      });
 
     styles[GeometryType.POLYGON] = [
       new Style({
@@ -141,25 +178,16 @@ class ModifyInteraction extends React.Component {
 
     styles[GeometryType.MULTI_LINE_STRING] = styles[GeometryType.LINE_STRING];
 
-    styles[GeometryType.CIRCLE] = styles[GeometryType.POLYGON].concat(styles[GeometryType.LINE_STRING]);
-
     styles[GeometryType.POINT] = [
       new Style({
-        image: new Circle({
-          radius: width * 2,
-          fill: new Fill({
-            color: black
-          }),
-          stroke: new Stroke({
-            color: white,
-            width: width / 2
-          })
-        }),
+        image,
         zIndex: Infinity
       })
     ];
 
     styles[GeometryType.MULTI_POINT] = styles[GeometryType.POINT];
+
+    styles[GeometryType.CIRCLE] = styles[GeometryType.POLYGON].concat(styles[GeometryType.LINE_STRING]);
 
     styles[GeometryType.GEOMETRY_COLLECTION] =
       styles[GeometryType.POLYGON].concat(
@@ -172,14 +200,17 @@ class ModifyInteraction extends React.Component {
 
   buildInteractionStyles() {
     return ((feature) => {
+      const styles = this.buildFeatureStyles(feature);
       const type = feature.getGeometry().getType();
-      return this.styles[type];
+
+      return styles[type];
     });
   }
 
   setFeatureStyle(feature) {
+    const styles = this.buildFeatureStyles(feature);
     const type = feature.getGeometry().getType();
-    const style = this.styles[type];
+    const style = styles[type];
 
     feature.setStyle(style);
   }

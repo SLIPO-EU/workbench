@@ -35,6 +35,10 @@ import {
 } from '../../../model/map-viewer';
 
 import {
+  compareGeometry,
+} from '../../../ducks/ui/views/map-viewer/util';
+
+import {
   cancelEdit,
   refreshFeatureProvenance,
   selectLayer,
@@ -84,6 +88,13 @@ class Sidebar extends React.Component {
     }
 
     return baseLayers;
+  }
+
+  get isModified() {
+    const { changedVertexCount, editFeature, initial: { geometry, properties: props }, current: { properties: nextProps } } = this.props;
+    const changed = !!Object.keys(props).find(key => props[key] !== nextProps[key]);
+
+    return changed || (changedVertexCount !== 0 && !compareGeometry(editFeature.getGeometry(), geometry));
   }
 
   toggleTab(tab) {
@@ -245,7 +256,7 @@ class Sidebar extends React.Component {
           <span><i className="fa fa-pencil pr-1"></i>Edit</span>
         </div>
         <div style={{ position: 'absolute', right: 22, top: 8 }}>
-          <Button color="primary" style={{ padding: '0.25rem 0.5rem' }} onClick={() => this.updateFeature()}>
+          <Button color="primary" style={{ padding: '0.25rem 0.5rem' }} onClick={() => this.updateFeature()} disabled={!this.isModified}>
             <i className="fa fa-save" />
           </Button>
           {' '}
@@ -271,11 +282,11 @@ class Sidebar extends React.Component {
         <FormGroup key={a.key}>
           <Label for={a.key}>{a.title}</Label>
           <Input
-            className={current[a.key] !== initial[a.key] ? 'slipo-map-property-modified' : ''}
+            className={current.properties[a.key] !== initial.properties[a.key] ? 'slipo-map-property-modified' : ''}
             type="text"
             name={a.key}
             id={a.key}
-            value={current[a.key]}
+            value={current.properties[a.key]}
             onChange={(e) => this.onPropertyChange(a.key, e.target.value)}
           />
         </FormGroup>
@@ -305,11 +316,13 @@ class Sidebar extends React.Component {
 const mapStateToProps = (state) => ({
   baseLayer: state.ui.views.map.config.baseLayer,
   bingMaps: state.config.bingMaps,
-  current: state.ui.views.map.edit.current.properties,
+  changedVertexCount: state.ui.views.map.edit.updates,
+  current: state.ui.views.map.edit.current,
   data: state.ui.views.map.data,
   editActive: state.ui.views.map.edit.active,
+  editFeature: state.ui.views.map.edit.feature,
   filters: state.ui.views.map.search.filters,
-  initial: state.ui.views.map.edit.initial.properties,
+  initial: state.ui.views.map.edit.initial,
   layers: state.ui.views.map.config.layers,
   osm: state.config.osm,
   selectedFeatures: state.ui.views.map.config.selectedFeatures,

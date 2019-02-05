@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -29,8 +30,12 @@ import java.util.zip.ZipFile;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.batch.core.BatchStatus;
+import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.StepExecutionListener;
+import org.springframework.batch.core.listener.StepExecutionListenerSupport;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.ExecutionContext;
@@ -39,6 +44,9 @@ import org.springframework.core.io.Resource;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
@@ -46,12 +54,11 @@ import eu.slipo.workbench.common.model.tool.AnyTool;
 import eu.slipo.workbench.common.model.tool.EnumConfigurationFormat;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.rpc.service.ConfigurationGeneratorService;
-import jersey.repackaged.com.google.common.collect.Iterables;
 
 /**
  * A tasklet that prepares a working directory.
  */
-public class PrepareWorkingDirectoryTasklet implements Tasklet
+public class PrepareWorkingDirectoryTasklet implements Tasklet, StepExecutionListener
 {
     private static final Logger logger = LoggerFactory.getLogger(PrepareWorkingDirectoryTasklet.class);
 
@@ -170,7 +177,7 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
          */
         public Builder input(String ...paths)
         {
-            return input(Arrays.stream(paths).map(Paths::get).collect(Collectors.toList()));
+            return input(Lists.transform(Arrays.asList(paths), Paths::get));
         }
 
         /**
@@ -323,6 +330,12 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
         public static final String CONFIG_FILE_BY_NAME = "configFileByName";
     }
 
+    public static final List<String> ALL_KEYS = ImmutableList.of(
+        Keys.WORK_DIR,
+        Keys.INPUT_DIR, Keys.INPUT_FILES, Keys.INPUT_FORMAT,
+        Keys.OUTPUT_DIR, Keys.OUTPUT_FORMAT,
+        Keys.CONFIG_FILE_BY_NAME);
+
     private final ConfigurationGeneratorService configurationGenerator;
 
     private final Path workDir;
@@ -410,6 +423,8 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
         //
         // Put (extract or link) each input into our input directory
         //
+
+        logger.info("Copying input for working directory: {}", workDir);
 
         List<String> inputFiles = new ArrayList<>();
         if (!input.isEmpty()) {
@@ -526,5 +541,88 @@ public class PrepareWorkingDirectoryTasklet implements Tasklet
         if (link == null) {
             Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
         }
+    }
+
+    @Override
+    public void beforeStep(StepExecution stepExecution)
+    {
+        // no-op
+    }
+
+    @Override
+    public ExitStatus afterStep(StepExecution stepExecution)
+    {
+        final BatchStatus status = stepExecution.getStatus();
+        final ExecutionContext executionContext = stepExecution.getExecutionContext();
+
+        if (status != BatchStatus.COMPLETED)
+            return null;
+
+        // So, the step is successful
+
+        ExitStatus exitStatus = null;
+        try {
+            checkAfterStep(executionContext);
+        } catch (IllegalStateException ex) {
+            // Alter the exit status to make the job fail
+            logger.error("The afterStep checks have failed", ex);
+            exitStatus = ExitStatus.FAILED;
+        }
+
+        return exitStatus;
+    }
+
+    private void checkAfterStep(ExecutionContext executionContext)
+    {
+        // Check directories
+
+        String workDir1 = executionContext.getString(Keys.WORK_DIR);
+        Assert.state(workDir1 != null, "The entry for the working directory is missing");
+        Path workDir1Path = Paths.get(workDir1);
+        Assert.state(workDir1Path.equals(workDir),
+            "The (entry for the) working directory points to an unexpected location");
+        Assert.state(Files.isDirectory(workDir1Path) &&
+                Files.isReadable(workDir1Path) && Files.isExecutable(workDir1Path),
+            "The (entry for the) working directory is expected to point to a readable directory");
+
+        String inputDir1 = executionContext.getString(Keys.INPUT_DIR);
+        Assert.state(inputDir1 != null, "The entry for the input directory is missing");
+        Path inputDir1Path = Paths.get(inputDir1);
+        Assert.state(Files.isDirectory(inputDir1Path) &&
+                Files.isReadable(inputDir1Path) && Files.isExecutable(inputDir1Path),
+            "The (entry for the) input directory is expected to point to a readable directory");
+        Assert.state(inputDir1Path.startsWith(workDir1Path),
+            "The input directory should be nested inside working directory");
+
+        String outputDir1 = executionContext.getString(Keys.OUTPUT_DIR);
+        Assert.state(outputDir1 != null, "The entry for the output directory is missing");
+        Path outputDir1Path = Paths.get(outputDir1);
+        Assert.state(Files.isDirectory(outputDir1Path) && Files.isWritable(outputDir1Path),
+            "The (entry for the) output directory is expected to point to a writable directory");
+        Assert.state(outputDir1Path.startsWith(workDir1Path),
+            "The output directory should be nested inside working directory");
+
+        // Check the exported list of input files
+
+        List<?> inputFiles = (List<?>) executionContext.get(Keys.INPUT_FILES);
+        Assert.state(inputFiles != null, "The list of input files is missing");
+        Assert.state(input.isEmpty() || !inputFiles.isEmpty(),
+            "The list for input files is empty (while input specification is not empty!)");
+        Assert.state(Iterables.all(inputFiles, String.class::isInstance),
+            "The list for input files should contain non-null strings");
+        List<Path> inputPaths = Lists.transform(inputFiles, f -> Paths.get(f.toString()));
+        Assert.state(Iterables.all(inputPaths, p -> !p.isAbsolute() && p.getNameCount() == 1),
+            "The  list for input files is expected as a list of (plain) file names");
+
+        // Check the configuration map
+
+        Map<?, ?> configFileByName = (Map<?, ?>) executionContext.get(Keys.CONFIG_FILE_BY_NAME);
+        Assert.state(configFileByName != null, "The map of configuration files is missing");
+        Assert.state(configFileByName.keySet().equals(config.keySet()),
+            "The map of configuration files appears to be missing entries");
+        Assert.state(Iterables.all(configFileByName.values(), String.class::isInstance),
+            "The map of configuration files should contain non-null string values");
+
+        return;
     }
 }

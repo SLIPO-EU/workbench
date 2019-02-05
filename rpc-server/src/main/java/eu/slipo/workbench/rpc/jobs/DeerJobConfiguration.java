@@ -70,6 +70,12 @@ public class DeerJobConfiguration extends ContainerBasedJobConfiguration
     }
 
     @Autowired
+    private void setImage(@Value("${slipo.rpc-server.tools.deer.docker.image}") String imageName)
+    {
+        this.imageName = imageName;
+    }
+
+    @Autowired
     private void setTimeout(
         @Value("${slipo.rpc-server.tools.deer.timeout-seconds:}") Integer timeoutSeconds)
     {
@@ -205,8 +211,10 @@ public class DeerJobConfiguration extends ContainerBasedJobConfiguration
             "workDir", "inputDir", "inputFormat", "inputFiles", "outputDir", "outputFormat",
             "configFileByName"
         };
+
         return stepBuilderFactory.get("deer.prepareWorkingDirectory")
             .tasklet(tasklet)
+            .listener(tasklet)
             .listener(ExecutionContextPromotionListeners.fromKeys(keys))
             .build();
     }
@@ -214,39 +222,34 @@ public class DeerJobConfiguration extends ContainerBasedJobConfiguration
     @Bean("deer.createContainerTasklet")
     @JobScope
     public CreateContainerTasklet createContainerTasklet(
-        @Value("${slipo.rpc-server.tools.deer.docker.image}") String imageName,
         @Value("#{jobExecution.jobInstance.id}") Long jobId,
-        @Value("#{jobExecutionContext['workDir']}") String workDir,
-        @Value("#{jobExecutionContext['inputDir']}") String inputDir,
+        @Value("#{T(java.nio.file.Paths).get(jobExecutionContext['workDir'])}") Path workDir,
+        @Value("#{T(java.nio.file.Paths).get(jobExecutionContext['inputDir'])}") Path inputDir,
         @Value("#{jobExecutionContext['inputFormat']}") String inputFormatName,
         @Value("#{jobExecutionContext['inputFiles']}") List<String> inputFiles,
         @Value("#{jobExecutionContext['outputFormat']}") String outputFormatName,
-        @Value("#{jobExecutionContext['outputDir']}") String outputDir,
+        @Value("#{T(java.nio.file.Paths).get(jobExecutionContext['outputDir'])}") Path outputDir,
         @Value("#{jobExecutionContext['configFileByName']}") Map<String, String> configFileByName)
     {
         String containerName = String.format("deer-%05x", jobId);
 
-        Path containerInputDir = containerDataDir.resolve("input");
-        Path containerOutputDir = containerDataDir.resolve("output");
-        Path containerConfigDir = containerDataDir;
-
         Assert.isTrue(inputFiles.size() == 1, "Expected a single input file");
-        Path inputFileName = Paths.get(inputFiles.get(0)).getFileName();
-        Path configPath = Paths.get(workDir, configFileByName.get("config"));
+        String inputFileName = inputFiles.get(0);
+        String configFileName = configFileByName.get("config");
 
         return CreateContainerTasklet.builder()
             .client(docker)
             .name(containerName)
             .container(configurer -> configurer
                 .image(imageName)
-                .volume(Paths.get(inputDir), containerInputDir, true)
-                .volume(Paths.get(outputDir), containerOutputDir)
-                .volume(configPath, containerConfigDir.resolve("config.ttl"), true)
+                .volume(inputDir, containerDataDir.resolve("input"), true)
+                .volume(outputDir, containerDataDir.resolve("output"))
+                .volume(workDir.resolve(configFileName), containerDataDir.resolve("config.ttl"), true)
                 // Set environment
-                .env("INPUT_FILE", containerInputDir.resolve(inputFileName))
+                .env("INPUT_FILE", containerDataDir.resolve(Paths.get("input", inputFileName)))
                 .env("OUTPUT_FORMAT", outputFormatName)
-                .env("OUTPUT_DIR", containerOutputDir)
-                .env("CONFIG_FILE", containerConfigDir.resolve("config.ttl"))
+                .env("OUTPUT_DIR", containerDataDir.resolve("output"))
+                .env("CONFIG_FILE", containerDataDir.resolve("config.ttl"))
                 // Set resource limits
                 .memory(memoryLimit)
                 .memoryAndSwap(memorySwapLimit))

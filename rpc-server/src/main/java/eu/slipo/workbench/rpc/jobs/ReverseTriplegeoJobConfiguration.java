@@ -42,6 +42,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -81,12 +82,20 @@ public class ReverseTriplegeoJobConfiguration extends ContainerBasedJobConfigura
      */
     private static final List<String> blacklistedParameterKeys = ImmutableList.of("inputFiles");
 
+    private static final Joiner pathJoiner = Joiner.on(File.pathSeparator);
+
     @Override
     @Autowired
     protected void setContainerDataDirectory(
         @Value("${slipo.rpc-server.tools.reverse-triplegeo.docker.container-data-dir}") String dir)
     {
         super.setContainerDataDirectory(dir);
+    }
+
+    @Autowired
+    private void setImage(@Value("${slipo.rpc-server.tools.reverse-triplegeo.docker.image}") String imageName)
+    {
+        this.imageName = imageName;
     }
 
     @Autowired
@@ -242,6 +251,7 @@ public class ReverseTriplegeoJobConfiguration extends ContainerBasedJobConfigura
 
         return stepBuilderFactory.get("reverseTriplegeo.prepareWorkingDirectory")
             .tasklet(tasklet)
+            .listener(tasklet)
             .listener(ExecutionContextPromotionListeners.fromKeys(keys))
             .build();
     }
@@ -249,27 +259,25 @@ public class ReverseTriplegeoJobConfiguration extends ContainerBasedJobConfigura
     @Bean("reverseTriplegeo.createContainerTasklet")
     @JobScope
     public CreateContainerTasklet createContainerTasklet(
-        @Value("${slipo.rpc-server.tools.reverse-triplegeo.docker.image}") String imageName,
         @Value("#{jobExecution.jobInstance.id}") Long jobId,
-        @Value("#{jobExecutionContext['workDir']}") String workDir,
-        @Value("#{jobExecutionContext['inputDir']}") String inputDir,
+        @Value("#{T(java.nio.file.Paths).get(jobExecutionContext['workDir'])}") Path workDir,
+        @Value("#{T(java.nio.file.Paths).get(jobExecutionContext['inputDir'])}") Path inputDir,
         @Value("#{jobExecutionContext['inputFormat']}") String inputFormatName,
         @Value("#{jobExecutionContext['inputFiles']}") List<String> inputFiles,
-        @Value("#{jobExecutionContext['outputDir']}") String outputDir,
+        @Value("#{T(java.nio.file.Paths).get(jobExecutionContext['outputDir'])}") Path outputDir,
         @Value("#{jobExecutionContext['configFileByName']}") Map<String, String> configFileByName)
     {
         String containerName = String.format("reverseTriplegeo-%05x", jobId);
 
-        Path containerInputDir = containerDataDir.resolve("input");
-        Path containerOutputDir = containerDataDir.resolve("output");
-        Path containerConfigDir = containerDataDir;
+        String optionsFileName = configFileByName.get("options");
+        String queryFileName = configFileByName.get("query");
 
         EnumDataFormat inputFormat = EnumDataFormat.valueOf(inputFormatName);
-        String inputNameExtension = inputFormat.getFilenameExtension();
+        String inputExtension = inputFormat.getFilenameExtension();
 
-        List<String> containerInputPaths = inputFiles.stream()
-            .filter(name -> StringUtils.getFilenameExtension(name).equals(inputNameExtension))
-            .map(name -> containerInputDir.resolve(name).toString())
+        List<Path> containerInputPaths = inputFiles.stream()
+            .filter(name -> StringUtils.getFilenameExtension(name).equals(inputExtension))
+            .map(name -> containerDataDir.resolve(Paths.get("input", name)))
             .collect(Collectors.toList());
 
         return CreateContainerTasklet.builder()
@@ -277,17 +285,15 @@ public class ReverseTriplegeoJobConfiguration extends ContainerBasedJobConfigura
             .name(containerName)
             .container(configurer -> configurer
                 .image(imageName)
-                .volume(Paths.get(inputDir), containerInputDir)
-                .volume(Paths.get(outputDir), containerOutputDir)
-                .volume(Paths.get(workDir, configFileByName.get("options")),
-                    containerConfigDir.resolve("options.conf"), true)
-                .volume(Paths.get(workDir, configFileByName.get("query")),
-                    containerConfigDir.resolve("query.sparql"), true)
+                .volume(inputDir, containerDataDir.resolve("input"))
+                .volume(outputDir, containerDataDir.resolve("output"))
+                .volume(workDir.resolve(optionsFileName), containerDataDir.resolve("options.conf"), true)
+                .volume(workDir.resolve(queryFileName), containerDataDir.resolve("query.sparql"), true)
                 // Set environment
-                .env("INPUT_FILE", String.join(File.pathSeparator, containerInputPaths))
-                .env("CONFIG_FILE", containerConfigDir.resolve("options.conf"))
-                .env("SPARQL_FILE", containerConfigDir.resolve("query.sparql"))
-                .env("OUTPUT_DIR", containerOutputDir)
+                .env("INPUT_FILE", pathJoiner.join(containerInputPaths))
+                .env("CONFIG_FILE", containerDataDir.resolve("options.conf"))
+                .env("SPARQL_FILE", containerDataDir.resolve("query.sparql"))
+                .env("OUTPUT_DIR", containerDataDir.resolve("output"))
                 // Set resource limits
                 .memory(memoryLimit)
                 .memoryAndSwap(memorySwapLimit))
@@ -334,13 +340,13 @@ public class ReverseTriplegeoJobConfiguration extends ContainerBasedJobConfigura
     @Bean("reverseTriplegeo.createOutputArchiveTasklet")
     @JobScope
     public Tasklet createOutputArchiveTasklet(
-        @Value("#{jobExecutionContext['outputFormat']}") final String outputFormatName,
-        @Value("#{jobExecutionContext['outputDir']}") final String outputDir)
+        @Value("#{jobExecutionContext['outputFormat']}") String outputFormatName,
+        @Value("#{T(java.nio.file.Paths).get(jobExecutionContext['outputDir'])}") Path outputDir)
     {
         final EnumDataFormat outputFormat = EnumDataFormat.valueOf(outputFormatName);
         final String outputName = ReverseTriplegeoConfiguration.OUTPUT_NAME + ".zip";
 
-        final Path archivePath = Paths.get(outputDir, outputName);
+        final Path archivePath = outputDir.resolve(outputName);
 
         // Collect the files to be packaged into the archive
 
@@ -355,7 +361,7 @@ public class ReverseTriplegeoJobConfiguration extends ContainerBasedJobConfigura
             break;
         }
 
-        final List<Path> files = Lists.transform(fileNames, Paths.get(outputDir)::resolve);
+        final List<Path> files = Lists.transform(fileNames, outputDir::resolve);
 
         // Return a tasklet to carry out this step
 

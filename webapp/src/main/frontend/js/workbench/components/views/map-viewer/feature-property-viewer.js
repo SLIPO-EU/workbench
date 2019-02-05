@@ -26,6 +26,10 @@ import {
   LayerLegend,
 } from './';
 
+import {
+  message,
+} from '../../../service';
+
 const createColumns = (state, props) => {
   const { filterable } = state;
   const { editActive, layers, features } = props;
@@ -152,8 +156,10 @@ class FeaturePropertyViewer extends React.Component {
         const outputKey = rowInfo.original[FEATURE_OUTPUT_KEY];
 
         const feature = this.props.features.find(f => f.getId() === id && f.get(FEATURE_OUTPUT_KEY) === outputKey);
-        this.props.fetchFeatureProvenance(feature).then(() => {
-          if (action === 'edit') {
+        this.props.fetchFeatureProvenance(feature).then((provenance) => {
+          if (!provenance) {
+            message.infoHtml('Failed to load provenance data.<br/>No POI data integration operations found.', 'fa-remove');
+          } else if (action === 'edit') {
             this.props.toggleEditor();
           }
         });

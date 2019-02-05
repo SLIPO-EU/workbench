@@ -62,7 +62,6 @@ class ResourceViewer extends React.Component {
 
     this.onFetchError = this.onFetchError.bind(this);
     this.onFetchSuccess = this.onFetchSuccess.bind(this);
-    this.onFeatureSelect = this.onFeatureSelect.bind(this);
     this.viewMap = this.viewMap.bind(this);
   }
 
@@ -84,9 +83,6 @@ class ResourceViewer extends React.Component {
     setTimeout(() => {
       this.props.history.push(StaticRoutes.ResourceExplorer);
     }, 500);
-  }
-
-  onFeatureSelect(features) {
   }
 
   viewMap(id, version) {

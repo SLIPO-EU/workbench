@@ -350,6 +350,6 @@ public class FagiConfigurationTests
         assertEquals(Arrays.asList("remaining.nt"), outputNames.get(EnumFagiOutputPart.REMAINING));
         assertEquals(Arrays.asList("review.nt"), outputNames.get(EnumFagiOutputPart.REVIEW));
         assertEquals(Arrays.asList("stats.json"), outputNames.get(EnumFagiOutputPart.STATS));
-        assertEquals(Arrays.asList("fusion.log"), outputNames.get(EnumFagiOutputPart.LOG));
+        assertEquals(Arrays.asList("fusionLog.txt"), outputNames.get(EnumFagiOutputPart.LOG));
     }
 }

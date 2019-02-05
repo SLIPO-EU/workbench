@@ -40,6 +40,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -80,12 +81,20 @@ public class TriplegeoJobConfiguration extends ContainerBasedJobConfiguration
      */
     private static final List<String> blacklistedParameterKeys = ImmutableList.of("inputFiles");
 
+    private static final Joiner pathJoiner = Joiner.on(File.pathSeparator);
+
     @Override
     @Autowired
     protected void setContainerDataDirectory(
         @Value("${slipo.rpc-server.tools.triplegeo.docker.container-data-dir}") String dir)
     {
         super.setContainerDataDirectory(dir);
+    }
+
+    @Autowired
+    private void setImage(@Value("${slipo.rpc-server.tools.triplegeo.docker.image}") String imageName)
+    {
+        this.imageName = imageName;
     }
 
     @Autowired
@@ -246,6 +255,7 @@ public class TriplegeoJobConfiguration extends ContainerBasedJobConfiguration
 
         return stepBuilderFactory.get("triplegeo.prepareWorkingDirectory")
             .tasklet(tasklet)
+            .listener(tasklet)
             .listener(ExecutionContextPromotionListeners.fromKeys(keys))
             .build();
     }
@@ -253,27 +263,26 @@ public class TriplegeoJobConfiguration extends ContainerBasedJobConfiguration
     @Bean("triplegeo.createContainerTasklet")
     @JobScope
     public CreateContainerTasklet createContainerTasklet(
-        @Value("${slipo.rpc-server.tools.triplegeo.docker.image}") String imageName,
         @Value("#{jobExecution.jobInstance.id}") Long jobId,
-        @Value("#{jobExecutionContext['workDir']}") String workDir,
-        @Value("#{jobExecutionContext['inputDir']}") String inputDir,
+        @Value("#{T(java.nio.file.Paths).get(jobExecutionContext['workDir'])}") Path workDir,
+        @Value("#{T(java.nio.file.Paths).get(jobExecutionContext['inputDir'])}") Path inputDir,
         @Value("#{jobExecutionContext['inputFormat']}") String inputFormatName,
         @Value("#{jobExecutionContext['inputFiles']}") List<String> inputFiles,
-        @Value("#{jobExecutionContext['outputDir']}") String outputDir,
+        @Value("#{T(java.nio.file.Paths).get(jobExecutionContext['outputDir'])}") Path outputDir,
         @Value("#{jobExecutionContext['configFileByName']}") Map<String, String> configFileByName)
     {
         String containerName = String.format("triplegeo-%05x", jobId);
 
-        Path containerInputDir = containerDataDir.resolve("input");
-        Path containerOutputDir = containerDataDir.resolve("output");
-        Path containerConfigDir = containerDataDir;
-
         EnumDataFormat inputFormat = EnumDataFormat.valueOf(inputFormatName);
-        String inputNameExtension = inputFormat.getFilenameExtension();
+        String inputExtension = inputFormat.getFilenameExtension();
 
-        List<String> containerInputPaths = inputFiles.stream()
-            .filter(name -> StringUtils.getFilenameExtension(name).equals(inputNameExtension))
-            .map(name -> containerInputDir.resolve(name).toString())
+        String optionsFileName = configFileByName.get("options");
+        String mappingsFileName = configFileByName.get("mappings");
+        String classificationFileName = configFileByName.get("classification");
+
+        List<Path> containerInputPaths = inputFiles.stream()
+            .filter(name -> StringUtils.getFilenameExtension(name).equals(inputExtension))
+            .map(name -> containerDataDir.resolve(Paths.get("input", name)))
             .collect(Collectors.toList());
 
         return CreateContainerTasklet.builder()
@@ -281,20 +290,17 @@ public class TriplegeoJobConfiguration extends ContainerBasedJobConfiguration
             .name(containerName)
             .container(configurer -> configurer
                 .image(imageName)
-                .volume(Paths.get(inputDir), containerInputDir)
-                .volume(Paths.get(outputDir), containerOutputDir)
-                .volume(Paths.get(workDir, configFileByName.get("options")),
-                    containerConfigDir.resolve("options.conf"), true)
-                .volume(Paths.get(workDir, configFileByName.get("mappings")),
-                    containerConfigDir.resolve("mappings.yml"), true)
-                .volume(Paths.get(workDir, configFileByName.get("classification")),
-                    containerConfigDir.resolve("classification.csv"), true)
+                .volume(inputDir, containerDataDir.resolve("input"))
+                .volume(outputDir, containerDataDir.resolve("output"))
+                .volume(workDir.resolve(optionsFileName), containerDataDir.resolve("options.conf"), true)
+                .volume(workDir.resolve(mappingsFileName), containerDataDir.resolve("mappings.yml"), true)
+                .volume(workDir.resolve(classificationFileName), containerDataDir.resolve("classification.csv"), true)
                 // Set environment
-                .env("INPUT_FILE", String.join(File.pathSeparator, containerInputPaths))
-                .env("CONFIG_FILE", containerConfigDir.resolve("options.conf"))
-                .env("MAPPINGS_FILE", containerConfigDir.resolve("mappings.yml"))
-                .env("CLASSIFICATION_FILE", containerConfigDir.resolve("classification.csv"))
-                .env("OUTPUT_DIR", containerOutputDir)
+                .env("INPUT_FILE", pathJoiner.join(containerInputPaths))
+                .env("CONFIG_FILE", containerDataDir.resolve("options.conf"))
+                .env("MAPPINGS_FILE", containerDataDir.resolve("mappings.yml"))
+                .env("CLASSIFICATION_FILE", containerDataDir.resolve("classification.csv"))
+                .env("OUTPUT_DIR", containerDataDir.resolve("output"))
                 // Set resource limits
                 .memory(memoryLimit)
                 .memoryAndSwap(memorySwapLimit))
@@ -345,7 +351,7 @@ public class TriplegeoJobConfiguration extends ContainerBasedJobConfiguration
         @Value("#{jobExecutionContext['inputFormat']}") String inputFormatName,
         @Value("#{jobExecutionContext['inputFiles']}") List<String> inputFiles,
         @Value("#{jobExecutionContext['outputFormat']}") String outputFormatName,
-        @Value("#{jobExecutionContext['outputDir']}") String outputDir)
+        @Value("#{T(java.nio.file.Paths).get(jobExecutionContext['outputDir'])}") Path outputDir)
     {
         final EnumDataFormat inputFormat = EnumDataFormat.valueOf(inputFormatName);
         final String inputNameExtension = inputFormat.getFilenameExtension();
@@ -356,11 +362,10 @@ public class TriplegeoJobConfiguration extends ContainerBasedJobConfiguration
 
         final List<String> inputNames = inputFiles.stream()
             .filter(name -> StringUtils.getFilenameExtension(name).equals(inputNameExtension))
-            .map(StringUtils::stripFilenameExtension)
-            .collect(Collectors.toList());
+            .collect(Collectors.mapping(StringUtils::stripFilenameExtension, Collectors.toList()));
 
-        final Path classificationFile = Paths.get(outputDir, "classification.nt");
-        final Path tmpDir = Paths.get(outputDir);
+        final Path classificationFile = outputDir.resolve("classification.nt");
+        final Path tmpDir = outputDir;
 
         return new Tasklet()
         {
@@ -371,7 +376,7 @@ public class TriplegeoJobConfiguration extends ContainerBasedJobConfiguration
                 // Concatenate each result with classification output
 
                 for (String inputName: inputNames) {
-                    Path outputFile = Paths.get(outputDir, inputName + ".nt");
+                    Path outputFile = outputDir.resolve(inputName + ".nt");
                     Path resultFile = Files.createTempFile(tmpDir, null, null);
                     // Concatenate
                     try (OutputStream out = Files.newOutputStream(resultFile)) {
@@ -381,7 +386,7 @@ public class TriplegeoJobConfiguration extends ContainerBasedJobConfiguration
                         Files.copy(outputFile, out);
                     }
                     // Replace original result
-                    Files.move(outputFile, Paths.get(outputDir, inputName + ".nt.orig"));
+                    Files.move(outputFile, outputDir.resolve(inputName + ".nt.orig"));
                     Files.move(resultFile, outputFile);
                 }
 
@@ -408,7 +413,7 @@ public class TriplegeoJobConfiguration extends ContainerBasedJobConfiguration
         @Value("#{jobExecutionContext['input']}") List<String> input,
         @Value("#{jobExecutionContext['inputFiles']}") List<String> inputFiles,
         @Value("#{jobExecutionContext['outputFormat']}") String outputFormatName,
-        @Value("#{jobExecutionContext['outputDir']}") String outputDir)
+        @Value("#{T(java.nio.file.Paths).get(jobExecutionContext['outputDir'])}") Path outputDir)
     {
         final EnumDataFormat outputFormat = EnumDataFormat.valueOf(outputFormatName);
         final String outputNameExtension = outputFormat.getFilenameExtension();
@@ -438,16 +443,16 @@ public class TriplegeoJobConfiguration extends ContainerBasedJobConfiguration
                     if (!expectedName.equals(actualName)) {
                         // Link result under expected name
                         Files.createSymbolicLink(
-                            Paths.get(outputDir, expectedName + "." + outputNameExtension),
+                            outputDir.resolve(expectedName + "." + outputNameExtension),
                             Paths.get(actualName + "." + outputNameExtension));
                         // Link execution KPI metadata under expected name
                         Files.createSymbolicLink(
-                            Paths.get(outputDir, expectedName + "_metadata.json"),
+                            outputDir.resolve(expectedName + "_metadata.json"),
                             Paths.get(actualName + "_metadata.json"));
                         // Link registration output (if it exists) under expected name
-                        if (Files.exists(Paths.get(outputDir, actualName + ".csv"))) {
+                        if (Files.exists(outputDir.resolve(actualName + ".csv"))) {
                             Files.createSymbolicLink(
-                                Paths.get(outputDir, expectedName + ".csv"),
+                                outputDir.resolve(expectedName + ".csv"),
                                 Paths.get(actualName + ".csv"));
                         }
                     }

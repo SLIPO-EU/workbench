@@ -47,6 +47,8 @@ import eu.slipo.workbench.rpc.jobs.tasklet.PrepareWorkingDirectoryTasklet;
 import eu.slipo.workbench.rpc.jobs.tasklet.docker.CreateContainerTasklet;
 import eu.slipo.workbench.rpc.jobs.tasklet.docker.RunContainerTasklet;
 
+import static org.springframework.util.StringUtils.stripFilenameExtension;
+
 @Component
 public class LimesJobConfiguration extends ContainerBasedJobConfiguration
 {
@@ -77,6 +79,12 @@ public class LimesJobConfiguration extends ContainerBasedJobConfiguration
         @Value("${slipo.rpc-server.tools.limes.docker.container-data-dir}") String dir)
     {
         super.setContainerDataDirectory(dir);
+    }
+
+    @Autowired
+    private void setImage(@Value("${slipo.rpc-server.tools.limes.docker.image}") String imageName)
+    {
+        this.imageName = imageName;
     }
 
     @Autowired
@@ -221,6 +229,7 @@ public class LimesJobConfiguration extends ContainerBasedJobConfiguration
         };
         return stepBuilderFactory.get("limes.prepareWorkingDirectory")
             .tasklet(tasklet)
+            .listener(tasklet)
             .listener(ExecutionContextPromotionListeners.fromKeys(keys))
             .build();
     }
@@ -228,47 +237,40 @@ public class LimesJobConfiguration extends ContainerBasedJobConfiguration
     @Bean("limes.createContainerTasklet")
     @JobScope
     public CreateContainerTasklet createContainerTasklet(
-        @Value("${slipo.rpc-server.tools.limes.docker.image}") String imageName,
         @Value("#{jobExecution.jobInstance.id}") Long jobId,
-        @Value("#{jobExecutionContext['workDir']}") String workDir,
-        @Value("#{jobExecutionContext['inputDir']}") String inputDir,
+        @Value("#{T(java.nio.file.Paths).get(jobExecutionContext['workDir'])}") Path workDir,
+        @Value("#{T(java.nio.file.Paths).get(jobExecutionContext['inputDir'])}") Path inputDir,
         @Value("#{jobExecutionContext['inputFormat']}") String inputFormatName,
         @Value("#{jobExecutionContext['inputFiles']}") List<String> inputFiles,
-        @Value("#{jobExecutionContext['outputDir']}") String outputDir,
+        @Value("#{T(java.nio.file.Paths).get(jobExecutionContext['outputDir'])}") Path outputDir,
         @Value("#{jobExecutionContext['configFileByName']}") Map<String, String> configFileByName,
         @Value("#{jobExecutionContext['config']}") LimesConfiguration config)
     {
         String containerName = String.format("limes-%05x", jobId);
 
-        Path containerInputDir = containerDataDir.resolve("input");
-        Path containerOutputDir = containerDataDir.resolve("output");
-        Path containerConfigDir = containerDataDir;
-
         Assert.isTrue(inputFiles.size() == 2, "Expected exactly 2 input files");
-        Path sourceFileName = Paths.get(inputFiles.get(0)).getFileName();
-        Path targetFileName = Paths.get(inputFiles.get(1)).getFileName();
-        Path configPath = Paths.get(workDir, configFileByName.get("config"));
+        String sourceFileName = inputFiles.get(0);
+        String targetFileName = inputFiles.get(1);
+        String configFileName = configFileByName.get("config");
 
-        String acceptedName = StringUtils.stripFilenameExtension(
-            Paths.get(config.getAcceptedPath()).getFileName().toString());
-        String reviewName = StringUtils.stripFilenameExtension(
-            Paths.get(config.getReviewPath()).getFileName().toString());
+        String acceptedFileName = Paths.get(config.getAcceptedPath()).getFileName().toString();
+        String reviewFileName = Paths.get(config.getReviewPath()).getFileName().toString();
 
         return CreateContainerTasklet.builder()
             .client(docker)
             .name(containerName)
             .container(configurer -> configurer
                 .image(imageName)
-                .volume(Paths.get(inputDir), containerInputDir, true)
-                .volume(Paths.get(outputDir), containerOutputDir)
-                .volume(configPath, containerConfigDir.resolve("config.xml"), true)
+                .volume(inputDir, containerDataDir.resolve("input"), true)
+                .volume(outputDir, containerDataDir.resolve("output"))
+                .volume(workDir.resolve(configFileName), containerDataDir.resolve("config.xml"), true)
                 // Set environment
-                .env("SOURCE_FILE", containerInputDir.resolve(sourceFileName))
-                .env("TARGET_FILE", containerInputDir.resolve(targetFileName))
-                .env("CONFIG_FILE", containerConfigDir.resolve("config.xml"))
-                .env("OUTPUT_DIR", containerOutputDir)
-                .env("ACCEPTED_NAME", acceptedName)
-                .env("REVIEW_NAME", reviewName)
+                .env("SOURCE_FILE", containerDataDir.resolve(Paths.get("input", sourceFileName)))
+                .env("TARGET_FILE", containerDataDir.resolve(Paths.get("input", targetFileName)))
+                .env("CONFIG_FILE", containerDataDir.resolve("config.xml"))
+                .env("OUTPUT_DIR", containerDataDir.resolve("output"))
+                .env("ACCEPTED_NAME", stripFilenameExtension(acceptedFileName))
+                .env("REVIEW_NAME", stripFilenameExtension(reviewFileName))
                 // Set resource limits
                 .memory(memoryLimit)
                 .memoryAndSwap(memorySwapLimit))

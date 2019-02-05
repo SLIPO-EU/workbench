@@ -66,7 +66,7 @@ public class LimesConfiguration extends InterlinkConfiguration<Limes>
 {
     private static final long serialVersionUID = 1L;
     
-    public static final String VERSION = "1.3";
+    public static final String VERSION = "1.5";
     
     private static final int SOURCE_INDEX = 0;
     
