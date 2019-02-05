@@ -251,6 +251,7 @@ public class ReverseTriplegeoJobConfiguration extends ContainerBasedJobConfigura
 
         return stepBuilderFactory.get("reverseTriplegeo.prepareWorkingDirectory")
             .tasklet(tasklet)
+            .listener(tasklet)
             .listener(ExecutionContextPromotionListeners.fromKeys(keys))
             .build();
     }

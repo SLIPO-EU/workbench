@@ -229,6 +229,7 @@ public class LimesJobConfiguration extends ContainerBasedJobConfiguration
         };
         return stepBuilderFactory.get("limes.prepareWorkingDirectory")
             .tasklet(tasklet)
+            .listener(tasklet)
             .listener(ExecutionContextPromotionListeners.fromKeys(keys))
             .build();
     }

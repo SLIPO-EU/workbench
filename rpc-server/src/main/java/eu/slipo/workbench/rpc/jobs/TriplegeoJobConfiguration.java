@@ -255,6 +255,7 @@ public class TriplegeoJobConfiguration extends ContainerBasedJobConfiguration
 
         return stepBuilderFactory.get("triplegeo.prepareWorkingDirectory")
             .tasklet(tasklet)
+            .listener(tasklet)
             .listener(ExecutionContextPromotionListeners.fromKeys(keys))
             .build();
     }
@@ -361,8 +362,7 @@ public class TriplegeoJobConfiguration extends ContainerBasedJobConfiguration
 
         final List<String> inputNames = inputFiles.stream()
             .filter(name -> StringUtils.getFilenameExtension(name).equals(inputNameExtension))
-            .map(StringUtils::stripFilenameExtension)
-            .collect(Collectors.toList());
+            .collect(Collectors.mapping(StringUtils::stripFilenameExtension, Collectors.toList()));
 
         final Path classificationFile = outputDir.resolve("classification.nt");
         final Path tmpDir = outputDir;

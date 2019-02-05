@@ -503,8 +503,6 @@ public class FagiJobConfiguration extends ContainerBasedJobConfiguration
         @Qualifier("fagi.prepareWorkingDirectoryTasklet") PrepareWorkingDirectoryTasklet tasklet)
         throws Exception
     {
-        // Todo Add step listener to check entries to be promoted
-
         String[] keys = new String[] {
             "workDir", "inputDir", "inputFiles", "inputFormat", "outputDir", "outputFormat",
             "configFileByName"
@@ -512,6 +510,7 @@ public class FagiJobConfiguration extends ContainerBasedJobConfiguration
 
         return stepBuilderFactory.get("fagi.prepareWorkingDirectory")
             .tasklet(tasklet)
+            .listener(tasklet)
             .listener(ExecutionContextPromotionListeners.fromKeys(keys))
             .build();
     }
@@ -527,11 +526,6 @@ public class FagiJobConfiguration extends ContainerBasedJobConfiguration
     {
         Assert.state(inputFiles != null && inputFiles.size() == 3,
             "The input is expected as a triple (left, right, links) of files");
-
-        // Fixme move this under a listener (for PrepareWorkingDirectory)
-        //final List<Path> inputPaths = Lists.transform(inputFiles, Paths::get);
-        //Assert.state(Iterables.all(inputPaths, f -> !f.isAbsolute() && f.getNameCount() == 1),
-        //    "The list of input files is expected to contain (plain) file names");
 
         final Path leftFile = inputDir.resolve(inputFiles.get(0));
         final Path rightFile = inputDir.resolve(inputFiles.get(1));

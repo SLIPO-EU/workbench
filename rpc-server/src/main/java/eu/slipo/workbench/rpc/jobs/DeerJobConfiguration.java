@@ -211,8 +211,10 @@ public class DeerJobConfiguration extends ContainerBasedJobConfiguration
             "workDir", "inputDir", "inputFormat", "inputFiles", "outputDir", "outputFormat",
             "configFileByName"
         };
+
         return stepBuilderFactory.get("deer.prepareWorkingDirectory")
             .tasklet(tasklet)
+            .listener(tasklet)
             .listener(ExecutionContextPromotionListeners.fromKeys(keys))
             .build();
     }
