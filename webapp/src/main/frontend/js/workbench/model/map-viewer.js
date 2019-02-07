@@ -5,6 +5,7 @@ export const EnumLayerType = {
 
 export const EnumPane = {
   FeatureCollection: 'FeatureCollection',
+  FeatureEvolution: 'Evolution',
   FeatureProvenance: 'Provenance',
 };
 
@@ -72,10 +73,15 @@ export const FilterTypes = [{
   value: 'greaterOrEqual'
 }];
 
+export const ATTRIBUTE_PROPERTIES = '__properties_update';
 export const ATTRIBUTE_GEOMETRY = '__geometry_update';
 
 // TODO : Replace with attributes from SLIPO ontology
 export const Attributes = [{
+  title: 'Display User Updates',
+  key: ATTRIBUTE_PROPERTIES,
+  editable: false,
+}, {
   title: 'Country',
   key: 'country',
   editable: true,

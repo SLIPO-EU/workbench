@@ -6,9 +6,8 @@ import com.vividsolutions.jts.geom.Geometry;
 
 public class Feature {
 
-    private Map<String, String> properties;
-
     private Geometry geometry;
+    private Map<String, String> properties;
 
     public Map<String, String> getProperties() {
         return properties;

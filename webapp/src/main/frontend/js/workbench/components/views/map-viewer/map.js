@@ -29,6 +29,7 @@ import {
 } from '../../../model/map-viewer';
 
 import {
+  FeatureEvolutionViewer,
   FeaturePropertyViewer,
   FeatureProvenanceViewer,
   LayerConfig,
@@ -152,8 +153,8 @@ class MapViewer extends React.Component {
     const {
       draggable, draggableOrder, editActive, layers,
       selectedFeature, selectedFeatures: features = [],
-      onGeometrySnapshotChange,
-      provenance, viewport
+      onEvolutionGeometryChange, onEvolutionUpdatesToggle, onProvenanceGeometryChange,
+      evolution, provenance, viewport
     } = this.props;
 
     const panels = [];
@@ -178,10 +179,11 @@ class MapViewer extends React.Component {
                         features={features}
                         layers={layers}
                         selectedFeature={selectedFeature}
+                        fetchFeatureEvolution={this.props.fetchFeatureEvolution}
                         fetchFeatureProvenance={this.props.fetchFeatureProvenance}
                         close={() => {
-                          if (!provenance) {
-                            // If provenance floating panel is hidden, clear selection
+                          if (!provenance && !evolution) {
+                            // If evolution/provenance floating panels are hidden, clear selection
                             this._select.clear();
                           }
                           this.props.clearSelectedFeatures();
@@ -195,8 +197,8 @@ class MapViewer extends React.Component {
             );
           }
           break;
-        case EnumPane.FeatureProvenance:
 
+        case EnumPane.FeatureProvenance:
           if (provenance) {
             panels.push(
               <div key={id} onClick={() => this.props.bringToFront(id)}>
@@ -217,9 +219,42 @@ class MapViewer extends React.Component {
                           this.props.hideProvenance();
                         }}
                         editActive={editActive}
-                        onGeometrySnapshotChange={onGeometrySnapshotChange}
+                        onProvenanceGeometryChange={onProvenanceGeometryChange}
                         provenance={provenance}
                         toggleEditor={() => this.toggleEditor(selectedFeature.feature)}
+                      />
+                    </ResizableBox>
+                  </div>
+                </Draggable>
+              </div>
+            );
+          }
+          break;
+
+        case EnumPane.FeatureEvolution:
+          if (evolution) {
+            panels.push(
+              <div key={id} onClick={() => this.props.bringToFront(id)}>
+                <Draggable
+                  defaultPosition={{ x: draggable[id].left, y: draggable[id].top }}
+                  onStop={(e, data) => this.onStop(data, id)}
+                  handle=".handle"
+                  bounds={bounds}
+                >
+                  <div style={{ pointerEvents: 'none' }}>
+                    <ResizableBox width={600} height={568} axis="x" minConstraints={[600, 568]}>
+                      <FeatureEvolutionViewer
+                        close={() => {
+                          if (!features || features.length === 0) {
+                            // If property viewer floating panel is hidden, clear selection
+                            this._select.clear();
+                          }
+                          this.props.hideEvolution();
+                        }}
+                        editActive={editActive}
+                        evolution={evolution}
+                        onEvolutionGeometryChange={onEvolutionGeometryChange}
+                        onEvolutionUpdatesToggle={onEvolutionUpdatesToggle}
                       />
                     </ResizableBox>
                   </div>

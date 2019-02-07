@@ -1,0 +1,64 @@
+.slipo-evolution-table {
+  .rt-thead.-headerGroups {
+    border-bottom: none !important;
+  }
+  .rt-tr-group {
+    border-bottom: none !important;
+  }
+  .rt-tr {
+    border-bottom: 1px solid #bdbdbd !important;
+  }
+  .slipo-th-level-1 {
+    border-left: 2px solid #bdbdbd;
+  }
+  .slipo-tl-selected {
+    font-weight: bold;
+  }
+  .slipo-tl-modified {
+    background: #e57373;
+    padding: 3px;
+    color: white;
+  }
+  .slipo-tl-cell-default {
+    background: none;
+  }
+  .slipo-tl-cell-odd {
+    background: #eceff1;
+  }
+  .slipo-tl-image-container {
+    position: relative;
+    .slipo-tl-image {
+      max-width: 100%;
+    }
+    .slipo-tl-image-updated {
+      position: absolute;
+      background: #eceff1;
+      padding: 4px;
+      width: 18px;
+      top: -1px;
+      left: -1px;
+    }
+  }
+  .slipo-tl-table {
+    margin: 10px 0px;
+  }
+  .slipo-tl-version-separator {
+    border-left: 2px solid #bdbdbd;
+  }
+  .geometry-active {
+    background: #517fa4;
+    color: #ffffff;
+  }
+  .geometry-inactive {
+    background: #cccccc;
+    color: #263238;
+  }
+  .updates-hide {
+    background: #d50000;
+    color: #ffffff;
+  }
+  .updates-show {
+    background: #388E3C;
+    color: #ffffff;
+  }
+}

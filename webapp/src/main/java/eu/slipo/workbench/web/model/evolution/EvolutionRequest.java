@@ -1,15 +1,18 @@
-package eu.slipo.workbench.web.model.provenance;
+package eu.slipo.workbench.web.model.evolution;
 
 /**
- * Request for a single POI provenance data
+ * Request for a single POI evolution data
  */
-public class ProvenanceRequest {
+public class EvolutionRequest {
+
+    private long processId;
+
+    private long processVersion;
 
     private long executionId;
-    private long processId;
-    private long processVersion;
+
     private String id;
-    private String outputKey;
+
     private String uri;
 
     public long getProcessId() {
@@ -36,14 +39,6 @@ public class ProvenanceRequest {
         this.executionId = executionId;
     }
 
-    public String getOutputKey() {
-        return outputKey;
-    }
-
-    public void setOutputKey(String outputKey) {
-        this.outputKey = outputKey;
-    }
-
     public String getId() {
         return id;
     }
@@ -59,5 +54,4 @@ public class ProvenanceRequest {
     public void setUri(String uri) {
         this.uri = uri;
     }
-
 }

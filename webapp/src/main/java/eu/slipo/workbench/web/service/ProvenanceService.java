@@ -40,6 +40,12 @@ import eu.slipo.workbench.common.model.tool.output.EnumDeerOutputPart;
 import eu.slipo.workbench.common.model.tool.output.EnumFagiOutputPart;
 import eu.slipo.workbench.common.model.tool.output.EnumTriplegeoOutputPart;
 import eu.slipo.workbench.common.repository.ResourceRepository;
+import eu.slipo.workbench.web.model.provenance.EnrichOperation;
+import eu.slipo.workbench.web.model.provenance.FeatureQuery;
+import eu.slipo.workbench.web.model.provenance.FuseOperation;
+import eu.slipo.workbench.web.model.provenance.Operation;
+import eu.slipo.workbench.web.model.provenance.PropertyAction;
+import eu.slipo.workbench.web.model.provenance.Provenance;
 import eu.slipo.workbench.web.repository.FeatureRepository;
 
 /**
@@ -120,7 +126,7 @@ public class ProvenanceService implements InitializingBean {
         String outputKey,
         String id,
         String uri
-    ) throws Exception, ProcessExecutionNotFoundException {
+    ) throws Exception {
 
         int level = 0;
         List<FeatureQuery> queries = new ArrayList<FeatureQuery>();
@@ -452,161 +458,6 @@ public class ProvenanceService implements InitializingBean {
         String result = attributeMapping.get(value);
 
         return (result == null ? value : result);
-    }
-
-    public static class Provenance {
-
-        public String stepName;
-
-        public String outputKey;
-
-        public String featureId;
-
-        public String featureUri;
-
-        public JsonNode features;
-
-        public List<Operation> operations;
-
-        public List<FeatureUpdateRecord> updates;
-
-        public static Provenance of(
-            String stepName,
-            JsonNode features,
-            List<Operation> operations,
-            String outputKey,
-            String featureId,
-            String featureUri,
-            List<FeatureUpdateRecord> updates
-        ) {
-            Provenance t = new Provenance();
-            t.stepName = stepName;
-            t.operations = operations;
-            t.features = features;
-            t.outputKey = outputKey;
-            t.featureId = featureId;
-            t.featureUri = featureUri;
-            t.updates = updates;
-            return t;
-        }
-    }
-
-    public static class FeatureQuery {
-
-        public int level;
-
-        public String source;
-
-        public UUID tableName;
-
-        public String featureUri;
-
-        public static FeatureQuery of(int level, String source, UUID tableName, String featureUri) {
-            FeatureQuery fq = new FeatureQuery();
-            fq.level = level;
-            fq.source = source;
-            fq.tableName = tableName;
-            fq.featureUri = featureUri;
-            return fq;
-        }
-
-    }
-
-    public static class Operation {
-
-        public int level;
-
-        public EnumTool tool;
-
-        public String stepName;
-
-    }
-
-    public static class EnrichOperation extends Operation {
-
-        public String uri;
-
-        public String input;
-
-        private EnrichOperation() {
-            super();
-        }
-
-        public static EnrichOperation of(int level, EnumTool tool, String stepName, String input, String uri) {
-            EnrichOperation eo = new EnrichOperation();
-            eo.level = level;
-            eo.tool = tool;
-            eo.stepName = stepName;
-            eo.input = input;
-            eo.uri = uri;
-            return eo;
-        }
-
-    }
-
-    public static class FuseOperation extends Operation {
-
-        public String leftUri;
-
-        public String rightUri;
-
-        public String leftInput;
-
-        public String rightInput;
-
-        public String selectedUri;
-
-        public String defaultAction;
-
-        public Float confidenceScore;
-
-        public List<PropertyAction> actions = new ArrayList<PropertyAction>();
-
-        private FuseOperation() {
-            super();
-        }
-
-        public static FuseOperation of(
-            int level,
-            EnumTool tool,
-            String stepName,
-            Object[] link,
-            String featureUri,
-            String leftInput,
-            String rightInput
-        ) {
-            FuseOperation fo = new FuseOperation();
-            fo.level = level;
-            fo.tool = tool;
-            fo.stepName = stepName;
-            fo.leftUri = (String) link[1];
-            fo.rightUri = (String) link[2];
-            fo.selectedUri = fo.leftUri.equals(featureUri) ? fo.leftUri : fo.rightUri;
-            fo.leftInput = leftInput;
-            fo.rightInput = rightInput;
-            fo.defaultAction = (String) link[3];
-            fo.confidenceScore = (Float) link[4];
-            return fo;
-        }
-
-    }
-
-    public static class PropertyAction {
-
-        public String property;
-
-        public String operation;
-
-        public String value;
-
-        public static PropertyAction of(String property, String operation, String value) {
-            PropertyAction pa = new PropertyAction();
-            pa.property = property;
-            pa.operation = operation;
-            pa.value = value;
-            return pa;
-        }
-
     }
 
 }

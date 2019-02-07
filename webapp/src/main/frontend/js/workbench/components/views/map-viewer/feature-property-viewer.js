@@ -57,12 +57,13 @@ const createColumns = (state, props) => {
           Header: '',
           id: 'actions',
           style: { 'textAlign': 'center' },
-          width: 60,
+          width: 80,
           show: !editActive,
           Expander: (cell) => {
             return cell.original[FEATURE_OUTPUT_KEY] ?
               <span>
                 <i data-action="provenance" title="View POI provenance" className="fa fa-search slipo-table-row-action pr-2" />
+                <i data-action="evolution" title="View POI evolution" className="fa fa-clock-o slipo-table-row-action pr-2"></i>
                 <i data-action="edit" title="Edit feature" className="fa fa-pencil slipo-table-row-action" />
               </span> : null;
           },
@@ -150,6 +151,19 @@ class FeaturePropertyViewer extends React.Component {
     const action = e.target.getAttribute('data-action');
 
     switch (action) {
+      case 'evolution': {
+        const id = rowInfo.original[FEATURE_LAYER_PROPERTY] + '::' + rowInfo.original[FEATURE_ID];
+        const outputKey = rowInfo.original[FEATURE_OUTPUT_KEY];
+
+        const feature = this.props.features.find(f => f.getId() === id && f.get(FEATURE_OUTPUT_KEY) === outputKey);
+        this.props.fetchFeatureEvolution(feature).then((evolution) => {
+          if (!evolution) {
+            message.infoHtml('Failed to load evolution data.<br/>No process execution instance was found.', 'fa-remove');
+          }
+        });
+        break;
+      }
+
       case 'provenance':
       case 'edit': {
         const id = rowInfo.original[FEATURE_LAYER_PROPERTY] + '::' + rowInfo.original[FEATURE_ID];
