@@ -47,6 +47,7 @@
         <module>workflows</module> <!-- model and execute workflows atop of Spring Batch -->
         <module>common</module> <!-- common for Spring-based applications -->
         <module>command</module> <!-- command-line interface for RPC server -->
+        <module>triplegeo-ml-mappings</module>
         <module>rpc-server</module>
         <module>webapp</module>
     </modules>

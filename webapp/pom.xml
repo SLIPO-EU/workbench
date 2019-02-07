@@ -41,6 +41,12 @@
             <version>${project.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>eu.slipo</groupId>
+            <artifactId>triplegeo-ml-mappings</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+        
         <!-- Spring-Boot starter dependencies -->
 
         <dependency>
