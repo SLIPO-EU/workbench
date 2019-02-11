@@ -130,12 +130,20 @@ export const Attributes = [{
   key: 'postcode',
   editable: true,
 }, {
+  title: 'Street',
+  key: 'street',
+  editable: true,
+}, {
   title: 'Street Number',
   key: 'street_num',
   editable: true,
 }, {
   title: 'Type',
   key: 'type',
+  editable: true,
+}, {
+  title: 'Category',
+  key: 'category',
   editable: true,
 }, {
   title: 'Wikipedia',
@@ -146,9 +154,21 @@ export const Attributes = [{
   key: 'uri',
   editable: false,
 }, {
+  title: 'Source',
+  key: 'source',
+  editable: true,
+}, {
   title: 'Timestamp',
   key: 'timestamp',
   editable: true,
+}, {
+  title: 'Longitude',
+  key: 'lon',
+  editable: false,
+}, {
+  title: 'Latitude',
+  key: 'lat',
+  editable: false,
 }, {
   title: 'Geometry',
   key: ATTRIBUTE_GEOMETRY,

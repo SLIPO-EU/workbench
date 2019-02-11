@@ -132,7 +132,7 @@ const createRows = (props) => {
     let columnIndex = 0;
     const attr = Attributes.find(a => a.key === prop);
     const row = {
-      'attribute': attr.title
+      attribute: attr.title
     };
     steps.forEach((step, index) => {
       inputRow.filter(i => i.step === step.index).map((input, inputIndex) => {

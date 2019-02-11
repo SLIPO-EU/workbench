@@ -93,7 +93,7 @@ const createRows = (props) => {
   return properties.map((prop, rowIndex) => {
     const attr = Attributes.find(a => a.key === prop);
     const row = {
-      'attribute': attr.title,
+      attribute: attr.title,
     };
 
     header.forEach((header, columnIndex) => {
