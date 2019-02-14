@@ -292,20 +292,21 @@ const configReducer = (state, action, global) => {
         return state;
       }
       // Restore geometry for the selected feature
-      const { data, response: { processVersion } } = state.evolution;
-      // Last row is the geometry row
-      const row = data[data.length - 1];
-      // Find cell for the requested revision
-      const cell = row.find(c => c.version === processVersion);
-      // Get selected feature
-      const feature = global.config.selectedFeature.feature;
-      if (feature) {
-        const geometry = geometryFromObject(cell.value);
-        // Set selected feature geometry. OpenLayers map rendering is not
-        // controlled by React.
-        feature.setGeometry(geometry);
+      const { data, response: { processVersion }, hasUpdates } = state.evolution;
+      if (hasUpdates) {
+        // Last row is the geometry row
+        const row = data[data.length - 1];
+        // Find cell for the requested revision
+        const cell = row.find(c => c.version === processVersion);
+        // Get selected feature
+        const feature = global.config.selectedFeature.feature;
+        if (feature) {
+          const geometry = geometryFromObject(cell.value);
+          // Set selected feature geometry. OpenLayers map rendering is not
+          // controlled by React.
+          feature.setGeometry(geometry);
+        }
       }
-
       return {
         ...state,
         evolution: null,
