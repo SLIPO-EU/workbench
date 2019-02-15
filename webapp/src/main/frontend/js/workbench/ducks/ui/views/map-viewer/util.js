@@ -110,6 +110,18 @@ function createEnrichedCells(step, property, features, updates = []) {
   return result;
 }
 
+function resolveDefaultFuseActionValue(defaultAction, leftValue, rightValue) {
+  switch (defaultAction) {
+    case 'KEEP_LEFT':
+      return leftValue;
+    case 'KEEP_RIGHT':
+      return rightValue;
+    case 'KEEP_BOTH':
+      return `${leftValue};${rightValue}`;
+  }
+  throw Error(`Fusion default action ${defaultAction} is not supported`);
+}
+
 function createFusedCells(step, property, features, updates) {
   const left = features.find((f) => f.properties[FEATURE_URI] === step.left.uri && f.source === step.left.input);
   const right = features.find((f) => f.properties[FEATURE_URI] === step.right.uri && f.source === step.right.input);
@@ -133,8 +145,8 @@ function createFusedCells(step, property, features, updates) {
   // Check this is the last operation (property should exist)
   const isLast = fused.properties.hasOwnProperty(property);
 
-  // TODO: Check default action
-  const value = action ? action.value : step.selectedUri === step.left.uri ? left.properties[property] : right.properties[property];
+  // Resolve value
+  const value = action ? action.value : resolveDefaultFuseActionValue(step.defaultAction, left.properties[property], right.properties[property]);
   // Add properties incrementally
   if (!isLast) {
     fused.properties[property] = value;
