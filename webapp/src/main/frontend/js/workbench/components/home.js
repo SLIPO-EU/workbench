@@ -27,6 +27,7 @@ import {
 import SecureRoute from './helpers/secure-route';
 
 import {
+  ApplicationKeyViewer,
   Dashboard,
   EventViewer,
   HarvesterDataExplorer,
@@ -186,6 +187,7 @@ class Home extends React.Component {
                 <Route path={StaticRoutes.RecipeExplorer} component={RecipeExplorer} />
                 <SecureRoute path={StaticRoutes.UserManager} component={UserManager} roles={[Roles.ADMIN]} />
                 <SecureRoute path={StaticRoutes.EventViewer} component={EventViewer} roles={[Roles.ADMIN, Roles.DEVELOPER]} />
+                <SecureRoute path={StaticRoutes.ApplicationKeyViewer} component={ApplicationKeyViewer} roles={[Roles.ADMIN]} />
                 {/* Default */}
                 <Redirect push={true} to={ErrorPages.NotFound} />
               </Switch>

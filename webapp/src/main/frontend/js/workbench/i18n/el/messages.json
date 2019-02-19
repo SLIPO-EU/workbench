@@ -35,7 +35,8 @@
     "settings": "Ρυθμίσεις",
     "admin": {
       "user-manager": "Χρήστες",
-      "event-viewer": "Καταγραφή Συμβάντων"
+      "event-viewer": "Καταγραφή Συμβάντων",
+      "application-key-viewer": "Application Keys"
     },
     "tools": {
       "schema-explorer": "Οντολογίες",
@@ -134,6 +135,6 @@
   },
   "error": {
     "FILESYSTEM_LOAD": "Failed to load filesystem",
-    "NOT_IMPLEMENTED": "Not implemented!"
+    "NOT_IMPLEMENTED": "Action is not implemented!"
   }
 }

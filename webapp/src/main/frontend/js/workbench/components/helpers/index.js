@@ -9,6 +9,7 @@ export { default as OpenLayers } from './map';
 export { default as Placeholder } from './placeholder';
 export { default as SecureContent } from './secure-content';
 export { default as SelectLanguage } from './select-language';
+export { default as StatusLabel } from './status-label';
 export { default as Table } from './table';
 export { default as ToastTemplate } from './toast-template';
 export { default as Zoom } from './zoom';

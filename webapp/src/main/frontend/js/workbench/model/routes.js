@@ -52,6 +52,7 @@ const ProcessExecutionExplorer = '/process/execution/explore';
 
 const RecipeExplorer = '/recipe/explore';
 
+const ApplicationKeyViewer = '/admin/application-key-viewer';
 const UserManager = '/admin/user-manager';
 const EventViewer = '/admin/event-viewer';
 
@@ -69,6 +70,7 @@ export const StaticRoutes = {
   RecipeExplorer,
   UserManager,
   EventViewer,
+  ApplicationKeyViewer,
 };
 
 /**
@@ -227,6 +229,13 @@ const routes = {
     defaultTitle: 'Event Viewer',
     roles: [Roles.ADMIN],
     links: [Dashboard, UserManager],
+  },
+  [ApplicationKeyViewer]: {
+    description: 'Browse application keys',
+    title: 'links.admin.application-key-viewer',
+    defaultTitle: 'Application Keys Viewer',
+    roles: [Roles.ADMIN],
+    links: [UserManager, EventViewer],
   },
   // Dynamic
   [ResourceMapViewer]: {

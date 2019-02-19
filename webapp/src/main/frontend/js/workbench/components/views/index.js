@@ -1,3 +1,4 @@
+export { default as ApplicationKeyViewer } from './application-key-viewer';
 export { default as ContextSidebar } from './context-sidebar';
 export { default as Dashboard } from './dashboard';
 export { default as EventViewer } from './event-viewer';

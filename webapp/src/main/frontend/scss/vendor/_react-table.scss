@@ -1,6 +1,5 @@
 .slipo-react-table-selected {
-  background: #626262;
-  color: white;
+  background: #E0E0E0;
 }
 
 .slipo-react-table-child-row {
@@ -10,7 +9,6 @@
 .slipo-react-table-selected a {
   color: white;
 }
-
 
 /**
 * Customize pagination
@@ -28,7 +26,6 @@
 .ReactTable .-pagination .-next button {
   float: right;
 }
-
 
 /**
 * Fix no data label z-index (renders over select input dropdown list)

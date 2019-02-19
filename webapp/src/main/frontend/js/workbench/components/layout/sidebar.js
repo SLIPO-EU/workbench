@@ -147,6 +147,13 @@ class Sidebar extends React.Component {
                       </NavLink>
                     </li>
                   </SecureContent>
+                  <SecureContent roles={[Roles.ADMIN]}>
+                    <li className="nav-item">
+                      <NavLink to={StaticRoutes.ApplicationKeyViewer} className="nav-link" activeClassName="active">
+                        <i className="fa fa-cogs"></i>{'Application Keys'}
+                      </NavLink>
+                    </li>
+                  </SecureContent>
                 </ul>
               </li>
             </SecureContent>

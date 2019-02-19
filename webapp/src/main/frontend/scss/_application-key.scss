@@ -1,0 +1,30 @@
+%slipo-app-key {
+  padding: 4px 4px;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.slipo-app-key-revoked {
+  @extend %slipo-error-level;
+  color: #FAFAFA;
+  background-color: #d50000;
+}
+
+.slipo-app-key-active {
+  @extend %slipo-error-level;
+  color: #FAFAFA;
+  background-color: #33691E;
+}
+
+.slipo-app-key-value {
+  position: relative;
+  padding: 10px;
+  font-weight: 600;
+  .copy-action {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    font-size: 1.2rem;
+    cursor: pointer;
+  }
+}
