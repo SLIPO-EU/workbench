@@ -5,7 +5,8 @@ public enum EnumRole
     USER(1, "User"),
     ADMIN(2, "Site administrator"),
     AUTHOR(3, "Data integration workflow author"),
-    DEVELOPER(4, "Developer role that enables additional features")
+    DEVELOPER(4, "Developer role that enables additional features"),
+    API(5, "SLIPO Application Programming Interface ")
     ;
 
     private final int value;

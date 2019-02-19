@@ -34,6 +34,10 @@ public enum EnumProcessTaskType {
      * Export map data
      */
     EXPORT_MAP(4),
+    /**
+     * SLIPO API method call
+     */
+    API(5),
     ;
 
     private final int value;
