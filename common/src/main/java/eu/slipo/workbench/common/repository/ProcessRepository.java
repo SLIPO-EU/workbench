@@ -235,6 +235,15 @@ public interface ProcessRepository
     ProcessExecutionRecord findLatestExecution(long id, long version);
 
     /**
+     * Get all revisions of the process with the specified id
+     *
+     * @param id The process id
+     * @param includeExecutions A flag to indicate if executions should also be returned
+     * @return A list of {@link ProcessRecord}
+     */
+    List<ProcessRecord> getRevisions(long id, boolean includeExecutions);
+
+    /**
      * Get a compact view of the execution of a process of a given id and version.
      *
      * <p>A compact view of the execution is an execution comprised of the latest execution of each step,

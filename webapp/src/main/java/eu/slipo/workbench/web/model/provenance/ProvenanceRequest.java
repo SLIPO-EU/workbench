@@ -5,16 +5,11 @@ package eu.slipo.workbench.web.model.provenance;
  */
 public class ProvenanceRequest {
 
-    private long processId;
-
-    private long processVersion;
-
     private long executionId;
-
-    private String outputKey;
-
+    private long processId;
+    private long processVersion;
     private String id;
-
+    private String outputKey;
     private String uri;
 
     public long getProcessId() {

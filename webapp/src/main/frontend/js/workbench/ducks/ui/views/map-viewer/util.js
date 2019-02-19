@@ -7,6 +7,7 @@ import {
 
 import {
   ATTRIBUTE_GEOMETRY,
+  ATTRIBUTE_PROPERTIES,
   EnumLayerType,
   Symbols,
 } from '../../../../model/map-viewer';
@@ -47,6 +48,10 @@ function createStyle(index) {
 }
 
 function projectProperty(feature, property, current, updates = [], index = 0) {
+  if (property === ATTRIBUTE_PROPERTIES) {
+    // Special property used by evolution viewer
+    return null;
+  }
   if (property === ATTRIBUTE_GEOMETRY) {
     // Set current value to the current geometry
     current = feature[FEATURE_GEOMETRY];
@@ -105,6 +110,18 @@ function createEnrichedCells(step, property, features, updates = []) {
   return result;
 }
 
+function resolveDefaultFuseActionValue(defaultAction, leftValue, rightValue) {
+  switch (defaultAction) {
+    case 'KEEP_LEFT':
+      return leftValue;
+    case 'KEEP_RIGHT':
+      return rightValue;
+    case 'KEEP_BOTH':
+      return `${leftValue};${rightValue}`;
+  }
+  throw Error(`Fusion default action ${defaultAction} is not supported`);
+}
+
 function createFusedCells(step, property, features, updates) {
   const left = features.find((f) => f.properties[FEATURE_URI] === step.left.uri && f.source === step.left.input);
   const right = features.find((f) => f.properties[FEATURE_URI] === step.right.uri && f.source === step.right.input);
@@ -128,8 +145,8 @@ function createFusedCells(step, property, features, updates) {
   // Check this is the last operation (property should exist)
   const isLast = fused.properties.hasOwnProperty(property);
 
-  // TODO: Check default action
-  const value = action ? action.value : step.selectedUri === step.left.uri ? left.properties[property] : right.properties[property];
+  // Resolve value
+  const value = action ? action.value : resolveDefaultFuseActionValue(step.defaultAction, left.properties[property], right.properties[property]);
   // Add properties incrementally
   if (!isLast) {
     fused.properties[property] = value;
@@ -459,6 +476,102 @@ export function provenanceToTable(provenance) {
     updates,
     geometrySnapshotIndex: dataRows[0].length - 1,
   };
+  return result;
+}
+
+export function evolutionToTable(evolution) {
+  const {
+    processVersion: version,
+    snapshots = [],
+  } = evolution;
+
+  if (snapshots.length === 0) {
+    return null;
+  }
+  const current = snapshots.find(s => s.process.version === version);
+
+  const hasUpdates = !!snapshots.find(s => s.updates != null && s.updates.length !== 0);
+
+  // Properties
+  const properties = snapshots
+    .reduce((result, snapshot) => {
+      // Process all features
+      const keys = Object.keys(snapshot.feature.properties);
+      return _.uniq([...result, ...keys]);
+    }, [])
+    .sort();
+  // Add extra properties for property and geometry updates
+  if (hasUpdates) {
+    properties.splice(0, 0, ATTRIBUTE_PROPERTIES);
+    properties.push(ATTRIBUTE_GEOMETRY);
+  }
+
+  // Add header
+  const header = [];
+
+  snapshots.forEach((snapshot, index) => {
+    const { process, execution } = snapshot;
+
+    header.push({
+      name: process.name,
+      description: process.description,
+      userName: execution.submittedBy ? execution.submittedBy.name : 'System',
+      submittedOn: execution.submittedOn,
+      version: process.version,
+      index,
+      showUpdates: true,
+    });
+  });
+
+  // Data rows
+  const data = [];
+
+  properties.forEach((property) => {
+    let columnIndex = 0;
+
+    // Attribute column
+    const values = [{
+      initial: property,
+      value: property,
+      index: columnIndex,
+      property,
+      version: null,
+    }];
+
+    snapshots.forEach((snapshot) => {
+      const { feature, updates = [] } = snapshot;
+      values.push({
+        initial: projectProperty(feature, property, feature.properties[property], updates, 0),
+        value: projectProperty(feature, property, feature.properties[property], updates, updates.length),
+        index: ++columnIndex,
+        property,
+        version: snapshot.process.version,
+      });
+    });
+
+    data.push(values);
+  });
+
+  // Get updates
+  const updates = snapshots.reduce((result, snapshot) => {
+    result[snapshot.process.version] = snapshot.updates;
+    return result;
+  }, {});
+
+  const result = {
+    response: evolution,
+    layer: current.stepName,
+    featureId: evolution.featureId,
+    featureUri: evolution.featureUri,
+    header,
+    properties,
+    data,
+    updates,
+    processVersion: version,
+    geometryVersion: version,
+    hasUpdates,
+  };
+
   return result;
 }
 

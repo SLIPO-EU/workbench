@@ -14,6 +14,7 @@ import {
 
 import {
   accountReducer,
+  applicationKeyReducer,
   dashboardReducer,
   eventReducer,
   harvesterDataExplorerReducer,
@@ -36,6 +37,7 @@ export default Redux.combineReducers({
     viewport,
     views: Redux.combineReducers({
       account: accountReducer,
+      applicationKey: applicationKeyReducer,
       dashboard: dashboardReducer,
       event: eventReducer,
       execution: Redux.combineReducers({

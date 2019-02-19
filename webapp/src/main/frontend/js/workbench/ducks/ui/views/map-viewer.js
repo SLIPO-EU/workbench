@@ -6,6 +6,7 @@ import {
 } from '../../../model/map-viewer';
 
 import {
+  evolutionToTable,
   geometryFromObject,
   processExecutionToLayers,
   provenanceToTable,
@@ -40,9 +41,12 @@ const Types = {
   RECEIVE_EXECUTION_MAP_DATA: 'ui/map/viewer/RECEIVE_EXECUTION_MAP_DATA',
   REQUEST_RESOURCE_MAP_DATA: 'ui/map/viewer/REQUEST_RESOURCE_MAP_DATA',
   RECEIVE_RESOURCE_MAP_DATA: 'ui/map/viewer/RECEIVE_RESOURCE_MAP_DATA',
+  REQUEST_FEATURE_EVOLUTION: 'ui/map/viewer/REQUEST_FEATURE_EVOLUTION',
+  RECEIVE_FEATURE_EVOLUTION: 'ui/map/viewer/RECEIVE_FEATURE_EVOLUTION',
   REQUEST_FEATURE_PROVENANCE: 'ui/map/viewer/REQUEST_FEATURE_PROVENANCE',
   RECEIVE_FEATURE_PROVENANCE: 'ui/map/viewer/RECEIVE_FEATURE_PROVENANCE',
 
+  HIDE_EVOLUTION: 'ui/map/viewer/HIDE_EVOLUTION',
   HIDE_PROVENANCE: 'ui/map/viewer/HIDE_PROVENANCE',
   BRING_PANEL_TO_FRONT: 'ui/map/viewer/BRING_PANEL_TO_FRONT',
 
@@ -69,7 +73,9 @@ const Types = {
   EDIT_UPDATE_PROPERTY: 'ui/map/viewer/EDIT_UPDATE_PROPERTY',
   EDIT_VERTEX: 'ui/map/viewer/EDIT_VERTEX',
 
-  SELECT_GEOMETRY_SNAPSHOT: 'ui/map/viewer/SELECT_GEOMETRY_SNAPSHOT',
+  SELECT_EVOLUTION_GEOMETRY: 'ui/map/viewer/SELECT_EVOLUTION_GEOMETRY',
+  TOGGLE_EVOLUTION_UPDATES: 'ui/map/viewer/TOGGLE_EVOLUTION_UPDATES',
+  SELECT_PROVENANCE_GEOMETRY: 'ui/map/viewer/SELECT_PROVENANCE_GEOMETRY',
 };
 
 /*
@@ -101,26 +107,31 @@ const initialState = {
     version: null,
   },
   config: {
-    layerConfigVisible: false,
-    layers: [],
     baseLayer: 'BingMaps-Road',
-    selectedLayer: null,
-    selectedFeatures: [],
-    selectedFeature: null,
-    provenance: null,
     center: null,
-    zoom: null,
-    draggableOrder: [EnumPane.FeatureCollection, EnumPane.FeatureProvenance],
     draggable: {
       [EnumPane.FeatureCollection]: {
         left: 220,
         top: 120,
       },
       [EnumPane.FeatureProvenance]: {
-        left: 520,
+        left: 220,
+        top: 120,
+      },
+      [EnumPane.FeatureEvolution]: {
+        left: 220,
         top: 120,
       },
     },
+    draggableOrder: [EnumPane.FeatureCollection, EnumPane.FeatureProvenance, EnumPane.FeatureEvolution],
+    evolution: null,
+    layerConfigVisible: false,
+    layers: [],
+    provenance: null,
+    selectedLayer: null,
+    selectedFeatures: [],
+    selectedFeature: null,
+    zoom: null,
   },
   edit: initialEditState,
   search: {
@@ -251,6 +262,10 @@ const configReducer = (state, action, global) => {
       };
 
     case Types.HIDE_PROVENANCE: {
+      if (!state.provenance) {
+        return state;
+      }
+
       // Restore geometry snapshot
       const { updates, dataRows } = state.provenance;
       if (updates.length !== 0) {
@@ -272,6 +287,34 @@ const configReducer = (state, action, global) => {
       };
     }
 
+    case Types.HIDE_EVOLUTION: {
+      if (!state.evolution) {
+        return state;
+      }
+      // Restore geometry for the selected feature
+      const { data, response: { processVersion }, hasUpdates } = state.evolution;
+      if (hasUpdates) {
+        // Last row is the geometry row
+        const row = data[data.length - 1];
+        // Find cell for the requested revision
+        const cell = row.find(c => c.version === processVersion);
+        // Get selected feature
+        const feature = global.config.selectedFeature.feature;
+        if (feature) {
+          const geometry = geometryFromObject(cell.value);
+          // Set selected feature geometry. OpenLayers map rendering is not
+          // controlled by React.
+          feature.setGeometry(geometry);
+        }
+      }
+      return {
+        ...state,
+        evolution: null,
+        selectedFeature: null,
+      };
+    }
+
+
     case Types.BRING_PANEL_TO_FRONT:
       return {
         ...state,
@@ -282,10 +325,11 @@ const configReducer = (state, action, global) => {
     case Types.RECEIVE_RESOURCE_MAP_DATA:
       return {
         ...state,
+        evolution: null,
         layers: processExecutionToLayers(action.data.process, action.data.execution),
+        provenance: null,
         selectedLayer: null,
         selectedFeatures: [],
-        provenance: null,
         selectedFeature: null,
       };
 
@@ -295,7 +339,13 @@ const configReducer = (state, action, global) => {
         provenance: action.provenance,
       };
 
-    case Types.SELECT_GEOMETRY_SNAPSHOT: {
+    case Types.RECEIVE_FEATURE_EVOLUTION:
+      return {
+        ...state,
+        evolution: action.evolution,
+      };
+
+    case Types.SELECT_PROVENANCE_GEOMETRY: {
       const feature = global.config.selectedFeature.feature;
       const geometry = geometryFromObject(action.geometry);
 
@@ -308,6 +358,71 @@ const configReducer = (state, action, global) => {
         provenance: {
           ...state.provenance,
           geometrySnapshotIndex: action.index,
+        },
+      };
+    }
+
+    case Types.SELECT_EVOLUTION_GEOMETRY: {
+      // Get selected feature
+      const feature = global.config.selectedFeature.feature;
+      // Resolve selected geometry
+      const { header, data } = state.evolution;
+      // Get revision
+      const revision = header.find(h => h.version === action.version);
+      // Last row is the geometry row
+      const row = data[data.length - 1];
+      // Find cell for the requested revision
+      const cell = row.find(c => c.version === action.version);
+      // Parse geometry
+      const geometry = geometryFromObject(revision.showUpdates ? cell.value : cell.initial);
+
+      // Set selected feature geometry. OpenLayers map rendering is not
+      // controlled by React.
+      feature.setGeometry(geometry);
+
+      return {
+        ...state,
+        evolution: {
+          ...state.evolution,
+          geometryVersion: action.version,
+        },
+      };
+    }
+
+    case Types.TOGGLE_EVOLUTION_UPDATES: {
+      // Get selected feature
+      const feature = global.config.selectedFeature.feature;
+      if (feature) {
+        // Resolve selected geometry
+        const { header, data, geometryVersion } = state.evolution;
+        if (geometryVersion === action.version) {
+          // Get revision
+          const revision = header.find(h => h.version === action.version);
+          // Last row is the geometry row
+          const row = data[data.length - 1];
+          // Find cell for the requested revision
+          const cell = row.find(c => c.version === action.version);
+          // Parse geometry
+          const geometry = geometryFromObject(revision.showUpdates ? cell.initial : cell.value);
+
+          // Set selected feature geometry. OpenLayers map rendering is not
+          // controlled by React.
+          feature.setGeometry(geometry);
+        }
+      }
+
+      return {
+        ...state,
+        evolution: {
+          ...state.evolution,
+          header: state.evolution.header.map(h => {
+            return (h.version === action.version) ?
+              {
+                ...h,
+                showUpdates: !h.showUpdates,
+              }
+              : h;
+          }),
         },
       };
     }
@@ -432,6 +547,7 @@ export default (state = initialState, action) => {
 
     case Types.REQUEST_EXECUTION_MAP_DATA:
     case Types.REQUEST_RESOURCE_MAP_DATA:
+    case Types.REQUEST_FEATURE_EVOLUTION:
     case Types.REQUEST_FEATURE_PROVENANCE:
       return {
         ...state,
@@ -440,6 +556,7 @@ export default (state = initialState, action) => {
 
     case Types.RECEIVE_EXECUTION_MAP_DATA:
     case Types.RECEIVE_RESOURCE_MAP_DATA:
+    case Types.RECEIVE_FEATURE_EVOLUTION:
     case Types.RECEIVE_FEATURE_PROVENANCE:
       return {
         ...state,
@@ -456,12 +573,15 @@ export default (state = initialState, action) => {
     case Types.SET_LAYER_STYLE:
     case Types.SET_SELECTED_FEATURES:
     case Types.CLEAR_SELECTED_FEATURES:
+    case Types.HIDE_EVOLUTION:
     case Types.HIDE_PROVENANCE:
     case Types.BRING_PANEL_TO_FRONT:
     case Types.SET_CENTER:
     case Types.SET_ITEM_POSITION:
     case Types.SELECT_FEATURE:
-    case Types.SELECT_GEOMETRY_SNAPSHOT:
+    case Types.SELECT_EVOLUTION_GEOMETRY:
+    case Types.TOGGLE_EVOLUTION_UPDATES:
+    case Types.SELECT_PROVENANCE_GEOMETRY:
       return {
         ...state,
         config: configReducer(state.config, action, state),
@@ -556,6 +676,7 @@ export const fetchFeatureProvenance = (processId, processVersion, executionId, f
   const featureId = feature.get(FEATURE_ID);
   const featureUri = feature.get(FEATURE_URI);
 
+  dispatch(hideEvolution());
   dispatch(selectFeature(feature, outputKey, featureId, featureUri));
   dispatch(requestFeatureProvenance());
 
@@ -613,6 +734,38 @@ export const refreshFeatureProvenance = () => (dispatch, getState) => {
     });
 };
 
+const requestFeatureEvolution = () => ({
+  type: Types.REQUEST_FEATURE_EVOLUTION,
+});
+
+const receiveFeatureEvolution = (evolution) => ({
+  type: Types.RECEIVE_FEATURE_EVOLUTION,
+  evolution,
+});
+
+export const fetchFeatureEvolution = (processId, processVersion, executionId, feature) => (dispatch, getState) => {
+  const { meta: { csrfToken: token } } = getState();
+
+  const outputKey = feature.get(FEATURE_OUTPUT_KEY);
+  const featureId = feature.get(FEATURE_ID);
+  const featureUri = feature.get(FEATURE_URI);
+
+  dispatch(hideProvenance());
+  dispatch(selectFeature(feature, outputKey, featureId, featureUri));
+  dispatch(requestFeatureEvolution());
+
+  return provenanceService.fetchFeatureEvolution(processId, processVersion, executionId, featureId, featureUri, token)
+    .then((data) => {
+      const evolution = evolutionToTable(data);
+
+      dispatch(receiveFeatureEvolution(evolution));
+      if (evolution) {
+        dispatch(bringToFront(EnumPane.FeatureEvolution));
+      }
+
+      return evolution;
+    });
+};
 
 const updateStyle = (tableName, style) => ({
   type: Types.SET_LAYER_STYLE,
@@ -730,10 +883,24 @@ export const clearSelectedFeatures = () => ({
   type: Types.CLEAR_SELECTED_FEATURES,
 });
 
-export const selectGeometrySnapshot = (index, geometry) => ({
-  type: Types.SELECT_GEOMETRY_SNAPSHOT,
+export const selectProvenanceGeometry = (index, geometry) => ({
+  type: Types.SELECT_PROVENANCE_GEOMETRY,
   index,
   geometry,
+});
+
+export const selectEvolutionGeometry = (version) => ({
+  type: Types.SELECT_EVOLUTION_GEOMETRY,
+  version,
+});
+
+export const toggleEvolutionUpdates = (version) => ({
+  type: Types.TOGGLE_EVOLUTION_UPDATES,
+  version,
+});
+
+export const hideEvolution = () => ({
+  type: Types.HIDE_EVOLUTION,
 });
 
 export const hideProvenance = () => ({

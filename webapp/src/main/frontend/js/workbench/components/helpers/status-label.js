@@ -1,6 +1,5 @@
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
-import * as ReactRedux from 'react-redux';
 
 /**
  * A presentational component for displaying labels
@@ -19,7 +18,7 @@ class StatusLabel extends React.Component {
       value: PropTypes.string.isRequired,
       className: PropTypes.string.isRequired,
     })).isRequired,
-    value: function (props, propName, componentName) {
+    value: function (props, propName) {
       if (!props['mappings'].find((m) => m.value === props[propName])) {
         return new Error(`Mapping for value ${props[propName]} was not found.`);
       }

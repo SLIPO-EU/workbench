@@ -386,6 +386,20 @@ public class DefaultProcessRepository implements ProcessRepository
         return executionEntity.toProcessExecutionRecord(true, false);
     }
 
+    @Override
+    public List<ProcessRecord> getRevisions(long id, boolean includeExecutions) {
+        String queryString =
+            "from ProcessRevision p where p.parent.id = :id order by p.version";
+
+        return entityManager
+            .createQuery(queryString, ProcessRevisionEntity.class)
+            .setParameter("id", id)
+            .getResultList()
+            .stream()
+            .map(r -> r.toProcessRecord(includeExecutions, false))
+            .collect(Collectors.toList());
+    }
+
     @Transactional(readOnly = true)
     @Override
     public ProcessExecutionRecord getExecutionCompactView(long id, long version)

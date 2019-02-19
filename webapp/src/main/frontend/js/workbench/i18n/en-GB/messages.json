@@ -35,7 +35,8 @@
     "settings": "Settings",
     "admin": {
       "user-manager": "User Management",
-      "event-viewer": "Event Viewer"
+      "event-viewer": "Event Viewer",
+      "application-key-viewer": "Application Keys"
     },
     "tools": {
       "schema-explorer": "Schema Explorer",
@@ -134,6 +135,6 @@
   },
   "error": {
     "FILESYSTEM_LOAD": "Failed to load filesystem",
-    "NOT_IMPLEMENTED": "Not implemented!"
+    "NOT_IMPLEMENTED": "Action is not implemented!"
   }
 }

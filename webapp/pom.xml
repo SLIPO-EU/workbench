@@ -20,7 +20,7 @@
         <node.env>production</node.env>
         <apache.csv.version>1.5</apache.csv.version>
     </properties>
-    
+
     <profiles>
         <profile>
             <id>develop</id>
@@ -34,50 +34,56 @@
     </repositories>
 
     <dependencies>
-        
+
         <dependency>
             <groupId>eu.slipo</groupId>
             <artifactId>workbench-common</artifactId>
             <version>${project.version}</version>
         </dependency>
-       
+
+        <dependency>
+            <groupId>eu.slipo</groupId>
+            <artifactId>triplegeo-ml-mappings</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+        
         <!-- Spring-Boot starter dependencies -->
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
-        
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-cache</artifactId>
         </dependency>
-        
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
-        
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
-        
+
         <dependency>
             <groupId>org.springframework.session</groupId>
             <artifactId>spring-session</artifactId>
         </dependency>
-        
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
         </dependency>
-        
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
-        
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -88,7 +94,7 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-       
+
         <!-- If packaging to WAR, mark dependency on embedded server as provided -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -103,7 +109,7 @@
             <artifactId>h2</artifactId>
             <scope>test</scope>
         </dependency>
-        
+
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
@@ -121,14 +127,14 @@
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
         </dependency>
-        
+
         <!-- CSV reader -->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-csv</artifactId>
             <version>${apache.csv.version}</version>
         </dependency>
-        
+
     </dependencies>
 
     <build>

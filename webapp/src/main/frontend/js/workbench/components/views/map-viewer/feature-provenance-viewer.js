@@ -132,7 +132,7 @@ const createRows = (props) => {
     let columnIndex = 0;
     const attr = Attributes.find(a => a.key === prop);
     const row = {
-      'attribute': attr.title
+      attribute: attr.title
     };
     steps.forEach((step, index) => {
       inputRow.filter(i => i.step === step.index).map((input, inputIndex) => {
@@ -152,7 +152,7 @@ const isLink = (value) => {
 };
 
 const renderCell = (cell, row, cellProps, componentProps) => {
-  const { editActive, provenance: { geometrySnapshotIndex }, onGeometrySnapshotChange } = componentProps;
+  const { editActive, provenance: { geometrySnapshotIndex }, onProvenanceGeometryChange } = componentProps;
 
   // Handle geometry property
   if (cell.property === ATTRIBUTE_GEOMETRY) {
@@ -173,7 +173,7 @@ const renderCell = (cell, row, cellProps, componentProps) => {
       return (
         <div
           className="badge-pill geometry-inactive p-1 m-auto w-50 text-center slipo-action-icon"
-          onClick={() => onGeometrySnapshotChange(cell.index, cell.value)}
+          onClick={() => onProvenanceGeometryChange(cell.index, cell.value)}
 
         >
           <i className="fa fa-search pr-2" />View
@@ -238,16 +238,6 @@ class FeatureProvenanceViewer extends React.Component {
 
   static propTypes = {
     provenance: PropTypes.object,
-  }
-
-  handleRowAction(rowInfo, e, handleOriginal) {
-    switch (e.target.getAttribute('data-action')) {
-      default:
-        if (handleOriginal) {
-          handleOriginal();
-        }
-        break;
-    }
   }
 
   toggleFilterable() {

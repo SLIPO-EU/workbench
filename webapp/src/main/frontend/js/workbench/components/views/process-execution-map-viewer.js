@@ -8,18 +8,22 @@ import {
 import {
   bringToFront,
   clearSelectedFeatures,
-  fetchFeatureProvenance,
   fetchExecutionMapData,
+  fetchFeatureEvolution,
+  fetchFeatureProvenance,
+  hideEvolution,
   hideProvenance,
   reset,
-  setFilter,
-  toggleFilter,
+  selectEvolutionGeometry,
   selectFeatures,
-  selectGeometrySnapshot,
+  selectProvenanceGeometry,
   setCenter,
+  setFilter,
   setItemPosition,
   setLayerStyle,
   toggleEditor,
+  toggleEvolutionUpdates,
+  toggleFilter,
   toggleLayerConfiguration,
   updateFeatureVertex,
 } from '../../ducks/ui/views/map-viewer';
@@ -101,6 +105,7 @@ class ProcessExecutionMapViewer extends React.Component {
       bingMaps,
       defaultCenter,
       execution,
+      fetchFeatureEvolution,
       fetchFeatureProvenance,
       layers,
       osm,
@@ -117,6 +122,14 @@ class ProcessExecutionMapViewer extends React.Component {
         draggableOrder={this.props.draggableOrder}
         editActive={this.props.editActive}
         editFeature={this.props.editFeature}
+        evolution={this.props.evolution}
+        fetchFeatureEvolution={
+          (feature) => fetchFeatureEvolution(
+            execution.process.id,
+            execution.process.version,
+            execution.id,
+            feature)
+        }
         fetchFeatureProvenance={
           (feature) => fetchFeatureProvenance(
             execution.process.id,
@@ -126,14 +139,17 @@ class ProcessExecutionMapViewer extends React.Component {
         }
         filterFormVisible={this.props.filterFormVisible}
         filters={this.props.filters}
+        hideEvolution={this.props.hideEvolution}
         hideProvenance={this.props.hideProvenance}
         initialCenter={this.props.initialCenter}
         initialZoom={this.props.initialZoom}
         layerConfigVisible={this.props.layerConfigVisible}
         layers={layers}
+        onEvolutionGeometryChange={(version) => this.props.selectEvolutionGeometry(version)}
+        onEvolutionUpdatesToggle={(version) => this.props.toggleEvolutionUpdates(version)}
         onFeatureSelect={(features) => this.props.selectFeatures(features)}
         onGeometryChange={() => this.props.updateFeatureVertex()}
-        onGeometrySnapshotChange={(index, geometry) => this.props.selectGeometrySnapshot(index, geometry)}
+        onProvenanceGeometryChange={(index, geometry) => this.props.selectProvenanceGeometry(index, geometry)}
         onMoveEnd={this.onMoveEnd}
         osm={osm}
         provenance={this.props.provenance}
@@ -160,6 +176,7 @@ const mapStateToProps = (state) => ({
   draggableOrder: state.ui.views.map.config.draggableOrder,
   editActive: state.ui.views.map.edit.active,
   editFeature: state.ui.views.map.edit.feature,
+  evolution: state.ui.views.map.config.evolution,
   execution: state.ui.views.map.data.execution,
   filterFormVisible: state.ui.views.map.search.visible,
   filters: state.ui.views.map.search.filters,
@@ -178,18 +195,22 @@ const mapStateToProps = (state) => ({
 const mapDispatchToProps = (dispatch) => bindActionCreators({
   bringToFront,
   clearSelectedFeatures,
+  fetchFeatureEvolution,
   fetchFeatureProvenance,
   fetchExecutionMapData,
+  hideEvolution,
   hideProvenance,
   reset,
   setFilter,
   toggleFilter,
+  selectEvolutionGeometry,
   selectFeatures,
-  selectGeometrySnapshot,
+  selectProvenanceGeometry,
   setCenter,
   setItemPosition,
   setLayerStyle,
   toggleEditor,
+  toggleEvolutionUpdates,
   toggleLayerConfiguration,
   updateFeatureVertex,
 }, dispatch);

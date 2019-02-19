@@ -1,3 +1,6 @@
 [submodule "workflows"]
 	path = workflows
 	url = https://github.com/SLIPO-EU/workflows.git
+[submodule "triplegeo-ml-mappings"]
+	path = triplegeo-ml-mappings
+	url = https://github.com/SLIPO-EU/triplegeo-ml-mappings.git
