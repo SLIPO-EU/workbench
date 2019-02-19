@@ -109,6 +109,10 @@ public abstract class BaseController {
                 "Process execution has failed to start. RPC server is unreachable", level);
         }
 
+        if (ex instanceof UnsupportedOperationException) {
+            return RestResponse.error(BasicErrorCode.NOT_IMPLEMENTED, "Action is not implemented", level);
+        }
+
         return RestResponse.error(BasicErrorCode.UNKNOWN, "An unknown error has occurred", level);
     }
 
