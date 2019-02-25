@@ -490,10 +490,13 @@ export function evolutionToTable(evolution) {
   }
   const current = snapshots.find(s => s.process.version === version);
 
-  const hasUpdates = !!snapshots.find(s => s.updates != null && s.updates.length !== 0);
+  // Reverse shapshot order and ignore versions after the current process version
+  const effectiveSnapshots = [...snapshots].reverse().filter(s => s.process.version <= version);
+
+  const hasUpdates = !!effectiveSnapshots.find(s => s.updates != null && s.updates.length !== 0);
 
   // Properties
-  const properties = snapshots
+  const properties = effectiveSnapshots
     .reduce((result, snapshot) => {
       // Process all features
       const keys = Object.keys(snapshot.feature.properties);
@@ -509,7 +512,7 @@ export function evolutionToTable(evolution) {
   // Add header
   const header = [];
 
-  snapshots.forEach((snapshot, index) => {
+  effectiveSnapshots.forEach((snapshot, index) => {
     const { process, execution } = snapshot;
 
     header.push({
@@ -538,7 +541,7 @@ export function evolutionToTable(evolution) {
       version: null,
     }];
 
-    snapshots.forEach((snapshot) => {
+    effectiveSnapshots.forEach((snapshot) => {
       const { feature, updates = [] } = snapshot;
       values.push({
         initial: projectProperty(feature, property, feature.properties[property], updates, 0),
@@ -553,7 +556,7 @@ export function evolutionToTable(evolution) {
   });
 
   // Get updates
-  const updates = snapshots.reduce((result, snapshot) => {
+  const updates = effectiveSnapshots.reduce((result, snapshot) => {
     result[snapshot.process.version] = snapshot.updates;
     return result;
   }, {});
