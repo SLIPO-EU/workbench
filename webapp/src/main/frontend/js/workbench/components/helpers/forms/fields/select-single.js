@@ -16,11 +16,12 @@ import { styles } from './select-shared';
  */
 export function Select(props) {
   const options = props.options.map(option => ({ value: option.value, label: option.label || option.value }));
+
   return (
     <ReactSelect
       name={props.id}
       id={props.id}
-      value={options.find(opt => opt.value === props.value)}
+      value={options.find(opt => opt.value === props.value) || null}
       clearable={props.clearable || false}
       onChange={(val) => {
         if (typeof props.onChange === 'function') {
