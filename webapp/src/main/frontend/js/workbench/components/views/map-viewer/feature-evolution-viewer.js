@@ -57,7 +57,20 @@ const createColumns = (state, componentProps) => {
         return (
           <div className={header.version === processVersion ? 'slipo-tl-selected' : ''}>
             <div>
-              <i className="fa fa-code-fork pr-2" />{`Revision ${header.version}`}
+              {header.version === processVersion &&
+                <React.Fragment>
+                  <i className="fa fa-code-fork pr-2" />{`Revision ${header.version}`}
+                </React.Fragment>
+              }
+              {header.version !== processVersion &&
+                <a className="slipo-table-row-action" onClick={(e) => {
+                  e.preventDefault();
+                  componentProps.viewRevision(header.id, header.version, header.executionId);
+                }}>
+                  <i className="fa fa-code-fork pr-2" />
+                  <span style={{ textDecoration: 'underline' }}>{`Revision ${header.version}`}</span>
+                </a>
+              }
             </div>
             <div>
               <i className="fa fa-user pr-2" />{header.userName}
