@@ -93,12 +93,15 @@ section:after {
   min-height: calc(100% - (2rem * 2));
 }
 
+.modal-dialog {
+  max-width: 65vw;
+}
+
 /*
  * Override default browser styles
  */
 
 //https://stackoverflow.com/questions/23372903/hide-spinner-in-input-number-firefox-29
-
 input[type=number]::-webkit-outer-spin-button,
 input[type=number]::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -153,4 +156,14 @@ input[type=number] {
 
 .transparent {
   color: transparent;
+}
+
+/*
+ * React Select should have its property classNamePrefix set to value 'predicate'
+ */
+
+.predicate__value-container {
+  .predicate-score {
+    display: none;
+  }
 }

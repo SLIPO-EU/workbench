@@ -373,19 +373,35 @@ export default (state = initialState, action) => {
         },
         steps: state.steps.map((step) => {
           if ((step.key === action.step.key) && (step.tool === EnumTool.TripleGeo)) {
-            return {
-              ...step,
-              dataSources: step.dataSources.map((ds) => {
-                if ((ds.key === action.dataSource.key) && (action.configuration)) {
-                  return {
-                    ...ds,
-                    configuration: _.cloneDeep(action.configuration),
-                    errors: { ...action.errors },
-                  };
-                }
-                return ds;
-              })
-            };
+            // Update data sources
+            const dataSources = step.dataSources.map((ds) => {
+              if ((ds.key === action.dataSource.key) && (action.configuration)) {
+                return {
+                  ...ds,
+                  configuration: _.cloneDeep(action.configuration),
+                  errors: { ...action.errors },
+                };
+              }
+              return ds;
+            });
+            // Reset mappings for TripleGeo
+            switch (step.tool) {
+              case EnumTool.TripleGeo:
+                return {
+                  ...step,
+                  configuration: {
+                    ...step.configuration,
+                    autoMappings: null,
+                    userMappings: null,
+                  },
+                  dataSources,
+                };
+              default:
+                return {
+                  ...step,
+                  dataSources,
+                };
+            }
           }
           return step;
         })
@@ -509,10 +525,10 @@ export default (state = initialState, action) => {
     default:
       return state;
   }
-
   if (requireValidation) {
     newState.errors = processService.validate(EnumDesignerSaveAction.None, newState, false);
   }
+
   if (supportUndo) {
     return {
       ...newState,
@@ -585,6 +601,8 @@ export {
   fetchExecutionKpiData,
   fetchProcess,
   fetchProcessRevision,
+  getTripleGeoMappings,
+  getTripleGeoMappingFileAsText,
   save,
 } from './process-designer/thunks';
 

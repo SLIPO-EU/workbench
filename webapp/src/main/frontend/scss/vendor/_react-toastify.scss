@@ -2,12 +2,12 @@
  * react-toastify
  */
 
- @import '../../../../../node_modules/react-toastify/scss/main';
+@import '../../../../../node_modules/react-toastify/scss/main';
 
 /*
- * Update z-ordering for react-toastify to render on top of toolbar menu
+ * Update z-ordering for react-toastify to render on top of toolbar menu and bootstrap modal
  */
 
 .slipo-toastify {
-  z-index: 1030 !important;
+  z-index: 1051 !important;
 }

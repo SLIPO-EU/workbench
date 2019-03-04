@@ -24,6 +24,12 @@ export const SELECT_STEP = 'ui/process-designer/SELECT_STEP';
 export const SET_STEP_PROPERTY = 'ui/process-designer/SET_STEP_PROPERTY';
 export const SET_STEP_CONFIGURATION = 'ui/process-designer/SET_STEP_CONFIGURATION';
 
+export const REQUEST_TRIPLEGEO_ML_MAPPINGS = 'ui/process-designer/REQUEST_TRIPLEGEO_ML_MAPPINGS';
+export const RECEIVE_TRIPLEGEO_ML_MAPPINGS = 'ui/process-designer/RECEIVE_TRIPLEGEO_ML_MAPPINGS';
+
+export const REQUEST_TRIPLEGEO_ML_MAPPINGS_FILE = 'ui/process-designer/REQUEST_TRIPLEGEO_ML_MAPPINGS_FILE';
+export const RECEIVE_TRIPLEGEO_ML_MAPPINGS_FILE = 'ui/process-designer/RECEIVE_TRIPLEGEO_ML_MAPPINGS_FILE';
+
 export const ADD_STEP_INPUT = 'ui/process-designer/ADD_STEP_INPUT';
 export const REMOVE_STEP_INPUT = 'ui/process-designer/REMOVE_STEP_INPUT';
 export const SELECT_STEP_INPUT = 'ui/process-designer/SELECT_STEP_INPUT';

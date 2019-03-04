@@ -7,6 +7,7 @@ export { default as ErrorLevel } from './error-level';
 export { default as JobStatus } from './job-status';
 export { default as OpenLayers } from './map';
 export { default as Placeholder } from './placeholder';
+export { styles as SelectDefaultStyle } from './forms/fields/select-shared';
 export { default as SecureContent } from './secure-content';
 export { default as SelectLanguage } from './select-language';
 export { default as StatusLabel } from './status-label';

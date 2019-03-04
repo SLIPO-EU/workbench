@@ -19,6 +19,6 @@ export const styles = {
     boxShadow: 'none',
     marginTop: '-1px',
     border: '1px solid #cccccc',
-    zIndex: '1002',
+    zIndex: '1055',
   }),
 };

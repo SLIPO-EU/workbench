@@ -1,5 +1,9 @@
+import actions from '../api/fetch-actions';
+
 import {
+  configurationLevels,
   ontologies,
+  predicates,
   serializations,
 } from "../../model/process-designer/configuration/triplegeo";
 
@@ -10,12 +14,69 @@ function fromEnumValue(value, list) {
 
 export function validateConfiguration(config) {
   const errors = {};
-  if (!config['inputFormat']) {
-    errors['inputFormat'] = 'Required';
+
+  if ((config['level'] === configurationLevels.SIMPLE) && (!config['profile'])) {
+    errors['profile'] = 'Required';
   }
-  if (!config['mode']) {
-    errors['mode'] = 'Required';
+
+  if (config['level'] === configurationLevels.AUTO) {
+    const id = config['userMappings'].find(m => m.predicate === predicates.ID) || null;
+    const lon = config['userMappings'].find(m => m.predicate === predicates.LONGITUDE) || null;
+    const lat = config['userMappings'].find(m => m.predicate === predicates.LATITUDE) || null;
+
+    if (!id) {
+      errors[`mapping-${predicates.ID}`] = `A mapping is required for predicate ${predicates.ID}`;
+    }
+    if (!lon) {
+      errors[`mapping-${predicates.LONGITUDE}`] = `A mapping is required for predicate ${predicates.LONGITUDE}`;
+    }
+    if (!lat) {
+      errors[`mapping-${predicates.LATITUDE}`] = `A mapping is required for predicate ${predicates.LATITUDE}`;
+    }
   }
+
+  if (config['level'] !== configurationLevels.AUTO) {
+    if (!config['featureSource']) {
+      errors['featureSource'] = 'Required';
+    }
+    if (!config['inputFormat']) {
+      errors['inputFormat'] = 'Required';
+    }
+    if (!config['mode']) {
+      errors['mode'] = 'Required';
+    }
+    if (!config['attrKey']) {
+      errors['attrKey'] = 'Required';
+    }
+
+    if (config && config.inputFormat !== 'CSV' && config.inputFormat !== 'JSON' && !config['attrGeometry']) {
+      errors['attrGeometry'] = 'Required';
+    }
+
+    if (config && config.inputFormat === 'CSV') {
+      if (!config['delimiter']) {
+        errors['delimiter'] = 'Required for CSV';
+      }
+      if (!config['attrGeometry']) {
+        if (!config['attrX']) {
+          errors['attrX'] = 'Required for CSV';
+        }
+        if (!config['attrY']) {
+          errors['attrY'] = 'Required for CSV';
+        }
+      }
+    }
+
+    if (config && config.inputFormat === 'JSON') {
+      if (!config['attrX']) {
+        errors['attrX'] = 'Required for JSON';
+      }
+      if (!config['attrY']) {
+        errors['attrY'] = 'Required for JSON';
+      }
+    }
+  }
+
   if (!config['encoding']) {
     errors['encoding'] = 'Required';
   }
@@ -25,40 +86,6 @@ export function validateConfiguration(config) {
   if (!config['targetGeoOntology']) {
     errors['targetGeoOntology'] = 'Required';
   }
-  if (!config['attrKey']) {
-    errors['attrKey'] = 'Required';
-  }
-
-  if (config && config.inputFormat !== 'CSV' && config.inputFormat !== 'JSON' && !config['attrGeometry']) {
-    errors['attrGeometry'] = 'Required';
-  }
-
-  if (!config['featureSource']) {
-    errors['featureSource'] = 'Required';
-  }
-
-  if (config && config.inputFormat === 'CSV') {
-    if (!config['delimiter']) {
-      errors['delimiter'] = 'Required for CSV';
-    }
-    if (!config['attrGeometry']) {
-      if (!config['attrX']) {
-        errors['attrX'] = 'Required for CSV';
-      }
-      if (!config['attrY']) {
-        errors['attrY'] = 'Required for CSV';
-      }
-    }
-  }
-
-  if (config && config.inputFormat === 'JSON') {
-    if (!config['attrX']) {
-      errors['attrX'] = 'Required for JSON';
-    }
-    if (!config['attrY']) {
-      errors['attrY'] = 'Required for JSON';
-    }
-  }
 
   if (Object.keys(errors).length) {
     throw errors;
@@ -67,14 +94,16 @@ export function validateConfiguration(config) {
 
 export function readConfiguration(config) {
   const {
-    prefixes, namespaces, profile = null, serialization, targetGeoOntology, sourceCRS = null, targetCRS = null, ...rest
+    level = configurationLevels.ADVANCED,
+    prefixes, namespaces, profile = null, serialization, targetGeoOntology, sourceCRS = null, targetCRS = null,
+    ...rest
   } = config;
   const prefixArr = prefixes ? prefixes.split(',').map(v => v.trim()) : [];
   const namespaceArr = namespaces ? namespaces.split(',').map(v => v.trim()) : [];
 
-
   return {
     ...rest,
+    level,
     profile,
     serialization: fromEnumValue(serialization, serializations),
     targetGeoOntology: fromEnumValue(targetGeoOntology, ontologies),
@@ -91,11 +120,12 @@ export function readConfiguration(config) {
         }) : [],
     sourceCRS: sourceCRS ? sourceCRS.split(':')[1] : null,
     targetCRS: targetCRS ? targetCRS.split(':')[1] : null,
+    autoMappings: null,
   };
 }
 
 export function writeConfiguration(config) {
-  const { quote, prefixes, mappingSpec, classificationSpec, sourceCRS = null, targetCRS = null, ...rest } = config;
+  const { autoMappings, quote, prefixes, mappingSpec, classificationSpec, sourceCRS = null, targetCRS = null, ...rest } = config;
 
   return {
     ...rest,
@@ -110,3 +140,30 @@ export function writeConfiguration(config) {
   };
 }
 
+export function getMappings(path, token) {
+  if (path.startsWith('/')) {
+    path = path.slice(1);
+  }
+
+  return actions.get(`/action/triplegeo/mappings?path=${path}`, token).
+    then(result => {
+      // Convert array to hash
+      const mappings = result.reduce((value, mapping) => {
+        if (!value[mapping.field]) {
+          value[mapping.field] = [];
+        }
+        value[mapping.field].push({ predicate: mapping.predicate, score: mapping.score });
+        return value;
+      }, {});
+
+      return mappings;
+    });
+}
+
+export function getMappingsFileAsText(mappings, token) {
+
+  return actions.post('/action/triplegeo/mappings', token, { mappings }).
+    then(yaml => {
+      return yaml;
+    });
+}
