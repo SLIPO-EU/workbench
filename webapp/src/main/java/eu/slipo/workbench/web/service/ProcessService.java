@@ -20,6 +20,7 @@ import eu.slipo.workbench.common.model.process.ProcessExecutionStopException;
 import eu.slipo.workbench.common.model.process.ProcessNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessQuery;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
+import eu.slipo.workbench.common.model.tool.TriplegeoFieldMapping;
 import eu.slipo.workbench.web.model.process.ProcessExecutionRecordView;
 import eu.slipo.workbench.web.model.process.ProcessRecordView;
 
@@ -113,8 +114,11 @@ public interface ProcessService {
      * @param isTemplate {@code true} if process definition should be saved as a template
      * @return an instance of {@link ProcessRecord} for the new process
      * @throws InvalidProcessDefinitionException if the given definition is invalid
+     * @throws ApplicationException if an create operation fails
      */
-    ProcessRecord create(ProcessDefinition definition, boolean isTemplate) throws InvalidProcessDefinitionException;
+    ProcessRecord create(
+        ProcessDefinition definition, boolean isTemplate
+    ) throws InvalidProcessDefinitionException, ApplicationException;
 
     /**
      * Update an existing process by providing a newer definition
@@ -123,8 +127,11 @@ public interface ProcessService {
      * @param definition The newer definition
      * @param isTemplate {@code true} if process definition should be saved as a template
      * @throws InvalidProcessDefinitionException if the given definition is invalid
+     * @throws ApplicationException if an update operation fails
      */
-    ProcessRecord update(long id, ProcessDefinition definition, boolean isTemplate) throws InvalidProcessDefinitionException;
+    ProcessRecord update(
+        long id, ProcessDefinition definition, boolean isTemplate
+    ) throws InvalidProcessDefinitionException, ApplicationException;
 
     /**
      * Finds all executions for a specific version of an existing process instance
@@ -232,5 +239,15 @@ public interface ProcessService {
      */
     Object getProcessExecutionKpiData(long id, long version, long executionId, long fileId)
         throws ApplicationException, ProcessExecutionNotFoundException;
+
+    /**
+     * Creates a YAML file with TripleGeo mappings from the given predicate to field
+     * mappings
+     *
+     * @param mappings SLIPO ontology predicate to field mappings
+     * @return The contents of the YAML file
+     * @throws IOException if creating the file fails
+     */
+    String tripleGeoMappingsAsText(List<TriplegeoFieldMapping> mappings) throws IOException;
 
 }

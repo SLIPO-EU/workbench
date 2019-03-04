@@ -13,7 +13,6 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Iterables;
 
@@ -22,7 +21,7 @@ import eu.slipo.workbench.common.model.resource.ResourceIdentifier;
 public class ProcessDefinition implements Serializable
 {
     private static final long serialVersionUID = 1L;
-    
+
     private final String name;
 
     private String description;
@@ -40,7 +39,7 @@ public class ProcessDefinition implements Serializable
      * Map a step's node name to a step descriptor
      */
     private final Map<String, Step> nodeNameToStep;
-    
+
     /**
      * Map a resource key to a process-wide resource descriptor ({@link ProcessInput})
      */
@@ -77,7 +76,7 @@ public class ProcessDefinition implements Serializable
 
         this.nodeNameToStep = Collections.unmodifiableMap(
             steps.stream().collect(Collectors.toMap(s -> s.nodeName(), Function.identity())));
-        
+
         this.resourceKeyToResource = Collections.unmodifiableMap(
             resources.stream().collect(Collectors.toMap(r -> r.key(), Function.identity())));
 
@@ -148,7 +147,7 @@ public class ProcessDefinition implements Serializable
     {
         return nodeName == null? null : nodeNameToStep.get(nodeName);
     }
-    
+
     /**
      * Get a {@link Step} descriptor by its user-provided name.
      */
@@ -156,7 +155,7 @@ public class ProcessDefinition implements Serializable
     {
         return name == null? null : Iterables.find(steps, s -> s.name.equals(name), null);
     }
-    
+
     /**
      * Get a resource by its key
      *
@@ -203,40 +202,41 @@ public class ProcessDefinition implements Serializable
     {
         return resourceKeyToStepKey.keySet();
     }
-    
+
     /**
-     * Transform to a process definition with normalized step keys (i.e in a contiguous 
+     * Transform to a process definition with normalized step keys (i.e in a contiguous
      * 0-based range).
-     * 
+     *
      * @param def The source definition (which is not modified)
      * @return a new definition
      */
     public static ProcessDefinition normalize(ProcessDefinition def)
     {
         // Re-map given step keys onto a contiguous range of [0, N)
-        
+
         final Map<Integer, Integer> mapping = new HashMap<>();
         int seq = 0;
-        for (Step step: def.steps)
+        for (Step step: def.steps) {
             mapping.put(step.key, seq++);
-        
-        // Create a new definition with transformed steps/resources 
-        
+        }
+
+        // Create a new definition with transformed steps/resources
+
         final List<ProcessInput> resources = def.resources.stream()
             .map(r -> {
                 if (r instanceof ProcessOutput) {
                     ProcessOutput r1 = new ProcessOutput((ProcessOutput) r);
                     r1.stepKey = mapping.get(r1.stepKey);
                     return r1;
-                } 
+                }
                 return r;
             })
             .collect(Collectors.toList());
-        
+
         final List<Step> steps = def.steps.stream()
             .map(s -> Step.of(mapping.get(s.key), s))
             .collect(Collectors.toList());
-        
+
         return new ProcessDefinition(def.name, def.description, resources, steps);
     }
 }

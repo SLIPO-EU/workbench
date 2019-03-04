@@ -416,4 +416,18 @@ public class Step implements Serializable
             "Step [key=%s, nodeName=%s, operation=%s, tool=%s, outputFormat=%s]",
             key, nodeName, operation, tool, outputFormat);
     }
+
+    // TODO: Review implementation
+
+    /**
+     * Provides access to a configuration object that is not immutable
+     *
+     * @return the step configuration
+     */
+    @JsonIgnore()
+    public ToolConfiguration<? extends AnyTool> getConfigurationUnsafe()
+    {
+        return this.configuration;
+    }
+
 }
