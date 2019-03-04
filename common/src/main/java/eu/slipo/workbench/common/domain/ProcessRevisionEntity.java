@@ -33,7 +33,7 @@ import eu.slipo.workbench.common.model.process.ProcessRecord;
 @Table(
     schema = "public",
     name = "process_revision",
-    uniqueConstraints = { 
+    uniqueConstraints = {
         @UniqueConstraint(name = "uq_process_parent_id_version", columnNames = { "parent", "`version`" })
     }
 )
@@ -72,7 +72,7 @@ public class ProcessRevisionEntity {
     AccountEntity updatedBy;
 
     @NotNull
-    @Column(name = "definition", nullable = false, updatable = false, length = 8192)
+    @Column(name = "definition", nullable = false, updatable = false)
     @Convert(converter = ProcessDefinitionConverter.class)
     ProcessDefinition definition;
 
@@ -83,21 +83,21 @@ public class ProcessRevisionEntity {
     @OneToOne(
         mappedBy = "process", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     ProcessExecutionMonitorEntity monitor;
-        
+
     protected ProcessRevisionEntity() {}
-    
+
     public ProcessRevisionEntity(ProcessEntity parent)
     {
         this.parent = parent;
         this.version = parent.version;
-            
+
         this.name = parent.name;
         this.description = parent.description;
         this.definition = parent.definition;
         this.updatedBy = parent.updatedBy;
         this.updatedOn = parent.updatedOn;
     }
-    
+
     public long getId()
     {
         return id;
@@ -107,7 +107,7 @@ public class ProcessRevisionEntity {
     {
         return parent;
     }
-    
+
     public void setParent(ProcessEntity parent)
     {
         this.parent = parent;
@@ -152,23 +152,24 @@ public class ProcessRevisionEntity {
     {
         this.monitor = monitor;
     }
-    
+
     public ProcessExecutionMonitorEntity getMonitor()
     {
         return monitor;
     }
-    
+
     public ZonedDateTime getExecutedOn()
     {
         // Find the time when the latest execution started
-        
-        if (executions.isEmpty())
+
+        if (executions.isEmpty()) {
             return null;
-        else if (executions.size() == 1)
+        } else if (executions.size() == 1) {
             return executions.get(0).getStartedOn();
-        
+        }
+
         // More than 1 executions are present: find the latest
-        
+
         return executions.stream()
             .map(ProcessExecutionEntity::getStartedOn)
             .filter(Objects::nonNull)
@@ -176,18 +177,18 @@ public class ProcessRevisionEntity {
             .findFirst()
             .orElse(null);
     }
-    
+
     public ProcessIdentifier getProcessIdentifier()
     {
         return ProcessIdentifier.of(parent.id, version);
     }
-    
+
     public ProcessRecord toProcessRecord()
     {
         return toProcessRecord(false, false);
     }
-    
-    public ProcessRecord toProcessRecord(boolean includeExecutions, boolean includeSteps) 
+
+    public ProcessRecord toProcessRecord(boolean includeExecutions, boolean includeSteps)
     {
         ProcessRecord record = new ProcessRecord(parent.id, version);
         AccountEntity createdBy = parent.createdBy;
@@ -203,7 +204,7 @@ public class ProcessRevisionEntity {
         record.setTemplate(parent.isTemplate);
 
         record.setExecutedOn(getExecutedOn());
-        
+
         if (includeExecutions) {
             for (ProcessExecutionEntity e: executions) {
                 record.addExecution(e.toProcessExecutionRecord(includeSteps));

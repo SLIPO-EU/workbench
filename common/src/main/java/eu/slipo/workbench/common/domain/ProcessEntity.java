@@ -30,7 +30,7 @@ import eu.slipo.workbench.common.model.process.ProcessRecord;
 
 /**
  * An entity that represents a process
- * 
+ *
  * <p>
  * Todo Consider adding resources referenced by this definition as an OneToMany
  * relationship to this entity (so we can answer dependency queries).
@@ -80,7 +80,7 @@ public class ProcessEntity {
     AccountEntity updatedBy;
 
     @NotNull
-    @Column(name = "definition", nullable = false, length = 8192)
+    @Column(name = "definition", nullable = false)
     @Convert(converter = ProcessDefinitionConverter.class)
     ProcessDefinition definition;
 
@@ -97,15 +97,15 @@ public class ProcessEntity {
     List<ProcessRevisionEntity> revisions = new ArrayList<>();
 
     protected ProcessEntity() {}
-    
-    public ProcessEntity(ProcessDefinition definition) 
+
+    public ProcessEntity(ProcessDefinition definition)
     {
         this.version = 1;
         this.definition = definition;
         this.name = definition.name();
         this.description = definition.description();
     }
-    
+
     public long getVersion() {
         return version;
     }
@@ -194,11 +194,11 @@ public class ProcessEntity {
         return createdBy;
     }
 
-    public List<ProcessRevisionEntity> getRevisions() 
+    public List<ProcessRevisionEntity> getRevisions()
     {
         return revisions;
     }
-    
+
     public void addRevision(ProcessRevisionEntity revisionEntity)
     {
         revisionEntity.setParent(this);
@@ -209,14 +209,14 @@ public class ProcessEntity {
     {
         return ProcessIdentifier.of(id, version);
     }
-    
+
     public ProcessRecord toProcessRecord()
     {
         return toProcessRecord(true, false, false);
     }
-    
+
     public ProcessRecord toProcessRecord(
-        boolean includeRevisions, boolean includeExecutions, boolean includeSteps) 
+        boolean includeRevisions, boolean includeExecutions, boolean includeSteps)
     {
         ProcessRecord p = new ProcessRecord(id, version);
 
@@ -231,7 +231,7 @@ public class ProcessEntity {
         p.setTemplate(isTemplate);
 
         p.setExecutedOn(null); // a record from a process revision will have this information
-        
+
         if (includeRevisions) {
             for (ProcessRevisionEntity r: revisions) {
                 p.addRevision(r.toProcessRecord(includeExecutions, includeSteps));
