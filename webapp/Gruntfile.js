@@ -266,6 +266,13 @@ module.exports = function (grunt) {
             src: 'ol/*.css',
             dest: '<%= targetDir %>/css',
           },
+          {
+            expand: true,
+            filter: 'isFile',
+            cwd: 'node_modules',
+            src: 'codemirror/lib/*.css',
+            dest: '<%= targetDir %>/css',
+          },
         ],
       },
     },
