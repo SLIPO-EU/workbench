@@ -57,6 +57,25 @@ public class TriplegeoConfiguration extends TransformConfiguration<Triplegeo>
     public static final String VERSION = "1.6";
 
     /**
+     * Available configuration levels
+     */
+    public enum EnumLevel {
+        /**
+         * Mappings are generated automatically
+         */
+        AUTO,
+        /**
+         * Mappings are set by selecting existing profiles
+         */
+        SIMPLE,
+        /**
+         * Mappings defined in profiles can be overridden by selecting user files
+         */
+        ADVANCED,
+        ;
+    }
+
+    /**
      * The set of available processing modes (see Triplegeo documentation)
      */
     public enum Mode {
@@ -218,6 +237,13 @@ public class TriplegeoConfiguration extends TransformConfiguration<Triplegeo>
      * A profile for setting default configuration values
      */
     private String _profile;
+
+    private EnumLevel level = EnumLevel.ADVANCED;
+
+    /**
+     * Custom mappings selected manually by the user
+     */
+    private List<TriplegeoFieldMapping> userMappings;
 
     private Mode mode = Mode.STREAM;
 
@@ -429,6 +455,29 @@ public class TriplegeoConfiguration extends TransformConfiguration<Triplegeo>
     //
     // Getters / Setters
     //
+
+    @JsonProperty("level")
+    public EnumLevel getLevel() {
+        if (level == null) {
+            return EnumLevel.ADVANCED;
+        }
+        return level;
+    }
+
+    @JsonProperty("level")
+    public void setLevel(EnumLevel level) {
+        this.level = level;
+    }
+
+    @JsonProperty("userMappings")
+    public List<TriplegeoFieldMapping> getUserMappings() {
+        return userMappings;
+    }
+
+    @JsonProperty("userMappings")
+    public void setUserMappings(List<TriplegeoFieldMapping> userMappings) {
+        this.userMappings = userMappings;
+    }
 
     @JsonProperty("profile")
     public void setProfile(String profile)

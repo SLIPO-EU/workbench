@@ -29,6 +29,11 @@ import {
 } from '../../ducks/ui/views/map-viewer';
 
 import {
+  buildPath,
+  DynamicRoutes,
+} from '../../model';
+
+import {
   message,
 } from '../../service';
 
@@ -55,6 +60,8 @@ class ResourceMapViewer extends React.Component {
     this.onFetchError = this.onFetchError.bind(this);
     this.onFetchSuccess = this.onFetchSuccess.bind(this);
     this.onMoveEnd = this.onMoveEnd.bind(this);
+
+    this.viewRevision = this.viewRevision.bind(this);
   }
 
   get params() {
@@ -92,6 +99,12 @@ class ResourceMapViewer extends React.Component {
 
   onMoveEnd(data) {
     this.props.setCenter(data.center, data.zoom);
+  }
+
+  viewRevision(id, version, execution) {
+    const path = buildPath(DynamicRoutes.ProcessExecutionMapViewer, [id, version, execution]);
+
+    this.props.history.push(path);
   }
 
   render() {
@@ -162,6 +175,7 @@ class ResourceMapViewer extends React.Component {
         toggleFilterForm={this.props.toggleFilter}
         toggleLayerConfiguration={this.props.toggleLayerConfiguration}
         viewport={this.props.viewport}
+        viewRevision={this.viewRevision}
       />
     );
   }

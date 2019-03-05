@@ -12,6 +12,7 @@ import {
 import { ResourceWizard } from './resource/register/';
 import { create as createResource } from '../../ducks/ui/views/resource-explorer';
 import { saveTempResource, clearTempResource } from '../../ducks/ui/views/resource-registration';
+import { getTripleGeoMappings, getTripleGeoMappingFileAsText } from '../../ducks/ui/views/process-designer';
 
 import {
   createFolder,
@@ -45,6 +46,8 @@ class ResourceRegistration extends React.Component {
                 createFolder={this.props.createFolder}
                 uploadFile={this.props.uploadFile}
                 deletePath={this.props.deletePath}
+                getTripleGeoMappings={this.props.getTripleGeoMappings}
+                getTripleGeoMappingFileAsText={this.props.getTripleGeoMappingFileAsText}
               />
             </CardBody>
           </Card>
@@ -68,6 +71,8 @@ const mapDispatchToProps = (dispatch) => bindActionCreators({
   createFolder,
   uploadFile,
   deletePath,
+  getTripleGeoMappings,
+  getTripleGeoMappingFileAsText,
 }, dispatch);
 
 const mergeProps = (stateProps, dispatchProps, ownProps) => {

@@ -154,7 +154,8 @@ class MapViewer extends React.Component {
       draggable, draggableOrder, editActive, layers,
       selectedFeature, selectedFeatures: features = [],
       onEvolutionGeometryChange, onEvolutionUpdatesToggle, onProvenanceGeometryChange,
-      evolution, provenance, viewport
+      evolution, provenance, viewport,
+      viewRevision,
     } = this.props;
 
     const panels = [];
@@ -255,6 +256,7 @@ class MapViewer extends React.Component {
                         evolution={evolution}
                         onEvolutionGeometryChange={onEvolutionGeometryChange}
                         onEvolutionUpdatesToggle={onEvolutionUpdatesToggle}
+                        viewRevision={viewRevision}
                       />
                     </ResizableBox>
                   </div>

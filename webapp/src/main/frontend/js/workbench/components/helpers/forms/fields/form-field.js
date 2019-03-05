@@ -14,7 +14,7 @@ import { FormGroup, FormText, Label, FormFeedback } from 'reactstrap';
 export function FormField(props) {
   return (
     <FormGroup color={props.error ? 'danger' : null}>
-      {props.label &&
+      {props.label && props.showLabel &&
         <Label for={props.id}>{props.label}</Label>
       }
       {props.children}
@@ -34,8 +34,12 @@ FormField.propTypes = {
   label: PropTypes.string,
   help: PropTypes.string,
   error: PropTypes.string,
+  showLabel: PropTypes.bool,
 };
 
+FormField.defaultProps = {
+  showLabel: true,
+};
 
 export default function decorateField(Component) {
   return function (props) {

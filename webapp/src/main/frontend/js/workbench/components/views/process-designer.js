@@ -97,6 +97,8 @@ import {
   resetSelectedKpi,
   selectFile,
   selectOutputPart,
+  getTripleGeoMappings,
+  getTripleGeoMappingFileAsText,
 } from '../../ducks/ui/views/process-designer';
 
 import {
@@ -429,6 +431,8 @@ class ProcessDesigner extends React.Component {
         uploadFile={this.props.uploadFile}
         deletePath={this.props.deletePath}
         setConfiguration={this.props.setConfiguration}
+        getTripleGeoMappings={this.props.getTripleGeoMappings}
+        getTripleGeoMappingFileAsText={this.props.getTripleGeoMappingFileAsText}
       />
     );
   }
@@ -602,6 +606,9 @@ const mapDispatchToProps = (dispatch) => bindActionCreators({
   createFolder,
   uploadFile,
   deletePath,
+  // TripleGeo ML Mappings
+  getTripleGeoMappings,
+  getTripleGeoMappingFileAsText,
 }, dispatch);
 
 const mergeProps = (stateProps, dispatchProps, ownProps) => {

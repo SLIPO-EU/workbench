@@ -3,7 +3,11 @@ import React from 'react';
 import { MultiStep } from '../../../helpers/forms/';
 import { EnumErrorLevel } from '../../../../model/error';
 import { StaticRoutes } from '../../../../model/routes';
-import { defaultValues as defaultTripleGeoValues } from '../../../../model/process-designer/configuration/triplegeo';
+import {
+  configurationLevels,
+  configurationLevelOptions,
+  defaultValues as defaultTripleGeoValues,
+} from '../../../../model/process-designer/configuration/triplegeo';
 import { defaultMetadataValue } from '../../../../model/process-designer/configuration/metadata';
 
 import * as type from './type';
@@ -32,6 +36,9 @@ import {
 } from '../../../../service';
 
 export default function ResourceWizard(props) {
+  const resourceIsFile = !!(props.initialValues.filesystem && props.initialValues.filesystem.resource);
+  const selectedFile = resourceIsFile ? props.initialValues.filesystem.resource.path : null;
+
   return (
     <div className="animated fadeIn">
       <MultiStep
@@ -142,6 +149,13 @@ export default function ResourceWizard(props) {
           uploadFile={props.uploadFile}
           deletePath={props.deletePath}
           readOnly={false}
+          // Enabled configuration levels
+          enabledLevels={resourceIsFile ? configurationLevelOptions.map(l => l.value) : [configurationLevels.ADVANCED]}
+          // Optional input file required for ML mappings generation
+          inputFile={selectedFile}
+          // Mappings methods
+          getTripleGeoMappings={props.getTripleGeoMappings}
+          getTripleGeoMappingFileAsText={props.getTripleGeoMappingFileAsText}
         />
 
         <confirmation.Component

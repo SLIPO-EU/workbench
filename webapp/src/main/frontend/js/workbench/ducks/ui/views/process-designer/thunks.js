@@ -1,5 +1,5 @@
 import * as processService from '../../../../service/process';
-
+import * as triplegeoService from '../../../../service/toolkit/triplegeo';
 /*
  * Action types
  */
@@ -159,4 +159,22 @@ export const downloadFile = (id, version, executionId, fileId, fileName) => {
 
     return Promise.resolve();
   };
+};
+
+export const getTripleGeoMappings = (path) => (dispatch, getState) => {
+  const { meta: { csrfToken: token } } = getState();
+
+  return triplegeoService.getMappings(path, token)
+    .then((mappings) => {
+      return mappings;
+    });
+};
+
+export const getTripleGeoMappingFileAsText = (mappings) => (dispatch, getState) => {
+  const { meta: { csrfToken: token } } = getState();
+
+  return triplegeoService.getMappingsFileAsText(mappings, token)
+    .then((text) => {
+      return text;
+    });
 };

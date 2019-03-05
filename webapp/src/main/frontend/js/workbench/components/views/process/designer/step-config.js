@@ -7,8 +7,14 @@ import {
 } from 'reactstrap';
 
 import {
-  EnumTool
+  EnumDataSource,
+  EnumTool,
 } from '../../../../model/process-designer';
+
+import {
+  configurationLevels,
+  configurationLevelOptions,
+} from '../../../../model/process-designer/configuration/triplegeo';
 
 import Form from '../../../helpers/forms/form';
 
@@ -57,15 +63,15 @@ class StepConfig extends React.Component {
 
   static propTypes = {
     appConfiguration: PropTypes.object,
-    filesystem: PropTypes.object,
-    step: PropTypes.object.isRequired,
-    stepConfiguration: PropTypes.object,
-    errors: PropTypes.object,
-    configureStepValidate: PropTypes.func.isRequired,
-    configureStepUpdate: PropTypes.func.isRequired,
     configureStepEnd: PropTypes.func.isRequired,
+    configureStepUpdate: PropTypes.func.isRequired,
+    configureStepValidate: PropTypes.func.isRequired,
+    errors: PropTypes.object,
+    filesystem: PropTypes.object,
     readOnly: PropTypes.bool.isRequired,
     setConfiguration: PropTypes.func.isRequired,
+    step: PropTypes.object.isRequired,
+    stepConfiguration: PropTypes.object,
   }
 
   setValue(configuration) {
@@ -111,20 +117,48 @@ class StepConfig extends React.Component {
     this.props.configureStepEnd(this.props.step, null, this.props.errors);
   }
 
+  get isFileSystemDataSource() {
+    const { step: { dataSources = [] } } = this.props;
+    const dataSource = dataSources.length === 1 ? dataSources[0] : null;
+
+    return !!(
+      (dataSource) && (dataSource.source === EnumDataSource.FILESYSTEM) && (dataSource.configuration) && (dataSource.configuration.resource)
+    );
+  }
+
+  get fileDataSource() {
+    const { step: { dataSources = [] } } = this.props;
+    const dataSource = dataSources.length === 1 ? dataSources[0] : null;
+
+    if ((dataSource) && (dataSource.source === EnumDataSource.FILESYSTEM) && (dataSource.configuration) && (dataSource.configuration.resource)) {
+      return dataSource.configuration.resource.path || null;
+    }
+    return null;
+  }
+
   render() {
+    const enableAutoMappings = this.isFileSystemDataSource;
+
     return (
       <Card>
         <CardBody className="card-body">
           {this.props.step.tool === EnumTool.TripleGeo &&
             this.createForm(TripleGeoConfiguration, validateTripleGeo, {
-              appConfiguration: this.props.appConfiguration,
-              filesystem: this.props.filesystem,
-              allowUpload: true,
-              allowNewFolder: true,
               allowDelete: true,
+              allowNewFolder: true,
+              allowUpload: true,
+              appConfiguration: this.props.appConfiguration,
               createFolder: this.props.createFolder,
-              uploadFile: this.props.uploadFile,
               deletePath: this.props.deletePath,
+              // Enabled configuration levels
+              enabledLevels: enableAutoMappings ? configurationLevelOptions.map(l => l.value) : [configurationLevels.ADVANCED],
+              filesystem: this.props.filesystem,
+              // Optional input file required for ML mappings generation
+              inputFile: this.fileDataSource,
+              uploadFile: this.props.uploadFile,
+              // Mappings methods
+              getTripleGeoMappings: this.props.getTripleGeoMappings,
+              getTripleGeoMappingFileAsText: this.props.getTripleGeoMappingFileAsText,
             })
           }
           {this.props.step.tool === EnumTool.LIMES &&

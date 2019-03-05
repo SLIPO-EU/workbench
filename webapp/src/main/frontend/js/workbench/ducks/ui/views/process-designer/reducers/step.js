@@ -19,6 +19,10 @@ import {
 } from '../../../../../model/process-designer';
 
 import {
+  configurationLevels as TripleGeoConfigurationLevels,
+} from '../../../../../model/process-designer/configuration/triplegeo';
+
+import {
   validateConfiguration as tripleGeoValidator,
 } from '../../../../../service/toolkit/triplegeo';
 import {
@@ -578,12 +582,29 @@ export function stepReducer(state, action) {
     case Types.REMOVE_STEP_DATA_SOURCE:
       return state.map((step) => {
         if (step.key === action.step.key) {
-          return {
-            ...step,
-            dataSources: step.dataSources.filter((s) => {
-              return (s.key !== action.dataSource.key);
-            })
-          };
+          // Update data sources
+          const dataSources = step.dataSources.filter((s) => {
+            return (s.key !== action.dataSource.key);
+          });
+          // For TripleGeo, update configuration level and reset mappings
+          switch (step.tool) {
+            case EnumTool.TripleGeo:
+              return {
+                ...step,
+                configuration: {
+                  ...step.configuration,
+                  level: TripleGeoConfigurationLevels.ADVANCED,
+                  autoMappings: null,
+                  userMappings: null,
+                },
+                dataSources,
+              };
+            default:
+              return {
+                ...step,
+                dataSources,
+              };
+          }
         }
         return step;
       });

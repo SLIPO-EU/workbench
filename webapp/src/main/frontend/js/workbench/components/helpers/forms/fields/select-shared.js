@@ -12,7 +12,6 @@ export const styles = {
   },
   container: (base, state) => ({
     ...base,
-    zIndex: '1002',
   }),
   menu: (base, state) => ({
     ...base,
@@ -20,5 +19,6 @@ export const styles = {
     boxShadow: 'none',
     marginTop: '-1px',
     border: '1px solid #cccccc',
+    zIndex: '1055',
   }),
 };
