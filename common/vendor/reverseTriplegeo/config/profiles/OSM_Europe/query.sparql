@@ -1,0 +1,95 @@
+PREFIX slipo: <http://slipo.eu/def#> 
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+PREFIX sf: <http://www.opengis.net/ont/sf#>
+PREFIX wgs84: <http://www.w3.org/2003/01/geo/wgs84_pos#>
+SELECT ?id ?source ?lon ?lat ?the_geom ?category ?name ?int_name ?alt_name (group_concat(distinct ?name_any;separator="; ") as ?name_other) ?description (group_concat(distinct ?phone_num;separator="; ") as ?phone) (group_concat(distinct ?fax_num;separator="; ") as ?fax) (group_concat(distinct ?email_addr;separator="; ") as ?email) ?homepage (group_concat(distinct ?street_name;separator="; ") as ?street) ?street_num ?postcode ?locality ?country ?open_hours ?wikipedia ?image
+WHERE { 
+		OPTIONAL {
+			?uri slipo:source ?poiSourceInfo .
+		    OPTIONAL { ?poiSourceInfo slipo:sourceRef ?source . }
+			?poiSourceInfo slipo:poiRef ?id .
+		}	
+		
+		OPTIONAL {
+			?uri slipo:lastUpdated ?timestamp .
+		}
+		
+		OPTIONAL {
+			?uri slipo:category ?category_uri .
+			?category_uri slipo:value ?category .
+		}
+		
+		OPTIONAL {
+			?uri geo:hasGeometry ?geometry .
+			?geometry geo:asWKT ?the_geom .
+		}
+		
+		OPTIONAL {
+			?uri slipo:address ?address .
+			OPTIONAL { ?address slipo:street ?street_name . }
+			OPTIONAL { ?address slipo:number ?street_num . }
+			OPTIONAL { ?address slipo:postcode ?postcode . }
+			OPTIONAL { ?address slipo:locality ?locality . }
+			OPTIONAL { ?address slipo:country ?country . }
+		}
+
+		OPTIONAL {
+			?uri slipo:name ?name_uri . 
+			?name_uri slipo:nameType "official" .
+			?name_uri slipo:nameValue ?name .
+		}
+
+		OPTIONAL {
+			?uri slipo:name ?altname_uri . 
+			?altname_uri slipo:nameType "alternate" .
+			?altname_uri slipo:nameValue ?alt_name .
+		}
+
+		OPTIONAL {
+			?uri slipo:name ?intname_uri . 
+			?intname_uri slipo:nameType "international" .
+			?intname_uri slipo:nameValue ?int_name .
+		}
+		
+		OPTIONAL {
+			?uri slipo:name ?fName . 
+			?fName slipo:nameValue ?name_any .
+			FILTER NOT EXISTS { ?fName slipo:nameType "official" } .
+			FILTER NOT EXISTS { ?fName slipo:nameType "alternate" } .
+			FILTER NOT EXISTS { ?fName slipo:nameType "international" } .
+			FILTER NOT EXISTS { ?fName slipo:nameType "transliterated" } .
+		}
+		
+		OPTIONAL {?uri slipo:description ?description . }
+		
+		OPTIONAL {?uri slipo:homepage ?homepage . }
+	
+		OPTIONAL {?uri slipo:otherLink ?wikipedia . }
+
+		OPTIONAL {?uri slipo:openingHours ?slot_uri .
+		     ?slot_uri slipo:concat ?open_hours .
+		}
+
+		OPTIONAL {?uri slipo:media ?media_uri .
+		     ?media_uri slipo:url ?image .
+		}
+		
+		OPTIONAL {?uri wgs84:long ?lon . }
+		OPTIONAL {?uri wgs84:lat ?lat . }
+		
+		OPTIONAL {
+			?uri slipo:phone ?phone_uri .
+			?phone_uri slipo:contactValue ?phone_num .
+		}
+		
+		OPTIONAL {
+			?uri slipo:fax ?fax_uri .
+			?fax_uri slipo:contactValue ?fax_num .
+		}
+		
+		OPTIONAL {
+			?uri slipo:email ?email_uri .
+			?email_uri slipo:contactValue ?email_addr .
+		}		  
+	}
+GROUP BY ?uri ?id ?source ?lon ?lat ?the_geom ?category ?name ?alt_name ?int_name ?description ?homepage ?street_num ?postcode ?locality ?country ?open_hours ?wikipedia ?image
