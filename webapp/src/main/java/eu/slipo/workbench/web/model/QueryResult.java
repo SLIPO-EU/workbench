@@ -19,20 +19,20 @@ public class QueryResult<Result> {
 
     private List<Result> items = new ArrayList<Result>();
 
-    public QueryResult(QueryPagingOptions query, int count) {
+    public QueryResult(QueryPagingOptions query, long count) {
         this.pagingOptions = new QueryResultPagingOptions(query.pageIndex, query.pageSize, count);
     }
 
-    public QueryResult(int pageIndex, int pageSize, int count) {
+    public QueryResult(int pageIndex, int pageSize, long count) {
         this.pagingOptions = new QueryResultPagingOptions(pageIndex, pageSize, count);
     }
 
-    public QueryResult(QueryPagingOptions query, int count, List<Result> items) {
+    public QueryResult(QueryPagingOptions query, long count, List<Result> items) {
         this.pagingOptions = new QueryResultPagingOptions(query.pageIndex, query.pageSize, count);
         this.items.addAll(items);
     }
 
-    public QueryResult(int pageIndex, int pageSize, int count, List<Result> items) {
+    public QueryResult(int pageIndex, int pageSize, long count, List<Result> items) {
         this.pagingOptions = new QueryResultPagingOptions(pageIndex, pageSize, count);
         this.items.addAll(items);
     }

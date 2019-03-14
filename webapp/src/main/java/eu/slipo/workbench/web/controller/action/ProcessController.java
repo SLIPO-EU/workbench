@@ -2,6 +2,7 @@ package eu.slipo.workbench.web.controller.action;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
@@ -22,9 +23,11 @@ import eu.slipo.workbench.common.model.BasicErrorCode;
 import eu.slipo.workbench.common.model.Error;
 import eu.slipo.workbench.common.model.QueryResultPage;
 import eu.slipo.workbench.common.model.RestResponse;
+import eu.slipo.workbench.common.model.process.ApiCallQuery;
 import eu.slipo.workbench.common.model.process.EnumProcessTaskType;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.ProcessErrorCode;
+import eu.slipo.workbench.common.model.process.ProcessExecutionApiRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessExecutionQuery;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
@@ -34,6 +37,7 @@ import eu.slipo.workbench.common.model.process.ProcessRecord;
 import eu.slipo.workbench.web.model.QueryResult;
 import eu.slipo.workbench.web.model.process.EnumProcessSaveActionType;
 import eu.slipo.workbench.web.model.process.ProcessCreateRequest;
+import eu.slipo.workbench.web.model.process.ProcessExecutionApiQueryRequest;
 import eu.slipo.workbench.web.model.process.ProcessExecutionQueryRequest;
 import eu.slipo.workbench.web.model.process.ProcessExecutionRecordView;
 import eu.slipo.workbench.web.model.process.ProcessQueryRequest;
@@ -68,7 +72,41 @@ public class ProcessController extends BaseController {
 
         ProcessQuery query = request.getQuery();
         PageRequest pageRequest = request.getPageRequest();
+
+        if(query.getTaskType() == EnumProcessTaskType.API) {
+            return RestResponse.result(
+                new QueryResult<ProcessRecord>(
+                    request.getPagingOptions().pageIndex,
+                    request.getPagingOptions().pageSize,
+                    0,
+                    Collections.emptyList()
+                )
+            );
+        }
+
+        query.setExcludeApi(true);
+
         QueryResultPage<ProcessRecord> r = this.processService.find(query, pageRequest);
+
+        return RestResponse.result(QueryResult.create(r));
+    }
+
+    /**
+     * Search for processes that correspond to API calls
+     *
+     * @param data the query to execute
+     * @return a list of processes
+     */
+    @RequestMapping(value = "/action/process/api/query", method = RequestMethod.POST)
+    public RestResponse<QueryResult<ProcessExecutionApiRecord>> findApiCalls(@RequestBody ProcessExecutionApiQueryRequest request) {
+        if (request == null || request.getQuery() == null) {
+            return RestResponse.error(ProcessErrorCode.QUERY_IS_EMPTY, "The query is empty");
+        }
+
+        ApiCallQuery query = request.getQuery();
+        PageRequest pageRequest = request.getPageRequest();
+
+        QueryResultPage<ProcessExecutionApiRecord> r = this.processService.find(query, pageRequest);
 
         return RestResponse.result(QueryResult.create(r));
     }
@@ -101,13 +139,26 @@ public class ProcessController extends BaseController {
      */
     @RequestMapping(value = "/action/process/execution/query", method = RequestMethod.POST)
     public RestResponse<QueryResult<ProcessExecutionRecord>> find(@RequestBody ProcessExecutionQueryRequest request) {
-
         if (request == null || request.getQuery() == null) {
             return RestResponse.error(ProcessErrorCode.QUERY_IS_EMPTY, "The query is empty");
         }
 
         ProcessExecutionQuery query = request.getQuery();
         PageRequest pageRequest = request.getPageRequest();
+
+        if(query.getTaskType() == EnumProcessTaskType.API) {
+            return RestResponse.result(
+                new QueryResult<ProcessExecutionRecord>(
+                    request.getPagingOptions().pageIndex,
+                    request.getPagingOptions().pageSize,
+                    0,
+                    Collections.emptyList()
+                )
+            );
+        }
+
+        query.setExcludeApi(true);
+
         QueryResultPage<ProcessExecutionRecord> r = this.processService.find(query, pageRequest);
 
         return RestResponse.result(QueryResult.create(r));

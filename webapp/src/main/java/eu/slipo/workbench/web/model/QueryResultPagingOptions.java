@@ -5,9 +5,9 @@ package eu.slipo.workbench.web.model;
  */
 public class QueryResultPagingOptions extends QueryPagingOptions {
 
-    public int count;
+    public long count;
 
-    public QueryResultPagingOptions(int indexPage, int indexSize, int count) {
+    public QueryResultPagingOptions(int indexPage, int indexSize, long count) {
         this.pageIndex = indexPage;
         this.pageSize = indexSize;
         this.count = count;

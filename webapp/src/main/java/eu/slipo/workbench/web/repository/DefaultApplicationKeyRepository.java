@@ -33,16 +33,21 @@ public class DefaultApplicationKeyRepository implements ApplicationKeyRepository
 
     @Override
     public ApplicationKeyRecord create(
-        int userId, int mappedUserId, int maxDailyRequestLimit, int maxConcurrentRequestLimit
+        int userId, String applicationName, Integer mappedUserId, Integer maxDailyRequestLimit, Integer maxConcurrentRequestLimit
     ) {
         AccountEntity createdBy = entityManager.getReference(AccountEntity.class, userId);
         AccountEntity mappedTo = entityManager.getReference(AccountEntity.class, mappedUserId);
 
         ApplicationKeyEntity key = new ApplicationKeyEntity();
+        key.setName(applicationName);
         key.setCreatedBy(createdBy);
         key.setMappedAccount(mappedTo);
-        key.setMaxConcurrentRequestLimit(maxConcurrentRequestLimit);
-        key.setMaxDailyRequestLimit(maxDailyRequestLimit);
+        key.setMaxConcurrentRequestLimit(
+            maxConcurrentRequestLimit == null ? ApplicationKeyRepository.DEFAULT_MAX_CONCURRENT_REQUEST_LIMIT : maxConcurrentRequestLimit
+        );
+        key.setMaxDailyRequestLimit(
+            maxDailyRequestLimit == null ? ApplicationKeyRepository.DEFAULT_MAX_DAILY_REQUEST_LIMIT : maxDailyRequestLimit
+        );
         key.setKey(this.createApplicationKey(userId, mappedUserId));
 
         this.entityManager.persist(key);
@@ -135,7 +140,7 @@ public class DefaultApplicationKeyRepository implements ApplicationKeyRepository
     }
 
     @Override
-    public void revoke(int userId, int id) {
+    public void revoke(int userId, long id) {
         AccountEntity revokedBy = entityManager.getReference(AccountEntity.class, userId);
 
         final String query = "From ApplicationKey k where k.id = :id";

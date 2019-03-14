@@ -25,25 +25,29 @@ public interface ApplicationKeyRepository {
      * Creates a new application key
      *
      * @param userId The user who created the application key
+     * @param applicationName The application key name
      * @param mappedUserId The user to which the new application key is mapped
      * @return An instance of {@link ApplicationKeyRecord} if the method call was
      * successful or null
      */
-    default ApplicationKeyRecord create(int userId, int mappedUserId) {
-        return this.create(userId, mappedUserId, DEFAULT_MAX_DAILY_REQUEST_LIMIT, DEFAULT_MAX_CONCURRENT_REQUEST_LIMIT);
+    default ApplicationKeyRecord create(int userId, String applicationName, Integer mappedUserId) {
+        return this.create(userId, applicationName, mappedUserId, DEFAULT_MAX_DAILY_REQUEST_LIMIT, DEFAULT_MAX_CONCURRENT_REQUEST_LIMIT);
     }
 
     /**
      * Creates a new application key
      *
      * @param userId The user who created the application key
+     * @param applicationName The application key name
      * @param mappedUserId The user to which the new application key is mapped
      * @param maxDailyRequestLimit The maximum number of allowed daily requests
      * @param maxConcurrentRequestLimit The maximum number of allowed concurrent requests
      * @return An instance of {@link ApplicationKeyRecord} if the method call was
      * successful or null
      */
-    ApplicationKeyRecord create(int userId, int mappedUserId, int maxDailyRequestLimit, int maxConcurrentRequestLimit);
+    ApplicationKeyRecord create(
+        int userId, String applicationName, Integer mappedUserId, Integer maxDailyRequestLimit, Integer maxConcurrentRequestLimit
+    );
 
     /**
      * Finds an application key by its value
@@ -69,6 +73,6 @@ public interface ApplicationKeyRepository {
      * @param userId The id of the user who revoked the key
      * @param id The id of the application key to revoke
      */
-    void revoke(int userId, int id);
+    void revoke(int userId, long id);
 
 }

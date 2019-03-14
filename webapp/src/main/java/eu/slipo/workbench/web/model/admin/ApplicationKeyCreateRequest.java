@@ -3,9 +3,9 @@ package eu.slipo.workbench.web.model.admin;
 public class ApplicationKeyCreateRequest {
 
     private String applicationName;
-    private int mappedAccount;
-    private int maxDailyRequestLimit;
-    private int maxConcurrentRequestLimit;
+    private Integer mappedAccount;
+    private Integer maxDailyRequestLimit;
+    private Integer maxConcurrentRequestLimit;
 
     public String getApplicationName() {
         return applicationName;
@@ -15,27 +15,27 @@ public class ApplicationKeyCreateRequest {
         this.applicationName = applicationName;
     }
 
-    public int getMappedAccount() {
+    public Integer getMappedAccount() {
         return mappedAccount;
     }
 
-    public void setMappedAccount(int mappedAccount) {
+    public void setMappedAccount(Integer mappedAccount) {
         this.mappedAccount = mappedAccount;
     }
 
-    public int getMaxDailyRequestLimit() {
+    public Integer getMaxDailyRequestLimit() {
         return maxDailyRequestLimit;
     }
 
-    public void setMaxDailyRequestLimit(int maxDailyRequestLimit) {
+    public void setMaxDailyRequestLimit(Integer maxDailyRequestLimit) {
         this.maxDailyRequestLimit = maxDailyRequestLimit;
     }
 
-    public int getMaxConcurrentRequestLimit() {
+    public Integer getMaxConcurrentRequestLimit() {
         return maxConcurrentRequestLimit;
     }
 
-    public void setMaxConcurrentRequestLimit(int maxConcurrentRequestLimit) {
+    public void setMaxConcurrentRequestLimit(Integer maxConcurrentRequestLimit) {
         this.maxConcurrentRequestLimit = maxConcurrentRequestLimit;
     }
 
