@@ -55,6 +55,9 @@ $slipo-ev-layer-color: #616161 !default;
     background: #EEEEEE;
     border: 1px solid #EEEEEE;
   }
+  &.slipo-ev-layer-disabled {
+    opacity: 0.4;
+  }
 }
 
 .slipo-layer-toggle {

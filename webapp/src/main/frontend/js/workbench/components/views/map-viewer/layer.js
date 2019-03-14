@@ -43,12 +43,13 @@ class Layer extends React.Component {
   }
 
   render() {
-    const { selected, layer: { hidden, title, style } } = this.props;
+    const { disabled, selected, layer: { hidden, title, style } } = this.props;
 
     return (
       <div
         className={
           classnames({
+            "slipo-ev-layer-disabled": disabled,
             "slipo-ev-layer": true,
             "slipo-ev-layer-active": selected,
           })

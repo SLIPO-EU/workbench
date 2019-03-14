@@ -191,6 +191,7 @@ function createFusedCells(step, property, features, updates) {
 export function processExecutionToLayers(process, execution) {
   const { steps, resources } = process;
   const layers = [];
+  const maxZoom = 15;
 
   // All input resource keys (exclude input for CATALOG or EXPORT operations)
   const input = steps.reduce(
@@ -241,6 +242,7 @@ export function processExecutionToLayers(process, execution) {
         file: null,
         type: EnumLayerType.Input,
         style: r.style || createStyle(layers.length),
+        maxZoom,
       });
     });
 
@@ -277,6 +279,7 @@ export function processExecutionToLayers(process, execution) {
             file: f.id,
             type: isOutput ? EnumLayerType.Output : EnumLayerType.Input,
             style: f.style || createStyle(layers.length),
+            maxZoom,
           });
         });
     }

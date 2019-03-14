@@ -50,12 +50,14 @@ class WfsLayer extends React.Component {
     extra: PropTypes.object,
     filters: PropTypes.arrayOf(PropTypes.object),
     style: PropTypes.object,
+    maxZoom: PropTypes.number,
   }
 
   static defaultProps = {
     version: '1.1.0',
     outputFormat: 'application/json',
     srsName: 'EPSG:3857',
+    maxZoom: 15,
   }
 
   buildRequest(extent) {
@@ -86,7 +88,9 @@ class WfsLayer extends React.Component {
   }
 
   componentDidMount() {
-    if (this.props.map) {
+    const { color, icon, index, extra, map, maxZoom } = this.props;
+
+    if (map) {
       const source = new VectorSource({
         format: new GeoJSON(),
         url: this.buildRequest.bind(this),
@@ -94,11 +98,11 @@ class WfsLayer extends React.Component {
       });
 
       source.on('addfeature', (e) => {
-        e.feature.set(FEATURE_COLOR_PROPERTY, this.props.color || null, true);
-        e.feature.set(FEATURE_ICON_PROPERTY, this.props.icon || null, true);
-        if (this.props.extra) {
-          Object.keys(this.props.extra).map((key) => {
-            e.feature.set(key, this.props.extra[key] || null, true);
+        e.feature.set(FEATURE_COLOR_PROPERTY, color || null, true);
+        e.feature.set(FEATURE_ICON_PROPERTY, icon || null, true);
+        if (extra) {
+          Object.keys(extra).map((key) => {
+            e.feature.set(key, extra[key] || null, true);
           });
         }
       }, this);
@@ -108,9 +112,10 @@ class WfsLayer extends React.Component {
       this.layer = new VectorLayer({
         source,
         style,
+        maxResolution: map.getView().getResolutionForZoom(maxZoom),
       });
 
-      this.props.map.getLayers().insertAt(this.props.index, this.layer);
+      map.getLayers().insertAt(index, this.layer);
     }
   }
 
