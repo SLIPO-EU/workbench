@@ -9,6 +9,10 @@ import {
 } from '../../../../model';
 
 import {
+  EnumTaskType
+} from '../../../../model/process-designer';
+
+import {
   SecureContent,
   Table,
 } from '../../../helpers';
@@ -42,10 +46,14 @@ const processColumns = [{
   Cell: props => {
     return (
       <span>
-        <i data-action="view" title="View" className='fa fa-search slipo-table-row-action p-1'></i>
-        <SecureContent roles={[Roles.ADMIN, Roles.AUTHOR]}>
-          <i data-action="edit" title="Edit" className='fa fa-pencil slipo-table-row-action p-1'></i>
-        </SecureContent>
+        {props.original.taskType !== EnumTaskType.EXPORT_MAP &&
+          <i data-action="view" title="View" className='fa fa-search slipo-table-row-action p-1'></i>
+        }
+        {props.original.taskType !== EnumTaskType.EXPORT_MAP &&
+          <SecureContent roles={[Roles.ADMIN, Roles.AUTHOR]}>
+            <i data-action="edit" title="Edit" className='fa fa-pencil slipo-table-row-action p-1'></i>
+          </SecureContent>
+        }
         {!props.original.running &&
           <i data-action="play" title="Start execution" className='fa fa-play slipo-table-row-action text-success p-1'></i>
         }
