@@ -30,7 +30,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.Iterables;
 
 import eu.slipo.workbench.common.domain.AccountEntity;
+import eu.slipo.workbench.common.domain.ApplicationKeyEntity;
 import eu.slipo.workbench.common.domain.ProcessEntity;
+import eu.slipo.workbench.common.domain.ProcessExecutionApiEntity;
 import eu.slipo.workbench.common.domain.ProcessExecutionEntity;
 import eu.slipo.workbench.common.domain.ProcessExecutionMonitorEntity;
 import eu.slipo.workbench.common.domain.ProcessExecutionStepEntity;
@@ -39,9 +41,12 @@ import eu.slipo.workbench.common.domain.ProcessRevisionEntity;
 import eu.slipo.workbench.common.domain.ResourceRevisionEntity;
 import eu.slipo.workbench.common.domain.WorkflowEntity;
 import eu.slipo.workbench.common.model.QueryResultPage;
+import eu.slipo.workbench.common.model.poi.EnumOperation;
+import eu.slipo.workbench.common.model.process.ApiCallQuery;
 import eu.slipo.workbench.common.model.process.EnumProcessExecutionStatus;
 import eu.slipo.workbench.common.model.process.EnumProcessTaskType;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
+import eu.slipo.workbench.common.model.process.ProcessExecutionApiRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessExecutionQuery;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
@@ -129,6 +134,9 @@ public class DefaultProcessRepository implements ProcessRepository
             if (query.getTemplate() != null) {
                 filters.add("(p.isTemplate = :template)");
             }
+            if (query.isExcludeApi()) {
+                filters.add("(p.taskType <> 'API')");
+            }
         }
 
         // Count records
@@ -200,6 +208,9 @@ public class DefaultProcessRepository implements ProcessRepository
             if (query.getStatus() != null) {
                 filters.add("(e.status = :status)");
             }
+            if (query.isExcludeApi()) {
+                filters.add("(e.process.parent.taskType <> 'API')");
+            }
         }
 
         // Count records
@@ -235,6 +246,67 @@ public class DefaultProcessRepository implements ProcessRepository
             .map(ProcessExecutionEntity::toProcessExecutionRecord)
             .collect(Collectors.toList());
         return new QueryResultPage<ProcessExecutionRecord>(records, pageReq, count);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public QueryResultPage<ProcessExecutionApiRecord> queryExecutions(ApiCallQuery query, PageRequest pageReq)
+    {
+        // Check query parameters
+        if (pageReq == null) {
+            pageReq = new PageRequest(0, 10);
+        }
+
+        String qlString = "";
+
+        // Resolve filters
+
+        List<String> filters = new ArrayList<>();
+        if (query != null) {
+            if (!StringUtils.isBlank(query.getName())) {
+                filters.add("(e.key.name like :name)");
+            }
+            if (query.getOperation() != null) {
+                filters.add("(e.operation = :operation)");
+            }
+            if (query.getStatus() != null) {
+                filters.add("(e.execution.status = :status)");
+            }
+        }
+
+        // Count records
+        qlString = "select count(e.id) from ProcessExecutionApi e ";
+        if (!filters.isEmpty()) {
+            qlString += " where " + StringUtils.join(filters, " and ");
+        }
+
+        Integer count;
+        TypedQuery<Number> countQuery = entityManager.createQuery(qlString, Number.class);
+        if (query != null) {
+            setFindParameters(query, countQuery);
+        }
+        count = countQuery.getSingleResult().intValue();
+
+        // Load records
+        qlString = "select e from ProcessExecutionApi e ";
+        if (!filters.isEmpty()) {
+            qlString += " where " + StringUtils.join(filters, " and ");
+        }
+        qlString += " order by e.id desc ";
+
+        TypedQuery<ProcessExecutionApiEntity> selectQuery =
+            entityManager.createQuery(qlString, ProcessExecutionApiEntity.class);
+        if (query != null) {
+            setFindParameters(query, selectQuery);
+        }
+
+        selectQuery.setFirstResult(pageReq.getOffset());
+        selectQuery.setMaxResults(pageReq.getPageSize());
+
+        List<ProcessExecutionApiRecord> records = selectQuery.getResultList().stream()
+            .map(ProcessExecutionApiEntity::toRecord)
+            .collect(Collectors.toList());
+        return new QueryResultPage<ProcessExecutionApiRecord>(records, pageReq, count);
     }
 
     @Transactional(readOnly = true)
@@ -469,8 +541,9 @@ public class DefaultProcessRepository implements ProcessRepository
         Assert.isTrue((taskType == EnumProcessTaskType.REGISTRATION && !isTemplate) ||
                       (taskType == EnumProcessTaskType.DATA_INTEGRATION) ||
                       (taskType == EnumProcessTaskType.EXPORT && !isTemplate) ||
-                      (taskType == EnumProcessTaskType.EXPORT_MAP && !isTemplate),
-                      "Registration process definition cannot be a template");
+                      (taskType == EnumProcessTaskType.EXPORT_MAP && !isTemplate) ||
+                      (taskType == EnumProcessTaskType.API && !isTemplate),
+                      "Process definition cannot be a template");
 
         AccountEntity createdBy = entityManager.find(AccountEntity.class, userId);
         Assert.notNull(createdBy, "The userId does not correspond to a user entity");
@@ -878,6 +951,20 @@ public class DefaultProcessRepository implements ProcessRepository
             }
     }
 
+    @Override
+    public void log(long applicationKey, long execution, EnumOperation operation) {
+        ProcessExecutionApiEntity entity = new ProcessExecutionApiEntity();
+
+        ApplicationKeyEntity keyRef = entityManager.find(ApplicationKeyEntity.class, applicationKey);
+        ProcessExecutionEntity executionRef = entityManager.find(ProcessExecutionEntity.class, execution);
+
+        entity.setExecution(executionRef);
+        entity.setKey(keyRef);
+        entity.setOperation(operation);
+
+        this.entityManager.persist(entity);
+    }
+
     private void setFindParameters(ProcessQuery processQuery, Query query)
     {
         if (processQuery.getCreatedBy() != null) {
@@ -919,6 +1006,19 @@ public class DefaultProcessRepository implements ProcessRepository
             query.setParameter("taskType", executionQuery.getTaskType());
         }
 
+        if (executionQuery.getStatus() != null) {
+            query.setParameter("status", executionQuery.getStatus());
+        }
+    }
+
+    private void setFindParameters(ApiCallQuery executionQuery, Query query)
+    {
+        if (!StringUtils.isBlank(executionQuery.getName())) {
+            query.setParameter("name", "%" + executionQuery.getName() + "%");
+        }
+        if (executionQuery.getOperation() != null) {
+            query.setParameter("operation", executionQuery.getOperation());
+        }
         if (executionQuery.getStatus() != null) {
             query.setParameter("status", executionQuery.getStatus());
         }

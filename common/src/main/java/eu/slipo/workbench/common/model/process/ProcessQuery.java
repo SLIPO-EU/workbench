@@ -1,10 +1,11 @@
 package eu.slipo.workbench.common.model.process;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 /**
  * Query for searching processes
  */
-public class ProcessQuery 
-{    
+public class ProcessQuery {
     /**
      * Search processes by name using LIKE SQL operator
      */
@@ -19,12 +20,14 @@ public class ProcessQuery
      * Search for templates
      */
     private Boolean template;
-    
+
     /**
      * Search by the ID of the user that created the process
      */
     private Integer createdBy;
-    
+
+    private boolean excludeApi;
+
     public String getName() {
         return name;
     }
@@ -49,13 +52,22 @@ public class ProcessQuery
         this.taskType = t;
     }
 
-    public Integer getCreatedBy()
-    {
+    public Integer getCreatedBy() {
         return createdBy;
     }
 
-    public void setCreatedBy(Integer createdBy)
-    {
+    public void setCreatedBy(Integer createdBy) {
         this.createdBy = createdBy;
     }
+
+    @JsonIgnore()
+    public boolean isExcludeApi() {
+        return excludeApi;
+    }
+
+    @JsonIgnore()
+    public void setExcludeApi(boolean excludeApi) {
+        this.excludeApi = excludeApi;
+    }
+
 }

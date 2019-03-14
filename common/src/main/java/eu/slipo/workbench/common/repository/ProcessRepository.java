@@ -11,9 +11,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import eu.slipo.workbench.common.domain.ProcessExecutionEntity;
 import eu.slipo.workbench.common.domain.ProcessRevisionEntity;
 import eu.slipo.workbench.common.model.QueryResultPage;
+import eu.slipo.workbench.common.model.poi.EnumOperation;
+import eu.slipo.workbench.common.model.process.ApiCallQuery;
 import eu.slipo.workbench.common.model.process.EnumProcessExecutionStatus;
 import eu.slipo.workbench.common.model.process.EnumProcessTaskType;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
+import eu.slipo.workbench.common.model.process.ProcessExecutionApiRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessExecutionQuery;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
@@ -265,6 +268,14 @@ public interface ProcessRepository
     QueryResultPage<ProcessExecutionRecord> queryExecutions(ProcessExecutionQuery query, PageRequest pageReq);
 
     /**
+     * Find process executions for API calls filtered by a {@link ApiCallQuery}.
+     *
+     * @param query A query to filter records, or <tt>null</tt> to fetch everything
+     * @return an instance of {@link QueryResult} with {@link ProcessExecutionApiRecord} items
+     */
+    QueryResultPage<ProcessExecutionApiRecord> queryExecutions(ApiCallQuery query, PageRequest pageReq);
+
+    /**
      * Create a (new) execution for a process revision with a given id and version. The new
      * execution will always be initialized with a status of {@link EnumProcessExecutionStatus#UNKNOWN}.
      *
@@ -397,4 +408,14 @@ public interface ProcessRepository
      * their steps) and marks as STOPPED all that appear as UNKNOWN/RUNNING.
      */
     void clearRunningExecutions();
+
+    /**
+     * Logs the execution of an API call
+     *
+     * @param applicationKey The id of the application key record
+     * @param execution The id of the process execution record
+     * @param operation The operation type
+     */
+    void log(long applicationKey, long execution, EnumOperation operation);
+
 }
