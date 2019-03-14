@@ -6,6 +6,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import eu.slipo.workbench.common.model.EnumRole;
+import eu.slipo.workbench.common.model.security.ApplicationKeyRecord;
 
 public interface IAuthenticationFacade {
 
@@ -61,5 +62,13 @@ public interface IAuthenticationFacade {
      * @return the user locale or {@code null} if the user is not authenticated
      */
     Locale getCurrentUserLocale();
+
+    /**
+     * Get the application key associated to the current request
+     *
+     * @return an instance of {@link ApplicationKeyRecord} or {@code null} if no
+     * application key exists
+     */
+    ApplicationKeyRecord getApplicationKey();
 
 }

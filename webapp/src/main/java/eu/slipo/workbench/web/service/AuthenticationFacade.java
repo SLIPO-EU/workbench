@@ -8,6 +8,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import eu.slipo.workbench.common.model.EnumRole;
+import eu.slipo.workbench.common.model.security.ApplicationKeyRecord;
+import eu.slipo.workbench.web.security.ApplicationKeyAuthenticationToken;
 import eu.slipo.workbench.web.service.DefaultUserDetailsService.Details;
 
 @Component
@@ -84,6 +86,19 @@ public class AuthenticationFacade implements IAuthenticationFacade {
         String lang = ((Details) authentication.getPrincipal()).getLang();
 
         return Locale.forLanguageTag(lang);
+    }
+
+    @Override
+    public ApplicationKeyRecord getApplicationKey() {
+        Authentication authentication = this.getAuthentication();
+        if (authentication == null) {
+            return null;
+        }
+        if (authentication instanceof ApplicationKeyAuthenticationToken) {
+            return ((ApplicationKeyAuthenticationToken) authentication).getApplicationKey();
+        }
+
+        return null;
     }
 
 }
