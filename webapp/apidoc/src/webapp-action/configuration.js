@@ -1,127 +1,122 @@
 /**
- * @api {get} action/configuration/{locale} Load configuration
+ * @api {get} action/configuration Load configuration
  * @apiVersion 1.0.0
  * @apiName Load
  * @apiGroup Configuration
- * @apiPermission ROLE_USER
+ * @apiPermission ROLE_USER, ROLE_AUTHOR, ROLE_ADMIN
  *
- * @apiDescription Loads application configuration settings and value lists
- *
- * @apiParam (Path Parameters)            {String}    locale            The locale used for translating resources
+ * @apiDescription Loads application configuration settings
  *
  * @apiParamExample {json} Request Example
- * GET action/configuration/en
+ * GET action/configuration
  *
  * @apiSuccess                            {Boolean}   success           Returns <code>true</code> or <code>false</code>
  * indicating success of the operation.
- * @apiSuccess                            {Object[]}  errors            Array of <code>Error</code> objects
- * @apiSuccess                            {Object}    result            An instance of <code>Configuration</code>. If the value of
- * property <code>success</code> is <code>false</code>, <code>result</code> is <code>undefined</code>
+ * @apiSuccess                            {Object[]}  errors
+ * Array of <code>Error</code> objects
+ * @apiSuccess                            {Object}    result
+ * An instance of <code>Configuration</code>. If the value of property <code>success</code> is <code>false</code>,
+ * <code>result</code> is <code>null</code>
  *
- * @apiSuccess (Configuration)            {Object}    values            An instance of <code>ValueListCollection</code> which contains
- * value list items.
+ * @apiSuccess (Configuration)            {Object}    bingMaps
+ * Bing Maps configuration options
+ * @apiSuccess (Configuration)            {String}    bingMaps.applicationKey
+ * Bing Maps API key. An API key can be created at <a href="https://www.bingmapsportal.com">Bing Maps Dev Center</a>.
+ * @apiSuccess (Configuration)            {String}    bingMaps.imagerySet
+ * Imagery set used. Valid values are <code>Road</code>, <code>Aerial</code> and <code>AerialWithLabels</code>.
  *
- * @apiSuccess (ValueListCollection)      {Object[]}  dataFormats       An array of <code>ValueListItem</code> objects with all supported
- * data formats
- * @apiSuccess (ValueListCollection)      {Object[]}  dataSources       An array of <code>ValueListItem</code> objects with all supported
- * data sources
- * @apiSuccess (ValueListCollection)      {Object[]}  operations        An array of <code>ValueListItem</code> objects with all supported
- * operations
- * @apiSuccess (ValueListCollection)      {Object[]}  resourceTypes     An array of <code>ValueListItem</code> objects with all supported
- * resource types
+ * @apiSuccess (Configuration)            {Object}    deer
+ * An instance of <code>SlipoToolkitConfiguration</code> for DEER.
+ * @apiSuccess (Configuration)            {Object}    fagi
+ * An instance of <code>SlipoToolkitConfiguration</code> for FAGI.
+ * @apiSuccess (Configuration)            {Object}    limes
+ * An instance of <code>SlipoToolkitConfiguration</code> for LIMES.
+ * @apiSuccess (Configuration)            {Object}    reverseTripleGeo
+ * An instance of <code>SlipoToolkitConfiguration</code> for TripleGeo Reverse.
+ * @apiSuccess (Configuration)            {Object}    tripleGeo
+ * An instance of <code>SlipoToolkitConfiguration</code> for TripleGeo.
  *
- * @apiSuccess (ValueListItem)            {String}    key               Unique key
- * @apiSuccess (ValueListItem)            {String}    name              Localized name for the key value
+ * @apiSuccess (Configuration)            {Object}    mapDefaults
+ * Default settings for application maps.
+ * @apiSuccess (Configuration)            {Number[]}  mapDefaults.center
+ * Default map center coordinates.
  *
+ * @apiSuccess (Configuration)            {Object}    osm
+ * Open Street Maps configuration options.
+ * @apiSuccess (Configuration)            {Object}    osm.url
+ * Default OSM url.
+ *
+ * @apiSuccess (Configuration)            {Object}    profiles
+ * Contains a dictionary of SLIPO toolkit component specific profiles.
+ *
+ * @apiSuccess (SlipoToolkitConfiguration)  {String}    baselineVersion
+ * Default version used by the designer when the version for an existing workflow step is not set.
+ * @apiSuccess (SlipoToolkitConfiguration)  {String[]}  supportedVersions
+ * A list of all supported versions.
+ * @apiSuccess (SlipoToolkitConfiguration)  {String}    version
+ * The current version.
  *
  * @apiSuccessExample {json} Response Example
  * HTTP/1.1 200 OK
  * {
- *   "errors": [],
- *   "success": true,
- *   "result": {
- *     "values": {
- *       "dataFormats": [{
- *         "key": "UNDEFINED",
- *         "name": "Unknown"
- *       }, {
- *         "key": "CSV",
- *         "name": "Comma-Separated Values"
- *       }, {
- *         "key": "GPX",
- *         "name": "GPS Exchange Format"
- *       }, {
- *         "key": "GEOJSON",
- *         "name": "GeoJSON"
- *       }, {
- *         "key": "OSM",
- *         "name": "Open Street Maps"
- *       }, {
- *         "key": "SHAPEFILE",
- *         "name": "Shape file"
- *       }, {
- *         "key": "RDF_XML",
- *         "name": "RDF/XML"
- *       }, {
- *         "key": "RDF_XML_ABBREV",
- *         "name": "RDF/XML-ABBREV"
- *       }, {
- *         "key": "TURTLE",
- *         "name": "Turtle"
- *       }, {
- *         "key": "N_TRIPLES",
- *         "name": "N-Triples"
- *       }, {
- *         "key": "N3",
- *         "name": "N3"
- *       }],
- *       "dataSources": [{
- *         "key": "UNDEFINED",
- *         "name": "Not Supported"
- *       }, {
- *         "key": "UPLOAD",
- *         "name": "Upload"
- *       }, {
- *         "key": "FILESYSTEM",
- *         "name": "File System"
- *       }, {
- *         "key": "HARVESTER",
- *         "name": "Harvester"
- *       }, {
- *         "key": "EXTERNAL_URL",
- *         "name": "External Url"
- *       }, {
- *         "key": "COMPUTED",
- *         "name": "Computed"
- *       }],
- *       "operations": [{
- *         "key": "UNDEFINED",
- *         "name": "Not Supported"
- *      }, {
- *         "key": "TRANSFORM",
- *         "name": "Transformation  "
- *       }, {
- *         "key": "INTERLINK",
- *         "name": "Interlinking"
- *       }, {
- *         "key": "FUSION",
- *         "name": "Fusion"
- *       }, {
- *         "key": "ENRICHEMENT",
- *         "name": "Enrichment"
- *       }],
- *       "resourceTypes": [{
- *         "key": "UNDEFINED",
- *         "name": "Unknown"
- *       }, {
- *         "key": "POI_DATA",
- *         "name": "POI Data"
- *       }, {
- *         "key": "POI_LINKED_DATA",
- *         "name": "POI Linked Data"
- *       }]
- *     }
- *   }
+ *  "errors":[],
+ *  "result":{
+ *    "profiles":{
+ *      "REVERSE_TRIPLEGEO":{
+ *        "OSM_Europe":{...},
+ *        "SLIPO_default":{...},
+ *        ...
+ *      },
+ *      "FAGI":{
+ *        "SLIPO_MatchByName":{...},
+ *        ...
+ *      },
+ *      "TRIPLEGEO":{
+ *        "OSM_Europe":{...},
+ *        ...
+ *      },
+ *      "LIMES":{
+ *        "SLIPO_MatchByName":{...},
+ *        ...,
+ *      }
+ *    },
+ *    "osm":{
+ *      "url":"https://a.tile.openstreetmap.org/${z}/${x}/${y}.png"},
+ *    },
+ *    "bingMaps":{
+ *      "applicationKey": ...,
+ *      "imagerySet":"Road"
+ *    },
+ *    "tripleGeo":{
+ *      "version":"1.6",
+ *      "baselineVersion":"1.6",
+ *      "supportedVersions":["1.2","1.4","1.5","1.6"]
+ *    },
+ *    "reverseTripleGeo":{
+ *      "version":"1.6",
+ *      "baselineVersion":"1.6",
+ *      "supportedVersions":["1.5","1.6"]
+ *    },
+ *    "limes":{
+ *      "version":"1.5",
+ *      "baselineVersion":"1.5",
+ *      "supportedVersions":["1.3","1.5"]
+ *    },
+ *    "fagi":{
+ *      "version":"1.2",
+ *      "baselineVersion":"1.2",
+ *      "supportedVersions":["1.2"]
+ *    },
+ *    "deer":{
+ *      "version":"1.1",
+ *      "baselineVersion":"1.1",
+ *      "supportedVersions":["1.1"]
+ *    },
+ *    "mapDefaults":{
+ *      "center":[14.183,48.49623]
+ *    }
+ *  },
+ *  "success":true
  * }
  *
  * @apiError                              {Boolean}   success           Always <code>false</code>.
@@ -134,7 +129,7 @@
  * HTTP/1.1 200 OK
  * {
  *   errors: [{
- *     code: "BasicErrorCode.NOT_IMPLEMENTED",
+ *     code: "NOT_IMPLEMENTED",
  *     description: "Not implemented"
  *   }],
  *   success: false

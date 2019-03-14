@@ -2,7 +2,7 @@
   "name": "SLIPO Web Application Action API Interface",
   "title": "SLIPO Web Application Action API Interface",
   "description": "",
-  "url": "https://workbench.dev.slipo.eu/",
+  "url": "https://app.dev.slipo.eu/",
   "header": {
     "title": "Introduction",
     "filename": "./header.md"
