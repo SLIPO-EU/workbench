@@ -1,3 +1,4 @@
+export { default as ApiUsage } from './api-usage';
 export { default as ApplicationKeyViewer } from './application-key-viewer';
 export { default as ContextSidebar } from './context-sidebar';
 export { default as Dashboard } from './dashboard';
