@@ -94,7 +94,12 @@ const resourceColumns = [{
     let action = null;
     switch (record.exportStatus) {
       case EnumMapExportStatus.NONE:
-        action = <i data-action="export-map" title="Export map data" className='fa fa-database slipo-table-row-action'></i>;
+        if (record.tableName) {
+          // Resource has been exported during the export of a process execution
+          action = <i data-action="view-map" title="View Map" className='fa fa-map-o slipo-table-row-action'></i>;
+        } else {
+          action = <i data-action="export-map" title="Export map data" className='fa fa-database slipo-table-row-action'></i>;
+        }
         break;
       case EnumMapExportStatus.FAILED:
         action = (
