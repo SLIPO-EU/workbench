@@ -38,6 +38,10 @@ class Dialog extends React.Component {
     this.setState({
       modal: !this.state.modal
     });
+
+    if (this.props.toggle) {
+      this.props.toggle();
+    }
   }
 
   render() {
