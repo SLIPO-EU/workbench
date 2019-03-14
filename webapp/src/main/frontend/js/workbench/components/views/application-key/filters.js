@@ -34,12 +34,15 @@ export default class Filters extends React.Component {
     super(props);
 
     this.clear = this.clear.bind(this);
+    this.create = this.create.bind(this);
     this.search = this.search.bind(this);
   }
 
   clear() {
     this.props.resetFilters();
-    this.props.query({ query: {} });
+    this.props.query({
+      query: { revoked: false },
+    });
   }
 
   search(e) {
@@ -53,8 +56,7 @@ export default class Filters extends React.Component {
   }
 
   create() {
-    message.error('error.NOT_IMPLEMENTED', 'fa-warning');
-    // TODO : Implement ...
+    this.props.create();
   }
 
   render() {

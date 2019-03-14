@@ -1,3 +1,4 @@
+import adminService from '../../../service/admin';
 import applicationKeyService from '../../../service/application-key';
 
 // Actions
@@ -13,6 +14,9 @@ const RECEIVE_APPLICATION_KEYS = 'ui/application-key/RECEIVE_APPLICATION_KEYS';
 const SET_SELECTED_APPLICATION_KEY = 'ui/application-key/SET_SELECTED_APPLICATION_KEY';
 const EXPAND_SELECTED_APPLICATION_KEY = 'ui/application-key/EXPAND_SELECTED_APPLICATION_KEY';
 
+const REQUEST_ACCOUNTS = 'ui/application-key/REQUEST_ACCOUNTS';
+const RECEIVE_ACCOUNTS = 'ui/application-key/RECEIVE_ACCOUNTS';
+
 const REQUEST_NEW_APPLICATION_KEY = 'ui/application-key/REQUEST_NEW_APPLICATION_KEY';
 const RECEIVE_NEW_APPLICATION_KEY = 'ui/application-key/RECEIVE_NEW_APPLICATION_KEY';
 
@@ -21,13 +25,14 @@ const RECEIVE_APPLICATION_KEY_REVOKE = 'ui/application-key/RECEIVE_NEW_APPLICATI
 
 // Reducer
 const initialState = {
+  accounts: [],
   expanded: {
     index: null,
     reason: null,
   },
   filters: {
     applicationName: null,
-    revoked: null,
+    revoked: false,
     userName: null,
   },
   items: [],
@@ -96,8 +101,22 @@ export default (state = initialState, action) => {
       return {
         ...state,
         filters: {
-          ...initialState.filters
+          ...initialState.filters,
         },
+      };
+
+    case REQUEST_ACCOUNTS:
+      return {
+        ...state,
+        loading: true,
+        accounts: [],
+      };
+
+    case RECEIVE_ACCOUNTS:
+      return {
+        ...state,
+        loading: false,
+        accounts: action.accounts,
       };
 
     case REQUEST_APPLICATION_KEYS:
@@ -201,6 +220,38 @@ export const setExpanded = (index, reason) => ({
 });
 
 // Thunk actions
+const requestAccounts = () => ({
+  type: REQUEST_ACCOUNTS,
+});
+
+const receiveAccounts = (accounts) => ({
+  type: RECEIVE_ACCOUNTS,
+  accounts,
+});
+
+export const getAccounts = () => (dispatch, getState) => {
+  const { meta: { csrfToken: token } } = getState();
+  dispatch(requestAccounts());
+
+  const data = {
+    pagingOptions: {
+      pageIndex: 0,
+      pageSize: 1000,
+    },
+    query: {
+      userName: null,
+    },
+  };
+
+  return adminService.getAccounts(data, token)
+    .then((result) => {
+      dispatch(receiveAccounts(result.items));
+    })
+    .catch((err) => {
+      console.error('Failed loading user accounts:', err);
+    });
+};
+
 const requestApplicationKeys = () => ({
   type: REQUEST_APPLICATION_KEYS,
 });
@@ -238,6 +289,8 @@ export const create = (data) => (dispatch, getState) => {
   return applicationKeyService.create(data, token)
     .then((result) => {
       dispatch(receiveNewApplicationKey(result));
+
+      return result;
     });
 };
 
@@ -257,4 +310,12 @@ export const revoke = (id) => (dispatch, getState) => {
     .then((result) => {
       dispatch(receiveRevokeApplicationKey(result));
     });
+};
+
+export const checkApplicationName = (name) => (dispatch, getState) => {
+  const { meta: { csrfToken: token } } = getState();
+
+  // Do not update state
+
+  return applicationKeyService.checkApplicationName(name, token);
 };
