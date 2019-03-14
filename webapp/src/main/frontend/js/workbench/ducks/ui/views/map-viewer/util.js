@@ -22,6 +22,7 @@ import {
 
 import {
   FEATURE_GEOMETRY,
+  FEATURE_ID,
   FEATURE_URI,
 } from '../../../../components/helpers/map/model/constants';
 
@@ -302,7 +303,10 @@ export function provenanceToTable(provenance) {
       const keys = Object.keys(feature.properties);
       return _.uniq([...result, ...keys]);
     }, [])
+    // Exclude surrogate key
+    .filter(p => p !== FEATURE_ID)
     .sort();
+
   // Add property for geometry updates
   if (updates.length !== 0) {
     properties.push(ATTRIBUTE_GEOMETRY);
@@ -502,7 +506,10 @@ export function evolutionToTable(evolution) {
       const keys = Object.keys(snapshot.feature.properties);
       return _.uniq([...result, ...keys]);
     }, [])
+    // Exclude surrogate key
+    .filter(p => p !== FEATURE_ID)
     .sort();
+
   // Add extra properties for property and geometry updates
   if (hasUpdates) {
     properties.splice(0, 0, ATTRIBUTE_PROPERTIES);

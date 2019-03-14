@@ -91,6 +91,9 @@ public class DefaultImportService implements ImportService, InitializingBean {
     @Value("${vector-data.default.id-column:id}")
     private String defaultIdColumn;
 
+    @Value("${vector-data.default.surrogate-id-column:__index}")
+    private String defaultSurrogateIdColumn;
+
     @Value("${vector-data.default.geometry-column:the_geom}")
     private String defaultGeometryColumn;
 
@@ -587,15 +590,25 @@ public class DefaultImportService implements ImportService, InitializingBean {
             // Import CSV data to table
             this.importCsvFile(this.defaultGeometrySchema, tableName, csv.toString(), this.defaultGeometryColumn, this.useCopy);
 
-            // Update resource record
+            // Update resource revision record
             String updateSql = String.format(
                     "update   resource_revision " +
                     "set      bbox = (select ST_SetSRID(ST_Extent(\"%3$s\"), 4326) from \"%1$s\".\"%2$s\"), " +
                     "         table_name = '%2$s' " +
-                    "where    resource_revision.parent = %4$d and resource_revision.version =  %5$d;",
+                    "where    resource_revision.parent = ? and resource_revision.version =  ?;",
+                    defaultGeometrySchema, tableName, defaultGeometryColumn);
+
+            jdbcTemplate.update(updateSql, new Object[] { id, version });
+
+            // Update resource record
+            updateSql = String.format(
+                    "update   resource " +
+                    "set      bbox = (select ST_SetSRID(ST_Extent(\"%3$s\"), 4326) from \"%1$s\".\"%2$s\"), " +
+                    "         table_name = '%2$s' " +
+                    "where    resource.id = ? and resource.version =  ?;",
                     defaultGeometrySchema, tableName, defaultGeometryColumn, id, version);
 
-            jdbcTemplate.execute(updateSql);
+            jdbcTemplate.update(updateSql, new Object[] { id, version });
         } catch(Exception ex) {
             logger.error(String.format("Failed to import data for resource %d-%d (id-version)", id, version), ex);
             throw ex;
@@ -703,7 +716,7 @@ public class DefaultImportService implements ImportService, InitializingBean {
     ) throws Exception {
 
         // Create table
-        String creteTableSql = this.createSpatialTableScript(schema, tableName, fileName);
+        String creteTableSql = this.createSpatialTableScript(schema, tableName, fileName, useCopy);
         jdbcTemplate.execute(creteTableSql);
 
         // Import data
@@ -731,6 +744,7 @@ public class DefaultImportService implements ImportService, InitializingBean {
         final List<Object> params = new ArrayList<Object>();
 
         int size = 0;
+        long id = 0;
 
         // Helper variables
         CSVFormat format = CSVFormat.DEFAULT
@@ -746,7 +760,9 @@ public class DefaultImportService implements ImportService, InitializingBean {
         ) {
             for (final CSVRecord record : parser) {
                 size++;
+                id++;
 
+                params.add(id);
                 record.forEach(value -> {
                     params.add(value);
                 });
@@ -796,7 +812,7 @@ public class DefaultImportService implements ImportService, InitializingBean {
     }
 
     private String createSpatialTableScript(
-        String schema, String tableName, String fileName
+        String schema, String tableName, String fileName, boolean useCopy
     ) throws Exception {
 
         StringBuilder script = new StringBuilder();
@@ -817,7 +833,6 @@ public class DefaultImportService implements ImportService, InitializingBean {
         ) {
 
             String[] fields = parser.getHeaderMap().keySet().toArray(new String[] {});
-            boolean keyExists = false;
             boolean geometryExists = false;
 
 
@@ -826,12 +841,14 @@ public class DefaultImportService implements ImportService, InitializingBean {
 
             // Append all columns
             int index = 0;
+
+            if(!useCopy) {
+                // Do not add extra columns if COPY is used
+                script.append(String.format("%s bigint PRIMARY KEY,\n",defaultSurrogateIdColumn));
+            }
+
             for (String field : fields) {
-                if (field.equals(defaultIdColumn)) {
-                    keyExists = true;
-                    // Handle primary keys either as string values or integers
-                    script.append(String.format("%s varchar PRIMARY KEY", defaultIdColumn));
-                } else if (field.equals(defaultGeometryColumn)) {
+                if (field.equals(defaultGeometryColumn)) {
                     script.append(String.format("%s geometry", defaultGeometryColumn));
                     geometryExists= true;
                 } else {
@@ -842,10 +859,7 @@ public class DefaultImportService implements ImportService, InitializingBean {
 
             script.append(");\n");
 
-            // Key, longitude and latitude attributes are required
-            if (!keyExists) {
-                throw new Exception(String.format("Key attribute [%s] was not found", defaultIdColumn));
-            }
+            // Longitude and Latitude attributes are required
             if (!geometryExists) {
                 throw new Exception(String.format("Geometry attribute [%s] was not found", defaultGeometryColumn));
             }

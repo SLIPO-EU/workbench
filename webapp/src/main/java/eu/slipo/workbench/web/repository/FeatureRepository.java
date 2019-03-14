@@ -21,7 +21,7 @@ public interface FeatureRepository {
      *
      * @throws Exception If a database operation fails
      */
-    void update(Integer userId, UUID tableName, String id, Map<String, String> properties, Geometry geometry) throws Exception;
+    void update(Integer userId, UUID tableName, long id, Map<String, String> properties, Geometry geometry) throws Exception;
 
     /**
      * Get feature updates
@@ -30,6 +30,6 @@ public interface FeatureRepository {
      * @param id The feature id
      * @return an array of @{link FeatureUpdateRecord}
      */
-    List<FeatureUpdateRecord> getUpdates(UUID tableName, String id);
+    List<FeatureUpdateRecord> getUpdates(UUID tableName, long id);
 
 }

@@ -11,7 +11,7 @@ public class EvolutionRequest {
 
     private long executionId;
 
-    private String id;
+    private long id;
 
     private String uri;
 
@@ -39,11 +39,11 @@ public class EvolutionRequest {
         this.executionId = executionId;
     }
 
-    public String getId() {
+    public long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(long id) {
         this.id = id;
     }
 

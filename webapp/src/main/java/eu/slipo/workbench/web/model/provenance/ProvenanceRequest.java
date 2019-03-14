@@ -8,7 +8,7 @@ public class ProvenanceRequest {
     private long executionId;
     private long processId;
     private long processVersion;
-    private String id;
+    private long id;
     private String outputKey;
     private String uri;
 
@@ -44,11 +44,11 @@ public class ProvenanceRequest {
         this.outputKey = outputKey;
     }
 
-    public String getId() {
+    public long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(long id) {
         this.id = id;
     }
 
