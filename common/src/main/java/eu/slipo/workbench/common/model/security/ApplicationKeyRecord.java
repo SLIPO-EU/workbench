@@ -1,10 +1,13 @@
 package eu.slipo.workbench.common.model.security;
 
+import java.io.Serializable;
 import java.time.ZonedDateTime;
 
 import eu.slipo.workbench.common.model.user.Account;
 
-public class ApplicationKeyRecord {
+public class ApplicationKeyRecord implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private long id;
 

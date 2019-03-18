@@ -11,7 +11,7 @@ public class Provenance {
     public JsonNode features;
     public List<FeatureUpdateRecord> updates;
     public List<Operation> operations;
-    public String featureId;
+    public long featureId;
     public String featureUri;
     public String outputKey;
     public String stepName;
@@ -25,7 +25,7 @@ public class Provenance {
         JsonNode features,
         List<Operation> operations,
         String outputKey,
-        String featureId,
+        long featureId,
         String featureUri,
         List<FeatureUpdateRecord> updates
     ) {

@@ -22,6 +22,7 @@ import {
 
 import {
   FEATURE_GEOMETRY,
+  FEATURE_ID,
   FEATURE_URI,
 } from '../../../../components/helpers/map/model/constants';
 
@@ -190,6 +191,7 @@ function createFusedCells(step, property, features, updates) {
 export function processExecutionToLayers(process, execution) {
   const { steps, resources } = process;
   const layers = [];
+  const maxZoom = 15;
 
   // All input resource keys (exclude input for CATALOG or EXPORT operations)
   const input = steps.reduce(
@@ -240,6 +242,7 @@ export function processExecutionToLayers(process, execution) {
         file: null,
         type: EnumLayerType.Input,
         style: r.style || createStyle(layers.length),
+        maxZoom,
       });
     });
 
@@ -276,6 +279,7 @@ export function processExecutionToLayers(process, execution) {
             file: f.id,
             type: isOutput ? EnumLayerType.Output : EnumLayerType.Input,
             style: f.style || createStyle(layers.length),
+            maxZoom,
           });
         });
     }
@@ -302,7 +306,10 @@ export function provenanceToTable(provenance) {
       const keys = Object.keys(feature.properties);
       return _.uniq([...result, ...keys]);
     }, [])
+    // Exclude surrogate key
+    .filter(p => p !== FEATURE_ID)
     .sort();
+
   // Add property for geometry updates
   if (updates.length !== 0) {
     properties.push(ATTRIBUTE_GEOMETRY);
@@ -502,7 +509,10 @@ export function evolutionToTable(evolution) {
       const keys = Object.keys(snapshot.feature.properties);
       return _.uniq([...result, ...keys]);
     }, [])
+    // Exclude surrogate key
+    .filter(p => p !== FEATURE_ID)
     .sort();
+
   // Add extra properties for property and geometry updates
   if (hasUpdates) {
     properties.splice(0, 0, ATTRIBUTE_PROPERTIES);

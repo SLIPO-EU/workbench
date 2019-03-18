@@ -513,3 +513,7 @@ export function stop(id, version, token) {
 export function exportMap(id, version, execution, token) {
   return actions.post(`/action/process/${id}/${version}/export/${execution}`, token);
 }
+
+export function fetchApiCalls(query, token) {
+  return actions.post('/action/process/api/query', token, query);
+}

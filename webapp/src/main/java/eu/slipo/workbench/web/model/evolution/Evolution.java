@@ -7,7 +7,7 @@ public class Evolution {
     public long processId;
     public long processVersion;
     public List<EvolutionSnapshot> snapshots;
-    public String featureId;
+    public long featureId;
     public String featureUri;
 
     private Evolution() {
@@ -18,7 +18,7 @@ public class Evolution {
         long processId,
         long processVersion,
         List<EvolutionSnapshot> snapshots,
-        String featureId,
+        long featureId,
         String featureUri
     ) {
         Evolution t = new Evolution();

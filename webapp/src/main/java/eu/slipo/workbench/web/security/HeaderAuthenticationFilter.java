@@ -15,7 +15,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -115,7 +114,7 @@ public class HeaderAuthenticationFilter extends GenericFilterBean {
         List<GrantedAuthority> authorities = new ArrayList<>();
         authorities.add(new SimpleGrantedAuthority("ROLE_API"));
         // Create token
-        UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(details, "", authorities);
+        ApplicationKeyAuthenticationToken token = new ApplicationKeyAuthenticationToken(details, "", authorities, applicationKey);
         // Update security context
         SecurityContextHolder.getContext().setAuthentication(token);
     }

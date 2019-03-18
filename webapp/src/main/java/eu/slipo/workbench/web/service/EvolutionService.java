@@ -90,7 +90,7 @@ public class EvolutionService implements InitializingBean {
         long processId,
         long processVersion,
         long processExecutionId,
-        String id,
+        long id,
         String uri
     ) throws Exception {
         List<EvolutionSnapshot> result = new ArrayList<EvolutionSnapshot>();

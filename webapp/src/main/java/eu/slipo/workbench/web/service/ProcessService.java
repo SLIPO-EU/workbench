@@ -9,9 +9,12 @@ import org.springframework.data.domain.PageRequest;
 import eu.slipo.workbench.common.domain.ProcessRevisionEntity;
 import eu.slipo.workbench.common.model.ApplicationException;
 import eu.slipo.workbench.common.model.QueryResultPage;
+import eu.slipo.workbench.common.model.poi.EnumOperation;
+import eu.slipo.workbench.common.model.process.ApiCallQuery;
 import eu.slipo.workbench.common.model.process.EnumProcessTaskType;
 import eu.slipo.workbench.common.model.process.InvalidProcessDefinitionException;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
+import eu.slipo.workbench.common.model.process.ProcessExecutionApiRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessExecutionQuery;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
@@ -20,6 +23,7 @@ import eu.slipo.workbench.common.model.process.ProcessExecutionStopException;
 import eu.slipo.workbench.common.model.process.ProcessNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessQuery;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
+import eu.slipo.workbench.common.model.security.ApplicationKeyRecord;
 import eu.slipo.workbench.common.model.tool.TriplegeoFieldMapping;
 import eu.slipo.workbench.web.model.process.ProcessExecutionRecordView;
 import eu.slipo.workbench.web.model.process.ProcessRecordView;
@@ -42,7 +46,7 @@ public interface ProcessService {
      * @param pageRequest a page request
      * @return a {@link QueryResultPage} with {@link ProcessRecord} objects
      */
-    QueryResultPage<ProcessRecord> findTemplates(ProcessQuery request, PageRequest pageRequest);
+    QueryResultPage<ProcessRecord> findTemplates(ProcessQuery query, PageRequest pageRequest);
 
     /**
      * Find process executions filtered by a {@link ProcessExecutionQuery}
@@ -51,7 +55,28 @@ public interface ProcessService {
      * @param pageRequest a page request
      * @return a {@link QueryResultPage} with {@link ProcessExecutionRecord} objects
      */
-    QueryResultPage<ProcessExecutionRecord> find(ProcessExecutionQuery request, PageRequest pageRequest);
+    QueryResultPage<ProcessExecutionRecord> find(ProcessExecutionQuery query, PageRequest pageRequest);
+
+    /**
+     * Find process executions for API calls filtered by a {@link ApiCallQuery}
+     *
+     * @param query a query to filter records, or {@code null} to fetch everything
+     * @param pageRequest a page request
+     * @return a {@link QueryResultPage} with {@link ProcessExecutionApiRecord} objects
+     */
+    QueryResultPage<ProcessExecutionApiRecord> find(ApiCallQuery query, PageRequest pageRequest);
+
+    /**
+     * Get the compact view of the execution for a process with a specific id and version.
+     * The response includes the execution steps
+     *
+     * @param id the process id
+     * @param version the process version
+     * @return an instance of {@link ProcessExecutionRecord}
+     *
+     * @throws ProcessExecutionNotFoundException if the process execution is not found
+     */
+    ProcessExecutionRecordView getProcessExecution(long id, long version) throws ProcessExecutionNotFoundException;
 
     /**
      * Get an execution for a process with a specific id and version. The response
@@ -249,5 +274,14 @@ public interface ProcessService {
      * @throws IOException if creating the file fails
      */
     String tripleGeoMappingsAsText(List<TriplegeoFieldMapping> mappings) throws IOException;
+
+    /**
+     * Logs the execution of an API call
+     *
+     * @param applicationKey The application key record for the key in the request header
+     * @param execution The process execution
+     * @param operation The operation type
+     */
+    void log(ApplicationKeyRecord applicationKey, ProcessExecutionRecord execution, EnumOperation operation);
 
 }

@@ -44,6 +44,8 @@ import eu.slipo.workbench.common.model.EnumRole;
 import eu.slipo.workbench.common.model.ErrorCode;
 import eu.slipo.workbench.common.model.FileSystemErrorCode;
 import eu.slipo.workbench.common.model.QueryResultPage;
+import eu.slipo.workbench.common.model.poi.EnumOperation;
+import eu.slipo.workbench.common.model.process.ApiCallQuery;
 import eu.slipo.workbench.common.model.process.CatalogResource;
 import eu.slipo.workbench.common.model.process.EnumInputType;
 import eu.slipo.workbench.common.model.process.EnumProcessExecutionStatus;
@@ -52,6 +54,7 @@ import eu.slipo.workbench.common.model.process.EnumStepFile;
 import eu.slipo.workbench.common.model.process.InvalidProcessDefinitionException;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.ProcessErrorCode;
+import eu.slipo.workbench.common.model.process.ProcessExecutionApiRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessExecutionQuery;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
@@ -68,6 +71,7 @@ import eu.slipo.workbench.common.model.resource.DataSource;
 import eu.slipo.workbench.common.model.resource.EnumDataSourceType;
 import eu.slipo.workbench.common.model.resource.FileSystemDataSource;
 import eu.slipo.workbench.common.model.resource.ResourceRecord;
+import eu.slipo.workbench.common.model.security.ApplicationKeyRecord;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoFieldMapping;
 import eu.slipo.workbench.common.repository.ProcessRepository;
@@ -169,6 +173,45 @@ public class DefaultProcessService implements ProcessService {
     }
 
     @Override
+    public QueryResultPage<ProcessExecutionApiRecord> find(ApiCallQuery query, PageRequest pageRequest) {
+        final QueryResultPage<ProcessExecutionApiRecord> result = processRepository.queryExecutions(query, pageRequest);
+        updateProcessExecutionApiCallRecords(result.getItems());
+
+        return result;
+    }
+
+    private void refreshCatalogResources(ProcessRecord record) {
+        record
+            .getDefinition()
+            .resources()
+            .stream()
+            .filter(r->r.getInputType() == EnumInputType.CATALOG)
+            .map(r-> (CatalogResource) r)
+            .forEach(r1-> {
+                ResourceRecord r2 = resourceRepository.findOne(r1.getId(), r1.getVersion());
+                if (r2 != null) {
+                    r1.setBoundingBox(r2.getBoundingBox());
+                    r1.setTableName(r2.getTableName());
+                }
+            });
+    }
+
+    @Override
+    public ProcessExecutionRecordView getProcessExecution(long id, long version) throws ProcessExecutionNotFoundException{
+
+        ProcessRecord processRecord = processRepository.findOne(id, version, false);
+
+        checkProcessExecutionAccess(processRecord);
+
+        ProcessExecutionRecord executionRecord = processRepository.getExecutionCompactView(id, version);
+
+        // For catalog resources update bounding box and table name values
+        refreshCatalogResources(processRecord);
+
+        return new ProcessExecutionRecordView(processRecord, executionRecord);
+    }
+
+    @Override
     public ProcessExecutionRecordView getProcessExecution(long id, long version, long executionId)
         throws ProcessExecutionNotFoundException{
 
@@ -183,19 +226,7 @@ public class DefaultProcessService implements ProcessService {
         checkProcessExecutionAccess(processRecord);
 
         // For catalog resources update bounding box and table name values
-        processRecord
-            .getDefinition()
-            .resources()
-            .stream()
-            .filter(r->r.getInputType() == EnumInputType.CATALOG)
-            .map(r-> (CatalogResource) r)
-            .forEach(r1-> {
-                ResourceRecord r2 = resourceRepository.findOne(r1.getId(), r1.getVersion());
-                if (r2 != null) {
-                    r1.setBoundingBox(r2.getBoundingBox());
-                    r1.setTableName(r2.getTableName());
-                }
-            });
+        refreshCatalogResources(processRecord);
 
         return new ProcessExecutionRecordView(processRecord, executionRecord);
     }
@@ -311,6 +342,9 @@ public class DefaultProcessService implements ProcessService {
                 throw this.accessDenied();
             }
             switch (task) {
+                case API:
+                    // Already authenticated using a valid application key
+                    break;
                 case EXPORT_MAP:
                     // Started by the system
                     break;
@@ -553,6 +587,23 @@ public class DefaultProcessService implements ProcessService {
         }
     }
 
+    private void updateProcessExecutionApiCallRecords(List<ProcessExecutionApiRecord> records) {
+        try {
+            final List<ProcessIdentifier> running = this.processOperator.list();
+
+            records.stream()
+            .forEach(e -> {
+                final Optional<ProcessIdentifier> identifier = running.stream()
+                    .filter(r -> r.getId() == e.getProcessId() && r.getVersion() == e.getProcessVersion())
+                    .findFirst();
+
+                e.setRunning(identifier.isPresent());
+            });
+        } catch(Exception ex) {
+            // Ignore
+        }
+    }
+
     private void checkProcessAccess(ProcessRecord record) {
         if ((!this.authenticationFacade.isAdmin()) && (!this.currentUserId().equals(record.getCreatedBy().getId()))) {
             throw this.accessDenied();
@@ -657,6 +708,11 @@ public class DefaultProcessService implements ProcessService {
 
             return writer.toString();
         }
+    }
+
+    @Override
+    public void log(ApplicationKeyRecord applicationKey, ProcessExecutionRecord execution, EnumOperation operation) {
+        this.processRepository.log(applicationKey.getId(), execution.getId(), operation);
     }
 
     private String tripleGeoMappingsToFile(

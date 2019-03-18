@@ -16,6 +16,7 @@ public enum ProcessErrorCode implements ErrorCode
     FAILED_TO_START,
     FAILED_TO_STOP,
     RPC_SERVER_UNREACHABLE,
+    FILE_NOT_FOUND,
     ;
 
     @Override

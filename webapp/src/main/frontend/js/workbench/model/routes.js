@@ -35,6 +35,7 @@ export const Pages = {
 /**
  * Static routes
  */
+const ApiUsage = '/api/usage';
 
 const Dashboard = '/dashboard';
 const UserFileSystem = '/user-files';
@@ -57,6 +58,7 @@ const UserManager = '/admin/user-manager';
 const EventViewer = '/admin/event-viewer';
 
 export const StaticRoutes = {
+  ApiUsage,
   Dashboard,
   UserFileSystem,
   HarvesterDataExplorer,
@@ -203,6 +205,12 @@ const routes = {
     title: 'links.process.explorer',
     defaultTitle: 'Process Explorer',
     links: [Dashboard, ProcessDesignerCreate]
+  },
+  [ApiUsage]: {
+    description: 'Browse API usage statistics',
+    title: 'links.api.usage.default',
+    defaultTitle: 'API Usage',
+    links: [Dashboard, ProcessExplorer]
   },
   [ProcessExecutionExplorer]: {
     description: 'Browse workflow executions',

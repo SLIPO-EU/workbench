@@ -122,7 +122,8 @@
       "REGISTRATION": "Registration",
       "DATA_INTEGRATION": "Data Integration",
       "EXPORT": "Export resource",
-      "EXPORT_MAP": "Export map"
+      "EXPORT_MAP": "Export map",
+      "API": "API"
     },
     "tool": {
       "UNDEFINED": "Unknown",

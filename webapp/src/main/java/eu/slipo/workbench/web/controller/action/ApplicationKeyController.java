@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import eu.slipo.workbench.common.model.BasicErrorCode;
 import eu.slipo.workbench.common.model.Error;
 import eu.slipo.workbench.common.model.QueryResultPage;
 import eu.slipo.workbench.common.model.RestResponse;
@@ -53,8 +54,13 @@ public class ApplicationKeyController extends BaseController {
     @PostMapping(value = "/action/admin/application-key")
     public RestResponse<?> create(@RequestBody ApplicationKeyCreateRequest request) {
         try {
+
+            if(request.getMappedAccount() == null) {
+                return RestResponse.error(BasicErrorCode.UNKNOWN, "Mapped account is not set");
+            }
             ApplicationKeyRecord record = this.applicationKeyRepository.create(
                 this.currentUserId(),
+                request.getApplicationName(),
                 request.getMappedAccount(),
                 request.getMaxDailyRequestLimit(),
                 request.getMaxConcurrentRequestLimit()
@@ -67,7 +73,7 @@ public class ApplicationKeyController extends BaseController {
     }
 
     @DeleteMapping(value = "/action/admin/application-key/{id}/revoke")
-    public RestResponse<?> find(@PathVariable int id) {
+    public RestResponse<?> revoke(@PathVariable long id) {
         try {
             this.applicationKeyRepository.revoke(this.currentUserId(), id);
 

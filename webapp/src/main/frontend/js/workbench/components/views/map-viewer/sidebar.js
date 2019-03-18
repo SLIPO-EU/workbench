@@ -228,8 +228,12 @@ class Sidebar extends React.Component {
   }
 
   renderLayer(layer) {
+    const { zoom } = this.props;
+    const { maxZoom } = layer;
+
     return (
       <Layer
+        disabled={zoom !== null && zoom <= maxZoom}
         key={`${layer.tableName}-${layer.color}`}
         layer={layer}
         toggle={this.props.toggleLayer}
@@ -327,6 +331,7 @@ const mapStateToProps = (state) => ({
   osm: state.config.osm,
   selectedFeatures: state.ui.views.map.config.selectedFeatures,
   selectedLayer: state.ui.views.map.config.selectedLayer,
+  zoom: state.ui.views.map.config.zoom,
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({

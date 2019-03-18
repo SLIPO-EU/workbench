@@ -5,6 +5,10 @@ import {
 } from 'react-intl';
 
 import {
+  copyToClipboard,
+} from '../../../util';
+
+import {
   StatusLabel,
   Table,
 } from '../../helpers';
@@ -124,7 +128,7 @@ export default class ApplicationKeys extends React.Component {
 
     switch (e.target.getAttribute('data-action')) {
       case 'revoke':
-        this.props.revoke(rowInfo.original.id);
+        this.props.revoke(rowInfo.original);
         break;
       case 'view-key':
         this.props.setExpanded(rowInfo.index, 'key');
@@ -138,9 +142,13 @@ export default class ApplicationKeys extends React.Component {
   }
 
   copyKeyToClipboard(value) {
-    message.error('error.NOT_IMPLEMENTED', 'fa-warning');
-    // TODO : Implement ...
-    // message.info('Key has been copied to clipboard', 'fa-clipboard');
+    const result = copyToClipboard('copy-key', value);
+
+    if (result) {
+      message.info('Key has been copied to clipboard', 'fa-clipboard');
+    } else {
+      message.error('error.NOT_IMPLEMENTED', 'fa-warning');
+    }
   }
 
   render() {
@@ -148,56 +156,68 @@ export default class ApplicationKeys extends React.Component {
     const pages = pager && Math.ceil(pager.count / pager.size);
 
     return (
-      <Table
-        name="Application key viewer"
-        id="application-key-viewer"
-        columns={columns}
-        data={items}
-        defaultPageSize={10}
-        showPageSizeOptions={false}
-        manual
-        onPageChange={(index) => {
-          this.props.setPager({ ...pager, index });
-          this.props.query({
-            query: { ...this.props.filters },
-            pagingOptions: { pageIndex: index, pageSize: pager.size }
-          });
-        }}
-        onPageSizeChange={(size) => {
-          this.props.setPager({ ...pager, size });
-          this.props.query({
-            query: { ...this.props.filters },
-            pagingOptions: { pageIndex: pager.index, pageSize: size }
-          });
-        }}
-        getTrProps={(state, rowInfo) => ({
-          className: (this.isSelected(rowInfo) ? 'slipo-react-table-selected' : null),
-        })}
-        getTdProps={(state, rowInfo, column) => ({
-          onClick: this.handleRowAction.bind(this, rowInfo)
-        })}
-        pages={pages}
-        page={pager.index}
-        pageSize={pager.size}
-        showPagination
-        expanded={
-          (this.props.selected && this.props.expanded && this.props.expanded.index !== null) ?
-            {
-              [this.props.expanded.index]: true
-            } :
-            {}
-        }
-        SubComponent={
-          row => {
-            return (
-              <div className="slipo-app-key-value">
-                {row.original.key}
-                <div className="copy-action"><i className="fa fa-clipboard" onClick={() => this.copyKeyToClipboard(row.original.key)} /></div>
-              </div>
-            );
+      <React.Fragment>
+        <textarea id="copy-key"
+          style={{
+            tabIndex: -1,
+            ariaHidden: true,
+            position: 'absolute',
+            left: -9999
+          }}
+        >
+        </textarea>
+
+        <Table
+          name="Application key viewer"
+          id="application-key-viewer"
+          columns={columns}
+          data={items}
+          defaultPageSize={10}
+          showPageSizeOptions={false}
+          manual
+          onPageChange={(index) => {
+            this.props.setPager({ ...pager, index });
+            this.props.query({
+              query: { ...this.props.filters },
+              pagingOptions: { pageIndex: index, pageSize: pager.size }
+            });
+          }}
+          onPageSizeChange={(size) => {
+            this.props.setPager({ ...pager, size });
+            this.props.query({
+              query: { ...this.props.filters },
+              pagingOptions: { pageIndex: pager.index, pageSize: size }
+            });
+          }}
+          getTrProps={(state, rowInfo) => ({
+            className: (this.isSelected(rowInfo) ? 'slipo-react-table-selected' : null),
+          })}
+          getTdProps={(state, rowInfo, column) => ({
+            onClick: this.handleRowAction.bind(this, rowInfo)
+          })}
+          pages={pages}
+          page={pager.index}
+          pageSize={pager.size}
+          showPagination
+          expanded={
+            (this.props.selected && this.props.expanded && this.props.expanded.index !== null) ?
+              {
+                [this.props.expanded.index]: true
+              } :
+              {}
           }
-        }
-      />
+          SubComponent={
+            row => {
+              return (
+                <div className="slipo-app-key-value">
+                  {row.original.key}
+                  <div className="copy-action"><i className="fa fa-clipboard" onClick={() => this.copyKeyToClipboard(row.original.key)} /></div>
+                </div>
+              );
+            }
+          }
+        />
+      </React.Fragment>
     );
   }
 }

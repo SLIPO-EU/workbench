@@ -1,5 +1,7 @@
 package eu.slipo.workbench.common.model.process;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 /**
  * Query for searching process executions
  */
@@ -9,12 +11,12 @@ public class ProcessExecutionQuery {
      * Search by process ID
      */
     private Long id;
-    
+
     /**
      * Search by process version
      */
     private Long version;
-    
+
     /**
      * Search by process name using LIKE SQL operator
      */
@@ -34,24 +36,22 @@ public class ProcessExecutionQuery {
      * Search by the ID of the user that created the process
      */
     private Integer createdBy;
-    
-    public Long getId()
-    {
+
+    private boolean excludeApi;
+
+    public Long getId() {
         return id;
     }
 
-    public void setId(Long processId)
-    {
+    public void setId(Long processId) {
         this.id = processId;
     }
 
-    public Long getVersion()
-    {
+    public Long getVersion() {
         return version;
     }
 
-    public void setVersion(Long version)
-    {
+    public void setVersion(Long version) {
         this.version = version;
     }
 
@@ -79,13 +79,22 @@ public class ProcessExecutionQuery {
         this.status = status;
     }
 
-    public Integer getCreatedBy()
-    {
+    public Integer getCreatedBy() {
         return createdBy;
     }
 
-    public void setCreatedBy(Integer createdBy)
-    {
+    public void setCreatedBy(Integer createdBy) {
         this.createdBy = createdBy;
     }
+
+    @JsonIgnore()
+    public boolean isExcludeApi() {
+        return excludeApi;
+    }
+
+    @JsonIgnore()
+    public void setExcludeApi(boolean excludeApi) {
+        this.excludeApi = excludeApi;
+    }
+
 }

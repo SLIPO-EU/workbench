@@ -158,7 +158,7 @@ public class MapController extends BaseController {
 
     @PostMapping(value = "/action/map/feature/{tableName}/{id}")
     public RestResponse<?> updateFeature(
-        @PathVariable UUID tableName, @PathVariable String id, @RequestBody Feature feature
+        @PathVariable UUID tableName, @PathVariable long id, @RequestBody Feature feature
     ) {
         try {
             featureRepository.update(this.currentUserId(), tableName, id, feature.getProperties(), feature.getGeometry());

@@ -1,4 +1,5 @@
 export { default as accountReducer } from './account';
+export { default as apiUsageReducer } from './api-usage';
 export { default as applicationKeyReducer } from './application-key';
 export { default as dashboardReducer } from './dashboard';
 export { default as eventReducer } from './event';

@@ -33,6 +33,9 @@ public class DefaultFeatureRepository implements FeatureRepository {
     @Value("${vector-data.default.id-column:id}")
     private String defaultIdColumn;
 
+    @Value("${vector-data.default.surrogate-id-column:__index}")
+    private String defaultSurrogateIdColumn;
+
     @Value("${vector-data.default.uri-column:uri}")
     private String defaultUriColumn;
 
@@ -59,7 +62,7 @@ public class DefaultFeatureRepository implements FeatureRepository {
 
     @Override
     public void update(
-        Integer userId, UUID tableName, String id, Map<String, String> properties, Geometry geometry
+        Integer userId, UUID tableName, long id, Map<String, String> properties, Geometry geometry
     ) throws Exception {
         List<String> columns = this.getColumns(tableName.toString());
         if (columns.isEmpty()) {
@@ -71,7 +74,7 @@ public class DefaultFeatureRepository implements FeatureRepository {
             "SELECT t.* " +
             "FROM   \"%1$s\".\"%2$s\" t " +
             "WHERE  %3$s = ?",
-            this.defaultGeometrySchema, tableName.toString(), this.defaultIdColumn
+            this.defaultGeometrySchema, tableName.toString(), this.defaultSurrogateIdColumn
         );
 
         List<Map<String, Object>> rows = jdbcTemplate.queryForList(query, new Object[] { id });
@@ -91,7 +94,7 @@ public class DefaultFeatureRepository implements FeatureRepository {
             "select ?, ?, ?, the_geom, the_geom_simple, now(), ? " +
             "from \"%1$s\".\"%2$s\" " +
             "where %3$s = ?",
-            this.defaultGeometrySchema, tableName.toString(), this.defaultIdColumn);
+            this.defaultGeometrySchema, tableName.toString(), this.defaultSurrogateIdColumn);
 
         insertParams.add(tableName);
         insertParams.add(id);
@@ -132,14 +135,14 @@ public class DefaultFeatureRepository implements FeatureRepository {
             tableName.toString(),
             this.defaultGeometryColumn,
             this.defaultGeometrySimpleColumn,
-            this.defaultIdColumn,
+            this.defaultSurrogateIdColumn,
             "4326");
 
         this.jdbcTemplate.update(update, updateParams.toArray(new Object[updateParams.size()]));
     }
 
     @Override
-    public List<FeatureUpdateRecord> getUpdates(UUID tableName, String id) {
+    public List<FeatureUpdateRecord> getUpdates(UUID tableName, long id) {
         String qlString = "FROM FeatureUpdate u WHERE u.tableName = :tableName and u.featureId = :id order by u.id";
 
         return entityManager

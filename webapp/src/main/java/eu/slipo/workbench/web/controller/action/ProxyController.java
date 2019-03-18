@@ -69,6 +69,9 @@ public class ProxyController implements InitializingBean {
     @Value("${vector-data.default.id-column:id}")
     private String defaultIdColumn;
 
+    @Value("${vector-data.default.surrogate-id-column:__index}")
+    private String defaultSurrogateIdColumn;
+
     @Value("${vector-data.default.geometry-column:the_geom}")
     private String defaultGeometryColumn;
 
@@ -229,7 +232,7 @@ public class ProxyController implements InitializingBean {
 
             dataQuery = String.format(
                 dataQuery, defaultSchema, tableName,  String.join(",", columns), boundingBox,
-                defaultIdColumn, defaultGeometrySimpleColumn, defaultGeometryColumn
+                defaultSurrogateIdColumn, defaultGeometrySimpleColumn, defaultGeometryColumn
             );
 
             String output = jdbcTemplate.queryForObject(dataQuery, filterAndArguments.getRight(), String.class);

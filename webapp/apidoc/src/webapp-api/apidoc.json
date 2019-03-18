@@ -1,0 +1,38 @@
+{
+  "name": "SLIPO API Interface",
+  "version": "1.0.0",
+  "title": "SLIPO API Interface",
+  "description": "",
+  "url": "https://app.dev.slipo.eu/",
+  "header": {
+    "title": "Introduction",
+    "filename": "./header.md"
+  },
+  "order": [
+    "FileSystem",
+    "Browse",
+    "DownloadFile",
+
+    "Resources",
+    "QueryResource",
+    "DownloadResource",
+
+    "Workflow",
+    "QueryWorkflow",
+    "Status",
+    "Start",
+    "Stop",
+    "DownloadWorkflowFile",
+
+    "Toolkit",
+    "Profiles",
+    "Transform",
+    "Interlink",
+    "Fusion",
+    "Enrich"
+  ],
+  "template": {
+    "withCompare": false,
+    "withGenerator": false
+  }
+}

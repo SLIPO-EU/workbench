@@ -169,7 +169,16 @@ module.exports = function (grunt) {
           debug: false,
           includeFilters: ['.*\\.js$']
         }
-      }
+      },
+      'webapp-api': {
+        src: 'apidoc/src/webapp-api',
+        dest: 'apidoc/docs/webapp-api',
+        template: 'apidoc/template',
+        options: {
+          debug: false,
+          includeFilters: ['.*\\.js$']
+        }
+      },
     },
 
     // Generate workbench documentation

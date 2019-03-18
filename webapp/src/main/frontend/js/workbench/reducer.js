@@ -14,6 +14,7 @@ import {
 
 import {
   accountReducer,
+  apiUsageReducer,
   applicationKeyReducer,
   dashboardReducer,
   eventReducer,
@@ -36,6 +37,9 @@ export default Redux.combineReducers({
     menu,
     viewport,
     views: Redux.combineReducers({
+      admin: Redux.combineReducers({
+        api: apiUsageReducer,
+      }),
       account: accountReducer,
       applicationKey: applicationKeyReducer,
       dashboard: dashboardReducer,

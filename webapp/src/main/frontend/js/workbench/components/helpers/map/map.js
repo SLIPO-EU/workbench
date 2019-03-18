@@ -98,13 +98,13 @@ class Map extends React.Component {
     }
   }
 
-  moveTo(center, zoom = 17, duration = 1500) {
+  moveTo(center, zoom = null, duration = 1500) {
     const { map } = this.state;
     if (map) {
       const view = map.getView();
       view.animate({
         center,
-        zoom,
+        zoom: zoom ? zoom : view.getZoom(),
         duration,
       });
     }

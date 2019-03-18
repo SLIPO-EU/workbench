@@ -3,7 +3,7 @@
  * @apiVersion 1.0.0
  * @apiName Browse
  * @apiGroup File System
- * @apiPermission ROLE_USER
+ * @apiPermission ROLE_USER, ROLE_AUTHOR, ROLE_ADMIN
  *
  * @apiDescription Enumerates files and folders for the specified path
  *
@@ -17,22 +17,20 @@
  * indicating success of the operation.
  * @apiSuccess                            {Object[]}  errors            Array of <code>Error</code>
  * @apiSuccess                            {Object}    result            An instance of <code>Folder</code>. If value of
- * <code>success</code> is <code>false</code>, <code>result</code> is <code>undefined</code>
+ * <code>success</code> is <code>false</code>, <code>result</code> is <code>null</code>
  *
+ * @apiSuccess (Folder)                   {Number}    count             Total number of folders and files
+ * @apiSuccess (Folder)                   {Object[]}  files             A list of <code>File</code> objects
+ * @apiSuccess (Folder)                   {Object[]}  folders           A list of <code>Folder</code> objects.
+ * @apiSuccess (Folder)                   {Number}    modified          Timestamp of the most recent update
  * @apiSuccess (Folder)                   {String}    name              Folder name
  * @apiSuccess (Folder)                   {String}    path              Relative path to the server file system
- * @apiSuccess (Folder)                   {Number}    count             Total number of folders and files
- * @apiSuccess (Folder)                   {Number}    size              Total size of all files
- * @apiSuccess (Folder)                   {Number}    createdOn         Creation timestamp
- * @apiSuccess (Folder)                   {Object[]}  files             A list of <code>File</code> objects
- * @apiSuccess (Folder)                   {Object[]}  folders           A list of <code>Folder</code> objects. The
- * properties <code>files</code> and <code>folders</code> are empty (no recursion is supported) and the value for
- * properties <code>count</code> and <code>size</code> is set to <code>0</code>
+ * @apiSuccess (Folder)                   {Number}    size              Total size of all files in bytes
  *
- * @apiSuccess (File)                     {String}    size              Size
+ * @apiSuccess (File)                     {Number}    modified          Timestamp of the most recent update
  * @apiSuccess (File)                     {String}    name              File name
  * @apiSuccess (File)                     {String}    path              Relative path to the server file system
- * @apiSuccess (File)                     {Number}    createdOn         Creation timestamp
+ * @apiSuccess (File)                     {String}    size              Size in bytes
  *
  * @apiSuccessExample {json} Response Example
  * HTTP/1.1 200 OK
@@ -40,26 +38,26 @@
  *   "errors": [],
  *   "success": true,
  *   "result": {
- *     "name": "",
- *     "path": "/",
+ *     "count": 1,
  *     "files": [{
- *       "size": 229634,
+ *       "modified": 1508427308822
  *       "name": "File 1",
  *       "path": "/File 1",
- *       "createdOn": 1508427308822
+ *       "size": 229634,
  *     }],
  *     "folders": [{
- *       "name": "Folder 1",
- *       "path": "/Folder 1/",
+ *       "count": 0,
  *       "files": [],
  *       "folders": [],
- *       "count": 0,
+ *       "modified": 1508427308822
+ *       "name": "Folder 1",
+ *       "path": "/Folder 1/",
  *       "size": 0,
- *       "createdOn": 1508427308822
  *     }],
- *     "count": 1,
+ *     "modified": 1508427308822
+ *     "name": "",
+ *     "path": "/",
  *     "size": 229634,
- *     "createdOn": 1508427308822
  *   }
  * }
  *
@@ -74,7 +72,7 @@
  * HTTP/1.1 200 OK
  * {
  *   errors: [{
- *     code: "FileSystemErrorCode.PATH_NOT_FOUND",
+ *     code: "PATH_NOT_FOUND",
  *     description: "Path / was not found."
  *   }],
  *   success: false

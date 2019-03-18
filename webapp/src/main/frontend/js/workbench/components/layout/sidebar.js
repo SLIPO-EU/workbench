@@ -154,6 +154,13 @@ class Sidebar extends React.Component {
                       </NavLink>
                     </li>
                   </SecureContent>
+                  <SecureContent roles={[Roles.ADMIN]}>
+                    <li className="nav-item">
+                      <NavLink to={StaticRoutes.ApiUsage} className="nav-link" activeClassName="active">
+                        <i className="fa fa-pie-chart"></i>{'Api Usage'}
+                      </NavLink>
+                    </li>
+                  </SecureContent>
                 </ul>
               </li>
             </SecureContent>

@@ -127,6 +127,7 @@ class MapViewer extends React.Component {
             }}
             filters={filters.filter(f => f.layer === l.tableName)}
             style={l.style}
+            maxZoom={l.maxZoom}
           />
         );
       });
@@ -143,7 +144,7 @@ class MapViewer extends React.Component {
       // Zoom to feature
       const extent = feature.getGeometry().getExtent();
       const center = Extend.getCenter(extent);
-      this._map.moveTo(center, 15);
+      this._map.moveTo(center);
       // Enable modify interaction
       this.props.toggleEditor(feature);
     }
@@ -293,7 +294,7 @@ class MapViewer extends React.Component {
           ref={(component) => { this._map = component; }}
           minZoom={7}
           maxZoom={19}
-          zoom={this.props.initialZoom ? this.props.initialZoom : 13}
+          zoom={this.props.initialZoom ? this.props.initialZoom : 17}
           center={this.props.initialCenter ? this.props.initialCenter : this.center}
           className="slipo-map-container-full-screen"
           onMoveEnd={(e) => this.props.onMoveEnd(e)}

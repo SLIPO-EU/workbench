@@ -124,7 +124,7 @@ public class ProvenanceService implements InitializingBean {
         ProcessDefinition definition,
         ProcessExecutionRecord execution,
         String outputKey,
-        String id,
+        long id,
         String uri
     ) throws Exception {
 

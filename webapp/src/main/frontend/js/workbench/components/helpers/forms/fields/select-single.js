@@ -33,7 +33,7 @@ export function Select(props) {
         }
       }}
       options={options}
-      disabled={props.readOnly}
+      isDisabled={props.readOnly}
       styles={styles}
     />
   );
