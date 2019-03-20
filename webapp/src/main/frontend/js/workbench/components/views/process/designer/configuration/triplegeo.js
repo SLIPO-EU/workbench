@@ -66,7 +66,6 @@ const getLevelDefaults = (level) => {
   throw new Error(`Configuration level ${level} is not supported`);
 };
 
-
 class TripleGeoConfiguration extends React.Component {
 
   constructor(props) {
@@ -189,7 +188,7 @@ class TripleGeoConfiguration extends React.Component {
             getTripleGeoMappingFileAsText={this.props.getTripleGeoMappingFileAsText}
             hide={() => this.hideDialog()}
             path={inputFile}
-            readOnly={this.props.readOnly}
+            readOnly={readOnly}
             setValue={this.props.setValue}
             visible={this.state.dialog}
           />
@@ -217,18 +216,24 @@ class TripleGeoConfiguration extends React.Component {
                         }
                         {configurationLevelOptions
                           .filter(l => enabledLevels.indexOf(l.value) !== -1)
-                          .map(l => (
-                            <Label
-                              key={`config-mode-${l.value}`}
-                              htmlFor={`config-mode-${l.value}`}
-                              className={l.value === value.level ? "btn btn-outline-secondary active ml-2" : "btn btn-outline-secondary ml-2"}
-                              check={l.value === value.level}
-                              style={{ border: 'none', padding: '0.5rem 0.7rem' }}
-                              title={l.label}
-                            >
-                              <Input type="radio" name="level" id={`config-mode-${l.value}`} onClick={() => this.changeConfigurationLevel(l.value)} />
-                              <span><i className={`pr-1 ${l.iconClass}`}></i>{l.label}</span>
-                            </Label>))
+                          .map(l => {
+                            if (readOnly && l.value !== value.level) {
+                              return null;
+                            }
+
+                            return (
+                              <Label
+                                key={`config-mode-${l.value}`}
+                                htmlFor={`config-mode-${l.value}`}
+                                className={l.value === value.level ? "btn btn-outline-secondary active ml-2" : "btn btn-outline-secondary ml-2"}
+                                check={l.value === value.level}
+                                style={{ border: 'none', padding: '0.5rem 0.7rem' }}
+                                title={l.label}
+                              >
+                                <Input type="radio" name="level" id={`config-mode-${l.value}`} onClick={() => this.changeConfigurationLevel(l.value)} />
+                                <span><i className={`pr-1 ${l.iconClass}`}></i>{l.label}</span>
+                              </Label>);
+                          })
                         }
                       </ButtonGroup>
                     </ButtonToolbar>

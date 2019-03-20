@@ -174,7 +174,7 @@ class TripleGeoMLMappings extends React.Component {
   }
 
   render() {
-    const { errors } = this.props;
+    const { errors, readOnly } = this.props;
     const { mappings, selection, yaml } = this.state;
     const rows = createRows(mappings, selection);
 
@@ -229,6 +229,7 @@ class TripleGeoMLMappings extends React.Component {
                     types={row.types}
                     language={row.language}
                     onChange={(data) => this.onChange(data)}
+                    readOnly={readOnly}
                   />
                 );
               })}
@@ -251,9 +252,16 @@ class TripleGeoMLMappings extends React.Component {
           {!yaml &&
             <React.Fragment>
               <Button color="secondary" onClick={() => this.showYamlFile()}>View mapping file</Button>
-              <Button color="secondary" onClick={() => this.refreshMappings(true)} title="Reset mappings">Reset</Button>
-              <Button color="primary" onClick={() => this.save(true)}>Apply</Button>
-              <Button color="danger" onClick={() => this.cancel(true)} className="float-left">Cancel</Button>
+              {!readOnly &&
+                <React.Fragment>
+                  <Button color="secondary" onClick={() => this.refreshMappings(true)} title="Reset mappings">Reset</Button>
+                  <Button color="primary" onClick={() => this.save(true)}>Apply</Button>
+                  <Button color="danger" onClick={() => this.cancel(true)} className="float-left">Cancel</Button>
+                </React.Fragment>
+              }
+              {readOnly &&
+                <Button color="secondary" onClick={() => this.cancel(true)} className="float-left">Back</Button>
+              }
             </React.Fragment>
           }
         </ModalFooter>

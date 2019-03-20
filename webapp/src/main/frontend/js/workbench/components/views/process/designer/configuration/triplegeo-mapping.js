@@ -33,12 +33,14 @@ class TripleGeoMapping extends React.Component {
     types: PropTypes.object.isRequired,
     language: PropTypes.string,
     onChange: PropTypes.func.isRequired,
+    readOnly: PropTypes.bool,
   }
 
   static defaultProps = {
     predicate: '',
     type: '',
     language: '',
+    readOnly: false,
   }
 
   toggle(field, predicate, expanded) {
@@ -52,7 +54,7 @@ class TripleGeoMapping extends React.Component {
   }
 
   render() {
-    const { expanded, field, predicate, predicates, type, types, language } = this.props;
+    const { expanded, field, predicate, predicates, type, types, language, readOnly } = this.props;
     const predicateOptions = predicates.map(p => ({
       value: p.predicate,
       label: (
@@ -92,14 +94,21 @@ class TripleGeoMapping extends React.Component {
             isClearable={true}
             placeholder="Select predicate ..."
             classNamePrefix="predicate"
+            isDisabled={readOnly}
           />
         </Col>
-        <Col style={{ flex: '0 0 80px', paddingTop: 6 }}>
-          {expanded ?
-            <span className="font-xs slipo-action-icon" onClick={() => this.toggle(field, predicate, false)}>Hide</span> :
-            <span className="font-xs slipo-action-icon" onClick={() => this.toggle(field, predicate, true)}>More ...</span>
-          }
-        </Col>
+        {readOnly &&
+          <Col style={{ flex: '0 0 80px', paddingTop: 6 }}>
+          </Col>
+        }
+        {!readOnly &&
+          <Col style={{ flex: '0 0 80px', paddingTop: 6 }}>
+            {expanded ?
+              <span className="font-xs slipo-action-icon" onClick={() => this.toggle(field, predicate, false)}>Hide</span> :
+              <span className="font-xs slipo-action-icon" onClick={() => this.toggle(field, predicate, true)}>More ...</span>
+            }
+          </Col>
+        }
         <Col>
           {expanded && typeOptions.length !== 0 &&
             <ReactSelect
@@ -117,6 +126,7 @@ class TripleGeoMapping extends React.Component {
               styles={SelectDefaultStyle}
               isClearable={true}
               placeholder="Select type ..."
+              isDisabled={readOnly}
             />
           }
         </Col>
@@ -137,6 +147,7 @@ class TripleGeoMapping extends React.Component {
               styles={SelectDefaultStyle}
               isClearable={true}
               placeholder="Select language ..."
+              isDisabled={readOnly}
             />
           }
         </Col>
