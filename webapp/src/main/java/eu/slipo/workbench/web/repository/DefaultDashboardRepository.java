@@ -94,7 +94,8 @@ public class DefaultDashboardRepository implements DashboardRepository {
             "select     e " +
             "from       ProcessExecution e " +
             "where      (e.startedOn != null and e.startedOn >= :date) and " +
-            "           (e.submittedBy.id = :userId or :userId is null) " +
+            "           (e.submittedBy.id = :userId or :userId is null) and " +
+            "           (e.process.parent.taskType <> 'API') " +
             "order by   e.startedOn desc, e.id desc";
 
         entityManager
