@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
 import * as  PropTypes from 'prop-types';
-import { NavLink } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { toggleMenu } from '../../ducks/ui/menu';
 import * as Roles from '../../model/role';
 import { StaticRoutes, DynamicRoutes } from '../../model/routes';
@@ -16,6 +16,7 @@ const Sections = {
   Recipe: 'Recipe',
   Tool: 'Tool',
   Admin: 'Admin',
+  Documentation: 'Documentation',
 };
 
 class Sidebar extends React.Component {
@@ -164,7 +165,22 @@ class Sidebar extends React.Component {
                 </ul>
               </li>
             </SecureContent>
-
+            <SecureContent roles={[Roles.ADMIN, Roles.DEVELOPER]}>
+              <li className={'nav-item nav-dropdown ' + (expanded(Sections.Documentation) ? 'open' : '')}>
+                <a className="nav-link nav-dropdown-toggle" onClick={() => (toggle(Sections.Documentation), false)}>
+                  {'Documentation'}
+                </a>
+                <ul className="nav-dropdown-items">
+                  <SecureContent roles={[Roles.ADMIN, Roles.DEVELOPER]}>
+                    <li className="nav-item">
+                      <a href="/docs/webapp-api/index.html" className="nav-link" target="_blank">
+                        <i className="fa fa-book"></i>{'SLIPO Web API'}
+                      </a>
+                    </li>
+                  </SecureContent>
+                </ul>
+              </li>
+            </SecureContent>
           </ul>
         </nav>
       </div>
