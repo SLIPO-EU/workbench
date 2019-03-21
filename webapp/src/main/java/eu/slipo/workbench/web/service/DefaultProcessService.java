@@ -657,7 +657,7 @@ public class DefaultProcessService implements ProcessService {
                         }
 
                         // Create empty classification file
-                        config.setClassificationSpec(createTripleGeoClassificationFile(name));
+                        // config.setClassificationSpec(createTripleGeoClassificationFile(name));
 
                         // Set id, longitude, latitude and geometry attributes
                         TriplegeoFieldMapping id = config.getUserMappings().stream()
@@ -831,6 +831,7 @@ public class DefaultProcessService implements ProcessService {
         }
 
         // Add other mappings
+        // TODO : Move to external configuration file
         for (TriplegeoFieldMapping m : mappings) {
             items = new LinkedHashMap<String, String>();
 

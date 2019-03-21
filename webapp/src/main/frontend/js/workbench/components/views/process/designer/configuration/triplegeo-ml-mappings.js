@@ -210,11 +210,14 @@ class TripleGeoMLMappings extends React.Component {
         </ModalHeader>
         <ModalBody style={{ minWidth: 960 }}>
           {yaml &&
-            <CodeMirror value={yaml} options={{
-              mode: 'yaml',
-              lineNumbers: true,
-              readOnly: true,
-            }} />
+            <CodeMirror
+              value={yaml}
+              options={{
+                mode: 'yaml',
+                lineNumbers: true,
+                readOnly: true,
+              }}
+            />
           }
           {!yaml &&
             <React.Fragment>
@@ -256,11 +259,11 @@ class TripleGeoMLMappings extends React.Component {
             </React.Fragment>
           }
         </ModalBody>
-        {errors && Object.keys(errors).length !== 0 &&
+        {errors && errors.length !== 0 &&
           <ModalFooter style={{ justifyContent: 'flex-start', paddingLeft: 0 }}>
             <ul style={{ marginLeft: -28 }}>
-              {Object.keys(errors).map(key => (
-                <li key={key} className="list-unstyled text-danger">{errors[key]}</li>
+              {errors.map(err => (
+                <li key={err.key} className="list-unstyled text-danger">{err.text}</li>
               ))}
             </ul>
           </ModalFooter>

@@ -21,20 +21,28 @@ export function validateConfiguration(config) {
   }
 
   if (config['level'] === configurationLevels.AUTO) {
-    const id = config['userMappings'].find(m => m.predicate === predicates.ID) || null;
-    const lon = config['userMappings'].find(m => m.predicate === predicates.LONGITUDE) || null;
-    const lat = config['userMappings'].find(m => m.predicate === predicates.LATITUDE) || null;
-    const geometry = config['userMappings'].find(m => m.predicate === surrogatePredicates.WKT) || null;
-
-    if (!id) {
-      errors[`mapping-${predicates.ID}`] = `A mapping is required for predicate ${predicates.ID}`;
+    if (!config['classificationSpec']) {
+      errors['classificationSpec'] = 'Required';
     }
-    if (!geometry) {
-      if (!lon) {
-        errors[`mapping-${predicates.LONGITUDE}`] = `A mapping is required for predicate ${predicates.LONGITUDE}`;
+
+    if (!config['userMappings']) {
+      errors['mapping-not-set'] = 'Mappings configuration is missing';
+    } else {
+      const id = config['userMappings'].find(m => m.predicate === predicates.ID) || null;
+      const lon = config['userMappings'].find(m => m.predicate === predicates.LONGITUDE) || null;
+      const lat = config['userMappings'].find(m => m.predicate === predicates.LATITUDE) || null;
+      const geometry = config['userMappings'].find(m => m.predicate === surrogatePredicates.WKT) || null;
+
+      if (!id) {
+        errors[`mapping-${predicates.ID}`] = `A mapping is required for predicate ${predicates.ID}`;
       }
-      if (!lat) {
-        errors[`mapping-${predicates.LATITUDE}`] = `A mapping is required for predicate ${predicates.LATITUDE}`;
+      if (!geometry) {
+        if (!lon) {
+          errors[`mapping-${predicates.LONGITUDE}`] = `A mapping is required for predicate ${predicates.LONGITUDE}`;
+        }
+        if (!lat) {
+          errors[`mapping-${predicates.LATITUDE}`] = `A mapping is required for predicate ${predicates.LATITUDE}`;
+        }
       }
     }
   }
@@ -90,7 +98,7 @@ export function validateConfiguration(config) {
   if (!config['targetGeoOntology']) {
     errors['targetGeoOntology'] = 'Required';
   }
-
+  console.log(errors);
   if (Object.keys(errors).length) {
     throw errors;
   }
@@ -130,7 +138,7 @@ export function readConfiguration(config) {
 
 export function writeConfiguration(config) {
   const {
-    autoMappings, userMappings,
+    autoMappings, userMappings = null,
     quote, prefixes, mappingSpec, classificationSpec, sourceCRS = null, targetCRS = null,
     ...rest
   } = config;
@@ -146,7 +154,7 @@ export function writeConfiguration(config) {
     sourceCRS: sourceCRS ? 'EPSG:' + sourceCRS : null,
     targetCRS: targetCRS ? 'EPSG:' + targetCRS : null,
     // Filter out empty predicates
-    userMappings: userMappings.filter(m => !!m.predicate),
+    userMappings: userMappings ? userMappings.filter(m => !!m.predicate) : null,
   };
 }
 

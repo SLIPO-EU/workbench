@@ -184,7 +184,7 @@ class TripleGeoConfiguration extends React.Component {
         {this.state.dialog &&
           <TripleGeoMLMappings
             configuration={value}
-            errors={errors}
+            errors={mappingErrors}
             getTripleGeoMappingFileAsText={this.props.getTripleGeoMappingFileAsText}
             hide={() => this.hideDialog()}
             path={inputFile}
@@ -257,8 +257,8 @@ class TripleGeoConfiguration extends React.Component {
                 />
               }
 
-              {value.level === configurationLevels.ADVANCED &&
-                <div>
+              <div>
+                {value.level === configurationLevels.ADVANCED &&
                   <div className="row">
                     <div className="col">
                       <FileSelectField
@@ -278,42 +278,43 @@ class TripleGeoConfiguration extends React.Component {
                       />
                     </div>
                   </div>
+                }
+                {(value.level === configurationLevels.ADVANCED || value.level === configurationLevels.AUTO) &&
                   <div className="row">
                     <div className="col">
-                      <div className="row">
-                        <div className="col">
-                          <FileSelectField
-                            {...inject}
-                            id="classificationSpec"
-                            label="Classification specification file"
-                            help="File (in YML or CSV format) containing classification hierarchy of categories"
-                            filesystem={filesystem}
-                            defaultMode={EnumFileSelectMode.FIELD}
-                            allowDelete
-                            allowUpload
-                            allowNewFolder
-                            createFolder={createFolder}
-                            deletePath={deletePath}
-                            uploadFile={uploadFile}
-                            placeHolder={!value['profile'] ? 'Select classification file...' : 'Using default classification file...'}
-                          />
-                        </div>
-                      </div>
-                      <div className="row">
-                        <div className="col">
-                          <CheckboxField
-                            {...inject}
-                            id="classifyByName"
-                            text="Classify By Name"
-                            help="Check if features specify their category based on the actual name of the category"
-                            disabled={!value['profile']}
-                          />
-                        </div>
-                      </div>
+                      <FileSelectField
+                        {...inject}
+                        id="classificationSpec"
+                        label="Classification specification file"
+                        help="File (in YML or CSV format) containing classification hierarchy of categories"
+                        filesystem={filesystem}
+                        defaultMode={EnumFileSelectMode.FIELD}
+                        allowDelete
+                        allowUpload
+                        allowNewFolder
+                        createFolder={createFolder}
+                        deletePath={deletePath}
+                        uploadFile={uploadFile}
+                        placeHolder={!value['profile'] ? 'Select classification file...' : 'Using default classification file...'}
+                      />
                     </div>
                   </div>
-                </div>
-              }
+                }
+                {value.level === configurationLevels.ADVANCED &&
+                  <div className="row">
+                    <div className="col">
+                      <CheckboxField
+                        {...inject}
+                        id="classifyByName"
+                        text="Classify By Name"
+                        help="Check if features specify their category based on the actual name of the category"
+                        disabled={!value['profile']}
+                      />
+                    </div>
+                  </div>
+                }
+              </div>
+
             </div>
           }
 

@@ -113,7 +113,6 @@ export const defaultValuesAuto = {
   attrName: null,
   attrX: null,
   attrY: null,
-  classificationSpec: null,
   classifyByName: false,
   autoMappings: null,
   userMappings: null,
