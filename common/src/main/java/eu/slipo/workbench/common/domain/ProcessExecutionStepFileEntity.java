@@ -105,6 +105,12 @@ public class ProcessExecutionStepFileEntity {
     UUID tableName;
 
     /**
+     * Total number of rows in table {@link ProcessExecutionStepFileEntity#tableName}
+     */
+    @Column(name = "row_count")
+    Long rowCount;
+
+    /**
      * A flag that indicates that a step file is verified to exist.
      *
      * This flag is only relevant to output files (as input files must always exist for a step
@@ -257,6 +263,16 @@ public class ProcessExecutionStepFileEntity {
         return tableName;
     }
 
+    public Long getRowCount()
+    {
+        return rowCount;
+    }
+
+    public void setRowCount(Long rowCount)
+    {
+        this.rowCount = rowCount;
+    }
+
     public void setVerified(boolean verified)
     {
         this.verified = verified;
@@ -302,6 +318,7 @@ public class ProcessExecutionStepFileEntity {
         fileRecord.setBoundingBox(boundingBox);
         fileRecord.setTableName(tableName);
         fileRecord.setStyle(style);
+        fileRecord.setRowCount(rowCount);
 
         return fileRecord;
     }

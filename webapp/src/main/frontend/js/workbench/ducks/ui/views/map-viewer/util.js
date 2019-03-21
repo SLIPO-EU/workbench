@@ -231,6 +231,7 @@ export function processExecutionToLayers(process, execution) {
         iconClass: 'fa fa-map-marker',
         color: Colors[layers.length % Colors.length],
         tableName: r.tableName,
+        rowCount: r.rowCount,
         boundingBox: r.boundingBox,
         inputType: r.inputType,
         step: null,
@@ -268,6 +269,7 @@ export function processExecutionToLayers(process, execution) {
             iconClass: 'fa fa-map-marker',
             color: Colors[layers.length % Colors.length],
             tableName: f.tableName,
+            rowCount: f.rowCount,
             boundingBox: f.boundingBox,
             inputType: r.inputType,
             step: {

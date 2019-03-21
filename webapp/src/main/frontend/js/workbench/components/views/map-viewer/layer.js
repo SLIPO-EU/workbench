@@ -42,8 +42,12 @@ class Layer extends React.Component {
     this.props.toggleLayerConfiguration();
   }
 
+  formatTitle(title, rowCount) {
+    return rowCount ? (<span>{title} (<b><span>{rowCount}</span></b>)</span>) : title;
+  }
+
   render() {
-    const { disabled, selected, layer: { hidden, title, style } } = this.props;
+    const { disabled, selected, layer: { hidden, title, rowCount = null, style } } = this.props;
 
     return (
       <div
@@ -65,7 +69,7 @@ class Layer extends React.Component {
           }
         </div>
         <div className="slipo-layer-title">
-          {title}
+          {this.formatTitle(title, rowCount)}
         </div>
         <div className="slipo-layer-legend">
           <LayerLegend
