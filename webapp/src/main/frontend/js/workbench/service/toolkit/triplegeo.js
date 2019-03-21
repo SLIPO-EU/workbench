@@ -129,7 +129,11 @@ export function readConfiguration(config) {
 }
 
 export function writeConfiguration(config) {
-  const { autoMappings, quote, prefixes, mappingSpec, classificationSpec, sourceCRS = null, targetCRS = null, ...rest } = config;
+  const {
+    autoMappings, userMappings,
+    quote, prefixes, mappingSpec, classificationSpec, sourceCRS = null, targetCRS = null,
+    ...rest
+  } = config;
 
   return {
     ...rest,
@@ -141,6 +145,8 @@ export function writeConfiguration(config) {
     quote: quote || '',
     sourceCRS: sourceCRS ? 'EPSG:' + sourceCRS : null,
     targetCRS: targetCRS ? 'EPSG:' + targetCRS : null,
+    // Filter out empty predicates
+    userMappings: userMappings.filter(m => !!m.predicate),
   };
 }
 

@@ -129,7 +129,7 @@ class TripleGeoMLMappings extends React.Component {
 
               return {
                 field,
-                predicate: selected ? selected.predicate : mappings[field][0].predicate,
+                predicate: selected ? selected.predicate : '',
                 type: selected ? selected.type : '',
                 language: selected ? selected.language : '',
                 expanded: selected && (selected.type || selected.language),
