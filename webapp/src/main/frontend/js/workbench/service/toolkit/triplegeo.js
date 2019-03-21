@@ -5,6 +5,7 @@ import {
   ontologies,
   predicates,
   serializations,
+  surrogatePredicates,
 } from "../../model/process-designer/configuration/triplegeo";
 
 function fromEnumValue(value, list) {
@@ -23,15 +24,18 @@ export function validateConfiguration(config) {
     const id = config['userMappings'].find(m => m.predicate === predicates.ID) || null;
     const lon = config['userMappings'].find(m => m.predicate === predicates.LONGITUDE) || null;
     const lat = config['userMappings'].find(m => m.predicate === predicates.LATITUDE) || null;
+    const geometry = config['userMappings'].find(m => m.predicate === surrogatePredicates.WKT) || null;
 
     if (!id) {
       errors[`mapping-${predicates.ID}`] = `A mapping is required for predicate ${predicates.ID}`;
     }
-    if (!lon) {
-      errors[`mapping-${predicates.LONGITUDE}`] = `A mapping is required for predicate ${predicates.LONGITUDE}`;
-    }
-    if (!lat) {
-      errors[`mapping-${predicates.LATITUDE}`] = `A mapping is required for predicate ${predicates.LATITUDE}`;
+    if (!geometry) {
+      if (!lon) {
+        errors[`mapping-${predicates.LONGITUDE}`] = `A mapping is required for predicate ${predicates.LONGITUDE}`;
+      }
+      if (!lat) {
+        errors[`mapping-${predicates.LATITUDE}`] = `A mapping is required for predicate ${predicates.LATITUDE}`;
+      }
     }
   }
 

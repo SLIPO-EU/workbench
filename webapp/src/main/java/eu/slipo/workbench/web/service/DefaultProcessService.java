@@ -16,6 +16,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -658,7 +659,7 @@ public class DefaultProcessService implements ProcessService {
                         // Create empty classification file
                         config.setClassificationSpec(createTripleGeoClassificationFile(name));
 
-                        // Set id, longitude and latitude attributes
+                        // Set id, longitude, latitude and geometry attributes
                         TriplegeoFieldMapping id = config.getUserMappings().stream()
                             .filter(m -> m.getPredicate().equals(Predicates.ID.toUpperCase()))
                             .findFirst()
@@ -682,6 +683,14 @@ public class DefaultProcessService implements ProcessService {
                         if (lat != null) {
                             config.setAttrY(lat.getField());
                         }
+
+                        TriplegeoFieldMapping geometry = config.getUserMappings().stream()
+                                .filter(m -> m.getPredicate().equals(Predicates.ATTRIBUTE_GEOMETRY.toUpperCase()))
+                                .findFirst()
+                                .orElse(null);
+                            if (geometry != null) {
+                                config.setAttrGeometry(geometry.getField());
+                            }
                     }
                     break;
                 default:
@@ -742,6 +751,10 @@ public class DefaultProcessService implements ProcessService {
         Map<String, Object> predicates = new LinkedHashMap<String, Object>();
         Map<String, String> items = null;
 
+        List<String> fieldNames = mappings.stream()
+            .map(m -> m.getField())
+            .collect(Collectors.toList());
+
         // Get id, longitude and latitude mappings
         TriplegeoFieldMapping id = mappings.stream()
             .filter(m -> m.getPredicate().equals(Predicates.ID.toUpperCase()))
@@ -755,6 +768,11 @@ public class DefaultProcessService implements ProcessService {
 
         TriplegeoFieldMapping lat = mappings.stream()
             .filter(m -> m.getPredicate().equals(Predicates.LATITUDE.toUpperCase()))
+            .findFirst()
+            .orElse(null);
+
+        TriplegeoFieldMapping geometry = mappings.stream()
+            .filter(m -> m.getPredicate().equals(Predicates.ATTRIBUTE_GEOMETRY.toUpperCase()))
             .findFirst()
             .orElse(null);
 
@@ -782,10 +800,22 @@ public class DefaultProcessService implements ProcessService {
         items.put("generateWith", "getDataSource");
         predicates.put("DATA_SOURCE", items);
 
+        // Category
+        items = new LinkedHashMap<String, String>();
+        items.put("entity", "category");
+        items.put("predicate", "slipo:category");
+        items.put("datatype", "uri");
+        predicates.put("CATEGORY_URI", items);
+
+        items = new LinkedHashMap<String, String>();
+        items.put("entity", "assignedCategory");
+        items.put("predicate", "slipo:assignedCategory");
+        predicates.put("ASSIGNED_CATEGORY", items);
+
         // Longitude
         if (lon != null) {
             items = new LinkedHashMap<String, String>();
-            items.put("entity", "uri");
+            items.put("entity", "lon");
             items.put("predicate", lon.getPredicate().toLowerCase());
             items.put("datatype", "float");
             predicates.put(lon.getField(), items);
@@ -794,7 +824,7 @@ public class DefaultProcessService implements ProcessService {
         // Latitude
         if (lat != null) {
             items = new LinkedHashMap<String, String>();
-            items.put("entity", "uri");
+            items.put("entity", "lat");
             items.put("predicate", lat.getPredicate().toLowerCase());
             items.put("datatype", "float");
             predicates.put(lat.getField(), items);
@@ -919,7 +949,54 @@ public class DefaultProcessService implements ProcessService {
             }
         }
 
+        // Add geometry mappings
+        if (geometry != null) {
+            if(lon == null) {
+                items = new LinkedHashMap<String, String>();
+                items.put("entity", "lon");
+                items.put("predicate", "wgs84_pos:long");
+                items.put("datatype", "float");
+                items.put("generateWith", "geometry.getLongitude");
+                predicates.put(getUniqueFieldName(fieldNames, "LONGITUDE"), items);
+            }
+            if(lon == null) {
+                items = new LinkedHashMap<String, String>();
+                items.put("entity", "lat");
+                items.put("predicate", "wgs84_pos:lat");
+                items.put("datatype", "float");
+                items.put("generateWith", "geometry.getLatitude");
+                predicates.put(getUniqueFieldName(fieldNames, "LATITUDE"), items);
+            }
+
+            items = new LinkedHashMap<String, String>();
+            items.put("entity", "area");
+            items.put("predicate", "slipo:area");
+            items.put("datatype", "float");
+            items.put("generateWith", "geometry.getArea");
+            predicates.put(getUniqueFieldName(fieldNames, "AREA"), items);
+
+            items = new LinkedHashMap<String, String>();
+            items.put("entity", "length");
+            items.put("predicate", "slipo:length");
+            items.put("datatype", "float");
+            items.put("generateWith", "geometry.getLength");
+            predicates.put(getUniqueFieldName(fieldNames, "LENGTH"), items);
+        }
+
         return predicates;
+    }
+
+    private String getUniqueFieldName(List<String> fieldNames, String name) {
+        int index = 0;
+        String result = name;
+
+        while (fieldNames.contains(result)) {
+            result = String.format("%s_%d", name, ++index);
+        }
+
+        fieldNames.add(result);
+
+        return result;
     }
 
     private String createTripleGeoClassificationFile(String name) throws IOException {

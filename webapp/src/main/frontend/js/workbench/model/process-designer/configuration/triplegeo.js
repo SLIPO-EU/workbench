@@ -209,3 +209,7 @@ export const predicates = {
   LONGITUDE: 'WGS84_POS:LONG',
   LATITUDE: 'WGS84_POS:LAT',
 };
+
+export const surrogatePredicates = {
+  WKT: '__WKT_GEOMETRY__',
+};

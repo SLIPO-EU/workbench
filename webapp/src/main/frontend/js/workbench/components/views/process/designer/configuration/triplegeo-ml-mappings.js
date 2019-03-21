@@ -18,9 +18,29 @@ import {
 
 import {
   predicateTypes,
+  surrogatePredicates,
 } from '../../../../../model/process-designer/configuration/triplegeo';
 
 import TripleGeoMapping from './triplegeo-mapping';
+
+const createPredicateGroups = (predicates) => {
+  return [{
+    label: 'Predicates',
+    options: predicates.map(p => ({
+      label: p.predicate,
+      value: p.predicate,
+      score: p.score,
+      custom: false,
+    })),
+  }, {
+    label: 'Custom Mappings',
+    options: [{
+      label: 'Geometry',
+      value: surrogatePredicates.WKT,
+      custom: true,
+    }],
+  }];
+};
 
 const createRows = (mappings = {}, selection = []) => {
   const rows = [];
@@ -37,7 +57,7 @@ const createRows = (mappings = {}, selection = []) => {
     const row = {
       field,
       predicate,
-      predicates: mappings[field],
+      predicates: createPredicateGroups(mappings[field]),
       type,
       types: predicateTypes,
       language,
