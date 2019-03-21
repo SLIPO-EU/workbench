@@ -640,7 +640,7 @@ public class DefaultProcessService implements ProcessService {
                         config.setFeatureSource(name);
 
                         // Create custom mapping file
-                        config.setMappingSpec(tripleGeoMappingsToFile(name, config.getUserMappings()));
+                        config.setMappingSpec(tripleGeoMappingsToFile(name, config.getUserMappings(), config.getMappingSpecText()));
 
                         // Set delimiter and quote
                         final DataSource source = step.sources().isEmpty() ? null : step.sources().get(0);
@@ -725,7 +725,7 @@ public class DefaultProcessService implements ProcessService {
     }
 
     private String tripleGeoMappingsToFile(
-        String name, List<TriplegeoFieldMapping> mappings
+        String name, List<TriplegeoFieldMapping> mappings, String text
     ) throws IOException {
         Map<String, Object> predicates = this.createTripleGeoMappings(mappings);
 
@@ -736,12 +736,16 @@ public class DefaultProcessService implements ProcessService {
         try (
             FileWriter writer = new FileWriter(targetFile.toString());
         ) {
-            DumperOptions options = new DumperOptions();
-            options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
-            options.setPrettyFlow(true);
+            if(StringUtils.isBlank(text)) {
+                DumperOptions options = new DumperOptions();
+                options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+                options.setPrettyFlow(true);
 
-            Yaml yaml = new Yaml(options);
-            yaml.dump(predicates, writer);
+                Yaml yaml = new Yaml(options);
+                yaml.dump(predicates, writer);
+            } else {
+                writer.write(text);
+            }
 
             return Paths.get(tripleGeoMappingFolder, name + ".yml").toString();
         }

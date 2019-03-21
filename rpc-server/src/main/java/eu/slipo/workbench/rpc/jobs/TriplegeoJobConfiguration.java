@@ -79,7 +79,7 @@ public class TriplegeoJobConfiguration extends ContainerBasedJobConfiguration
     /**
      * A list of keys of parameters to be ignored (blacklisted) as conflicting with <tt>input</tt> parameter.
      */
-    private static final List<String> blacklistedParameterKeys = ImmutableList.of("inputFiles", "level");
+    private static final List<String> blacklistedParameterKeys = ImmutableList.of("inputFiles", "level", "mappingSpecText");
 
     private static final List<String> blacklistedParameterPrefixes = ImmutableList.of("userMappings");
 

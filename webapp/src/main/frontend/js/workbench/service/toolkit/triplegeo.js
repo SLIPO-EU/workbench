@@ -25,7 +25,7 @@ export function validateConfiguration(config) {
       errors['classificationSpec'] = 'Required';
     }
 
-    if (!config['userMappings']) {
+    if (!config['userMappings'] && !config['mappingSpecText']) {
       errors['mapping-not-set'] = 'Mappings configuration is missing';
     } else {
       const id = config['userMappings'].find(m => m.predicate === predicates.ID) || null;
@@ -98,7 +98,7 @@ export function validateConfiguration(config) {
   if (!config['targetGeoOntology']) {
     errors['targetGeoOntology'] = 'Required';
   }
-  console.log(errors);
+
   if (Object.keys(errors).length) {
     throw errors;
   }

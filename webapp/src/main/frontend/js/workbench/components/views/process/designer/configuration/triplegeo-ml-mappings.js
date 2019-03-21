@@ -75,13 +75,16 @@ class TripleGeoMLMappings extends React.Component {
   constructor(props) {
     super(props);
 
-    const { configuration: { autoMappings: mappings, userMappings: selection } } = props;
+    const { configuration: { autoMappings: mappings, userMappings: selection, mappingSpecText } } = props;
 
     this.state = {
       mappings: mappings ? { ...mappings, } : null,
       selection: selection ? [...selection] : [],
-      yaml: null,
+      mappingSpecText,
+      yaml: mappingSpecText || null,
     };
+
+    this.updateYaml = this.updateYaml.bind(this);
   }
 
   static propTypes = {
@@ -108,7 +111,7 @@ class TripleGeoMLMappings extends React.Component {
 
   refreshMappings(resetSelection = true) {
     const { path } = this.props;
-    const { selection } = this.state;
+    const { selection, mappingSpecText, yaml } = this.state;
 
     getMappings(path)
       .then(mappings => {
@@ -135,6 +138,8 @@ class TripleGeoMLMappings extends React.Component {
                 expanded: selected && (selected.type || selected.language),
               };
             }),
+          mappingSpecText: resetSelection ? null : mappingSpecText,
+          yaml: resetSelection ? null : yaml,
         });
       })
       .catch((err) => {
@@ -142,7 +147,7 @@ class TripleGeoMLMappings extends React.Component {
       });
   }
 
-  save() {
+  saveMappings() {
     const { configuration, setValue } = this.props;
     const { mappings, selection } = this.state;
 
@@ -154,6 +159,20 @@ class TripleGeoMLMappings extends React.Component {
         const { expanded, ...rest } = s;
         return { ...rest };
       }),
+      mappingSpecText: null,
+    });
+
+    this.props.hide();
+  }
+
+  saveMappingsText() {
+    const { configuration, setValue } = this.props;
+    const { mappings, mappingSpecText } = this.state;
+
+    setValue({
+      ...configuration,
+      mappings: { ...mappings },
+      mappingSpecText,
     });
 
     this.props.hide();
@@ -193,9 +212,24 @@ class TripleGeoMLMappings extends React.Component {
     });
   }
 
+  editYamlFile() {
+    const { yaml } = this.state;
+
+    this.setState({
+      mappingSpecText: yaml,
+    });
+  }
+
+  updateYaml(text) {
+    this.setState({
+      yaml: text,
+      mappingSpecText: text,
+    });
+  }
+
   render() {
     const { errors, readOnly } = this.props;
-    const { mappings, selection, yaml } = this.state;
+    const { mappings, selection, mappingSpecText, yaml } = this.state;
     const rows = createRows(mappings, selection);
 
     return (
@@ -211,12 +245,13 @@ class TripleGeoMLMappings extends React.Component {
         <ModalBody style={{ minWidth: 960 }}>
           {yaml &&
             <CodeMirror
-              value={yaml}
+              value={mappingSpecText ? mappingSpecText : yaml}
               options={{
                 mode: 'yaml',
                 lineNumbers: true,
-                readOnly: true,
+                readOnly: readOnly || !mappingSpecText,
               }}
+              onChange={this.updateYaml}
             />
           }
           {!yaml &&
@@ -270,20 +305,36 @@ class TripleGeoMLMappings extends React.Component {
         }
         <ModalFooter>
           {yaml &&
-            <Button color="secondary" onClick={() => this.hideYamlFile()}>Back</Button>
+            <React.Fragment>
+              {!readOnly && !mappingSpecText &&
+                <Button color="secondary" onClick={() => this.editYamlFile()}>Edit</Button>
+              }
+              {!readOnly && mappingSpecText &&
+                <React.Fragment>
+                  <Button color="secondary" onClick={() => this.refreshMappings(true)} title="Reset mappings">Reset</Button>
+                  <Button color="primary" onClick={() => this.saveMappingsText()}>Apply</Button>
+                  <Button color="danger" onClick={() => this.cancel()} className="float-left">Cancel</Button>
+                </React.Fragment>
+              }
+              {!mappingSpecText &&
+                <Button color="secondary" onClick={() => this.hideYamlFile()}>Back</Button>
+              }
+            </React.Fragment>
           }
           {!yaml &&
             <React.Fragment>
-              <Button color="secondary" onClick={() => this.showYamlFile()}>View mapping file</Button>
+              {rows.length !== 0 &&
+                <Button color="secondary" onClick={() => this.showYamlFile()}>View mapping file</Button>
+              }
               {!readOnly &&
                 <React.Fragment>
                   <Button color="secondary" onClick={() => this.refreshMappings(true)} title="Reset mappings">Reset</Button>
-                  <Button color="primary" onClick={() => this.save(true)}>Apply</Button>
-                  <Button color="danger" onClick={() => this.cancel(true)} className="float-left">Cancel</Button>
+                  <Button color="primary" onClick={() => this.saveMappings()}>Apply</Button>
+                  <Button color="danger" onClick={() => this.cancel()} className="float-left">Cancel</Button>
                 </React.Fragment>
               }
               {readOnly &&
-                <Button color="secondary" onClick={() => this.cancel(true)} className="float-left">Back</Button>
+                <Button color="secondary" onClick={() => this.cancel()} className="float-left">Back</Button>
               }
             </React.Fragment>
           }

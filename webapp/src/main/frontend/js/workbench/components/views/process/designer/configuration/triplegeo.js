@@ -230,7 +230,7 @@ class TripleGeoConfiguration extends React.Component {
                                 style={{ border: 'none', padding: '0.5rem 0.7rem' }}
                                 title={l.label}
                               >
-                                <Input type="radio" name="level" id={`config-mode-${l.value}`} onClick={() => this.changeConfigurationLevel(l.value)} />
+                                <Input type="radio" name="level" id={`config-mode-${l.value}`} onClick={() => this.changeConfigurationLevel(l.value)} disabled={readOnly} />
                                 <span><i className={`pr-1 ${l.iconClass}`}></i>{l.label}</span>
                               </Label>);
                           })
