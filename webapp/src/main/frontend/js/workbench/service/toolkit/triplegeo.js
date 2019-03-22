@@ -5,6 +5,7 @@ import {
   ontologies,
   predicates,
   serializations,
+  surrogatePredicates,
 } from "../../model/process-designer/configuration/triplegeo";
 
 function fromEnumValue(value, list) {
@@ -20,18 +21,29 @@ export function validateConfiguration(config) {
   }
 
   if (config['level'] === configurationLevels.AUTO) {
-    const id = config['userMappings'].find(m => m.predicate === predicates.ID) || null;
-    const lon = config['userMappings'].find(m => m.predicate === predicates.LONGITUDE) || null;
-    const lat = config['userMappings'].find(m => m.predicate === predicates.LATITUDE) || null;
+    if (!config['classificationSpec']) {
+      errors['classificationSpec'] = 'Required';
+    }
 
-    if (!id) {
-      errors[`mapping-${predicates.ID}`] = `A mapping is required for predicate ${predicates.ID}`;
-    }
-    if (!lon) {
-      errors[`mapping-${predicates.LONGITUDE}`] = `A mapping is required for predicate ${predicates.LONGITUDE}`;
-    }
-    if (!lat) {
-      errors[`mapping-${predicates.LATITUDE}`] = `A mapping is required for predicate ${predicates.LATITUDE}`;
+    if (!config['userMappings'] && !config['mappingSpecText']) {
+      errors['mapping-not-set'] = 'Mappings configuration is missing';
+    } else {
+      const id = config['userMappings'].find(m => m.predicate === predicates.ID) || null;
+      const lon = config['userMappings'].find(m => m.predicate === predicates.LONGITUDE) || null;
+      const lat = config['userMappings'].find(m => m.predicate === predicates.LATITUDE) || null;
+      const geometry = config['userMappings'].find(m => m.predicate === surrogatePredicates.WKT) || null;
+
+      if (!id) {
+        errors[`mapping-${predicates.ID}`] = `A mapping is required for predicate ${predicates.ID}`;
+      }
+      if (!geometry) {
+        if (!lon) {
+          errors[`mapping-${predicates.LONGITUDE}`] = `A mapping is required for predicate ${predicates.LONGITUDE}`;
+        }
+        if (!lat) {
+          errors[`mapping-${predicates.LATITUDE}`] = `A mapping is required for predicate ${predicates.LATITUDE}`;
+        }
+      }
     }
   }
 
@@ -125,7 +137,11 @@ export function readConfiguration(config) {
 }
 
 export function writeConfiguration(config) {
-  const { autoMappings, quote, prefixes, mappingSpec, classificationSpec, sourceCRS = null, targetCRS = null, ...rest } = config;
+  const {
+    autoMappings, userMappings = null,
+    quote, prefixes, mappingSpec, classificationSpec, sourceCRS = null, targetCRS = null,
+    ...rest
+  } = config;
 
   return {
     ...rest,
@@ -137,6 +153,8 @@ export function writeConfiguration(config) {
     quote: quote || '',
     sourceCRS: sourceCRS ? 'EPSG:' + sourceCRS : null,
     targetCRS: targetCRS ? 'EPSG:' + targetCRS : null,
+    // Filter out empty predicates
+    userMappings: userMappings ? userMappings.filter(m => !!m.predicate) : null,
   };
 }
 

@@ -18,9 +18,29 @@ import {
 
 import {
   predicateTypes,
+  surrogatePredicates,
 } from '../../../../../model/process-designer/configuration/triplegeo';
 
 import TripleGeoMapping from './triplegeo-mapping';
+
+const createPredicateGroups = (predicates) => {
+  return [{
+    label: 'Predicates',
+    options: predicates.map(p => ({
+      label: p.predicate,
+      value: p.predicate,
+      score: p.score,
+      custom: false,
+    })),
+  }, {
+    label: 'Custom Mappings',
+    options: [{
+      label: 'Geometry',
+      value: surrogatePredicates.WKT,
+      custom: true,
+    }],
+  }];
+};
 
 const createRows = (mappings = {}, selection = []) => {
   const rows = [];
@@ -37,7 +57,7 @@ const createRows = (mappings = {}, selection = []) => {
     const row = {
       field,
       predicate,
-      predicates: mappings[field],
+      predicates: createPredicateGroups(mappings[field]),
       type,
       types: predicateTypes,
       language,
@@ -55,13 +75,16 @@ class TripleGeoMLMappings extends React.Component {
   constructor(props) {
     super(props);
 
-    const { configuration: { autoMappings: mappings, userMappings: selection } } = props;
+    const { configuration: { autoMappings: mappings, userMappings: selection, mappingSpecText } } = props;
 
     this.state = {
       mappings: mappings ? { ...mappings, } : null,
       selection: selection ? [...selection] : [],
-      yaml: null,
+      mappingSpecText,
+      yaml: mappingSpecText || null,
     };
+
+    this.updateYaml = this.updateYaml.bind(this);
   }
 
   static propTypes = {
@@ -88,7 +111,7 @@ class TripleGeoMLMappings extends React.Component {
 
   refreshMappings(resetSelection = true) {
     const { path } = this.props;
-    const { selection } = this.state;
+    const { selection, mappingSpecText, yaml } = this.state;
 
     getMappings(path)
       .then(mappings => {
@@ -109,12 +132,14 @@ class TripleGeoMLMappings extends React.Component {
 
               return {
                 field,
-                predicate: selected ? selected.predicate : mappings[field][0].predicate,
+                predicate: selected ? selected.predicate : '',
                 type: selected ? selected.type : '',
                 language: selected ? selected.language : '',
                 expanded: selected && (selected.type || selected.language),
               };
             }),
+          mappingSpecText: resetSelection ? null : mappingSpecText,
+          yaml: resetSelection ? null : yaml,
         });
       })
       .catch((err) => {
@@ -122,7 +147,7 @@ class TripleGeoMLMappings extends React.Component {
       });
   }
 
-  save() {
+  saveMappings() {
     const { configuration, setValue } = this.props;
     const { mappings, selection } = this.state;
 
@@ -134,6 +159,20 @@ class TripleGeoMLMappings extends React.Component {
         const { expanded, ...rest } = s;
         return { ...rest };
       }),
+      mappingSpecText: null,
+    });
+
+    this.props.hide();
+  }
+
+  saveMappingsText() {
+    const { configuration, setValue } = this.props;
+    const { mappings, mappingSpecText } = this.state;
+
+    setValue({
+      ...configuration,
+      mappings: { ...mappings },
+      mappingSpecText,
     });
 
     this.props.hide();
@@ -173,9 +212,24 @@ class TripleGeoMLMappings extends React.Component {
     });
   }
 
+  editYamlFile() {
+    const { yaml } = this.state;
+
+    this.setState({
+      mappingSpecText: yaml,
+    });
+  }
+
+  updateYaml(text) {
+    this.setState({
+      yaml: text,
+      mappingSpecText: text,
+    });
+  }
+
   render() {
-    const { errors } = this.props;
-    const { mappings, selection, yaml } = this.state;
+    const { errors, readOnly } = this.props;
+    const { mappings, selection, mappingSpecText, yaml } = this.state;
     const rows = createRows(mappings, selection);
 
     return (
@@ -190,11 +244,15 @@ class TripleGeoMLMappings extends React.Component {
         </ModalHeader>
         <ModalBody style={{ minWidth: 960 }}>
           {yaml &&
-            <CodeMirror value={yaml} options={{
-              mode: 'yaml',
-              lineNumbers: true,
-              readOnly: true,
-            }} />
+            <CodeMirror
+              value={mappingSpecText ? mappingSpecText : yaml}
+              options={{
+                mode: 'yaml',
+                lineNumbers: true,
+                readOnly: readOnly || !mappingSpecText,
+              }}
+              onChange={this.updateYaml}
+            />
           }
           {!yaml &&
             <React.Fragment>
@@ -229,31 +287,55 @@ class TripleGeoMLMappings extends React.Component {
                     types={row.types}
                     language={row.language}
                     onChange={(data) => this.onChange(data)}
+                    readOnly={readOnly}
                   />
                 );
               })}
             </React.Fragment>
           }
         </ModalBody>
-        {errors && Object.keys(errors).length !== 0 &&
+        {errors && errors.length !== 0 &&
           <ModalFooter style={{ justifyContent: 'flex-start', paddingLeft: 0 }}>
             <ul style={{ marginLeft: -28 }}>
-              {Object.keys(errors).map(key => (
-                <li key={key} className="list-unstyled text-danger">{errors[key]}</li>
+              {errors.map(err => (
+                <li key={err.key} className="list-unstyled text-danger">{err.text}</li>
               ))}
             </ul>
           </ModalFooter>
         }
         <ModalFooter>
           {yaml &&
-            <Button color="secondary" onClick={() => this.hideYamlFile()}>Back</Button>
+            <React.Fragment>
+              {!readOnly && !mappingSpecText &&
+                <Button color="secondary" onClick={() => this.editYamlFile()}>Edit</Button>
+              }
+              {!readOnly && mappingSpecText &&
+                <React.Fragment>
+                  <Button color="secondary" onClick={() => this.refreshMappings(true)} title="Reset mappings">Reset</Button>
+                  <Button color="primary" onClick={() => this.saveMappingsText()}>Apply</Button>
+                  <Button color="danger" onClick={() => this.cancel()} className="float-left">Cancel</Button>
+                </React.Fragment>
+              }
+              {!mappingSpecText &&
+                <Button color="secondary" onClick={() => this.hideYamlFile()}>Back</Button>
+              }
+            </React.Fragment>
           }
           {!yaml &&
             <React.Fragment>
-              <Button color="secondary" onClick={() => this.showYamlFile()}>View mapping file</Button>
-              <Button color="secondary" onClick={() => this.refreshMappings(true)} title="Reset mappings">Reset</Button>
-              <Button color="primary" onClick={() => this.save(true)}>Apply</Button>
-              <Button color="danger" onClick={() => this.cancel(true)} className="float-left">Cancel</Button>
+              {rows.length !== 0 &&
+                <Button color="secondary" onClick={() => this.showYamlFile()}>View mapping file</Button>
+              }
+              {!readOnly &&
+                <React.Fragment>
+                  <Button color="secondary" onClick={() => this.refreshMappings(true)} title="Reset mappings">Reset</Button>
+                  <Button color="primary" onClick={() => this.saveMappings()}>Apply</Button>
+                  <Button color="danger" onClick={() => this.cancel()} className="float-left">Cancel</Button>
+                </React.Fragment>
+              }
+              {readOnly &&
+                <Button color="secondary" onClick={() => this.cancel()} className="float-left">Back</Button>
+              }
             </React.Fragment>
           }
         </ModalFooter>

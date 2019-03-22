@@ -2,6 +2,8 @@ package eu.slipo.workbench.web.model.triplegeo;
 
 public class Predicates {
 
+    public static final String ATTRIBUTE_GEOMETRY = "__WKT_GEOMETRY__";
+
     public static final String ACCURACY = "slipo:accuracy";
     public static final String ADDRESS_COUNTRY = "slipo:country";
     public static final String ADDRESS_LOCALITY = "slipo:locality";

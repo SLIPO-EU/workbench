@@ -585,30 +585,33 @@ public class DefaultImportService implements ImportService, InitializingBean {
 
             // Get CSV file
             csv = getCsvFileFromZip(path);
-            String tableName = UUID.randomUUID().toString();
+            UUID tableName = UUID.randomUUID();
 
-            // Import CSV data to table
-            this.importCsvFile(this.defaultGeometrySchema, tableName, csv.toString(), this.defaultGeometryColumn, this.useCopy);
+            long rowCount = this.importCsvFile(
+                this.defaultGeometrySchema, tableName.toString(), csv.toString(), this.defaultGeometryColumn, this.useCopy
+            );
 
             // Update resource revision record
             String updateSql = String.format(
                     "update   resource_revision " +
                     "set      bbox = (select ST_SetSRID(ST_Extent(\"%3$s\"), 4326) from \"%1$s\".\"%2$s\"), " +
-                    "         table_name = '%2$s' " +
+                    "         table_name = ?, " +
+                    "         row_count = ? " +
                     "where    resource_revision.parent = ? and resource_revision.version =  ?;",
                     defaultGeometrySchema, tableName, defaultGeometryColumn);
 
-            jdbcTemplate.update(updateSql, new Object[] { id, version });
+            jdbcTemplate.update(updateSql, new Object[] { tableName, rowCount, id, version });
 
             // Update resource record
             updateSql = String.format(
                     "update   resource " +
                     "set      bbox = (select ST_SetSRID(ST_Extent(\"%3$s\"), 4326) from \"%1$s\".\"%2$s\"), " +
-                    "         table_name = '%2$s' " +
+                    "         table_name = ?, " +
+                    "         row_count = ? " +
                     "where    resource.id = ? and resource.version =  ?;",
-                    defaultGeometrySchema, tableName, defaultGeometryColumn, id, version);
+                    defaultGeometrySchema, tableName, defaultGeometryColumn);
 
-            jdbcTemplate.update(updateSql, new Object[] { id, version });
+            jdbcTemplate.update(updateSql, new Object[] { tableName, rowCount, id, version });
         } catch(Exception ex) {
             logger.error(String.format("Failed to import data for resource %d-%d (id-version)", id, version), ex);
             throw ex;
@@ -627,10 +630,12 @@ public class DefaultImportService implements ImportService, InitializingBean {
         try {
             // Get CSV file
             csv = getCsvFileFromZip(path);
-            String tableName = UUID.randomUUID().toString();
+            UUID tableName = UUID.randomUUID();
 
             // Import CSV data to table
-            this.importCsvFile(defaultGeometrySchema, tableName, csv.toString(), defaultGeometryColumn, this.useCopy);
+            long rowCount = this.importCsvFile(
+                defaultGeometrySchema, tableName.toString(), csv.toString(), defaultGeometryColumn, this.useCopy
+            );
 
             // Get step file
             ProcessExecutionStepFileRecord file = execution.getSteps()
@@ -649,11 +654,12 @@ public class DefaultImportService implements ImportService, InitializingBean {
             String updateSql = String.format(
                 "update   process_execution_step_file " +
                 "set      bbox = (select ST_SetSRID(ST_Extent(\"%3$s\"), 4326) from \"%1$s\".\"%2$s\"), " +
-                "         table_name = '%2$s' " +
-                "where    process_execution_step_file.id = %4$d;",
-                defaultGeometrySchema, tableName, defaultGeometryColumn, fileId);
+                "         table_name = ?, " +
+                "         row_count = ? " +
+                "where    process_execution_step_file.id = ?;",
+                defaultGeometrySchema, tableName, defaultGeometryColumn);
 
-            jdbcTemplate.execute(updateSql);
+            jdbcTemplate.update(updateSql, new Object[] { tableName, rowCount, fileId });
         } catch(Exception ex) {
             logger.error(String.format("Failed to import data for step file %d-%d-%d (execution-step key-file id)", execution.getId(), stepKey, fileId), ex);
             throw ex;
@@ -711,9 +717,10 @@ public class DefaultImportService implements ImportService, InitializingBean {
         return destFile;
     }
 
-    private void importCsvFile(
+    private long importCsvFile(
         String schema, String tableName, String fileName, String geomColumn, boolean useCopy
     ) throws Exception {
+        long rowCount = 0;
 
         // Create table
         String creteTableSql = this.createSpatialTableScript(schema, tableName, fileName, useCopy);
@@ -727,7 +734,7 @@ public class DefaultImportService implements ImportService, InitializingBean {
 
             jdbcTemplate.execute(copySql);
         } else {
-            this.insertRowsFromFile(schema, tableName, fileName);
+            rowCount = this.insertRowsFromFile(schema, tableName, fileName);
         }
 
         // Add simplified geometry column
@@ -735,9 +742,11 @@ public class DefaultImportService implements ImportService, InitializingBean {
 
         // Add indexes
         this.addGeometryIndexes(schema, tableName);
+
+        return rowCount;
     }
 
-    private void insertRowsFromFile(
+    private long insertRowsFromFile(
         String schema, String tableName, String fileName
     ) throws Exception {
         final String insertSql = this.createInsertRowScript(schema, tableName, fileName);
@@ -777,6 +786,8 @@ public class DefaultImportService implements ImportService, InitializingBean {
             if (size != 0) {
                 jdbcTemplate.update(StringUtils.repeat(insertSql, size), params.toArray(new Object[0]));
             }
+
+            return id;
         } catch (Exception ex) {
             logger.error(String.format("Failed to insert rows from file [%s]", fileName), ex);
             throw ex;

@@ -54,6 +54,8 @@ public class ResourceRecord implements Serializable
 
     private UUID tableName;
 
+    private Long rowCount;
+
     private Geometry boundingBox;
 
     private Integer numberOfEntities;
@@ -263,6 +265,16 @@ public class ResourceRecord implements Serializable
     public void setTableName(UUID tableName)
     {
         this.tableName = tableName;
+    }
+
+    public Long getRowCount()
+    {
+        return rowCount;
+    }
+
+    public void setRowCount(Long rowCount)
+    {
+        this.rowCount = rowCount;
     }
 
     public Geometry getBoundingBox()

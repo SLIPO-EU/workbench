@@ -79,7 +79,9 @@ public class TriplegeoJobConfiguration extends ContainerBasedJobConfiguration
     /**
      * A list of keys of parameters to be ignored (blacklisted) as conflicting with <tt>input</tt> parameter.
      */
-    private static final List<String> blacklistedParameterKeys = ImmutableList.of("inputFiles");
+    private static final List<String> blacklistedParameterKeys = ImmutableList.of("inputFiles", "level", "mappingSpecText");
+
+    private static final List<String> blacklistedParameterPrefixes = ImmutableList.of("userMappings");
 
     private static final Joiner pathJoiner = Joiner.on(File.pathSeparator);
 
@@ -128,8 +130,9 @@ public class TriplegeoJobConfiguration extends ContainerBasedJobConfiguration
     @PostConstruct
     private void setMemoryLimitsIfNeeded()
     {
-        if (this.memorySwapLimit < 0)
+        if (this.memorySwapLimit < 0) {
             this.memorySwapLimit = 2L * this.memoryLimit;
+        }
 
         logger.info("The memory limits are {}m/{}m",
             memoryLimit / 1024L / 1024L, memorySwapLimit / 1024L / 1024L);
@@ -153,7 +156,10 @@ public class TriplegeoJobConfiguration extends ContainerBasedJobConfiguration
 
             // Read given parameters
 
-            parameters = Maps.filterKeys(parameters, key -> !blacklistedParameterKeys.contains(key));
+            parameters = Maps.filterKeys(
+                parameters,
+                key -> !blacklistedParameterKeys.contains(key) && !blacklistedParameterPrefixes.stream().anyMatch(p -> key.startsWith(p))
+            );
 
             TriplegeoConfiguration configuration =
                 propertiesConverter.propertiesToValue(parameters, TriplegeoConfiguration.class);

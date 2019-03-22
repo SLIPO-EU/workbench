@@ -46,7 +46,7 @@ public class FileSytemController extends BaseController {
     private long maxUserSpace;
 
     @Value("${slipo.user.max-space:20971520}")
-    public void setDefaultLocale(String maxUserSpace) {
+    public void setMaxUserSpace(String maxUserSpace) {
         this.maxUserSpace = this.parseSize(maxUserSpace);
     }
 

@@ -119,6 +119,9 @@ public class ResourceRevisionEntity {
     @Column(name = "table_name", columnDefinition = "uuid")
     UUID tableName;
 
+    @Column(name = "row_count")
+    Long rowCount;
+
     @Column(name = "layer_style", updatable = true, nullable = true)
     JsonNode style;
 
@@ -260,6 +263,16 @@ public class ResourceRevisionEntity {
         this.tableName = tableName;
     }
 
+    public Long getRowCount()
+    {
+        return rowCount;
+    }
+
+    public void setRowCount(Long rowCount)
+    {
+        this.rowCount = rowCount;
+    }
+
     public JsonNode getStyle()
     {
         return style;
@@ -290,6 +303,7 @@ public class ResourceRevisionEntity {
         record.setBoundingBox(boundingBox);
         record.setNumberOfEntities(numberOfEntities);
         record.setStyle(style);
+        record.setRowCount(rowCount);
 
         if (processExecution != null) {
             record.setExecution(

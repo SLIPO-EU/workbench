@@ -89,6 +89,7 @@ export const defaultValues = {
   delimiter: '|',
   encoding: encodings[3].value,
   level: configurationLevels.ADVANCED,
+  mappingSpecText: null,
   mode: modes[1].value,
   nsClassificationURI: 'http://slipo.eu/id/classification/',
   nsClassURI: 'http://slipo.eu/id/term/',
@@ -113,7 +114,6 @@ export const defaultValuesAuto = {
   attrName: null,
   attrX: null,
   attrY: null,
-  classificationSpec: null,
   classifyByName: false,
   autoMappings: null,
   userMappings: null,
@@ -124,6 +124,7 @@ export const defaultValuesAuto = {
   inputFormat: EnumDataFormat.CSV,
   level: configurationLevels.AUTO,
   mappingSpec: null,
+  mappingSpecText: null,
   mode: modes[1].value,
   nsClassificationURI: 'http://slipo.eu/id/classification/',
   nsClassURI: 'http://slipo.eu/id/term/',
@@ -147,6 +148,7 @@ export const defaultValuesSimple = {
   userMappings: null,
   level: configurationLevels.SIMPLE,
   mappingSpec: null,
+  mappingSpecText: null,
   mode: modes[1].value,
   nsClassificationURI: 'http://slipo.eu/id/classification/',
   nsClassURI: 'http://slipo.eu/id/term/',
@@ -208,4 +210,8 @@ export const predicates = {
   ID: 'SLIPO:POIREF',
   LONGITUDE: 'WGS84_POS:LONG',
   LATITUDE: 'WGS84_POS:LAT',
+};
+
+export const surrogatePredicates = {
+  WKT: '__WKT_GEOMETRY__',
 };

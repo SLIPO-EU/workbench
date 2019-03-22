@@ -18,6 +18,32 @@ import {
 
 const languageOptions = _.orderBy(langs.map(l => ({ value: l.alpha2, label: l.English })), ['label'], ['asc']);
 
+const groupStyles = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+};
+
+const groupBadgeStyles = {
+  backgroundColor: '#EBECF0',
+  borderRadius: '2em',
+  color: '#172B4D',
+  display: 'inline-block',
+  fontSize: 12,
+  fontWeight: 'normal',
+  lineHeight: '1',
+  minWidth: 1,
+  padding: '0.17em 0.5em',
+  textAlign: 'center',
+};
+
+const formatGroupLabel = data => (
+  <div style={groupStyles}>
+    <span>{data.label}</span>
+    <span style={groupBadgeStyles}>{data.options.length}</span>
+  </div>
+);
+
 class TripleGeoMapping extends React.Component {
 
   constructor(props) {
@@ -33,12 +59,14 @@ class TripleGeoMapping extends React.Component {
     types: PropTypes.object.isRequired,
     language: PropTypes.string,
     onChange: PropTypes.func.isRequired,
+    readOnly: PropTypes.bool,
   }
 
   static defaultProps = {
     predicate: '',
     type: '',
     language: '',
+    readOnly: false,
   }
 
   toggle(field, predicate, expanded) {
@@ -52,19 +80,38 @@ class TripleGeoMapping extends React.Component {
   }
 
   render() {
-    const { expanded, field, predicate, predicates, type, types, language } = this.props;
-    const predicateOptions = predicates.map(p => ({
-      value: p.predicate,
-      label: (
-        <div className="clearfix">
-          <div className="float-left">{p.predicate}</div>
-          <div className={`predicate-score float-right font-xs ${p.score > 0.8 ? 'text-success' : 'text-danger'}`}>
-            {(p.score * 100).toFixed(2)} %
-          </div>
-        </div>
-      ),
-      score: p.score
-    }));
+    const { expanded, field, predicate, predicates, type, types, language, readOnly } = this.props;
+
+    const allPredicates = predicates.reduce((result, group) => {
+      return [...result, ...group.options];
+    }, []);
+
+    const selectedPredicate = allPredicates.find(opt => opt.value === predicate) || null;
+
+    const predicateOptions = predicates.map((group, index) => {
+      switch (index) {
+        case 0:
+          // ML Predicates
+          return {
+            label: group.label,
+            options: group.options.map(p => ({
+              ...p,
+              label: (
+                <div className="clearfix">
+                  <div className="float-left">{p.value}</div>
+                  <div className={`predicate-score float-right font-xs ${p.score > 0.8 ? 'text-success' : 'text-danger'}`}>
+                    {(p.score * 100).toFixed(2)} %
+                </div>
+                </div>
+              ),
+            })),
+          };
+        default:
+          // Custom groups
+          return group;
+      }
+    });
+
     const typeOptions = types[predicate] || [];
 
     return (
@@ -79,7 +126,7 @@ class TripleGeoMapping extends React.Component {
           <ReactSelect
             name="predicate"
             id="predicate"
-            value={predicateOptions.find(opt => opt.value === predicate) || ''}
+            value={selectedPredicate || ''}
             onChange={(option) => this.props.onChange({
               field,
               predicate: option ? option.value : '',
@@ -92,14 +139,22 @@ class TripleGeoMapping extends React.Component {
             isClearable={true}
             placeholder="Select predicate ..."
             classNamePrefix="predicate"
+            isDisabled={readOnly}
+            formatGroupLabel={formatGroupLabel}
           />
         </Col>
-        <Col style={{ flex: '0 0 80px', paddingTop: 6 }}>
-          {expanded ?
-            <span className="font-xs slipo-action-icon" onClick={() => this.toggle(field, predicate, false)}>Hide</span> :
-            <span className="font-xs slipo-action-icon" onClick={() => this.toggle(field, predicate, true)}>More ...</span>
-          }
-        </Col>
+        {(readOnly || !selectedPredicate || selectedPredicate.custom) &&
+          <Col style={{ flex: '0 0 80px', paddingTop: 6 }}>
+          </Col>
+        }
+        {!readOnly && selectedPredicate && !selectedPredicate.custom &&
+          <Col style={{ flex: '0 0 80px', paddingTop: 6 }}>
+            {expanded ?
+              <span className="font-xs slipo-action-icon" onClick={() => this.toggle(field, predicate, false)}>Hide</span> :
+              <span className="font-xs slipo-action-icon" onClick={() => this.toggle(field, predicate, true)}>More ...</span>
+            }
+          </Col>
+        }
         <Col>
           {expanded && typeOptions.length !== 0 &&
             <ReactSelect
@@ -117,6 +172,7 @@ class TripleGeoMapping extends React.Component {
               styles={SelectDefaultStyle}
               isClearable={true}
               placeholder="Select type ..."
+              isDisabled={readOnly}
             />
           }
         </Col>
@@ -137,6 +193,7 @@ class TripleGeoMapping extends React.Component {
               styles={SelectDefaultStyle}
               isClearable={true}
               placeholder="Select language ..."
+              isDisabled={readOnly}
             />
           }
         </Col>

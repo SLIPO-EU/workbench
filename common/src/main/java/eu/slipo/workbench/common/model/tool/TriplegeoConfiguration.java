@@ -302,6 +302,11 @@ public class TriplegeoConfiguration extends TransformConfiguration<Triplegeo>
     private String mappingSpec;
 
     /**
+     * Custom mappings from input schema to RDF according to a custom ontology.
+     */
+    private String mappingSpecText;
+
+    /**
      * A resource location of a YML/CSV file describing a classification scheme.
      */
     private String classificationSpec;
@@ -659,6 +664,18 @@ public class TriplegeoConfiguration extends TransformConfiguration<Triplegeo>
     public String getMappingSpec()
     {
         return mappingSpec;
+    }
+
+    @JsonProperty("mappingSpecText")
+    public void setMappingSpecText(String mappingSpecText)
+    {
+        this.mappingSpecText = mappingSpecText;
+    }
+
+    @JsonProperty("mappingSpecText")
+    public String getMappingSpecText()
+    {
+        return mappingSpecText;
     }
 
     @JsonProperty("classificationSpec")

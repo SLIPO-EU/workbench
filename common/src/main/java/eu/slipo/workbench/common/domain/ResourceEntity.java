@@ -125,6 +125,9 @@ public class ResourceEntity
     @Column(name = "table_name", columnDefinition = "uuid")
     UUID tableName;
 
+    @Column(name = "row_count")
+    Long rowCount;
+
     @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     List<ResourceRevisionEntity> revisions = new ArrayList<>();
 
@@ -300,6 +303,16 @@ public class ResourceEntity
         this.tableName = tableName;
     }
 
+    public Long getRowCount()
+    {
+        return rowCount;
+    }
+
+    public void setRowCount(Long rowCount)
+    {
+        this.rowCount = rowCount;
+    }
+
     public long getId()
     {
         return this.id;
@@ -343,6 +356,7 @@ public class ResourceEntity
         record.setFilePath(filePath);
         record.setFileSize(fileSize);
         record.setMetadata(name, description);
+        record.setRowCount(rowCount);
 
         if (processExecution != null) {
             record.setExecution(

@@ -31,6 +31,8 @@ public class ProcessExecutionStepFileRecord implements Serializable
 
     private UUID tableName;
 
+    private Long rowCount;
+
     private String outputPartKey;
 
     private JsonNode style;
@@ -84,6 +86,7 @@ public class ProcessExecutionStepFileRecord implements Serializable
         this.boundingBox = record.boundingBox;
         this.tableName = record.tableName;
         this.outputPartKey = record.outputPartKey;
+        this.rowCount = record.rowCount;
     }
 
     public long getId()
@@ -187,6 +190,14 @@ public class ProcessExecutionStepFileRecord implements Serializable
 
     public void setStyle(JsonNode style) {
         this.style = style;
+    }
+
+    public Long getRowCount() {
+        return rowCount;
+    }
+
+    public void setRowCount(Long rowCount) {
+        this.rowCount = rowCount;
     }
 
     @Override

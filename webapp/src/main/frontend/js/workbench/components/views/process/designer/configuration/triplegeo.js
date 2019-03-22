@@ -66,7 +66,6 @@ const getLevelDefaults = (level) => {
   throw new Error(`Configuration level ${level} is not supported`);
 };
 
-
 class TripleGeoConfiguration extends React.Component {
 
   constructor(props) {
@@ -185,11 +184,11 @@ class TripleGeoConfiguration extends React.Component {
         {this.state.dialog &&
           <TripleGeoMLMappings
             configuration={value}
-            errors={errors}
+            errors={mappingErrors}
             getTripleGeoMappingFileAsText={this.props.getTripleGeoMappingFileAsText}
             hide={() => this.hideDialog()}
             path={inputFile}
-            readOnly={this.props.readOnly}
+            readOnly={readOnly}
             setValue={this.props.setValue}
             visible={this.state.dialog}
           />
@@ -217,18 +216,24 @@ class TripleGeoConfiguration extends React.Component {
                         }
                         {configurationLevelOptions
                           .filter(l => enabledLevels.indexOf(l.value) !== -1)
-                          .map(l => (
-                            <Label
-                              key={`config-mode-${l.value}`}
-                              htmlFor={`config-mode-${l.value}`}
-                              className={l.value === value.level ? "btn btn-outline-secondary active ml-2" : "btn btn-outline-secondary ml-2"}
-                              check={l.value === value.level}
-                              style={{ border: 'none', padding: '0.5rem 0.7rem' }}
-                              title={l.label}
-                            >
-                              <Input type="radio" name="level" id={`config-mode-${l.value}`} onClick={() => this.changeConfigurationLevel(l.value)} />
-                              <span><i className={`pr-1 ${l.iconClass}`}></i>{l.label}</span>
-                            </Label>))
+                          .map(l => {
+                            if (readOnly && l.value !== value.level) {
+                              return null;
+                            }
+
+                            return (
+                              <Label
+                                key={`config-mode-${l.value}`}
+                                htmlFor={`config-mode-${l.value}`}
+                                className={l.value === value.level ? "btn btn-outline-secondary active ml-2" : "btn btn-outline-secondary ml-2"}
+                                check={l.value === value.level}
+                                style={{ border: 'none', padding: '0.5rem 0.7rem' }}
+                                title={l.label}
+                              >
+                                <Input type="radio" name="level" id={`config-mode-${l.value}`} onClick={() => this.changeConfigurationLevel(l.value)} disabled={readOnly} />
+                                <span><i className={`pr-1 ${l.iconClass}`}></i>{l.label}</span>
+                              </Label>);
+                          })
                         }
                       </ButtonGroup>
                     </ButtonToolbar>
@@ -252,8 +257,8 @@ class TripleGeoConfiguration extends React.Component {
                 />
               }
 
-              {value.level === configurationLevels.ADVANCED &&
-                <div>
+              <div>
+                {value.level === configurationLevels.ADVANCED &&
                   <div className="row">
                     <div className="col">
                       <FileSelectField
@@ -273,42 +278,43 @@ class TripleGeoConfiguration extends React.Component {
                       />
                     </div>
                   </div>
+                }
+                {(value.level === configurationLevels.ADVANCED || value.level === configurationLevels.AUTO) &&
                   <div className="row">
                     <div className="col">
-                      <div className="row">
-                        <div className="col">
-                          <FileSelectField
-                            {...inject}
-                            id="classificationSpec"
-                            label="Classification specification file"
-                            help="File (in YML or CSV format) containing classification hierarchy of categories"
-                            filesystem={filesystem}
-                            defaultMode={EnumFileSelectMode.FIELD}
-                            allowDelete
-                            allowUpload
-                            allowNewFolder
-                            createFolder={createFolder}
-                            deletePath={deletePath}
-                            uploadFile={uploadFile}
-                            placeHolder={!value['profile'] ? 'Select classification file...' : 'Using default classification file...'}
-                          />
-                        </div>
-                      </div>
-                      <div className="row">
-                        <div className="col">
-                          <CheckboxField
-                            {...inject}
-                            id="classifyByName"
-                            text="Classify By Name"
-                            help="Check if features specify their category based on the actual name of the category"
-                            disabled={!value['profile']}
-                          />
-                        </div>
-                      </div>
+                      <FileSelectField
+                        {...inject}
+                        id="classificationSpec"
+                        label="Classification specification file"
+                        help="File (in YML or CSV format) containing classification hierarchy of categories"
+                        filesystem={filesystem}
+                        defaultMode={EnumFileSelectMode.FIELD}
+                        allowDelete
+                        allowUpload
+                        allowNewFolder
+                        createFolder={createFolder}
+                        deletePath={deletePath}
+                        uploadFile={uploadFile}
+                        placeHolder={!value['profile'] ? 'Select classification file...' : 'Using default classification file...'}
+                      />
                     </div>
                   </div>
-                </div>
-              }
+                }
+                {value.level === configurationLevels.ADVANCED &&
+                  <div className="row">
+                    <div className="col">
+                      <CheckboxField
+                        {...inject}
+                        id="classifyByName"
+                        text="Classify By Name"
+                        help="Check if features specify their category based on the actual name of the category"
+                        disabled={!value['profile']}
+                      />
+                    </div>
+                  </div>
+                }
+              </div>
+
             </div>
           }
 
