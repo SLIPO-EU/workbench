@@ -252,7 +252,7 @@ public class DefaultImportService implements ImportService, InitializingBean {
                 ProcessExecutionStepFileRecord file = step.getOutputFile(EnumStepFile.LOG, EnumFagiOutputPart.LOG.key());
                 final Path path = fileNamingStrategy.resolveExecutionPath(file.getFilePath());
 
-                this.importFusionLog(task.getCreatedBy().getId(), execution.getId(), step, defaultFagiSchema, path.toString());
+                this.importFusionLog(execution.getId(), step, defaultFagiSchema, path.toString());
             };
 
             // Update task status
@@ -632,6 +632,10 @@ public class DefaultImportService implements ImportService, InitializingBean {
             csv = getCsvFileFromZip(path);
             UUID tableName = UUID.randomUUID();
 
+            // Store step key to table name mapping. Table name may be reused when
+            // importing FAGI logs
+            this.activeTask.addStepToTableNameMapping(stepKey, tableName);
+
             // Import CSV data to table
             long rowCount = this.importCsvFile(
                 defaultGeometrySchema, tableName.toString(), csv.toString(), defaultGeometryColumn, this.useCopy
@@ -916,9 +920,10 @@ public class DefaultImportService implements ImportService, InitializingBean {
     }
 
     private void importFusionLog(
-        int userId, long executionId, ProcessExecutionStepRecord step, String schema, String fileName
+        long executionId, ProcessExecutionStepRecord step, String schema, String fileName
     ) throws Exception {
-        final String tableNamePrefix = UUID.randomUUID().toString();
+        final String tableNamePrefix = this.activeTask.getTableNameForStep(step.getKey()) != null ?
+            this.activeTask.getTableNameForStep(step.getKey()).toString() : UUID.randomUUID().toString();
 
         // Create table
         String creteTableSql = this.createFusionLogTableScript(schema, tableNamePrefix);

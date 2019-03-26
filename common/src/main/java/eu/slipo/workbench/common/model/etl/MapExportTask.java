@@ -1,6 +1,9 @@
 package eu.slipo.workbench.common.model.etl;
 
 import java.time.ZonedDateTime;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.user.AccountInfo;
@@ -22,6 +25,8 @@ public class MapExportTask {
     private ProcessExecutionRecord workflow;
 
     private ProcessExecutionRecord transform;
+
+    private Map<Long, UUID> stepTableNameMappings = new HashMap<Long, UUID>();
 
     public MapExportTask(long id, ZonedDateTime createdOn, AccountInfo createdBy, ProcessExecutionRecord workflow) {
         this.id = id;
@@ -76,6 +81,14 @@ public class MapExportTask {
 
     public void setTransform(ProcessExecutionRecord transform) {
         this.transform = transform;
+    }
+
+    public void addStepToTableNameMapping(long stepKey, UUID tableName) {
+        this.stepTableNameMappings.put(stepKey, tableName);
+    }
+
+    public UUID getTableNameForStep(long stepKey) {
+        return this.stepTableNameMappings.get(stepKey);
     }
 
 }
