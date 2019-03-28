@@ -127,7 +127,7 @@ public class EvolutionService implements InitializingBean {
                         snapshot.stepName = table.getLeft();
                         snapshot.tableName = table.getRight();
                         snapshot.feature = feature;
-                        snapshot.updates = this.featureRepository.getUpdates(table.getRight(), id);
+                        snapshot.updates = this.featureRepository.getUpdates(table.getRight(), uri);
 
                         result.add(snapshot);
                     }
