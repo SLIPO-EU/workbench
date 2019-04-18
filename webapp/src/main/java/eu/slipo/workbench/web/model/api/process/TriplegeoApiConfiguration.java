@@ -1,5 +1,7 @@
 package eu.slipo.workbench.web.model.api.process;
 
+import org.apache.commons.lang3.StringUtils;
+
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 
@@ -209,20 +211,48 @@ public class TriplegeoApiConfiguration {
 
     public void merge(TriplegeoConfiguration configuration) {
         configuration.setProfile(profile);
-        configuration.setInputFormat(inputFormat);
-        configuration.setEncoding(encoding);
-        configuration.setAttrKey(attrKey);
-        configuration.setAttrName(attrName);
-        configuration.setAttrCategory(attrCategory);
-        configuration.setAttrGeometry(attrGeometry);
-        configuration.setDelimiter(delimiter);
-        configuration.setQuote(quote);
-        configuration.setAttrX(attrX);
-        configuration.setAttrY(attrY);
-        configuration.setFeatureSource(featureSource);
-        configuration.setSourceCRS(sourceCRS);
-        configuration.setTargetCRS(targetCRS);
-        configuration.setDefaultLang(defaultLang);
+        if ((inputFormat != null) && (inputFormat != EnumDataFormat.UNDEFINED)) {
+            configuration.setInputFormat(inputFormat);
+        }
+        if (!StringUtils.isBlank(encoding)) {
+            configuration.setEncoding(encoding);
+        }
+        if (!StringUtils.isBlank(attrKey)) {
+            configuration.setAttrKey(attrKey);
+        }
+        if (!StringUtils.isBlank(attrName)) {
+            configuration.setAttrName(attrName);
+        }
+        if (!StringUtils.isBlank(attrCategory)) {
+            configuration.setAttrCategory(attrCategory);
+        }
+        if (!StringUtils.isBlank(attrGeometry)) {
+            configuration.setAttrGeometry(attrGeometry);
+        }
+        if (!StringUtils.isBlank(delimiter)) {
+            configuration.setDelimiter(delimiter);
+        }
+        if (!StringUtils.isBlank(quote)) {
+            configuration.setQuote(quote);
+        }
+        if (!StringUtils.isBlank(attrX)) {
+            configuration.setAttrX(attrX);
+        }
+        if (!StringUtils.isBlank(attrY)) {
+            configuration.setAttrY(attrY);
+        }
+        if (!StringUtils.isBlank(featureSource)) {
+            configuration.setFeatureSource(featureSource);
+        }
+        if (!StringUtils.isBlank(sourceCRS)) {
+            configuration.setSourceCRS(sourceCRS);
+        }
+        if (!StringUtils.isBlank(targetCRS)) {
+            configuration.setTargetCRS(targetCRS);
+        }
+        if (!StringUtils.isBlank(defaultLang)) {
+            configuration.setDefaultLang(defaultLang);
+        }
 
         configuration.setClassificationSpec(null);
         configuration.setMappingSpec(null);
