@@ -33,9 +33,7 @@ public class ProcessSimpleRecord {
         this.version = record.getVersion();
 
         for (ProcessRecord p : record.getRevisions()) {
-            if (p.getVersion() != this.version) {
-                this.revisions.add(new ProcessSimpleRecord(p));
-            }
+            this.revisions.add(new ProcessSimpleRecord(p));
         }
     }
 
