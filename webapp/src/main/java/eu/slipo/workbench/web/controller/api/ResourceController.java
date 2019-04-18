@@ -75,7 +75,7 @@ public class ResourceController extends BaseController {
     }
 
     /**
-     * Downloads a file
+     * Downloads a resource file
      *
      * @param id The resource id
      * @param version The resource revision
