@@ -8,7 +8,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.Locale;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -18,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -39,9 +37,9 @@ import eu.slipo.workbench.web.model.UploadRequest;
 @RestController
 @Secured({ "ROLE_USER", "ROLE_AUTHOR", "ROLE_ADMIN" })
 @RequestMapping(produces = "application/json")
-public class FileSytemController extends BaseController {
+public class FileSystemController extends BaseController {
 
-    private static final Logger logger = LoggerFactory.getLogger(FileSytemController.class);
+    private static final Logger logger = LoggerFactory.getLogger(FileSystemController.class);
 
     private long maxUserSpace;
 
@@ -207,7 +205,12 @@ public class FileSytemController extends BaseController {
             final Path relativePath = Paths.get(request.getPath(), request.getFilename());
             final Path absolutePath = fileNamingStrategy.resolvePath(userId, relativePath);
 
-            if (Files.exists(absolutePath)) {
+            File localFile = absolutePath.toFile();
+
+            if(localFile.isDirectory()) {
+                return RestResponse.error(FileSystemErrorCode.PATH_IS_DIRECTORY, "File is a directory");
+            }
+            if (localFile.exists()) {
                 return RestResponse.error(FileSystemErrorCode.PATH_ALREADY_EXISTS, "File with the same name already exists");
             }
 
@@ -220,22 +223,6 @@ public class FileSytemController extends BaseController {
         } catch (Exception ex) {
             return RestResponse.error(BasicErrorCode.UNKNOWN, "An unknown error has occurred");
         }
-    }
-
-    private long parseSize(String size) {
-        Assert.hasLength(size, "Size must not be empty");
-
-        size = size.toUpperCase(Locale.ENGLISH);
-        if (size.endsWith("KB")) {
-            return Long.valueOf(size.substring(0, size.length() - 2)) * 1024;
-        }
-        if (size.endsWith("MB")) {
-            return Long.valueOf(size.substring(0, size.length() - 2)) * 1024 * 1024;
-        }
-        if (size.endsWith("GB")) {
-            return Long.valueOf(size.substring(0, size.length() - 2)) * 1024 * 1024 * 1024;
-        }
-        return Long.valueOf(size);
     }
 
 }
