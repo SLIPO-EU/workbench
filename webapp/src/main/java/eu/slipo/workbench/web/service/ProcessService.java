@@ -15,6 +15,7 @@ import eu.slipo.workbench.common.model.process.EnumProcessTaskType;
 import eu.slipo.workbench.common.model.process.InvalidProcessDefinitionException;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.ProcessExecutionApiRecord;
+import eu.slipo.workbench.common.model.process.ProcessExecutionFileNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessExecutionNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessExecutionQuery;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
@@ -74,9 +75,12 @@ public interface ProcessService {
      * @param version the process version
      * @return an instance of {@link ProcessExecutionRecord}
      *
+     * @throws ProcessNotFoundException if the process is not found
      * @throws ProcessExecutionNotFoundException if the process execution is not found
      */
-    ProcessExecutionRecordView getProcessExecution(long id, long version) throws ProcessExecutionNotFoundException;
+    ProcessExecutionRecordView getProcessExecution(
+        long id, long version
+    ) throws ProcessNotFoundException, ProcessExecutionNotFoundException;
 
     /**
      * Get an execution for a process with a specific id and version. The response
@@ -87,10 +91,12 @@ public interface ProcessService {
      * @param executionId the execution id
      * @return a list of {@link ProcessExecutionRecord}
      *
+     * @throws ProcessNotFoundException if the process is not found
      * @throws ProcessExecutionNotFoundException if the process execution is not found
      */
-    ProcessExecutionRecordView getProcessExecution(long id, long version, long executionId)
-        throws ProcessExecutionNotFoundException;
+    ProcessExecutionRecordView getProcessExecution(
+        long id, long version, long executionId
+    ) throws ProcessNotFoundException, ProcessExecutionNotFoundException;
 
     /**
      * Finds the most recent version of an existing process instance
@@ -246,9 +252,10 @@ public interface ProcessService {
      *
      * @throws ProcessNotFoundException if the process revision is not found
      * @throws ProcessExecutionNotFoundException if the execution is not found
+     * @throws ProcessExecutionFileNotFoundException if the file is not found
      */
     File getProcessExecutionFile(long id, long version, long executionId, long fileId)
-        throws ProcessNotFoundException, ProcessExecutionNotFoundException;
+        throws ProcessNotFoundException, ProcessExecutionNotFoundException, ProcessExecutionFileNotFoundException;
 
     /**
      * Get KPI data for the selected execution

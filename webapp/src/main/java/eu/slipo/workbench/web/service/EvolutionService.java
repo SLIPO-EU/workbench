@@ -28,6 +28,7 @@ import eu.slipo.workbench.common.model.process.EnumStepFile;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepFileRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepRecord;
+import eu.slipo.workbench.common.model.process.ProcessNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
 import eu.slipo.workbench.common.model.process.Step.Input;
 import eu.slipo.workbench.common.repository.ProcessRepository;
@@ -104,7 +105,12 @@ public class EvolutionService implements InitializingBean {
             .map(r -> {
                 // Get the execution compact view. There is only a single successful (COMPLETED)
                 // execution per revision instance
-                ProcessExecutionRecord e = processRepository.getExecutionCompactView(r.getId(), r.getVersion());
+                ProcessExecutionRecord e = null;
+                try {
+                    e = processRepository.getExecutionCompactView(r.getId(), r.getVersion());
+                } catch (ProcessNotFoundException ex) {
+                    // Ignore
+                }
                 if ((e != null) && (e.getStatus() == EnumProcessExecutionStatus.COMPLETED) && (e.isExported())) {
                     Pair<String, UUID> tables = this.getOutputStepTable(r, e);
                     return Triple.<ProcessRecord, ProcessExecutionRecord, Pair<String, UUID>>of(r, e, tables);
