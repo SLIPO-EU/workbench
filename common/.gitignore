@@ -4,12 +4,9 @@
 
 /vendor/triplegeo/config/profiles/*
 /vendor/reverseTriplegeo/config/profiles/*
-/vendor/fagi/config/profiles/*
-/vendor/limes/config/profiles/*
+
 !/vendor/triplegeo/config/profiles/.gitkeep
 !/vendor/triplegeo/config/profiles/OSM_Europe/
 !/vendor/reverseTriplegeo/config/profiles/SLIPO_default/
 !/vendor/reverseTriplegeo/config/profiles/OSM_Europe/
-!/vendor/limes/config/profiles/SLIPO_MatchByName/
-!/vendor/limes/config/profiles/SLIPO_equiMatchByNameAndDistance/
 /.apt_generated_tests/

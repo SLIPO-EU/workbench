@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rules>
+  <validationRule>
+    <defaultAction>accept</defaultAction>
+  </validationRule>
+  <rule>
+    <propertyA>http://www.opengis.net/ont/geosparql#hasGeometry http://www.opengis.net/ont/geosparql#asWKT</propertyA>
+    <propertyB>http://www.opengis.net/ont/geosparql#hasGeometry http://www.opengis.net/ont/geosparql#asWKT</propertyB>
+    <defaultAction>keep-more-points</defaultAction>
+  </rule>
+  <rule>
+    <propertyA>http://slipo.eu/def#email http://slipo.eu/def#contactValue</propertyA>
+    <propertyB>http://slipo.eu/def#email http://slipo.eu/def#contactValue</propertyB>
+    <defaultAction>keep-longest</defaultAction>
+  </rule>  
+  <rule>
+    <propertyA>http://slipo.eu/def#name http://slipo.eu/def#nameValue</propertyA>
+    <propertyB>http://slipo.eu/def#name http://slipo.eu/def#nameValue</propertyB>
+    <defaultAction>keep-longest</defaultAction>
+  </rule>
+  <rule>
+    <propertyA>http://slipo.eu/def#address http://slipo.eu/def#street</propertyA>
+    <propertyB>http://slipo.eu/def#address http://slipo.eu/def#street</propertyB>
+    <defaultAction>keep-longest</defaultAction>
+  </rule>
+  <rule>
+    <propertyA>http://slipo.eu/def#address http://slipo.eu/def#number</propertyA>
+    <propertyB>http://slipo.eu/def#address http://slipo.eu/def#number</propertyB>
+    <defaultAction>keep-longest</defaultAction>
+  </rule>
+  <rule>
+    <propertyA>http://slipo.eu/def#address http://slipo.eu/def#postcode</propertyA>
+    <propertyB>http://slipo.eu/def#address http://slipo.eu/def#postcode</propertyB>
+    <defaultAction>keep-longest</defaultAction>
+  </rule>
+  <rule>
+    <propertyA>http://slipo.eu/def#locality</propertyA>
+    <propertyB>http://slipo.eu/def#locality</propertyB>
+    <defaultAction>keep-longest</defaultAction>
+  </rule>
+  <rule>
+    <propertyA>http://slipo.eu/def#country</propertyA>
+    <propertyB>http://slipo.eu/def#country</propertyB>
+    <defaultAction>keep-longest</defaultAction>
+  </rule>
+  <rule>
+    <propertyA>http://slipo.eu/def#homepage</propertyA>
+    <propertyB>http://slipo.eu/def#homepage</propertyB>
+	<actionRuleSet>
+		<actionRule>
+			<condition>
+				<function>exists(a)</function>
+			</condition>
+			<action>keep-left</action>
+		</actionRule>					
+	</actionRuleSet>
+    <defaultAction>keep-right</defaultAction>
+  </rule>
+  <rule>
+    <propertyA>http://slipo.eu/def#phone http://slipo.eu/def#contactValue</propertyA>
+    <propertyB>http://slipo.eu/def#phone http://slipo.eu/def#contactValue</propertyB>
+	<defaultAction>keep-longest</defaultAction>
+  </rule>
+  <rule>
+    <propertyA>http://slipo.eu/def#fax http://slipo.eu/def#contactValue</propertyA>
+    <propertyB>http://slipo.eu/def#fax http://slipo.eu/def#contactValue</propertyB>
+    <defaultAction>keep-longest</defaultAction>
+  </rule>
+  <rule>
+    <propertyA>http://slipo.eu/def#openingHours http://slipo.eu/def#concat</propertyA>
+    <propertyB>http://slipo.eu/def#openingHours http://slipo.eu/def#concat</propertyB>
+    <defaultAction>keep-longest</defaultAction>
+  </rule>  
+  <defaultDatasetAction>keep-left</defaultDatasetAction>
+  <ensembles>
+	<functionalProperties></functionalProperties>
+	<nonFunctionalProperties></nonFunctionalProperties>
+  </ensembles>
+</rules>
