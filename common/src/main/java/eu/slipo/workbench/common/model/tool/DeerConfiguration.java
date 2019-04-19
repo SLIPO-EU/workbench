@@ -34,7 +34,7 @@ public class DeerConfiguration extends EnrichConfiguration<Deer>
     /**
      * This class represents the configuration of a specific version
      */
-    public static final String VERSION = "1.1";
+    public static final String VERSION = "2.0";
     
     public class OutputNameMapper implements InputToOutputNameMapper<Deer>
     {
@@ -44,9 +44,10 @@ public class DeerConfiguration extends EnrichConfiguration<Deer>
         public Multimap<OutputPart<Deer>, OutputSpec> applyToPath(List<Path> inputList)
         {
             Assert.state(outputFormat != null, "The output format is required");
-            final String path = "output" + "." + outputFormat.getFilenameExtension();                
+            final String resultsPath = "enriched" + "." + outputFormat.getFilenameExtension();             
             return ImmutableListMultimap.of(
-                EnumDeerOutputPart.ENRICHED, OutputSpec.of(Paths.get(path), outputFormat));
+                EnumDeerOutputPart.ENRICHED, OutputSpec.of(Paths.get(resultsPath), outputFormat),
+                EnumDeerOutputPart.STATS, OutputSpec.of(Paths.get("deer-analytics.json"), EnumDataFormat.JSON));
         }
     }
     

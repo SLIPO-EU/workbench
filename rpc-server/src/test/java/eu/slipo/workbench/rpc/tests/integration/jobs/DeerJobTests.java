@@ -107,15 +107,21 @@ public class DeerJobTests extends AbstractJobTests
 
     protected Map<String, String> extractInputParameters(Fixture f)
     {
-        final Path inputPath =  f.inputDir.resolve("1.nt");
+        final Path inputPath =  f.inputDir.resolve("fused.nt");
         return Collections.singletonMap("input", inputPath.toString());
+    }
+
+    @Override
+    protected boolean checkForEqualResults()
+    {
+        return false;
     }
 
     //
     // Tests
     //
 
-    @Test(timeout = 20 * 1000L)
+    @Test(timeout = 30 * 1000L)
     public void test1() throws Exception
     {
         testWithFixture(fixtures.get(0), this::extractInputParameters);

@@ -164,7 +164,8 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
     {
         NT("nt"), 
         CSV("csv"), 
-        CSV_UNIQUE_LINKS("csv-unique-links");
+        CSV_UNIQUE_LINKS("csv-unique-links"),
+        CSV_ENSEMBLES("csv-ensembles");
         
         private final String key;
         

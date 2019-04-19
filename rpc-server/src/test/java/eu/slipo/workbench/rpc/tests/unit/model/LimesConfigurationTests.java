@@ -83,21 +83,47 @@ public class LimesConfigurationTests
 
             config.addPrefix("example", "http://example.com/schema/def#");
 
-            config.setMetric("trigrams(a.level, b.level)");
-
             config.setSource("a",
-                "/tmp/limes/input/a.nt",
+                "/var/local/limes/input/a.nt",
                 "?x",
                 "slipo:name/slipo:nameType RENAME label");
             config.setTarget("b",
-                "/tmp/limes/input/b.nt",
+                "/var/local/limes/input/b.nt",
                 "?y",
                 "slipo:name/slipo:nameType RENAME label");
 
-            config.setOutputDir("/tmp/limes/output");
+            config.setMetric("trigrams(a.label, b.label)");
+
+            config.setOutputDir("/var/local/limes/output");
             config.setOutputFormatFromString("N-TRIPLES");
             config.setAccepted(0.98, "accepted.nt");
             config.setReview(0.95, "review.nt");
+
+            return config;
+        }
+
+        @Bean
+        public LimesConfiguration config2()
+        {
+            LimesConfiguration config = new LimesConfiguration();
+
+            config.addPrefix("example", "http://example.com/schema/def#");
+
+            config.setSource("a",
+                "/var/local/limes/input/a.nt",
+                "?x",
+                "slipo:name/slipo:nameType RENAME label");
+            config.setTarget("b",
+                "/var/local/limes/input/b.nt",
+                "?y",
+                "slipo:name/slipo:nameType RENAME label");
+
+            config.setMetric("trigrams(a.label, b.label)");
+
+            config.setOutputDir("/var/local/limes/output");
+            config.setOutputFormatFromString("TAB");
+            config.setAccepted(0.98, "accepted.csv");
+            config.setReview(0.95, "review.csv");
 
             return config;
         }
@@ -127,6 +153,9 @@ public class LimesConfigurationTests
 
     @Autowired
     LimesConfiguration config1;
+
+    @Autowired
+    LimesConfiguration config2;
 
     void checkEquals(LimesConfiguration.Input expected, LimesConfiguration.Input actual)
     {
@@ -299,9 +328,21 @@ public class LimesConfigurationTests
     }
 
     @Test
+    public void test2_serializeAsJson() throws Exception
+    {
+        serializeAsJson(config2);
+    }
+
+    @Test
     public void test1_serializeAsXml() throws Exception
     {
         serializeAsXml(config1);
+    }
+
+    @Test
+    public void test2_serializeAsXml() throws Exception
+    {
+        serializeAsXml(config2);
     }
 
     @Test
@@ -311,9 +352,21 @@ public class LimesConfigurationTests
     }
 
     @Test
+    public void test2_serializeAsProperties() throws Exception
+    {
+        serializeAsProperties(config2);
+    }
+
+    @Test
     public void test1_serializeDefault() throws Exception
     {
         serializeDefault(config1);
+    }
+
+    @Test
+    public void test2_serializeDefault() throws Exception
+    {
+        serializeDefault(config2);
     }
 
     @Test
@@ -323,9 +376,21 @@ public class LimesConfigurationTests
     }
 
     @Test
+    public void test2_validate() throws Exception
+    {
+        validate(config2);
+    }
+
+    @Test
     public void test1_setInputMap() throws Exception
     {
         setInputMap(config1);
+    }
+
+    @Test
+    public void test2_setInputMap() throws Exception
+    {
+        setInputMap(config2);
     }
 
     @Test
@@ -344,5 +409,17 @@ public class LimesConfigurationTests
 
         assertEquals(Arrays.asList("accepted.nt"), outputNames.get(EnumLimesOutputPart.ACCEPTED));
         assertEquals(Arrays.asList("review.nt"), outputNames.get(EnumLimesOutputPart.REVIEW));
+    }
+
+    @Test
+    public void test2_getOutputNames() throws Exception
+    {
+        Multimap<OutputPart<Limes>, OutputSpec> outputMap = config2.getOutputNameMapper()
+            .apply(Arrays.asList("/data/a.nt", "/data/b.nt"));
+        Multimap<OutputPart<Limes>, String> outputNames =
+            Multimaps.transformValues(outputMap, s -> s.fileName());
+
+        assertEquals(Arrays.asList("accepted.csv"), outputNames.get(EnumLimesOutputPart.ACCEPTED));
+        assertEquals(Arrays.asList("review.csv"), outputNames.get(EnumLimesOutputPart.REVIEW));
     }
 }

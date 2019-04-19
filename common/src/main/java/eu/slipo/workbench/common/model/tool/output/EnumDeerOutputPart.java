@@ -4,7 +4,9 @@ import eu.slipo.workbench.common.model.tool.Deer;
 
 public enum EnumDeerOutputPart implements OutputPart<Deer>
 {
-    ENRICHED("enriched", EnumOutputType.OUTPUT);
+    ENRICHED("enriched", EnumOutputType.OUTPUT), 
+    
+    STATS("stats", EnumOutputType.KPI);
 
     private final String key;
 

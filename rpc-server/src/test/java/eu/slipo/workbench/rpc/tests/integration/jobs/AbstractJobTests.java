@@ -113,6 +113,8 @@ public abstract class AbstractJobTests
 
     protected abstract void warn(String msg, Object ...args);
 
+    protected abstract boolean checkForEqualResults();
+
     protected void testWithFixture(
         Fixture fixture, Function<Fixture, Map<String, String>> inputParametersExtractor)
         throws Exception
@@ -197,10 +199,12 @@ public abstract class AbstractJobTests
         final List<Path> expectedResults = Files.list(fixture.resultsDir)
             .filter(Files::isRegularFile)
             .collect(Collectors.toList());
-        for (Path expectedResult: expectedResults) {
-            Path fileName = expectedResult.getFileName();
-            Path result = outputDir.resolve(fileName);
-            checkResultFile(expectedResult, result);
+        if (checkForEqualResults()) {
+            for (Path expectedResult: expectedResults) {
+                Path fileName = expectedResult.getFileName();
+                Path result = outputDir.resolve(fileName);
+                checkResultFile(expectedResult, result);
+            }
         }
     }
 
