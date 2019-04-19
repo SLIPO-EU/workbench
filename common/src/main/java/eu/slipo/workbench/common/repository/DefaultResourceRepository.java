@@ -75,29 +75,26 @@ public class DefaultResourceRepository implements ResourceRepository
             if (query.getCreatedBy() != null) {
                 filters.add("(r.createdBy.id = :ownerId or :ownerId is null)");
             }
-
             if (!StringUtils.isBlank(query.getName())) {
                 filters.add("(r.name like :name)");
             }
-
             if (!StringUtils.isBlank(query.getDescription())) {
                 filters.add("(r.description like :description)");
             }
-
             if (query.getFormat() != EnumDataFormat.UNDEFINED) {
                 filters.add("(r.inputFormat like :format)");
             }
-
             if (query.getType() != EnumResourceType.UNDEFINED) {
                 filters.add("(r.type like :type)");
             }
-
             if (query.getSize() != null) {
-                filters.add("(g.size >= :size)");
+                filters.add("(r.numberOfEntities >= :numberOfEntities)");
             }
-
             if (query.getBoundingBox() != null) {
-                filters.add("(intersects(:geometry, g.geometry) = true)");
+                filters.add("(intersects(:boundingBox, r.boundingBox) = true)");
+            }
+            if (query.isExported()) {
+                filters.add("(r.tableName is not null)");
             }
         }
 
@@ -506,11 +503,9 @@ public class DefaultResourceRepository implements ResourceRepository
     }
 
     private void setFindParameters(ResourceQuery resourceQuery, Query query) {
-        Geometry geometry = resourceQuery.getBoundingBox();
-        if ((geometry != null) && (geometry.getSRID() == 0)) {
-            geometry.setSRID(4326);
+        if (resourceQuery.getCreatedBy() != null) {
+            query.setParameter("ownerId", resourceQuery.getCreatedBy());
         }
-
         if (!StringUtils.isBlank(resourceQuery.getName())) {
             query.setParameter("name", "%" + resourceQuery.getName() + "%");
         }
@@ -524,13 +519,16 @@ public class DefaultResourceRepository implements ResourceRepository
             query.setParameter("type", resourceQuery.getType());
         }
         if (resourceQuery.getSize() != null) {
-            query.setParameter("size", resourceQuery.getSize());
+            query.setParameter("numberOfEntities", resourceQuery.getSize());
         }
-        if (geometry != null) {
-            query.setParameter("geometry", geometry);
-        }
-        if (resourceQuery.getCreatedBy() != null) {
-            query.setParameter("ownerId", resourceQuery.getCreatedBy());
+
+        Geometry bbox = resourceQuery.getBoundingBox();
+        if (bbox != null) {
+            if (bbox.getSRID() == 0) {
+                bbox.setSRID(4326);
+            }
+
+            query.setParameter("boundingBox", bbox);
         }
     }
 

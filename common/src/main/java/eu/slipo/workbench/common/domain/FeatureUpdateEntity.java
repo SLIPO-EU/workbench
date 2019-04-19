@@ -38,9 +38,13 @@ public class FeatureUpdateEntity {
     @Column(name = "table_name", columnDefinition = "uuid")
     UUID tableName;
 
-    @NotBlank
+    @NotNull
     @Column(name = "`feature_id`", nullable = false, updatable = false)
     long featureId;
+
+    @NotBlank
+    @Column(name = "`feature_uri`", nullable = false, updatable = false)
+    String featureUri;
 
     @Column(name = "properties", updatable = false, nullable = false)
     JsonNode properties;
@@ -67,6 +71,10 @@ public class FeatureUpdateEntity {
 
     public long getFeatureId() {
         return featureId;
+    }
+
+    public String getFeatureUri() {
+        return featureUri;
     }
 
     public JsonNode getProperties() {

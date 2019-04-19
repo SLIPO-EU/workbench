@@ -28,6 +28,7 @@ import eu.slipo.workbench.common.model.process.EnumProcessTaskType;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.ProcessErrorCode;
 import eu.slipo.workbench.common.model.process.ProcessExecutionApiRecord;
+import eu.slipo.workbench.common.model.process.ProcessExecutionFileNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessExecutionNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessExecutionQuery;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
@@ -245,6 +246,8 @@ public class ProcessController extends BaseController {
             response.sendError(HttpServletResponse.SC_NOT_FOUND, "Process was not found");
         } catch (ProcessExecutionNotFoundException ex) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND, "Process execution was not found");
+        } catch (ProcessExecutionFileNotFoundException ex) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "File was not found");
         }
 
         response.sendError(HttpServletResponse.SC_GONE, "File has been removed");
@@ -278,6 +281,8 @@ public class ProcessController extends BaseController {
             response.sendError(HttpServletResponse.SC_NOT_FOUND, "Process was not found");
         } catch (ProcessExecutionNotFoundException ex) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND, "Process execution was not found");
+        } catch (ProcessExecutionFileNotFoundException ex) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "File was not found");
         }
 
         response.sendError(HttpServletResponse.SC_GONE, "File has been removed");

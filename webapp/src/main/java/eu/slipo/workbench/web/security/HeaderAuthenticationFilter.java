@@ -57,6 +57,7 @@ public class HeaderAuthenticationFilter extends GenericFilterBean {
         ServletRequest request, javax.servlet.ServletResponse response, FilterChain chain
     ) throws IOException, ServletException {
         boolean clearContext = false;
+        boolean execute = true;
 
         // Get HTTP request/response
         HttpServletRequest httpRequest = (HttpServletRequest) request;
@@ -71,13 +72,16 @@ public class HeaderAuthenticationFilter extends GenericFilterBean {
                 this.attemptAuthentication(key);
             } catch (Exception ex) {
                 this.handleUnauthorizedRequest(httpResponse, ex);
+                execute = false;
             }
             // Reset context after the request is completed
             clearContext = true;
         }
 
         // Continue request
-        chain.doFilter(request, response);
+        if(execute) {
+          chain.doFilter(request, response);
+        }
 
         // Cleanup
         if (clearContext) {

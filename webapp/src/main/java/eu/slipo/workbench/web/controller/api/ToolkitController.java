@@ -94,6 +94,11 @@ public class ToolkitController extends BaseController {
     @Autowired
     private ProcessService processService;
 
+    /**
+     * Enumerate all registered SLIPO Toolkit components profiles
+     *
+     * @return A dictionary with all profiles per SLIPO Toolkit component
+     */
     @GetMapping(value = "/api/v1/toolkit/profiles")
     public RestResponse<?> profiles() {
         try {
@@ -103,6 +108,13 @@ public class ToolkitController extends BaseController {
         }
     }
 
+    /**
+     * Execute a transformation operation
+     *
+     * @param request Transform operation configuration
+     *
+     * @return An instance of {@link ProcessExecutionSimpleRecord} for the new execution
+     */
     @PostMapping(value = "/api/v1/toolkit/transform")
     public RestResponse<?> transform(@RequestBody TransformRequest request) {
         ProcessRecord record = null;
@@ -143,6 +155,13 @@ public class ToolkitController extends BaseController {
         }
     }
 
+    /**
+     * Execute an interlink operation
+     *
+     * @param request Interlink operation configuration
+     *
+     * @return An instance of {@link ProcessExecutionSimpleRecord} for the new execution
+     */
     @PostMapping(value = "/api/v1/toolkit/interlink")
     public RestResponse<?> interlink(@RequestBody InterlinkRequest request) {
         ProcessRecord record = null;
@@ -179,6 +198,13 @@ public class ToolkitController extends BaseController {
         }
     }
 
+    /**
+     * Execute a fusion operation
+     *
+     * @param request Fusion operation configuration
+     *
+     * @return An instance of {@link ProcessExecutionSimpleRecord} for the new execution
+     */
     @PostMapping(value = "/api/v1/toolkit/fuse")
     public RestResponse<?> fuse(@RequestBody FusionRequest request) {
         ProcessRecord record = null;
@@ -220,6 +246,13 @@ public class ToolkitController extends BaseController {
         }
     }
 
+    /**
+     * Execute an enrichment operation
+     *
+     * @param request Enrichment operation configuration
+     *
+     * @return An instance of {@link ProcessExecutionSimpleRecord} for the new execution
+     */
     @PostMapping(value = "/api/v1/toolkit/enrich")
     public RestResponse<?> enrich(@RequestBody EnrichRequest request) {
         ProcessRecord record = null;

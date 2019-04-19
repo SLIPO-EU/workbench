@@ -26,6 +26,9 @@ public class ProcessQuery {
      */
     private Integer createdBy;
 
+    /**
+     * Exclude processes created by API calls
+     */
     private boolean excludeApi;
 
     public String getName() {

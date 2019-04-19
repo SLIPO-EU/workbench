@@ -9,8 +9,8 @@ import eu.slipo.workbench.common.model.poi.EnumResourceType;
 /**
  * Query for searching resources
  */
-public class ResourceQuery
-{
+public class ResourceQuery {
+
     /**
      * Search resources by name using LIKE SQL operator
      */
@@ -46,6 +46,11 @@ public class ResourceQuery
      * Search by the ID of the user that created this resource
      */
     private Integer createdBy;
+
+    /**
+     * Include only processes that have been successfully exported to PostGIS
+     */
+    private boolean exported;
 
     public String getName() {
         return name;
@@ -101,13 +106,20 @@ public class ResourceQuery
         this.size = size;
     }
 
-    public Integer getCreatedBy()
-    {
+    public Integer getCreatedBy() {
         return createdBy;
     }
 
-    public void setCreatedBy(Integer createdBy)
-    {
+    public void setCreatedBy(Integer createdBy) {
         this.createdBy = createdBy;
     }
+
+    public boolean isExported() {
+        return exported;
+    }
+
+    public void setExported(boolean exported) {
+        this.exported = exported;
+    }
+
 }

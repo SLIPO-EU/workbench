@@ -24,6 +24,7 @@ import eu.slipo.workbench.common.model.QueryResultPage;
 import eu.slipo.workbench.common.model.RestResponse;
 import eu.slipo.workbench.common.model.process.EnumProcessTaskType;
 import eu.slipo.workbench.common.model.process.ProcessErrorCode;
+import eu.slipo.workbench.common.model.process.ProcessExecutionFileNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessExecutionNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessQuery;
@@ -45,6 +46,12 @@ public class ProcessController extends BaseController {
     @Autowired
     private ProcessService processService;
 
+    /**
+     * Query user workflows
+     *
+     * @param request A query for filtering workflows
+     * @return A list of {@link ProcessSimpleRecord}
+     */
     @PostMapping(value = "/api/v1/process")
     public RestResponse<?> query(@RequestBody ProcessQueryRequest request) {
         try {
@@ -55,6 +62,7 @@ public class ProcessController extends BaseController {
             ProcessQuery query = request.getQuery();
             query.setCreatedBy(this.currentUserId());
             query.setTemplate(false);
+            query.setExcludeApi(false);
 
             PageRequest pageRequest = request.getPageRequest();
 
@@ -71,6 +79,13 @@ public class ProcessController extends BaseController {
         }
     }
 
+    /**
+     * Get workflow execution instance status
+     *
+     * @param id The workflow id
+     * @param version The workflow version
+     * @return an instance of {@link ProcessExecutionSimpleRecord}
+     */
     @GetMapping(value = "/api/v1/process/{id}/{version}")
     public RestResponse<?> getStatus(
         @PathVariable long id, @PathVariable long version
@@ -89,6 +104,18 @@ public class ProcessController extends BaseController {
         }
     }
 
+    /**
+     * Get workflow execution instance file
+     *
+     * @param id The workflow id
+     * @param version The workflow version
+     * @param fileId The file id
+     * @param response The HTTP response
+     * @return An instance of {@link FileSystemResource} if file exists; Otherwise a
+     * server error is returned
+     *
+     * @throws IOException If an I/O error has occurred
+     */
     @GetMapping(value = "/api/v1/process/{id}/{version}/file/{fileId}")
     public FileSystemResource getFile(
         @PathVariable long id, @PathVariable long version, @PathVariable long fileId,
@@ -123,11 +150,24 @@ public class ProcessController extends BaseController {
             createErrorResponse(
                 HttpServletResponse.SC_NOT_FOUND, response, ProcessErrorCode.EXECUTION_NOT_FOUND, "Process execution was not found"
             );
+        } catch (ProcessExecutionFileNotFoundException ex) {
+            createErrorResponse(
+                HttpServletResponse.SC_NOT_FOUND, response, ProcessErrorCode.EXECUTION_NOT_FOUND, "File was not found"
+            );
         }
 
         return null;
     }
 
+    /**
+     * Starts a workflow revision execution
+     *
+     * @param id The workflow id
+     * @param version The workflow version
+     *
+     * @return An empty instance of {@link RestResponse} if operation was successful;
+     * Otherwise an error message is returned
+     */
     @PostMapping(value = "/api/v1/process/{id}/{version}/start")
     public RestResponse<?> start(@PathVariable long id, @PathVariable long version) {
         try {
@@ -142,6 +182,15 @@ public class ProcessController extends BaseController {
         return RestResponse.success();
     }
 
+    /**
+     * Stops a workflow revision execution
+     *
+     * @param id The workflow id
+     * @param version The workflow version
+     *
+     * @return An empty instance of {@link RestResponse} if operation was successful;
+     * Otherwise an error message is returned
+     */
     @PostMapping(value = "/api/v1/process/{id}/{version}/stop")
     public RestResponse<?> stop(@PathVariable long id, @PathVariable long version) {
         try {

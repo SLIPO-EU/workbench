@@ -224,7 +224,7 @@ public class ProxyController implements InitializingBean {
                 "               select 'Feature' As type, " +
                 "                      ST_AsGeoJSON(dt.\"%7$s\")::json As geometry," +
                 "                      row_to_json((select columns FROM (SELECT %3$s) As columns)) As properties, " +
-                "                      '%2$s::' || \"%5$s\" as id " +
+                "                      '%2$s::' || dt.\"%5$s\" as id " +
                 "               from   \"%1$s\".\"%2$s\" As dt" +
                 "               where  " + where +
                 "    ) As f " +

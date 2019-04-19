@@ -140,7 +140,7 @@ public class ProvenanceService implements InitializingBean {
         JsonNode features = this.getFeatures(queries);
 
         // Get updates
-        List<FeatureUpdateRecord> updates = this.featureRepository.getUpdates(queries.get(0).tableName, id);
+        List<FeatureUpdateRecord> updates = this.featureRepository.getUpdates(queries.get(0).tableName, uri);
 
         return Provenance.of(step.name(), features, actions, outputKey, id, uri, updates);
     }
@@ -212,6 +212,8 @@ public class ProvenanceService implements InitializingBean {
                 f = stepRecord.getOutputFile(EnumStepFile.OUTPUT, partKey);
                 if (f.getTableName() != null) {
                     Assert.equals(step.input().size(), 3);
+
+                    queries.add(FeatureQuery.of(level, step.name(), f.getTableName(), featureUri));
 
                     // Find link if any exists
                     Object[] link = this.findLink(f.getTableName().toString() + FAGI_LINK_SUFFIX, featureUri);
@@ -418,6 +420,9 @@ public class ProvenanceService implements InitializingBean {
                 FeatureQuery q = queries.get(index);
 
                 String columns = getColumns(q.tableName);
+                if(StringUtils.isBlank(columns)) {
+                    continue;
+                }
 
                 dataQuery += (index == 0 ? " " : " union all ") +
                     "    select " +

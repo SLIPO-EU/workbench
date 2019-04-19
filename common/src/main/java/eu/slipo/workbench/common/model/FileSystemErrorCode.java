@@ -10,6 +10,8 @@ public enum FileSystemErrorCode implements ErrorCode {
     PATH_ALREADY_EXISTS,
     PATH_NOT_FOUND,
     PATH_NOT_EMPTY,
+    PATH_IS_DIRECTORY,
+    PATH_MAX_DEPTH,
     NOT_ENOUGH_SPACE,
     ;
 
