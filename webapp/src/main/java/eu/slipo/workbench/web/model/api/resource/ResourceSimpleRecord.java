@@ -5,6 +5,7 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.vividsolutions.jts.geom.Geometry;
@@ -30,6 +31,8 @@ public class ResourceSimpleRecord implements Serializable {
 
     private Integer numberOfEntities;
 
+    private UUID tableName;
+
     private List<ResourceSimpleRecord> revisions = new ArrayList<ResourceSimpleRecord>();
 
     public ResourceSimpleRecord() {
@@ -44,6 +47,7 @@ public class ResourceSimpleRecord implements Serializable {
         this.size = record.getFileSize();
         this.boundingBox = record.getBoundingBox();
         this.numberOfEntities = record.getNumberOfEntities();
+        this.tableName = record.getTableName();
 
         for (ResourceRecord r : record.getRevisions()) {
             if (r.getVersion() != this.version) {
@@ -87,6 +91,14 @@ public class ResourceSimpleRecord implements Serializable {
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public List<ResourceSimpleRecord> getRevisions() {
         return this.revisions == null ? Collections.emptyList() : Collections.unmodifiableList(this.revisions);
+    }
+
+    public UUID getTableName() {
+        return tableName;
+    }
+
+    public void setTableName(UUID tableName) {
+        this.tableName = tableName;
     }
 
 }

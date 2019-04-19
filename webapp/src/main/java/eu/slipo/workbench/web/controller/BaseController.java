@@ -6,6 +6,7 @@ import java.util.Locale;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.remoting.RemoteConnectFailureException;
+import org.springframework.util.Assert;
 
 import eu.slipo.workbench.common.model.ApplicationException;
 import eu.slipo.workbench.common.model.BasicErrorCode;
@@ -93,6 +94,22 @@ public abstract class BaseController {
         }
 
         return RestResponse.error(BasicErrorCode.UNKNOWN, "An unknown error has occurred", level);
+    }
+
+    protected long parseSize(String size) {
+        Assert.hasLength(size, "Size must not be empty");
+
+        size = size.toUpperCase(Locale.ENGLISH);
+        if (size.endsWith("KB")) {
+            return Long.valueOf(size.substring(0, size.length() - 2)) * 1024;
+        }
+        if (size.endsWith("MB")) {
+            return Long.valueOf(size.substring(0, size.length() - 2)) * 1024 * 1024;
+        }
+        if (size.endsWith("GB")) {
+            return Long.valueOf(size.substring(0, size.length() - 2)) * 1024 * 1024 * 1024;
+        }
+        return Long.valueOf(size);
     }
 
 }

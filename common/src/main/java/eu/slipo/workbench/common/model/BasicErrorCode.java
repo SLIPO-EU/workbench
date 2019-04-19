@@ -23,6 +23,8 @@ public enum BasicErrorCode implements ErrorCode
     AUTHORIZATION_FAILED,
 
     IO_ERROR,                   // IO error has occurred
+
+    REQUEST_SIZE_REJECTED,      // Request size exceeds the configured maximum
     ;
 
     @Override

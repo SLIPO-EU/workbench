@@ -82,7 +82,8 @@ public class LimesConfiguration extends InterlinkConfiguration<Limes>
         N_TRIPLES(EnumDataFormat.N_TRIPLES, "N-TRIPLE", "N-TRIPLES"),
         TURTLE(EnumDataFormat.TURTLE, "TURTLE", "TTL"),
         RDF_XML(EnumDataFormat.RDF_XML, "RDF", "RDF/XML"),
-        RDF_XML_ABBREV(EnumDataFormat.RDF_XML_ABBREV, "RDF/XML-ABBREV");
+        RDF_XML_ABBREV(EnumDataFormat.RDF_XML_ABBREV, "RDF/XML-ABBREV"),
+        CSV(EnumDataFormat.CSV, "TAB", "CSV");
         
         private final EnumDataFormat dataFormat;
 

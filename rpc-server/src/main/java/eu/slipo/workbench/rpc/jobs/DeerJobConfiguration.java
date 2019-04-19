@@ -1,8 +1,10 @@
 package eu.slipo.workbench.rpc.jobs;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -34,6 +36,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.tool.DeerConfiguration;
 import eu.slipo.workbench.common.model.tool.InvalidConfigurationException;
 import eu.slipo.workbench.rpc.jobs.listener.ExecutionContextPromotionListeners;
@@ -230,25 +233,39 @@ public class DeerJobConfiguration extends ContainerBasedJobConfiguration
         @Value("#{jobExecutionContext['outputFormat']}") String outputFormatName,
         @Value("#{T(java.nio.file.Paths).get(jobExecutionContext['outputDir'])}") Path outputDir,
         @Value("#{jobExecutionContext['configFileByName']}") Map<String, String> configFileByName)
+            throws IOException
     {
         String containerName = String.format("deer-%05x", jobId);
 
         Assert.isTrue(inputFiles.size() == 1, "Expected a single input file");
-        String inputFileName = inputFiles.get(0);
-        String configFileName = configFileByName.get("config");
+        final String inputFileName = inputFiles.get(0);
+        final String configFileName = configFileByName.get("config");
 
+        final EnumDataFormat outputFormat = EnumDataFormat.valueOf(outputFormatName);
+        final String resultFileName = "enriched" + "." + outputFormat.getFilenameExtension();
+        final String statsFileName = "deer-analytics.json";
+
+        // At container creation, we need to bind-mount the two (empty) output files: enrichment result and
+        // analytics. The files need to exist (before container creation) in order to convince Docker to
+        // mount them as files (and not as directories).
+        Files.write(outputDir.resolve(resultFileName), new byte[0]);
+        Files.write(outputDir.resolve(statsFileName), new byte[0]);
+
+        // Create container
         return CreateContainerTasklet.builder()
             .client(docker)
             .name(containerName)
             .container(configurer -> configurer
                 .image(imageName)
-                .volume(inputDir, containerDataDir.resolve("input"), true)
-                .volume(outputDir, containerDataDir.resolve("output"))
+                .volume(inputDir.resolve(inputFileName), containerDataDir.resolve(Paths.get("input", inputFileName)), true)
                 .volume(workDir.resolve(configFileName), containerDataDir.resolve("config.ttl"), true)
+                .volume(outputDir.resolve(resultFileName), containerDataDir.resolve(Paths.get("output", resultFileName)))
+                .volume(outputDir.resolve(statsFileName), containerDataDir.resolve(statsFileName))
                 // Set environment
                 .env("INPUT_FILE", containerDataDir.resolve(Paths.get("input", inputFileName)))
                 .env("OUTPUT_FORMAT", outputFormatName)
                 .env("OUTPUT_DIR", containerDataDir.resolve("output"))
+                .env("OUTPUT_NAME", "enriched")
                 .env("CONFIG_FILE", containerDataDir.resolve("config.ttl"))
                 // Set resource limits
                 .memory(memoryLimit)

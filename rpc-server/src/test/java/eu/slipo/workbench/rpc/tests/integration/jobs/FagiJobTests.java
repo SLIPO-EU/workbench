@@ -119,11 +119,17 @@ public class FagiJobTests extends AbstractJobTests
         return Collections.singletonMap("input", inputAsString);
     }
 
+    @Override
+    protected boolean checkForEqualResults()
+    {
+        return false;
+    }
+
     //
     // Tests
     //
 
-    @Test(timeout = 15 * 1000L)
+    @Test(timeout = 25 * 1000L)
     public void test1() throws Exception
     {
         testWithFixture(fixtures.get(0), this::extractInputParameters);

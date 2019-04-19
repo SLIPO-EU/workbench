@@ -56,6 +56,7 @@ import eu.slipo.workbench.common.model.process.InvalidProcessDefinitionException
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.ProcessErrorCode;
 import eu.slipo.workbench.common.model.process.ProcessExecutionApiRecord;
+import eu.slipo.workbench.common.model.process.ProcessExecutionFileNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessExecutionNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessExecutionQuery;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
@@ -198,7 +199,9 @@ public class DefaultProcessService implements ProcessService {
     }
 
     @Override
-    public ProcessExecutionRecordView getProcessExecution(long id, long version) throws ProcessExecutionNotFoundException{
+    public ProcessExecutionRecordView getProcessExecution(
+        long id, long version
+    ) throws ProcessNotFoundException, ProcessExecutionNotFoundException {
 
         ProcessRecord processRecord = processRepository.findOne(id, version, false);
 
@@ -213,8 +216,9 @@ public class DefaultProcessService implements ProcessService {
     }
 
     @Override
-    public ProcessExecutionRecordView getProcessExecution(long id, long version, long executionId)
-        throws ProcessExecutionNotFoundException{
+    public ProcessExecutionRecordView getProcessExecution(
+        long id, long version, long executionId
+    ) throws ProcessNotFoundException, ProcessExecutionNotFoundException{
 
         ProcessRecord processRecord = processRepository.findOne(id, version, false);
         ProcessExecutionRecord executionRecord = processRepository.getExecutionCompactView(id, version);
@@ -433,7 +437,7 @@ public class DefaultProcessService implements ProcessService {
 
     @Override
     public File getProcessExecutionFile(long id, long version, long executionId, long fileId)
-        throws ProcessNotFoundException, ProcessExecutionNotFoundException {
+        throws ProcessNotFoundException, ProcessExecutionNotFoundException, ProcessExecutionFileNotFoundException {
 
         ProcessRecord processRecord = processRepository.findOne(id, version, false);
         ProcessExecutionRecord executionRecord = processRepository.findExecution(executionId);
@@ -455,7 +459,7 @@ public class DefaultProcessService implements ProcessService {
             .findFirst();
 
         if (!result.isPresent()) {
-            throw ProcessExecutionNotFoundException.forExecution(executionId);
+            throw ProcessExecutionFileNotFoundException.forFile(executionId, fileId);
         }
 
         final String filename = result.get().getFilePath();

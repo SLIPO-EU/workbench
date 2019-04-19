@@ -27,9 +27,9 @@ public interface FeatureRepository {
      * Get feature updates
      *
      * @param tableName The feature database table
-     * @param id The feature id
+     * @param uri The feature URI
      * @return an array of @{link FeatureUpdateRecord}
      */
-    List<FeatureUpdateRecord> getUpdates(UUID tableName, long id);
+    List<FeatureUpdateRecord> getUpdates(UUID tableName, String uri);
 
 }

@@ -140,23 +140,29 @@ public class TriplegeoJobTests extends AbstractJobTests
         return Collections.singletonMap("input", inputPathsAsString);
     }
 
+    @Override
+    protected boolean checkForEqualResults()
+    {
+        return false;
+    }
+
     //
     // Tests
     //
 
-    @Test(timeout = 15 * 1000L)
+    @Test(timeout = 25 * 1000L)
     public void test1() throws Exception
     {
         testWithFixture(fixtures.get(0), this::extractInputParameters);
     }
 
-    @Test(timeout = 15 * 1000L)
+    @Test(timeout = 25 * 1000L)
     public void test2() throws Exception
     {
         testWithFixture(fixtures.get(1), this::extractInputParameters);
     }
 
-    @Test(timeout = 15 * 1000L)
+    @Test(timeout = 25 * 1000L)
     public void test3() throws Exception
     {
         testWithFixture(fixtures.get(2), this::extractInputParameters);

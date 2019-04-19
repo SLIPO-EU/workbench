@@ -474,11 +474,12 @@ public class DefaultProcessRepository implements ProcessRepository
 
     @Transactional(readOnly = true)
     @Override
-    public ProcessExecutionRecord getExecutionCompactView(long id, long version)
+    public ProcessExecutionRecord getExecutionCompactView(long id, long version) throws ProcessNotFoundException
     {
         final ProcessRevisionEntity revisionEntity = findRevision(id, version);
-        Assert.notNull(revisionEntity,
-            "The pair of (id, version) does not correspond to a process revision entity");
+        if (revisionEntity == null) {
+            throw new ProcessNotFoundException(id, version);
+        }
 
         final List<ProcessExecutionEntity> executionEntities = revisionEntity.getExecutions().stream()
             .filter(e -> e.getStartedOn() != null)

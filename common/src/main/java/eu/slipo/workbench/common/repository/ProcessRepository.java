@@ -256,8 +256,9 @@ public interface ProcessRepository
      * @param id The process id
      * @param version The version of a specific revision of a process
      * @return A record presenting a compact execution of given process revision
+     * @throws ProcessNotFoundException if process is not found
      */
-    ProcessExecutionRecord getExecutionCompactView(long id, long version);
+    ProcessExecutionRecord getExecutionCompactView(long id, long version) throws ProcessNotFoundException;
 
     /**
      * Find process executions filtered by a {@link ProcessExecutionQuery}.

@@ -90,11 +90,13 @@ public class DefaultFeatureRepository implements FeatureRepository {
 
         String insert = String.format(
             "insert into public.feature_update_history ( " +
-            "table_name, feature_id, properties, the_geom, the_geom_simple, updated_on, updated_by) " +
-            "select ?, ?, ?, the_geom, the_geom_simple, now(), ? " +
+            "table_name, feature_id, feature_uri, properties, the_geom, the_geom_simple, updated_on, updated_by) " +
+            "select ?, ?, \"%4$s\", ?, \"%5$s\", \"%6$s\", now(), ? " +
             "from \"%1$s\".\"%2$s\" " +
             "where %3$s = ?",
-            this.defaultGeometrySchema, tableName.toString(), this.defaultSurrogateIdColumn);
+            this.defaultGeometrySchema, tableName.toString(),
+            this.defaultSurrogateIdColumn,
+            this.defaultUriColumn, this.defaultGeometryColumn, this.defaultGeometrySimpleColumn);
 
         insertParams.add(tableName);
         insertParams.add(id);
@@ -142,13 +144,13 @@ public class DefaultFeatureRepository implements FeatureRepository {
     }
 
     @Override
-    public List<FeatureUpdateRecord> getUpdates(UUID tableName, long id) {
-        String qlString = "FROM FeatureUpdate u WHERE u.tableName = :tableName and u.featureId = :id order by u.id";
+    public List<FeatureUpdateRecord> getUpdates(UUID tableName, String uri) {
+        String qlString = "FROM FeatureUpdate u WHERE u.tableName = :tableName and u.featureUri = :uri order by u.id";
 
         return entityManager
             .createQuery(qlString, FeatureUpdateEntity.class)
             .setParameter("tableName", tableName)
-            .setParameter("id", id)
+            .setParameter("uri", uri)
             .getResultList()
             .stream()
             .map(e -> e.toRecord())

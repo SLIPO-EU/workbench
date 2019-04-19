@@ -54,7 +54,7 @@ public class TriplegeoConfiguration extends TransformConfiguration<Triplegeo>
     /**
      * This class represents the configuration of a specific version
      */
-    public static final String VERSION = "1.6";
+    public static final String VERSION = "1.7";
 
     /**
      * Available configuration levels

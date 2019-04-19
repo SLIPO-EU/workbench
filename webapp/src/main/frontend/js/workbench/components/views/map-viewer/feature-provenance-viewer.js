@@ -68,7 +68,7 @@ const createColumns = (state, componentProps) => {
         if (step.tool === null) {
           return (<span><i className="fa fa-clock-o pr-2" />{moment(step.updatedOn).format('DD/MM/YYYY h:mm:ss a')}</span>);
         } else {
-          return (<span><i className={`${step.iconClass || ''} pr-2`} />{step.name}</span>);
+          return (<span><i className={`${step.iconClass || ''} pr-2`} />{step.title}</span>);
         }
       },
       headerStyle: {
