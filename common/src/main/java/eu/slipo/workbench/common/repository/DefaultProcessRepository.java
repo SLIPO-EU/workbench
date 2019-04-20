@@ -2,6 +2,7 @@ package eu.slipo.workbench.common.repository;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -37,6 +38,7 @@ import eu.slipo.workbench.common.domain.ProcessExecutionEntity;
 import eu.slipo.workbench.common.domain.ProcessExecutionMonitorEntity;
 import eu.slipo.workbench.common.domain.ProcessExecutionStepEntity;
 import eu.slipo.workbench.common.domain.ProcessExecutionStepFileEntity;
+import eu.slipo.workbench.common.domain.ProcessExecutionStepLogsEntity;
 import eu.slipo.workbench.common.domain.ProcessRevisionEntity;
 import eu.slipo.workbench.common.domain.ResourceRevisionEntity;
 import eu.slipo.workbench.common.domain.WorkflowEntity;
@@ -51,6 +53,7 @@ import eu.slipo.workbench.common.model.process.ProcessExecutionNotFoundException
 import eu.slipo.workbench.common.model.process.ProcessExecutionQuery;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepFileRecord;
+import eu.slipo.workbench.common.model.process.ProcessExecutionStepLogsRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepRecord;
 import eu.slipo.workbench.common.model.process.ProcessIdentifier;
 import eu.slipo.workbench.common.model.process.ProcessNotFoundException;
@@ -416,10 +419,11 @@ public class DefaultProcessRepository implements ProcessRepository
 
     @Transactional(readOnly = true)
     @Override
-    public ProcessExecutionRecord findExecution(long executionId, boolean includeNonVerifiedFiles)
+    public ProcessExecutionRecord findExecution(
+        long executionId, boolean includeNonVerifiedFiles, boolean includeLogs)
     {
         ProcessExecutionEntity e = entityManager.find(ProcessExecutionEntity.class, executionId);
-        return e == null? null : e.toProcessExecutionRecord(true, includeNonVerifiedFiles);
+        return e == null? null : e.toProcessExecutionRecord(true, includeNonVerifiedFiles, includeLogs);
     }
 
     @Transactional(readOnly = true)
@@ -455,7 +459,7 @@ public class DefaultProcessRepository implements ProcessRepository
         Assert.state(runningExecutionIds.isEmpty() || runningExecutionIds.get(0).equals(executionId),
             "Expected a running execution to be the one started most recently!");
 
-        return executionEntity.toProcessExecutionRecord(true, false);
+        return executionEntity.toProcessExecutionRecord(true, false, true);
     }
 
     @Override
@@ -492,7 +496,7 @@ public class DefaultProcessRepository implements ProcessRepository
 
         // The basic execution metadata are populated from latest execution
         final ProcessExecutionRecord executionRecord =
-            executionEntities.get(0).toProcessExecutionRecord(false, false);
+            executionEntities.get(0).toProcessExecutionRecord(false, false, false);
 
         // Represent each step execution with latest one
 
@@ -656,7 +660,7 @@ public class DefaultProcessRepository implements ProcessRepository
 
         entityManager.persist(executionEntity);
         entityManager.flush();
-        return executionEntity.toProcessExecutionRecord(true, true);
+        return executionEntity.toProcessExecutionRecord(true, true, false);
     }
 
     @Override
@@ -738,7 +742,7 @@ public class DefaultProcessRepository implements ProcessRepository
         // Save
 
         entityManager.flush();
-        return executionEntity.toProcessExecutionRecord(true, true);
+        return executionEntity.toProcessExecutionRecord(true, true, false);
     }
 
     @Override
@@ -790,7 +794,7 @@ public class DefaultProcessRepository implements ProcessRepository
 
         // Save
         entityManager.flush();
-        return executionEntity.toProcessExecutionRecord(true, true);
+        return executionEntity.toProcessExecutionRecord(true, true, false);
     }
 
     @Override
@@ -842,7 +846,7 @@ public class DefaultProcessRepository implements ProcessRepository
                 resourceIdentifier == null? null : findResourceEntity(resourceIdentifier, true));
         }
 
-        // Add file records (if any)
+        // Add file records (if any).
         // A file record is considered as a new one if carrying an invalid (negative) id
 
         for (ProcessExecutionStepFileRecord fileRecord: Iterables.filter(fileRecords, f -> f.getId() < 0)) {
@@ -857,18 +861,24 @@ public class DefaultProcessRepository implements ProcessRepository
             executionStepEntity.addFile(fileEntity);
         }
 
+        // Add logs for this processing step (if any).
+        // A log file can only be added (as reported in the end of a processing step).
+        
+        for (ProcessExecutionStepLogsRecord logfileRecord: record.getLogs()) {
+            executionStepEntity.addLog(logfileRecord.getName(), logfileRecord.getFilePath());
+        }
+        
         // Save
         entityManager.flush();
-        return executionEntity.toProcessExecutionRecord(true, true);
+        return executionEntity.toProcessExecutionRecord(true, true, true);
     }
 
     @Override
-    public ProcessExecutionRecord updateExecutionStepAddingFile(long executionId, int stepKey, ProcessExecutionStepFileRecord fileRecord)
+    public ProcessExecutionRecord updateExecutionStepAddingFile(long executionId, int stepKey, Collection<ProcessExecutionStepFileRecord> records)
         throws ProcessExecutionNotFoundException, ProcessExecutionNotActiveException
     {
-        Assert.notNull(fileRecord, "A non-empty record is required");
-        Assert.state(fileRecord.getId() < 0, "Did not expect an id for a record of a new file entity");
-
+        Assert.notEmpty(records, "Expected a non-empty collection of records");
+        
         final ProcessExecutionEntity executionEntity =
             entityManager.find(ProcessExecutionEntity.class, executionId);
         if (executionEntity == null) {
@@ -883,23 +893,59 @@ public class DefaultProcessRepository implements ProcessRepository
             throw ProcessExecutionNotFoundException.forExecutionStep(executionId, stepKey);
         }
 
-        // Add file record
+        // Add file entities
 
-        ProcessExecutionStepFileEntity fileEntity =
-            new ProcessExecutionStepFileEntity(executionStepEntity, fileRecord);
-        fileEntity.setVerified(true);
+        for (ProcessExecutionStepFileRecord fileRecord: records) {
+            Assert.state(fileRecord.getId() < 0, "Did not expect an id for a record of a new file entity");
+        
+            ProcessExecutionStepFileEntity fileEntity =
+                new ProcessExecutionStepFileEntity(executionStepEntity, fileRecord);
+            fileEntity.setVerified(true);
 
-        ResourceIdentifier resourceIdentifier = fileRecord.getResource();
-        if (resourceIdentifier != null) {
-            fileEntity.setResource(findResourceEntity(resourceIdentifier, true));
+            ResourceIdentifier resourceIdentifier = fileRecord.getResource();
+            if (resourceIdentifier != null) {
+                fileEntity.setResource(findResourceEntity(resourceIdentifier, true));
+            }
+            executionStepEntity.addFile(fileEntity);
         }
-        executionStepEntity.addFile(fileEntity);
 
         // Save
         entityManager.flush();
-        return executionEntity.toProcessExecutionRecord(true, true);
+        return executionEntity.toProcessExecutionRecord(true, true, true);
     }
 
+    @Override
+    public ProcessExecutionRecord updateExecutionStepAddingLogs(long executionId, int stepKey, Collection<ProcessExecutionStepLogsRecord> records)
+        throws ProcessExecutionNotFoundException, ProcessExecutionNotActiveException
+    {
+        Assert.notEmpty(records, "Expected a non-empty collection of records");
+        
+        final ProcessExecutionEntity executionEntity =
+            entityManager.find(ProcessExecutionEntity.class, executionId);
+        if (executionEntity == null) {
+            throw ProcessExecutionNotFoundException.forExecution(executionId);
+        }
+        
+        final ProcessExecutionStepEntity executionStepEntity = executionEntity.getStepByKey(stepKey);
+        if (executionStepEntity == null) {
+            throw ProcessExecutionNotFoundException.forExecutionStep(executionId, stepKey);
+        }
+        
+        // Add log file entities
+        
+        for (ProcessExecutionStepLogsRecord r: records) {
+            Assert.state(r.getId() < 0, "Did not expect an id for a record of a new log file entity");
+            final ProcessExecutionStepLogsEntity e = 
+                new ProcessExecutionStepLogsEntity(executionStepEntity, r.getName());
+            e.setPath(r.getFilePath());
+            entityManager.persist(e);
+        }
+        
+        // Save
+        entityManager.flush();
+        return executionEntity.toProcessExecutionRecord(true, true, true);
+    }
+    
     @Override
     public boolean discardExecution(long executionId, boolean forceIfNotEmpty)
         throws ProcessExecutionNotFoundException

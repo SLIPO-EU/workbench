@@ -44,6 +44,8 @@ public class ProcessExecutionStepRecord implements Serializable
     private String errorMessage;
 
     private List<ProcessExecutionStepFileRecord> files;
+    
+    private List<ProcessExecutionStepLogsRecord> logs;
 
     protected ProcessExecutionStepRecord() {}
 
@@ -52,6 +54,7 @@ public class ProcessExecutionStepRecord implements Serializable
         this.id = id;
         this.key = key;
         this.files = new ArrayList<>();
+        this.logs = new ArrayList<>();
     }
 
     public ProcessExecutionStepRecord(int key)
@@ -78,10 +81,13 @@ public class ProcessExecutionStepRecord implements Serializable
         this.completedOn = record.completedOn;
         this.errorMessage = record.errorMessage;
         this.files = copyFileRecords?
-            (record.files.stream()
-                .map(ProcessExecutionStepFileRecord::new)
-                .collect(Collectors.toList())) :
+            (record.files.stream().map(ProcessExecutionStepFileRecord::new)
+                .collect(Collectors.toList())):
             (new ArrayList<>(record.files));
+        this.logs = copyFileRecords?
+            (record.logs.stream().map(ProcessExecutionStepLogsRecord::new)
+                .collect(Collectors.toList())):
+            (new ArrayList<>(record.logs));
     }
 
     public long getId()
@@ -228,15 +234,32 @@ public class ProcessExecutionStepRecord implements Serializable
             "The given index does not correspond to a file record");
         this.files.set(index, f);
     }
+    
+    public List<ProcessExecutionStepLogsRecord> getLogs()
+    {
+        return Collections.unmodifiableList(logs);
+    }
+    
+    public void addLog(ProcessExecutionStepLogsRecord f)
+    {
+        this.logs.add(f);
+    }
+
+    public void addLogs(List<ProcessExecutionStepLogsRecord> logs)
+    {
+        this.logs.addAll(logs);
+    }
+
+    public void clearLogs()
+    {
+        this.logs.clear();
+    }
 
     @Override
     public String toString()
     {
         return String.format(
-            "ProcessExecutionStepRecord " +
-                "[id=%s, key=%s, name=%s, jobExecutionId=%s, status=%s," +
-                " tool=%s, operation=%s, startedOn=%s, completedOn=%s, errorMessage=%s, files=%s]",
-            id, key, name, jobExecutionId, status, tool, operation, startedOn, completedOn,
-            errorMessage, files);
+            "ProcessExecutionStepRecord [id=%s, key=%s, name=%s, jobExecutionId=%s, status=%s]",
+            id, key, name, jobExecutionId, status);
     }
 }

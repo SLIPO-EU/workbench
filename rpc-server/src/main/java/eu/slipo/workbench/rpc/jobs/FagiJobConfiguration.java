@@ -930,6 +930,10 @@ public class FagiJobConfiguration extends ContainerBasedJobConfiguration
                 resultContext.put("containerNameByPartitionNumber", containerNameByPartitionNumber);
                 resultContext.put("containerIdByPartitionNumber", containerIdByPartitionNumber);
 
+                // Todo Aggregate container logs
+                // If container logs are written under `command.output` entry, they must be also
+                // be aggregated and stored under master execution context.
+
                 return;
             }
         };

@@ -103,6 +103,9 @@ public class ProcessExecutionStepEntity
     @OneToMany(mappedBy = "step", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     List<ProcessExecutionStepFileEntity> files = new ArrayList<>();
 
+    @OneToMany(mappedBy = "step", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    List<ProcessExecutionStepLogsEntity> logs = new ArrayList<>();
+    
     protected ProcessExecutionStepEntity() {}
     
     public ProcessExecutionStepEntity(ProcessExecutionEntity executionEntity, int key) 
@@ -258,12 +261,27 @@ public class ProcessExecutionStepEntity
         files.add(f);
     }
     
-    public ProcessExecutionStepRecord toProcessExecutionStepRecord()
+    public List<ProcessExecutionStepLogsEntity> getLogs()
     {
-        return toProcessExecutionStepRecord(false);
+        return logs;
     }
     
-    public ProcessExecutionStepRecord toProcessExecutionStepRecord(boolean includeNonVerifiedFiles) 
+    public void addLog(String name, String path) 
+    {
+        logs.add(new ProcessExecutionStepLogsEntity(this, name, path));
+    }
+    
+    public ProcessExecutionStepRecord toProcessExecutionStepRecord()
+    {
+        return toProcessExecutionStepRecord(false, false);
+    }
+    
+    public ProcessExecutionStepRecord toProcessExecutionStepRecord(boolean includeNonVerifiedFiles)
+    {
+        return toProcessExecutionStepRecord(includeNonVerifiedFiles, false);
+    }
+    
+    public ProcessExecutionStepRecord toProcessExecutionStepRecord(boolean includeNonVerifiedFiles, boolean includeLogs) 
     {
         ProcessExecutionStepRecord stepRecord = new ProcessExecutionStepRecord(id, key);
 
@@ -280,6 +298,12 @@ public class ProcessExecutionStepEntity
         for (ProcessExecutionStepFileEntity f: files) {
             if (includeNonVerifiedFiles || f.isVerified())
                 stepRecord.addFile(f.toProcessExecutionStepFileRecord());
+        }
+        
+        if (includeLogs) {
+            for (ProcessExecutionStepLogsEntity f: logs) {
+                stepRecord.addLog(f.toProcessExecutionStepLogsRecord());
+            }
         }
 
         return stepRecord;

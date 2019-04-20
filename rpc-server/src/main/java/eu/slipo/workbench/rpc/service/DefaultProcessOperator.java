@@ -7,8 +7,11 @@ import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -24,9 +27,11 @@ import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
+import com.github.slugify.Slugify;
 import com.google.common.collect.Iterables;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
@@ -39,6 +44,7 @@ import eu.slipo.workbench.common.model.process.ProcessExecutionNotFoundException
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStartException;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepFileRecord;
+import eu.slipo.workbench.common.model.process.ProcessExecutionStepLogsRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStopException;
 import eu.slipo.workbench.common.model.process.ProcessIdentifier;
@@ -76,6 +82,8 @@ public class DefaultProcessOperator implements ProcessOperator
 {
     private static final Logger logger = LoggerFactory.getLogger(DefaultProcessOperator.class);
 
+    private static final Slugify slugifyLowercase = (new Slugify()).withLowerCase(true);
+
     @Autowired
     @Qualifier("userDataDirectory")
     private Path userDataDir;
@@ -110,6 +118,9 @@ public class DefaultProcessOperator implements ProcessOperator
 
     @Autowired
     private ProcessToWorkflowMapper processToWorkflowMapper;
+
+    @Value("${slipo.rpc-server.workflows.collect-logs:false}")
+    private boolean collectLogs = false;
 
     /**
      * Fix status of interrupted executions.
@@ -206,8 +217,7 @@ public class DefaultProcessOperator implements ProcessOperator
     }
 
     /**
-     * The basic workflow-level execution listener which records the status/progress of the
-     * process execution
+     * The basic execution listener which records the status/progress of the process execution
      */
     private class ReportingExecutionListener implements WorkflowExecutionEventListener
     {
@@ -378,7 +388,7 @@ public class DefaultProcessOperator implements ProcessOperator
             final BatchStatus batchStatus = jobExecution.getStatus();
             final ExecutionContext executionContext = jobExecution.getExecutionContext();
 
-            ProcessExecutionRecord executionRecord = processRepository.findExecution(executionId, true);
+            ProcessExecutionRecord executionRecord = processRepository.findExecution(executionId, true, false);
             ProcessExecutionStepRecord stepRecord = executionRecord.getStep(step.key());
             if (stepRecord == null)
                 throw new IllegalStateException(String.format(
@@ -431,6 +441,8 @@ public class DefaultProcessOperator implements ProcessOperator
 
             final ZonedDateTime now = ZonedDateTime.now();
 
+            boolean finished = true;
+
             switch (batchStatus) {
             case COMPLETED:
                 {
@@ -464,12 +476,36 @@ public class DefaultProcessOperator implements ProcessOperator
                 break;
             case STOPPED:
                 {
+                    finished = false;
                     stepRecord.setStatus(EnumProcessExecutionStatus.STOPPED);
                 }
                 break;
             default:
                 throw new IllegalStateException(
                     "Did not expect a batch status of ["+ batchStatus + "] in a afterNode callback");
+            }
+
+            // If finished, collect logs generated from this processing step
+
+            if (collectLogs && finished) {
+                // Use a per-execution directory to hold log files (will be lazily created)
+                Path logsDir = stagingDir.resolve(Paths.get("logs", String.format("%05x", executionId)));
+                // Collect logs from underlying Batch steps
+                for (org.springframework.batch.core.StepExecution se: jobExecution.getStepExecutions()) {
+                    String content = se.getExecutionContext().getString("command.output", null);
+                    if (content != null && !content.isEmpty()) {
+                        Path path = logsDir.resolve(slugifyLowercase.slugify(se.getStepName()) + "." + "log");
+                        try {
+                            Files.createDirectories(logsDir);
+                            Files.write(path, content.getBytes(), StandardOpenOption.CREATE_NEW);
+                        } catch (IOException ex) {
+                            throw new IllegalStateException(ex);
+                        }
+                        ProcessExecutionStepLogsRecord fileRecord =
+                            new ProcessExecutionStepLogsRecord(se.getStepName(), convertPathToUri(path));
+                        stepRecord.addLog(fileRecord);
+                    }
+                }
             }
 
             //
