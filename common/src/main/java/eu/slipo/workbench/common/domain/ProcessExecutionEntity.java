@@ -64,7 +64,7 @@ public class ProcessExecutionEntity
     @Column(name = "status", nullable = false)
     private EnumProcessExecutionStatus status;
 
-    @Column(name = "error_message", length = 2048)
+    @Column(name = "error_message", length = 2047)
     private String errorMessage;
 
     @OneToMany(
