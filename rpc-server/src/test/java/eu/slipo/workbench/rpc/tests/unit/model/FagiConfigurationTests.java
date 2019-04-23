@@ -106,6 +106,8 @@ public class FagiConfigurationTests
             config.setTargetMode("aa");
             config.setTarget("target", "fused.nt", "remaining.nt", "review.nt", "stats.json");
 
+            config.setVerbose(true);
+
             return config;
         }
 
@@ -131,6 +133,8 @@ public class FagiConfigurationTests
 
             config.setTargetMode("aa");
             config.setTarget("target", "fused.nt", "remaining.nt", "review.nt", "stats.json");
+
+            config.setVerbose(true);
 
             return config;
         }
