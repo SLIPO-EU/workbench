@@ -1,6 +1,7 @@
 package eu.slipo.workbench.common.repository;
 
 import java.time.ZonedDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,6 +22,7 @@ import eu.slipo.workbench.common.model.process.ProcessExecutionNotFoundException
 import eu.slipo.workbench.common.model.process.ProcessExecutionQuery;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepFileRecord;
+import eu.slipo.workbench.common.model.process.ProcessExecutionStepLogsRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepRecord;
 import eu.slipo.workbench.common.model.process.ProcessIdentifier;
 import eu.slipo.workbench.common.model.process.ProcessNotFoundException;
@@ -203,19 +205,31 @@ public interface ProcessRepository
      * @param executionId the execution id (i.e the primary key of the execution)
      * @param includeNonVerifiedFiles if the result should include records for non-verified
      *   output files (i.e. not yet confirmed to exist or abandoned as part of a failed step)
+     * @param includeLogs if the result should include records for log files generated during 
+     *   execution of each step (which are present only for finished steps).   
      * @return an instance of {@link ProcessExecutionRecord} or <tt>null</tt> if no
      *   such execution exists
      */
-    ProcessExecutionRecord findExecution(long executionId, boolean includeNonVerifiedFiles);
+    ProcessExecutionRecord findExecution(long executionId, boolean includeNonVerifiedFiles, boolean includeLogs);
 
     /**
      * Find process execution record
      *
-     * @see ProcessRepository#findExecution(long, boolean)
+     * @see ProcessRepository#findExecution(long, boolean, boolean)
      */
     default ProcessExecutionRecord findExecution(long executionId)
     {
-        return findExecution(executionId, false);
+        return findExecution(executionId, false, false);
+    }
+    
+    /**
+     * Find process execution record
+     *
+     * @see ProcessRepository#findExecution(long, boolean, boolean)
+     */
+    default ProcessExecutionRecord findExecution(long executionId, boolean includeNonVerifiedFiles)
+    {
+        return findExecution(executionId, includeNonVerifiedFiles, false);
     }
 
     /**
@@ -361,22 +375,34 @@ public interface ProcessRepository
         throws ProcessExecutionNotFoundException, ProcessExecutionNotActiveException;
 
     /**
-     * Update the execution state of an existing processing step by adding a new file.
+     * Update the execution state of an existing processing step by adding new files.
      *
      * <p>This is a case of {@link ProcessRepository#updateExecutionStep(long, int, ProcessExecutionStepRecord)},
      * and is provided only as a convenience method.
      *
      * @param executionId The execution id of a process revision
      * @param stepKey The step key
-     * @param record A record representing the file record to be added (i.e associated with this
+     * @param records A collection of records representing the file to be added (i.e associated with this
      *   processing step).
      * @return
      *
      * @see ProcessRepository#updateExecutionStep(long, int, ProcessExecutionStepRecord)
      */
-    ProcessExecutionRecord updateExecutionStepAddingFile(long executionId, int stepKey, ProcessExecutionStepFileRecord record)
+    ProcessExecutionRecord updateExecutionStepAddingFile(long executionId, int stepKey, Collection<ProcessExecutionStepFileRecord> records)
         throws ProcessExecutionNotFoundException, ProcessExecutionNotActiveException;
-
+    
+    /**
+     *  Update the execution state of an existing processing step by adding new log files.
+     * 
+     * @param executionId The execution id of a process revision
+     * @param stepKey The step key
+     * @param records A collection of records representing the log file to be added (i.e logs extracted from the actual 
+     *   Batch step)
+     * @return
+     */
+    ProcessExecutionRecord updateExecutionStepAddingLogs(long executionId, int stepKey, Collection<ProcessExecutionStepLogsRecord> records)
+        throws ProcessExecutionNotFoundException, ProcessExecutionNotActiveException;
+    
     /**
      * Discard (i.e delete) an execution entity.
      *

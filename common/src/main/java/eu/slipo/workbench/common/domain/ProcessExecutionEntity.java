@@ -252,12 +252,12 @@ public class ProcessExecutionEntity
 
     public ProcessExecutionRecord toProcessExecutionRecord()
     {
-        return toProcessExecutionRecord(true, false);
+        return toProcessExecutionRecord(true, false, false);
     }
 
     public ProcessExecutionRecord toProcessExecutionRecord(boolean includeSteps)
     {
-        return toProcessExecutionRecord(includeSteps, false);
+        return toProcessExecutionRecord(includeSteps, false, false);
     }
 
     public ProcessExecutionMapExportEntity getMap()
@@ -270,7 +270,8 @@ public class ProcessExecutionEntity
         this.map = map;
     }
 
-    public ProcessExecutionRecord toProcessExecutionRecord(boolean includeSteps, boolean includeNonVerifiedFiles)
+    public ProcessExecutionRecord toProcessExecutionRecord(
+        boolean includeSteps, boolean includeNonVerifiedFiles, boolean includeLogs)
     {
         ProcessExecutionRecord record =
             new ProcessExecutionRecord(id, process.parent.id, process.version);
@@ -295,7 +296,7 @@ public class ProcessExecutionEntity
 
         if (includeSteps) {
             for (ProcessExecutionStepEntity s: steps) {
-                record.addStep(s.toProcessExecutionStepRecord(includeNonVerifiedFiles));
+                record.addStep(s.toProcessExecutionStepRecord(includeNonVerifiedFiles, includeLogs));
             }
         }
 
