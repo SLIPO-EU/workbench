@@ -611,18 +611,23 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
             Assert.state(target.reviewPath != null, "The path (review) is required");
             Assert.state(target.statsPath != null, "The path (stats) is required");
             
-            return ImmutableMultimap.<OutputPart<Fagi>, OutputSpec>builder()
-                .put(EnumFagiOutputPart.FUSED, 
-                    OutputSpec.of(Paths.get(target.fusedPath).getFileName(), outputFormat))
-                .put(EnumFagiOutputPart.REMAINING, 
-                    OutputSpec.of(Paths.get(target.remainingPath).getFileName(), outputFormat))
-                .put(EnumFagiOutputPart.REVIEW, 
-                    OutputSpec.of(Paths.get(target.reviewPath).getFileName(), outputFormat))
-                .put(EnumFagiOutputPart.STATS, 
-                    OutputSpec.of(Paths.get(target.statsPath).getFileName()))
-                .put(EnumFagiOutputPart.LOG,
-                    OutputSpec.of(Paths.get(target.fusionLogPath).getFileName()))
-                .build();
+            ImmutableMultimap.Builder<OutputPart<Fagi>, OutputSpec> mapBuilder = ImmutableMultimap.builder();
+            
+            mapBuilder.put(EnumFagiOutputPart.FUSED, 
+                OutputSpec.of(Paths.get(target.fusedPath).getFileName(), outputFormat));
+            mapBuilder.put(EnumFagiOutputPart.REMAINING, 
+                OutputSpec.of(Paths.get(target.remainingPath).getFileName(), outputFormat));
+            mapBuilder.put(EnumFagiOutputPart.REVIEW, 
+                OutputSpec.of(Paths.get(target.reviewPath).getFileName(), outputFormat));
+            mapBuilder.put(EnumFagiOutputPart.STATS, 
+                OutputSpec.of(Paths.get(target.statsPath).getFileName()));
+            
+            if (verbose) {
+                mapBuilder.put(EnumFagiOutputPart.LOG,
+                    OutputSpec.of(Paths.get(target.fusionLogPath).getFileName()));
+            }
+            
+            return mapBuilder.build();
         }
     }
     
