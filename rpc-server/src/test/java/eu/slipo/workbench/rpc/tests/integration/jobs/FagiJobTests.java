@@ -3,9 +3,11 @@ package eu.slipo.workbench.rpc.tests.integration.jobs;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -48,15 +50,15 @@ public class FagiJobTests extends AbstractJobTests
         ResourceLoader resourceLoader;
 
         @Bean
-        public List<Fixture> fixtures() throws IOException
+        public Map<String, Fixture> fixtures() throws IOException
         {
             final Resource root = resourceLoader.getResource("classpath:testcases/fagi/");
 
-            final List<Fixture> fixtures = new ArrayList<>();
+            final Map<String, Fixture> fixtures = new LinkedHashMap<>();
 
             //  Add fixtures from src/test/resources
 
-            for (String fixtureName: Arrays.asList("1")) {
+            for (String fixtureName: Arrays.asList("1", "1-csv")) {
                 final Resource dir = root.createRelative(fixtureName + "/");
                 Resource inputDir = dir.createRelative("input");
                 Resource resultsDir = dir.createRelative("output");
@@ -66,7 +68,7 @@ public class FagiJobTests extends AbstractJobTests
                     parametersMap.load(in);
                 }
                 parametersMap.put("rulesSpec", dir.createRelative("rules.xml").getURI());
-                fixtures.add(Fixture.create(inputDir, resultsDir, parametersMap));
+                fixtures.put(fixtureName, Fixture.create(inputDir, resultsDir, parametersMap));
             }
 
             return fixtures;
@@ -78,7 +80,7 @@ public class FagiJobTests extends AbstractJobTests
     private Flow fagiFlow;
 
     @Autowired
-    private List<Fixture> fixtures;
+    private Map<String, Fixture> fixtures;
 
     @Override
     protected String configKey()
@@ -112,7 +114,13 @@ public class FagiJobTests extends AbstractJobTests
 
     protected Map<String, String> extractInputParameters(Fixture f)
     {
-        String inputAsString = Stream.of("a.nt", "b.nt", "links.nt")
+        final String leftFileName = "a.nt";
+        final String rightFileName = "b.nt";
+        // The links file may be provided either as NT or CSV
+        final String linksFileName = "nt".equalsIgnoreCase(f.parameters.getString("links.linksFormat"))?
+            "links.nt" : "links.csv";
+
+        String inputAsString = Stream.of(leftFileName, rightFileName, linksFileName)
             .map(name -> f.inputDir.resolve(name).toString())
             .collect(Collectors.joining(File.pathSeparator));
 
@@ -132,6 +140,12 @@ public class FagiJobTests extends AbstractJobTests
     @Test(timeout = 25 * 1000L)
     public void test1() throws Exception
     {
-        testWithFixture(fixtures.get(0), this::extractInputParameters);
+        testWithFixture(fixtures.get("1"), this::extractInputParameters);
+    }
+
+    @Test(timeout = 25 * 1000L)
+    public void test1_csvLinks() throws Exception
+    {
+        testWithFixture(fixtures.get("1-csv"), this::extractInputParameters);
     }
 }

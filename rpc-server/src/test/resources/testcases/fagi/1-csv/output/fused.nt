@@ -1,0 +1,34 @@
+<http://slipo.eu/id/poi/5b8bb367-f3a5-30c1-b33c-381ef1e2f045/sourceInfo> <http://slipo.eu/def#sourceRef> "Foo-A" .
+<http://slipo.eu/id/poi/5b8bb367-f3a5-30c1-b33c-381ef1e2f045/sourceInfo> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/def#sourceInfo> .
+<http://slipo.eu/id/poi/db05380d-5286-372e-b2b8-387d7794c600/geom> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/sf#POINT> .
+<http://slipo.eu/id/poi/db05380d-5286-372e-b2b8-387d7794c600/geom> <http://www.opengis.net/ont/geosparql#asWKT> "<http://www.opengis.net/def/crs/EPSG/0/4326> POINT(9.60075869906469 47.3287657601793)"^^<http://www.opengis.net/ont/geosparql#wktLiteral> .
+<http://slipo.eu/id/poi/5b8bb367-f3a5-30c1-b33c-381ef1e2f045> <http://slipo.eu/def#name> <http://slipo.eu/id/poi/5b8bb367-f3a5-30c1-b33c-381ef1e2f045/name> .
+<http://slipo.eu/id/poi/5b8bb367-f3a5-30c1-b33c-381ef1e2f045> <http://www.opengis.net/ont/geosparql#hasGeometry> <http://slipo.eu/id/poi/5b8bb367-f3a5-30c1-b33c-381ef1e2f045/geom> .
+<http://slipo.eu/id/poi/5b8bb367-f3a5-30c1-b33c-381ef1e2f045> <http://slipo.eu/def#source> <http://slipo.eu/id/poi/5b8bb367-f3a5-30c1-b33c-381ef1e2f045/sourceInfo> .
+<http://slipo.eu/id/poi/db05380d-5286-372e-b2b8-387d7794c600> <http://slipo.eu/def#source> <http://slipo.eu/id/poi/db05380d-5286-372e-b2b8-387d7794c600/sourceInfo> .
+<http://slipo.eu/id/poi/db05380d-5286-372e-b2b8-387d7794c600> <http://www.opengis.net/ont/geosparql#hasGeometry> <http://slipo.eu/id/poi/db05380d-5286-372e-b2b8-387d7794c600/geom> .
+<http://slipo.eu/id/poi/db05380d-5286-372e-b2b8-387d7794c600> <http://slipo.eu/def#name> <http://slipo.eu/id/poi/db05380d-5286-372e-b2b8-387d7794c600/name> .
+<http://slipo.eu/id/poi/db05380d-5286-372e-b2b8-387d7794c600> <http://slipo.eu/def#fusion-gain> "{scoreA: 1.0, scoreB: 1.0, score: 0.0}" .
+<http://slipo.eu/id/poi/db05380d-5286-372e-b2b8-387d7794c600> <http://slipo.eu/def#fusion-confidence> "0.5"^^<http://www.w3.org/2001/XMLSchema#float> .
+<http://slipo.eu/id/poi/db05380d-5286-372e-b2b8-387d7794c600> <http://www.w3.org/ns/prov#wasDerivedFrom> <http://www.provbook.org/db05380d-5286-372e-b2b8-387d7794c600> .
+<http://slipo.eu/id/poi/db05380d-5286-372e-b2b8-387d7794c600> <http://www.w3.org/ns/prov#appliedAction> <http://www.provbook.org/db05380d-5286-372e-b2b8-387d7794c600/-63023791> .
+<http://slipo.eu/id/poi/db05380d-5286-372e-b2b8-387d7794c600/sourceInfo> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://slipo.eu/def#sourceInfo> .
+<http://slipo.eu/id/poi/db05380d-5286-372e-b2b8-387d7794c600/sourceInfo> <http://slipo.eu/def#sourceRef> "Foo-A" .
+<http://www.provbook.org/db05380d-5286-372e-b2b8-387d7794c600> <http://www.w3.org/ns/prov#validation-action> "accept" .
+<http://www.provbook.org/db05380d-5286-372e-b2b8-387d7794c600> <http://www.w3.org/ns/prov#left-uri> "http://slipo.eu/id/poi/db05380d-5286-372e-b2b8-387d7794c600" .
+<http://www.provbook.org/db05380d-5286-372e-b2b8-387d7794c600> <http://www.w3.org/ns/prov#right-uri> "http://slipo.eu/id/poi/d361a055-8672-306f-b620-81d31d1606e0" .
+<http://www.provbook.org/db05380d-5286-372e-b2b8-387d7794c600> <http://www.w3.org/ns/prov#fusion-confidence> "0.5" .
+<http://www.provbook.org/db05380d-5286-372e-b2b8-387d7794c600> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/ns/prov#Agent> .
+<http://www.provbook.org/db05380d-5286-372e-b2b8-387d7794c600> <http://www.w3.org/ns/prov#default-fusion-action> "keep-left" .
+<http://slipo.eu/id/poi/5b8bb367-f3a5-30c1-b33c-381ef1e2f045/geom> <http://www.opengis.net/ont/geosparql#asWKT> "<http://www.opengis.net/def/crs/EPSG/0/4326> POINT(9.6165689202358 47.3491812906968)"^^<http://www.opengis.net/ont/geosparql#wktLiteral> .
+<http://slipo.eu/id/poi/5b8bb367-f3a5-30c1-b33c-381ef1e2f045/geom> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opengis.net/ont/sf#POINT> .
+<http://www.provbook.org/db05380d-5286-372e-b2b8-387d7794c600/-63023791> <http://www.w3.org/ns/prov#attribute> "http://slipo.eu/def#name" .
+<http://www.provbook.org/db05380d-5286-372e-b2b8-387d7794c600/-63023791> <http://www.w3.org/ns/prov#attribute> "http://slipo.eu/def#nameValue" .
+<http://www.provbook.org/db05380d-5286-372e-b2b8-387d7794c600/-63023791> <http://www.w3.org/ns/prov#left-value> "Michail Alexakis" .
+<http://www.provbook.org/db05380d-5286-372e-b2b8-387d7794c600/-63023791> <http://www.w3.org/ns/prov#right-value> "Michail Alexakis" .
+<http://www.provbook.org/db05380d-5286-372e-b2b8-387d7794c600/-63023791> <http://www.w3.org/ns/prov#fused-value> "Michail Alexakis, Michail Alexakis" .
+<http://www.provbook.org/db05380d-5286-372e-b2b8-387d7794c600/-63023791> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/ns/prov#Agent> .
+<http://www.provbook.org/db05380d-5286-372e-b2b8-387d7794c600/-63023791> <http://www.w3.org/ns/prov#fusion-action> "concatenate" .
+<http://slipo.eu/id/poi/db05380d-5286-372e-b2b8-387d7794c600/name> <http://slipo.eu/def#nameValue> "Michail Alexakis, Michail Alexakis" .
+<http://slipo.eu/id/poi/5b8bb367-f3a5-30c1-b33c-381ef1e2f045/name> <http://slipo.eu/def#nameType> "official" .
+<http://slipo.eu/id/poi/5b8bb367-f3a5-30c1-b33c-381ef1e2f045/name> <http://slipo.eu/def#nameValue> "Med. Michelle" .
