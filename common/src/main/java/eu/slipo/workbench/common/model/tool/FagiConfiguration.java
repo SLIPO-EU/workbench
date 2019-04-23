@@ -183,7 +183,7 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
         {
             Assert.isTrue(!StringUtils.isEmpty(key), "Expected a non-empty key to search for");
             for (LinkFormat f: LinkFormat.values())
-                if (f.key.equals(key))
+                if (f.key.equalsIgnoreCase(key))
                     return f;
             return null;
         }
@@ -305,13 +305,22 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
         
         String id;
         
-        LinkFormat format = LinkFormat.NT;
+        LinkFormat format;
         
-        LinksSpec() {}
+        LinksSpec() 
+        {
+            this(null, LinkFormat.NT);
+        }
         
-        LinksSpec(String id)
+        LinksSpec(String id) 
+        {
+            this(id, LinkFormat.NT);
+        }
+        
+        LinksSpec(String id, LinkFormat format)
         {
             this.id = id;
+            this.format = format;
         }
     }
     
@@ -330,16 +339,23 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
             this.spec = new LinksSpec();
         }
         
-        Links(String id, String path)
+        Links(String id, LinkFormat format, String path)
         {
             this.path = path;
-            this.spec = new LinksSpec(id);
+            this.spec = new LinksSpec(id, format);
         }
         
         @JsonProperty("linksFormat")
+        @NotEmpty
         public String getLinksFormatAsString()
         {
             return this.spec.format.key();
+        }
+        
+        @JsonIgnore
+        public LinkFormat getLinksFormat()
+        {
+            return spec.format;
         }
         
         @JsonProperty("linksFormat")
@@ -378,6 +394,28 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
         public void setId(String id)
         {
             this.spec.id = id;
+        }
+        
+        @JsonIgnore
+        @AssertTrue
+        boolean isFormatInParWithPathExtension()
+        {
+            if (path == null)
+                return true; // nothing to check against
+            
+            String extension = null;
+            switch (spec.format) {
+            case NT:
+                extension = "nt";
+                break;
+            case CSV:
+            case CSV_ENSEMBLES:
+            case CSV_UNIQUE_LINKS:
+                extension = "csv";
+                break;
+            }
+            
+            return StringUtils.getFilenameExtension(path).equalsIgnoreCase(extension);
         }
     }
     
@@ -643,7 +681,7 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
         
         this.leftSpec = new InputSpec("a");
         this.rightSpec = new InputSpec("b");
-        this.linksSpec = new LinksSpec("links");
+        this.linksSpec = new LinksSpec("links", LinkFormat.NT);
         
         this.target = new Output("ab", Mode.AA, this.outputFormat);
     }
@@ -1019,7 +1057,7 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
     @Valid
     public Links getLinks()
     {
-        return new Links(linksSpec.id, input.get(LINKS_INDEX));
+        return new Links(linksSpec.id, linksSpec.format, input.get(LINKS_INDEX));
     }
     
     @JsonProperty("links")
@@ -1035,10 +1073,11 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
     }
     
     @JsonIgnore
-    public void setLinks(String id, String path)
+    public void setLinks(String id, LinkFormat format, String path)
     {
         this.input.set(LINKS_INDEX, path);
         this.linksSpec.id = id;
+        this.linksSpec.format = format;
     }
     
     @JsonProperty("input.links")
@@ -1052,6 +1091,18 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
     public String getLinksPath()
     {
         return input.get(LINKS_INDEX);
+    }
+    
+    @JsonIgnore
+    public String getLinksFormatAsString()
+    {
+        return linksSpec.format.key();
+    }
+    
+    @JsonIgnore
+    public LinkFormat getLinksFormat()
+    {
+        return linksSpec.format;
     }
     
     @JsonIgnore

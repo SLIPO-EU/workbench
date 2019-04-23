@@ -9,6 +9,7 @@ import java.io.ObjectOutputStream;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -37,6 +38,7 @@ import com.google.common.collect.Multimaps;
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.tool.Fagi;
 import eu.slipo.workbench.common.model.tool.FagiConfiguration;
+import eu.slipo.workbench.common.model.tool.FagiConfiguration.LinkFormat;
 import eu.slipo.workbench.common.model.tool.output.EnumFagiOutputPart;
 import eu.slipo.workbench.common.model.tool.output.OutputPart;
 import eu.slipo.workbench.common.model.tool.output.OutputSpec;
@@ -84,6 +86,8 @@ public class FagiConfigurationTests
         @Bean
         public FagiConfiguration config1()
         {
+            // This configuration accepts links as NT triples
+
             FagiConfiguration config = new FagiConfiguration();
 
             config.setInputFormat(EnumDataFormat.N_TRIPLES);
@@ -95,11 +99,35 @@ public class FagiConfigurationTests
             config.setSimilarity("jarowinkler");
             config.setRulesSpec("rules-1.xml");
 
-            config.setLeft("a",
-                "input/a.nt", "classpath:defaults/fagi/classification.csv", LocalDate.of(2018, 5, 21));
-            config.setRight("b",
-                "input/b.nt", "classpath:defaults/fagi/classification.csv", LocalDate.of(2018, 6, 1));
-            config.setLinks("links", "input/links.nt");
+            config.setLeft("a", "input/a.nt", "classpath:defaults/fagi/classification.csv", LocalDate.of(2018, 5, 21));
+            config.setRight("b", "input/b.nt", "classpath:defaults/fagi/classification.csv", LocalDate.of(2018, 6, 1));
+            config.setLinks("links", LinkFormat.NT, "input/links.nt");
+
+            config.setTargetMode("aa");
+            config.setTarget("target", "fused.nt", "remaining.nt", "review.nt", "stats.json");
+
+            return config;
+        }
+
+        @Bean
+        public FagiConfiguration config2()
+        {
+            // This configuration accepts links as CSV records
+
+            FagiConfiguration config = new FagiConfiguration();
+
+            config.setInputFormat(EnumDataFormat.N_TRIPLES);
+
+            config.setOutputFormat(EnumDataFormat.N_TRIPLES);
+            config.setOutputDir("/var/local/fagi/output");
+
+            config.setLang("el-GR");
+            config.setSimilarity("jarowinkler");
+            config.setRulesSpec("rules-2.xml");
+
+            config.setLeft("a", "input/a.nt", "classpath:defaults/fagi/classification.csv", LocalDate.of(2018, 5, 21));
+            config.setRight("b", "input/b.nt", "classpath:defaults/fagi/classification.csv", LocalDate.of(2018, 6, 1));
+            config.setLinks("links", LinkFormat.CSV, "input/links.csv");
 
             config.setTargetMode("aa");
             config.setTarget("target", "fused.nt", "remaining.nt", "review.nt", "stats.json");
@@ -123,6 +151,8 @@ public class FagiConfigurationTests
     @Autowired
     FagiConfiguration config1;
 
+    @Autowired
+    FagiConfiguration config2;
 
     void checkEquals(FagiConfiguration.Input expected, FagiConfiguration.Input actual)
     {
@@ -228,9 +258,11 @@ public class FagiConfigurationTests
         String s1 = objectMapper.writeValueAsString(configuration);
         FagiConfiguration config1a = objectMapper.readValue(s1, FagiConfiguration.class);
 
+        final String linksExtension = configuration.getLinksFormat() == LinkFormat.NT? "nt" : "csv";
+
         final String leftPath = "/var/local/fagi/input/1.nt";
         final String rightPath = "/var/local/fagi/input/2.nt";
-        final String linksPath = "/var/local/fagi/input/links-1-2.nt";
+        final String linksPath = String.format("/var/local/fagi/input/links-1-2.%s", linksExtension);
 
         final Map<String, String> inputMap = ImmutableMap.of(
             "left", leftPath, "right", rightPath, "links", linksPath);
@@ -262,9 +294,11 @@ public class FagiConfigurationTests
         String s1 = objectMapper.writeValueAsString(configuration);
         FagiConfiguration config1a = objectMapper.readValue(s1, FagiConfiguration.class);
 
+        final String linksExtension = configuration.getLinksFormat() == LinkFormat.NT? "nt" : "csv";
+
         final String leftPath = "/var/local/fagi/input/1.nt";
         final String rightPath = "/var/local/fagi/input/2.nt";
-        final String linksPath = "/var/local/fagi/input/links-1-2.nt";
+        final String linksPath = String.format("/var/local/fagi/input/links-1-2.%s", linksExtension);
 
         config1a.setInput(Arrays.asList(leftPath, rightPath, linksPath));
 
@@ -288,6 +322,26 @@ public class FagiConfigurationTests
         assertEquals(configuration.getLinks().getId(), config1b.getLinks().getId());
     }
 
+    private void getOutputNames(FagiConfiguration configuration)
+    {
+        final String linksExtension = configuration.getLinksFormat() == LinkFormat.NT? "nt" : "csv";
+
+        final String leftPath = "/var/local/fagi/input/a.nt";
+        final String rightPath = "/var/local/fagi/input/b.nt";
+        final String linksPath = String.format("/var/local/fagi/input/links.%s", linksExtension);
+
+        Multimap<OutputPart<Fagi>, OutputSpec> outputMap = config1.getOutputNameMapper()
+            .apply(Arrays.asList(leftPath, rightPath, linksPath));
+        Multimap<OutputPart<Fagi>, String> outputNames =
+            Multimaps.transformValues(outputMap, s -> s.fileName());
+
+        assertEquals(Arrays.asList("fused.nt"), outputNames.get(EnumFagiOutputPart.FUSED));
+        assertEquals(Arrays.asList("remaining.nt"), outputNames.get(EnumFagiOutputPart.REMAINING));
+        assertEquals(Arrays.asList("review.nt"), outputNames.get(EnumFagiOutputPart.REVIEW));
+        assertEquals(Arrays.asList("stats.json"), outputNames.get(EnumFagiOutputPart.STATS));
+        assertEquals(Arrays.asList("fusionLog.txt"), outputNames.get(EnumFagiOutputPart.LOG));
+    }
+
     //
     // Tests
     //
@@ -299,9 +353,21 @@ public class FagiConfigurationTests
     }
 
     @Test
+    public void test2_serializeAsJson() throws Exception
+    {
+        serializeAsJson(config2);
+    }
+
+    @Test
     public void test1_serializeAsXml() throws Exception
     {
         serializeAsXml(config1);
+    }
+
+    @Test
+    public void test2_serializeAsXml() throws Exception
+    {
+        serializeAsXml(config2);
     }
 
     @Test
@@ -311,9 +377,21 @@ public class FagiConfigurationTests
     }
 
     @Test
+    public void test2_serializeAsProperties() throws Exception
+    {
+        serializeAsProperties(config2);
+    }
+
+    @Test
     public void test1_serializeDefault() throws Exception
     {
         serializeDefault(config1);
+    }
+
+    @Test
+    public void test2_serializeDefault() throws Exception
+    {
+        serializeDefault(config2);
     }
 
     @Test
@@ -323,11 +401,22 @@ public class FagiConfigurationTests
     }
 
     @Test
+    public void test2_validate() throws Exception
+    {
+        validate(config2);
+    }
+
+    @Test
     public void test1_setInputMap() throws Exception
     {
         setInputMap(config1);
     }
 
+    @Test
+    public void test2_setInputMap() throws Exception
+    {
+        setInputMap(config2);
+    }
 
     @Test
     public void test1_setInputList() throws Exception
@@ -336,20 +425,20 @@ public class FagiConfigurationTests
     }
 
     @Test
+    public void test2_setInputList() throws Exception
+    {
+        setInputList(config2);
+    }
+
+    @Test
     public void test1_getOutputNames() throws Exception
     {
-        Multimap<OutputPart<Fagi>, OutputSpec> outputMap = config1.getOutputNameMapper()
-            .apply(Arrays.asList(
-                "/var/local/limes/input/a.nt",
-                "/var/local/limes/input/b.nt",
-                "/var/local/limes/input/links.nt"));
-        Multimap<OutputPart<Fagi>, String> outputNames =
-            Multimaps.transformValues(outputMap, s -> s.fileName());
+        getOutputNames(config1);
+    }
 
-        assertEquals(Arrays.asList("fused.nt"), outputNames.get(EnumFagiOutputPart.FUSED));
-        assertEquals(Arrays.asList("remaining.nt"), outputNames.get(EnumFagiOutputPart.REMAINING));
-        assertEquals(Arrays.asList("review.nt"), outputNames.get(EnumFagiOutputPart.REVIEW));
-        assertEquals(Arrays.asList("stats.json"), outputNames.get(EnumFagiOutputPart.STATS));
-        assertEquals(Arrays.asList("fusionLog.txt"), outputNames.get(EnumFagiOutputPart.LOG));
+    @Test
+    public void test2_getOutputNames() throws Exception
+    {
+        getOutputNames(config2);
     }
 }
