@@ -16,6 +16,7 @@ export const EnumDesignerView = {
   StepConfiguration: 'StepConfiguration',
   DataSourceConfiguration: 'DataSourceConfiguration',
   StepExecution: 'StepExecution',
+  DockerLogViewer: 'DockerLogViewer',
 };
 
 /**

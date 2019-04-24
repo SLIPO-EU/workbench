@@ -330,6 +330,13 @@ export function fetchExecutionKpiData(process, version, execution, file, token) 
     });
 }
 
+export function fetchExecutionLogData(process, version, execution, file, token) {
+  return actions.get(`/action/process/${process}/${version}/execution/${execution}/log/${file}`, token)
+    .then(data => {
+      return data;
+    });
+}
+
 export function getStepDataSourceRequirements(step) {
   let { source } = ToolConfigurationSettings[step.tool];
 

@@ -174,6 +174,7 @@ class Step extends React.Component {
     configureStepBegin: PropTypes.func.isRequired,
     setStepProperty: PropTypes.func.isRequired,
     showStepExecutionDetails: PropTypes.func.isRequired,
+    showDockerLogDetails: PropTypes.func.isRequired,
 
     addStepInput: PropTypes.func.isRequired,
     removeStepInput: PropTypes.func.isRequired,
@@ -315,6 +316,19 @@ class Step extends React.Component {
   }
 
   /**
+   * Show docker log files
+   *
+   * @param {*} e
+   * @memberof Step
+   */
+  viewLogs(e) {
+    e.stopPropagation();
+
+    this.props.setActiveStep(this.props.step);
+    this.props.showDockerLogDetails();
+  }
+
+  /**
    * Shows details for the current step
    *
    * @param {any} e
@@ -409,12 +423,19 @@ class Step extends React.Component {
                     })
                   }
                   value={this.props.step.name}
+                  title={this.props.step.name}
                   readOnly
                 />
               </div>
             }
             {this.props.readOnly ?
               <div className="slipo-pd-step-actions">
+                {this.props.stepExecution && this.props.stepExecution.logs && this.props.stepExecution.logs.length !== 0 &&
+                  <i
+                    className="slipo-pd-step-action slipo-pd-step-config fa fa-bug"
+                    title="View docker log files"
+                    onClick={(e) => { this.viewLogs(e); }}></i>
+                }
                 {this.props.stepExecution && this.props.stepExecution.files && this.props.stepExecution.files.length !== 0 &&
                   <i
                     className="slipo-pd-step-action slipo-pd-step-config fa fa-folder-open"

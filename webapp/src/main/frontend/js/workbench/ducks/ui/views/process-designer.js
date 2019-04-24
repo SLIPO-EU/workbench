@@ -504,13 +504,30 @@ export default (state = initialState, action) => {
         },
       };
 
+    case Types.SHOW_DOCKER_LOGS:
+      return {
+        ...state,
+        view: {
+          type: EnumDesignerView.DockerLogViewer,
+        },
+      };
+
+    case Types.HIDE_DOCKER_LOGS:
+      return {
+        ...state,
+        view: {
+          type: EnumDesignerView.Designer,
+        },
+      };
+
     case Types.REQUEST_EXECUTION_DATA:
     case Types.RECEIVE_EXECUTION_DATA:
     case Types.SET_SELECTED_FILE:
     case Types.REQUEST_EXECUTION_KPI_DATA:
     case Types.RECEIVE_EXECUTION_KPI_DATA:
+    case Types.REQUEST_EXECUTION_LOG_DATA:
+    case Types.RECEIVE_EXECUTION_LOG_DATA:
     case Types.RESET_SELECTED_FILE:
-    case Types.RESET_SELECTED_KPI:
       return {
         ...state,
         execution: executionReducer(state, action),
@@ -582,10 +599,11 @@ export {
   undo,
   redo,
   showStepExecutionDetails,
+  showDockerLogDetails,
   hideStepExecutionDetails,
+  hideDockerLogDetails,
   selectFile,
   resetSelectedFile,
-  resetSelectedKpi,
   selectOutputPart,
 } from './process-designer/actions';
 
@@ -596,9 +614,12 @@ export {
 export {
   cloneTemplate,
   checkFile,
+  checkLog,
   downloadFile,
+  downloadLog,
   fetchExecutionDetails,
   fetchExecutionKpiData,
+  fetchExecutionLogData,
   fetchProcess,
   fetchProcessRevision,
   getTripleGeoMappings,

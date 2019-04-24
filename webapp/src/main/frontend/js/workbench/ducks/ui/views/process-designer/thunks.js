@@ -54,6 +54,26 @@ export const fetchExecutionKpiData = (process, version, execution, file, mode) =
     });
 };
 
+const requestExecutionLogData = (id) => ({
+  type: Types.REQUEST_EXECUTION_LOG_DATA,
+  id,
+});
+
+const receiveExecutionLogData = (data) => ({
+  type: Types.RECEIVE_EXECUTION_LOG_DATA,
+  data,
+});
+
+export const fetchExecutionLogData = (process, version, execution, file) => (dispatch, getState) => {
+  const { meta: { csrfToken: token } } = getState();
+  dispatch(requestExecutionLogData(file));
+
+  return processService.fetchExecutionLogData(process, version, execution, file, token)
+    .then((data) => {
+      dispatch(receiveExecutionLogData(data));
+    });
+};
+
 const processLoaded = function (process, readOnly, clone, appConfiguration) {
   return {
     type: Types.LOAD_RECEIVE_RESPONSE,
@@ -141,7 +161,7 @@ export const checkFile = (id, version, executionId, fileId, fileName) => {
   };
 };
 
-const filedDownloaded = function (fileId, fileName) {
+const fileDownloaded = function (fileId, fileName) {
   return {
     type: Types.FILE_DOWNLOAD_RESPONSE,
     fileId,
@@ -155,7 +175,47 @@ export const downloadFile = (id, version, executionId, fileId, fileName) => {
 
     dom.downloadUrl(url, fileName);
 
-    dispatch(filedDownloaded(fileId, fileName));
+    dispatch(fileDownloaded(fileId, fileName));
+
+    return Promise.resolve();
+  };
+};
+
+const logExists = function (fileId, fileName) {
+  return {
+    type: Types.LOG_EXISTS_RESPONSE,
+    fileId,
+    fileName,
+  };
+};
+
+export const checkLog = (id, version, executionId, fileId, fileName) => {
+  return (dispatch, getState) => {
+    const { meta: { csrfToken: token } } = getState();
+    const url = `/action/process/${id}/${version}/execution/${executionId}/log/${fileId}/exists`;
+
+    return file.exists(url, token)
+      .then(() => {
+        dispatch(logExists(fileId, fileName));
+      });
+  };
+};
+
+const logDownloaded = function (fileId, fileName) {
+  return {
+    type: Types.LOG_DOWNLOAD_RESPONSE,
+    fileId,
+    fileName,
+  };
+};
+
+export const downloadLog = (id, version, executionId, fileId, fileName) => {
+  return (dispatch, getState) => {
+    const url = `/action/process/${id}/${version}/execution/${executionId}/log/${fileId}/download`;
+
+    dom.downloadUrl(url, fileName);
+
+    dispatch(logDownloaded(fileId, fileName));
 
     return Promise.resolve();
   };

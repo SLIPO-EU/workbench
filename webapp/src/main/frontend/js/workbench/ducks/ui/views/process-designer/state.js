@@ -23,4 +23,5 @@ export const initializeExecution = () => ({
   lastUpdate: null,
   selectedFile: null,
   selectedKpi: null,
+  selectedLog: null,
 });

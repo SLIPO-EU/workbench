@@ -97,6 +97,7 @@ class StepGroup extends React.Component {
     moveStepInput: PropTypes.func.isRequired,
     configureStepBegin: PropTypes.func.isRequired,
     showStepExecutionDetails: PropTypes.func.isRequired,
+    showDockerLogDetails: PropTypes.func.isRequired,
     setStepProperty: PropTypes.func.isRequired,
 
     // Step input actions
@@ -149,6 +150,7 @@ class StepGroup extends React.Component {
         moveStepInput={this.props.moveStepInput}
         configureStepBegin={this.props.configureStepBegin}
         showStepExecutionDetails={this.props.showStepExecutionDetails}
+        showDockerLogDetails={this.props.showDockerLogDetails}
         setStepProperty={this.props.setStepProperty}
         addStepInput={this.props.addStepInput}
         cloneStep={this.props.cloneStep}

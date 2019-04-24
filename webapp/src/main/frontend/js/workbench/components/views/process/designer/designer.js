@@ -35,6 +35,7 @@ class Designer extends React.Component {
     moveStepInput: PropTypes.func.isRequired,
     configureStepBegin: PropTypes.func.isRequired,
     showStepExecutionDetails: PropTypes.func.isRequired,
+    showDockerLogDetails: PropTypes.func.isRequired,
     setStepProperty: PropTypes.func.isRequired,
 
     addStepInput: PropTypes.func.isRequired,
@@ -78,6 +79,7 @@ class Designer extends React.Component {
         moveStepInput={this.props.moveStepInput}
         configureStepBegin={this.props.configureStepBegin}
         showStepExecutionDetails={this.props.showStepExecutionDetails}
+        showDockerLogDetails={this.props.showDockerLogDetails}
         setStepProperty={this.props.setStepProperty}
         addStepInput={this.props.addStepInput}
         removeStepInput={this.props.removeStepInput}

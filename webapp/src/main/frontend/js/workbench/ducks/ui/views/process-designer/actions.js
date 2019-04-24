@@ -270,9 +270,21 @@ export const showStepExecutionDetails = function () {
   };
 };
 
+export const showDockerLogDetails = function () {
+  return {
+    type: Types.SHOW_DOCKER_LOGS,
+  };
+};
+
 export const hideStepExecutionDetails = function () {
   return {
     type: Types.HIDE_STEP_EXECUTION,
+  };
+};
+
+export const hideDockerLogDetails = function () {
+  return {
+    type: Types.HIDE_DOCKER_LOGS,
   };
 };
 
@@ -283,10 +295,6 @@ export const selectFile = (id) => ({
 
 export const resetSelectedFile = () => ({
   type: Types.RESET_SELECTED_FILE,
-});
-
-export const resetSelectedKpi = () => ({
-  type: Types.RESET_SELECTED_KPI,
 });
 
 export const selectOutputPart = (step, resource, partKey) => ({

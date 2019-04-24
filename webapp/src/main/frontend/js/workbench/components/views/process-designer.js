@@ -45,6 +45,7 @@ import {
 } from './process/designer';
 
 import {
+  DockerLogDetails,
   Execution,
   ExecutionStepDetails,
 } from './execution/viewer';
@@ -58,11 +59,14 @@ import {
 import {
   reset,
   checkFile,
+  checkLog,
   downloadFile,
+  downloadLog,
   fetchProcess,
   fetchProcessRevision,
   fetchExecutionDetails,
   fetchExecutionKpiData,
+  fetchExecutionLogData,
   save,
   addStep,
   cloneStep,
@@ -92,9 +96,10 @@ import {
   undo,
   redo,
   showStepExecutionDetails,
+  showDockerLogDetails,
   hideStepExecutionDetails,
+  hideDockerLogDetails,
   resetSelectedFile,
-  resetSelectedKpi,
   selectFile,
   selectOutputPart,
   getTripleGeoMappings,
@@ -137,6 +142,7 @@ class ProcessDesigner extends React.Component {
     this.reset = this.reset.bind(this);
     this.select = this.select.bind(this);
     this.selectKpi = this.selectKpi.bind(this);
+    this.selectLog = this.selectLog.bind(this);
     this.toggleCancelDialog = this.toggleCancelDialog.bind(this);
     this.toggleSaveButtonDropdown = this.toggleSaveButtonDropdown.bind(this);
     this.viewMap = this.viewMap.bind(this);
@@ -319,6 +325,15 @@ class ProcessDesigner extends React.Component {
       });
   }
 
+  selectLog(file) {
+    const { id, version, execution } = this.props.match.params;
+
+    this.props.fetchExecutionLogData(Number.parseInt(id), Number.parseInt(version), Number.parseInt(execution), file)
+      .catch(err => {
+        message.error(`Failed to load docker log data. ${err.message}`, 'fa-warning');
+      });
+  }
+
   viewMap() {
     const { id, version, execution } = this.props.match.params;
     const path = buildPath(DynamicRoutes.ProcessExecutionMapViewer, [id, version, execution]);
@@ -391,6 +406,7 @@ class ProcessDesigner extends React.Component {
                   cloneStep={this.props.cloneStep}
                   configureStepBegin={this.props.configureStepBegin}
                   showStepExecutionDetails={this.props.showStepExecutionDetails}
+                  showDockerLogDetails={this.props.showDockerLogDetails}
                   removeStep={this.props.removeStep}
                   moveStep={this.props.moveStep}
                   moveStepInput={this.props.moveStepInput}
@@ -475,14 +491,40 @@ class ProcessDesigner extends React.Component {
         process={this.props.process}
         hideStepExecutionDetails={this.props.hideStepExecutionDetails}
         resetSelectedFile={this.props.resetSelectedFile}
-        resetSelectedKpi={this.props.resetSelectedKpi}
         selectedFile={this.props.selectedExecutionFile}
         selectedKpi={this.props.selectedKpi}
         selectFile={this.props.selectFile}
         selectKpi={this.selectKpi}
         step={step}
       />
+    );
+  }
 
+  renderDockerLogDetails() {
+    const { active, execution } = this.props;
+
+    if ((!active) || (active.type !== EnumSelection.Step)) {
+      return null;
+    }
+
+    const step = execution.steps.find((s) => s.key === active.step);
+    const logs = (step ? step.logs : []);
+
+    return (
+      <DockerLogDetails
+        checkLog={this.props.checkLog}
+        downloadLog={this.props.downloadLog}
+        execution={this.props.execution}
+        logs={logs}
+        process={this.props.process}
+        hideDockerLogDetails={this.props.hideDockerLogDetails}
+        resetSelectedFile={this.props.resetSelectedFile}
+        selectedFile={this.props.selectedExecutionFile}
+        selectedLog={this.props.selectedLog}
+        selectFile={this.props.selectFile}
+        selectLog={this.selectLog}
+        step={step}
+      />
     );
   }
 
@@ -527,6 +569,7 @@ class ProcessDesigner extends React.Component {
             {this.props.view.type === EnumDesignerView.StepConfiguration && this.renderStepConfiguration()}
             {this.props.view.type === EnumDesignerView.DataSourceConfiguration && this.renderDataSourceConfiguration()}
             {this.props.view.type === EnumDesignerView.StepExecution && this.renderStepExecutionDetails()}
+            {this.props.view.type === EnumDesignerView.DockerLogViewer && this.renderDockerLogDetails()}
           </Col>
         </Row>
         {this.state.cancelDialogOpen &&
@@ -553,6 +596,7 @@ const mapStateToProps = (state) => ({
   execution: state.ui.views.process.designer.execution.data,
   selectedExecutionFile: state.ui.views.process.designer.execution.selectedFile,
   selectedKpi: state.ui.views.process.designer.execution.selectedKpi,
+  selectedLog: state.ui.views.process.designer.execution.selectedLog,
   // File system
   filesystem: state.config.filesystem,
   // Application configuration
@@ -563,7 +607,9 @@ const mapDispatchToProps = (dispatch) => bindActionCreators({
   // Workflow designer
   reset,
   checkFile,
+  checkLog,
   downloadFile,
+  downloadLog,
   fetchProcess,
   fetchProcessRevision,
   save,
@@ -595,11 +641,13 @@ const mapDispatchToProps = (dispatch) => bindActionCreators({
   undoAction: undo,
   redoAction: redo,
   showStepExecutionDetails,
+  showDockerLogDetails,
   hideStepExecutionDetails,
+  hideDockerLogDetails,
   fetchExecutionDetails,
   fetchExecutionKpiData,
+  fetchExecutionLogData,
   resetSelectedFile,
-  resetSelectedKpi,
   selectFile,
   selectOutputPart,
   // File system

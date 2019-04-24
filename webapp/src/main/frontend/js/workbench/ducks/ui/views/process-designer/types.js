@@ -45,6 +45,8 @@ export const SELECT_STEP_DATA_SOURCE = 'ui/process-designer/SELECT_STEP_DATA_SOU
 
 export const SHOW_STEP_EXECUTION = 'ui/process-designer/SHOW_STEP_EXECUTION';
 export const HIDE_STEP_EXECUTION = 'ui/process-designer/HIDE_STEP_EXECUTION';
+export const SHOW_DOCKER_LOGS = 'ui/process-designer/SHOW_DOCKER_LOGS';
+export const HIDE_DOCKER_LOGS = 'ui/process-designer/HIDE_DOCKER_LOGS';
 
 export const ADD_RESOURCE_TO_BAG = 'ui/process-designer/ADD_RESOURCE_TO_BAG';
 export const REMOVE_RESOURCE_FROM_BAG = 'ui/process-designer/REMOVE_RESOURCE_FROM_BAG';
@@ -67,7 +69,11 @@ export const RESET_SELECTED_FILE = 'ui/process/execution/viewer/RESET_SELECTED_F
 export const REQUEST_EXECUTION_KPI_DATA = 'ui/process/execution/viewer/REQUEST_EXECUTION_KPI_DATA';
 export const RECEIVE_EXECUTION_KPI_DATA = 'ui/process/execution/viewer/RECEIVE_EXECUTION_KPI_DATA';
 
-export const RESET_SELECTED_KPI = 'ui/process/execution/viewer/RESET_SELECTED_KPI';
-
 export const FILE_EXISTS_RESPONSE = 'ui/process/execution/viewer/FILE_EXISTS_RESPONSE';
 export const FILE_DOWNLOAD_RESPONSE = 'ui/process/execution/viewer/FILE_DOWNLOAD_RESPONSE';
+
+export const REQUEST_EXECUTION_LOG_DATA = 'ui/process/execution/viewer/REQUEST_EXECUTION_LOG_DATA';
+export const RECEIVE_EXECUTION_LOG_DATA = 'ui/process/execution/viewer/RECEIVE_EXECUTION_LOG_DATA';
+
+export const LOG_EXISTS_RESPONSE = 'ui/process/execution/viewer/LOG_EXISTS_RESPONSE';
+export const LOG_DOWNLOAD_RESPONSE = 'ui/process/execution/viewer/LOG_DOWNLOAD_RESPONSE';
