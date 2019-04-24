@@ -89,14 +89,33 @@ public interface ProcessService {
      * @param id the process id
      * @param version the process version
      * @param executionId the execution id
+     * @param includeLogs If true, the docker log files are also returned
      * @return a list of {@link ProcessExecutionRecord}
      *
      * @throws ProcessNotFoundException if the process is not found
      * @throws ProcessExecutionNotFoundException if the process execution is not found
      */
     ProcessExecutionRecordView getProcessExecution(
-        long id, long version, long executionId
+        long id, long version, long executionId, boolean includeLogs
     ) throws ProcessNotFoundException, ProcessExecutionNotFoundException;
+
+    /**
+     * Get an execution for a process with a specific id and version. The response
+     * includes the execution steps
+     *
+     * @param id the process id
+     * @param version the process version
+     * @param executionId the execution id
+     * @return a list of {@link ProcessExecutionRecord}
+     *
+     * @throws ProcessNotFoundException if the process is not found
+     * @throws ProcessExecutionNotFoundException if the process execution is not found
+     */
+    default ProcessExecutionRecordView getProcessExecution(
+        long id, long version, long executionId
+    ) throws ProcessNotFoundException, ProcessExecutionNotFoundException {
+        return this.getProcessExecution(id, version, executionId, false);
+    }
 
     /**
      * Finds the most recent version of an existing process instance
@@ -258,6 +277,22 @@ public interface ProcessService {
         throws ProcessNotFoundException, ProcessExecutionNotFoundException, ProcessExecutionFileNotFoundException;
 
     /**
+     * Returns the log file with the given {@code fileId} for the selected process revision execution.
+     *
+     * @param id the process id
+     * @param version the process version (revision)
+     * @param executionId the process execution id
+     * @param fileId the id of the file to return
+     * @return the {@link File} for the selected {@code fileId}
+     *
+     * @throws ProcessNotFoundException if the process revision is not found
+     * @throws ProcessExecutionNotFoundException if the execution is not found
+     * @throws ProcessExecutionFileNotFoundException if the file is not found
+     */
+    File getProcessExecutionLog(long id, long version, long executionId, long fileId)
+        throws ProcessNotFoundException, ProcessExecutionNotFoundException, ProcessExecutionFileNotFoundException;
+
+    /**
      * Get KPI data for the selected execution
      *
      * @param id the process id
@@ -270,6 +305,21 @@ public interface ProcessService {
      * @throws ProcessExecutionNotFoundException if process execution is not found
      */
     Object getProcessExecutionKpiData(long id, long version, long executionId, long fileId)
+        throws ApplicationException, ProcessExecutionNotFoundException;
+
+    /**
+     * Get log file content for the selected execution
+     *
+     * @param id the process id
+     * @param version the process version
+     * @param executionId the execution id
+     * @param fileId the file id
+     * @return the log file contents as plain text
+     *
+     * @throws ApplicationException if file is not found or the file format is not supported
+     * @throws ProcessExecutionNotFoundException if process execution is not found
+     */
+    String getProcessExecutionLogContent(long id, long version, long executionId, long fileId)
         throws ApplicationException, ProcessExecutionNotFoundException;
 
     /**

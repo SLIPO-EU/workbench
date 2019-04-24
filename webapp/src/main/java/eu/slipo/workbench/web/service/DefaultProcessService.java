@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -18,6 +19,7 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -62,6 +64,7 @@ import eu.slipo.workbench.common.model.process.ProcessExecutionQuery;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStartException;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepFileRecord;
+import eu.slipo.workbench.common.model.process.ProcessExecutionStepLogsRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStepRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStopException;
 import eu.slipo.workbench.common.model.process.ProcessIdentifier;
@@ -207,7 +210,7 @@ public class DefaultProcessService implements ProcessService {
 
         checkProcessExecutionAccess(processRecord);
 
-        ProcessExecutionRecord executionRecord = processRepository.getExecutionCompactView(id, version);
+        ProcessExecutionRecord executionRecord = processRepository.getExecutionCompactView(id, version, false);
 
         // For catalog resources update bounding box and table name values
         refreshCatalogResources(processRecord);
@@ -217,11 +220,11 @@ public class DefaultProcessService implements ProcessService {
 
     @Override
     public ProcessExecutionRecordView getProcessExecution(
-        long id, long version, long executionId
+        long id, long version, long executionId, boolean includeLogs
     ) throws ProcessNotFoundException, ProcessExecutionNotFoundException{
 
         ProcessRecord processRecord = processRepository.findOne(id, version, false);
-        ProcessExecutionRecord executionRecord = processRepository.getExecutionCompactView(id, version);
+        ProcessExecutionRecord executionRecord = processRepository.getExecutionCompactView(id, version, includeLogs);
         if (processRecord == null ||
             executionRecord == null ||
             executionRecord.getProcess().getId() != id ||
@@ -474,6 +477,44 @@ public class DefaultProcessService implements ProcessService {
     }
 
     @Override
+    public File getProcessExecutionLog(long id, long version, long executionId, long fileId)
+        throws ProcessNotFoundException, ProcessExecutionNotFoundException, ProcessExecutionFileNotFoundException {
+
+        ProcessRecord processRecord = processRepository.findOne(id, version, false);
+        ProcessExecutionRecord executionRecord = processRepository.findExecution(executionId, false, true);
+        if (processRecord == null ||
+            executionRecord == null ||
+            executionRecord.getProcess().getId() != id ||
+            executionRecord.getProcess().getVersion() != version) {
+
+            throw new ProcessNotFoundException(id, version);
+        }
+
+        checkProcessExecutionAccess(processRecord);
+
+        final Optional<ProcessExecutionStepLogsRecord> result = executionRecord
+            .getSteps()
+            .stream()
+            .flatMap(s -> s.getLogs().stream())
+            .filter(f -> f.getId() == fileId)
+            .findFirst();
+
+        if (!result.isPresent()) {
+            throw ProcessExecutionFileNotFoundException.forFile(executionId, fileId);
+        }
+
+        final String filename = result.get().getFilePath();
+        Path path;
+        try {
+            path = fileNamingStrategy.resolveExecutionPath(filename);
+        } catch (URISyntaxException e) {
+            return null;
+        }
+
+        return path.toFile();
+    }
+
+    @Override
     public Object getProcessExecutionKpiData(long id, long version, long executionId, long fileId)
         throws ApplicationException, ProcessExecutionNotFoundException {
 
@@ -535,11 +576,65 @@ public class DefaultProcessService implements ProcessService {
         } catch (JsonParseException ex) {
             String message = "Failed to parse JSON file";
             logger.error(message,ex);
-            return ApplicationException.fromMessage(BasicErrorCode.UNKNOWN, message);
+            throw ApplicationException.fromMessage(BasicErrorCode.UNKNOWN, message);
         } catch (IOException ex) {
             String message = "Failed to access file";
             logger.error(message,ex);
-            return ApplicationException.fromMessage(BasicErrorCode.IO_ERROR, message);
+            throw ApplicationException.fromMessage(BasicErrorCode.IO_ERROR, message);
+        }
+    }
+
+    @Override
+    public String getProcessExecutionLogContent(long id, long version, long executionId, long fileId)
+        throws ApplicationException, ProcessExecutionNotFoundException {
+
+        ProcessRecord processRecord = processRepository.findOne(id, version, false);
+        ProcessExecutionRecord executionRecord = processRepository.findExecution(executionId, false, true);
+        if (processRecord == null ||
+            executionRecord == null ||
+            executionRecord.getProcess().getId() != id ||
+            executionRecord.getProcess().getVersion() != version) {
+            throw ProcessExecutionNotFoundException.forExecution(executionId);
+        }
+
+        checkProcessExecutionAccess(processRecord);
+
+        final Optional<Pair<ProcessExecutionStepRecord, ProcessExecutionStepLogsRecord>> result = executionRecord
+            .getSteps()
+            .stream()
+            .flatMap(s -> {
+                return s.getLogs()
+                    .stream()
+                    .map(l -> Pair.<ProcessExecutionStepRecord, ProcessExecutionStepLogsRecord>of(s, l));
+            })
+            .filter(f -> f.getRight().getId() == fileId)
+            .findFirst();
+
+        if (!result.isPresent()) {
+            throw ApplicationException.fromMessage(BasicErrorCode.NO_RESULT, "File was not found");
+        }
+        result.get().getLeft();
+        final ProcessExecutionStepLogsRecord fileRecord = result.get().getRight();
+
+        final String filename = fileRecord.getFilePath();
+        Path path;
+        try {
+            path = fileNamingStrategy.resolveExecutionPath(filename);
+        } catch (URISyntaxException e) {
+            throw ApplicationException.fromMessage(BasicErrorCode.NO_RESULT, "File was not found");
+        }
+        final File file = path.toFile();
+
+        if (!file.exists()) {
+            throw ApplicationException.fromMessage(FileSystemErrorCode.PATH_NOT_FOUND, "File was not found");
+        }
+
+        try {
+            return FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+        } catch (IOException ex) {
+            String message = "Failed to access file";
+            logger.error(message,ex);
+            throw ApplicationException.fromMessage(BasicErrorCode.IO_ERROR, message);
         }
     }
 
