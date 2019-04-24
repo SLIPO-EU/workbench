@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.domain.PageRequest;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -205,8 +206,8 @@ public interface ProcessRepository
      * @param executionId the execution id (i.e the primary key of the execution)
      * @param includeNonVerifiedFiles if the result should include records for non-verified
      *   output files (i.e. not yet confirmed to exist or abandoned as part of a failed step)
-     * @param includeLogs if the result should include records for log files generated during 
-     *   execution of each step (which are present only for finished steps).   
+     * @param includeLogs if the result should include records for log files generated during
+     *   execution of each step (which are present only for finished steps).
      * @return an instance of {@link ProcessExecutionRecord} or <tt>null</tt> if no
      *   such execution exists
      */
@@ -221,7 +222,7 @@ public interface ProcessRepository
     {
         return findExecution(executionId, false, false);
     }
-    
+
     /**
      * Find process execution record
      *
@@ -263,16 +264,40 @@ public interface ProcessRepository
     /**
      * Get a compact view of the execution of a process of a given id and version.
      *
-     * <p>A compact view of the execution is an execution comprised of the latest execution of each step,
-     * successful or not (of course, a successful execution of a step will always be the latest,
-     * because it will never attempt to re-execute).
+     * <p>
+     * A compact view of the execution is an execution comprised of the latest execution
+     * of each step, successful or not (of course, a successful execution of a step will
+     * always be the latest, because it will never attempt to re-execute).
      *
      * @param id The process id
      * @param version The version of a specific revision of a process
+     * during execution of each step (which are present only for finished steps).
+     *
      * @return A record presenting a compact execution of given process revision
      * @throws ProcessNotFoundException if process is not found
      */
-    ProcessExecutionRecord getExecutionCompactView(long id, long version) throws ProcessNotFoundException;
+    @Transactional(readOnly = true)
+    default ProcessExecutionRecord getExecutionCompactView(long id, long version) throws ProcessNotFoundException {
+        return this.getExecutionCompactView(id, version, false);
+    }
+
+    /**
+     * Get a compact view of the execution of a process of a given id and version.
+     *
+     * <p>
+     * A compact view of the execution is an execution comprised of the latest execution
+     * of each step, successful or not (of course, a successful execution of a step will
+     * always be the latest, because it will never attempt to re-execute).
+     *
+     * @param id The process id
+     * @param version The version of a specific revision of a process
+     * @param includeLogs if the result should include records for log files generated
+     * during execution of each step (which are present only for finished steps).
+     *
+     * @return A record presenting a compact execution of given process revision
+     * @throws ProcessNotFoundException if process is not found
+     */
+    ProcessExecutionRecord getExecutionCompactView(long id, long version, boolean includeLogs) throws ProcessNotFoundException;
 
     /**
      * Find process executions filtered by a {@link ProcessExecutionQuery}.
@@ -390,19 +415,19 @@ public interface ProcessRepository
      */
     ProcessExecutionRecord updateExecutionStepAddingFile(long executionId, int stepKey, Collection<ProcessExecutionStepFileRecord> records)
         throws ProcessExecutionNotFoundException, ProcessExecutionNotActiveException;
-    
+
     /**
      *  Update the execution state of an existing processing step by adding new log files.
-     * 
+     *
      * @param executionId The execution id of a process revision
      * @param stepKey The step key
-     * @param records A collection of records representing the log file to be added (i.e logs extracted from the actual 
+     * @param records A collection of records representing the log file to be added (i.e logs extracted from the actual
      *   Batch step)
      * @return
      */
     ProcessExecutionRecord updateExecutionStepAddingLogs(long executionId, int stepKey, Collection<ProcessExecutionStepLogsRecord> records)
         throws ProcessExecutionNotFoundException, ProcessExecutionNotActiveException;
-    
+
     /**
      * Discard (i.e delete) an execution entity.
      *

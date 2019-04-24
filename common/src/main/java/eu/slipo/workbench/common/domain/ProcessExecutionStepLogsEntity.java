@@ -31,7 +31,7 @@ public class ProcessExecutionStepLogsEntity
     @ManyToOne
     @JoinColumn(name = "process_execution_step", nullable = false, updatable = false)
     ProcessExecutionStepEntity step;
-    
+
     /**
      * The name of the underlying Batch step (this is <em>not</em> the name of the process execution step!)
      */
@@ -39,18 +39,18 @@ public class ProcessExecutionStepLogsEntity
     @NaturalId
     @Column(name = "`name`", nullable = false, updatable = false)
     String name;
-    
+
     @NotNull
     @Column(name = "file_path", nullable = false, updatable = false)
     String path;
-    
+
     protected ProcessExecutionStepLogsEntity() {}
-    
+
     public ProcessExecutionStepLogsEntity(ProcessExecutionStepEntity processExecutionStepEntity, String name)
     {
         this(processExecutionStepEntity, name, null);
     }
-    
+
     public ProcessExecutionStepLogsEntity(
         ProcessExecutionStepEntity processExecutionStepEntity, String name, String path)
     {
@@ -58,22 +58,22 @@ public class ProcessExecutionStepLogsEntity
         this.name = name;
         this.path = path;
     }
-    
+
     public ProcessExecutionStepEntity getStep()
     {
         return step;
     }
-    
+
     public String getName()
     {
         return name;
     }
-    
+
     public String getPath()
     {
         return path;
     }
-    
+
     public void setPath(String path)
     {
         this.path = path;
@@ -81,7 +81,7 @@ public class ProcessExecutionStepLogsEntity
 
     public ProcessExecutionStepLogsRecord toProcessExecutionStepLogsRecord()
     {
-        ProcessExecutionStepLogsRecord r = new ProcessExecutionStepLogsRecord(name, path);
+        ProcessExecutionStepLogsRecord r = new ProcessExecutionStepLogsRecord(id, name, path);
         return r;
     }
 }
