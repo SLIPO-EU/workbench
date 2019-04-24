@@ -16,6 +16,7 @@ export const defaultValues = {
   links: {
     id: 'links',
     file: null,
+    linksFormat: null,
   },
   target: {
     id: 'target',
