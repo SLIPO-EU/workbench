@@ -565,6 +565,7 @@ public class DefaultProcessService implements ProcessService {
         try {
             switch (stepRecord.getTool()) {
                 case TRIPLEGEO:
+                case DEER:
                 case FAGI:
                     JsonNode node = objectMapper.readTree(file);
                     return node;

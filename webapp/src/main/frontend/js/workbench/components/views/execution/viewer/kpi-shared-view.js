@@ -34,7 +34,7 @@ class KpiSharedView extends React.Component {
   static propTypes = {
     data: PropTypes.arrayOf(PropTypes.shape({
       key: PropTypes.string.isRequired,
-      value: PropTypes.oneOfType([PropTypes.string, PropTypes.number, PropTypes.bool]).isRequired,
+      value: PropTypes.oneOfType([PropTypes.string, PropTypes.number, PropTypes.bool]),
       description: PropTypes.string,
     })),
     file: PropTypes.object.isRequired,

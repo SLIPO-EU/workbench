@@ -29,6 +29,7 @@ import {
 } from '../../process/designer';
 
 import {
+  KpiDeerView,
   KpiFagiView,
   KpiTripleGeoView,
 } from './';
@@ -203,10 +204,24 @@ export default class ExecutionStepDetails extends React.Component {
     return (rowInfo && this.props.selectedFile === rowInfo.row.id);
   }
 
+  resolveKpiComponent(tool) {
+    switch (tool) {
+      case EnumTool.DEER:
+        return KpiDeerView;
+      case EnumTool.FAGI:
+        return KpiFagiView;
+      case EnumTool.TripleGeo:
+        return KpiTripleGeoView;
+    }
+
+    return null;
+  }
+
   render() {
     const iconClassName = (ToolIcons[this.props.step.component] || 'fa fa-folder-open') + ' pr-2';
     const data = this.props.selectedKpi && this.props.selectedKpi.data;
     const file = this.props.selectedFile && this.props.files.find((f) => f.id === this.props.selectedFile);
+    const ComponentKpi = this.resolveKpiComponent(this.props.step.tool);
 
     return (
       <div>
@@ -247,24 +262,18 @@ export default class ExecutionStepDetails extends React.Component {
             </Row>
           </CardBody>
         </Card>
-        {this.props.selectedKpi &&
+        {this.props.selectedKpi && ComponentKpi &&
           <Row className="mb-4">
             <Col>
-              {this.props.step.tool === EnumTool.TripleGeo &&
-                <KpiTripleGeoView
-                  data={data}
-                  file={file}
-                />
-              }
-              {this.props.step.tool === EnumTool.FAGI &&
-                <KpiFagiView
-                  data={data}
-                  file={file}
-                />}
+              <ComponentKpi
+                data={data}
+                file={file}
+              />
             </Col>
           </Row>
         }
       </div>
     );
   }
+
 }
