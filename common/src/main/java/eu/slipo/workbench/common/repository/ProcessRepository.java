@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.domain.PageRequest;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -276,8 +275,8 @@ public interface ProcessRepository
      * @return A record presenting a compact execution of given process revision
      * @throws ProcessNotFoundException if process is not found
      */
-    @Transactional(readOnly = true)
-    default ProcessExecutionRecord getExecutionCompactView(long id, long version) throws ProcessNotFoundException {
+    default ProcessExecutionRecord getExecutionCompactView(long id, long version) throws ProcessNotFoundException 
+    {
         return this.getExecutionCompactView(id, version, false);
     }
 
@@ -469,5 +468,4 @@ public interface ProcessRepository
      * @param operation The operation type
      */
     void log(long applicationKey, long execution, EnumOperation operation);
-
 }

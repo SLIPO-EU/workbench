@@ -428,6 +428,13 @@ public class DefaultProcessRepository implements ProcessRepository
 
     @Transactional(readOnly = true)
     @Override
+    public ProcessExecutionRecord findExecution(long executionId, boolean includeNonVerifiedFiles)
+    {
+        return ProcessRepository.super.findExecution(executionId, includeNonVerifiedFiles);
+    }
+    
+    @Transactional(readOnly = true)
+    @Override
     public ProcessExecutionRecord findExecution(long executionId)
     {
         return ProcessRepository.super.findExecution(executionId);
@@ -518,6 +525,14 @@ public class DefaultProcessRepository implements ProcessRepository
         executionRecord.setSteps(stepRecords);
 
         return executionRecord;
+    }
+    
+    @Transactional(readOnly = true)
+    @Override
+    public ProcessExecutionRecord getExecutionCompactView(long id, long version)
+        throws ProcessNotFoundException
+    {
+        return ProcessRepository.super.getExecutionCompactView(id, version);
     }
 
     @Transactional(readOnly = true)
