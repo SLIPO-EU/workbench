@@ -1,22 +1,29 @@
 package eu.slipo.workbench.web.controller.action;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import eu.slipo.workbench.common.model.BasicErrorCode;
@@ -64,7 +71,7 @@ public class ProcessController extends BaseController {
      * @param data the query to execute
      * @return a list of processes
      */
-    @RequestMapping(value = "/action/process/query", method = RequestMethod.POST)
+    @PostMapping(value = "/action/process/query")
     public RestResponse<QueryResult<ProcessRecord>> find(@RequestBody ProcessQueryRequest request) {
 
         if (request == null || request.getQuery() == null) {
@@ -98,7 +105,7 @@ public class ProcessController extends BaseController {
      * @param data the query to execute
      * @return a list of processes
      */
-    @RequestMapping(value = "/action/process/api/query", method = RequestMethod.POST)
+    @PostMapping(value = "/action/process/api/query")
     public RestResponse<QueryResult<ProcessExecutionApiRecord>> findApiCalls(@RequestBody ProcessExecutionApiQueryRequest request) {
         if (request == null || request.getQuery() == null) {
             return RestResponse.error(ProcessErrorCode.QUERY_IS_EMPTY, "The query is empty");
@@ -118,7 +125,7 @@ public class ProcessController extends BaseController {
      * @param data the query to execute
      * @return a list of process templates
      */
-    @RequestMapping(value = "/action/process/template/query", method = RequestMethod.POST)
+    @PostMapping(value = "/action/process/template/query")
     public RestResponse<QueryResult<ProcessRecord>> findTemplates(@RequestBody ProcessQueryRequest request) {
 
         if (request == null || request.getQuery() == null) {
@@ -138,7 +145,7 @@ public class ProcessController extends BaseController {
      * @param data the query to execute
      * @return a list of processes
      */
-    @RequestMapping(value = "/action/process/execution/query", method = RequestMethod.POST)
+    @PostMapping(value = "/action/process/execution/query")
     public RestResponse<QueryResult<ProcessExecutionRecord>> find(@RequestBody ProcessExecutionQueryRequest request) {
         if (request == null || request.getQuery() == null) {
             return RestResponse.error(ProcessErrorCode.QUERY_IS_EMPTY, "The query is empty");
@@ -173,7 +180,7 @@ public class ProcessController extends BaseController {
      * @param version the process version
      * @return a list of {@link ProcessExecutionRecord}
      */
-    @RequestMapping(value = "/action/process/{id}/{version}/execution", method = RequestMethod.GET)
+    @GetMapping(value = "/action/process/{id}/{version}/execution")
     public RestResponse<List<ProcessExecutionRecord>> getAllProcessExecutions(@PathVariable long id, @PathVariable long version) {
 
         return RestResponse.result(processService.findExecutions(id, version));
@@ -188,7 +195,7 @@ public class ProcessController extends BaseController {
      * @param executionId the execution id
      * @return a list of {@link ProcessExecutionRecord}
      */
-    @RequestMapping(value = "/action/process/{id}/{version}/execution/{executionId}", method = RequestMethod.GET)
+    @GetMapping(value = "/action/process/{id}/{version}/execution/{executionId}")
     public RestResponse<?> getProcessExecution(@PathVariable long id, @PathVariable long version, @PathVariable long executionId) {
 
         try {
@@ -208,7 +215,7 @@ public class ProcessController extends BaseController {
      * @param fileId the file id
      * @return a JSON object with KPI data
      */
-    @RequestMapping(value = "/action/process/{id}/{version}/execution/{executionId}/kpi/{fileId}", method = RequestMethod.GET)
+    @GetMapping(value = "/action/process/{id}/{version}/execution/{executionId}/kpi/{fileId}")
     public RestResponse<?> getProcessExecutionKpiData(
         @PathVariable long id, @PathVariable long version, @PathVariable long executionId, @PathVariable long fileId) {
 
@@ -229,7 +236,7 @@ public class ProcessController extends BaseController {
      * @param fileId the log file id
      * @return the contents of the file as plain text
      */
-    @RequestMapping(value = "/action/process/{id}/{version}/execution/{executionId}/log/{fileId}", method = RequestMethod.GET)
+    @GetMapping(value = "/action/process/{id}/{version}/execution/{executionId}/log/{fileId}")
     public RestResponse<?> getProcessExecutionLogFileContent(
         @PathVariable long id, @PathVariable long version, @PathVariable long executionId, @PathVariable long fileId) {
 
@@ -251,7 +258,7 @@ public class ProcessController extends BaseController {
      * @return an empty successful response if file exists
      * @throws IOException if process or file is not found
      */
-    @RequestMapping(value = "/action/process/{id}/{version}/execution/{executionId}/file/{fileId}/exists", method = RequestMethod.GET)
+    @GetMapping(value = "/action/process/{id}/{version}/execution/{executionId}/file/{fileId}/exists")
     public RestResponse<?> processExecutionFileExists(
         @PathVariable long id, @PathVariable long version, @PathVariable long executionId, @PathVariable long fileId,
         HttpServletResponse response
@@ -285,7 +292,7 @@ public class ProcessController extends BaseController {
      * @return an empty successful response if file exists
      * @throws IOException if process or file is not found
      */
-    @RequestMapping(value = "/action/process/{id}/{version}/execution/{executionId}/log/{fileId}/exists", method = RequestMethod.GET)
+    @GetMapping(value = "/action/process/{id}/{version}/execution/{executionId}/log/{fileId}/exists")
     public RestResponse<?> processExecutionLogExists(
         @PathVariable long id, @PathVariable long version, @PathVariable long executionId, @PathVariable long fileId,
         HttpServletResponse response
@@ -319,8 +326,10 @@ public class ProcessController extends BaseController {
      * @return an instance of {@link FileSystemResource}
      * @throws IOException if an I/O exception has occurred
      */
-    @RequestMapping(value = "/action/process/{id}/{version}/execution/{executionId}/file/{fileId}/download", method = RequestMethod.GET)
-    public FileSystemResource downloadProcessExecutionFile(
+    @GetMapping(
+        value = "/action/process/{id}/{version}/execution/{executionId}/file/{fileId}/download"
+    )
+    public HttpEntity<byte[]> downloadProcessExecutionFile(
         @PathVariable long id, @PathVariable long version, @PathVariable long executionId, @PathVariable long fileId,
         HttpServletResponse response
     ) throws IOException {
@@ -329,8 +338,18 @@ public class ProcessController extends BaseController {
         try {
             file = this.processService.getProcessExecutionFile(id, version, executionId, fileId);
             if ((file != null) && (file.exists())) {
-                response.setHeader("Content-Disposition", String.format("attachment; filename=%s", file.getName()));
-                return new FileSystemResource(file);
+                String contentType = Files.probeContentType(file.toPath());
+                if (contentType == null) {
+                    contentType = "application/octet-stream";
+                }
+
+                HttpHeaders headers = new HttpHeaders();
+                headers.add("Content-Type", contentType);
+                headers.add("Content-Disposition", String.format("attachment; filename=%s", file.getName()));
+
+                try(InputStream inputStream = new FileInputStream(file)) {
+                    return new HttpEntity<>(IOUtils.toByteArray(inputStream), headers);
+                }
             }
         } catch (ProcessNotFoundException ex) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND, "Process was not found");
@@ -354,7 +373,10 @@ public class ProcessController extends BaseController {
      * @return an instance of {@link FileSystemResource}
      * @throws IOException if an I/O exception has occurred
      */
-    @RequestMapping(value = "/action/process/{id}/{version}/execution/{executionId}/log/{fileId}/download", method = RequestMethod.GET)
+    @GetMapping(
+        value = "/action/process/{id}/{version}/execution/{executionId}/log/{fileId}/download",
+        produces = "text/plain"
+    )
     public FileSystemResource downloadProcessExecutionLog(
         @PathVariable long id, @PathVariable long version, @PathVariable long executionId, @PathVariable long fileId,
         HttpServletResponse response
@@ -385,7 +407,7 @@ public class ProcessController extends BaseController {
      * @param id the process id
      * @return the updated process model
      */
-    @RequestMapping(value = "/action/process/{id}", method = RequestMethod.GET)
+    @GetMapping(value = "/action/process/{id}")
     public RestResponse<?> getProcess(@PathVariable long id) {
         try {
             ProcessRecord record = processService.findOne(id);
@@ -407,7 +429,7 @@ public class ProcessController extends BaseController {
      * @param data the process model
      * @return the updated process model
      */
-    @RequestMapping(value = "/action/process/{id}/{version}", method = RequestMethod.GET)
+    @GetMapping(value = "/action/process/{id}/{version}")
     public RestResponse<?> getProcessRevision(@PathVariable long id, @PathVariable long version) {
         try {
             ProcessRecord record = processService.findOne(id, version);
@@ -430,7 +452,7 @@ public class ProcessController extends BaseController {
      *
      * @return the created process model
      */
-    @RequestMapping(value = "/action/process", method = RequestMethod.POST)
+    @PostMapping(value = "/action/process")
     public RestResponse<?> create(@RequestBody ProcessCreateRequest request) {
 
         return this.createOrUpdateProcess(null, request);
@@ -443,7 +465,7 @@ public class ProcessController extends BaseController {
      * @param request the process definition
      * @return the created process model
      */
-    @RequestMapping(value = "/action/process/{id}", method = RequestMethod.POST)
+    @PostMapping(value = "/action/process/{id}")
     public RestResponse<?> update(@PathVariable long id, @RequestBody ProcessCreateRequest request) {
 
         return this.createOrUpdateProcess(id, request);
@@ -455,7 +477,7 @@ public class ProcessController extends BaseController {
      * @param id the id of the process to start
      * @return an empty response if operation was successful
      */
-    @RequestMapping(value = "/action/process/{id}/{version}/start", method = RequestMethod.POST)
+    @PostMapping(value = "/action/process/{id}/{version}/start")
     public RestResponse<?> start(@PathVariable long id, @PathVariable long version) {
         try {
             this.processService.start(id, version, EnumProcessTaskType.UNDEFINED);
@@ -471,7 +493,7 @@ public class ProcessController extends BaseController {
      * @param id the id of the process to start
      * @return an empty response if operation was successful
      */
-    @RequestMapping(value = "/action/process/{id}/{version}/stop", method = RequestMethod.POST)
+    @PostMapping(value = "/action/process/{id}/{version}/stop")
     public RestResponse<?> stop(@PathVariable long id, @PathVariable long version) {
         try {
             this.processService.stop(id, version);
@@ -489,7 +511,7 @@ public class ProcessController extends BaseController {
      * @param execution the unique id of the process execution instance to export
      * @return an empty response if operation was successful
      */
-    @RequestMapping(value = "/action/process/{id}/{version}/export/{execution}", method = RequestMethod.POST)
+    @PostMapping(value = "/action/process/{id}/{version}/export/{execution}")
     public RestResponse<?> exportMap(@PathVariable long id, @PathVariable long version, @PathVariable long execution) {
         try {
             this.processService.exportMap(id, version, execution);
