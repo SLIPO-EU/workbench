@@ -969,9 +969,12 @@ public class DefaultImportService implements ImportService, InitializingBean {
             InputStreamReader isr = new InputStreamReader(fis, "UTF-8");
             BufferedReader br = new BufferedReader(isr);
         ) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (StringUtils.isBlank(line)) {
+                    continue;
+                }
 
-            while (br.ready()) {
-                String line = br.readLine();
                 FusionLog log = objectMapper.readValue(line, FusionLog.class);
 
                 final String logSql = String.format(

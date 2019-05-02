@@ -8,6 +8,7 @@ export function executionReducer(state, action) {
         data: null,
         selectedFile: null,
         selectedKpi: null,
+        selectedLog: null,
       };
 
     case Types.RECEIVE_EXECUTION_DATA:
@@ -22,6 +23,7 @@ export function executionReducer(state, action) {
         ...state.execution,
         selectedFile: action.id,
         selectedKpi: null,
+        selectedLog: null,
       };
 
     case Types.REQUEST_EXECUTION_KPI_DATA:
@@ -32,6 +34,7 @@ export function executionReducer(state, action) {
           mode: action.mode,
           data: null,
         },
+        selectedLog: null,
       };
 
     case Types.RECEIVE_EXECUTION_KPI_DATA:
@@ -43,20 +46,34 @@ export function executionReducer(state, action) {
         },
       };
 
+    case Types.REQUEST_EXECUTION_LOG_DATA:
+      return {
+        ...state.execution,
+        selectedKpi: null,
+        selectedLog: {
+          id: action.id,
+          data: null,
+        },
+      };
+
+    case Types.RECEIVE_EXECUTION_LOG_DATA:
+      return {
+        ...state.execution,
+        selectedLog: {
+          ...state.selectedLog,
+          data: action.data,
+        },
+      };
+
     case Types.RESET_SELECTED_FILE:
       return {
         ...state.execution,
         selectedFile: null,
         selectedKpi: null,
+        selectedLog: null,
       };
 
-    case Types.RESET_SELECTED_KPI:
-      return {
-        ...state.execution,
-        selectedKpi: null,
-      };
-
-      default:
+    default:
       return state;
   }
 }

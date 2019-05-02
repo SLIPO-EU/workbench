@@ -110,7 +110,7 @@ export default class Form extends React.Component {
         <Row>
           <Col>
             <div
-              style={{ maxHeight: '70vh', overflowY: 'auto', paddingRight: 16, paddingBottom: 50 }}
+              style={{ paddingRight: 16, paddingBottom: 50 }}
             >
               {
                 React.Children.map(children, (child) => {

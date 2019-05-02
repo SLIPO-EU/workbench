@@ -192,7 +192,7 @@ public class ProcessController extends BaseController {
     public RestResponse<?> getProcessExecution(@PathVariable long id, @PathVariable long version, @PathVariable long executionId) {
 
         try {
-            final ProcessExecutionRecordView view = this.processService.getProcessExecution(id, version, executionId);
+            final ProcessExecutionRecordView view = this.processService.getProcessExecution(id, version, executionId, true);
             return RestResponse.result(view);
         } catch (Exception ex) {
             return this.exceptionToResponse(ex);
@@ -221,13 +221,34 @@ public class ProcessController extends BaseController {
     }
 
     /**
+     * Get log file contents
+     *
+     * @param id the process id
+     * @param version the process version
+     * @param executionId the execution id
+     * @param fileId the log file id
+     * @return the contents of the file as plain text
+     */
+    @RequestMapping(value = "/action/process/{id}/{version}/execution/{executionId}/log/{fileId}", method = RequestMethod.GET)
+    public RestResponse<?> getProcessExecutionLogFileContent(
+        @PathVariable long id, @PathVariable long version, @PathVariable long executionId, @PathVariable long fileId) {
+
+        try {
+            String data = this.processService.getProcessExecutionLogContent(id, version, executionId, fileId);
+            return RestResponse.result(data);
+        } catch (Exception ex) {
+            return this.exceptionToResponse(ex);
+        }
+    }
+
+    /**
      * Checks if a file for the selected execution exists
      *
      * @param id the process id
      * @param version the process version
      * @param executionId the execution id
      * @param fileId the file id
-     * @return a list of {@link ProcessExecutionRecord}
+     * @return an empty successful response if file exists
      * @throws IOException if process or file is not found
      */
     @RequestMapping(value = "/action/process/{id}/{version}/execution/{executionId}/file/{fileId}/exists", method = RequestMethod.GET)
@@ -239,6 +260,40 @@ public class ProcessController extends BaseController {
         final File file;
         try {
             file = this.processService.getProcessExecutionFile(id, version, executionId, fileId);
+            if ((file != null) && (file.exists())) {
+                return RestResponse.success();
+            }
+        } catch (ProcessNotFoundException ex) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Process was not found");
+        } catch (ProcessExecutionNotFoundException ex) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Process execution was not found");
+        } catch (ProcessExecutionFileNotFoundException ex) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "File was not found");
+        }
+
+        response.sendError(HttpServletResponse.SC_GONE, "File has been removed");
+        return null;
+    }
+
+    /**
+     * Checks if a log file exists
+     *
+     * @param id the process id
+     * @param version the process version
+     * @param executionId the execution id
+     * @param fileId the file id
+     * @return an empty successful response if file exists
+     * @throws IOException if process or file is not found
+     */
+    @RequestMapping(value = "/action/process/{id}/{version}/execution/{executionId}/log/{fileId}/exists", method = RequestMethod.GET)
+    public RestResponse<?> processExecutionLogExists(
+        @PathVariable long id, @PathVariable long version, @PathVariable long executionId, @PathVariable long fileId,
+        HttpServletResponse response
+    ) throws IOException {
+
+        final File file;
+        try {
+            file = this.processService.getProcessExecutionLog(id, version, executionId, fileId);
             if ((file != null) && (file.exists())) {
                 return RestResponse.success();
             }
@@ -273,6 +328,41 @@ public class ProcessController extends BaseController {
         final File file;
         try {
             file = this.processService.getProcessExecutionFile(id, version, executionId, fileId);
+            if ((file != null) && (file.exists())) {
+                response.setHeader("Content-Disposition", String.format("attachment; filename=%s", file.getName()));
+                return new FileSystemResource(file);
+            }
+        } catch (ProcessNotFoundException ex) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Process was not found");
+        } catch (ProcessExecutionNotFoundException ex) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "Process execution was not found");
+        } catch (ProcessExecutionFileNotFoundException ex) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, "File was not found");
+        }
+
+        response.sendError(HttpServletResponse.SC_GONE, "File has been removed");
+        return null;
+    }
+
+    /**
+     * Downloads a log file
+     *
+     * @param id the process id
+     * @param version the process version
+     * @param executionId the execution id
+     * @param fileId the file id
+     * @return an instance of {@link FileSystemResource}
+     * @throws IOException if an I/O exception has occurred
+     */
+    @RequestMapping(value = "/action/process/{id}/{version}/execution/{executionId}/log/{fileId}/download", method = RequestMethod.GET)
+    public FileSystemResource downloadProcessExecutionLog(
+        @PathVariable long id, @PathVariable long version, @PathVariable long executionId, @PathVariable long fileId,
+        HttpServletResponse response
+    ) throws IOException {
+
+        final File file;
+        try {
+            file = this.processService.getProcessExecutionLog(id, version, executionId, fileId);
             if ((file != null) && (file.exists())) {
                 response.setHeader("Content-Disposition", String.format("attachment; filename=%s", file.getName()));
                 return new FileSystemResource(file);

@@ -29,9 +29,8 @@ public class CsvUtils {
             Map<Character, Integer> prev = null;
             Map<Character, Integer> curr = null;
 
-            while (br.ready() && index < 100) {
-                String line = br.readLine();
-
+            String line;
+            while ((line = br.readLine()) != null && index < 100) {
                 // Count character frequency for the current line
                 curr = new HashMap<Character, Integer>();
 
@@ -74,8 +73,8 @@ public class CsvUtils {
             Set<Character> quote = new HashSet<Character>();
             Set<Character> curr = null;
 
-            while (br.ready() && index < 100) {
-                String line = br.readLine();
+            String line;
+            while ((line = br.readLine()) != null && index < 100) {
                 String[] words = StringUtils.split(line, Character.toString(delimiter));
 
                 // Get quotes for the current line

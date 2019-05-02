@@ -26,18 +26,18 @@ public class TriplegeoApiConfiguration {
     /**
      * The name of the field holding a unique identifier for each input record
      */
-    private String attrKey = "id";
+    private String attrKey;
 
     /**
      * The name of the field from which names will be extracted.
      */
-    private String attrName = "name";
+    private String attrName;
 
     /**
      * The name of the field from which a category will be extracted (e.g. type of points,
      * road classes).
      */
-    private String attrCategory = "type";
+    private String attrCategory;
 
     /**
      * Parameter that specifies the name of the geometry column in the input dataset. Omit
@@ -49,25 +49,25 @@ public class TriplegeoApiConfiguration {
     /**
      * A field delimiter for records (meaningful only for CSV input).
      */
-    private String delimiter = ";";
+    private String delimiter;
 
     /**
      * Mandatory for CSV input only (case-insensitive): specify quote character for string
      * values; Remove for any other types of input data.
      */
-    private String quote = "\"";
+    private String quote;
 
     /**
      * Required for CSV input only (case-insensitive): specify attribute holding X-
      * coordinates of point locations
      */
-    private String attrX = "lon";
+    private String attrX;
 
     /**
      * Required for CSV input only (case-insensitive): specify attribute holding Y-
      * coordinates of point locations
      */
-    private String attrY = "lat";
+    private String attrY;
 
     /**
      * A name for the data source provider of input features
@@ -87,7 +87,7 @@ public class TriplegeoApiConfiguration {
     /**
      * The default language for labels created in output RDF. The default is "en".
      */
-    private String defaultLang = "en";
+    private String defaultLang;
 
     public String getProfile() {
         return profile;
@@ -98,6 +98,9 @@ public class TriplegeoApiConfiguration {
     }
 
     public EnumDataFormat getInputFormat() {
+        if (inputFormat == null) {
+            return EnumDataFormat.UNDEFINED;
+        }
         return inputFormat;
     }
 
@@ -226,9 +229,6 @@ public class TriplegeoApiConfiguration {
         if (!StringUtils.isBlank(attrCategory)) {
             configuration.setAttrCategory(attrCategory);
         }
-        if (!StringUtils.isBlank(attrGeometry)) {
-            configuration.setAttrGeometry(attrGeometry);
-        }
         if (!StringUtils.isBlank(delimiter)) {
             configuration.setDelimiter(delimiter);
         }
@@ -253,6 +253,7 @@ public class TriplegeoApiConfiguration {
         if (!StringUtils.isBlank(defaultLang)) {
             configuration.setDefaultLang(defaultLang);
         }
+        configuration.setAttrGeometry(attrGeometry);
 
         configuration.setClassificationSpec(null);
         configuration.setMappingSpec(null);

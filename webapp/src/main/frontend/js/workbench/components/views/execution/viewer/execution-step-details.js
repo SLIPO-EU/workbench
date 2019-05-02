@@ -146,7 +146,6 @@ export default class ExecutionStepDetails extends React.Component {
     hideStepExecutionDetails: PropTypes.func.isRequired,
     files: PropTypes.arrayOf(PropTypes.object).isRequired,
     resetSelectedFile: PropTypes.func.isRequired,
-    resetSelectedKpi: PropTypes.func.isRequired,
     selectedFile: PropTypes.number,
     selectFile: PropTypes.func.isRequired,
     selectKpi: PropTypes.func.isRequired,
