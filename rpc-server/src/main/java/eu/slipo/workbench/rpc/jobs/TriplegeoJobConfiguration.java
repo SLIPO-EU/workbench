@@ -291,6 +291,8 @@ public class TriplegeoJobConfiguration extends ContainerBasedJobConfiguration
             .map(name -> containerDataDir.resolve(Paths.get("input", name)))
             .collect(Collectors.toList());
 
+        Path containerTempDir = Paths.get("/tmp");
+
         return CreateContainerTasklet.builder()
             .client(docker)
             .name(containerName)
@@ -301,6 +303,7 @@ public class TriplegeoJobConfiguration extends ContainerBasedJobConfiguration
                 .volume(workDir.resolve(optionsFileName), containerDataDir.resolve("options.conf"), true)
                 .volume(workDir.resolve(mappingsFileName), containerDataDir.resolve("mappings.yml"), true)
                 .volume(workDir.resolve(classificationFileName), containerDataDir.resolve("classification.csv"), true)
+                .volume(containerTempDir)
                 // Set environment
                 .env("INPUT_FILE", pathJoiner.join(containerInputPaths))
                 .env("CONFIG_FILE", containerDataDir.resolve("options.conf"))
