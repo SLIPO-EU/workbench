@@ -280,6 +280,8 @@ public class ReverseTriplegeoJobConfiguration extends ContainerBasedJobConfigura
             .map(name -> containerDataDir.resolve(Paths.get("input", name)))
             .collect(Collectors.toList());
 
+        Path containerTempDir = Paths.get("/tmp");
+
         return CreateContainerTasklet.builder()
             .client(docker)
             .name(containerName)
@@ -289,6 +291,7 @@ public class ReverseTriplegeoJobConfiguration extends ContainerBasedJobConfigura
                 .volume(outputDir, containerDataDir.resolve("output"))
                 .volume(workDir.resolve(optionsFileName), containerDataDir.resolve("options.conf"), true)
                 .volume(workDir.resolve(queryFileName), containerDataDir.resolve("query.sparql"), true)
+                .volume(containerTempDir)
                 // Set environment
                 .env("INPUT_FILE", pathJoiner.join(containerInputPaths))
                 .env("CONFIG_FILE", containerDataDir.resolve("options.conf"))
