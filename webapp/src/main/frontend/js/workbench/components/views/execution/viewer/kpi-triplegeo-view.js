@@ -144,7 +144,7 @@ class KpiTripleGeoView extends React.Component {
           }
         </Row>
         {series.length !== 0 &&
-          < Card >
+          <Card>
             <CardBody>
               <Row className="mb-4">
                 <Col>

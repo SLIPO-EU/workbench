@@ -220,6 +220,7 @@ export default class ExecutionStepDetails extends React.Component {
   render() {
     const iconClassName = (ToolIcons[this.props.step.component] || 'fa fa-folder-open') + ' pr-2';
     const data = this.props.selectedKpi && this.props.selectedKpi.data;
+    const original = this.props.selectedKpi && this.props.selectedKpi.original;
     const file = this.props.selectedFile && this.props.files.find((f) => f.id === this.props.selectedFile);
     const ComponentKpi = this.resolveKpiComponent(this.props.step.tool);
 
@@ -268,6 +269,7 @@ export default class ExecutionStepDetails extends React.Component {
               <ComponentKpi
                 data={data}
                 file={file}
+                original={original}
               />
             </Col>
           </Row>

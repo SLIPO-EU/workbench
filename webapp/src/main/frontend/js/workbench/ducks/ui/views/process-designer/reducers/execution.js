@@ -31,8 +31,8 @@ export function executionReducer(state, action) {
         ...state.execution,
         selectedKpi: {
           id: action.id,
-          mode: action.mode,
           data: null,
+          original: null,
         },
         selectedLog: null,
       };
@@ -43,6 +43,7 @@ export function executionReducer(state, action) {
         selectedKpi: {
           ...state.selectedKpi,
           data: action.data.values,
+          original: action.data.original,
         },
       };
 

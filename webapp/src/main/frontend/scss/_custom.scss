@@ -15,6 +15,7 @@ h3 {
     padding: 0px 10px;
     min-width: 60px;
   }
+
   .navbar-brand {
     padding: 0px;
     background-image: url("../images/logo.png");
@@ -148,6 +149,11 @@ input[type=number] {
 
 .slipo-action-icon {
   cursor: pointer;
+}
+
+.slipo-action-link {
+  cursor: pointer;
+  text-decoration: underline !important;
 }
 
 .transparent {

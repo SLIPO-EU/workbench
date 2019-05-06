@@ -315,18 +315,22 @@ export function fetchExecutionKpiData(process, version, execution, file, token) 
   return actions.get(`/action/process/${process}/${version}/execution/${execution}/kpi/${file}`, token)
     .then(data => {
       // Flatten data
-      data = flatten(data);
+      const flattenedData = flatten(data);
       // Remove empty objects
-      return Object.keys(data).reduce((result, key) => {
-        if (!_.isObject(data[key])) {
-          result.values.push({
+      const result = Object.keys(flattenedData).reduce((current, key) => {
+        if (!_.isObject(flattenedData[key])) {
+          current.values.push({
             key,
-            value: data[key],
+            value: flattenedData[key],
             description: null,
           });
         }
-        return result;
-      }, { values: [] });
+        return current;
+      }, { values: [], original: data });
+
+      result.values.sort((a1, a2) => a1.key > a2.key ? 1 : -1);
+
+      return result;
     });
 }
 
