@@ -19,8 +19,8 @@ import {
 } from '../../../../../model/process-designer';
 
 import {
-  configurationLevels as TripleGeoConfigurationLevels,
-} from '../../../../../model/process-designer/configuration/triplegeo';
+  TripleGeoConfigurationLevels,
+} from '../../../../../model/process-designer/configuration';
 
 import {
   validateConfiguration as tripleGeoValidator,
