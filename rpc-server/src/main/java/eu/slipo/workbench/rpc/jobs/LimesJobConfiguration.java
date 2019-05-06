@@ -1,5 +1,7 @@
 package eu.slipo.workbench.rpc.jobs;
 
+import static org.springframework.util.StringUtils.stripFilenameExtension;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -47,8 +49,6 @@ import eu.slipo.workbench.rpc.jobs.tasklet.PrepareWorkingDirectoryTasklet;
 import eu.slipo.workbench.rpc.jobs.tasklet.docker.CreateContainerTasklet;
 import eu.slipo.workbench.rpc.jobs.tasklet.docker.RunContainerTasklet;
 
-import static org.springframework.util.StringUtils.stripFilenameExtension;
-
 @Component
 public class LimesJobConfiguration extends ContainerBasedJobConfiguration
 {
@@ -71,7 +71,7 @@ public class LimesJobConfiguration extends ContainerBasedJobConfiguration
     /**
      * A list of keys of parameters to be ignored (blacklisted) as conflicting with <tt>input</tt> parameter.
      */
-    private static final List<String> blacklistedParameterKeys = ImmutableList.of("source.endpoint", "target.endpoint");
+    private static final List<String> blacklistedParameterKeys = ImmutableList.of("level", "source.endpoint", "target.endpoint");
 
     @Override
     @Autowired
@@ -118,8 +118,9 @@ public class LimesJobConfiguration extends ContainerBasedJobConfiguration
     @PostConstruct
     private void setMemoryLimitsIfNeeded()
     {
-        if (this.memorySwapLimit < 0)
+        if (this.memorySwapLimit < 0) {
             this.memorySwapLimit = 2L * this.memoryLimit;
+        }
 
         logger.info("The memory limits are {}m/{}m",
             memoryLimit / 1024L / 1024L, memorySwapLimit / 1024L / 1024L);
