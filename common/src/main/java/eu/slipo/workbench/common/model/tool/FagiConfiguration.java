@@ -656,7 +656,7 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
      */
     private String _profile;
 
-    private EnumLevel level = EnumLevel.ADVANCED;
+    private EnumLevel _level;
 
     private String lang;
 
@@ -734,16 +734,16 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
     }
 
     @JsonProperty("level")
-    public EnumLevel getLevel() {
-        if (level == null) {
-            return EnumLevel.ADVANCED;
-        }
-        return level;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public EnumLevel getLevel() 
+    {
+        return _level;
     }
 
     @JsonProperty("level")
-    public void setLevel(EnumLevel level) {
-        this.level = level;
+    public void setLevel(EnumLevel level) 
+    {
+        this._level = level;
     }
 
     @JsonProperty("verbose")

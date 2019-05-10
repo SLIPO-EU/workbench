@@ -142,7 +142,8 @@ public class FagiJobConfiguration extends ContainerBasedJobConfiguration
     private long memorySwapLimitForMerging = -1L;
 
     /**
-     * A list of keys of parameters to be ignored (blacklisted) as conflicting with <tt>input</tt> parameter.
+     * A list of keys of parameters to be ignored (blacklisted) by a job execution (e.g conflicting
+     * with <tt>input</tt> parameter).
      */
     private static final List<String> blacklistedParameterKeys =
         ImmutableList.of("level", "left.path", "right.path", "links.path");

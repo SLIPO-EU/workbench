@@ -69,7 +69,8 @@ public class LimesJobConfiguration extends ContainerBasedJobConfiguration
     public static final long DEFAULT_MEMORY_LIMIT = 536870912L;
 
     /**
-     * A list of keys of parameters to be ignored (blacklisted) as conflicting with <tt>input</tt> parameter.
+     * A list of keys of parameters to be ignored (blacklisted) by a job execution (e.g conflicting
+     * with <tt>input</tt> parameter).
      */
     private static final List<String> blacklistedParameterKeys = ImmutableList.of("level", "source.endpoint", "target.endpoint");
 

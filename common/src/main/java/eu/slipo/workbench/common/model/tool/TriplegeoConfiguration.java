@@ -238,7 +238,7 @@ public class TriplegeoConfiguration extends TransformConfiguration<Triplegeo>
      */
     private String _profile;
 
-    private EnumLevel level = EnumLevel.ADVANCED;
+    private EnumLevel _level;
 
     /**
      * Custom mappings selected manually by the user
@@ -462,16 +462,16 @@ public class TriplegeoConfiguration extends TransformConfiguration<Triplegeo>
     //
 
     @JsonProperty("level")
-    public EnumLevel getLevel() {
-        if (level == null) {
-            return EnumLevel.ADVANCED;
-        }
-        return level;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public EnumLevel getLevel() 
+    {
+        return _level;
     }
 
     @JsonProperty("level")
-    public void setLevel(EnumLevel level) {
-        this.level = level;
+    public void setLevel(EnumLevel level) 
+    {
+        this._level = level;
     }
 
     @JsonProperty("userMappings")
