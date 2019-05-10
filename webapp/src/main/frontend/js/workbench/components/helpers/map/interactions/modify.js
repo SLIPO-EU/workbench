@@ -11,10 +11,6 @@ import Translate from 'ol/interaction/Translate';
 import { default as GeometryType } from 'ol/geom/GeometryType';
 
 import {
-  FEATURE_LAYER_PROPERTY,
-} from '../model/constants';
-
-import {
   createStyle,
 } from '../shared/utils';
 

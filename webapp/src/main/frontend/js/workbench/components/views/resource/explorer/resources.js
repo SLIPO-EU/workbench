@@ -316,7 +316,7 @@ export default class Resources extends React.Component {
           });
         }}
         getTrProps={(state, rowInfo) => ({
-          onClick: (e) => {
+          onClick: () => {
             this.props.setSelectedResource(rowInfo.row.id, rowInfo.row.version);
           },
           className: (this.isSelected(rowInfo) ? 'slipo-react-table-selected' : null),
@@ -343,7 +343,7 @@ export default class Resources extends React.Component {
                     defaultPageSize={row.original.revisions.length}
                     showPagination={false}
                     getTrProps={(state, rowInfo) => ({
-                      onClick: (e) => {
+                      onClick: () => {
                         this.props.setSelectedResource(rowInfo.row.id, rowInfo.row.version);
                       },
                       className: (this.isSelected(rowInfo) ? 'slipo-react-table-selected' : 'slipo-react-table-child-row'),

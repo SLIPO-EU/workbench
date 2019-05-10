@@ -3,7 +3,8 @@ import * as React from 'react';
 import { Input } from 'reactstrap';
 
 import Feature from 'ol/Feature';
-import WKT from 'ol/format/WKT';
+import { fromLonLat } from 'ol/proj';
+import { default as GeometryType } from 'ol/geom/GeometryType';
 
 import {
   OpenLayers,
@@ -17,9 +18,12 @@ import {
   EnumSymbol,
 } from '../../model/map-viewer';
 
-import { fromLonLat } from 'ol/proj';
-import { compareGeometry } from '../../ducks/ui/views/map-viewer/util';
-import { default as GeometryType } from 'ol/geom/GeometryType';
+import {
+  compareGeometry,
+  fromWKT,
+  toWKT,
+} from '../../util/geometry';
+
 
 const defaultStyle = {
   symbol: EnumSymbol.Square,
@@ -45,31 +49,6 @@ const selectStyle = {
   },
   size: 10,
   opacity: 50,
-};
-
-const fromWKT = (wkt) => {
-  const format = new WKT();
-
-  try {
-    return format.readGeometry(wkt, {
-      dataProjection: 'EPSG:4326',
-      featureProjection: 'EPSG:3857'
-    });
-  } catch (err) {
-    return null;
-  }
-};
-
-const toWKT = (feature) => {
-  if (!feature || !feature.getGeometry()) {
-    return null;
-  }
-  const format = new WKT();
-
-  return format.writeGeometry(feature.getGeometry(), {
-    dataProjection: 'EPSG:4326',
-    featureProjection: 'EPSG:3857'
-  });
 };
 
 const createFeature = (wkt) => {
@@ -242,7 +221,7 @@ class GeometryEditor extends React.Component {
       invalid,
     } = this.state;
 
-    const { config: { mapDefaults: { center: defaultCenter }, osm: { url } }, readOnly } = this.props;
+    const { config: { osm: { url } }, readOnly } = this.props;
 
     if (mode === EnumMode.MAP) {
       return (

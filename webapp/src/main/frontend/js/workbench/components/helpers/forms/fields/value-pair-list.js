@@ -126,8 +126,8 @@ export class ValuePairList extends React.Component {
         </div>
         {!this.isReadOnly &&
           <div className="col" style={{ paddingTop: 2, fontSize: '1.2rem' }}>
-            <i className="fa fa-trash mr-2" style={{ cursor: 'pointer' }} onClick={(e) => this.removeItem(index)} />
-            <i className="fa fa-pencil" style={{ cursor: 'pointer' }} onClick={(e) => this.editItem(index)} />
+            <i className="fa fa-trash mr-2" style={{ cursor: 'pointer' }} onClick={() => this.removeItem(index)} />
+            <i className="fa fa-pencil" style={{ cursor: 'pointer' }} onClick={() => this.editItem(index)} />
           </div>
         }
       </div>
@@ -171,7 +171,7 @@ export class ValuePairList extends React.Component {
               />
             </div>
             <div className="col" style={{ paddingTop: 2, fontSize: '1.2rem' }}>
-              <i className="fa fa-plus" style={{ cursor: 'pointer' }} onClick={(e) => this.addItem()} />
+              <i className="fa fa-plus" style={{ cursor: 'pointer' }} onClick={() => this.addItem()} />
             </div>
           </div>
         }

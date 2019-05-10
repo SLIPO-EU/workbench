@@ -166,7 +166,7 @@ export default class ExecutionStepDetails extends React.Component {
     this.props.checkFile(this.props.process.id, this.props.process.version, this.props.execution.id, fileId, fileName)
       .then(() => {
         this.props.downloadFile(this.props.process.id, this.props.process.version, this.props.execution.id, fileId, fileName)
-          .catch(err => {
+          .catch(() => {
             message.error('Failed to download file', 'fa-cloud-download');
           });
       })
