@@ -110,13 +110,6 @@
     "urijs": "^1.19.1",
     "url-search-params": "^1.1.0"
   },
-  "browserify": {
-    "transform": [
-      "babelify",
-      "envify",
-      "browserify-shim"
-    ]
-  },
   "browser": {},
   "browserify-shim": {}
 }
