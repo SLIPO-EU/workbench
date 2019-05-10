@@ -191,6 +191,7 @@ export default class ExecutionStepDetails extends React.Component {
       case EnumTool.FAGI:
         return KpiFagiView;
       case EnumTool.TripleGeo:
+      case EnumTool.ReverseTripleGeo:
         return KpiTripleGeoView;
     }
 
