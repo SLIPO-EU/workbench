@@ -1,4 +1,5 @@
 export { default as Checkbox } from './checkbox';
+export { default as GeometryField } from './geometry';
 export { default as TextField } from './text';
 export { default as TextAreaField } from './textarea';
 export { default as PasswordField } from './password';

@@ -19,3 +19,24 @@
 .slipo-map-property-modified {
   border: 1px solid #4dbd74;
 }
+
+.map-button {
+  position: absolute;
+  z-index: 1;
+  right: 10px;
+  background: #ffffff;
+  padding: 0px 5px, ;
+  border: 1px solid #616161;
+  cursor: pointer;
+  opacity: 0.4;
+
+  &.selected {
+    background: #616161;
+    color: #ffffff;
+    cursor: default;
+  }
+
+  &:hover {
+    opacity: 1;
+  }
+}
