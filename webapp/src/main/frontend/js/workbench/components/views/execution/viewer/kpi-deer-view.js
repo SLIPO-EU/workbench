@@ -25,6 +25,7 @@ class KpiDeerView extends React.Component {
       description: PropTypes.string,
     })),
     file: PropTypes.object.isRequired,
+    original: PropTypes.object.isRequired,
   }
 
   render() {
@@ -41,6 +42,7 @@ class KpiDeerView extends React.Component {
                 <KpiSharedView
                   data={this.props.data}
                   file={this.props.file}
+                  original={this.props.original}
                 />
               </CardBody>
             </Card>

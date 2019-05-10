@@ -108,6 +108,7 @@ class KpiTripleGeoView extends React.Component {
                 <KpiSharedView
                   data={this.props.data}
                   file={this.props.file}
+                  original={this.props.original}
                 />
               </CardBody>
             </Card>
