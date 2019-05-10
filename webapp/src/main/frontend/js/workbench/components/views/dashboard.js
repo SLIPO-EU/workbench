@@ -16,7 +16,6 @@ import {
 } from 'reactstrap';
 
 import {
-  EnumErrorLevel,
   Roles,
   UPDATE_INTERVAL_SECONDS,
 } from '../../model';

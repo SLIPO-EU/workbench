@@ -15,6 +15,7 @@ import {
   CheckboxField,
   EnumFileSelectMode,
   FileSelectField,
+  GeometryField,
   SelectField,
   TextField,
   ValuePairListField,
@@ -47,6 +48,8 @@ import {
 import {
   readConfiguration,
 } from '../../../../../service/toolkit/triplegeo';
+
+import GeometryType from 'ol/geom/GeometryType';
 
 const languages = _.orderBy(langs.map(l => ({ value: l.alpha2, label: l.English })), ['label'], ['asc']);
 
@@ -599,6 +602,22 @@ class TripleGeoConfiguration extends React.Component {
                 help="Default lang for the labels created in the output RDF. By default, the value will be English-en"
                 options={languages}
               />
+
+              {value.level === configurationLevels.ADVANCED &&
+                <div className="row">
+                  <div className="col">
+                    <GeometryField
+                      {...inject}
+                      id="spatialExtent"
+                      label="Spatial Extent"
+                      help="Spatial filter to select input geometries contained within the specified polygon"
+                      config={this.props.appConfiguration}
+                      type={GeometryType.POLYGON}
+                    />
+                  </div>
+                </div>
+              }
+
             </div>
           }
         </div>

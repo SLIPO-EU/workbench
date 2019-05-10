@@ -77,7 +77,7 @@ class KpiFagiView extends React.Component {
       description: PropTypes.string,
     })),
     file: PropTypes.object.isRequired,
-    original: PropTypes.object,
+    original: PropTypes.object.isRequired,
   }
 
   componentDidUpdate(prevProps) {
@@ -354,6 +354,7 @@ class KpiFagiView extends React.Component {
                 <KpiSharedView
                   data={selectedItems.length === 0 ? data : data.filter(d => selectedItems.some(s => d.key.startsWith(s.key + '.')))}
                   file={file}
+                  original={this.props.original}
                 />
               </CardBody>
             </Card>

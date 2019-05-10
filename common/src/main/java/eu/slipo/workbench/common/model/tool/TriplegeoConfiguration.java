@@ -396,6 +396,11 @@ public class TriplegeoConfiguration extends TransformConfiguration<Triplegeo>
     private boolean registerFeatures = true;
 
     /**
+     * Spatial filter to select input geometries contained within the specified polygon
+     */
+    private String spatialExtent;
+
+    /**
      * A default constructor
      */
     public TriplegeoConfiguration()
@@ -1094,5 +1099,17 @@ public class TriplegeoConfiguration extends TransformConfiguration<Triplegeo>
     public void setRegisterFeatures(boolean registerFeatures)
     {
         this.registerFeatures = registerFeatures;
+    }
+
+    @JsonProperty("spatialExtent")
+    public String getSpatialExtent()
+    {
+        return spatialExtent;
+    }
+
+    @JsonProperty("spatialExtent")
+    public void setSpatialExtent(String spatialExtent)
+    {
+        this.spatialExtent = spatialExtent;
     }
 }

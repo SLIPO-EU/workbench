@@ -1,6 +1,8 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
 
+import ReactJson from 'react-json-view';
+
 import {
   Col,
   Row,
@@ -38,6 +40,7 @@ class KpiSharedView extends React.Component {
       description: PropTypes.string,
     })),
     file: PropTypes.object.isRequired,
+    original: PropTypes.object.isRequired,
   }
 
   render() {
@@ -55,13 +58,16 @@ class KpiSharedView extends React.Component {
         </Row>
         <Row>
           <Col>
-            <Table
-              data={this.props.data}
-              columns={KpiGridColumns}
-              showPagination={true}
-              defaultPageSize={10}
-              minRows={10}
-            />
+            <ReactJson
+              collapsed={1}
+              displayDataTypes={false}
+              enableClipboard={false}
+              name={'metadata'}
+              src={this.props.original}
+              style={{
+                maxHeight: 600,
+                overflowY: 'auto'
+              }} />
           </Col>
         </Row>
       </div>

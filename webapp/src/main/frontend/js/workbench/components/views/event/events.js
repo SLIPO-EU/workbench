@@ -43,11 +43,11 @@ const eventColumns = [{
   accessor: d => d.message,
   minWidth: 400,
 }, {
-  Header: props => <span>Source</span>,
+  Header: () => <span>Source</span>,
   accessor: 'clientAddress',
   style: { 'textAlign': 'center' }
 }, {
-  Header: props => <span>Account</span>,
+  Header: () => <span>Account</span>,
   accessor: 'userName',
   style: { 'textAlign': 'center' }
 }];
@@ -93,7 +93,7 @@ export default class Processes extends React.Component {
           });
         }}
         getTrProps={(state, rowInfo) => ({
-          onClick: (e) => {
+          onClick: () => {
             this.props.setSelected(rowInfo.row.id);
           },
           className: (this.isSelected(rowInfo) ? 'slipo-react-table-selected' : null),

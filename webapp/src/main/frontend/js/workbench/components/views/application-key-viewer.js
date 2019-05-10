@@ -126,12 +126,12 @@ class ApplicationKeyViewer extends React.Component {
                 `The application key has been created successfully.${result ? '<br />The key has been copied to the clipboard.' : ''}`
               );
             })
-            .catch(err => {
+            .catch(() => {
               message.error('An error has occurred');
             });
         }
       })
-      .catch(err => {
+      .catch(() => {
         message.error('Validation has failed');
       });
   }

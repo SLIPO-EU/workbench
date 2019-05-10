@@ -2,6 +2,7 @@ import * as Fields from '../fields/';
 import decorateFormField from './decorate-form-field';
 
 export const CheckboxField = decorateFormField(Fields.Checkbox);
+export const GeometryField = decorateFormField(Fields.GeometryField);
 export const TextField = decorateFormField(Fields.TextField);
 export const TextAreaField = decorateFormField(Fields.TextAreaField);
 export const PasswordField = decorateFormField(Fields.PasswordField);

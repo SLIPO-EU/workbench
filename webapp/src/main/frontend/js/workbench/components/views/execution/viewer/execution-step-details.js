@@ -38,26 +38,6 @@ import {
   message,
 } from '../../../../service';
 
-function isMapSupported(tool, type, table) {
-  if (!table) {
-    return false;
-  }
-  switch (tool) {
-    case EnumTool.TripleGeo:
-      return (type === EnumStepFileType.OUTPUT);
-
-    case EnumTool.LIMES:
-      return (type === EnumStepFileType.INPUT);
-
-    case EnumTool.FAGI: case EnumTool.DEER:
-      return ((type === EnumStepFileType.INPUT) || (type === EnumStepFileType.OUTPUT));
-
-    default:
-      return false;
-
-  }
-}
-
 function sortFiles(files) {
   files.forEach((f) => {
     f.__group = EnumStepFileTypeValue[f.type];
@@ -186,7 +166,7 @@ export default class ExecutionStepDetails extends React.Component {
     this.props.checkFile(this.props.process.id, this.props.process.version, this.props.execution.id, fileId, fileName)
       .then(() => {
         this.props.downloadFile(this.props.process.id, this.props.process.version, this.props.execution.id, fileId, fileName)
-          .catch(err => {
+          .catch(() => {
             message.error('Failed to download file', 'fa-cloud-download');
           });
       })
@@ -211,6 +191,7 @@ export default class ExecutionStepDetails extends React.Component {
       case EnumTool.FAGI:
         return KpiFagiView;
       case EnumTool.TripleGeo:
+      case EnumTool.ReverseTripleGeo:
         return KpiTripleGeoView;
     }
 

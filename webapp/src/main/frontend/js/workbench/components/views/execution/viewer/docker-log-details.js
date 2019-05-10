@@ -117,7 +117,7 @@ export default class DockerLogDetails extends React.Component {
     this.props.checkLog(this.props.process.id, this.props.process.version, this.props.execution.id, fileId, fileName)
       .then(() => {
         this.props.downloadLog(this.props.process.id, this.props.process.version, this.props.execution.id, fileId, fileName)
-          .catch(err => {
+          .catch(() => {
             message.error('Failed to download file', 'fa-cloud-download');
           });
       })

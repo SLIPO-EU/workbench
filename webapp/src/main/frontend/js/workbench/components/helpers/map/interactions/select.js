@@ -1,23 +1,25 @@
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
 
-import OpenLayersMap from 'ol/map';
+import OpenLayersMap from 'ol/Map';
 
-import Style from 'ol/style/style';
-import Circle from 'ol/style/circle';
-import Stroke from 'ol/style/stroke';
-import Fill from 'ol/style/fill';
+import GeoJSON from 'ol/format/GeoJSON';
+import Select from 'ol/interaction/Select';
+import Feature from 'ol/Feature';
 
-import GeoJSON from 'ol/format/geojson';
-import Select from 'ol/interaction/select';
+import { click as clickCondition, noModifierKeys as noModifierKeysCondition } from 'ol/events/condition';
 
 import {
   FEATURE_LAYER_PROPERTY,
 } from '../model/constants';
 
 import {
-  createStyle,
+  createStyle, mergeExtent,
 } from '../shared/utils';
+
+import {
+  EnumSymbol,
+} from '../../../../model/map-viewer';
 
 /**
  * Select interaction
@@ -37,76 +39,77 @@ class SelectInteraction extends React.Component {
 
   static propTypes = {
     active: PropTypes.bool,
+    color: PropTypes.string,
+    fitToExtent: PropTypes.bool,
+    hitTolerance: PropTypes.number,
     map: PropTypes.instanceOf(OpenLayersMap),
+    multi: PropTypes.bool,
     onFeatureSelect: PropTypes.func,
     selected: PropTypes.object,
-    color: PropTypes.string,
-    width: PropTypes.number,
-    hitTolerance: PropTypes.number,
-    multi: PropTypes.bool,
     styles: PropTypes.object,
+    width: PropTypes.number,
   }
 
   static defaultProps = {
     active: true,
-    width: 1,
     color: '#0D47A1',
+    fitToExtent: false,
     hitTolerance: 5,
     multi: true,
+    width: 1,
   }
 
-  parseFeatures(selected) {
-    this.interaction.getFeatures().clear();
+  parseFeatures(selected, fitToExtent) {
+    const features = this.interaction.getFeatures();
+    features.clear();
 
     if (!selected) {
       return;
     }
 
-    const format = new GeoJSON();
-    const features = format.readFeatures(selected, {
-      featureProjection: 'EPSG:3857',
-    });
+    // Handle selected type
+    if (selected instanceof Feature) {
+      // The selection is a single OpenLayers Feature instance
+      features.push(selected);
+    } else {
+      // By default attempt to parse JSON
+      const format = new GeoJSON();
+      const features = format.readFeatures(selected, {
+        featureProjection: 'EPSG:3857',
+      });
 
-    for (let index in features) {
-      this.interaction.getFeatures().push(features[index]);
+      for (let index in features) {
+        features.push(features[index]);
+      }
+    }
+
+    // Fit map to the selected features
+    if ((fitToExtent) && (features)) {
+      const extent = mergeExtent(features);
+
+      if (extent) {
+        this.props.map.getView().fit(extent);
+      }
     }
   }
 
   buildDefaultStyles() {
-    const stroke = new Stroke({
-      color: this.props.color,
-      width: this.props.width,
-    });
+    const { icon = null, color, width } = this.props;
 
-    const fill = new Fill({
-      color: this.props.color + '80',
-    });
-
-    const style = new Style({
-      fill,
-      stroke,
-    });
-
-    const image = new Circle({
-      radius: this.props.width,
-      fill,
-      stroke,
-    });
-
-    const styles = {
-      'Point': new Style({
-        image,
-      }),
-      'MultiPoint': new Style({
-        image,
-      }),
-      'LineString': style,
-      'MultiLineString': style,
-      'Polygon': style,
-      'MultiPolygon': style,
+    const layerStyle = {
+      symbol: EnumSymbol.Square,
+      stroke: {
+        color,
+        width,
+      },
+      fill: {
+        color,
+      },
+      opacity: 50,
+      size: 20,
     };
 
-    return styles;
+    return createStyle(icon, color, layerStyle, false);
   }
 
   buildStyles(styles) {
@@ -129,7 +132,7 @@ class SelectInteraction extends React.Component {
 
   buildStyleFunction() {
     return ((feature) => {
-      const type = feature.getGeometry().getType();
+      const type = feature.getGeometry() ? feature.getGeometry().getType() : null;
       const layer = feature.get(FEATURE_LAYER_PROPERTY);
       const styleMap = this.styles[layer];
 
@@ -138,18 +141,21 @@ class SelectInteraction extends React.Component {
   }
 
   componentDidMount() {
-    const { active, hitTolerance, map, multi, onFeatureSelect, selected } = this.props;
+    const { active, hitTolerance, map, multi, onFeatureSelect, selected, fitToExtent } = this.props;
 
     if (map) {
       const style = this.buildStyleFunction();
 
       this.interaction = new Select({
+        condition: (e) => {
+          return clickCondition(e) && noModifierKeysCondition(e);
+        },
         multi,
         hitTolerance,
         style,
       });
 
-      this.parseFeatures(selected);
+      this.parseFeatures(selected, fitToExtent);
 
       this.interaction.on('select', () => {
         if (typeof onFeatureSelect === 'function') {
@@ -164,7 +170,7 @@ class SelectInteraction extends React.Component {
 
   componentWillReceiveProps(nextProps) {
     if (this.props.selected != nextProps.selected) {
-      this.parseFeatures(nextProps.selected);
+      this.parseFeatures(nextProps.selected, nextProps.fitToExtent);
     }
     if (this.props.active != nextProps.active) {
       this.interaction.setActive(nextProps.active);

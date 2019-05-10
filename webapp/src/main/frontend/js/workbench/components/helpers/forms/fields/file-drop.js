@@ -52,7 +52,7 @@ export class FileDrop extends React.Component {
           disableClick={false}
           multiple={false}
         >
-          {({ getRootProps, getInputProps, isDragActive }) => {
+          {({ getRootProps, getInputProps }) => {
             return (
               <div {...getRootProps()} style={{
                 textAlign: 'center',

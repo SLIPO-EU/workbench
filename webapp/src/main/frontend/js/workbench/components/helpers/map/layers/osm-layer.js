@@ -1,9 +1,9 @@
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
 
-import OpenLayersMap from 'ol/map';
-import TileLayer from 'ol/layer/tile';
-import OSM from 'ol/source/osm';
+import OpenLayersMap from 'ol/Map';
+import TileLayer from 'ol/layer/Tile';
+import OSM from 'ol/source/OSM';
 
 /**
  * OSM layer

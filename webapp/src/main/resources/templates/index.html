@@ -22,6 +22,7 @@
   <script th:if="${@environment.getActiveProfiles()[0] == 'production'}" th:src="@{/js/vendor/react-with-redux.min.js}"></script>
   <script th:if="${@environment.getActiveProfiles()[0] == 'development'}" th:src="@{/js/vendor/react-with-redux.js}"></script>
 
+  <link rel="stylesheet" th:href="@{/vendor/mdi/css/materialdesignicons.min.css}" />
   <link rel="stylesheet" th:href="@{/vendor/coreui/css/font-awesome.min.css}" />
   <link rel="stylesheet" th:href="@{/vendor/coreui/css/simple-line-icons.css}" />
 

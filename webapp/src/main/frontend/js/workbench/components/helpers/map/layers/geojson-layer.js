@@ -1,15 +1,15 @@
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
 
-import OpenLayersMap from 'ol/map';
+import OpenLayersMap from 'ol/Map';
 
-import Style from 'ol/style/style';
-import Stroke from 'ol/style/stroke';
+import Style from 'ol/style/Style';
+import Stroke from 'ol/style/Stroke';
 
-import VectorSource from 'ol/source/vector';
-import GeoJSON from 'ol/format/geojson';
+import VectorSource from 'ol/source/Vector';
+import GeoJSON from 'ol/format/GeoJSON';
 
-import VectorLayer from 'ol/layer/vector';
+import VectorLayer from 'ol/layer/Vector';
 
 /**
  * Vector layer from GeoJSON data

@@ -1,5 +1,7 @@
 import actions from '../api/fetch-actions';
 
+import WKT from 'ol/format/WKT';
+
 import {
   configurationLevels,
   ontologies,
@@ -97,6 +99,19 @@ export function validateConfiguration(config) {
   }
   if (!config['targetGeoOntology']) {
     errors['targetGeoOntology'] = 'Required';
+  }
+
+  if (config['level'] === configurationLevels.ADVANCED && config['spatialExtent']) {
+    const format = new WKT();
+
+    try {
+      format.readGeometry(config['spatialExtent'], {
+        dataProjection: 'EPSG:4326',
+        featureProjection: 'EPSG:3857'
+      });
+    } catch (err) {
+      errors['spatialExtent'] = 'Invalid WKT';
+    }
   }
 
   if (Object.keys(errors).length) {

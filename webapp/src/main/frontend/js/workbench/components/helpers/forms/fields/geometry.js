@@ -1,17 +1,18 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Input } from 'reactstrap';
 
 import decorateField from './form-field';
+import GeometryType from 'ol/geom/GeometryType';
+import GeometryEditor from '../../geometry-editor';
 
 /**
- * A text area component
+ * Simple geometry editor
  *
  * @export
- * @class TextArea
+ * @class Geometry
  * @extends {React.Component}
  */
-export class TextArea extends React.Component {
+export class Geometry extends React.Component {
 
   constructor(props) {
     super(props);
@@ -24,15 +25,21 @@ export class TextArea extends React.Component {
     value: PropTypes.string,
     state: PropTypes.oneOf(['success', 'warning', 'danger']),
     onChange: PropTypes.func,
-    rows: PropTypes.number,
     readOnly: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
+    maxLength: PropTypes.number,
+    type: PropTypes.oneOf([GeometryType.POINT, GeometryType.LINE_STRING, GeometryType.POLYGON]),
+  }
+
+  static defaultProps = {
+    type: GeometryType.POINT,
+    maxLength: 5000,
   }
 
   /**
    * Returns true if the component is read-only; Otherwise false
    *
    * @readonly
-   * @memberof TextArea
+   * @memberof Text
    */
   get isReadOnly() {
     if (typeof this.props.readOnly === 'function') {
@@ -43,18 +50,21 @@ export class TextArea extends React.Component {
 
   render() {
     const props = this.props;
+
     return (
-      <Input
-        type="textarea"
+      <GeometryEditor
+        config={props.config}
+        type={props.type}
         name={props.id}
         id={props.id}
         state={props.state}
         value={props.value || ''}
-        onChange={e => typeof props.onChange === 'function' ? props.onChange(e.target.value) : null}
+        onChange={wkt => this.props.onChange(wkt)}
         readOnly={this.isReadOnly}
-        rows={props.rows || 1}
+        maxLength={this.props.maxLength}
       />
     );
   }
 }
-export default decorateField(TextArea);
+
+export default decorateField(Geometry);

@@ -5,10 +5,8 @@ import * as PropTypes from 'prop-types';
 import Map from 'ol/Map';
 import Feature from 'ol/Feature';
 import Collection from 'ol/Collection';
-import Modify from 'ol/interaction/Modify';
+import Draw from 'ol/interaction/Draw';
 import Translate from 'ol/interaction/Translate';
-
-import { default as GeometryType } from 'ol/geom/GeometryType';
 
 import {
   createStyle,
@@ -19,19 +17,19 @@ import {
 } from '../../../../model/map-viewer';
 
 /**
- * Modify interaction
+ * Draw interaction
  *
- * @class ModifyInteraction
+ * @class DrawInteraction
  * @extends {React.Component}
  */
-class ModifyInteraction extends React.Component {
+class DrawInteraction extends React.Component {
 
   constructor(props) {
     super(props);
 
     // OpenLayers interactions added to the map instance by this component
     this.interactions = [];
-    // Feature collection for the OpenLayers Modify interaction
+    // Feature collection for the OpenLayers Draw interaction
     this.features = new Collection();
   }
 
@@ -43,36 +41,44 @@ class ModifyInteraction extends React.Component {
     // Map instance
     map: PropTypes.instanceOf(Map),
     // True if Translate interaction is enabled
-    translate: PropTypes.bool.isRequired,
+    translate: PropTypes.bool,
+    // Allow drawing only a single feature
+    single: PropTypes.bool,
   }
 
   static defaultProps = {
     translate: false,
+    single: true,
   }
 
-  componentDidMount() {
-    const { active, feature = null, map, onGeometryChange, translate } = this.props;
+  createInteractions(type, active) {
+    const { map, onDrawEnd, onDrawStart, translate, single } = this.props;
 
-    // Wait for map instance to initialize
-    if (!map) {
-      return;
-    }
+    this.removeInteractions();
 
     const style = this.buildInteractionStyles();
 
-    if (feature) {
-      this.setFeatureStyle(feature);
-      this.features.push(feature);
-    }
-
-    this.interactions.push(new Modify({
+    this.interactions.push(new Draw({
       features: this.features,
+      type,
       style,
     }));
 
-    this.interactions[0].on('modifyend', (e) => {
-      if (typeof onGeometryChange === 'function') {
-        onGeometryChange(e.features || null);
+    this.interactions[0].on('drawstart', (e) => {
+      if (single) {
+        this.features.clear();
+      }
+      if (typeof onDrawStart === 'function') {
+        onDrawEnd(e.feature);
+      }
+    }, this);
+
+    this.interactions[0].on('drawend', (e) => {
+      if (e.feature) {
+        this.features.push(e.feature);
+      }
+      if (typeof onDrawEnd === 'function') {
+        onDrawEnd(this.features);
       }
     }, this);
 
@@ -88,6 +94,31 @@ class ModifyInteraction extends React.Component {
     });
   }
 
+  removeInteractions() {
+    const { map } = this.props;
+
+    if (map) {
+      this.interactions.forEach(i => map.removeInteraction(i));
+      this.interactions = [];
+    }
+  }
+
+  componentDidMount() {
+    const { active, feature = null, map, type } = this.props;
+
+    // Wait for map instance to initialize
+    if (!map) {
+      return;
+    }
+
+    if (feature) {
+      this.setFeatureStyle(feature);
+      this.features.push(feature);
+    }
+
+    this.createInteractions(type, active);
+  }
+
   componentWillReceiveProps(nextProps) {
     if (this.props.feature != nextProps.feature) {
       this.features.clear();
@@ -99,27 +130,20 @@ class ModifyInteraction extends React.Component {
     if (this.props.active != nextProps.active) {
       this.interactions.forEach(i => i.setActive(nextProps.active));
     }
-  }
-
-  componentWillUnmount() {
-    const { map } = this.props;
-
-    if (map) {
-      this.interactions.forEach(i => map.removeInteraction(i));
-      this.interactions = null;
-      this.features.clear();
-      this.features = null;
+    if (this.props.type != nextProps.type) {
+      this.createInteractions(nextProps.type, nextProps.active);
     }
   }
 
+  componentWillUnmount() {
+    this.removeInteractions();
+
+    this.features.clear();
+    this.features = null;
+  }
+
   buildFeatureStyles(feature) {
-    const {
-      fillColor = '#ffffff',
-      fontColor = null,
-      icon = null,
-      strokeColor = '#424242',
-      width = 3,
-    } = this.props;
+    const { icon = null, fontColor = null, strokeColor = '#424242', fillColor = '#ffffff', width = 3 } = this.props;
 
     const layerStyle = {
       symbol: EnumSymbol.Square,
@@ -131,7 +155,7 @@ class ModifyInteraction extends React.Component {
         color: fillColor
       },
       opacity: 50,
-      size: 40,
+      size: 20,
     };
 
     return createStyle(icon, fontColor, layerStyle, false);
@@ -140,7 +164,7 @@ class ModifyInteraction extends React.Component {
   buildInteractionStyles() {
     return ((feature) => {
       const styles = this.buildFeatureStyles(feature);
-      const type = feature.getGeometry() ? feature.getGeometry().getType() : GeometryType.POINT;
+      const type = feature.getGeometry() ? feature.getGeometry().getType() : null;
 
       return styles[type];
     });
@@ -148,7 +172,7 @@ class ModifyInteraction extends React.Component {
 
   setFeatureStyle(feature) {
     const styles = this.buildFeatureStyles(feature);
-    const type = feature.getGeometry() ? feature.getGeometry().getType() : GeometryType.POINT;
+    const type = feature.getGeometry() ? feature.getGeometry().getType() : null;
     const style = styles[type];
 
     feature.setStyle(style);
@@ -160,4 +184,4 @@ class ModifyInteraction extends React.Component {
 
 }
 
-export default ModifyInteraction;
+export default DrawInteraction;
