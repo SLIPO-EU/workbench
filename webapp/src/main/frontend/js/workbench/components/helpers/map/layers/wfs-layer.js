@@ -1,13 +1,13 @@
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
 
-import OpenLayersMap from 'ol/map';
+import OpenLayersMap from 'ol/Map';
 
-import VectorSource from 'ol/source/vector';
-import GeoJSON from 'ol/format/geojson';
-import LoadingStrategy from 'ol/loadingstrategy';
+import VectorSource from 'ol/source/Vector';
+import GeoJSON from 'ol/format/GeoJSON';
+import VectorLayer from 'ol/layer/Vector';
 
-import VectorLayer from 'ol/layer/vector';
+import { bbox as bboxLoadingStrategy } from 'ol/loadingstrategy';
 
 import URI from 'urijs';
 
@@ -94,7 +94,7 @@ class WfsLayer extends React.Component {
       const source = new VectorSource({
         format: new GeoJSON(),
         url: this.buildRequest.bind(this),
-        strategy: LoadingStrategy.bbox,
+        strategy: bboxLoadingStrategy,
       });
 
       source.on('addfeature', (e) => {

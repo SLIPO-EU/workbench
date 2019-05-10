@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
 
-import OpenLayersMap from 'ol/map';
+import OpenLayersMap from 'ol/Map';
 
 /**
  * A collection of map layers

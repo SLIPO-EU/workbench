@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import GeoJSON from 'ol/format/geojson';
+import GeoJSON from 'ol/format/GeoJSON';
 
 import {
   Colors,
@@ -596,6 +596,12 @@ export function evolutionToTable(evolution) {
 }
 
 export function compareGeometry(geom1, geom2) {
+  if (!geom1 && !geom2) {
+    return true;
+  }
+  if ((geom1 && !geom2) || (!geom1 && geom2)) {
+    return false;
+  }
   const format = new GeoJSON();
 
   const geom1AsText = format.writeGeometry(geom1, {

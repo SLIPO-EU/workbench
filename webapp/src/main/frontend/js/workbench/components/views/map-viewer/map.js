@@ -1,9 +1,10 @@
 import * as React from 'react';
 import Draggable from 'react-draggable';
 
-import Extend from 'ol/extent';
-import GeoJSON from 'ol/format/geojson';
-import proj from 'ol/proj';
+import GeoJSON from 'ol/format/GeoJSON';
+
+import { fromLonLat } from 'ol/proj';
+import { createEmpty, extend, isEmpty, getCenter } from 'ol/extent';
 
 import {
   ResizableBox,
@@ -69,17 +70,17 @@ class MapViewer extends React.Component {
 
   get center() {
     const { defaultCenter, layers } = this.props;
-    const extent = Extend.createEmpty();
+    const extent = createEmpty();
     const format = new GeoJSON();
 
     layers
       .filter((l) => l.boundingBox)
       .forEach((l) => {
         const bbox = format.readFeature(l.boundingBox);
-        Extend.extend(extent, bbox.getGeometry().getExtent());
+        extend(extent, bbox.getGeometry().getExtent());
       });
 
-    return (Extend.isEmpty(extent) ? proj.fromLonLat(defaultCenter) : proj.fromLonLat(Extend.getCenter(extent)));
+    return (isEmpty(extent) ? fromLonLat(defaultCenter) : fromLonLat(getCenter(extent)));
   }
 
   getLayers() {
@@ -143,7 +144,7 @@ class MapViewer extends React.Component {
     if (feature) {
       // Zoom to feature
       const extent = feature.getGeometry().getExtent();
-      const center = Extend.getCenter(extent);
+      const center = getCenter(extent);
       this._map.moveTo(center);
       // Enable modify interaction
       this.props.toggleEditor(feature);

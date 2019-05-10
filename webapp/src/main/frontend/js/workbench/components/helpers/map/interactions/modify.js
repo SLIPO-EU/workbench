@@ -2,25 +2,25 @@
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
 
-import Map from 'ol/map';
-import Feature from 'ol/feature';
-import GeometryType from 'ol/geom/geometrytype';
-import Collection from 'ol/collection';
-import Modify from 'ol/interaction/modify';
-import Translate from 'ol/interaction/translate';
+import Map from 'ol/Map';
+import Feature from 'ol/Feature';
+import Collection from 'ol/Collection';
+import Modify from 'ol/interaction/Modify';
+import Translate from 'ol/interaction/Translate';
 
-import Style from 'ol/style/style';
-import Circle from 'ol/style/circle';
-import Stroke from 'ol/style/stroke';
-import Fill from 'ol/style/fill';
+import { default as GeometryType } from 'ol/geom/GeometryType';
 
 import {
   FEATURE_LAYER_PROPERTY,
 } from '../model/constants';
 
 import {
-  createStyleForSymbol,
+  createStyle,
 } from '../shared/utils';
+
+import {
+  EnumSymbol,
+} from '../../../../model/map-viewer';
 
 /**
  * Modify interaction
@@ -76,7 +76,7 @@ class ModifyInteraction extends React.Component {
 
     this.interactions[0].on('modifyend', (e) => {
       if (typeof onGeometryChange === 'function') {
-        onGeometryChange();
+        onGeometryChange(e.features || null);
       }
     }, this);
 
@@ -117,91 +117,34 @@ class ModifyInteraction extends React.Component {
   }
 
   buildFeatureStyles(feature) {
-    const styles = {};
+    const {
+      fillColor = '#ffffff',
+      fontColor = null,
+      icon = null,
+      strokeColor = '#424242',
+      width = 3,
+    } = this.props;
 
-    const white = '#ffffff';
-    const black = '#424242';
-    const width = 3;
+    const layerStyle = {
+      symbol: EnumSymbol.Square,
+      stroke: {
+        color: strokeColor,
+        width,
+      },
+      fill: {
+        color: fillColor
+      },
+      opacity: 50,
+      size: 40,
+    };
 
-    const { styles: layerStyles } = this.props;
-    const layerName = feature.get(FEATURE_LAYER_PROPERTY);
-    const layerStyle = layerStyles ? layerStyles[layerName] : null;
-
-    const image = layerStyle ?
-      createStyleForSymbol(
-        layerStyle.symbol,
-        black,
-        3,
-        white,
-        layerStyle.size,
-        50,
-      ) :
-      new Circle({
-        radius: width * 2,
-        fill: new Fill({
-          color: black
-        }),
-        stroke: new Stroke({
-          color: white,
-          width: width / 2
-        })
-      });
-
-    styles[GeometryType.POLYGON] = [
-      new Style({
-        fill: new Fill({
-          color: [255, 255, 255, 0.5]
-        }),
-        stroke: new Stroke({
-          color: black,
-          width: width
-        }),
-      })
-    ];
-
-    styles[GeometryType.MULTI_POLYGON] = styles[GeometryType.POLYGON];
-
-    styles[GeometryType.LINE_STRING] = [
-      new Style({
-        stroke: new Stroke({
-          color: white,
-          width: width + 2
-        })
-      }),
-      new Style({
-        stroke: new Stroke({
-          color: black,
-          width: width
-        })
-      })
-    ];
-
-    styles[GeometryType.MULTI_LINE_STRING] = styles[GeometryType.LINE_STRING];
-
-    styles[GeometryType.POINT] = [
-      new Style({
-        image,
-        zIndex: Infinity
-      })
-    ];
-
-    styles[GeometryType.MULTI_POINT] = styles[GeometryType.POINT];
-
-    styles[GeometryType.CIRCLE] = styles[GeometryType.POLYGON].concat(styles[GeometryType.LINE_STRING]);
-
-    styles[GeometryType.GEOMETRY_COLLECTION] =
-      styles[GeometryType.POLYGON].concat(
-        styles[GeometryType.LINE_STRING],
-        styles[GeometryType.POINT]
-      );
-
-    return styles;
+    return createStyle(icon, fontColor, layerStyle, false);
   }
 
   buildInteractionStyles() {
     return ((feature) => {
       const styles = this.buildFeatureStyles(feature);
-      const type = feature.getGeometry().getType();
+      const type = feature.getGeometry() ? feature.getGeometry().getType() : GeometryType.POINT;
 
       return styles[type];
     });
@@ -209,7 +152,7 @@ class ModifyInteraction extends React.Component {
 
   setFeatureStyle(feature) {
     const styles = this.buildFeatureStyles(feature);
-    const type = feature.getGeometry().getType();
+    const type = feature.getGeometry() ? feature.getGeometry().getType() : GeometryType.POINT;
     const style = styles[type];
 
     feature.setStyle(style);

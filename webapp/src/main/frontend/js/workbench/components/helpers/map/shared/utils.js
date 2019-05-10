@@ -1,9 +1,13 @@
-import Style from 'ol/style/style';
-import Text from 'ol/style/text';
-import Circle from 'ol/style/circle';
-import Stroke from 'ol/style/stroke';
-import Fill from 'ol/style/fill';
-import RegularShape from 'ol/style/regularshape';
+import Collection from 'ol/Collection';
+import Style from 'ol/style/Style';
+import Text from 'ol/style/Text';
+import Circle from 'ol/style/Circle';
+import Stroke from 'ol/style/Stroke';
+import Fill from 'ol/style/Fill';
+import RegularShape from 'ol/style/RegularShape';
+import Feature from 'ol/Feature';
+
+import { createEmpty, extend, isEmpty } from 'ol/extent';
 
 import {
   EnumSymbol,
@@ -148,4 +152,35 @@ export const createStyle = (icon, color, layerStyle, dash = false, scale = 1.0) 
     'MultiPolygon': style,
   };
 
+};
+
+const toFeatureArray = (features) => {
+  if (features instanceof Feature) {
+    return [features];
+  }
+  if (features instanceof Collection) {
+    return features.getArray();
+  }
+  if (Array.isArray(features)) {
+    return features;
+  }
+
+  return null;
+};
+
+export const mergeExtent = (features) => {
+  const array = toFeatureArray(features);
+
+  if (array) {
+    const extent = createEmpty();
+
+    array.forEach((f) => {
+      if (f.getGeometry()) {
+        extend(extent, f.getGeometry().getExtent());
+      }
+    });
+
+    return isEmpty(extent) ? null : extent;
+  }
+  return null;
 };
