@@ -38,26 +38,6 @@ import {
   message,
 } from '../../../../service';
 
-function isMapSupported(tool, type, table) {
-  if (!table) {
-    return false;
-  }
-  switch (tool) {
-    case EnumTool.TripleGeo:
-      return (type === EnumStepFileType.OUTPUT);
-
-    case EnumTool.LIMES:
-      return (type === EnumStepFileType.INPUT);
-
-    case EnumTool.FAGI: case EnumTool.DEER:
-      return ((type === EnumStepFileType.INPUT) || (type === EnumStepFileType.OUTPUT));
-
-    default:
-      return false;
-
-  }
-}
-
 function sortFiles(files) {
   files.forEach((f) => {
     f.__group = EnumStepFileTypeValue[f.type];

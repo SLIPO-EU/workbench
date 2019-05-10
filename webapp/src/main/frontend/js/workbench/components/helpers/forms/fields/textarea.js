@@ -46,7 +46,6 @@ export class TextArea extends React.Component {
     return (
       <Input
         type="textarea"
-        rows={props.rows || 2}
         name={props.id}
         id={props.id}
         state={props.state}
