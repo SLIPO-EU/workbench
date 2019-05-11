@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,10 +41,13 @@ import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.poi.EnumOperation;
 import eu.slipo.workbench.common.model.poi.EnumTool;
 import eu.slipo.workbench.common.model.process.EnumProcessTaskType;
+import eu.slipo.workbench.common.model.process.EnumStepFile;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.ProcessDefinitionBuilderFactory;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStartException;
+import eu.slipo.workbench.common.model.process.ProcessExecutionStepFileRecord;
+import eu.slipo.workbench.common.model.process.ProcessExecutionStepRecord;
 import eu.slipo.workbench.common.model.process.ProcessNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
 import eu.slipo.workbench.common.model.resource.FileSystemDataSource;
@@ -51,6 +55,7 @@ import eu.slipo.workbench.common.model.resource.ResourceRecord;
 import eu.slipo.workbench.common.model.tool.DeerConfiguration;
 import eu.slipo.workbench.common.model.tool.FagiConfiguration;
 import eu.slipo.workbench.common.model.tool.LimesConfiguration;
+import eu.slipo.workbench.common.model.tool.ReverseTriplegeoConfiguration;
 import eu.slipo.workbench.common.model.tool.ToolConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.repository.ResourceRepository;
@@ -59,13 +64,17 @@ import eu.slipo.workbench.common.service.util.PropertiesConverterService;
 import eu.slipo.workbench.web.model.api.ApiErrorCode;
 import eu.slipo.workbench.web.model.api.CatalogInput;
 import eu.slipo.workbench.web.model.api.EnrichRequest;
+import eu.slipo.workbench.web.model.api.ExportRequest;
 import eu.slipo.workbench.web.model.api.FileInput;
 import eu.slipo.workbench.web.model.api.FusionRequest;
 import eu.slipo.workbench.web.model.api.Input;
 import eu.slipo.workbench.web.model.api.InterlinkRequest;
+import eu.slipo.workbench.web.model.api.StepOutputInput;
 import eu.slipo.workbench.web.model.api.TransformRequest;
 import eu.slipo.workbench.web.model.api.process.ProcessExecutionSimpleRecord;
+import eu.slipo.workbench.web.model.api.process.ReverseTriplegeoApiConfiguration;
 import eu.slipo.workbench.web.model.api.process.TriplegeoApiConfiguration;
+import eu.slipo.workbench.web.model.process.ProcessExecutionRecordView;
 import eu.slipo.workbench.web.service.ProcessService;
 
 @Secured({ "ROLE_API" })
@@ -129,14 +138,23 @@ public class ToolkitController extends BaseController {
                 EnumTool.TRIPLEGEO, apiConfig.getProfile()
             );
 
+            // Set configuration
             if(configuration == null) {
                 return RestResponse.error(
                     ApiErrorCode.PROFILE_NOT_FOUND,
                     String.format("Profile %s was not found", apiConfig.getProfile())
                 );
             }
-
             apiConfig.merge(configuration);
+
+            // Check files
+            this.checkPath(request.getPath(), "path");
+            if (!StringUtils.isBlank(configuration.getMappingSpec())) {
+                this.checkPath(configuration.getMappingSpec(), "mappingSpec");
+            }
+            if (!StringUtils.isBlank(configuration.getClassificationSpec())) {
+                this.checkPath(configuration.getClassificationSpec(), "classificationSpec");
+            }
 
             ProcessDefinition definition = processDefinitionBuilderFactory.create(procName)
                 .description("API Transform Method")
@@ -177,6 +195,8 @@ public class ToolkitController extends BaseController {
             if(configuration == null) {
                 return RestResponse.error(ApiErrorCode.PROFILE_NOT_FOUND, String.format("Profile %s was not found", request.getProfile()));
             }
+            configuration.setLevel(LimesConfiguration.EnumLevel.ADVANCED);
+            configuration.setProfile(request.getProfile());
 
             ProcessDefinition definition = processDefinitionBuilderFactory.create(procName)
                 .description("API Interlink Method")
@@ -221,6 +241,7 @@ public class ToolkitController extends BaseController {
             if(configuration == null) {
                 return RestResponse.error(ApiErrorCode.PROFILE_NOT_FOUND, String.format("Profile %s was not found", request.getProfile()));
             }
+            configuration.setLevel(FagiConfiguration.EnumLevel.ADVANCED);
             configuration.setProfile(request.getProfile());
             configuration.setVerbose(true);
 
@@ -267,6 +288,7 @@ public class ToolkitController extends BaseController {
             if(configuration == null) {
                 return RestResponse.error(ApiErrorCode.PROFILE_NOT_FOUND, String.format("Profile %s was not found", request.getProfile()));
             }
+            configuration.setLevel(DeerConfiguration.EnumLevel.ADVANCED);
             configuration.setProfile(request.getProfile());
 
             ProcessDefinition definition = processDefinitionBuilderFactory.create(procName)
@@ -287,6 +309,60 @@ public class ToolkitController extends BaseController {
         }
     }
 
+    /**
+     * Execute an export (reverse transformation) operation
+     *
+     * @param request Export operation configuration
+     *
+     * @return An instance of {@link ProcessExecutionSimpleRecord} for the new execution
+     */
+    @PostMapping(value = "/api/v1/toolkit/export")
+    public RestResponse<?> export(@RequestBody ExportRequest request) {
+        ProcessRecord record = null;
+
+        try {
+            final ReverseTriplegeoApiConfiguration apiConfig = request.getConfiguration();
+
+            final String resourceKey = "1";
+            final String outputKey = "2";
+            final String procName = String.format("API %s %s", dateFormat.format(new Date()), UUID.randomUUID().toString());
+
+            final ReverseTriplegeoConfiguration configuration = (ReverseTriplegeoConfiguration) this.getProfileByName(
+                EnumTool.REVERSE_TRIPLEGEO, apiConfig.getProfile()
+            );
+
+            // Set configuration
+            if(configuration == null) {
+                return RestResponse.error(
+                    ApiErrorCode.PROFILE_NOT_FOUND,
+                    String.format("Profile %s was not found", apiConfig.getProfile())
+                );
+            }
+            apiConfig.merge(configuration);
+
+            // Check files
+            if (!StringUtils.isBlank(configuration.getSparqlFile())) {
+                this.checkPath(configuration.getSparqlFile(), "sparqlFile");
+            }
+
+            ProcessDefinition definition = processDefinitionBuilderFactory.create(procName)
+                .description("API Export Method")
+                .resource("input", resourceKey, inputToPath(request.getInput()), EnumDataFormat.N_TRIPLES)
+                .export("export", stepBuilder -> stepBuilder
+                    .group(0)
+                    .input(resourceKey)
+                    .outputKey(outputKey)
+                    .configuration(configuration))
+                .build();
+
+            record = processService.create(definition, EnumProcessTaskType.API);
+
+            return this.start(record, EnumOperation.TRANSFORM);
+        } catch (Exception ex) {
+            return this.exceptionToResponse(ex);
+        }
+    }
+
     private RestResponse<?> start(
         ProcessRecord record, EnumOperation operation
     ) throws ProcessNotFoundException, ProcessExecutionStartException, IOException {
@@ -298,26 +374,100 @@ public class ToolkitController extends BaseController {
         return RestResponse.result(new ProcessExecutionSimpleRecord(execution));
     }
 
+    private void checkPath(String path, String parameter) throws Exception {
+        if (StringUtils.isBlank(path)) {
+            throw ApplicationException.fromMessage(
+                ApiErrorCode.EMPTY_PATH, String.format("[%s] Path is empty", parameter)
+            );
+        }
+
+        Path relativePath = Paths.get(path);
+        if (relativePath.isAbsolute()) {
+            throw ApplicationException.fromMessage(
+                ApiErrorCode.RELATIVE_PATH_REQUIRED, String.format("[%s] A relative path is required", parameter)
+            );
+        }
+
+        Path absolutePath = this.fileNamingStrategy.resolvePath(this.currentUserId(), relativePath);
+
+        if ((absolutePath == null) || (!absolutePath.toFile().exists())) {
+            throw ApplicationException.fromMessage(
+                ApiErrorCode.FILE_NOT_FOUND, String.format("[%s] File was not found.", parameter)
+            );
+        }
+    }
+
     private Path inputToPath(Input input) throws Exception {
+        Path path = null;
+
         switch (input.getType()) {
             case FILESYSTEM:
                 FileInput fileInput = ((FileInput) input);
-                return this.fileNamingStrategy.resolvePath(this.currentUserId(), fileInput.getPath());
+
+                path = this.fileNamingStrategy.resolvePath(this.currentUserId(), fileInput.getPath());
+                break;
             case CATALOG:
                 CatalogInput catalogInput = ((CatalogInput) input);
                 ResourceRecord record = this.resourceRepository.findOne(catalogInput.getId(), catalogInput.getVersion());
+
                 if(record == null) {
                     throw ApplicationException.fromMessage(ApiErrorCode.RESOURCE_NOT_FOUND, "Resource was not found.");
                 }
-                return this.fileNamingStrategy.resolveExecutionPath(CatalogUserFileNamingStrategy.SCHEME + "://" + record.getFilePath());
+
+                path = this.fileNamingStrategy.resolveExecutionPath(CatalogUserFileNamingStrategy.SCHEME + "://" + record.getFilePath());
+                break;
+            case OUTPUT:
+                StepOutputInput stepOutputInput = ((StepOutputInput) input);
+                ProcessExecutionRecordView execution = this.processService.getProcessExecution(
+                    stepOutputInput.getProcessId(), stepOutputInput.getProcessVersion()
+                );
+
+                final Pair<ProcessExecutionStepRecord, ProcessExecutionStepFileRecord> result = execution.getExecution()
+                    .getSteps().stream()
+                    .flatMap(s -> {
+                        return s.getFiles()
+                            .stream()
+                            .map(f-> Pair.<ProcessExecutionStepRecord, ProcessExecutionStepFileRecord>of(s, f));
+                    })
+                    .filter(f -> f.getRight().getId() == stepOutputInput.getFileId())
+                    .findFirst()
+                    .orElse(null);
+
+                if(result == null) {
+                    throw ApplicationException.fromMessage(ApiErrorCode.OUTPUT_FILE_NOT_FOUND, "Output file was not found.");
+                }
+                if (result.getRight().getType() != EnumStepFile.OUTPUT) {
+                    throw ApplicationException.fromMessage(ApiErrorCode.FILE_TYPE_NOT_SUPPORTED, "File type is not supported");
+                }
+                switch (result.getLeft().getTool()) {
+                    case LIMES:
+                        if (result.getRight().getDataFormat() != EnumDataFormat.CSV) {
+                            throw ApplicationException.fromMessage(ApiErrorCode.FILE_TYPE_NOT_SUPPORTED, "File type is not supported");
+                        }
+                        break;
+                    default:
+                        if (result.getRight().getDataFormat() != EnumDataFormat.N_TRIPLES) {
+                            throw ApplicationException.fromMessage(ApiErrorCode.FILE_TYPE_NOT_SUPPORTED, "File type is not supported");
+                        }
+                        break;
+                }
+
+                path = this.fileNamingStrategy.resolveExecutionPath(result.getRight().getFilePath());
+                break;
             default:
                 throw new Exception("Input type is not supported");
         }
+
+        if ((path == null) || (!path.toFile().exists())) {
+            throw ApplicationException.fromMessage(ApiErrorCode.FILE_NOT_FOUND, "File was not found.");
+        }
+
+        return path;
     }
 
     private ToolConfiguration<?> getProfileByName(EnumTool tool, String profile) {
         try {
-            String re = ".*vendor\\/" + tool.name().toLowerCase() + "\\/.*config\\/profiles\\/(.*)\\/(config\\.properties)";
+            String re = ".*vendor\\/" + CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, tool.name())+ "\\/.*config\\/profiles\\/(.*)\\/(config\\.properties)";
             Pattern pattern = Pattern.compile(re);
 
             List<Pair<Path, Resource>> profiles = Stream.of(resourceResolver.getResources("classpath:" + vendorDataPath + "/**"))
@@ -341,6 +491,8 @@ public class ToolkitController extends BaseController {
                        switch (tool) {
                             case TRIPLEGEO:
                                 return propertiesConverter.propertiesToValue(pair.getRight(), TriplegeoConfiguration.class);
+                            case REVERSE_TRIPLEGEO:
+                                return propertiesConverter.propertiesToValue(pair.getRight(), ReverseTriplegeoConfiguration.class);
                             case LIMES:
                                 return propertiesConverter.propertiesToValue(pair.getRight(), LimesConfiguration.class);
                             case FAGI:
@@ -359,7 +511,14 @@ public class ToolkitController extends BaseController {
             logger.error("Failed to scan classpath for vendor profiles", e);
         }
 
-        return null;
+        // Set default profiles for specific tools
+        switch (tool) {
+            case TRIPLEGEO:
+                return new TriplegeoConfiguration();
+            default:
+                return null;
+        }
+
     }
 
     private Map<EnumTool, List<String>> getToolProfiles() {

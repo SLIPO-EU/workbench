@@ -1,9 +1,12 @@
 package eu.slipo.workbench.web.model.api.process;
 
+import java.util.Arrays;
+
 import org.apache.commons.lang3.StringUtils;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
+import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration.EnumLevel;
 
 public class TriplegeoApiConfiguration {
 
@@ -88,6 +91,17 @@ public class TriplegeoApiConfiguration {
      * The default language for labels created in output RDF. The default is "en".
      */
     private String defaultLang;
+
+    /**
+     * A resource location of a YML file containing mappings from input schema to RDF
+     * according to a custom ontology.
+     */
+    private String mappingSpec;
+
+    /**
+     * A resource location of a YML/CSV file describing a classification scheme.
+     */
+    private String classificationSpec;
 
     public String getProfile() {
         return profile;
@@ -212,8 +226,49 @@ public class TriplegeoApiConfiguration {
         this.defaultLang = defaultLang;
     }
 
+    public String getMappingSpec() {
+        return mappingSpec;
+    }
+
+    public void setMappingSpec(String mappingSpec) {
+        this.mappingSpec = mappingSpec;
+    }
+
+    public String getClassificationSpec() {
+        return classificationSpec;
+    }
+
+    public void setClassificationSpec(String classificationSpec) {
+        this.classificationSpec = classificationSpec;
+    }
+
     public void merge(TriplegeoConfiguration configuration) {
-        configuration.setProfile(profile);
+        configuration.setLevel(EnumLevel.ADVANCED);
+
+        if(StringUtils.isBlank(profile)) {
+            // If profile is not set, several fields require additional configuration
+            configuration.setNamespaceUris(
+                Arrays.asList(new String[] {
+                    "http://slipo.eu/def#",
+                    "http://www.opengis.net/ont/geosparql#",
+                    "http://www.w3.org/2001/XMLSchema#",
+                    "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                    "http://www.w3.org/2003/01/geo/wgs84_pos#"
+                })
+            );
+            configuration.setPrefixKeysFromString("slipo, geo, xsd, rdfs, wgs84_pos");
+            configuration.setClassifyByName(false);
+        } else {
+            configuration.setProfile(profile);
+        }
+
+        if (!StringUtils.isBlank(mappingSpec)) {
+            configuration.setMappingSpec(mappingSpec);
+        }
+        if (!StringUtils.isBlank(classificationSpec)) {
+            configuration.setClassificationSpec(classificationSpec);
+        }
+
         if ((inputFormat != null) && (inputFormat != EnumDataFormat.UNDEFINED)) {
             configuration.setInputFormat(inputFormat);
         }
@@ -229,12 +284,13 @@ public class TriplegeoApiConfiguration {
         if (!StringUtils.isBlank(attrCategory)) {
             configuration.setAttrCategory(attrCategory);
         }
-        if (!StringUtils.isBlank(delimiter)) {
+        if ((inputFormat == EnumDataFormat.CSV)) {
             configuration.setDelimiter(delimiter);
         }
-        if (!StringUtils.isBlank(quote)) {
+        if ((inputFormat == EnumDataFormat.CSV)) {
             configuration.setQuote(quote);
         }
+        configuration.setAttrGeometry(attrGeometry);
         if (!StringUtils.isBlank(attrX)) {
             configuration.setAttrX(attrX);
         }
@@ -253,10 +309,6 @@ public class TriplegeoApiConfiguration {
         if (!StringUtils.isBlank(defaultLang)) {
             configuration.setDefaultLang(defaultLang);
         }
-        configuration.setAttrGeometry(attrGeometry);
-
-        configuration.setClassificationSpec(null);
-        configuration.setMappingSpec(null);
     }
 
 }
