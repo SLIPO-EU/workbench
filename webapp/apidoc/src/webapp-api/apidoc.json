@@ -29,7 +29,8 @@
     "Transform",
     "Interlink",
     "Fusion",
-    "Enrich"
+    "Enrich",
+    "Export"
   ],
   "template": {
     "withCompare": false,
