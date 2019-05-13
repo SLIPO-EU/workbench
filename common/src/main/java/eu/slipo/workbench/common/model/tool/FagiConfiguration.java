@@ -46,7 +46,7 @@ import eu.slipo.workbench.common.model.tool.output.OutputSpec;
     "left", "right", "links", "target"
 })
 @JacksonXmlRootElement(localName = "specification")
-public class FagiConfiguration extends FuseConfiguration<Fagi> 
+public class FagiConfiguration extends FuseConfiguration<Fagi>
 {
     private static final long serialVersionUID = 1L;
 
@@ -54,12 +54,21 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
      * This class represents the configuration of a specific version
      */
     public static final String VERSION = "1.2";
-    
+
     private static final int LEFT_INDEX = 0;
-    
+
     private static final int RIGHT_INDEX = 1;
-    
+
     private static final int LINKS_INDEX = 2;
+
+    /**
+     * Available configuration levels
+     */
+    public enum EnumLevel {
+        AUTO,
+        ADVANCED,
+        ;
+    }
 
     public enum Similarity
     {
@@ -70,23 +79,25 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
         JARO("jaro"),
         TWOGRAM("2Gram"),
         LCS("longestcommonsubsequence");
-        
+
         protected final String key;
-        
+
         private Similarity(String key)
         {
             this.key = key;
         }
-        
+
         public static Similarity fromKey(String key)
         {
-            for (Similarity s: Similarity.values())
-                if (s.key.equals(key) || s.name().equals(key))
+            for (Similarity s: Similarity.values()) {
+                if (s.key.equals(key) || s.name().equals(key)) {
                     return s;
+                }
+            }
             return null;
         }
     }
-    
+
     public enum Mode
     {
         AA("aa_mode"),
@@ -96,29 +107,31 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
         A("a_mode"),
         B("b_mode"),
         L("l_mode");
-        
+
         protected final String key;
-        
+
         private Mode(String key)
         {
             this.key = key;
         }
-        
+
         public static Mode fromKey(String key)
         {
-            for (Mode s: Mode.values())
-                if (s.key.equalsIgnoreCase(key) || s.name().equalsIgnoreCase(key))
+            for (Mode s: Mode.values()) {
+                if (s.key.equalsIgnoreCase(key) || s.name().equalsIgnoreCase(key)) {
                     return s;
+                }
+            }
             return null;
         }
     }
-    
+
     public enum DataFormat
     {
         N_TRIPLES(EnumDataFormat.N_TRIPLES, "NT"),
         TURTLE(EnumDataFormat.TURTLE, "TTL"),
         RDF_XML(EnumDataFormat.RDF_XML, "RDF");
-        
+
         protected final EnumDataFormat dataFormat;
 
         protected final String key;
@@ -144,77 +157,83 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
         public static DataFormat from(String key)
         {
             Assert.isTrue(!StringUtils.isEmpty(key), "Expected a non-empty key to search for");
-            for (DataFormat e: DataFormat.values())
-                if (e.name().equals(key) || e.key.equals(key))
+            for (DataFormat e: DataFormat.values()) {
+                if (e.name().equals(key) || e.key.equals(key)) {
                     return e;
+                }
+            }
             return null;
         }
 
         public static DataFormat from(EnumDataFormat dataFormat)
         {
             Assert.notNull(dataFormat, "Expected a non-null data format to search for");
-            for (DataFormat e: DataFormat.values())
-                if (e.dataFormat == dataFormat)
+            for (DataFormat e: DataFormat.values()) {
+                if (e.dataFormat == dataFormat) {
                     return e;
+                }
+            }
             return null;
         }
     }
-    
+
     public enum LinkFormat
     {
-        NT("nt"), 
-        CSV("csv"), 
+        NT("nt"),
+        CSV("csv"),
         CSV_UNIQUE_LINKS("csv-unique-links"),
         CSV_ENSEMBLES("csv-ensembles");
-        
+
         private final String key;
-        
+
         private LinkFormat(String key)
         {
             this.key = key;
         }
-        
+
         public String key()
         {
             return this.key;
         }
-        
+
         public static LinkFormat fromKey(String key)
         {
             Assert.isTrue(!StringUtils.isEmpty(key), "Expected a non-empty key to search for");
-            for (LinkFormat f: LinkFormat.values())
-                if (f.key.equalsIgnoreCase(key))
+            for (LinkFormat f: LinkFormat.values()) {
+                if (f.key.equalsIgnoreCase(key)) {
                     return f;
+                }
+            }
             return null;
         }
     }
-    
+
     protected static class InputSpec implements Serializable
     {
         private static final long serialVersionUID = 1L;
-        
+
         /**
          * An identifier for an input
          */
         String id;
-        
+
         /**
          * The location for a file resource containing a classification for this input
          */
         String categoriesLocation;
-        
+
         /**
          * The date of last update
          */
         LocalDate date;
-        
+
         InputSpec() {}
-        
+
         InputSpec(String id)
         {
             this.id = id;
         }
-        
+
         InputSpec(String id, String categoriesLocation, LocalDate date)
         {
             this.id = id;
@@ -222,187 +241,188 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
             this.date = date;
         }
     }
-    
+
     @JsonPropertyOrder({ "id", "file", "categories", "date" })
     public static class Input implements Serializable
     {
         private static final long serialVersionUID = 1L;
-        
+
         @JsonIgnore
         InputSpec spec;
-        
+
         String path;
-        
+
         Input()
         {
             this.spec = new InputSpec();
         }
-        
+
         Input(String id, String path, String categoriesLocation, LocalDate date)
         {
             this.path = path;
             this.spec = new InputSpec(id, categoriesLocation, date);
         }
-        
+
         Input(String id, String path)
         {
             this(id, path, null, null);
         }
-        
+
         @JsonProperty("file")
         public String getPath()
         {
             return path;
         }
-        
+
         @JsonProperty("file")
         public void setPath(String path)
         {
             this.path = path;
         }
-        
+
         @JsonProperty("id")
         @NotEmpty
         public String getId()
         {
             return spec.id;
         }
-        
+
         @JsonProperty("id")
         public void setId(String id)
         {
             this.spec.id = id;
         }
-        
+
         @JsonProperty("categories")
         public String getCategoriesLocation()
         {
             return spec.categoriesLocation;
         }
-        
+
         @JsonProperty("categories")
         public void setCategoriesLocation(String location)
         {
             this.spec.categoriesLocation = location;
         }
-        
+
         @JsonProperty("date")
         public LocalDate getDate()
         {
             return spec.date;
         }
-        
+
         @JsonProperty("date")
         public void setDate(LocalDate date)
         {
             this.spec.date = date;
         }
     }
-    
+
     protected static class LinksSpec implements Serializable
     {
         private static final long serialVersionUID = 1L;
-        
+
         String id;
-        
+
         LinkFormat format;
-        
-        LinksSpec() 
+
+        LinksSpec()
         {
             this(null, LinkFormat.NT);
         }
-        
-        LinksSpec(String id) 
+
+        LinksSpec(String id)
         {
             this(id, LinkFormat.NT);
         }
-        
+
         LinksSpec(String id, LinkFormat format)
         {
             this.id = id;
             this.format = format;
         }
     }
-    
+
     @JsonPropertyOrder({ "id", "linksFormat", "file" })
     public static class Links implements Serializable
     {
         private static final long serialVersionUID = 1L;
-        
+
         @JsonIgnore
         LinksSpec spec;
-        
+
         String path;
-        
+
         Links()
         {
             this.spec = new LinksSpec();
         }
-        
+
         Links(String id, LinkFormat format, String path)
         {
             this.path = path;
             this.spec = new LinksSpec(id, format);
         }
-        
+
         @JsonProperty("linksFormat")
         @NotEmpty
         public String getLinksFormatAsString()
         {
             return this.spec.format.key();
         }
-        
+
         @JsonIgnore
         public LinkFormat getLinksFormat()
         {
             return spec.format;
         }
-        
+
         @JsonProperty("linksFormat")
         public void setLinksFormat(String key)
         {
             setLinksFormat(LinkFormat.fromKey(key));
         }
-        
+
         @JsonIgnore
         public void setLinksFormat(LinkFormat format)
         {
             Assert.notNull(format, "Expected a non-null link format");
             this.spec.format = format;
         }
-        
+
         @JsonProperty("file")
         public String getPath()
         {
             return path;
         }
-        
+
         @JsonProperty("file")
         public void setPath(String path)
         {
             this.path = path;
         }
-        
+
         @JsonProperty("id")
         @NotEmpty
         public String getId()
         {
             return spec.id;
         }
-        
+
         @JsonProperty("id")
         public void setId(String id)
         {
             this.spec.id = id;
         }
-        
+
         @JsonIgnore
         @AssertTrue
         boolean isFormatInParWithPathExtension()
         {
-            if (path == null)
+            if (path == null) {
                 return true; // nothing to check against
-            
+            }
+
             String extension = null;
             switch (spec.format) {
             case NT:
@@ -414,44 +434,44 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
                 extension = "csv";
                 break;
             }
-            
+
             return StringUtils.getFilenameExtension(path).equalsIgnoreCase(extension);
         }
     }
-    
-    @JsonPropertyOrder({ 
-        "id", "mode", "outputDir", "fused", "remaining", "ambiguous", "statistics", "fusionLog" 
+
+    @JsonPropertyOrder({
+        "id", "mode", "outputDir", "fused", "remaining", "ambiguous", "statistics", "fusionLog"
     })
     public static class Output implements Serializable
     {
         private static final long serialVersionUID = 1L;
-        
+
         public static final String DEFAULT_FUSED_NAME = "fused";
-        
+
         public static final String DEFAULT_REMAINING_NAME = "remaining";
-        
+
         public static final String DEFAULT_REVIEW_NAME = "ambiguous";
-        
+
         public static final String DEFAULT_STATS_NAME = "stats";
-        
+
         public static final String DEFAULT_FUSION_LOG_NAME = "fusionLog";
-        
+
         String id;
-        
+
         Mode mode;
-        
+
         String outputDir;
-        
+
         String fusedPath;
-        
+
         String remainingPath;
-        
+
         String reviewPath;
-        
+
         String statsPath;
-        
+
         String fusionLogPath;
-        
+
         Output() {}
 
         Output(String id, Mode mode, EnumDataFormat outputFormat)
@@ -466,9 +486,9 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
             this.statsPath = DEFAULT_STATS_NAME + ".json";
             this.fusionLogPath = DEFAULT_FUSION_LOG_NAME + ".txt";
         }
-        
+
         Output(
-            String id, Mode mode, String dir, 
+            String id, Mode mode, String dir,
             String fusedPath, String remainingPath, String reviewPath)
         {
             this.id = id;
@@ -480,14 +500,14 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
             this.statsPath = DEFAULT_STATS_NAME + ".json";
             this.fusionLogPath = DEFAULT_FUSION_LOG_NAME + ".txt";
         }
-        
+
         @JsonProperty("id")
         @NotEmpty
         public String getId()
         {
             return id;
         }
-        
+
         @JsonProperty("id")
         public void setId(String id)
         {
@@ -500,44 +520,44 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
         {
             return mode;
         }
-        
+
         @JsonIgnore
         public void setMode(Mode mode)
         {
             this.mode = mode;
         }
-        
+
         @JsonProperty("mode")
         public String getModeAsString()
         {
             return mode == null? null : mode.key;
         }
-        
+
         @JsonProperty("mode")
         public void setMode(String key)
         {
             this.mode = Mode.fromKey(key);
         }
-        
+
         @JsonProperty("outputDir")
         public String getOutputDir()
         {
             return outputDir;
         }
-        
+
         @JsonProperty("outputDir")
         public void setOutputDir(String dir)
         {
             this.outputDir = dir;
         }
-        
+
         @JsonProperty("fused")
         @NotEmpty
         public String getFusedPath()
         {
             return fusedPath;
         }
-        
+
         @JsonProperty("fused")
         public void setFusedPath(String fusedPath)
         {
@@ -550,13 +570,13 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
         {
             return remainingPath;
         }
-        
+
         @JsonProperty("remaining")
         public void setRemainingPath(String remainingPath)
         {
             this.remainingPath = remainingPath;
         }
-        
+
         @JsonProperty("ambiguous")
         @NotEmpty
         public String getReviewPath()
@@ -583,7 +603,7 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
         {
             this.statsPath = statsPath;
         }
-        
+
         @JsonProperty("fusionLog")
         @NotEmpty
         public String getFusionLogPath()
@@ -597,11 +617,11 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
             this.fusionLogPath = fusionLogPath;
         }
     }
-  
+
     public class OutputNameMapper implements InputToOutputNameMapper<Fagi>
     {
         private OutputNameMapper() {};
-        
+
         @Override
         public Multimap<OutputPart<Fagi>, OutputSpec> applyToPath(List<Path> input)
         {
@@ -610,119 +630,134 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
             Assert.state(target.remainingPath != null, "The path (remaining) is required");
             Assert.state(target.reviewPath != null, "The path (review) is required");
             Assert.state(target.statsPath != null, "The path (stats) is required");
-            
+
             ImmutableMultimap.Builder<OutputPart<Fagi>, OutputSpec> mapBuilder = ImmutableMultimap.builder();
-            
-            mapBuilder.put(EnumFagiOutputPart.FUSED, 
+
+            mapBuilder.put(EnumFagiOutputPart.FUSED,
                 OutputSpec.of(Paths.get(target.fusedPath).getFileName(), outputFormat));
-            mapBuilder.put(EnumFagiOutputPart.REMAINING, 
+            mapBuilder.put(EnumFagiOutputPart.REMAINING,
                 OutputSpec.of(Paths.get(target.remainingPath).getFileName(), outputFormat));
-            mapBuilder.put(EnumFagiOutputPart.REVIEW, 
+            mapBuilder.put(EnumFagiOutputPart.REVIEW,
                 OutputSpec.of(Paths.get(target.reviewPath).getFileName(), outputFormat));
-            mapBuilder.put(EnumFagiOutputPart.STATS, 
+            mapBuilder.put(EnumFagiOutputPart.STATS,
                 OutputSpec.of(Paths.get(target.statsPath).getFileName()));
-            
+
             if (verbose) {
                 mapBuilder.put(EnumFagiOutputPart.LOG,
                     OutputSpec.of(Paths.get(target.fusionLogPath).getFileName()));
             }
-            
+
             return mapBuilder.build();
         }
     }
-    
+
     /**
      * A profile for setting default configuration values
      */
     private String _profile;
-    
+
+    private EnumLevel _level;
+
     private String lang;
-    
+
     private Similarity similarity;
-    
+
     /**
      * A flag that controls whether an action log should be generated (see target)
      */
     private boolean verbose;
-    
+
     /**
      * The resource location for the XML file holding the ruleset for fusion
      */
     private String rulesSpec;
-    
+
     /**
      * The left-side input specification
      */
     private InputSpec leftSpec;
-    
+
     /**
      * The right-side input specification
      */
     private InputSpec rightSpec;
-    
+
     /**
-     * The sameAs links specification 
+     * The sameAs links specification
      */
     private LinksSpec linksSpec;
-    
+
     /**
      * The target (i.e output) specification
      */
     private Output target;
-    
-    public FagiConfiguration() 
+
+    public FagiConfiguration()
     {
         this._version = VERSION;
-        
+
         this.verbose = false;
-        
+
         this.lang = "en";
-        
+
         this.input = new ArrayList<>(Collections.nCopies(3, null));
         this.inputFormat = EnumDataFormat.N_TRIPLES;
         this.outputFormat = EnumDataFormat.N_TRIPLES;
-        
+
         this.similarity = Similarity.JAROWINKLER;
-        
+
         this.leftSpec = new InputSpec("a");
         this.rightSpec = new InputSpec("b");
         this.linksSpec = new LinksSpec("links", LinkFormat.NT);
-        
+
         this.target = new Output("ab", Mode.AA, this.outputFormat);
     }
-    
+
     @JsonIgnore
     @Override
     public Class<Fagi> getToolType()
     {
         return Fagi.class;
     }
-    
+
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonProperty("profile")
     public String getProfile()
     {
         return _profile;
     }
-    
+
     @JsonProperty("profile")
     public void setProfile(String profile)
     {
         this._profile = profile;
     }
-    
+
+    @JsonProperty("level")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public EnumLevel getLevel() 
+    {
+        return _level;
+    }
+
+    @JsonProperty("level")
+    public void setLevel(EnumLevel level) 
+    {
+        this._level = level;
+    }
+
     @JsonProperty("verbose")
     public void setVerbose(boolean verbose)
     {
         this.verbose = verbose;
     }
-    
+
     @JsonProperty("verbose")
     public boolean isVerbose()
     {
         return verbose;
     }
-    
+
     @JsonIgnore
     @NotNull
     @Override
@@ -743,7 +778,7 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
     {
         return inputFormat == null? null : DataFormat.from(inputFormat).key();
     }
-    
+
     @JsonProperty("inputFormat")
     public void setInputFormat(String key)
     {
@@ -751,20 +786,20 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
         Assert.notNull(f, "The key [" + key + "] does not map to a data format");
         this.inputFormat = f.dataFormat();
     }
-    
+
     @JsonIgnore
     @Override
     public List<String> getInput()
     {
         return Collections.unmodifiableList(input);
     }
-   
+
     @JsonIgnore
     @Override
     public void setInput(List<String> inputList)
     {
         Assert.notNull(inputList, "A non-null list of inputs is required");
-        Assert.isTrue(inputList.size() == 3, 
+        Assert.isTrue(inputList.size() == 3,
             "Expected a triple (left, right, links) of input files");
         setLeftPath(inputList.get(0).toString());
         setRightPath(inputList.get(1).toString());
@@ -777,7 +812,7 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
     {
         // Treat as a colon-separated list of paths
         String[] inputPaths = inputAsString.toString().split(File.pathSeparator);
-        Assert.isTrue(inputPaths.length == 3, 
+        Assert.isTrue(inputPaths.length == 3,
             "Expected a triple (left, right, links) of input files");
         setLeftPath(inputPaths[0]);
         setRightPath(inputPaths[1]);
@@ -798,7 +833,7 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
             setLinksPath(inputMap.get("links").toString());
         }
     }
-    
+
     @JsonProperty("input")
     @JsonSetter
     @JsonInclude(Include.NON_NULL)
@@ -816,7 +851,7 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
             this.setInput(input.toString());
         }
     }
-    
+
     @Override
     public void clearInput()
     {
@@ -831,21 +866,21 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
     {
         return outputDir;
     }
-    
+
     @JsonIgnore
     @Override
     public void setOutputDir(String dir)
     {
         this.outputDir = this.target.outputDir = dir;
     }
-    
+
     @JsonIgnore
     @Override
     public InputToOutputNameMapper<Fagi> getOutputNameMapper()
     {
         return new OutputNameMapper();
     }
-    
+
     @JsonIgnore
     @NotNull
     @Override
@@ -858,28 +893,29 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
     @AssertTrue
     protected boolean isOutputFormatParWithExtensions()
     {
-        if (outputFormat == null)
+        if (outputFormat == null) {
             return true; // nothing to check
-        
+        }
+
         final String extension = outputFormat.getFilenameExtension();
         return Stream.of(target.fusedPath, target.remainingPath, target.reviewPath)
             .filter(Objects::nonNull)
             .allMatch(p -> StringUtils.getFilenameExtension(p).equals(extension));
     }
-    
+
     @JsonIgnore
     @Override
     public void setOutputFormat(EnumDataFormat dataFormat)
     {
         this.outputFormat = dataFormat;
     }
-    
+
     @JsonProperty("outputFormat")
     public String getOutputFormatAsString()
     {
         return outputFormat == null? null : DataFormat.from(outputFormat).key();
     }
-    
+
     @JsonProperty("outputFormat")
     public void setOutputFormat(String key)
     {
@@ -887,7 +923,7 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
         Assert.notNull(f, "The key [" + key + "] does not map to a data format");
         this.outputFormat = f.dataFormat();
     }
-    
+
     @JsonIgnore
     @Override
     public String getVersion()
@@ -901,58 +937,58 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
     {
         super.setVersion(version);
     }
-    
+
     @JsonProperty("locale")
     @Pattern(regexp = "([a-z][a-z])([-][A-Z][A-Z])?", flags = {Pattern.Flag.CASE_INSENSITIVE})
     public String getLang()
     {
         return lang;
     }
-    
+
     @JsonProperty("locale")
     public void setLang(String lang)
     {
         this.lang = lang;
     }
-    
+
     @JsonIgnore
     public Similarity getSimilarity()
     {
         return similarity;
     }
-    
+
     @JsonIgnore
     public void setSimilarity(Similarity similarity)
     {
         this.similarity = similarity;
     }
-    
+
     @JsonProperty("similarity")
     public String getSimilarityAsString()
     {
         return similarity == null? null : similarity.key;
     }
-    
+
     @JsonProperty("similarity")
     public void setSimilarity(String key)
     {
         this.similarity = Similarity.fromKey(key);
     }
-    
+
     @JsonProperty("rulesSpec")
     public String getRulesSpec()
     {
         return rulesSpec;
     }
-    
+
     @JsonProperty("rulesSpec")
     public void setRulesSpec(String resourceLocation)
     {
         this.rulesSpec = resourceLocation;
     }
-    
+
     //// Left ////
-    
+
     @JsonProperty("left")
     @NotNull
     @Valid
@@ -961,7 +997,7 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
         final String path = input.get(LEFT_INDEX);
         return new Input(leftSpec.id, path, leftSpec.categoriesLocation, leftSpec.date);
     }
-    
+
     @JsonProperty("left")
     @JsonInclude(Include.NON_NULL)
     protected void setLeft(Input r)
@@ -970,11 +1006,12 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
         this.leftSpec.id = r.spec.id;
         this.leftSpec.categoriesLocation = r.spec.categoriesLocation;
         this.leftSpec.date = r.spec.date;
-        
-        if (!StringUtils.isEmpty(r.path))
+
+        if (!StringUtils.isEmpty(r.path)) {
             this.input.set(LEFT_INDEX, r.path);
+        }
     }
-    
+
     @JsonIgnore
     public void setLeft(String id, String path, String categoriesLocation, LocalDate date)
     {
@@ -983,28 +1020,28 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
         this.leftSpec.categoriesLocation = categoriesLocation;
         this.leftSpec.date = date;
     }
-    
+
     @JsonProperty("input.left")
     @JsonSetter
     public void setLeftPath(String path)
     {
         this.input.set(LEFT_INDEX, path);
     }
-    
+
     @JsonIgnore
     public String getLeftPath()
     {
         return input.get(LEFT_INDEX);
     }
-    
+
     @JsonIgnore
     public String getLeftId()
     {
         return leftSpec.id;
     }
-    
+
     //// Right ////
-    
+
     @JsonProperty("right")
     @NotNull
     @Valid
@@ -1013,7 +1050,7 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
         final String path = input.get(RIGHT_INDEX);
         return new Input(rightSpec.id, path, rightSpec.categoriesLocation, rightSpec.date);
     }
-    
+
     @JsonProperty("right")
     @JsonInclude(Include.NON_NULL)
     protected void setRight(Input r)
@@ -1022,11 +1059,12 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
         this.rightSpec.id = r.spec.id;
         this.rightSpec.categoriesLocation = r.spec.categoriesLocation;
         this.rightSpec.date = r.spec.date;
-        
-        if (!StringUtils.isEmpty(r.path))
+
+        if (!StringUtils.isEmpty(r.path)) {
             this.input.set(RIGHT_INDEX, r.path);
+        }
     }
-    
+
     @JsonIgnore
     public void setRight(String id, String path, String categoriesLocation, LocalDate date)
     {
@@ -1035,28 +1073,28 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
         this.rightSpec.categoriesLocation = categoriesLocation;
         this.rightSpec.date = date;
     }
-    
+
     @JsonProperty("input.right")
     @JsonSetter
     public void setRightPath(String path)
     {
         this.input.set(RIGHT_INDEX, path);
     }
-    
+
     @JsonIgnore
     public String getRightPath()
     {
         return input.get(RIGHT_INDEX);
     }
-    
+
     @JsonIgnore
     public String getRightId()
     {
         return rightSpec.id;
     }
-    
+
     //// Links ////
-    
+
     @JsonProperty("links")
     @NotNull
     @Valid
@@ -1064,7 +1102,7 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
     {
         return new Links(linksSpec.id, linksSpec.format, input.get(LINKS_INDEX));
     }
-    
+
     @JsonProperty("links")
     @JsonInclude(Include.NON_NULL)
     protected void setLinks(Links r)
@@ -1072,11 +1110,12 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
         Assert.notNull(r, "An input descriptor is required");
         this.linksSpec.id = r.spec.id;
         this.linksSpec.format = r.spec.format;
-        
-        if (!StringUtils.isEmpty(r.path))
+
+        if (!StringUtils.isEmpty(r.path)) {
             this.input.set(LINKS_INDEX, r.path);
+        }
     }
-    
+
     @JsonIgnore
     public void setLinks(String id, LinkFormat format, String path)
     {
@@ -1084,40 +1123,40 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
         this.linksSpec.id = id;
         this.linksSpec.format = format;
     }
-    
+
     @JsonProperty("input.links")
     @JsonSetter
     public void setLinksPath(String path)
     {
         this.input.set(LINKS_INDEX, path);
     }
-    
+
     @JsonIgnore
     public String getLinksPath()
     {
         return input.get(LINKS_INDEX);
     }
-    
+
     @JsonIgnore
     public String getLinksFormatAsString()
     {
         return linksSpec.format.key();
     }
-    
+
     @JsonIgnore
     public LinkFormat getLinksFormat()
     {
         return linksSpec.format;
     }
-    
+
     @JsonIgnore
     public String getLinksId()
     {
         return linksSpec.id;
     }
-    
+
     //// Target ////
-    
+
     @JsonProperty("target")
     @NotNull
     @Valid
@@ -1125,7 +1164,7 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
     {
         return target;
     }
-    
+
     @JsonProperty("target")
     @JsonInclude(Include.NON_NULL)
     protected void setTarget(Output r)
@@ -1137,10 +1176,10 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
         this.target.remainingPath = r.remainingPath;
         this.target.reviewPath = r.reviewPath;
         this.target.statsPath = r.statsPath;
-        
+
         this.outputDir = this.target.outputDir = r.outputDir;
     }
-    
+
     @JsonIgnore
     public void setTarget(
         String id, String fusedName, String remainingName, String reviewName, String statsName)
@@ -1152,24 +1191,25 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
         Assert.isTrue(Paths.get(remainingName).getNameCount() == 1, "A plain file name is expected");
         Assert.isTrue(!StringUtils.isEmpty(reviewName), "A non-empty file name is expected");
         Assert.isTrue(Paths.get(reviewName).getNameCount() == 1, "A plain file name is expected");
-        
+
         this.target.id = id;
-        
+
         this.target.fusedPath = fusedName;
         this.target.remainingPath = remainingName;
         this.target.reviewPath = reviewName;
-        
-        if (!StringUtils.isEmpty(statsName))
+
+        if (!StringUtils.isEmpty(statsName)) {
             this.target.statsPath = statsName;
+        }
     }
-    
+
     @JsonIgnore
     public void setTargetMode(Mode mode)
     {
         Assert.notNull(mode, "A fusion mode is required");
         this.target.mode = mode;
     }
-    
+
     @JsonIgnore
     public void setTargetMode(String key)
     {

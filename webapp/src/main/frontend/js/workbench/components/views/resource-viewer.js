@@ -1,8 +1,9 @@
 import * as React from 'react';
 import * as ReactRedux from 'react-redux';
 
-import Extend from 'ol/extent';
-import GeoJSON from 'ol/format/geojson';
+import GeoJSON from 'ol/format/GeoJSON';
+
+import { getCenter as getExtentCenter } from 'ol/extent';
 
 import {
   bindActionCreators
@@ -116,7 +117,7 @@ class ResourceViewer extends React.Component {
         featureProjection: 'EPSG:3857',
       });
       const extent = geometry.getExtent();
-      const center = Extend.getCenter(extent);
+      const center = getExtentCenter(extent);
 
       return center || defaultCenter;
     }

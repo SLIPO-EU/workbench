@@ -1,9 +1,18 @@
 import React from 'react';
 
-import { FormGroup, FormText, Label } from 'reactstrap';
+import {
+  ButtonGroup,
+  ButtonToolbar,
+  FormGroup,
+  FormText,
+  Input,
+  Label,
+} from 'reactstrap';
 
 import {
-  defaultValues as defaultLimesValues,
+  configurationLevels,
+  configurationLevelOptions,
+  defaultValues as defaultValuesAdvanced,
 } from '../../../../../model/process-designer/configuration/limes';
 
 import {
@@ -45,7 +54,7 @@ class LimesConfiguration extends React.Component {
       value: null,
       label: 'Custom Profile',
       config: {
-        ...defaultLimesValues,
+        ...defaultValuesAdvanced,
       },
     }];
 
@@ -61,25 +70,67 @@ class LimesConfiguration extends React.Component {
       });
     });
 
-    this.state = {
-      advancedMappings: this.isProfileModified || this.profiles.length === 0,
-    };
+    // If only a single configuration level is enabled, reset level to Advanced
+    const { enabledLevels } = props;
+    if (enabledLevels.length === 1) {
+      this.changeConfigurationLevel(configurationLevels.ADVANCED);
+    }
   }
 
-  get isProfileModified() {
-    return !this.props.value['profile'];
+  getLevelDefaults(level) {
+    switch (level) {
+      case configurationLevels.ADVANCED:
+        return {
+          ...defaultValuesAdvanced,
+          // Do not override level
+          level,
+        };
+      case configurationLevels.AUTO: {
+        const defaultProfileName = this.props.appConfiguration.limes.defaultProfile;
+        const profile = this.profiles.find((p) => p.value === defaultProfileName) || null;
+
+        if (profile) {
+          return {
+            ...profile.config,
+            // Do not override level
+            level,
+          };
+        } else {
+          throw new Error(`Default profile is not set`);
+        }
+      }
+    }
+
+    throw new Error(`Configuration level ${level} is not supported`);
   }
 
   changeProfile(name) {
     const profile = this.profiles.find((p) => p.value === name);
+
     if (profile) {
       const { setValue, value } = this.props;
       const newValue = {
         ...value,
         ...profile.config,
+        // Preserve configuration level
+        level: value.level,
       };
       setValue(newValue);
     }
+  }
+
+  changeConfigurationLevel(level) {
+    const { setValue, value } = this.props;
+
+    // Update configuration level
+    const defaults = this.getLevelDefaults(level);
+
+    const newValue = {
+      ...value,
+      // Reset options that are not supported by the selected mode
+      ...defaults,
+    };
+    setValue(newValue);
   }
 
   loadFile(file) {
@@ -113,7 +164,7 @@ class LimesConfiguration extends React.Component {
 
   render() {
     const props = this.props;
-    const { errors, readOnly, setValue, value } = props;
+    const { enabledLevels, errors, readOnly, setValue, value } = props;
 
     const inject = {
       errors,
@@ -126,21 +177,57 @@ class LimesConfiguration extends React.Component {
       <div>
 
         <div>
-          <h4>Profile</h4>
-          <hr />
-        </div>
+          <div style={{ position: 'relative' }}>
+            <h4 style={{ paddingTop: 6 }}>{value.level === configurationLevels.AUTO ? 'Mode' : 'Profile'}</h4>
+            {this.profiles.length !== 0 && enabledLevels.length > 1 &&
+              <div>
+                <ButtonToolbar style={{ position: 'absolute', right: 0, top: 2 }}>
+                  <ButtonGroup data-toggle="buttons" aria-label="First group">
+                    {configurationLevelOptions
+                      .filter(l => enabledLevels.indexOf(l.value) !== -1)
+                      .map(l => {
+                        if (readOnly && l.value !== value.level) {
+                          return null;
+                        }
 
-        <SelectField
-          {...inject}
-          id="profile"
-          label="Selected Profile"
-          help="Specify a default rules specification profile"
-          options={this.profiles}
-          clearable={false}
-          onChange={(value) => {
-            this.changeProfile(value);
-          }}
-        />
+                        return (
+                          <Label
+                            key={`config-mode-${l.value}`}
+                            htmlFor={`config-mode-${l.value}`}
+                            className={l.value === value.level ? "btn btn-outline-secondary active ml-2" : "btn btn-outline-secondary ml-2"}
+                            check={l.value === value.level}
+                            style={{ border: 'none', padding: '0.5rem 0.7rem' }}
+                            title={l.label}
+                            hidden={readOnly && l.value !== value.level}
+                          >
+                            <Input type="radio" name="level" id={`config-mode-${l.value}`} onClick={() => this.changeConfigurationLevel(l.value)} />
+                            <span><i className={`pr-1 ${l.iconClass}`}></i>{l.label}</span>
+                          </Label>);
+                      })
+                    }
+                  </ButtonGroup>
+                </ButtonToolbar>
+              </div>
+            }
+            <hr />
+          </div>
+
+          {value.level !== configurationLevels.AUTO &&
+            <SelectField
+              {...inject}
+              id="profile"
+              label="Selected Profile"
+              help="Specify a default rules specification profile"
+              options={this.profiles}
+              clearable={false}
+              onChange={(value) => {
+                this.changeProfile(value);
+              }}
+              showLabel={value.level === configurationLevels.ADVANCED}
+            />
+          }
+
+        </div>
 
         <SecureContent roles={[Roles.DEVELOPER]}>
           <div>

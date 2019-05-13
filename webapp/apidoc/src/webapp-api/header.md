@@ -59,6 +59,22 @@ The API may return the following error codes:
     <td>Catalog resource was not found</td>
   </tr>
   <tr>
+    <td>EMPTY_PATH</td>
+    <td><code>FileInput</code> path is empty</td>
+  </tr>
+  <tr>
+    <td>RELATIVE_PATH_REQUIRED</td>
+    <td><code>FileInput</code> path is not relative</td>
+  </tr>
+  <tr>
+    <td>OUTPUT_FILE_NOT_FOUND</td>
+    <td><code>StepOutputInput</code> file was not found</td>
+  </tr>
+  <tr>
+    <td>FILE_TYPE_NOT_SUPPORTED</td>
+    <td><code>StepOutputInput</code> file type is not supported</td>
+  </tr>
+  <tr>
     <td>UNKNOWN</td>
     <td>An internal server error has occurred</td>
   </tr>

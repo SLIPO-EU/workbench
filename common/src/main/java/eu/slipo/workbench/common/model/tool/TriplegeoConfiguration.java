@@ -238,7 +238,7 @@ public class TriplegeoConfiguration extends TransformConfiguration<Triplegeo>
      */
     private String _profile;
 
-    private EnumLevel level = EnumLevel.ADVANCED;
+    private EnumLevel _level;
 
     /**
      * Custom mappings selected manually by the user
@@ -396,6 +396,11 @@ public class TriplegeoConfiguration extends TransformConfiguration<Triplegeo>
     private boolean registerFeatures = true;
 
     /**
+     * Spatial filter to select input geometries contained within the specified polygon
+     */
+    private String spatialExtent;
+
+    /**
      * A default constructor
      */
     public TriplegeoConfiguration()
@@ -462,16 +467,16 @@ public class TriplegeoConfiguration extends TransformConfiguration<Triplegeo>
     //
 
     @JsonProperty("level")
-    public EnumLevel getLevel() {
-        if (level == null) {
-            return EnumLevel.ADVANCED;
-        }
-        return level;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public EnumLevel getLevel() 
+    {
+        return _level;
     }
 
     @JsonProperty("level")
-    public void setLevel(EnumLevel level) {
-        this.level = level;
+    public void setLevel(EnumLevel level) 
+    {
+        this._level = level;
     }
 
     @JsonProperty("userMappings")
@@ -1094,5 +1099,17 @@ public class TriplegeoConfiguration extends TransformConfiguration<Triplegeo>
     public void setRegisterFeatures(boolean registerFeatures)
     {
         this.registerFeatures = registerFeatures;
+    }
+
+    @JsonProperty("spatialExtent")
+    public String getSpatialExtent()
+    {
+        return spatialExtent;
+    }
+
+    @JsonProperty("spatialExtent")
+    public void setSpatialExtent(String spatialExtent)
+    {
+        this.spatialExtent = spatialExtent;
     }
 }

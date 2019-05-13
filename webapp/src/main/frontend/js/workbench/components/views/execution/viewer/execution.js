@@ -27,8 +27,12 @@ class Execution extends React.Component {
 
   static propTypes = {
     execution: PropTypes.object.isRequired,
-    viewMap: PropTypes.func.isRequired,
-  };
+    viewMap: PropTypes.func,
+  }
+
+  static defaultProps = {
+    viewMap: null,
+  }
 
   render() {
     const e = this.props.execution;
@@ -94,7 +98,7 @@ class Execution extends React.Component {
               }
             </Col>
           </Row>
-          {e.exported &&
+          {this.props.viewMap && e.exported &&
             <Row>
               <Col>
                 <div className="float-right">

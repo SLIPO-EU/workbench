@@ -23,6 +23,7 @@ import {
 
 import {
   Layer,
+  RevisionHistory,
 } from './';
 
 import {
@@ -36,7 +37,7 @@ import {
 
 import {
   compareGeometry,
-} from '../../../ducks/ui/views/map-viewer/util';
+} from '../../../util/geometry';
 
 import {
   cancelEdit,
@@ -49,10 +50,6 @@ import {
   updateFeature,
   updateFeatureProperty,
 } from '../../../ducks/ui/views/map-viewer';
-
-import {
-  RevisionHistory,
-} from './';
 
 import {
   message,

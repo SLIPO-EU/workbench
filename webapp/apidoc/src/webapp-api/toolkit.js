@@ -81,7 +81,7 @@ function profiles() { return; }
  * @apiDescription Executes a workflow with a single Transform operation.
  *
  * @apiParamExample {json} Request Example
- * POST api/v1/process
+ * POST api/v1/toolkit/transform
  * {
  *  "path":"csv/data.csv",
  *  "configuration":{
@@ -99,7 +99,9 @@ function profiles() { return; }
  *    "profile": "SLIPO_Default",
  *    "quote": "",
  *    "sourceCRS": "EPSG:4326",
- *    "targetCRS": "EPSG:4326"
+ *    "targetCRS": "EPSG:4326",
+ *    "mappingSpec": null,
+ *    "classificationSpec": null,
  *  }
  * }
  *
@@ -108,7 +110,7 @@ function profiles() { return; }
  * @apiParam                              {Configuration}   configuration
  * TripleGeo configuration
  *
- * @apiParam  (Configuration)             {String}          profile
+ * @apiParam  (Configuration)             {String}          [profile]
  * A profile for setting default configuration values.
  * @apiParam  (Configuration)             {String}          inputFormat
  * The data format that input files conform to.
@@ -145,6 +147,11 @@ function profiles() { return; }
  * The coordinate reference system (CRS) for output data (e.g "EPSG:4326").
  * @apiParam  (Configuration)             {String}          [defaultLang]
  * The default language for labels created in output RDF. The default is "en".
+ * @apiParam  (Configuration)             {String}          [mappingSpec]
+ * A resource location of a YML file containing mappings from input schema to RDF
+ * according to a custom ontology.
+ * @apiParam  (Configuration)             {String}          [classificationSpec]
+ * A resource location of a YML/CSV file describing a classification scheme.
  *
  * @apiSuccess                            {Boolean}   success           Returns <code>true</code> or <code>false</code>
  * indicating success of the operation.
@@ -165,7 +172,7 @@ function transform() { return; }
  * @apiDescription Executes a workflow with a single Interlink operation.
  *
  * @apiParamExample {json} Request Example
- * POST api/v1/process
+ * POST api/v1/toolkit/interlink
  * {
  *  "left": {
  *    "type":"FILESYSTEM",
@@ -180,9 +187,9 @@ function transform() { return; }
  * }
  *
  * @apiParam                              {Object}     left
- * An instance of either <code>FileInput</code> or <code>ResourceInput</code>.
+ * An instance of either <code>FileInput</code>, <code>ResourceInput</code> or <code>StepOutputInput</code>.
  * @apiParam                              {Object}     right
- * An instance of either <code>FileInput</code> or <code>ResourceInput</code>.
+ * An instance of either <code>FileInput</code>, <code>ResourceInput</code> or <code>StepOutputInput</code>.
  * @apiParam                              {String}                      profile
  * Configuration profile.
  *
@@ -191,12 +198,25 @@ function transform() { return; }
  * @apiParam  (FileInput)                 {String}    path
  * A relative path to the input file.
  *
- * @apiParam  (ResourceInput)                 {String}    type
+ * @apiParam  (ResourceInput)             {String}    type
  * Input type. Must be set to <code>CATALOG</code>.
- * @apiParam  (ResourceInput)                 {Number}    id
+ * @apiParam  (ResourceInput)             {Number}    id
  * The resource id.
- * @apiParam  (ResourceInput)                 {Number}    version
+ * @apiParam  (ResourceInput)             {Number}    version
  * The resource version.
+ *
+ * @apiParam  (StepOutputInput)           {String}    type
+ * Input type. Must be set to <code>OUTPUT</code>.
+ * @apiParam  (StepOutputInput)           {Number}    processId
+ * The process id.
+ * @apiParam  (StepOutputInput)           {Number}    processVersion
+ * The process version.
+ * @apiParam  (StepOutputInput)           {Number}    fileId
+ * The process execution file id. A process execution may generate files of several types i.e. <code>LOG</code>,
+ * <code>KPI</code>, <code>OUTPUT</code> etc. The selected file must be of type <code>OUTPUT</code>.
+ *
+ * Moreover, for <code>LIMES</code> output files, the file format must be <code>CSV</code>. For all other SLIPO
+ * Toolkit components, the file format must be <code>N-TRIPLES</code>.
  *
  * @apiSuccess                            {Boolean}   success           Returns <code>true</code> or <code>false</code>
  * indicating success of the operation.
@@ -207,7 +227,7 @@ function transform() { return; }
 function interlink() { return; }
 
 /**
- * @api {post} api/v1/process Fusion
+ * @api {post} api/v1/toolkit/fuse Fusion
  * @apiHeader {String} X-API-Key Application key
  * @apiVersion 1.0.0
  * @apiName Fusion
@@ -235,11 +255,11 @@ function interlink() { return; }
  * }
  *
  * @apiParam                              {Object}     left
- * An instance of either <code>FileInput</code> or <code>ResourceInput</code>.
+ * An instance of either <code>FileInput</code>, <code>ResourceInput</code> or <code>StepOutputInput</code>.
  * @apiParam                              {Object}     right
- * An instance of either <code>FileInput</code> or <code>ResourceInput</code>.
+ * An instance of either <code>FileInput</code>, <code>ResourceInput</code> or <code>StepOutputInput</code>.
  * @apiParam                              {Object}     links
- * An instance of <code>FileInput</code>.
+ * An instance of either <code>FileInput</code>, <code>ResourceInput</code> or <code>StepOutputInput</code>.
  * @apiParam                              {String}                      profile
  * Configuration profile.
  *
@@ -262,7 +282,7 @@ function fuse() { return; }
  * @apiDescription Executes a workflow with a single Enrichment operation.
  *
  * @apiParamExample {json} Request Example
- * POST api/v1/process
+ * POST api/v1/toolkit/enrich
  * {
  *  "input": {
  *    "type":"FILESYSTEM",
@@ -272,7 +292,7 @@ function fuse() { return; }
  * }
  *
  * @apiParam                              {Object}     input
- * An instance of either <code>FileInput</code> or <code>ResourceInput</code>.
+ * An instance of either <code>FileInput</code>, <code>ResourceInput</code> or <code>StepOutputInput</code>.
  * @apiParam                              {String}                      profile
  * Configuration profile.
  *
@@ -283,3 +303,69 @@ function fuse() { return; }
  * <code>success</code> is <code>false</code>, <code>result</code> is <code>null</code>
  */
 function enrich() { return; }
+
+/**
+ * @api {post} api/v1/toolkit/export Export
+ * @apiHeader {String} X-API-Key Application key
+ * @apiVersion 1.0.0
+ * @apiName Export
+ * @apiGroup Toolkit
+ * @apiPermission ROLE_API
+ *
+ * @apiDescription Executes a workflow with a single Export (reverse TripleGeo) operation.
+ *
+ * @apiParamExample {json} Request Example
+ * POST api/v1/toolkit/export
+ * {
+ *  "input": {
+ *    "type":"FILESYSTEM",
+ *    "path": "data.nt"
+ *  },
+ *  "configuration":{
+ *    "defaultLang": "en",
+ *    "delimiter": "|",
+ *    "encoding": "UTF-8",
+ *    "outputFormat": "CSV",
+ *    "profile": "SLIPO_default",
+ *    "quote": "",
+ *    "sourceCRS": "EPSG:4326",
+ *    "sparqlFile": null,
+ *    "targetCRS": "EPSG:4326",
+ *  }
+ * }
+ *
+ * @apiParam                              {Object}          path
+ * An instance of either <code>FileInput</code>, <code>ResourceInput</code> or <code>StepOutputInput</code>.
+ * @apiParam                              {Configuration}   configuration
+ * Reverse TripleGeo configuration
+ *
+ * @apiParam  (Configuration)             {String}          profile
+ * A profile for setting default configuration values
+ * @apiParam  (Configuration)             {String}          [sparqlFile]
+ * A file containing a user-specified SELECT query (in SPARQL) that will retrieve
+ * results from the input RDF triples. This query should conform with the underlying
+ * ontology of the input RDF triples.
+ * @apiParam  (Configuration)             {String}          [delimiter]
+ * A field delimiter for records (meaningful only for CSV output).
+ * @apiParam  (Configuration)             {String}          [quote]
+ * A quote character for records (meaningful only for CSV output)
+ * @apiParam  (Configuration)             {String}          sourceCRS
+ * The coordinate reference system (CRS) for input data (eg "EPSG:4326").
+ * @apiParam  (Configuration)             {String}          targetCRS
+ * The coordinate reference system (CRS) for output data (e.g "EPSG:4326").
+ * @apiParam  (Configuration)             {String}          [defaultLang]
+ * The default language for labels created in output RDF. The default is "en".
+ * @apiParam  (Configuration)             {String}          [encoding]
+ * Optional parameter for the encoding (character set) for strings in the input data.
+ *
+ * @apiParam  (Configuration)             {String}          outputFormat
+ * The expected data format for output. The value can be either <code>CSV</code> or
+ * <code>SHAPEFILE</code>
+ *
+ * @apiSuccess                            {Boolean}   success           Returns <code>true</code> or <code>false</code>
+ * indicating success of the operation.
+ * @apiSuccess                            {Error[]}   errors            Array of <code>Error</code> objects.
+ * @apiSuccess                            {Object}    result            An instance of <code>ProcessExecutionRecord</code>. If value of
+ * <code>success</code> is <code>false</code>, <code>result</code> is <code>null</code>
+ */
+function export_to_file() { return; }

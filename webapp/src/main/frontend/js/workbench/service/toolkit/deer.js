@@ -1,3 +1,7 @@
+import {
+  configurationLevels,
+} from "../../model/process-designer/configuration/deer";
+
 export function validateConfiguration(config) {
   const errors = {};
 
@@ -7,10 +11,11 @@ export function validateConfiguration(config) {
 }
 
 export function readConfiguration(config) {
-  const { profile = null, ...rest } = config;
+  const { level = configurationLevels.ADVANCED, profile = null, ...rest } = config;
 
   return {
     ...rest,
+    level,
     profile,
   };
 }

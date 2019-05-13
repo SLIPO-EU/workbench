@@ -29,6 +29,7 @@ import {
 } from '../../process/designer';
 
 import {
+  KpiDeerView,
   KpiFagiView,
   KpiTripleGeoView,
 } from './';
@@ -36,26 +37,6 @@ import {
 import {
   message,
 } from '../../../../service';
-
-function isMapSupported(tool, type, table) {
-  if (!table) {
-    return false;
-  }
-  switch (tool) {
-    case EnumTool.TripleGeo:
-      return (type === EnumStepFileType.OUTPUT);
-
-    case EnumTool.LIMES:
-      return (type === EnumStepFileType.INPUT);
-
-    case EnumTool.FAGI: case EnumTool.DEER:
-      return ((type === EnumStepFileType.INPUT) || (type === EnumStepFileType.OUTPUT));
-
-    default:
-      return false;
-
-  }
-}
 
 function sortFiles(files) {
   files.forEach((f) => {
@@ -143,14 +124,18 @@ export default class ExecutionStepDetails extends React.Component {
   }
 
   static propTypes = {
-    hideStepExecutionDetails: PropTypes.func.isRequired,
+    checkFile: PropTypes.func.isRequired,
+    downloadFile: PropTypes.func.isRequired,
+    execution: PropTypes.object.isRequired,
     files: PropTypes.arrayOf(PropTypes.object).isRequired,
+    hideStepExecutionDetails: PropTypes.func,
+    process: PropTypes.object.isRequired,
     resetSelectedFile: PropTypes.func.isRequired,
-    selectedFile: PropTypes.number,
-    selectFile: PropTypes.func.isRequired,
-    selectKpi: PropTypes.func.isRequired,
+    selectedRow: PropTypes.number,
     selectedKpi: PropTypes.object,
+    selectRow: PropTypes.func.isRequired,
     step: PropTypes.object.isRequired,
+    viewKpi: PropTypes.func.isRequired,
   };
 
   /**
@@ -162,7 +147,7 @@ export default class ExecutionStepDetails extends React.Component {
    * @memberof Resources
    */
   handleRowAction(rowInfo, e, handleOriginal) {
-    this.props.selectFile(rowInfo.row.id);
+    this.props.selectRow(rowInfo.row.id);
 
     switch (e.target.getAttribute('data-action')) {
       case 'file-download':
@@ -170,7 +155,7 @@ export default class ExecutionStepDetails extends React.Component {
         break;
 
       case 'kpi-view':
-        this.props.selectKpi(rowInfo.row.id);
+        this.props.viewKpi(rowInfo.row.id);
         break;
 
       default:
@@ -185,7 +170,7 @@ export default class ExecutionStepDetails extends React.Component {
     this.props.checkFile(this.props.process.id, this.props.process.version, this.props.execution.id, fileId, fileName)
       .then(() => {
         this.props.downloadFile(this.props.process.id, this.props.process.version, this.props.execution.id, fileId, fileName)
-          .catch(err => {
+          .catch(() => {
             message.error('Failed to download file', 'fa-cloud-download');
           });
       })
@@ -200,13 +185,29 @@ export default class ExecutionStepDetails extends React.Component {
   }
 
   isSelected(rowInfo) {
-    return (rowInfo && this.props.selectedFile === rowInfo.row.id);
+    return (rowInfo && this.props.selectedRow === rowInfo.row.id);
+  }
+
+  resolveKpiComponent(tool) {
+    switch (tool) {
+      case EnumTool.DEER:
+        return KpiDeerView;
+      case EnumTool.FAGI:
+        return KpiFagiView;
+      case EnumTool.TripleGeo:
+      case EnumTool.ReverseTripleGeo:
+        return KpiTripleGeoView;
+    }
+
+    return null;
   }
 
   render() {
     const iconClassName = (ToolIcons[this.props.step.component] || 'fa fa-folder-open') + ' pr-2';
     const data = this.props.selectedKpi && this.props.selectedKpi.data;
-    const file = this.props.selectedFile && this.props.files.find((f) => f.id === this.props.selectedFile);
+    const original = this.props.selectedKpi && this.props.selectedKpi.original;
+    const file = this.props.selectedRow && this.props.files.find((f) => f.id === this.props.selectedRow);
+    const ComponentKpi = this.resolveKpiComponent(this.props.step.tool);
 
     return (
       <div>
@@ -217,11 +218,13 @@ export default class ExecutionStepDetails extends React.Component {
                 <i className={iconClassName}></i>
                 <span>{this.props.step.name + ' - Files'}</span>
               </Col>
-              <Col>
-                <div className="float-right">
-                  <Button color="primary" onClick={this.hideStepExecutionDetails}><i className="fa fa-undo" /></Button>
-                </div>
-              </Col>
+              {this.props.hideStepExecutionDetails &&
+                <Col>
+                  <div className="float-right">
+                    <Button color="primary" onClick={this.hideStepExecutionDetails}><i className="fa fa-undo" /></Button>
+                  </div>
+                </Col>
+              }
             </Row>
             <Row>
               <Col>
@@ -247,24 +250,19 @@ export default class ExecutionStepDetails extends React.Component {
             </Row>
           </CardBody>
         </Card>
-        {this.props.selectedKpi &&
+        {this.props.selectedKpi && ComponentKpi &&
           <Row className="mb-4">
             <Col>
-              {this.props.step.tool === EnumTool.TripleGeo &&
-                <KpiTripleGeoView
-                  data={data}
-                  file={file}
-                />
-              }
-              {this.props.step.tool === EnumTool.FAGI &&
-                <KpiFagiView
-                  data={data}
-                  file={file}
-                />}
+              <ComponentKpi
+                data={data}
+                file={file}
+                original={original}
+              />
             </Col>
           </Row>
         }
       </div>
     );
   }
+
 }

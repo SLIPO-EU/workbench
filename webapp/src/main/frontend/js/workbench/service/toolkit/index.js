@@ -52,6 +52,8 @@ export function validateConfiguration(tool, config) {
       return validateMetadata(config);
     case EnumTool.ReverseTripleGeo:
       return validateReverseTripleGeo(config);
+    case EnumTool.IMPORTER:
+      return true;
   }
   throw new Error(`Tool ${tool} is not supported`);
 }
@@ -70,6 +72,8 @@ export function readConfiguration(tool, config) {
       return readMetadata(config);
     case EnumTool.ReverseTripleGeo:
       return readReverseTripleGeo(config);
+    case EnumTool.IMPORTER:
+      return config;
   }
   throw new Error(`Tool ${tool} is not supported`);
 }

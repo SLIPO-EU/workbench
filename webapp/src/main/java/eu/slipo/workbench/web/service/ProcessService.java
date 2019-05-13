@@ -83,6 +83,22 @@ public interface ProcessService {
     ) throws ProcessNotFoundException, ProcessExecutionNotFoundException;
 
     /**
+     * Get the compact view of the execution for a process with a specific id and version.
+     * The response includes the execution steps
+     *
+     * @param id the process id
+     * @param version the process version
+     * @param includeLogs If true, the docker log files are also returned
+     * @return an instance of {@link ProcessExecutionRecordView}
+     *
+     * @throws ProcessNotFoundException if the process is not found
+     * @throws ProcessExecutionNotFoundException if the process execution is not found
+     */
+    ProcessExecutionRecordView getProcessExecution(
+        long id, long version, boolean includeLogs
+    ) throws ProcessNotFoundException, ProcessExecutionNotFoundException;
+
+    /**
      * Get an execution for a process with a specific id and version. The response
      * includes the execution steps
      *

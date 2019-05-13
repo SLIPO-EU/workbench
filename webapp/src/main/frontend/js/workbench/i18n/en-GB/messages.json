@@ -41,6 +41,14 @@
     "tools": {
       "schema-explorer": "Schema Explorer",
       "schema-designer": "Schema Editor"
+    },
+    "api": {
+      "usage": {
+        "default": "API Usage"
+      },
+      "execution": {
+        "viewer": "API Operation"
+      }
     }
   },
   "login": {
@@ -123,7 +131,7 @@
       "DATA_INTEGRATION": "Data Integration",
       "EXPORT": "Export resource",
       "EXPORT_MAP": "Export map",
-      "API":"API"
+      "API": "API"
     },
     "tool": {
       "UNDEFINED": "Unknown",

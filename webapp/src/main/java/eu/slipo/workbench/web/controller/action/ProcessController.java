@@ -200,6 +200,34 @@ public class ProcessController extends BaseController {
 
         try {
             final ProcessExecutionRecordView view = this.processService.getProcessExecution(id, version, executionId, true);
+
+            if (view.getProcess().getTaskType() == EnumProcessTaskType.API) {
+                throw this.accessDenied();
+            }
+
+            return RestResponse.result(view);
+        } catch (Exception ex) {
+            return this.exceptionToResponse(ex);
+        }
+    }
+
+    /**
+     * Get the execution data of an API operation. The response includes the execution
+     * steps.
+     *
+     * @param id the process id
+     * @return a list of {@link ProcessExecutionRecordView}
+     */
+    @GetMapping(value = "/action/process/api/execution/{processId}")
+    public RestResponse<?> getApiOperationExecution(@PathVariable long processId) {
+
+        try {
+            final ProcessExecutionRecordView view = this.processService.getProcessExecution(processId, 1, true);
+
+            if (view.getProcess().getTaskType() != EnumProcessTaskType.API) {
+                throw this.accessDenied();
+            }
+
             return RestResponse.result(view);
         } catch (Exception ex) {
             return this.exceptionToResponse(ex);
@@ -417,6 +445,9 @@ public class ProcessController extends BaseController {
             if (record.getDefinition() == null) {
                 return RestResponse.error(new Error(ProcessErrorCode.INVALID, "Failed to parse process definition"));
             }
+            if (record.getTaskType() == EnumProcessTaskType.API) {
+                throw this.accessDenied();
+            }
             return RestResponse.result(new ProcessRecordView(record));
         } catch (Exception ex) {
             return this.exceptionToResponse(ex);
@@ -438,6 +469,9 @@ public class ProcessController extends BaseController {
             }
             if (record.getDefinition() == null) {
                 return RestResponse.error(new Error(ProcessErrorCode.INVALID, "Failed to parse process definition"));
+            }
+            if (record.getTaskType() == EnumProcessTaskType.API) {
+                throw this.accessDenied();
             }
             return RestResponse.result(new ProcessRecordView(record));
         } catch (Exception ex) {

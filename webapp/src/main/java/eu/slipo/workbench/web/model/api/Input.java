@@ -15,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonSubTypes({
     @Type(name = "FILESYSTEM", value = FileInput.class),
     @Type(name = "CATALOG", value = CatalogInput.class),
+    @Type(name = "OUTPUT", value = StepOutputInput.class),
 })
 public abstract class Input implements Serializable {
 
@@ -23,6 +24,7 @@ public abstract class Input implements Serializable {
     public enum EnumType {
         FILESYSTEM,
         CATALOG,
+        OUTPUT,
         ;
     }
 

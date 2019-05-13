@@ -442,6 +442,8 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
             parametersMap.remove("profile");
         }
 
+        parametersMap.remove("level"); // because the actual job is not aware of it
+
         // This configuration contains references to files (`mappingSpec`, `classificationSpec`)
         // that may need to be resolved to absolute URIs.
 
@@ -496,6 +498,8 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
             parametersMap.remove("profile");
         }
 
+        parametersMap.remove("level"); // because the actual job is not aware of it
+
         return parametersMap;
     }
 
@@ -513,6 +517,8 @@ public class DefaultProcessToWorkflowMapper implements ProcessToWorkflowMapper
                 parametersMap.put("rulesSpec", profile.getRulesSpec());
             parametersMap.remove("profile");
         }
+
+        parametersMap.remove("level"); // because the actual job is not aware of it
 
         // The reference to `rulesSpec` file may need to be resolved to an absolute URI
         String rulesLocation = parametersMap.getProperty("rulesSpec");

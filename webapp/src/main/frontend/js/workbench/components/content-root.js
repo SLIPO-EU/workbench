@@ -5,7 +5,6 @@ import { bindActionCreators } from 'redux';
 import { Switch, Route, Redirect } from 'react-router-dom';
 
 import {
-  toast,
   ToastContainer
 } from 'react-toastify';
 

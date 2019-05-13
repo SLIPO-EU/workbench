@@ -40,6 +40,7 @@ const executionsColumns = (props) => (
     Expander: (row) => {
       return (
         <span>
+          <i data-action="view" title="View" className='fa fa-search slipo-table-row-action p-1'></i>
           {row.original.errorMessage &&
             <i data-action="error" title="View error message" className='fa fa-warning slipo-table-row-action p-1'></i>
           }
@@ -113,6 +114,9 @@ export default class ProcessExecutions extends React.Component {
     this.props.setSelected(rowInfo.row.id);
 
     switch (e.target.getAttribute('data-action')) {
+      case 'view':
+        this.props.viewExecution(rowInfo.original.processId);
+        break;
       case 'stop':
         this.props.stopExecution(rowInfo.original.process.id, rowInfo.original.process.version);
         break;

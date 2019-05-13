@@ -1,5 +1,8 @@
 package eu.slipo.workbench.rpc.jobs;
 
+import static com.google.common.primitives.Ints.constrainToRange;
+import static org.springframework.util.StringUtils.stripFilenameExtension;
+
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
@@ -49,11 +52,9 @@ import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.core.annotation.Order;
 import org.springframework.core.io.Resource;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Component;
@@ -64,7 +65,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.primitives.Ints;
 
 import eu.slipo.workbench.common.model.poi.EnumDataFormat;
 import eu.slipo.workbench.common.model.tool.FagiConfiguration;
@@ -74,11 +74,6 @@ import eu.slipo.workbench.rpc.jobs.listener.LoggingJobExecutionListener;
 import eu.slipo.workbench.rpc.jobs.tasklet.PrepareWorkingDirectoryTasklet;
 import eu.slipo.workbench.rpc.jobs.tasklet.docker.CreateContainerTasklet;
 import eu.slipo.workbench.rpc.jobs.tasklet.docker.RunContainerTasklet;
-
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
-import static com.google.common.primitives.Ints.constrainToRange;
-import static org.springframework.util.StringUtils.stripFilenameExtension;
 
 @Component
 public class FagiJobConfiguration extends ContainerBasedJobConfiguration
@@ -147,10 +142,11 @@ public class FagiJobConfiguration extends ContainerBasedJobConfiguration
     private long memorySwapLimitForMerging = -1L;
 
     /**
-     * A list of keys of parameters to be ignored (blacklisted) as conflicting with <tt>input</tt> parameter.
+     * A list of keys of parameters to be ignored (blacklisted) by a job execution (e.g conflicting
+     * with <tt>input</tt> parameter).
      */
     private static final List<String> blacklistedParameterKeys =
-        ImmutableList.of("left.path", "right.path", "links.path");
+        ImmutableList.of("level", "left.path", "right.path", "links.path");
 
     @Autowired
     private TaskExecutor taskExecutor;
@@ -278,14 +274,17 @@ public class FagiJobConfiguration extends ContainerBasedJobConfiguration
     @PostConstruct
     private void setMemoryLimitsIfNeeded()
     {
-        if (this.memorySwapLimit < 0)
+        if (this.memorySwapLimit < 0) {
             this.memorySwapLimit = 2L * this.memoryLimit;
+        }
 
-        if (this.memorySwapLimitForPartitioning < 0)
+        if (this.memorySwapLimitForPartitioning < 0) {
             this.memorySwapLimitForPartitioning = 2L * this.memoryLimitForPartitioning;
+        }
 
-        if (this.memorySwapLimitForMerging < 0)
+        if (this.memorySwapLimitForMerging < 0) {
             this.memorySwapLimitForMerging = 2L * this.memoryLimitForMerging;
+        }
 
         logger.info("The memory limits are {}m/{}m",
             memoryLimit / 1024L / 1024L, memorySwapLimit / 1024L / 1024L);
@@ -781,9 +780,10 @@ public class FagiJobConfiguration extends ContainerBasedJobConfiguration
 
         String partitionDirName = String.format("partition_%d", partitionNumber);
         Path partitionDir = workDir.resolve(Paths.get("partitions", partitionDirName));
-        if (!Files.isDirectory(partitionDir))
+        if (!Files.isDirectory(partitionDir)) {
             throw new IllegalStateException(
                 "The input directory for partition #" + partitionNumber + " is missing: " + partitionDir);
+        }
 
         // Create directory for the output of this partition
         Path partitionOutputDir = partitionDir.resolve("output");
@@ -912,8 +912,9 @@ public class FagiJobConfiguration extends ContainerBasedJobConfiguration
                     }
                 }
 
-                if (result.getStatus() != BatchStatus.COMPLETED)
+                if (result.getStatus() != BatchStatus.COMPLETED) {
                     return;
+                }
 
                 // The master step is complete (all partition steps are complete)
 
@@ -969,8 +970,9 @@ public class FagiJobConfiguration extends ContainerBasedJobConfiguration
         @Value("#{stepExecutionContext['partitionNumber']}") Integer partitionNumber)
     {
         String containerName = containerNameByPartitionNumber.get(partitionNumber);
-        if (StringUtils.isEmpty(containerName))
+        if (StringUtils.isEmpty(containerName)) {
             throw new IllegalStateException("No entry for container for partition #" + partitionNumber);
+        }
 
         return RunContainerTasklet.builder()
             .client(docker)

@@ -185,6 +185,17 @@ public class DefaultProcessService implements ProcessService {
         return result;
     }
 
+    private ProcessExecutionRecordView createProcessExecutionRecordView(
+        ProcessRecord processRecord, ProcessExecutionRecord processExecutionRecord
+    ) throws ProcessNotFoundException {
+        // For catalog resources, update bounding box and table name values
+        refreshCatalogResources(processRecord);
+        // Remove any server specific private data
+        sanitizeProcessRecord(processRecord);
+
+        return new ProcessExecutionRecordView(processRecord, processExecutionRecord);
+    }
+
     private void refreshCatalogResources(ProcessRecord record) {
         record
             .getDefinition()
@@ -201,21 +212,29 @@ public class DefaultProcessService implements ProcessService {
             });
     }
 
+    private void sanitizeProcessRecord(ProcessRecord record) {
+        // TODO: IMPORTER steps contain absolute file paths and must be removed
+    }
+
     @Override
     public ProcessExecutionRecordView getProcessExecution(
         long id, long version
+    ) throws ProcessNotFoundException, ProcessExecutionNotFoundException {
+        return this.getProcessExecution(id, version, false);
+    }
+
+    @Override
+    public ProcessExecutionRecordView getProcessExecution(
+        long id, long version, boolean includeLogs
     ) throws ProcessNotFoundException, ProcessExecutionNotFoundException {
 
         ProcessRecord processRecord = processRepository.findOne(id, version, false);
 
         checkProcessExecutionAccess(processRecord);
 
-        ProcessExecutionRecord executionRecord = processRepository.getExecutionCompactView(id, version, false);
+        ProcessExecutionRecord executionRecord = processRepository.getExecutionCompactView(id, version, includeLogs);
 
-        // For catalog resources update bounding box and table name values
-        refreshCatalogResources(processRecord);
-
-        return new ProcessExecutionRecordView(processRecord, executionRecord);
+        return createProcessExecutionRecordView(processRecord, executionRecord);
     }
 
     @Override
@@ -233,10 +252,7 @@ public class DefaultProcessService implements ProcessService {
         }
         checkProcessExecutionAccess(processRecord);
 
-        // For catalog resources update bounding box and table name values
-        refreshCatalogResources(processRecord);
-
-        return new ProcessExecutionRecordView(processRecord, executionRecord);
+        return createProcessExecutionRecordView(processRecord, executionRecord);
     }
 
     @Override
@@ -565,6 +581,7 @@ public class DefaultProcessService implements ProcessService {
         try {
             switch (stepRecord.getTool()) {
                 case TRIPLEGEO:
+                case DEER:
                 case FAGI:
                     JsonNode node = objectMapper.readTree(file);
                     return node;

@@ -76,7 +76,7 @@ export default class Processes extends React.Component {
           });
         }}
         getTrProps={(state, rowInfo) => ({
-          onClick: (e) => {
+          onClick: () => {
             this.props.setSelected(rowInfo.row.id);
           },
           className: (this.isSelected(rowInfo) ? 'slipo-react-table-selected' : null),

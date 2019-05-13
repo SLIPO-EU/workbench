@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 
 import * as  PropTypes from 'prop-types';
-import { Link, NavLink } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { toggleMenu } from '../../ducks/ui/menu';
 import * as Roles from '../../model/role';
 import { StaticRoutes, DynamicRoutes } from '../../model/routes';

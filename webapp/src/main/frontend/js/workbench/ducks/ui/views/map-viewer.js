@@ -2,12 +2,15 @@ import * as mapService from '../../../service/map';
 import * as provenanceService from '../../../service/provenance';
 
 import {
+  geometryFromObject,
+} from '../../../util/geometry';
+
+import {
   EnumPane,
 } from '../../../model/map-viewer';
 
 import {
   evolutionToTable,
-  geometryFromObject,
   processExecutionToLayers,
   provenanceToTable,
 } from './map-viewer/util';

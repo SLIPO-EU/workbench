@@ -33,10 +33,9 @@ export const fetchExecutionDetails = (process, version, execution) => (dispatch,
     });
 };
 
-const requestExecutionKpiData = (id, mode) => ({
+const requestExecutionKpiData = (id) => ({
   type: Types.REQUEST_EXECUTION_KPI_DATA,
   id,
-  mode,
 });
 
 const receiveExecutionKpiData = (data) => ({
@@ -44,9 +43,9 @@ const receiveExecutionKpiData = (data) => ({
   data,
 });
 
-export const fetchExecutionKpiData = (process, version, execution, file, mode) => (dispatch, getState) => {
+export const fetchExecutionKpiData = (process, version, execution, file) => (dispatch, getState) => {
   const { meta: { csrfToken: token } } = getState();
-  dispatch(requestExecutionKpiData(file, mode));
+  dispatch(requestExecutionKpiData(file));
 
   return processService.fetchExecutionKpiData(process, version, execution, file, token)
     .then((data) => {

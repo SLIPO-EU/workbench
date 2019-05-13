@@ -16,6 +16,8 @@ public abstract class AbstractToolConfiguration {
 
     private List<String> supportedVersions;
 
+    private String defaultProfile;
+
     public String getVersion() {
         return version;
     }
@@ -38,6 +40,14 @@ public abstract class AbstractToolConfiguration {
 
     public void setSupportedVersions(List<String> supportedVersions) {
         this.supportedVersions = supportedVersions;
+    }
+
+    public String getDefaultProfile() {
+        return defaultProfile;
+    }
+
+    public void setDefaultProfile(String defaultProfile) {
+        this.defaultProfile = defaultProfile;
     }
 
 }

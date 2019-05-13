@@ -103,6 +103,7 @@ export const defaultValues = {
   registerFeatures: true,
   serialization: serializations[2].value,
   sourceCRS: '4326',
+  spatialExtent: null,
   targetCRS: '4326',
   targetGeoOntology: ontologies[0].value,
 };
@@ -138,6 +139,7 @@ export const defaultValuesAuto = {
   registerFeatures: true,
   serialization: serializations[2].value,
   sourceCRS: '4326',
+  spatialExtent: null,
   targetCRS: '4326',
   targetGeoOntology: ontologies[0].value,
 };
@@ -159,6 +161,7 @@ export const defaultValuesSimple = {
   prefixes: [...defaultNamespaces],
   registerFeatures: true,
   serialization: serializations[2].value,
+  spatialExtent: null,
   targetGeoOntology: ontologies[0].value,
 };
 

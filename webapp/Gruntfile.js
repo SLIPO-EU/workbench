@@ -51,8 +51,67 @@ module.exports = function (grunt) {
     // Transpile and bundle JavaScript files
     browserify: {
       options: {
-        /* moved to package.json */
+        /*
+          Browserify and Babel configuration has been moved here from .babelrc and
+          package.json files. The global and ignore options where ignored when an
+          external .balelrc file was used.
+        */
         watch: true,
+        transform: [
+          ["babelify", {
+            /* Required for building newer versions of OpenLayers library */
+            global: true,
+            presets: [
+              "@babel/preset-env",
+              "@babel/preset-react",
+            ],
+            plugins: [
+              "@babel/plugin-syntax-dynamic-import",
+              "@babel/plugin-syntax-import-meta",
+              [
+                "@babel/plugin-proposal-decorators",
+                {
+                  legacy: true
+                }
+              ],
+              "@babel/plugin-proposal-class-properties",
+              "@babel/plugin-proposal-json-strings",
+              "@babel/plugin-proposal-function-sent",
+              "@babel/plugin-proposal-export-namespace-from",
+              "@babel/plugin-proposal-numeric-separator",
+              "@babel/plugin-proposal-throw-expressions",
+              "@babel/plugin-proposal-export-default-from",
+              "@babel/plugin-proposal-logical-assignment-operators",
+              "@babel/plugin-proposal-optional-chaining",
+              [
+                "@babel/plugin-proposal-pipeline-operator",
+                {
+                  proposal: "minimal"
+                }
+              ],
+              "@babel/plugin-proposal-nullish-coalescing-operator",
+              "@babel/plugin-proposal-do-expressions",
+              "@babel/plugin-proposal-function-bind"
+            ],
+            ignore: [
+              filename => {
+                if (!/\/node_modules\//.test(filename)) {
+                  // Compile SLIPO workbench source code
+                  return false;
+                } else if (/\/node_modules\/(ol)\//.test(filename)) {
+                  // External libraries that are using ES6 should be compiled too:
+                  //
+                  // OpenLayers
+                  return false;
+                }
+                // Anything else should be ignored
+                return true;
+              },
+            ],
+          }],
+          "envify",
+          "browserify-shim"
+        ]
       },
       'workbench': {
         options: {
@@ -282,6 +341,16 @@ module.exports = function (grunt) {
             src: 'codemirror/lib/*.css',
             dest: '<%= targetDir %>/css',
           },
+          {
+            expand: true,
+            filter: 'isFile',
+            cwd: 'node_modules/@mdi/font',
+            src: [
+              'css/*',
+              'fonts/*',
+            ],
+            dest: '<%= targetDir %>/vendor/mdi',
+          },
         ],
       },
     },
@@ -317,7 +386,8 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-copy');
-  grunt.loadNpmTasks('grunt-contrib-uglify');
+  //grunt.loadNpmTasks('grunt-contrib-uglify');
+  grunt.loadNpmTasks('grunt-contrib-uglify-es');
   grunt.loadNpmTasks('grunt-contrib-sass');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-eslint');

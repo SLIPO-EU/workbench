@@ -35,34 +35,45 @@ public class DeerConfiguration extends EnrichConfiguration<Deer>
      * This class represents the configuration of a specific version
      */
     public static final String VERSION = "2.0";
-    
+
+    /**
+     * Available configuration levels
+     */
+    public enum EnumLevel {
+        AUTO,
+        ADVANCED,
+        ;
+    }
+
     public class OutputNameMapper implements InputToOutputNameMapper<Deer>
     {
         private OutputNameMapper() {}
-        
+
         @Override
         public Multimap<OutputPart<Deer>, OutputSpec> applyToPath(List<Path> inputList)
         {
             Assert.state(outputFormat != null, "The output format is required");
-            final String resultsPath = "enriched" + "." + outputFormat.getFilenameExtension();             
+            final String resultsPath = "enriched" + "." + outputFormat.getFilenameExtension();
             return ImmutableListMultimap.of(
                 EnumDeerOutputPart.ENRICHED, OutputSpec.of(Paths.get(resultsPath), outputFormat),
                 EnumDeerOutputPart.STATS, OutputSpec.of(Paths.get("deer-analytics.json"), EnumDataFormat.JSON));
         }
     }
-    
+
     /**
      * A profile for setting default configuration values
      */
     private String _profile;
-    
+
+    private EnumLevel _level;
+
     /**
      * The location of the actual configuration (described using an RDF vocabulary).
      * @see https://dice-group.github.io/deer/configuring_deer/
      */
     private String spec;
-    
-    public DeerConfiguration() 
+
+    public DeerConfiguration()
     {
         this._version = VERSION;
         this.input = Arrays.asList((String) null);
@@ -83,13 +94,26 @@ public class DeerConfiguration extends EnrichConfiguration<Deer>
     {
         return _profile;
     }
-    
+
     @JsonProperty("profile")
     public void setProfile(String profile)
     {
         this._profile = profile;
     }
-    
+
+    @JsonProperty("level")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public EnumLevel getLevel()
+    {
+        return _level;
+    }
+
+    @JsonProperty("level")
+    public void setLevel(EnumLevel level)
+    {
+        this._level = level;
+    }
+
     @JsonProperty("inputFormat")
     @Override
     public EnumDataFormat getInputFormat()
@@ -129,13 +153,13 @@ public class DeerConfiguration extends EnrichConfiguration<Deer>
         Assert.isTrue(!StringUtils.isEmpty(inputPath), "Expected a non-empty input path");
         this.input.set(0, inputPath);
     }
-    
+
     @JsonProperty("input")
     public String getInputAsString()
     {
         return this.input.get(0);
     }
-    
+
     @JsonIgnore
     public String getInputPath()
     {
@@ -190,19 +214,19 @@ public class DeerConfiguration extends EnrichConfiguration<Deer>
     {
         return new OutputNameMapper();
     }
-    
+
     @JsonProperty("spec")
     public String getSpec()
     {
         return spec;
     }
-    
+
     @JsonProperty("spec")
     public void setSpec(String spec)
     {
         this.spec = spec;
     }
-    
+
     @JsonIgnore
     @Override
     public String getVersion()

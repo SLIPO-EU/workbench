@@ -1,8 +1,8 @@
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
 
-import OpenLayersMap from 'ol/map';
-import View from 'ol/view';
+import OpenLayersMap from 'ol/Map';
+import View from 'ol/View';
 
 /**
  * A wrapper component for {@link OpenLayers.Map}.

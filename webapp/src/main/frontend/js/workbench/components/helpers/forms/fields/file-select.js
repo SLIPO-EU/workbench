@@ -427,8 +427,8 @@ export class FileSelect extends React.Component {
         <input type="text" className="form-control" readOnly value={this.selectedPath || this.props.placeHolder || ''} />
         {!this.props.readOnly &&
           <span className="input-group-btn">
-            {this.selectedPath && <button className="btn btn-danger" type="button" onClick={(e) => this.props.onChange(null)}><i className="fa fa-trash" /></button>}
-            <button className="btn btn-default" type="button" onClick={(e) => this.setMode(EnumFileSelectMode.BROWSER)}><i className="fa fa-pencil" /></button>
+            {this.selectedPath && <button className="btn btn-danger" type="button" onClick={() => this.props.onChange(null)}><i className="fa fa-trash" /></button>}
+            <button className="btn btn-default" type="button" onClick={() => this.setMode(EnumFileSelectMode.BROWSER)}><i className="fa fa-pencil" /></button>
           </span>
         }
       </div>
@@ -458,7 +458,7 @@ export class FileSelect extends React.Component {
                     <Button
                       disabled={this.state.mode !== EnumFileSelectMode.BROWSER}
                       color="link"
-                      onClick={(e) => {
+                      onClick={() => {
                         if (item && item.folder) {
                           this.setState({ folder: item.folder });
                         }
@@ -475,16 +475,16 @@ export class FileSelect extends React.Component {
         </div>
         <div style={{ fontSize: '1.5em', paddingTop: '4px' }}>
           {!this.props.readOnly && this.state.collapsed && this.state.mode === EnumFileSelectMode.BROWSER &&
-            <Button color="primary" className="ml-1 mb-1" onClick={(e) => this.setMode(EnumFileSelectMode.FIELD)}><i className="fa fa-check" /></Button>
+            <Button color="primary" className="ml-1 mb-1" onClick={() => this.setMode(EnumFileSelectMode.FIELD)}><i className="fa fa-check" /></Button>
           }
           {!this.props.readOnly && this.props.allowUpload && this.state.mode === EnumFileSelectMode.BROWSER &&
-            <Button color="default" className="ml-1 mb-1" onClick={(e) => this.setMode(EnumFileSelectMode.UPLOAD)}><i className="fa fa-cloud-upload" /></Button>
+            <Button color="default" className="ml-1 mb-1" onClick={() => this.setMode(EnumFileSelectMode.UPLOAD)}><i className="fa fa-cloud-upload" /></Button>
           }
           {!this.props.readOnly && this.props.allowNewFolder && this.state.mode === EnumFileSelectMode.BROWSER &&
-            <Button color="default" className="ml-1 mb-1" onClick={(e) => this.setMode(EnumFileSelectMode.NEW_FOLDER)}><i className="fa fa-folder-o" /></Button>
+            <Button color="default" className="ml-1 mb-1" onClick={() => this.setMode(EnumFileSelectMode.NEW_FOLDER)}><i className="fa fa-folder-o" /></Button>
           }
           {!this.props.readOnly && this.state.mode === EnumFileSelectMode.UPLOAD && !this.state.isUploading &&
-            <Button color="danger" className="ml-1 mb-1" onClick={(e) => this.cancelUpload()}><i className="fa fa-times" /></Button>
+            <Button color="danger" className="ml-1 mb-1" onClick={() => this.cancelUpload()}><i className="fa fa-times" /></Button>
           }
         </div>
       </div>
@@ -515,10 +515,10 @@ export class FileSelect extends React.Component {
           autoFocus={true}
         />
         <div className="ml-2" style={{ float: 'left' }}>
-          <Button color="success" onClick={(e) => this.createNewFolder()} disabled={!this.state.newFolderName}><i className="fa fa-check" /></Button>
+          <Button color="success" onClick={() => this.createNewFolder()} disabled={!this.state.newFolderName}><i className="fa fa-check" /></Button>
         </div>
         <div className="ml-2" style={{ float: 'left' }}>
-          <Button color="danger" onClick={(e) => this.discardNewFolder()}><i className="fa fa-times" /></Button>
+          <Button color="danger" onClick={() => this.discardNewFolder()}><i className="fa fa-times" /></Button>
         </div>
       </div>
     );

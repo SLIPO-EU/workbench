@@ -88,6 +88,7 @@ export const EnumTool = {
   DEER: 'DEER',
   CATALOG: 'REGISTER',
   ReverseTripleGeo: 'REVERSE_TRIPLEGEO',
+  IMPORTER: 'IMPORTER',
 };
 
 /**
@@ -226,6 +227,7 @@ export const EnumDeerOutputPart = {
 
 // Supported data integration tasks
 export const EnumTaskType = {
+  API: 'API',
   REGISTRATION: 'REGISTRATION',
   DATA_INTEGRATION: 'DATA_INTEGRATION',
   EXPORT: 'EXPORT',

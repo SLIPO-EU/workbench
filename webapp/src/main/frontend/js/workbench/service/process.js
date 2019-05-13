@@ -180,6 +180,8 @@ export function readProcessResponse(result) {
     });
 
   const steps = definition.steps
+    // Ignore IMPORTER steps (not supported by the designer)
+    .filter(s => s.tool !== EnumTool.IMPORTER)
     .map((s, index) => {
       return {
         key: s.key,
@@ -315,18 +317,22 @@ export function fetchExecutionKpiData(process, version, execution, file, token) 
   return actions.get(`/action/process/${process}/${version}/execution/${execution}/kpi/${file}`, token)
     .then(data => {
       // Flatten data
-      data = flatten(data);
+      const flattenedData = flatten(data);
       // Remove empty objects
-      return Object.keys(data).reduce((result, key) => {
-        if (!_.isObject(data[key])) {
-          result.values.push({
+      const result = Object.keys(flattenedData).reduce((current, key) => {
+        if (!_.isObject(flattenedData[key])) {
+          current.values.push({
             key,
-            value: data[key],
+            value: flattenedData[key],
             description: null,
           });
         }
-        return result;
-      }, { values: [] });
+        return current;
+      }, { values: [], original: data });
+
+      result.values.sort((a1, a2) => a1.key > a2.key ? 1 : -1);
+
+      return result;
     });
 }
 
@@ -523,4 +529,14 @@ export function exportMap(id, version, execution, token) {
 
 export function fetchApiCalls(query, token) {
   return actions.post('/action/process/api/query', token, query);
+}
+
+export function fetchApiExecution(processId, token) {
+  return actions.get(`/action/process/api/execution/${processId}`, token)
+    .then((result) => {
+      return {
+        process: readProcessResponse(result.process),
+        execution: result.execution,
+      };
+    });
 }

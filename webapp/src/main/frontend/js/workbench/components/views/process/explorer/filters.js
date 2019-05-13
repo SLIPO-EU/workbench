@@ -55,7 +55,9 @@ export default class Filters extends React.Component {
     const _t = this.context.intl.formatMessage;
     const supportedTasks = [
       { value: null, label: 'Select...' },
-      ...Object.keys(EnumTaskType).map(key => ({ value: key, label: _t({ id: `enum.taskType.${key}` }) }))
+      ...Object.keys(EnumTaskType)
+        .filter(key => key !== EnumTaskType.API)
+        .map(key => ({ value: key, label: _t({ id: `enum.taskType.${key}` }) }))
     ];
 
     return (

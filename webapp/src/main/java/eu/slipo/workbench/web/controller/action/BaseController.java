@@ -19,7 +19,7 @@ public abstract class BaseController extends eu.slipo.workbench.web.controller.B
         }
     }
 
-    private ApplicationException accessDenied() {
+    protected ApplicationException accessDenied() {
         return ApplicationException
             .fromPattern(BasicErrorCode.AUTHORIZATION_FAILED)
             .withFormattedMessage(messageSource, currentUserLocale());

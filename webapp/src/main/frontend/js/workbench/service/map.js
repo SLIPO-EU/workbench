@@ -1,4 +1,4 @@
-import GeoJSON from 'ol/format/geojson';
+import GeoJSON from 'ol/format/GeoJSON';
 
 import actions from './api/fetch-actions';
 

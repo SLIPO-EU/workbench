@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as PropTypes from 'prop-types';
-import { ResponsiveBar } from 'nivo';
+import { ResponsiveBar } from '@nivo/bar';
 
 /**
  * A wrapper component for {@link ResponsiveBar}.
@@ -8,7 +8,7 @@ import { ResponsiveBar } from 'nivo';
  * @class BarChart
  * @extends {React.Component}
  */
-export class BarChart extends React.Component {
+class BarChart extends React.Component {
 
   constructor(props) {
     super(props);
@@ -40,6 +40,7 @@ export class BarChart extends React.Component {
           keys={[
             "count",
           ]}
+          minValue={0}
           indexBy="field"
           margin={{
             "top": 50,
@@ -50,15 +51,14 @@ export class BarChart extends React.Component {
           isInteractive={false}
           padding={0.3}
           layout="horizontal"
-          colors="d320c"
+          borderColor="#00ff80"
           colorBy="index"
-          borderColor="inherit:brighter(1.6)"
           axisBottom={{
             "orient": "bottom",
             "tickSize": 5,
             "tickPadding": 5,
             "tickRotation": 0,
-            "legendPosition": "center",
+            "legendPosition": "middle",
             "legendOffset": 36
           }}
           axisLeft={{
@@ -66,7 +66,7 @@ export class BarChart extends React.Component {
             "tickSize": 5,
             "tickPadding": 5,
             "tickRotation": 0,
-            "legendPosition": "center",
+            "legendPosition": "middle",
             "legendOffset": -40
           }}
           enableGridX={true}
@@ -77,20 +77,10 @@ export class BarChart extends React.Component {
           animate={true}
           motionStiffness={90}
           motionDamping={15}
-          legends={[
-            {
-              "dataFrom": "keys",
-              "anchor": "bottom-right",
-              "direction": "column",
-              "translateX": 120,
-              "itemWidth": 100,
-              "itemHeight": 20,
-              "itemsSpacing": 2,
-              "symbolSize": 20
-            }
-          ]}
         />
       </div >
     );
   }
 }
+
+export default BarChart;

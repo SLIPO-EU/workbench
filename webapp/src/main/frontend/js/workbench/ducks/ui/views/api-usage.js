@@ -1,5 +1,10 @@
 import * as processService from '../../../service/process';
 
+import {
+  dom,
+  file,
+} from '../../../service/api';
+
 // Actions
 import { LOGOUT } from '../../user';
 
@@ -14,6 +19,9 @@ const RECEIVE_API_USAGE_DATA = 'ui/process/api/usage/explorer/RECEIVE_API_USAGE_
 const SET_SELECTED = 'ui/process/api/usage/explorer/SET_SELECTED';
 const RESET_SELECTED = 'ui/process/api/usage/explorer/RESET_SELECTED';
 const SET_EXPANDED = 'ui/process/api/usage/explorer/SET_EXPANDED';
+
+const REQUEST_EXECUTION_DATA = 'ui/process/api/usage/explorer/REQUEST_EXECUTION_DATA';
+const RECEIVE_EXECUTION_DATA = 'ui/process/api/usage/explorer/RECEIVE_EXECUTION_DATA';
 
 // Initial state
 const initialState = {
@@ -34,6 +42,7 @@ const initialState = {
   items: [],
   selected: null,
   lastUpdate: null,
+  execution: null,
 };
 
 // Reducer
@@ -125,6 +134,18 @@ export default (state = initialState, action) => {
       };
     }
 
+    case REQUEST_EXECUTION_DATA:
+      return {
+        ...state,
+        execution: null,
+      };
+
+    case RECEIVE_EXECUTION_DATA:
+      return {
+        ...state,
+        execution: action.data,
+      };
+
     default:
       return state;
   }
@@ -186,4 +207,71 @@ export const fetchExecutions = (query) => (dispatch, getState) => {
     .catch((err) => {
       console.error('Failed loading API usage data:', err);
     });
+};
+
+const requestExecutionData = () => ({
+  type: REQUEST_EXECUTION_DATA,
+});
+
+const receiveExecutionData = (data) => ({
+  type: RECEIVE_EXECUTION_DATA,
+  data,
+});
+
+export const fetchExecution = (processId) => (dispatch, getState) => {
+  const { meta: { csrfToken: token } } = getState();
+  dispatch(requestExecutionData());
+
+  return processService.fetchApiExecution(processId, token)
+    .then((data) => {
+      dispatch(receiveExecutionData(data));
+    });
+};
+
+export const fetchExecutionKpiData = (processId, processVersion, executionId, fileId) => (dispatch, getState) => {
+  const { meta: { csrfToken: token } } = getState();
+  return processService.fetchExecutionKpiData(processId, processVersion, executionId, fileId, token);
+};
+
+export const fetchExecutionLogData = (processId, processVersion, executionId, fileId) => (dispatch, getState) => {
+  const { meta: { csrfToken: token } } = getState();
+  return processService.fetchExecutionLogData(processId, processVersion, executionId, fileId, token);
+};
+
+export const checkFile = (processId, processVersion, executionId, fileId) => {
+  return (dispatch, getState) => {
+    const { meta: { csrfToken: token } } = getState();
+    const url = `/action/process/${processId}/${processVersion}/execution/${executionId}/file/${fileId}/exists`;
+
+    return file.exists(url, token);
+  };
+};
+
+export const downloadFile = (processId, processVersion, executionId, fileId, fileName) => {
+  return () => {
+    const url = `/action/process/${processId}/${processVersion}/execution/${executionId}/file/${fileId}/download`;
+
+    dom.downloadUrl(url, fileName);
+
+    return Promise.resolve();
+  };
+};
+
+export const checkLog = (processId, processVersion, executionId, fileId) => {
+  return (dispatch, getState) => {
+    const { meta: { csrfToken: token } } = getState();
+    const url = `/action/process/${processId}/${processVersion}/execution/${executionId}/log/${fileId}/exists`;
+
+    return file.exists(url, token);
+  };
+};
+
+export const downloadLog = (processId, processVersion, executionId, fileId, fileName) => {
+  return () => {
+    const url = `/action/process/${processId}/${processVersion}/execution/${executionId}/log/${fileId}/download`;
+
+    dom.downloadUrl(url, fileName);
+
+    return Promise.resolve();
+  };
 };

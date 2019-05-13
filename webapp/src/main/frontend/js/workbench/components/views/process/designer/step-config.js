@@ -12,9 +12,12 @@ import {
 } from '../../../../model/process-designer';
 
 import {
-  configurationLevels,
-  configurationLevelOptions,
-} from '../../../../model/process-designer/configuration/triplegeo';
+  TripleGeoConfigurationLevels,
+  TripleGeoConfigurationLevelOptions,
+  LimesConfigurationLevelOptions,
+  FagiConfigurationLevelOptions,
+  DeerConfigurationLevelOptions,
+} from '../../../../model/process-designer/configuration';
 
 import Form from '../../../helpers/forms/form';
 
@@ -151,54 +154,60 @@ class StepConfig extends React.Component {
               createFolder: this.props.createFolder,
               deletePath: this.props.deletePath,
               // Enabled configuration levels
-              enabledLevels: enableAutoMappings ? configurationLevelOptions.map(l => l.value) : [configurationLevels.ADVANCED],
+              enabledLevels: enableAutoMappings ? TripleGeoConfigurationLevelOptions.map(l => l.value) : [TripleGeoConfigurationLevels.ADVANCED],
               filesystem: this.props.filesystem,
-              // Optional input file required for ML mappings generation
-              inputFile: this.fileDataSource,
-              uploadFile: this.props.uploadFile,
               // Mappings methods
               getTripleGeoMappings: this.props.getTripleGeoMappings,
               getTripleGeoMappingFileAsText: this.props.getTripleGeoMappingFileAsText,
+              // Optional input file required for ML mappings generation
+              inputFile: this.fileDataSource,
+              uploadFile: this.props.uploadFile,
             })
           }
           {this.props.step.tool === EnumTool.LIMES &&
             this.createForm(LimesConfiguration, validateLimes, {
-              appConfiguration: this.props.appConfiguration,
-              filesystem: this.props.filesystem,
-              allowUpload: true,
-              allowNewFolder: true,
               allowDelete: true,
+              allowNewFolder: true,
+              allowUpload: true,
+              appConfiguration: this.props.appConfiguration,
               createFolder: this.props.createFolder,
-              uploadFile: this.props.uploadFile,
               deletePath: this.props.deletePath,
-              step: this.props.step,
+              // Enabled configuration levels
+              enabledLevels: LimesConfigurationLevelOptions.map(l => l.value),
+              filesystem: this.props.filesystem,
               setConfiguration: this.props.setConfiguration,
+              step: this.props.step,
+              uploadFile: this.props.uploadFile,
             })
           }
           {this.props.step.tool === EnumTool.FAGI &&
             this.createForm(FagiConfiguration, validateFagi, {
-              appConfiguration: this.props.appConfiguration,
-              filesystem: this.props.filesystem,
-              allowUpload: true,
-              allowNewFolder: true,
               allowDelete: true,
+              allowNewFolder: true,
+              allowUpload: true,
+              appConfiguration: this.props.appConfiguration,
               createFolder: this.props.createFolder,
-              uploadFile: this.props.uploadFile,
               deletePath: this.props.deletePath,
-              step: this.props.step,
+              // Enabled configuration levels
+              enabledLevels: FagiConfigurationLevelOptions.map(l => l.value),
+              filesystem: this.props.filesystem,
               setConfiguration: this.props.setConfiguration,
+              step: this.props.step,
+              uploadFile: this.props.uploadFile,
             })
           }
           {this.props.step.tool === EnumTool.DEER &&
             this.createForm(DeerConfiguration, validateDeer, {
-              appConfiguration: this.props.appConfiguration,
-              filesystem: this.props.filesystem,
-              allowUpload: true,
-              allowNewFolder: true,
               allowDelete: true,
+              allowNewFolder: true,
+              allowUpload: true,
+              appConfiguration: this.props.appConfiguration,
               createFolder: this.props.createFolder,
-              uploadFile: this.props.uploadFile,
               deletePath: this.props.deletePath,
+              // Enabled configuration levels
+              enabledLevels: DeerConfigurationLevelOptions.map(l => l.value),
+              filesystem: this.props.filesystem,
+              uploadFile: this.props.uploadFile,
             })
           }
           {this.props.step.tool === EnumTool.CATALOG &&

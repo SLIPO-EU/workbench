@@ -7,6 +7,7 @@ import GeoJsonLayer from './layers/geojson-layer';
 import Interactions from './interactions/interactions';
 import Select from './interactions/select';
 import Modify from './interactions/modify';
+import Draw from './interactions/draw';
 
 export default {
   Map,
@@ -21,5 +22,6 @@ export default {
   Interaction: {
     Select,
     Modify,
+    Draw,
   }
 };

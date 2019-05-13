@@ -12,13 +12,10 @@ import classnames from 'classnames';
 
 import {
   EnumDataSource,
-  EnumHarvester,
   EnumTool,
   EnumToolboxItemGroup,
   DataSourceIcons,
   DataSourceTitles,
-  HarvesterIcons,
-  HarvesterTitles,
   ToolDefaultOperation,
   ToolIcons,
   ToolTitles,
@@ -44,17 +41,11 @@ function getToolboxItems(type) {
     }
   }
 
-  // if ((type === EnumToolboxItemGroup.All) || (type === EnumToolboxItemGroup.Harvester)) {
-  //   for (let key in EnumHarvester) {
-  //     items.push(<DataSource key={++index} name={HarvesterTitles[key]} source={EnumDataSource.HARVESTER} iconClass={HarvesterIcons[key]} harvester={key} />);
-  //   }
-  // }
-
   if ((type === EnumToolboxItemGroup.All) || (type === EnumToolboxItemGroup.Tools)) {
     for (let key in EnumTool) {
       const value = EnumTool[key];
 
-      if (value === EnumTool.CATALOG) {
+      if (value === EnumTool.CATALOG || value === EnumTool.IMPORTER) {
         continue;
       }
       items.push(<Operation key={++index} name={ToolTitles[value]} tool={value} operation={ToolDefaultOperation[value]} iconClass={ToolIcons[value]} />);
