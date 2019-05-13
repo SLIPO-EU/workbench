@@ -10,6 +10,7 @@ COPY dependency/*.jar lib/
 COPY conf/*.xml conf/db.properties conf/ 
 
 RUN mv webapps/ROOT webapps/welcome
+RUN mv webapps/docs webapps/tomcat-docs
 COPY workbench-rpc-server.war webapps/ROOT.war
 
 RUN cat conf/db.properties >> conf/catalina.properties
