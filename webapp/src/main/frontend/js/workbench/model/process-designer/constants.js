@@ -150,6 +150,16 @@ export const ToolConfigurationSettings = {
     allowClone: false,
     allowExport: true,
   },
+  [EnumTool.IMPORTER]: {
+    source: 0,
+    poi: 0,
+    linked: 0,
+    any: 0,
+    editable: false,
+    outputParts: null,
+    allowClone: false,
+    allowExport: false,
+  },
 };
 
 /**

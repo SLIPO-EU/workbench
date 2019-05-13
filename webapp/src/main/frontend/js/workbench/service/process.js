@@ -180,6 +180,8 @@ export function readProcessResponse(result) {
     });
 
   const steps = definition.steps
+    // Ignore IMPORTER steps (not supported by the designer)
+    .filter(s => s.tool !== EnumTool.IMPORTER)
     .map((s, index) => {
       return {
         key: s.key,
@@ -527,4 +529,14 @@ export function exportMap(id, version, execution, token) {
 
 export function fetchApiCalls(query, token) {
   return actions.post('/action/process/api/query', token, query);
+}
+
+export function fetchApiExecution(processId, token) {
+  return actions.get(`/action/process/api/execution/${processId}`, token)
+    .then((result) => {
+      return {
+        process: readProcessResponse(result.process),
+        execution: result.execution,
+      };
+    });
 }

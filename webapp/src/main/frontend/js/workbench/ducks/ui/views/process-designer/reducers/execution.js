@@ -6,9 +6,9 @@ export function executionReducer(state, action) {
       return {
         ...state.execution,
         data: null,
-        selectedFile: null,
         selectedKpi: null,
         selectedLog: null,
+        selectedRow: null,
       };
 
     case Types.RECEIVE_EXECUTION_DATA:
@@ -21,9 +21,9 @@ export function executionReducer(state, action) {
     case Types.SET_SELECTED_FILE:
       return {
         ...state.execution,
-        selectedFile: action.id,
         selectedKpi: null,
         selectedLog: null,
+        selectedRow: action.id,
       };
 
     case Types.REQUEST_EXECUTION_KPI_DATA:
@@ -69,9 +69,9 @@ export function executionReducer(state, action) {
     case Types.RESET_SELECTED_FILE:
       return {
         ...state.execution,
-        selectedFile: null,
         selectedKpi: null,
         selectedLog: null,
+        selectedRow: null,
       };
 
     default:

@@ -124,14 +124,18 @@ export default class ExecutionStepDetails extends React.Component {
   }
 
   static propTypes = {
-    hideStepExecutionDetails: PropTypes.func.isRequired,
+    checkFile: PropTypes.func.isRequired,
+    downloadFile: PropTypes.func.isRequired,
+    execution: PropTypes.object.isRequired,
     files: PropTypes.arrayOf(PropTypes.object).isRequired,
+    hideStepExecutionDetails: PropTypes.func,
+    process: PropTypes.object.isRequired,
     resetSelectedFile: PropTypes.func.isRequired,
-    selectedFile: PropTypes.number,
-    selectFile: PropTypes.func.isRequired,
-    selectKpi: PropTypes.func.isRequired,
+    selectedRow: PropTypes.number,
     selectedKpi: PropTypes.object,
+    selectRow: PropTypes.func.isRequired,
     step: PropTypes.object.isRequired,
+    viewKpi: PropTypes.func.isRequired,
   };
 
   /**
@@ -143,7 +147,7 @@ export default class ExecutionStepDetails extends React.Component {
    * @memberof Resources
    */
   handleRowAction(rowInfo, e, handleOriginal) {
-    this.props.selectFile(rowInfo.row.id);
+    this.props.selectRow(rowInfo.row.id);
 
     switch (e.target.getAttribute('data-action')) {
       case 'file-download':
@@ -151,7 +155,7 @@ export default class ExecutionStepDetails extends React.Component {
         break;
 
       case 'kpi-view':
-        this.props.selectKpi(rowInfo.row.id);
+        this.props.viewKpi(rowInfo.row.id);
         break;
 
       default:
@@ -181,7 +185,7 @@ export default class ExecutionStepDetails extends React.Component {
   }
 
   isSelected(rowInfo) {
-    return (rowInfo && this.props.selectedFile === rowInfo.row.id);
+    return (rowInfo && this.props.selectedRow === rowInfo.row.id);
   }
 
   resolveKpiComponent(tool) {
@@ -202,7 +206,7 @@ export default class ExecutionStepDetails extends React.Component {
     const iconClassName = (ToolIcons[this.props.step.component] || 'fa fa-folder-open') + ' pr-2';
     const data = this.props.selectedKpi && this.props.selectedKpi.data;
     const original = this.props.selectedKpi && this.props.selectedKpi.original;
-    const file = this.props.selectedFile && this.props.files.find((f) => f.id === this.props.selectedFile);
+    const file = this.props.selectedRow && this.props.files.find((f) => f.id === this.props.selectedRow);
     const ComponentKpi = this.resolveKpiComponent(this.props.step.tool);
 
     return (
@@ -214,11 +218,13 @@ export default class ExecutionStepDetails extends React.Component {
                 <i className={iconClassName}></i>
                 <span>{this.props.step.name + ' - Files'}</span>
               </Col>
-              <Col>
-                <div className="float-right">
-                  <Button color="primary" onClick={this.hideStepExecutionDetails}><i className="fa fa-undo" /></Button>
-                </div>
-              </Col>
+              {this.props.hideStepExecutionDetails &&
+                <Col>
+                  <div className="float-right">
+                    <Button color="primary" onClick={this.hideStepExecutionDetails}><i className="fa fa-undo" /></Button>
+                  </div>
+                </Col>
+              }
             </Row>
             <Row>
               <Col>

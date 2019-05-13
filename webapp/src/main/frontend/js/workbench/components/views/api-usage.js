@@ -17,6 +17,8 @@ import {
 } from 'react-intl';
 
 import {
+  buildPath,
+  DynamicRoutes,
   UPDATE_INTERVAL_SECONDS,
 } from '../../model';
 
@@ -54,6 +56,7 @@ class ApiUsage extends React.Component {
     super(props);
 
     this.stopExecution = this.stopExecution.bind(this);
+    this.viewExecution = this.viewExecution.bind(this);
 
     this.refreshIntervalId = null;
   }
@@ -95,6 +98,12 @@ class ApiUsage extends React.Component {
       });
   }
 
+  viewExecution(processId) {
+    const path = buildPath(DynamicRoutes.ApiExecutionViewer, [processId]);
+
+    this.props.history.push(path);
+  }
+
   render() {
     return (
       <div className="animated fadeIn">
@@ -134,6 +143,7 @@ class ApiUsage extends React.Component {
                       setPager={this.props.setPager}
                       setSelected={this.props.setSelected}
                       stopExecution={this.stopExecution}
+                      viewExecution={this.viewExecution}
                     />
                   </Col>
                 </Row>

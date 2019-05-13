@@ -141,8 +141,8 @@ class ProcessDesigner extends React.Component {
     this.onFetchSuccess = this.onFetchSuccess.bind(this);
     this.reset = this.reset.bind(this);
     this.select = this.select.bind(this);
-    this.selectKpi = this.selectKpi.bind(this);
-    this.selectLog = this.selectLog.bind(this);
+    this.viewKpi = this.viewKpi.bind(this);
+    this.viewLog = this.viewLog.bind(this);
     this.toggleCancelDialog = this.toggleCancelDialog.bind(this);
     this.toggleSaveButtonDropdown = this.toggleSaveButtonDropdown.bind(this);
     this.viewMap = this.viewMap.bind(this);
@@ -316,7 +316,7 @@ class ProcessDesigner extends React.Component {
       });
   }
 
-  selectKpi(file) {
+  viewKpi(file) {
     const { id, version, execution } = this.props.match.params;
 
     this.props.fetchExecutionKpiData(Number.parseInt(id), Number.parseInt(version), Number.parseInt(execution), file)
@@ -325,7 +325,7 @@ class ProcessDesigner extends React.Component {
       });
   }
 
-  selectLog(file) {
+  viewLog(file) {
     const { id, version, execution } = this.props.match.params;
 
     this.props.fetchExecutionLogData(Number.parseInt(id), Number.parseInt(version), Number.parseInt(execution), file)
@@ -491,11 +491,11 @@ class ProcessDesigner extends React.Component {
         process={this.props.process}
         hideStepExecutionDetails={this.props.hideStepExecutionDetails}
         resetSelectedFile={this.props.resetSelectedFile}
-        selectedFile={this.props.selectedExecutionFile}
+        selectedRow={this.props.selectedRow}
         selectedKpi={this.props.selectedKpi}
-        selectFile={this.props.selectFile}
-        selectKpi={this.selectKpi}
+        selectRow={this.props.selectFile}
         step={step}
+        viewKpi={this.viewKpi}
       />
     );
   }
@@ -519,11 +519,11 @@ class ProcessDesigner extends React.Component {
         process={this.props.process}
         hideDockerLogDetails={this.props.hideDockerLogDetails}
         resetSelectedFile={this.props.resetSelectedFile}
-        selectedFile={this.props.selectedExecutionFile}
+        selectedRow={this.props.selectedRow}
         selectedLog={this.props.selectedLog}
-        selectFile={this.props.selectFile}
-        selectLog={this.selectLog}
+        selectRow={this.props.selectFile}
         step={step}
+        viewLog={this.viewLog}
       />
     );
   }
@@ -594,7 +594,7 @@ const mapStateToProps = (state) => ({
   view: state.ui.views.process.designer.view,
   // Execution viewer
   execution: state.ui.views.process.designer.execution.data,
-  selectedExecutionFile: state.ui.views.process.designer.execution.selectedFile,
+  selectedRow: state.ui.views.process.designer.execution.selectedRow,
   selectedKpi: state.ui.views.process.designer.execution.selectedKpi,
   selectedLog: state.ui.views.process.designer.execution.selectedLog,
   // File system

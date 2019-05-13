@@ -136,6 +136,10 @@ class StepGroup extends React.Component {
    * @memberof Designer
    */
   renderStep(step) {
+    if (step.tool === EnumTool.IMPORTER) {
+      return null;
+    }
+
     const resources = step.input.map((i) => this.props.resources.find((r) => i.inputKey === r.key)).filter((r) => !!r) || [];
     const stepExecution = this.props.stepExecutions.find((e) => e.key === step.key) || null;
 

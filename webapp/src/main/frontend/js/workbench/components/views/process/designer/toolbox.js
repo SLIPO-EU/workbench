@@ -45,7 +45,7 @@ function getToolboxItems(type) {
     for (let key in EnumTool) {
       const value = EnumTool[key];
 
-      if (value === EnumTool.CATALOG) {
+      if (value === EnumTool.CATALOG || value === EnumTool.IMPORTER) {
         continue;
       }
       items.push(<Operation key={++index} name={ToolTitles[value]} tool={value} operation={ToolDefaultOperation[value]} iconClass={ToolIcons[value]} />);

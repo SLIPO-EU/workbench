@@ -91,7 +91,10 @@ const ProcessDesignerEditTemplate = '/workflow/template/designer/:id';
 const ProcessExecutionMapViewer = '/workflow/designer/:id/:version/execution/:execution/map';
 const ProcessExecutionViewer = '/workflow/designer/:id/:version/execution/:execution';
 
+const ApiExecutionViewer = '/api/operation/:processId';
+
 export const DynamicRoutes = {
+  ApiExecutionViewer,
   ResourceMapViewer,
   ResourceViewer,
   ProcessDesignerCreate,
@@ -122,9 +125,15 @@ const processRouteGuard = (roles, views) => {
     return false;
   }
   if (roles.indexOf(Roles.ADMIN) !== -1) {
+    // Full access for admins
     return true;
   }
+  if ((roles.indexOf(Roles.ADMIN) === -1) && (process.taskType === EnumTaskType.API)) {
+    // Only admins can view API execution data
+    return false;
+  }
   if ((roles.indexOf(Roles.AUTHOR) !== -1) && (process.taskType !== EnumTaskType.REGISTRATION)) {
+    // Authors can not edit registration tasks
     return true;
   }
   return false;
@@ -246,6 +255,13 @@ const routes = {
     links: [UserManager, EventViewer],
   },
   // Dynamic
+  [ApiExecutionViewer]: {
+    description: 'View SLIPO API execution details',
+    title: 'links.api.execution.viewer',
+    defaultTitle: 'API Operation',
+    roles: processRouteGuard,
+    links: defaultLinks,
+  },
   [ResourceMapViewer]: {
     description: 'View a resource map data',
     title: 'links.resource.map-viewer',

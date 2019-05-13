@@ -21,7 +21,7 @@ export const initializeGroups = () => ([{
 export const initializeExecution = () => ({
   data: null,
   lastUpdate: null,
-  selectedFile: null,
   selectedKpi: null,
   selectedLog: null,
+  selectedRow: null,
 });

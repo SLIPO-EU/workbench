@@ -107,7 +107,7 @@ class DeerConfiguration extends React.Component {
 
     // Update configuration level
     const defaults = this.getLevelDefaults(level);
-    console.log(defaults);
+
     const newValue = {
       ...value,
       // Reset options that are not supported by the selected mode

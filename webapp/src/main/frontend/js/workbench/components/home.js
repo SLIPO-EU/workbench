@@ -28,6 +28,7 @@ import SecureRoute from './helpers/secure-route';
 
 import {
   ApiUsage,
+  ApiExecutionViewer,
   ApplicationKeyViewer,
   Dashboard,
   EventViewer,
@@ -169,6 +170,7 @@ class Home extends React.Component {
                 <Route path={DynamicRoutes.ResourceMapViewer} component={ResourceMapViewer} />
                 <Route path={DynamicRoutes.ResourceViewer} component={ResourceViewer} />
                 <Route path={DynamicRoutes.ProcessDesignerView} component={ProcessDesigner} exact />
+                <SecureRoute path={DynamicRoutes.ApiExecutionViewer} component={ApiExecutionViewer} exact roles={[Roles.ADMIN, Roles.AUTHOR]} />
                 <SecureRoute path={DynamicRoutes.ProcessDesignerEditTemplate} component={ProcessDesigner} exact roles={[Roles.ADMIN, Roles.AUTHOR]} />
                 <SecureRoute path={DynamicRoutes.ProcessDesignerEdit} component={ProcessDesigner} exact roles={[Roles.ADMIN, Roles.AUTHOR]} />
                 <SecureRoute path={DynamicRoutes.ProcessDesignerCreate} component={ProcessDesigner} exact roles={[Roles.ADMIN, Roles.AUTHOR]} />
