@@ -41,6 +41,14 @@
     "tools": {
       "schema-explorer": "Οντολογίες",
       "schema-designer": "Σχεδίαση Οντολογίας"
+    },
+    "api": {
+      "usage": {
+        "default": "Χρήση API"
+      },
+      "execution": {
+        "viewer": "Εκτέλεση κλήσης API"
+      }
     }
   },
   "login": {
