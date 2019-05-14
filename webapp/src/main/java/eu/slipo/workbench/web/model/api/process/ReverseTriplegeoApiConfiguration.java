@@ -22,7 +22,7 @@ public class ReverseTriplegeoApiConfiguration {
     /**
      * A field delimiter for records (meaningful only for CSV output).
      */
-    private String delimiter = ";";
+    private String delimiter = "|";
 
     /**
      * A quote character for records (meaningful only for CSV output)
@@ -131,7 +131,7 @@ public class ReverseTriplegeoApiConfiguration {
         if (!StringUtils.isBlank(defaultLang)) {
             configuration.setDefaultLang(defaultLang);
         }
-        if (!StringUtils.isBlank(delimiter)) {
+        if (!StringUtils.isBlank(delimiter) && outputFormat == EnumDataFormat.CSV) {
             configuration.setDelimiter(delimiter);
         }
         if (!StringUtils.isBlank(encoding)) {
@@ -143,7 +143,9 @@ public class ReverseTriplegeoApiConfiguration {
             configuration.setOutputFormat(EnumDataFormat.CSV);
         }
         configuration.setProfile(profile);
-        configuration.setQuote(quote);
+        if (outputFormat == EnumDataFormat.CSV) {
+            configuration.setQuote(quote);
+        }
         configuration.setSourceCRS(sourceCRS);
         if (!StringUtils.isBlank(sparqlFile)) {
             configuration.setSparqlFile(sparqlFile);
