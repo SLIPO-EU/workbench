@@ -37,7 +37,7 @@ class StackedBarChart extends React.Component {
             top: 50,
             right: 130,
             bottom: 50,
-            left: 310,
+            left: 150,
           }}
           padding={0.3}
           layout="horizontal"
@@ -53,7 +53,7 @@ class StackedBarChart extends React.Component {
           }}
           axisLeft={{
             format: (value) => {
-              return value.length > 55 ? value.substr(0, 55) + '...' : value;
+              return value.length > 30 ? value.substr(0, 30) + '...' : value;
             },
             tickSize: 5,
             tickPadding: 5,
