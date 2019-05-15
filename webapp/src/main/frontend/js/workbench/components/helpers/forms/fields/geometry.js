@@ -54,14 +54,15 @@ export class Geometry extends React.Component {
     return (
       <GeometryEditor
         config={props.config}
-        type={props.type}
-        name={props.id}
+        drawStyle={props.drawStyle}
         id={props.id}
-        state={props.state}
-        value={props.value || ''}
+        maxLength={this.props.maxLength}
+        name={props.id}
         onChange={wkt => this.props.onChange(wkt)}
         readOnly={this.isReadOnly}
-        maxLength={this.props.maxLength}
+        state={props.state}
+        type={props.type}
+        value={props.value || ''}
       />
     );
   }

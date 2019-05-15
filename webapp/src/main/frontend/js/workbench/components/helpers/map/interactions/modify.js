@@ -130,8 +130,8 @@ class ModifyInteraction extends React.Component {
       fill: {
         color: fillColor
       },
-      opacity: 50,
-      size: 40,
+      opacity: 70,
+      size: 20,
     };
 
     return createStyle(icon, fontColor, layerStyle, false);

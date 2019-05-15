@@ -4,6 +4,8 @@ import * as PropTypes from 'prop-types';
 import OpenLayersMap from 'ol/Map';
 import View from 'ol/View';
 
+import { defaults as defaultInteractions } from 'ol/interaction.js';
+
 /**
  * A wrapper component for {@link OpenLayers.Map}.
  *
@@ -22,14 +24,16 @@ class Map extends React.Component {
 
   static propTypes = {
     center: PropTypes.arrayOf(PropTypes.number),
-    zoom: PropTypes.number,
-    minZoom: PropTypes.number,
-    maxZoom: PropTypes.number,
     className: PropTypes.string,
+    doubleClickZoom: PropTypes.bool.isRequired,
+    maxZoom: PropTypes.number,
+    minZoom: PropTypes.number,
+    zoom: PropTypes.number,
   }
 
   static defaultProps = {
     center: [0, 0],
+    doubleClickZoom: true,
     zoom: 12,
     minZoom: 1,
     maxZoom: 19,
@@ -52,7 +56,14 @@ class Map extends React.Component {
   }
 
   componentDidMount() {
+    const { doubleClickZoom } = this.props;
+
+    const interactions = defaultInteractions({
+      doubleClickZoom
+    });
+
     const map = new OpenLayersMap({
+      interactions,
       layers: [],
       target: this._el,
       view: new View({

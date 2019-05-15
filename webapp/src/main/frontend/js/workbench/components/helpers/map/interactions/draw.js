@@ -40,10 +40,10 @@ class DrawInteraction extends React.Component {
     feature: PropTypes.instanceOf(Feature),
     // Map instance
     map: PropTypes.instanceOf(Map),
-    // True if Translate interaction is enabled
-    translate: PropTypes.bool,
     // Allow drawing only a single feature
     single: PropTypes.bool,
+    // True if Translate interaction is enabled
+    translate: PropTypes.bool,
   }
 
   static defaultProps = {
@@ -143,7 +143,13 @@ class DrawInteraction extends React.Component {
   }
 
   buildFeatureStyles(feature) {
-    const { icon = null, fontColor = null, strokeColor = '#424242', fillColor = '#ffffff', width = 3 } = this.props;
+    const {
+      fillColor = '#ffffff',
+      fontColor = null,
+      icon = null,
+      strokeColor = '#424242',
+      width = 3,
+    } = this.props;
 
     const layerStyle = {
       symbol: EnumSymbol.Square,
@@ -154,7 +160,7 @@ class DrawInteraction extends React.Component {
       fill: {
         color: fillColor
       },
-      opacity: 50,
+      opacity: 70,
       size: 20,
     };
 
