@@ -1,6 +1,8 @@
 import * as React from 'react';
 import PropTypes from 'prop-types';
 
+import ReactSelect from 'react-select';
+
 import {
   Col,
   Card,
@@ -13,9 +15,15 @@ import {
 } from '.';
 
 import {
-  Table,
+  SelectDefaultStyle,
   StackedBarChart,
+  Table,
 } from '../../../helpers';
+
+const EnumGroup = {
+  PERCENT: 'PERCENT',
+  ABSOLUTE: 'ABSOLUTE',
+};
 
 const EnumChartMode = {
   Configuration: 'Configuration',
@@ -59,8 +67,10 @@ class KpiFagiView extends React.Component {
     super(props);
 
     this.state = {
+      groupOptions: [],
       items: [],
       mode: EnumChartMode.Configuration,
+      selectedGroup: null,
     };
   }
 
@@ -89,6 +99,7 @@ class KpiFagiView extends React.Component {
     if (!data) {
       return;
     }
+    const groups = [];
 
     const items = Object.keys(data)
       .reduce((result, key) => {
@@ -105,11 +116,23 @@ class KpiFagiView extends React.Component {
           selected: false,
         });
 
+        if (!groups.includes(value.type)) {
+          groups.push(value.type);
+        }
+
         return result;
       }, []);
 
     this.setState({
-      items,
+      groupOptions: groups.sort().map(g => ({ label: g, value: g })),
+      items: items.sort((i1, i2) => i1.label > i2.label ? 1 : -1),
+      mode: EnumChartMode.Configuration,
+    });
+  }
+
+  onGroupSelected(selectedGroup) {
+    this.setState({
+      selectedGroup,
     });
   }
 
@@ -150,9 +173,9 @@ class KpiFagiView extends React.Component {
   }
 
   getSeries() {
-    const { items } = this.state;
+    const { items, selectedGroup } = this.state;
 
-    const selectedItems = items.filter(i => i.selected);
+    const selectedItems = items.filter(i => i.selected && i.type === selectedGroup);
 
     switch (selectedItems.length) {
       case 0:
@@ -171,8 +194,6 @@ class KpiFagiView extends React.Component {
               keys.push(item.label);
             }
             result[item.label] = +item.value;
-            //result[item.label + 'Color']= 'hsl(327, 70%, 50%)';
-            //legendA: item.legendA,
           });
 
           series.push(result);
@@ -201,13 +222,16 @@ class KpiFagiView extends React.Component {
 
   render() {
     const { data, file } = this.props;
-    const { items, mode } = this.state;
+    const { items, groupOptions, selectedGroup, mode } = this.state;
 
     if (!data) {
       return null;
     }
 
-    const selectedItems = items.filter(i => i.selected) || [];
+    const selectedGroupOption = selectedGroup ? groupOptions.find(opt => opt.value === selectedGroup) : null;
+    const visibleItems = selectedGroup ? items.filter(i => i.type === selectedGroup) : [];
+
+    const selectedItems = visibleItems.filter(i => i.selected) || [];
 
     const [keys, series] = mode === EnumChartMode.View ? this.getSeries() : [null, null];
 
@@ -250,6 +274,20 @@ class KpiFagiView extends React.Component {
               </Row>
               {mode === EnumChartMode.Configuration &&
                 <React.Fragment>
+                  <Row>
+                    <Col>
+                      <ReactSelect
+                        name="group"
+                        id="group"
+                        value={selectedGroupOption || ''}
+                        onChange={(option) => this.onGroupSelected(option ? option.value : '')}
+                        options={groupOptions}
+                        styles={SelectDefaultStyle}
+                        isClearable={true}
+                        placeholder="Select value type ..."
+                      />
+                    </Col>
+                  </Row>
                   {items.length !== 0 &&
                     <Row>
                       <Col>
@@ -259,7 +297,7 @@ class KpiFagiView extends React.Component {
                             name="Chart Items"
                             id="chart-items"
                             columns={itemColumns}
-                            data={items}
+                            data={visibleItems}
                             defaultPageSize={items.length}
                             pageSize={items.length}
                             showPageSizeOptions={false}
@@ -282,15 +320,17 @@ class KpiFagiView extends React.Component {
                   <Col>
                     <StackedBarChart
                       data={series}
-                      keys={keys}
                       indexBy={'label'}
+                      keys={keys}
+                      maxValue={selectedGroup === EnumGroup.PERCENT ? 1 : 'auto'}
                       tooltip={(datum) => {
                         const { id, value } = datum;
+                        const computedValue = Math.floor(value) === value ? value : value.toFixed(2);
 
                         return (
                           <div>
                             <div>{id}</div>
-                            <div>{Math.floor(value) === value ? value : value.toFixed(2)}</div>
+                            <div>{selectedGroup === EnumGroup.PERCENT ? `${computedValue * 100} %` : computedValue}</div>
                           </div>
                         );
                       }}
