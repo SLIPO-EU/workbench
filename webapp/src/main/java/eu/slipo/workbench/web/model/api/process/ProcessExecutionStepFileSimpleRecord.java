@@ -15,6 +15,7 @@ public class ProcessExecutionStepFileSimpleRecord {
     private String name;
     private Long size;
     private Geometry boundingBox;
+    private String outputPartKey;
 
     public ProcessExecutionStepFileSimpleRecord(ProcessExecutionStepFileRecord record) {
         this.id = record.getId();
@@ -22,6 +23,7 @@ public class ProcessExecutionStepFileSimpleRecord {
         this.name = Paths.get(record.getFilePath()).getFileName().toString();
         this.size = record.getFileSize();
         this.boundingBox = record.getBoundingBox();
+        this.outputPartKey = record.getOutputPartKey();
     }
 
     public long getId() {
@@ -38,6 +40,10 @@ public class ProcessExecutionStepFileSimpleRecord {
 
     public Long getSize() {
         return size;
+    }
+
+    public String getOutputPartKey() {
+        return outputPartKey;
     }
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)

@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import * as React from 'react';
 
 import { Input } from 'reactstrap';
@@ -212,6 +213,12 @@ class GeometryEditor extends React.Component {
     });
   }
 
+  createDrawStyle() {
+    const { drawStyle = {} } = this.props;
+
+    return _.merge({}, defaultStyle, drawStyle);
+  }
+
   render() {
     const {
       draw,
@@ -224,6 +231,8 @@ class GeometryEditor extends React.Component {
     const { config: { osm: { url } }, readOnly } = this.props;
 
     if (mode === EnumMode.MAP) {
+      const drawStyle = this.createDrawStyle();
+
       return (
         <div style={{ position: 'relative' }}>
           <div
@@ -255,10 +264,11 @@ class GeometryEditor extends React.Component {
             </React.Fragment>
           }
           <OpenLayers.Map
-            minZoom={4}
-            maxZoom={19}
-            zoom={4}
             center={fromLonLat([16.03, 48.76])}
+            doubleClickZoom={false}
+            maxZoom={19}
+            minZoom={4}
+            zoom={4}
           >
             <OpenLayers.Layers>
               <OpenLayers.Layer.OSM
@@ -268,21 +278,23 @@ class GeometryEditor extends React.Component {
             <OpenLayers.Interactions>
               <OpenLayers.Interaction.Select
                 active={false}
+                fitToExtent={true}
                 selected={editableFeature || null}
                 style={selectStyle}
-                fitToExtent={true}
               />
               <OpenLayers.Interaction.Modify
                 active={!draw && !readOnly}
                 feature={editableFeature || null}
+                fillColor={drawStyle.fill.color}
                 onGeometryChange={(features) => this.onGeometryChange(features)}
-                style={defaultStyle}
+                strokeColor={drawStyle.stroke.color}
               />
               <OpenLayers.Interaction.Draw
                 active={draw && !readOnly}
                 feature={editableFeature || null}
+                fillColor={drawStyle.fill.color}
                 onDrawEnd={(features) => this.onGeometryChange(features)}
-                style={defaultStyle}
+                strokeColor={drawStyle.stroke.color}
                 type={type}
               />
             </OpenLayers.Interactions>

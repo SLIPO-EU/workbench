@@ -580,6 +580,7 @@ public class DefaultProcessService implements ProcessService {
 
         try {
             switch (stepRecord.getTool()) {
+                case REVERSE_TRIPLEGEO:
                 case TRIPLEGEO:
                 case DEER:
                 case FAGI:

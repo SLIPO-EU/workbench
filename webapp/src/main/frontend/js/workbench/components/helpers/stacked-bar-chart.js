@@ -20,6 +20,8 @@ class StackedBarChart extends React.Component {
   }
 
   render() {
+    const { data, indexBy, keys, maxValue = 'auto', tooltip } = this.props;
+
     const height = this.props.data.length * 50;
 
     return (
@@ -28,16 +30,17 @@ class StackedBarChart extends React.Component {
         style={{ display: "flex", flexWrap: "wrap", height: (height < 500 ? 500 : height) }}
       >
         <ResponsiveBar
-          data={this.props.data}
-          keys={this.props.keys}
+          data={data}
+          keys={keys}
           minValue={0}
+          maxValue={maxValue}
           enableLabel={false}
-          indexBy={this.props.indexBy}
+          indexBy={indexBy}
           margin={{
             top: 50,
             right: 130,
             bottom: 50,
-            left: 310,
+            left: 150,
           }}
           padding={0.3}
           layout="horizontal"
@@ -53,7 +56,7 @@ class StackedBarChart extends React.Component {
           }}
           axisLeft={{
             format: (value) => {
-              return value.length > 55 ? value.substr(0, 55) + '...' : value;
+              return value.length > 30 ? value.substr(0, 30) + '...' : value;
             },
             tickSize: 5,
             tickPadding: 5,
@@ -75,7 +78,7 @@ class StackedBarChart extends React.Component {
           animate={true}
           motionStiffness={90}
           motionDamping={15}
-          tooltip={this.props.tooltip}
+          tooltip={tooltip}
         />
       </div >
     );

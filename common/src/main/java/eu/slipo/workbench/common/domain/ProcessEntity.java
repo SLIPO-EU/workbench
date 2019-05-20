@@ -80,7 +80,7 @@ public class ProcessEntity {
     AccountEntity updatedBy;
 
     @NotNull
-    @Column(name = "definition", nullable = false, length = 2047)
+    @Column(name = "definition", nullable = false, length = 8191)
     @Convert(converter = ProcessDefinitionConverter.class)
     ProcessDefinition definition;
 
