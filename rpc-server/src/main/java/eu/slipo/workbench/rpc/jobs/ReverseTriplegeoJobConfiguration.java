@@ -297,6 +297,7 @@ public class ReverseTriplegeoJobConfiguration extends ContainerBasedJobConfigura
                 .env("CONFIG_FILE", containerDataDir.resolve("options.conf"))
                 .env("SPARQL_FILE", containerDataDir.resolve("query.sparql"))
                 .env("OUTPUT_DIR", containerDataDir.resolve("output"))
+                .env("OUTPUT_NAME", ReverseTriplegeoConfiguration.OUTPUT_NAME)
                 // Set resource limits
                 .memory(memoryLimit)
                 .memoryAndSwap(memorySwapLimit))

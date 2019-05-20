@@ -41,7 +41,7 @@ public class ReverseTriplegeoConfiguration extends TransformConfiguration<Revers
     /**
      * This class represents the configuration of a specific version
      */
-    public static final String VERSION = "1.7";
+    public static final String VERSION = "1.8";
 
     /**
      * The output name (without any file extension)
@@ -60,9 +60,11 @@ public class ReverseTriplegeoConfiguration extends TransformConfiguration<Revers
             // The reverse transformation produces a single output (e.g. points.zip)
            
             final String outputFileName = OUTPUT_NAME + ".zip";
+            final String statsFileName = OUTPUT_NAME + "_metadata" + ".json";
             
             return ImmutableMultimap.of(
-                EnumReverseTriplegeoOutputPart.TRANSFORMED, OutputSpec.of(outputFileName, outputFormat));
+                EnumReverseTriplegeoOutputPart.TRANSFORMED, OutputSpec.of(outputFileName, outputFormat),
+                EnumReverseTriplegeoOutputPart.TRANSFORMED_METADATA, OutputSpec.of(statsFileName, EnumDataFormat.JSON));
         }
     }
 

@@ -5,7 +5,9 @@ import eu.slipo.workbench.common.model.tool.ReverseTriplegeo;
 public enum EnumReverseTriplegeoOutputPart implements OutputPart<ReverseTriplegeo>
 {
     TRANSFORMED("transformed", EnumOutputType.OUTPUT),
-
+    
+    TRANSFORMED_METADATA("transformed-metadata", EnumOutputType.KPI),
+    
     ;
 
     private final String key;
