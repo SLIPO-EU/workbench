@@ -72,7 +72,7 @@ public class ProcessRevisionEntity {
     AccountEntity updatedBy;
 
     @NotNull
-    @Column(name = "definition", nullable = false, updatable = false, length = 4095)
+    @Column(name = "definition", nullable = false, updatable = false, length = 8191)
     @Convert(converter = ProcessDefinitionConverter.class)
     ProcessDefinition definition;
 
