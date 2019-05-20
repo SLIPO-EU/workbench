@@ -602,22 +602,34 @@ class TripleGeoConfiguration extends React.Component {
                 help="Default lang for the labels created in the output RDF. By default, the value will be English-en"
                 options={languages}
               />
+            </div>
+          }
 
-              {value.level === configurationLevels.ADVANCED &&
-                <div className="row">
-                  <div className="col">
-                    <GeometryField
-                      {...inject}
-                      id="spatialExtent"
-                      label="Spatial Extent"
-                      help="Spatial filter to select input geometries contained within the specified polygon"
-                      config={this.props.appConfiguration}
-                      type={GeometryType.POLYGON}
-                    />
-                  </div>
-                </div>
-              }
-
+          {value.level === configurationLevels.ADVANCED &&
+            <div>
+              <div>
+                <h4>Spatial Extent</h4>
+                <hr />
+              </div>
+              <div>
+                <GeometryField
+                  {...inject}
+                  config={this.props.appConfiguration}
+                  drawStyle={{
+                    stroke: {
+                      color: '#b71c1c',
+                    },
+                    fill: {
+                      color: '#e0e0e0',
+                    },
+                  }}
+                  help="Spatial filter to select input geometries contained within the specified polygon"
+                  id="spatialExtent"
+                  label="Spatial Extent"
+                  showLabel={false}
+                  type={GeometryType.POLYGON}
+                />
+              </div>
             </div>
           }
         </div>

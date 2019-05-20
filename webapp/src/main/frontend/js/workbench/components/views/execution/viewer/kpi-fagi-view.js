@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import * as React from 'react';
 import PropTypes from 'prop-types';
 
@@ -17,9 +16,14 @@ import {
 
 import {
   SelectDefaultStyle,
-  Table,
   StackedBarChart,
+  Table,
 } from '../../../helpers';
+
+const EnumGroup = {
+  PERCENT: 'PERCENT',
+  ABSOLUTE: 'ABSOLUTE',
+};
 
 const EnumChartMode = {
   Configuration: 'Configuration',
@@ -53,7 +57,7 @@ const itemColumns = [{
 }, {
   Header: 'Title',
   id: 'title',
-  accessor: i => i.title,
+  accessor: i => i.label,
   headerStyle: { 'textAlign': 'left' },
 }];
 
@@ -63,10 +67,10 @@ class KpiFagiView extends React.Component {
     super(props);
 
     this.state = {
-      groups: [],
       groupOptions: [],
-      selectedGroup: null,
+      items: [],
       mode: EnumChartMode.Configuration,
+      selectedGroup: null,
     };
   }
 
@@ -77,88 +81,71 @@ class KpiFagiView extends React.Component {
       description: PropTypes.string,
     })),
     file: PropTypes.object.isRequired,
-    original: PropTypes.object.isRequired,
+    original: PropTypes.object,
+  }
+
+  componentDidMount() {
+    const { original } = this.props;
+    this.updateChartItems(original);
   }
 
   componentDidUpdate(prevProps) {
     if ((this.props.original) && (this.props.original !== prevProps.original)) {
-
-      const { original } = this.props;
-
-      const groups = Object.keys(original)
-        // Group items by type
-        .reduce((result, key, index) => {
-          const value = original[key];
-          if (!_.isObject(value)) {
-            return;
-          }
-
-          let group = result.find(g => g.key === value.group.enumGroup);
-          if (!group) {
-            group = {
-              key: value.group.enumGroup,
-              title: value.group.title,
-              legendA: value.group.legendA,
-              legendB: value.group.legendB,
-              legendTotal: value.group.legendTotal,
-              items: [],
-              count: 0,
-            };
-            result.push(group);
-          }
-
-          const { group: valueGroup, ...rest } = value;
-          if ((rest['valueA'] !== undefined) && (rest['valueB'] !== undefined)) {
-            group.items.push({
-              key,
-              selected: false,
-              ...rest,
-            });
-          }
-
-          return result;
-        }, [])
-        // Remove empty groups
-        .filter(g => g.key);
-
-      groups.forEach(g => {
-        g.items.sort((i1, i2) => i1.title > i2.title ? 1 : -1);
-      });
-
-      this.setState({
-        groups,
-        groupOptions: groups.map(g => ({ label: g.title, value: g.key })),
-      });
+      this.updateChartItems(this.props.original);
     }
   }
 
-  onGroupSelected(key) {
-    const { groups = [] } = this.state;
+  updateChartItems(data) {
+    if (!data) {
+      return;
+    }
+    const groups = [];
 
-    const selectedGroup = groups.find(g => g.key === key) || null;
+    const items = Object.keys(data)
+      .reduce((result, key) => {
+        const value = data[key];
+
+        // Ignore previous versions of FAGI
+        if (!value.hasOwnProperty('items')) {
+          return result;
+        }
+
+        result.push({
+          key,
+          ...value,
+          selected: false,
+        });
+
+        if (!groups.includes(value.type)) {
+          groups.push(value.type);
+        }
+
+        return result;
+      }, []);
 
     this.setState({
-      selectedGroup: {
-        ...selectedGroup,
-        count: 0,
-      },
+      groupOptions: groups.sort().map(g => ({ label: g, value: g })),
+      items: items.sort((i1, i2) => i1.label > i2.label ? 1 : -1),
+      mode: EnumChartMode.Configuration,
+    });
+  }
+
+  onGroupSelected(selectedGroup) {
+    this.setState({
+      selectedGroup,
     });
   }
 
   onItemSelected(selected, checked) {
-    const { selectedGroup } = this.state;
+    const { items } = this.state;
 
-    const updatedGroup = {
-      ...selectedGroup,
-      items: selectedGroup.items.map(item => ({
-        ...item,
-        selected: item.key === selected.key ? checked : item.selected,
-      })),
-      count: selectedGroup.count + (checked ? 1 : -1),
-    };
+    const updatedItems = items.map(item => ({
+      ...item,
+      selected: item.key === selected.key ? checked : item.selected,
+    }));
 
     this.setState({
-      selectedGroup: updatedGroup,
+      items: updatedItems,
     });
   }
 
@@ -173,40 +160,47 @@ class KpiFagiView extends React.Component {
   onClearSelection(e) {
     e.preventDefault();
 
-    const { selectedGroup } = this.state;
+    const { items } = this.state;
 
-    const updatedGroup = {
-      ...selectedGroup,
-      items: selectedGroup.items.map(item => ({
-        ...item,
-        selected: false,
-      })),
-      count: 0,
-    };
+    const updatedItems = items.map(item => ({
+      ...item,
+      selected: false,
+    }));
 
     this.setState({
-      selectedGroup: updatedGroup,
+      items: updatedItems,
     });
   }
 
   getSeries() {
-    const { selectedGroup } = this.state;
+    const { items, selectedGroup } = this.state;
 
-    const selectedItems = selectedGroup.items.filter(i => i.selected);
+    const selectedItems = items.filter(i => i.selected && i.type === selectedGroup);
 
     switch (selectedItems.length) {
       case 0:
-        return null;
-      default:
-        return selectedItems.map(item => ({
-          title: item.title,
-          valueA: +item.valueA,
-          valueAColor: 'hsl(327, 70%, 50%)',
-          legendA: item.legendA,
-          valueB: +item.valueB,
-          valueBColor: 'hsl(236, 70%, 50%)',
-          legendB: item.legendB,
-        }));
+        return [null, null];
+      default: {
+        const keys = [];
+        const series = [];
+
+        selectedItems.forEach(value => {
+          const result = {
+            label: value.label,
+          };
+
+          value.items.map(item => {
+            if (!keys.includes(item.label)) {
+              keys.push(item.label);
+            }
+            result[item.label] = +item.value;
+          });
+
+          series.push(result);
+        });
+
+        return [keys, series];
+      }
     }
   }
 
@@ -228,30 +222,32 @@ class KpiFagiView extends React.Component {
 
   render() {
     const { data, file } = this.props;
-    const { groups, groupOptions, selectedGroup, mode } = this.state;
+    const { items, groupOptions, selectedGroup, mode } = this.state;
 
     if (!data) {
       return null;
     }
 
-    const selectedGroupOption = selectedGroup ? groupOptions.find(opt => opt.value === selectedGroup.key) : null;
-    const selectedItems = selectedGroup ? selectedGroup.items.filter(i => i.selected) : [];
+    const selectedGroupOption = selectedGroup ? groupOptions.find(opt => opt.value === selectedGroup) : null;
+    const visibleItems = selectedGroup ? items.filter(i => i.type === selectedGroup) : [];
 
-    const series = mode === EnumChartMode.View ? this.getSeries() : null;
+    const selectedItems = visibleItems.filter(i => i.selected) || [];
+
+    const [keys, series] = mode === EnumChartMode.View ? this.getSeries() : [null, null];
 
     return (
       <div>
-        {groups.length !== 0 &&
+        {items.length !== 0 &&
           <Card>
             <CardBody>
               <Row className="mb-4">
                 <Col>
                   <i className="fa fa-bar-chart pr-1"></i>
-                  <span>{`Charts [${selectedGroup ? selectedGroup.count : 0}]`}</span>
+                  <span>{`Charts [${selectedItems.length}]`}</span>
                   {mode === EnumChartMode.Configuration &&
                     <React.Fragment>
                       <span className="p-2">Configuration</span>
-                      {selectedGroup && selectedGroup.count !== 0 &&
+                      {selectedItems.length !== 0 &&
                         <a
                           className="p-2 slipo-action-link"
                           onClick={(e) => this.onModeChanged(e, EnumChartMode.View)}
@@ -268,7 +264,7 @@ class KpiFagiView extends React.Component {
                       <span className="p-2">View</span>
                     </React.Fragment>
                   }
-                  {selectedGroup && mode === EnumChartMode.Configuration &&
+                  {selectedItems.length !== 0 && mode === EnumChartMode.Configuration &&
                     <a
                       className="p-2 slipo-action-link"
                       onClick={(e) => this.onClearSelection(e)}
@@ -288,11 +284,11 @@ class KpiFagiView extends React.Component {
                         options={groupOptions}
                         styles={SelectDefaultStyle}
                         isClearable={true}
-                        placeholder="Select group ..."
+                        placeholder="Select value type ..."
                       />
                     </Col>
                   </Row>
-                  {selectedGroup &&
+                  {items.length !== 0 &&
                     <Row>
                       <Col>
                         <div style={{ maxHeight: 400, overflowY: 'auto' }}>
@@ -301,9 +297,9 @@ class KpiFagiView extends React.Component {
                             name="Chart Items"
                             id="chart-items"
                             columns={itemColumns}
-                            data={selectedGroup.items}
-                            defaultPageSize={selectedGroup.items.length}
-                            pageSize={selectedGroup.items.length}
+                            data={visibleItems}
+                            defaultPageSize={items.length}
+                            pageSize={items.length}
                             showPageSizeOptions={false}
                             getTdProps={(state, rowInfo, column) => ({
                               onClick: this.handleRowAction.bind(this, rowInfo)
@@ -324,19 +320,17 @@ class KpiFagiView extends React.Component {
                   <Col>
                     <StackedBarChart
                       data={series}
-                      keys={[
-                        'valueA',
-                        'valueB',
-                      ]}
-                      indexBy={'title'}
+                      indexBy={'label'}
+                      keys={keys}
+                      maxValue={selectedGroup === EnumGroup.PERCENT ? 1 : 'auto'}
                       tooltip={(datum) => {
-                        const { id, data } = datum;
-                        const value = id === 'valueA' ? data.valueA : data.valueB;
+                        const { id, value } = datum;
+                        const computedValue = Math.floor(value) === value ? value : value.toFixed(2);
 
                         return (
                           <div>
-                            <div>{id === 'valueA' ? data.legendA : data.legendB}</div>
-                            <div>{Math.floor(value) === value ? value : value.toFixed(2)}</div>
+                            <div>{id}</div>
+                            <div>{selectedGroup === EnumGroup.PERCENT ? `${computedValue * 100} %` : computedValue}</div>
                           </div>
                         );
                       }}
