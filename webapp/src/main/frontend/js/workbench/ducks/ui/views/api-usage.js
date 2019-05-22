@@ -228,9 +228,9 @@ export const fetchExecution = (processId) => (dispatch, getState) => {
     });
 };
 
-export const fetchExecutionKpiData = (processId, processVersion, executionId, fileId) => (dispatch, getState) => {
+export const fetchExecutionKpiData = (processId, processVersion, executionId, fileId, tool) => (dispatch, getState) => {
   const { meta: { csrfToken: token } } = getState();
-  return processService.fetchExecutionKpiData(processId, processVersion, executionId, fileId, token);
+  return processService.fetchExecutionKpiData(processId, processVersion, executionId, fileId, token, tool);
 };
 
 export const fetchExecutionLogData = (processId, processVersion, executionId, fileId) => (dispatch, getState) => {

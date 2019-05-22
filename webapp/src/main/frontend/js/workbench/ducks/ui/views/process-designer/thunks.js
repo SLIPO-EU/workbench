@@ -43,11 +43,11 @@ const receiveExecutionKpiData = (data) => ({
   data,
 });
 
-export const fetchExecutionKpiData = (process, version, execution, file) => (dispatch, getState) => {
+export const fetchExecutionKpiData = (process, version, execution, file, tool) => (dispatch, getState) => {
   const { meta: { csrfToken: token } } = getState();
   dispatch(requestExecutionKpiData(file));
 
-  return processService.fetchExecutionKpiData(process, version, execution, file, token)
+  return processService.fetchExecutionKpiData(process, version, execution, file, token, tool)
     .then((data) => {
       dispatch(receiveExecutionKpiData(data));
     });
