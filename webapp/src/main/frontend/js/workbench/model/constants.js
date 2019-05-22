@@ -45,3 +45,8 @@ export const AltColors = [
   '#757575',
   '#e0e0e0',
 ];
+
+/**
+ * Max WKT length
+ */
+export const MAX_WKT_LENGTH = 32 * 1024;

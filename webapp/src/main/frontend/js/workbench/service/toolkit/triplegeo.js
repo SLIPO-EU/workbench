@@ -3,6 +3,10 @@ import actions from '../api/fetch-actions';
 import WKT from 'ol/format/WKT';
 
 import {
+  MAX_WKT_LENGTH,
+} from '../../model/constants';
+
+import {
   configurationLevels,
   ontologies,
   predicates,
@@ -104,13 +108,17 @@ export function validateConfiguration(config) {
   if (config['level'] === configurationLevels.ADVANCED && config['spatialExtent']) {
     const format = new WKT();
 
-    try {
-      format.readGeometry(config['spatialExtent'], {
-        dataProjection: 'EPSG:4326',
-        featureProjection: 'EPSG:3857'
-      });
-    } catch (err) {
-      errors['spatialExtent'] = 'Invalid WKT';
+    if (config['spatialExtent'].length > MAX_WKT_LENGTH) {
+      errors['spatialExtent'] = 'Invalid length';
+    } else {
+      try {
+        format.readGeometry(config['spatialExtent'], {
+          dataProjection: 'EPSG:4326',
+          featureProjection: 'EPSG:3857'
+        });
+      } catch (err) {
+        errors['spatialExtent'] = 'Invalid WKT';
+      }
     }
   }
 

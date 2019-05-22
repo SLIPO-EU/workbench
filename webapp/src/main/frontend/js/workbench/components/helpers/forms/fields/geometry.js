@@ -5,6 +5,10 @@ import decorateField from './form-field';
 import GeometryType from 'ol/geom/GeometryType';
 import GeometryEditor from '../../geometry-editor';
 
+import {
+  MAX_WKT_LENGTH,
+} from '../../../../model/constants';
+
 /**
  * Simple geometry editor
  *
@@ -32,7 +36,7 @@ export class Geometry extends React.Component {
 
   static defaultProps = {
     type: GeometryType.POINT,
-    maxLength: 5000,
+    maxLength: MAX_WKT_LENGTH,
   }
 
   /**
