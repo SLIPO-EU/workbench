@@ -61,10 +61,10 @@ class ExecutionViewer extends React.Component {
   viewKpi(fileId) {
     const {
       process: { id: processId, version: processVersion },
-      execution: { id: executionId }
+      execution: { id: executionId, steps }
     } = this.props.data;
 
-    this.props.fetchExecutionKpiData(processId, processVersion, executionId, fileId)
+   this.props.fetchExecutionKpiData(processId, processVersion, executionId, fileId, steps[0].tool )
       .then((data) => {
         this.setState({
           selectedKpiRow: fileId,

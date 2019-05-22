@@ -318,11 +318,13 @@ class ProcessDesigner extends React.Component {
 
   viewKpi(file) {
     const { id, version, execution } = this.props.match.params;
+    const { active: { step: index }, steps } = this.props;
 
-    this.props.fetchExecutionKpiData(Number.parseInt(id), Number.parseInt(version), Number.parseInt(execution), file)
-      .catch(err => {
-        message.error(`Failed to load KPI data. ${err.message}`, 'fa-warning');
-      });
+    this.props.fetchExecutionKpiData(
+      Number.parseInt(id), Number.parseInt(version), Number.parseInt(execution), file, steps[index].tool
+    ).catch(err => {
+      message.error(`Failed to load KPI data. ${err.message}`, 'fa-warning');
+    });
   }
 
   viewLog(file) {

@@ -303,6 +303,11 @@ class GeometryEditor extends React.Component {
       );
     }
 
+    const textareaProps = {};
+    if ((this.props.maxLength) && (this.props.maxLength > 0)) {
+      textareaProps['maxLength'] = this.props.maxLength;
+    }
+
     return (
       <div style={{ position: 'relative' }}>
         <div
@@ -324,6 +329,7 @@ class GeometryEditor extends React.Component {
           </div>
         }
         <Input
+          {...textareaProps}
           type="textarea"
           rows={this.props.rows || 20}
           name={this.props.id}

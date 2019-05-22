@@ -1,6 +1,8 @@
 import _ from 'lodash';
 import actions from './api/fetch-actions';
 
+import { default as safeEval } from 'safe-eval';
+
 import {
   flatten,
 } from 'flat';
@@ -313,9 +315,11 @@ export function fetchExecutionDetails(process, version, execution, token) {
     });
 }
 
-export function fetchExecutionKpiData(process, version, execution, file, token) {
+export function fetchExecutionKpiData(process, version, execution, file, token, tool) {
   return actions.get(`/action/process/${process}/${version}/execution/${execution}/kpi/${file}`, token)
-    .then(data => {
+    .then(response => {
+      // For LIMES convert text to simple JavaScript object
+      const data = tool === EnumTool.LIMES ? safeEval(response) : response;
       // Flatten data
       const flattenedData = flatten(data);
       // Remove empty objects

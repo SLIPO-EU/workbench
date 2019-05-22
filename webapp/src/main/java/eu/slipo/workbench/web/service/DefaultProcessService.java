@@ -580,12 +580,14 @@ public class DefaultProcessService implements ProcessService {
 
         try {
             switch (stepRecord.getTool()) {
-                case REVERSE_TRIPLEGEO:
-                case TRIPLEGEO:
                 case DEER:
                 case FAGI:
+                case REVERSE_TRIPLEGEO:
+                case TRIPLEGEO:
                     JsonNode node = objectMapper.readTree(file);
                     return node;
+                case LIMES:
+                    return FileUtils.readFileToString(file, StandardCharsets.UTF_8);
                 default:
                     Resource resource = new FileSystemResource(file);
                     Properties props = PropertiesLoaderUtils.loadProperties(resource);
