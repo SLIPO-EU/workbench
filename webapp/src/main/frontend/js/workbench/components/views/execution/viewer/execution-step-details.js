@@ -31,6 +31,7 @@ import {
 import {
   KpiDeerView,
   KpiFagiView,
+  KpiLimesView,
   KpiTripleGeoView,
 } from './';
 
@@ -194,8 +195,10 @@ export default class ExecutionStepDetails extends React.Component {
         return KpiDeerView;
       case EnumTool.FAGI:
         return KpiFagiView;
-      case EnumTool.TripleGeo:
+      case EnumTool.LIMES:
+        return KpiLimesView;
       case EnumTool.ReverseTripleGeo:
+      case EnumTool.TripleGeo:
         return KpiTripleGeoView;
     }
 

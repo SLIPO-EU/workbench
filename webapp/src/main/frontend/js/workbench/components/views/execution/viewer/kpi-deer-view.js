@@ -25,7 +25,7 @@ class KpiDeerView extends React.Component {
       description: PropTypes.string,
     })),
     file: PropTypes.object.isRequired,
-    original: PropTypes.object.isRequired,
+    original: PropTypes.object,
   }
 
   render() {
