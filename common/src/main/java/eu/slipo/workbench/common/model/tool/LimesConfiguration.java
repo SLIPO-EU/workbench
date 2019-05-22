@@ -591,6 +591,8 @@ public class LimesConfiguration extends InterlinkConfiguration<Limes>
                     OutputSpec.of(Paths.get(accepted.path).getFileName(), outputFormat))
                 .put(EnumLimesOutputPart.REVIEW,
                     OutputSpec.of(Paths.get(review.path).getFileName(), outputFormat))
+                .put(EnumLimesOutputPart.STATS,
+                    OutputSpec.of(Paths.get("stats.json"), EnumDataFormat.JSON))
                 .build();
         }
     }

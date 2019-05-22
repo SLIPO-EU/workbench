@@ -6,7 +6,11 @@ public enum EnumLimesOutputPart implements OutputPart<Limes>
 {
     ACCEPTED("accepted", EnumOutputType.OUTPUT),
     
-    REVIEW("review", EnumOutputType.OUTPUT);
+    REVIEW("review", EnumOutputType.OUTPUT),
+    
+    STATS("stats", EnumOutputType.KPI),
+    
+    ;
 
     private final String key;
 
