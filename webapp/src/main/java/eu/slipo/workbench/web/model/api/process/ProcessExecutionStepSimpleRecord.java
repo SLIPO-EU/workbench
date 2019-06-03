@@ -11,6 +11,7 @@ import eu.slipo.workbench.common.model.process.ProcessExecutionStepRecord;
 
 public class ProcessExecutionStepSimpleRecord {
 
+    private int key;
     private String name;
     private EnumProcessExecutionStatus status;
     private EnumTool tool;
@@ -20,6 +21,7 @@ public class ProcessExecutionStepSimpleRecord {
     private List<ProcessExecutionStepFileSimpleRecord> files;
 
     public ProcessExecutionStepSimpleRecord(ProcessExecutionStepRecord record) {
+        this.key = record.getKey();
         this.name = record.getName();
         this.status = record.getStatus();
         this.tool = record.getTool();
@@ -30,6 +32,10 @@ public class ProcessExecutionStepSimpleRecord {
         files = record.getFiles().stream()
             .map(f -> new ProcessExecutionStepFileSimpleRecord(f))
             .collect(Collectors.toList());
+    }
+
+    public int getKey() {
+        return key;
     }
 
     public String getName() {

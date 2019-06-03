@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import eu.slipo.workbench.common.model.ApplicationException;
 import eu.slipo.workbench.common.model.BasicErrorCode;
 import eu.slipo.workbench.common.model.RestResponse;
+import eu.slipo.workbench.common.model.process.ProcessDefinition;
 import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStartException;
 import eu.slipo.workbench.common.model.process.ProcessExecutionStopException;
@@ -39,6 +41,17 @@ public class ProcessController
 
     @Autowired
     private Validator validator;
+
+    @PostMapping(value = "/api/proc/create")
+    public RestResponse<ProcessRecord> createProcFromDefinition(
+        @RequestParam("creator") Integer creatorId,
+        @RequestBody ProcessDefinition definition)
+    {
+        final ProcessRecord processRecord = processRepository.create(definition, creatorId);
+        logger.info("Created {}", processRecord);
+
+        return RestResponse.result(processRecord);
+    }
 
     @PostMapping(value = "/api/proc/start")
     public RestResponse<ProcessExecutionRecord> startProc(

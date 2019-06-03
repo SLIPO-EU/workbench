@@ -30,7 +30,7 @@ import eu.slipo.workbench.common.model.process.ProcessNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessQuery;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
 import eu.slipo.workbench.web.model.QueryResult;
-import eu.slipo.workbench.web.model.api.process.ProcessExecutionSimpleRecord;
+import eu.slipo.workbench.web.model.api.process.ProcessExecutionSimpleRecordView;
 import eu.slipo.workbench.web.model.api.process.ProcessSimpleRecord;
 import eu.slipo.workbench.web.model.process.ProcessExecutionRecordView;
 import eu.slipo.workbench.web.model.process.ProcessQueryRequest;
@@ -84,7 +84,7 @@ public class ProcessController extends BaseController {
      *
      * @param id The workflow id
      * @param version The workflow version
-     * @return an instance of {@link ProcessExecutionSimpleRecord}
+     * @return an instance of {@link ProcessExecutionSimpleRecordView}
      */
     @GetMapping(value = "/api/v1/process/{id}/{version}")
     public RestResponse<?> getStatus(
@@ -98,7 +98,7 @@ public class ProcessController extends BaseController {
             if (result.getExecution() == null) {
                 return RestResponse.error(ProcessErrorCode.EXECUTION_NOT_FOUND, "Process execution was not found");
             }
-            return RestResponse.result(new ProcessExecutionSimpleRecord(result.getExecution()));
+            return RestResponse.result(new ProcessExecutionSimpleRecordView(result));
         } catch (Exception ex) {
             return this.exceptionToResponse(ex);
         }

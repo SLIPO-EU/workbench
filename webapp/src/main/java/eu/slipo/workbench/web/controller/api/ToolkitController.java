@@ -71,7 +71,7 @@ import eu.slipo.workbench.web.model.api.Input;
 import eu.slipo.workbench.web.model.api.InterlinkRequest;
 import eu.slipo.workbench.web.model.api.StepOutputInput;
 import eu.slipo.workbench.web.model.api.TransformRequest;
-import eu.slipo.workbench.web.model.api.process.ProcessExecutionSimpleRecord;
+import eu.slipo.workbench.web.model.api.process.ProcessExecutionSimpleRecordView;
 import eu.slipo.workbench.web.model.api.process.ReverseTriplegeoApiConfiguration;
 import eu.slipo.workbench.web.model.api.process.TriplegeoApiConfiguration;
 import eu.slipo.workbench.web.model.process.ProcessExecutionRecordView;
@@ -122,7 +122,7 @@ public class ToolkitController extends BaseController {
      *
      * @param request Transform operation configuration
      *
-     * @return An instance of {@link ProcessExecutionSimpleRecord} for the new execution
+     * @return An instance of {@link ProcessExecutionSimpleRecordView} for the new execution
      */
     @PostMapping(value = "/api/v1/toolkit/transform")
     public RestResponse<?> transform(@RequestBody TransformRequest request) {
@@ -178,7 +178,7 @@ public class ToolkitController extends BaseController {
      *
      * @param request Interlink operation configuration
      *
-     * @return An instance of {@link ProcessExecutionSimpleRecord} for the new execution
+     * @return An instance of {@link ProcessExecutionSimpleRecordView} for the new execution
      */
     @PostMapping(value = "/api/v1/toolkit/interlink")
     public RestResponse<?> interlink(@RequestBody InterlinkRequest request) {
@@ -223,7 +223,7 @@ public class ToolkitController extends BaseController {
      *
      * @param request Fusion operation configuration
      *
-     * @return An instance of {@link ProcessExecutionSimpleRecord} for the new execution
+     * @return An instance of {@link ProcessExecutionSimpleRecordView} for the new execution
      */
     @PostMapping(value = "/api/v1/toolkit/fuse")
     public RestResponse<?> fuse(@RequestBody FusionRequest request) {
@@ -272,7 +272,7 @@ public class ToolkitController extends BaseController {
      *
      * @param request Enrichment operation configuration
      *
-     * @return An instance of {@link ProcessExecutionSimpleRecord} for the new execution
+     * @return An instance of {@link ProcessExecutionSimpleRecordView} for the new execution
      */
     @PostMapping(value = "/api/v1/toolkit/enrich")
     public RestResponse<?> enrich(@RequestBody EnrichRequest request) {
@@ -314,7 +314,7 @@ public class ToolkitController extends BaseController {
      *
      * @param request Export operation configuration
      *
-     * @return An instance of {@link ProcessExecutionSimpleRecord} for the new execution
+     * @return An instance of {@link ProcessExecutionSimpleRecordView} for the new execution
      */
     @PostMapping(value = "/api/v1/toolkit/export")
     public RestResponse<?> export(@RequestBody ExportRequest request) {
@@ -371,7 +371,9 @@ public class ToolkitController extends BaseController {
         logger.info("A {} operation is submitted as execution #{}", operation.toString(), execution.getId());
         this.processService.log(this.applicationKey(), execution, operation);
 
-        return RestResponse.result(new ProcessExecutionSimpleRecord(execution));
+        ProcessRecord process = this.processService.findOne(record.getId(), record.getVersion());
+
+        return RestResponse.result(new ProcessExecutionSimpleRecordView(process, execution));
     }
 
     private void checkPath(String path, String parameter) throws Exception {

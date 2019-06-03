@@ -63,7 +63,7 @@
         <postgresql.version>9.4.1212.jre7</postgresql.version>
         <geotools.version>18.0</geotools.version>
         <hibernate-spatial.version>5.2.11.Final</hibernate-spatial.version>
-        <jackson-version>2.9.8</jackson-version>
+        <jackson-version>2.9.9</jackson-version>
     </properties>
 
     <developers>
