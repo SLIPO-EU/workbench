@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import eu.slipo.workbench.common.model.process.EnumProcessTaskType;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
+import eu.slipo.workbench.common.model.process.Step;
 
 public class ProcessSimpleRecord {
 
@@ -21,6 +22,7 @@ public class ProcessSimpleRecord {
     private EnumProcessTaskType taskType;
     private ZonedDateTime updatedOn;
     private long version;
+    private List<ProcessStepSimpleRecord> steps = new ArrayList<>();
 
     public ProcessSimpleRecord(ProcessRecord record) {
         this.createdOn = record.getCreatedOn();
@@ -32,6 +34,9 @@ public class ProcessSimpleRecord {
         this.updatedOn = record.getUpdatedOn();
         this.version = record.getVersion();
 
+        for (Step s : record.getDefinition().steps()) {
+            this.steps.add(new ProcessStepSimpleRecord(s));
+        }
         for (ProcessRecord p : record.getRevisions()) {
             this.revisions.add(new ProcessSimpleRecord(p));
         }
@@ -67,6 +72,10 @@ public class ProcessSimpleRecord {
 
     public EnumProcessTaskType getTaskType() {
         return taskType;
+    }
+
+    public List<ProcessStepSimpleRecord> getSteps() {
+        return steps;
     }
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)

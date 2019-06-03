@@ -353,6 +353,36 @@ module.exports = function (grunt) {
           },
         ],
       },
+      // Copy assets required by slipo frames Python module
+      'workbench-api': {
+        files: [
+          {
+            expand: true,
+            filter: 'isFile',
+            cwd: 'node_modules/jquery/dist',
+            src: [
+              '*',
+            ],
+            dest: '<%= targetDir %>/vendor/api/v1/jquery',
+          }, {
+            expand: true,
+            filter: 'isFile',
+            cwd: 'node_modules/d3/build',
+            src: [
+              '*',
+            ],
+            dest: '<%= targetDir %>/vendor/api/v1/d3',
+          }, {
+            expand: true,
+            filter: 'isFile',
+            cwd: 'node_modules/dagre-d3/dist',
+            src: [
+              '*',
+            ],
+            dest: '<%= targetDir %>/vendor/api/v1/dagre-d3',
+          },
+        ],
+      },
     },
 
     // Watch for changes to JavaScript, Sass and i18n files
