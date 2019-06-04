@@ -29,6 +29,8 @@
         driverClassName="org.postgresql.Driver" 
         url="jdbc:postgresql://${db.host}:${db.port}/${db.name}" 
         username="${db.username}" password="${db.password}"
+        initialSize="4" minIdle="4" maxIdle="12" maxTotal="40" 
+        maxWaitMillis="600000"
      />
    
     <!-- Uncomment this to disable session persistence across Tomcat restarts -->
