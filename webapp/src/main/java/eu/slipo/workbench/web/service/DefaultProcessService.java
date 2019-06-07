@@ -673,6 +673,8 @@ public class DefaultProcessService implements ProcessService {
                     .findFirst();
 
                 p.setRunning(identifier.isPresent());
+                // Do not send definition data to the client
+                p.setDefinition(null);
             });
 
             // Update all versions for every process
@@ -684,6 +686,8 @@ public class DefaultProcessService implements ProcessService {
                         .findFirst();
 
                     p.setRunning(identifier.isPresent());
+                    // Do not send definition data to the client
+                    p.setDefinition(null);
                 });
         } catch(Exception ex) {
             // Ignore
