@@ -754,6 +754,7 @@ public class DefaultImportService implements ImportService, InitializingBean {
         String schema, String tableName, String fileName
     ) throws Exception {
         final String insertSql = this.createInsertRowScript(schema, tableName, fileName);
+        final List<String> columns = this.getColumns(tableName);
         final List<Object> params = new ArrayList<Object>();
 
         int size = 0;
@@ -775,10 +776,21 @@ public class DefaultImportService implements ImportService, InitializingBean {
                 size++;
                 id++;
 
+                // Add surrogate key
                 params.add(id);
-                record.forEach(value -> {
-                    params.add(value);
-                });
+
+                // Add exported fields
+                for (int colIndex = 0; colIndex < record.size(); colIndex++) {
+                    final String value = record.get(colIndex);
+                    final String column = columns.get(colIndex + 1); // Add one for the surrogate key column
+
+                    if ((column.equals(defaultGeometryColumn)) && (StringUtils.isBlank(value))) {
+                        // Set null since an empty string will result in ERROR: parse error - invalid geometry
+                        params.add(null);
+                    } else {
+                        params.add(value);
+                    }
+                }
 
                 if (size == this.batchSize) {
                     jdbcTemplate.update(StringUtils.repeat(insertSql, size), params.toArray(new Object[0]));
@@ -800,13 +812,13 @@ public class DefaultImportService implements ImportService, InitializingBean {
 
     private void addSimplifiedGeometryColumn(String schema, String tableName) {
         String createColumnSql = String.format(
-            "ALTER TABLE \"%s\".\"%s\" ADD COLUMN %s geometry",
+            "ALTER TABLE \"%1$s\".\"%2$s\" ADD COLUMN %3$s geometry",
             schema, tableName, defaultGeometrySimpleColumn);
 
         jdbcTemplate.execute(createColumnSql);
 
         String updateColumnSql = String.format(
-            "update \"%s\".\"%s\" set %s = ST_ConvexHull(%s);",
+            "update \"%1$s\".\"%2$s\" set %3$s = case when %4$s is null then null else ST_ConvexHull(%4$s) end;",
             schema, tableName, defaultGeometrySimpleColumn, defaultGeometryColumn);
 
         jdbcTemplate.execute(updateColumnSql);
