@@ -148,7 +148,7 @@ public class DefaultProcessService implements ProcessService {
     public QueryResultPage<ProcessRecord> find(ProcessQuery query, PageRequest pageRequest) {
         query.setTemplate(false);
         query.setCreatedBy(isAdmin() ? null : currentUserId());
-        if (!this.authenticationFacade.isAdmin()) {
+        if (!this.authenticationFacade.isAdmin() && !this.authenticationFacade.hasAnyRole(EnumRole.API)) {
             query.setTaskType(EnumProcessTaskType.DATA_INTEGRATION);
         }
 
