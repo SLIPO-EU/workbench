@@ -85,6 +85,8 @@
  * A list of all resource revisions. If no revisions exist, the property is omitted.
  * @apiSuccess (ResourceRecord)           {Object}            size
  * Resource file size in bytes.
+ * @apiSuccess (ResourceRecord)           {String}            tableName
+ * Database table name if the resource has been imported to PostGIS or <code>null</code>.
  * @apiSuccess (ResourceRecord)           {Number}            updatedOn
  * Last modified timestamp.
  * @apiSuccess (ResourceRecord)           {Number}            version
@@ -109,6 +111,7 @@
  *      "size":749509,
  *      "boundingBox":null,
  *      "numberOfEntities":100,
+ *      "tableName":null,
  *      "revisions":[{
  *        "id":46,
  *        "version":1,
@@ -117,7 +120,8 @@
  *        "createdOn":1551695892815,
  *        "size":749509,
  *        "boundingBox":null,
- *        "numberOfEntities":100
+ *        "numberOfEntities":100,
+ *        "tableName":null
  *      }]
  *    }],
  *  },"

@@ -60,10 +60,10 @@
  * }
  *
  * @apiError                              {Boolean}   success           Always <code>false</code>.
- * @apiError                              {Error[]}  errors            Array of <code>Error</code> objects.
+ * @apiError                              {Error[]}   errors            Array of <code>Error</code> objects.
  *
- * @apiError (Error)                      {String} code                 Unique error code.
- * @apiError (Error)                      {String} description          Error message. Application should not present
+ * @apiError (Error)                      {String}    code              Unique error code.
+ * @apiError (Error)                      {String}    description       Error message. Application should not present
  * error messages to the users. Instead the error <code>code</code> must be used for deciding the client message.
  *
  * @apiErrorExample Error Response Example
@@ -106,9 +106,51 @@ function browse() { return; }
  * {
  *   errors: [{
  *     code: "PATH_NOT_FOUND",
- *     description: "Path / was not found."
+ *     description: "Path folder/data.csv was not found."
  *   }],
  *   success: false
  * }
  */
 function download() { return; }
+
+/**
+ * @api {get} api/v1/file-system/upload Upload
+ * @apiHeader {String} X-API-Key Application key
+ * @apiHeader {String} Content-Type multipart/mixed
+ * @apiVersion 1.0.0
+ * @apiName UploadFile
+ * @apiGroup FileSystem
+ * @apiPermission ROLE_API
+ *
+ * @apiDescription Uploads a file
+ *
+ * @apiParam                              {Part}      file          The file to upload.
+ * @apiParam                              {Part}      data          Upload options object serialized as a JSON string.
+ *
+ * @apiParam (Options)                    {String}    path          Server relative path to upload the file
+ * @apiParam (Options)                    {String}    filename      Remote file name.
+ * @apiParam (Options)                    {Boolean}   overwrite     <code>true</code> if the operation should overwrite
+ * any existing file. If <code>overwrite</code> is set to <code>false</code> and a remote file already exists, the operation
+ * will fail.
+ *
+ * @apiParamExample {json} Request Example
+ * POST api/v1/file-system/upload
+ *
+ * @apiError                              {Boolean}   success       Always <code>false</code>.
+ * @apiError                              {Error[]}   errors        Array of <code>Error</code> objects.
+ *
+ * @apiError (Error)                      {String}    code          Unique error code.
+ * @apiError (Error)                      {String}    description   Error message. Application should not present
+ * error messages to the users. Instead the error <code>code</code> must be used for deciding the client message.
+ *
+ * @apiErrorExample Error Response Example
+ * HTTP/1.1 200 OK
+ * {
+ *   errors: [{
+ *     code: "PATH_IS_DIRECTORY",
+ *     description: "File is a directory"
+ *   }],
+ *   success: false
+ * }
+ */
+function upload() { return; }

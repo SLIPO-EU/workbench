@@ -69,12 +69,29 @@
  * Workflow unique name.
  * @apiSuccess (ProcessSimpleRecord)           {ProcessSimpleRecord[]}  [revisions]
  * A list of all workflow revisions. If no revisions exist, the property is omitted.
- * @apiSuccess (ProcessSimpleRecord)           {Object}                 taskType
+ * @apiSuccess (ProcessSimpleRecord)           {String}                 taskType
  * Workflow task type.
  * @apiSuccess (ProcessSimpleRecord)           {Number}                 updatedOn
  * Last modified timestamp.
- * @apiSuccess (ProcessSimpleRecord)           {Number}                   version
+ * @apiSuccess (ProcessSimpleRecord)           {Number}                 version
  * Workflow version.
+ * @apiSuccess (ProcessSimpleRecord)           {Object[]}               steps
+ * An array of <code>Step</code> objects.
+ *
+ * @apiSuccess (Step)                          {Number}                 key
+ * Unique key id.
+ * @apiSuccess (Step)                          {Number}                 group
+ * Step group.
+ * @apiSuccess (Step)                          {String}                 name
+ * Unique step name.
+ * @apiSuccess (Step)                          {String}                 operation
+ * Step operation type.
+ * @apiSuccess (Step)                          {String}                 tool
+ * SLIPO Toolkit component.
+ * @apiSuccess (Step)                          {String[]}               inputKeys
+ * An array of input keys.
+ * @apiSuccess (Step)                          {String}                 outputKey
+ * Step output unique key.
  *
  * @apiSuccessExample {json} Response Example
  * HTTP/1.1 200 OK
@@ -94,7 +111,16 @@
  *      "name":"API 10-03-2019 18:58:23 0ee87dc8-73c8-4f25-9698-b4f9d7f67f4c",
  *      "taskType":"API",
  *      "updatedOn":1552237103328,
- *      "version":1
+ *      "version":1,
+ *      "steps": [{
+ *        "group": 0,
+ *        "inputKeys": [],
+ *        "key": 0,
+ *        "name": "Transform 1",
+ *        "operation": "TRANSFORM",
+ *        "outputKey": "3",
+ *        "tool": "TRIPLEGEO"
+ *        }]
  *    }]
  *  },
  *  "success":true
@@ -124,40 +150,79 @@ function query() { return; }
  * @apiSuccess                            {Object}    result            An instance of <code>ProcessExecutionRecord</code>. If value of
  * <code>success</code> is <code>false</code>, <code>result</code> is <code>null</code>
  *
- * @apiSuccess (ProcessExecutionRecord)           {String}             status
- * Workflow execution instance status:<br/>
+ * @apiSuccess (ProcessExecutionRecord)           {Object}             process
+ * A <code>Process</code> object.
+ * @apiSuccess (ProcessExecutionRecord)           {Object}             execution
+ * An <code>Execution</code> object. If process execution has not started, this property is set to <code>null</code>.
+ *
+ * @apiSuccess (Process)                          {Number}             createdOn
+ * Creation timestamp.
+ * @apiSuccess (Process)                          {String}             description
+ * Process description.
+ * @apiSuccess (Process)                          {Number}             executedOn
+ * Execution timestamp.
+ * @apiSuccess (Process)                          {Number}             id
+ * Process unique id.
+ * @apiSuccess (Process)                          {String}             name
+ * Process unique name.
+ * @apiSuccess (Process)                          {String}             taskType
+ * Process task type.
+ * @apiSuccess (Process)                          {Number}             updatedOn
+ * Modified timestamp.
+ * @apiSuccess (Process)                          {Number}             version
+ * Process version number.
+ * @apiSuccess (Process)                          {Object[]}           steps
+ * An array of <code>ProcessStep</code> objects.
+ *
+ * @apiSuccess (ProcessStep)                      {Number}             key
+ * Unique key id.
+ * @apiSuccess (ProcessStep)                      {Number}             group
+ * Step group.
+ * @apiSuccess (ProcessStep)                      {String}             name
+ * Unique step name.
+ * @apiSuccess (ProcessStep)                      {String}             operation
+ * Step operation type.
+ * @apiSuccess (ProcessStep)                      {String}             tool
+ * SLIPO Toolkit component.
+ * @apiSuccess (ProcessStep)                      {String[]}           inputKeys
+ * An array of input keys.
+ * @apiSuccess (ProcessStep)                      {String}             outputKey
+ * Step output unique key.
+ *
+ * @apiSuccess (Execution)                        {String}             status
+ * Process execution instance status:<br/>
  * <code>UNKNOWN</code><br/>
  * <code>COMPLETED</code><br/>
  * <code>FAILED</code><br/>
  * <code>RUNNING</code><br/>
  * <code>STOPPED</code><br/>
  *
- * @apiSuccess (ProcessExecutionRecord)           {String}             taskType
- * Workflow task type.
- * @apiSuccess (ProcessExecutionRecord)           {Number}             executedOn
- * Execution timestamp.
- * @apiSuccess (ProcessExecutionRecord)           {Number}             id
- * Workflow execution instance unique id.
- * @apiSuccess (ProcessExecutionRecord)           {Number}             processId
- * Parent workflow unique id.
- * @apiSuccess (ProcessExecutionRecord)           {Number}             processVersion
- * Parent workflow version.
- * @apiSuccess (ProcessExecutionRecord)           {String}             name
- * Workflow unique name.
- * @apiSuccess (ProcessExecutionRecord)           {Number}             completedOn
+ * @apiSuccess (Execution)                        {String}             taskType
+ * Process task type.
+ * @apiSuccess (Execution)                        {Number}             id
+ * Process execution instance unique id.
+ * @apiSuccess (Execution)                        {Number}             processId
+ * Parent process unique id.
+ * @apiSuccess (Execution)                        {Number}             processVersion
+ * Parent process version.
+ * @apiSuccess (Execution)                        {String}             name
+ * Process unique name.
+ * @apiSuccess (Execution)                        {Number}             completedOn
  * Execution completion timestamp.
- * @apiSuccess (ProcessExecutionRecord)           {Number}             startedOn
+ * @apiSuccess (Execution)                        {Number}             startedOn
  * Execution start timestamp.
- * @apiSuccess (ProcessExecutionRecord)           {Number}             submittedOn
+ * @apiSuccess (Execution)                        {Number}             submittedOn
  * Execution submit timestamp.
- * @apiSuccess (ProcessExecutionRecord)           {Step[]}             steps
- * Workflow steps
+ * @apiSuccess (Execution)                        {Object[]}           steps
+ * An array of <code>ExecutionStep</code> objects.
  *
- * @apiSuccess (Step)                             {String}             name
- * Unique step name
- * @apiSuccess (Step)                             {String}             status
+ * @apiSuccess (ExecutionStep)                    {Number}             key
+ * Unique step id.
+ * @apiSuccess (ExecutionStep)                    {String}             name
+ * Unique step name.
+ * @apiSuccess (ExecutionStep)                    {String}             status
  * Step execution status.
- * @apiSuccess (Step)                             {String}             tool
+ * @apiSuccess (ExecutionStep)                    {String}             tool
  * SLIPO Toolkit Component:<br/>
  * <code>REGISTER</code>: Catalog registration component<br/>
  * <code>TRIPLEGEO</code>: Data transformation component<br/>
@@ -166,7 +231,7 @@ function query() { return; }
  * <code>DEER</code>: POI RDF dataset enrichment component<br/>
  * <code>REVERSE_TRIPLEGEO</code>: Data reverse transformation component<br/>
  * <code>IMPORTER</code>: An internal component for importing external data sources into a process<br/>
- * @apiSuccess (Step)                             {String}             operation
+ * @apiSuccess (ExecutionStep)                    {String}             operation
  * Operation type:<br/>
  * <code>REGISTER</code>: Register resource to catalog<br/>
  * <code>TRANSFORM</code>: Data transformation<br/>
@@ -174,16 +239,24 @@ function query() { return; }
  * <code>FUSION</code>: POI RDF dataset and linked data fusion<br/>
  * <code>ENRICHMENT</code>: POI RDF dataset enrichment<br/>
  * <code>IMPORT_DATA</code>: Import external data sources into a process<br/>
- * @apiSuccess (Step)                             {Number}             startedOn
+ * @apiSuccess (ExecutionStep)                    {Number}             startedOn
  * Start timestamp.
- * @apiSuccess (Step)                             {Number}             completedOn
+ * @apiSuccess (ExecutionStep)                    {Number}             completedOn
  * Completion timestamp.
- * @apiSuccess (Step)                             {File[]}             files
- * Execution files
+ * @apiSuccess (ExecutionStep)                    {Object[]}           files
+ * An array of <code>ExecutionStepFile</code> objects.
  *
- * @apiSuccess (Step)                             {String}             id
+ * @apiSuccess (ExecutionStepFile)                {Number}             id
  * Execution step file unique id.
- * @apiSuccess (Step)                             {String}             type
+ * @apiSuccess (ExecutionStepFile)                {String}             name
+ * The step file name.
+ * @apiSuccess (ExecutionStepFile)                {String}             outputPartKey
+ * The type of output file depending on the operation e.g. for <codes>LIMES</code> the output
+ * part key may be any of <code>accepted</code> or <code>review</code>. If no applicable value
+ * exists, this property is set to <code>null</code>.
+ * @apiSuccess (ExecutionStepFile)                {String}             size
+ * The file size.
+ * @apiSuccess (ExecutionStepFile)                {String}             type
  * File type:<br/>
  * <code>CONFIGURATION</code>: Tool configuration<br/>
  * <code>INPUT</code>: Input file<br/>
@@ -192,61 +265,105 @@ function query() { return; }
  * <code>KPI</code>: Tool specific or aggregated KPI data<br/>
  * <code>QA</code>: Tool specific QA data<br/>
  * <code>LOG</code>: Logs recorded during step execution  <br/>
- * @apiSuccess (Step)                             {String}             name
- * The file name
- * @apiSuccess (Step)                             {String}             size
- * The file size
  *
  * @apiSuccessExample {json} Response Example
  * HTTP/1.1 200 OK
  * {
  *  "errors":[],
- *  "result":{
- *    "status":"FAILED",
- *    "taskType":"DATA_INTEGRATION",
- *    "id":74,
- *    "processId":46,
- *    "processVersion":2,
- *    "name":"Test FAGI",
- *    "completedOn":1536224888309,
- *    "startedOn":1536224877916,
- *    "submittedOn":1536224877278,
- *    "steps":[{
- *      "name":"Interlink 1",
- *      "status":"COMPLETED",
- *      "tool":"LIMES",
- *      "operation":"INTERLINK",
- *      "startedOn":1536224878195,
- *      "completedOn":1536224887529,
- *      "files":[{
- *        "id":2012,
- *        "type":"INPUT",
- *        "name":"data.nt",
- *        "size":757323,
- *      },{
- *        "id":2016,
- *        "type":"CONFIGURATION",
- *        "name":"config.xml",
- *        "size":1195,
- *      },{
- *        ...
- *      }]
- *    },{
- *      "name":"Fuse 2",
- *      "status":"FAILED",
- *      "tool":"FAGI",
- *      "operation":"FUSION",
- *      "startedOn":1536224887781,
- *      "completedOn":1536224888298,
- *      "files":[{
- *        "id":2017,
- *        "type":"INPUT",
- *        "name":"accepted.nt",
- *        "size":757323
- *      },{
- *        ...
- *      }]
+ *  "execution": {
+ *    "completedOn": 1558601105127,
+ *    "id": 544,
+ *    "name": "Demo",
+ *    "processId": 285,
+ *    "processVersion": 26,
+ *    "startedOn": 1558601054676,
+ *    "status": "COMPLETED",
+ *    "steps": [{
+ *      "completedOn": 1558601068543,
+ *      "files": [{
+ *        "id": 8095,
+ *        "name": "classification.csv",
+ *        "outputPartKey": null,
+ *        "size": 4412,
+ *        "type": "CONFIGURATION"
+ *      }, {
+ *        "id": 8094,
+ *        "name": "mappings.yml",
+ *        "outputPartKey": null,
+ *        "size": 822,
+ *        "type": "CONFIGURATION"
+ *      }, {
+ *        "id": 8093,
+ *        "name": "options.conf",
+ *        "outputPartKey": null,
+ *        "size": 1260,
+ *        "type": "CONFIGURATION"
+ *      }, {
+ *        "id": 8089,
+ *        "name": "classification_metadata.json",
+ *        "outputPartKey": "classification-metadata",
+ *        "size": 382,
+ *        "type": "KPI"
+ *      }, {
+ *        "id": 8090,
+ *        "name": "classification.nt",
+ *        "outputPartKey": "classification",
+ *        "size": 89766,
+ *        "type": "OUTPUT"
+ *      }, {
+ *        "id": 8083,
+ *        "name": "DKV_Berlin.csv",
+ *        "outputPartKey": "registration-request",
+ *        "size": 36219,
+ *        "type": "OUTPUT"
+ *      }, {
+ *        "id": 8085,
+ *        "name": "DKV_Berlin_metadata.json",
+ *        "outputPartKey": "transformed-metadata",
+ *        "size": 532,
+ *        "type": "KPI"
+ *      }, {
+ *        "id": 8087,
+ *        "name": "DKV_Berlin.nt",
+ *        "outputPartKey": "transformed",
+ *        "size": 747829,
+ *        "type": "OUTPUT"
+ *      }, {
+ *        "id": 8081,
+ *        "name": "DKV_Berlin.csv",
+ *        "outputPartKey": null,
+ *        "size": 28669,
+ *        "type": "INPUT"
+ *      }],
+ *      "key": 0,
+ *      "name": "Transform 1",
+ *      "operation": "TRANSFORM",
+ *      "startedOn": 1558601054670,
+ *      "status": "COMPLETED",
+ *      "tool": "TRIPLEGEO"
  *    }],
+ *    "submittedOn": 1558601054294,
+ *    "taskType": "DATA_INTEGRATION"
+ *  },
+ *  "process": {
+ *    "createdOn": 1557508338603,
+ *    "description": "Demo",
+ *    "executedOn": 1558601054676,
+ *    "id": 285,
+ *    "name": "Demo",
+ *    "steps": [{
+ *      "group": 0,
+ *      "inputKeys": [],
+ *      "key": 0,
+ *      "name": "Transform 1",
+ *      "operation": "TRANSFORM",
+ *      "outputKey": "2",
+ *      "tool": "TRIPLEGEO"
+ *    }],
+ *    "taskType": "DATA_INTEGRATION",
+ *    "updatedOn": 1558601053135,
+ *    "version": 26
+ *  },
  *  "success":true
  * }
  */
