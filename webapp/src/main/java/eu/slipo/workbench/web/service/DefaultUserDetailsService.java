@@ -3,6 +3,7 @@ package eu.slipo.workbench.web.service;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
@@ -84,13 +85,21 @@ public class DefaultUserDetailsService implements UserDetailsService
             return account.isActive();
         }
 
-        public String getLang() {
+        public String getLang()
+        {
             return account.getLang();
         }
 
-        public boolean hasRole(EnumRole role) {
+        public boolean hasRole(EnumRole role)
+        {
             return account.hasRole(role);
         }
+
+        public void setRoles(Set<EnumRole> roles)
+        {
+            this.account.setRoles(roles);
+        }
+
     }
 
     @Autowired
