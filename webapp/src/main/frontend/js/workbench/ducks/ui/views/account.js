@@ -13,6 +13,9 @@ const RECEIVE_ACCOUNT_DATA = 'ui/accounts/RECEIVE_ACCOUNT_DATA';
 const SET_SELECTED_ACCOUNT = 'ui/accounts/SET_SELECTED_ACCOUNT';
 const RESET_SELECTED_ACCOUNT = 'ui/accounts/RESET_SELECTED_ACCOUNT';
 
+const ACCOUNT_CREATE_INIT = 'ui/accounts/ACCOUNT_CREATE_INIT';
+const ACCOUNT_CREATE_COMPLETE = 'ui/accounts/ACCOUNT_CREATE_COMPLETE';
+
 const ACCOUNT_UPDATE_INIT = 'ui/accounts/ACCOUNT_UPDATE_INIT';
 const ACCOUNT_UPDATE_COMPLETE = 'ui/accounts/ACCOUNT_UPDATE_INIT';
 
@@ -108,6 +111,19 @@ export default (state = initialState, action) => {
         selected: null,
       };
 
+    case ACCOUNT_CREATE_INIT:
+      return {
+        ...state,
+        loading: true,
+        selected: null,
+      };
+
+    case ACCOUNT_CREATE_COMPLETE:
+      return {
+        ...state,
+        loading: false,
+      };
+
     case ACCOUNT_UPDATE_INIT:
       return {
         ...state,
@@ -174,6 +190,24 @@ export const fetchAccounts = (query) => (dispatch, getState) => {
     })
     .catch((err) => {
       console.error('Failed loading accounts:', err);
+    });
+};
+
+const createAccountInit = () => ({
+  type: ACCOUNT_CREATE_INIT,
+});
+
+const createAccountComplete = () => ({
+  type: ACCOUNT_CREATE_COMPLETE,
+});
+
+export const createAccount = (account) => (dispatch, getState) => {
+  const { meta: { csrfToken: token } } = getState();
+  dispatch(createAccountInit());
+
+  return adminService.createAccount(account, token)
+    .then((result) => {
+      dispatch(createAccountComplete(result));
     });
 };
 

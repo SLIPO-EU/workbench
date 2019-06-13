@@ -21,6 +21,7 @@ import {
 } from '../../model';
 
 import {
+  createAccount,
   fetchAccounts,
   resetFilters,
   setFilter,
@@ -30,6 +31,7 @@ import {
 } from '../../ducks/ui/views/account';
 
 import {
+  AccountForm,
   Filters,
   User,
   Users,
@@ -49,6 +51,10 @@ class UserManager extends React.Component {
 
   constructor(props) {
     super(props);
+
+    this.state = {
+      showCreateDialog: false,
+    };
 
     this.setSelected = this.setSelected.bind(this);
 
@@ -80,6 +86,33 @@ class UserManager extends React.Component {
     this.props.setSelected(id);
   }
 
+  showCreateDialog() {
+    this.setState({
+      showCreateDialog: true,
+    });
+  }
+
+  hideCreateDialog() {
+    this.setState({
+      showCreateDialog: false,
+    });
+  }
+
+  createAccount(data) {
+    this.props.createAccount(data)
+      .then(() => {
+        this.hideCreateDialog();
+        this.search();
+        message.infoHtml(
+          `The account has been created successfully.`
+        );
+      })
+      .catch((err) => {
+        const reason = err.errors.map((e) => e.description + '<br>').join('');
+        message.errorHtml(`Account creation has failed. Reason${err.errors.length > 1 ? 's' : ''}:<br>${reason} `, 'fa-user');
+      });
+  }
+
   updateAccount(account) {
     this.props.updateAccount(account)
       .then(() => {
@@ -98,6 +131,13 @@ class UserManager extends React.Component {
 
     return (
       <div className="animated fadeIn">
+        {this.state.showCreateDialog &&
+          <AccountForm
+            onSave={(account) => this.createAccount(account)}
+            hide={() => this.hideCreateDialog()}
+            visible={this.state.showCreateDialog}
+          />
+        }
         <Row>
           <Col className="col-12">
             <Card>
@@ -114,6 +154,7 @@ class UserManager extends React.Component {
                 <Row>
                   <Col>
                     <Filters
+                      create={() => this.showCreateDialog()}
                       filters={this.props.filters}
                       setFilter={this.props.setFilter}
                       resetFilters={this.props.resetFilters}
@@ -142,14 +183,15 @@ class UserManager extends React.Component {
             </Card>
           </Col>
         </Row >
-        {selectedUser &&
+        {selectedUser && !this.state.showCreateDialog &&
           <Row>
             <Col className="col-12">
               <Card>
                 <CardBody className="card-body">
                   <User
-                    user={selectedUser}
+                    mode={User.EditMode.UPDATE}
                     onSave={(account) => this.updateAccount(account)}
+                    user={selectedUser}
                   />
                 </CardBody>
               </Card>
@@ -172,6 +214,7 @@ const mapStateToProps = (state) => ({
 });
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
+  createAccount,
   fetchAccounts,
   resetFilters,
   setFilter,

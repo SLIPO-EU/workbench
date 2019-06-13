@@ -10,6 +10,10 @@ export default {
     return actions.post('/action/admin/accounts', token, query);
   },
 
+  createAccount: (account, token)=> {
+    return actions.put('/action/admin/account', token, account);
+  },
+
   updateAccount: (account, token) => {
     return actions.post('/action/admin/account', token, account);
   },
