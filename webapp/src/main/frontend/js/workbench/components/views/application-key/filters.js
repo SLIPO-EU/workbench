@@ -11,10 +11,6 @@ import {
   TextField,
 } from '../../helpers/forms/fields/';
 
-import {
-  message,
-} from '../../../service';
-
 const statusValues = [
   { value: 'ALL', label: 'Select ...' },
   { value: 'ACTIVE', label: 'Active' },

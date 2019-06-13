@@ -17,6 +17,7 @@ import eu.slipo.workbench.common.model.process.ProcessErrorCode;
 import eu.slipo.workbench.common.model.user.Account;
 import eu.slipo.workbench.web.model.EventRecord;
 import eu.slipo.workbench.web.model.QueryResult;
+import eu.slipo.workbench.web.model.admin.AccountCreateRequest;
 import eu.slipo.workbench.web.model.admin.AccountQuery;
 import eu.slipo.workbench.web.model.admin.AccountQueryRequest;
 import eu.slipo.workbench.web.model.admin.EventQuery;
@@ -77,6 +78,25 @@ public class AdminController extends BaseController {
         QueryResultPage<Account> r = this.accountService.query(query, pageRequest);
 
         return RestResponse.result(QueryResult.create(r));
+    }
+
+    /**
+     * Create a new account
+     *
+     * @param account the account to create
+     * @return an empty response if the account creation is successful or a list of
+     * {@link Error} objects if any errors occur
+     */
+    @Secured({ "ROLE_ADMIN" })
+    @RequestMapping(value = "/action/admin/account", method = RequestMethod.PUT)
+    public RestResponse<?> create(@RequestBody AccountCreateRequest request) {
+
+        List<Error> errors = this.accountService.create(request);
+
+        if (errors.isEmpty()) {
+            return RestResponse.success();
+        }
+        return RestResponse.error(errors);
     }
 
     /**

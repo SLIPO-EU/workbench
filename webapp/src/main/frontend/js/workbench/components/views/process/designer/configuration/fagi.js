@@ -37,6 +37,7 @@ import {
 } from '../../../../helpers/forms/fields/file-drop';
 
 import {
+  CheckboxField,
   EnumFileSelectMode,
   FileSelectField,
   SelectField,
@@ -94,6 +95,8 @@ class FagiConfiguration extends React.Component {
         if (profile) {
           return {
             ...profile.config,
+            // Enable ML rules
+            enableMLRules: true,
             // Do not override level
             level,
           };
@@ -230,28 +233,40 @@ class FagiConfiguration extends React.Component {
           }
 
           {value.level === configurationLevels.ADVANCED &&
-            <div>
-              <div className="row">
-                <div className="col">
-                  <FileSelectField
-                    {...inject}
-                    id="rulesSpec"
-                    label="Rules file"
-                    help="File containing FAGI rules"
-                    filesystem={filesystem}
-                    defaultMode={EnumFileSelectMode.FIELD}
-                    allowDelete
-                    allowUpload
-                    allowNewFolder
-                    createFolder={createFolder}
-                    deletePath={deletePath}
-                    uploadFile={uploadFile}
-                    placeHolder={!this.props.value['profile'] ? 'Select specification file...' : 'Using default specification file...'}
-                  />
-                </div>
+            <div className="row">
+              <div className="col">
+                <FileSelectField
+                  {...inject}
+                  id="rulesSpec"
+                  label="Rules file"
+                  help="File containing FAGI rules"
+                  filesystem={filesystem}
+                  defaultMode={EnumFileSelectMode.FIELD}
+                  allowDelete
+                  allowUpload
+                  allowNewFolder
+                  createFolder={createFolder}
+                  deletePath={deletePath}
+                  uploadFile={uploadFile}
+                  placeHolder={!this.props.value['profile'] ? 'Select specification file...' : 'Using default specification file...'}
+                />
               </div>
             </div>
           }
+
+          {value.level === configurationLevels.ADVANCED &&
+            <div className="row">
+              <div className="col">
+                <CheckboxField
+                  {...inject}
+                  id="enableMLRules"
+                  text="Enable ML-Rules"
+                  help="Enable prediction of validation and fusion actions with the use of ML models"
+                />
+              </div>
+            </div>
+          }
+
         </div>
 
         <SecureContent roles={[Roles.DEVELOPER]}>

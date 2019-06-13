@@ -24,14 +24,13 @@ class UserDetails extends React.Component {
   constructor(props) {
     super(props);
 
-    const { user: { familyName, givenName, roles } } = props;
-
-    this.state = {
-      familyName,
-      givenName,
-      roles: [...roles],
-    };
+    this.state = this.getStateFromProps(props);
   }
+
+  static EditMode = {
+    CREATE: 'Create',
+    UPDATE: 'Update',
+  };
 
   static propTypes = {
     user: PropTypes.object.isRequired,
@@ -39,41 +38,75 @@ class UserDetails extends React.Component {
   }
 
   onRoleChange(selected, role) {
-    const roles = [...this.state.roles.filter((r) => r !== role)];
+    const { current } = this.state;
+    const roles = [...current.roles.filter((r) => r !== role)];
 
     if (selected) {
       roles.push(role);
     }
     this.setState({
-      roles,
+      current: {
+        ...current,
+        roles,
+      },
     });
   }
 
   componentWillReceiveProps(nextProps) {
-    this.updateStateFromProps(nextProps);
+    this.setState(this.getStateFromProps(nextProps));
   }
 
-  updateStateFromProps(props) {
-    const { user: { familyName, givenName, roles } } = props;
+  getStateFromProps(props) {
+    const { user: { email, username, familyName, givenName, password = '', roles = [] } } = props;
 
-    this.setState({
-      givenName,
-      familyName,
-      roles: [...roles],
-    });
+    return {
+      initial: {
+        email,
+        username,
+        familyName,
+        givenName,
+        password,
+        verifyPassword: password,
+        roles: [...roles],
+      },
+      current: {
+        email,
+        username,
+        familyName,
+        givenName,
+        password,
+        verifyPassword: password,
+        roles: [...roles],
+      },
+    };
   }
 
   isModified() {
-    const { user: { givenName: oldGivenName, familyName: oldFamilyName, roles: oldRoles } } = this.props;
-    const { givenName: newGivenName, familyName: newFamilyName, roles: newRoles } = this.state;
+    const { mode } = this.props;
+    const { initial, current } = this.state;
 
-    if (oldGivenName !== newGivenName) {
+    if (mode === UserDetails.EditMode.CREATE) {
+      if (initial.username !== current.username) {
+        return true;
+      }
+      if (initial.email !== current.email) {
+        return true;
+      }
+      if (initial.password !== current.password) {
+        return true;
+      }
+      if (initial.verifyPassword !== current.verifyPassword) {
+        return true;
+      }
+    }
+    if (initial.givenName !== current.givenName) {
       return true;
     }
-    if (oldFamilyName !== newFamilyName) {
+    if (initial.familyName !== current.familyName) {
       return true;
     }
-    return !_.isEqual([...oldRoles].sort(), [...newRoles].sort());
+
+    return !_.isEqual([...initial.roles].sort(), [...current.roles].sort());
   }
 
   save(e) {
@@ -83,45 +116,73 @@ class UserDetails extends React.Component {
       return;
     }
 
-    const { user: { id } } = this.props;
-    const { givenName, familyName, roles } = this.state;
+    const { mode, user: { id = null } } = this.props;
+    const { email, username, givenName, familyName, password, roles } = this.state.current;
 
-    this.props.onSave({
-      id,
-      givenName,
-      familyName,
-      roles,
-    });
+    if (mode === UserDetails.EditMode.CREATE) {
+      this.props.onSave({
+        email,
+        username,
+        givenName,
+        familyName,
+        password,
+        roles,
+      });
+    } else {
+      this.props.onSave({
+        id,
+        givenName,
+        familyName,
+        roles,
+      });
+    }
   }
 
   cancel(e) {
     e.preventDefault();
 
-    this.updateStateFromProps(this.props);
+    this.setState(this.getStateFromProps(this.props));
+
+    if (typeof this.props.onCancel === 'function') {
+      this.props.onCancel();
+    }
   }
 
   render() {
-    const { user } = this.props;
+    const { mode } = this.props;
+    const { current: user } = this.state;
 
     return (
       <div>
         <Row>
           <Col>
             <Row>
-              <Col>
-                <TextField
-                  id="username"
-                  label="Account"
-                  value={user.username}
-                  readOnly={true}
-                />
-              </Col>
+              {mode === UserDetails.EditMode.UPDATE &&
+                < Col >
+                  <TextField
+                    id="form-username"
+                    label="Account"
+                    value={user.username}
+                    readOnly={true}
+                    autoComplete="new-password"
+                  />
+                </Col>
+              }
               <Col>
                 <TextField
                   id="email"
                   label="Email"
                   value={user.email}
-                  readOnly={true}
+                  readOnly={mode === UserDetails.EditMode.UPDATE}
+                  error={user.email ? null : 'Required'}
+                  onChange={(value) => this.setState({
+                    current: {
+                      ...user,
+                      email: value,
+                      username: value,
+                    }
+                  })}
+                  autoComplete="new-password"
                 />
               </Col>
             </Row>
@@ -130,29 +191,79 @@ class UserDetails extends React.Component {
                 <TextField
                   id="givenName"
                   label="First Name"
-                  value={this.state.givenName}
+                  value={user.givenName}
                   readOnly={false}
-                  onChange={(value) => this.setState({ givenName: value })}
+                  error={user.givenName ? null : 'Required'}
+                  onChange={(value) => this.setState({
+                    current: {
+                      ...user,
+                      givenName: value,
+                    }
+                  })}
                 />
               </Col>
               <Col>
                 <TextField
                   id="familyName"
                   label="Last Name"
-                  value={this.state.familyName}
+                  value={user.familyName}
                   readOnly={false}
-                  onChange={(value) => this.setState({ familyName: value })}
+                  error={user.familyName ? null : 'Required'}
+                  onChange={(value) => this.setState({
+                    current: {
+                      ...user,
+                      familyName: value,
+                    }
+                  })}
                 />
               </Col>
             </Row>
+            {mode === UserDetails.EditMode.CREATE &&
+              <Row>
+                <Col>
+                  <TextField
+                    id="password"
+                    label="Password"
+                    value={user.password}
+                    readOnly={false}
+                    error={user.password ? null : 'Required'}
+                    onChange={(value) => this.setState({
+                      current: {
+                        ...user,
+                        password: value,
+                      }
+                    })}
+                    type="password"
+                    autoComplete="new-password"
+                  />
+                </Col>
+                <Col>
+                  <TextField
+                    id="verifyPassword"
+                    label="Verify Password"
+                    value={user.verifyPassword}
+                    readOnly={false}
+                    error={user.password !== user.verifyPassword ? 'Password does not match' : null}
+                    onChange={(value) => this.setState({
+                      current: {
+                        ...user,
+                        verifyPassword: value,
+                      }
+                    })}
+                    type="password"
+                    autoComplete="new-password"
+                  />
+                </Col>
+              </Row>
+            }
           </Col>
-          <Col>
+          <Col sm="3">
             <Row>
               <Col>
                 <FormGroup>
                   <Label for="roles">Roles</Label>
                   <Roles
-                    roles={this.state.roles}
+                    roles={user.roles}
                     onChange={(selected, role) => this.onRoleChange(selected, role)}
                   />
                 </FormGroup>
@@ -160,24 +271,24 @@ class UserDetails extends React.Component {
             </Row>
           </Col>
         </Row>
-        {this.isModified() &&
-          <Row className="float-right">
-            <Col>
-              <Button
-                color="primary"
-                className="ml-1 mb-1"
-                onClick={(e) => this.save(e)}>
-                <i className="fa fa-save mr-2" /> Save
+        <Row className="float-right">
+          <Col>
+            <Button
+              color="primary"
+              className="ml-1 mb-1"
+              disabled={!this.isModified()}
+              onClick={(e) => this.save(e)}>
+              <i className="fa fa-save mr-2" /> Save
               </Button>
-              <Button
-                color="danger"
-                className="ml-1 mb-1"
-                onClick={(e) => this.cancel(e)}>
-                <i className="fa fa-trash mr-2" /> Cancel
+            <Button
+              color="danger"
+              className="ml-1 mb-1"
+              disabled={mode !== UserDetails.EditMode.CREATE && !this.isModified()}
+              onClick={(e) => this.cancel(e)}>
+              <i className="fa fa-trash mr-2" /> Cancel
               </Button>
-            </Col>
-          </Row>
-        }
+          </Col>
+        </Row>
       </div>
     );
   }

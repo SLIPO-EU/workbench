@@ -1,8 +1,10 @@
 package eu.slipo.workbench.web.repository;
 
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -12,7 +14,10 @@ import javax.persistence.TypedQuery;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import eu.slipo.workbench.common.domain.AccountEntity;
 import eu.slipo.workbench.common.model.EnumRole;
@@ -21,6 +26,7 @@ import eu.slipo.workbench.common.model.user.Account;
 import eu.slipo.workbench.web.model.admin.AccountQuery;
 
 @Repository()
+@Transactional()
 public class DefaultAccountRepository implements AccountRepository {
 
     @PersistenceContext(unitName = "default")
@@ -84,6 +90,43 @@ public class DefaultAccountRepository implements AccountRepository {
         AccountEntity account = this.findEntity(id);
 
         return (account == null ? null : account.toDto());
+    }
+
+    @Override
+    public Account findOne(String userName) {
+        String qlString = "select a from Account a where a.username = :userName ";
+
+        List<AccountEntity> accounts = entityManager
+            .createQuery(qlString, AccountEntity.class)
+            .setParameter("userName", userName)
+            .setMaxResults(1)
+            .getResultList();
+
+        return (accounts.isEmpty() ? null : accounts.get(0).toDto());
+    }
+
+    @Override
+    public Account create(int createdBy, String userName, String password, String givenName, String familyName, Set<EnumRole> roles) {
+        PasswordEncoder encoder = new BCryptPasswordEncoder();
+
+        AccountEntity entity = new AccountEntity(userName, userName);
+        AccountEntity grantedBy = this.findEntity(createdBy);
+
+        entity.setActive(true);
+        entity.setBlocked(false);
+        entity.setLang("en");
+        entity.setName(givenName, familyName);
+        entity.setRegistered(ZonedDateTime.now());
+        entity.setPassword(encoder.encode(password));
+
+        roles.stream().forEach(r-> {
+            entity.grant(r, grantedBy);
+        });
+
+        entityManager.persist(entity);
+        entityManager.flush();
+
+        return entity.toDto();
     }
 
     @Override

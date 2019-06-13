@@ -1,7 +1,10 @@
 package eu.slipo.workbench.web.repository;
 
+import java.util.Set;
+
 import org.springframework.data.domain.PageRequest;
 
+import eu.slipo.workbench.common.model.EnumRole;
 import eu.slipo.workbench.common.model.QueryResultPage;
 import eu.slipo.workbench.common.model.user.Account;
 import eu.slipo.workbench.web.model.admin.AccountQuery;
@@ -24,6 +27,29 @@ public interface AccountRepository {
      * returned.
      */
     Account findOne(int id);
+
+    /**
+     * Find the account with the given user name
+     *
+     * @param userName the account user name to search for
+     * @return An {@link Account} object if the account exists; Otherwise <tt>null</tt> is
+     * returned.
+     */
+    Account findOne(String userName);
+
+    /**
+     * Create a new account
+     *
+     * @param createdBy The id of the authenticated user
+     * @param userName Unique user name
+     * @param password User password
+     * @param givenName User given name
+     * @param familyName User family name
+     * @param roles User assigned roles
+     *
+     * @return The new account
+     */
+    Account create(int createdBy, String userName, String password, String givenName, String familyName, Set<EnumRole> roles);
 
     /**
      * Update the account with the given id

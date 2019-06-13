@@ -2,6 +2,8 @@ package eu.slipo.workbench.web.security;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 import javax.servlet.FilterChain;
@@ -26,12 +28,14 @@ import org.springframework.web.filter.GenericFilterBean;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import eu.slipo.workbench.common.model.BasicErrorCode;
+import eu.slipo.workbench.common.model.EnumRole;
 import eu.slipo.workbench.common.model.ErrorCode;
 import eu.slipo.workbench.common.model.RestResponse;
 import eu.slipo.workbench.common.model.security.ApplicationKeyErrorCode;
 import eu.slipo.workbench.common.model.security.ApplicationKeyException;
 import eu.slipo.workbench.common.model.security.ApplicationKeyRecord;
 import eu.slipo.workbench.web.repository.ApplicationKeyRepository;
+import eu.slipo.workbench.web.service.DefaultUserDetailsService;
 
 /**
  * A servlet filter extending {@link GenericFilterBean} that handles API calls
@@ -113,10 +117,13 @@ public class HeaderAuthenticationFilter extends GenericFilterBean {
             throw new ApplicationKeyException(ApplicationKeyErrorCode.REVOKED_KEY, "Application key has been revoked");
         }
         // Get user details and authorities
-        UserDetails details = this.userDetailsService.loadUserByUsername(applicationKey.getMappedAccount().getUsername());
+        UserDetails userDetails = this.userDetailsService.loadUserByUsername(applicationKey.getMappedAccount().getUsername());
         // Set authorities
         List<GrantedAuthority> authorities = new ArrayList<>();
         authorities.add(new SimpleGrantedAuthority("ROLE_API"));
+        // Replace roles
+        DefaultUserDetailsService.Details details = ((DefaultUserDetailsService.Details) userDetails);
+        details.setRoles(new HashSet<>(Arrays.asList(EnumRole.API)));
         // Create token
         ApplicationKeyAuthenticationToken token = new ApplicationKeyAuthenticationToken(details, "", authorities, applicationKey);
         // Update security context

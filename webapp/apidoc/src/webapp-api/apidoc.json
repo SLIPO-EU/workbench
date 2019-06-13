@@ -9,9 +9,13 @@
     "filename": "./header.md"
   },
   "order": [
+    "Context",
+    "Validate",
+
     "FileSystem",
     "Browse",
     "DownloadFile",
+    "UploadFile",
 
     "Resources",
     "QueryResource",

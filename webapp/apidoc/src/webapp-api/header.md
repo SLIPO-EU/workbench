@@ -1,6 +1,7 @@
 This document describes the SLIPO API Interface.
 
-All API requests must set the HTTP header `X-API-Key` to a valid application key value.
+All API requests must set the HTTP header `X-API-Key` to a valid application key value. Moreover, the `Content-Type`
+header value must be set to `application/json` unless stated otherwise.
 
 The API may return the following error codes:
 

@@ -34,8 +34,10 @@ public class ProcessSimpleRecord {
         this.updatedOn = record.getUpdatedOn();
         this.version = record.getVersion();
 
-        for (Step s : record.getDefinition().steps()) {
-            this.steps.add(new ProcessStepSimpleRecord(s));
+        if (record.getDefinition() != null) {
+            for (Step s : record.getDefinition().steps()) {
+                this.steps.add(new ProcessStepSimpleRecord(s));
+            }
         }
         for (ProcessRecord p : record.getRevisions()) {
             this.revisions.add(new ProcessSimpleRecord(p));

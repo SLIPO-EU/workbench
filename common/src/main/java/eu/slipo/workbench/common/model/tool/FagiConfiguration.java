@@ -618,6 +618,114 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
         }
     }
 
+    public static class MachineLearningModels implements Serializable
+    {
+        private static final long serialVersionUID = 1L;
+
+        /**
+         * The path of the ML-model for name resources
+         */
+        private String name;
+
+        /**
+         * The path of the ML-model for address resources.
+         */
+        private String address;
+
+        /**
+         * The path of the ML-model for website resources.
+         */
+        private String website;
+
+        /**
+         * The path of the ML-model for phone number resources.
+         */
+        private String phone;
+
+        /**
+         * The path of the ML-model for e-mail resources.
+         */
+        private String email;
+
+        /**
+         * The path of the ML-model for link validation.
+         */
+        private String validation;
+
+        @JsonProperty("name")
+        public String getName()
+        {
+            return name;
+        }
+
+        @JsonProperty("name")
+        public void setName(String name)
+        {
+            this.name = name;
+        }
+
+        @JsonProperty("address")
+        public String getAddress()
+        {
+            return address;
+        }
+
+        @JsonProperty("address")
+        public void setAddress(String address)
+        {
+            this.address = address;
+        }
+
+        @JsonProperty("website")
+        public String getWebsite()
+        {
+            return website;
+        }
+
+        @JsonProperty("website")
+        public void setWebsite(String website)
+        {
+            this.website = website;
+        }
+
+        @JsonProperty("phone")
+        public String getPhone()
+        {
+            return phone;
+        }
+
+        @JsonProperty("phone")
+        public void setPhone(String phone)
+        {
+            this.phone = phone;
+        }
+
+        @JsonProperty("email")
+        public String getEmail()
+        {
+            return email;
+        }
+
+        @JsonProperty("email")
+        public void setEmail(String email)
+        {
+            this.email = email;
+        }
+
+        @JsonProperty("validation")
+        public String getValidation()
+        {
+            return validation;
+        }
+
+        @JsonProperty("validation")
+        public void setValidation(String validation)
+        {
+            this.validation = validation;
+        }
+
+    }
+
     public class OutputNameMapper implements InputToOutputNameMapper<Fagi>
     {
         private OutputNameMapper() {};
@@ -692,6 +800,16 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
      */
     private Output target;
 
+    /**
+     * Enable the prediction of validation and fusion actions with the use of ML models
+     */
+    private boolean enableMLRules;
+
+    /**
+     * The models to be defined in the ML group tag
+     */
+    private MachineLearningModels mlModels;
+
     public FagiConfiguration()
     {
         this._version = VERSION;
@@ -735,13 +853,13 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
 
     @JsonProperty("level")
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public EnumLevel getLevel() 
+    public EnumLevel getLevel()
     {
         return _level;
     }
 
     @JsonProperty("level")
-    public void setLevel(EnumLevel level) 
+    public void setLevel(EnumLevel level)
     {
         this._level = level;
     }
@@ -1215,5 +1333,31 @@ public class FagiConfiguration extends FuseConfiguration<Fagi>
     {
         Assert.notNull(key, "A key (for fusion mode) is required");
         this.target.mode = Mode.fromKey(key);
+    }
+
+    //// ML models ////
+
+    @JsonProperty("enableMLRules")
+    public boolean isEnableMLRules()
+    {
+        return enableMLRules;
+    }
+
+    @JsonProperty("enableMLRules")
+    public void setEnableMLRules(boolean enableMLRules)
+    {
+        this.enableMLRules = enableMLRules;
+    }
+
+    @JsonProperty("mlModels")
+    public MachineLearningModels getMlModels()
+    {
+        return mlModels;
+    }
+
+    @JsonProperty("mlModels")
+    public void setMlModels(MachineLearningModels mlModels)
+    {
+        this.mlModels = mlModels;
     }
 }

@@ -16,6 +16,7 @@ export default class Filters extends React.Component {
     super(props);
 
     this.clear = this.clear.bind(this);
+    this.create = this.create.bind(this);
     this.search = this.search.bind(this);
   }
 
@@ -34,6 +35,10 @@ export default class Filters extends React.Component {
     });
   }
 
+  create() {
+    this.props.create();
+  }
+
   render() {
     const props = this.props;
 
@@ -50,7 +55,8 @@ export default class Filters extends React.Component {
             />
           </Col>
           <Col xs="12" md="9">
-            <Button color="warning" onClick={this.clear} style={{ marginTop: 30, float: 'right' }}>Clear</Button>
+            <Button color="primary" onClick={this.create} style={{ marginTop: 30, float: 'right' }}>Create</Button>
+            <Button color="warning" onClick={this.clear} style={{ marginTop: 30, float: 'right', marginRight: 10 }}>Clear</Button>
             <Button type="submit" style={{ marginTop: 30, float: 'right', marginRight: 10 }}>Search</Button>
           </Col>
         </Row>
