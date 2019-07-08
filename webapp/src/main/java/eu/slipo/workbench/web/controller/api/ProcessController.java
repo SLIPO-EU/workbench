@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -86,6 +87,7 @@ public class ProcessController extends BaseController {
      * @param version The workflow version
      * @return an instance of {@link ProcessExecutionSimpleRecordView}
      */
+    @CrossOrigin
     @GetMapping(value = "/api/v1/process/{id}/{version}")
     public RestResponse<?> getStatus(
         @PathVariable long id, @PathVariable long version
