@@ -106,7 +106,7 @@ class KpiFagiView extends React.Component {
         const value = data[key];
 
         // Ignore previous versions of FAGI
-        if (!value.hasOwnProperty('items')) {
+        if (!Object.prototype.hasOwnProperty.call(value, 'items')) {
           return result;
         }
 
