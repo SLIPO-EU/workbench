@@ -268,7 +268,10 @@ class TripleGeoConfiguration extends React.Component {
                         {...inject}
                         id="mappingSpec"
                         label="Mapping specification file"
-                        help="File containing RML or XSLT mappings from input schema to RDF"
+                        help={
+                          <span>File containing YAML mappings from input schema to RDF. Example mappings for TripleGeo can be found <a href="https://github.com/SLIPO-EU/TripleGeo/tree/master/test/conf" target="_blank">here</a>.
+                          </span>
+                        }
                         filesystem={filesystem}
                         defaultMode={EnumFileSelectMode.FIELD}
                         allowDelete
@@ -289,7 +292,10 @@ class TripleGeoConfiguration extends React.Component {
                         {...inject}
                         id="classificationSpec"
                         label="Classification specification file"
-                        help="File (in YML or CSV format) containing classification hierarchy of categories"
+                        help={
+                          <span>File (in YML or CSV format) containing classification hierarchy of categories. Example classification for TripleGeo can be found <a href="https://github.com/SLIPO-EU/TripleGeo/tree/master/test/classification" target="_blank">here</a>.
+                          </span>
+                        }
                         filesystem={filesystem}
                         defaultMode={EnumFileSelectMode.FIELD}
                         allowDelete
