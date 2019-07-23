@@ -23,6 +23,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import com.google.common.collect.ImmutableList;
 
 import eu.slipo.workbench.web.logging.filter.MappedDiagnosticContextFilter;
+import eu.slipo.workbench.web.model.Headers;
 
 @Configuration
 @EnableWebSecurity
@@ -126,8 +127,13 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter
     CorsConfigurationSource corsConfigurationSource() {
         final CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(ImmutableList.of("*"));
-        configuration.setAllowedMethods(ImmutableList.of("GET", "POST"));
-        configuration.setAllowedHeaders(ImmutableList.of("Authorization", "Cache-Control", "Content-Type"));
+        configuration.setAllowedMethods(ImmutableList.of("GET"));
+        configuration.setAllowedHeaders(ImmutableList.of(
+            "Authorization",
+            "Cache-Control",
+            "Content-Type",
+            Headers.API_SESSION_TOKEN
+        ));
 
         final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

@@ -6,7 +6,8 @@ public enum EnumRole
     ADMIN(2, "Site administrator"),
     AUTHOR(3, "Data integration workflow author"),
     DEVELOPER(4, "Developer role that enables additional features"),
-    API(5, "SLIPO Application Programming Interface ")
+    API(5, "SLIPO Application Programming Interface "),
+    API_SESSION(5, "SLIPO Application Programming Interface session token "),
     ;
 
     private final int value;

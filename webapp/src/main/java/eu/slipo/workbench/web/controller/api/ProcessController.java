@@ -88,6 +88,7 @@ public class ProcessController extends BaseController {
      * @return an instance of {@link ProcessExecutionSimpleRecordView}
      */
     @CrossOrigin
+    @Secured({ "ROLE_API", "ROLE_API_SESSION" })
     @GetMapping(value = "/api/v1/process/{id}/{version}")
     public RestResponse<?> getStatus(
         @PathVariable long id, @PathVariable long version
