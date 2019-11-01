@@ -1,6 +1,8 @@
 package eu.slipo.workbench.web.controller.action;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -18,6 +20,7 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -67,6 +70,7 @@ public class ConfigurationController extends BaseController {
         ClientConfiguration config = new ClientConfiguration();
 
         config.setProfiles(this.getToolProfiles());
+        config.setProfileComments(this.getProfileComments());
         config.setOsm(this.mapConfiguration.getOsm());
         config.setBingMaps(this.mapConfiguration.getBingMaps());
         config.setTripleGeo(toolkitConfiguration.getTriplegeo());
@@ -79,7 +83,7 @@ public class ConfigurationController extends BaseController {
         return config;
     }
 
-    private Map<EnumTool, Map<String, ToolConfiguration<?>>> getToolProfiles() {
+     private Map<EnumTool, Map<String, ToolConfiguration<?>>> getToolProfiles() {
         Map<EnumTool, Map<String, ToolConfiguration<?>>>  result = new HashMap<EnumTool, Map<String, ToolConfiguration<?>>>();
         try {
             String re = ".*vendor\\/(.*)\\/.*config\\/profiles\\/(.*)\\/(config\\.properties)";
@@ -145,6 +149,53 @@ public class ConfigurationController extends BaseController {
         }
 
         postProcessProfiles(result);
+        return result;
+    }
+
+
+    private Map<EnumTool, Map<String, String>> getProfileComments() {
+        Map<EnumTool, Map<String, String>>  result = new HashMap<EnumTool, Map<String, String>>();
+        try {
+            String re = ".*vendor\\/(.*)\\/.*config\\/profiles\\/(.*)\\/(readme\\.txt)";
+            Pattern pattern = Pattern.compile(re);
+
+            Stream.of(resourceResolver.getResources("classpath:" + vendorDataPath + "/**"))
+            .map(r -> {
+                Pair<Path, Resource> p = null;
+                if (r instanceof FileSystemResource) {
+                    p = Pair.<Path, Resource>of(Paths.get(((FileSystemResource) r).getPath()), r);
+                } else if (r instanceof ClassPathResource) {
+                    p = Pair.<Path, Resource>of(Paths.get(((ClassPathResource) r).getPath()), r);
+                } else {
+                    logger.warn("Did not expect a resource of type [" + r.getClass() + "]");
+                }
+                return p;
+            })
+            .forEach(pair -> {
+                Matcher m = pattern.matcher(pair.getLeft().toString());
+                if (m.matches()) {
+                    final String name = CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_UNDERSCORE, m.group(1));
+                    final EnumTool tool = EnumTool.fromName(name);
+                    final String profile = m.group(2);
+
+                    try (InputStream in = pair.getRight().getInputStream()) {
+                        String comments = StreamUtils.copyToString(in, StandardCharsets.UTF_8);
+
+                        if(!result.containsKey(tool)) {
+                            result.put(tool, new HashMap<String, String>());
+                        }
+                        if(!result.get(tool).containsKey(profile)) {
+                            result.get(tool).put(profile, comments);
+                        }
+                    } catch (IOException ex) {
+                        logger.warn(String.format("Cannot read comments for profile [%s] of tool [%s]", profile, tool), ex);
+                    }
+                }
+            });
+        } catch (IOException e) {
+            logger.error("Failed to scan classpath for vendor profile comments", e);
+        }
+
         return result;
     }
 

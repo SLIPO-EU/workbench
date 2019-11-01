@@ -41,7 +41,10 @@ class DeerConfiguration extends React.Component {
       },
     }];
 
-    const deerProfiles = this.props.appConfiguration.profiles[EnumTool.DEER] || [];
+    const { appConfiguration: config } = this.props;
+    const deerProfiles = config.profiles[EnumTool.DEER] || [];
+    const deerProfileComments = config.profileComments[EnumTool.DEER] || null;
+
     Object.keys(deerProfiles).map(key => {
       this.profiles.push({
         value: key,
@@ -50,6 +53,7 @@ class DeerConfiguration extends React.Component {
           ...readConfiguration(deerProfiles[key]),
           profile: key,
         },
+        comments: deerProfileComments ? deerProfileComments[key] : null || null,
       });
     });
 
@@ -128,6 +132,8 @@ class DeerConfiguration extends React.Component {
       value,
     };
 
+    const selectedProfile = this.profiles.find((p) => p.value === value.profile) || null;
+
     return (
       <div>
 
@@ -167,18 +173,25 @@ class DeerConfiguration extends React.Component {
           </div>
 
           {value.level !== configurationLevels.AUTO &&
-            <SelectField
-              {...inject}
-              id="profile"
-              label="Selected Profile"
-              help="Specify a default specification profile"
-              options={this.profiles}
-              clearable={false}
-              onChange={(value) => {
-                this.changeProfile(value);
-              }}
-              showLabel={value.level === configurationLevels.ADVANCED}
-            />
+            <>
+              <SelectField
+                {...inject}
+                id="profile"
+                label="Selected Profile"
+                help="Specify a default specification profile"
+                options={this.profiles}
+                clearable={false}
+                onChange={(value) => {
+                  this.changeProfile(value);
+                }}
+                showLabel={value.level === configurationLevels.ADVANCED}
+              />
+              {selectedProfile && selectedProfile.comments &&
+                <div className="alert-info alert-profile">
+                  {selectedProfile.comments}
+                </div>
+              }
+            </>
           }
 
           {value.level === configurationLevels.ADVANCED &&

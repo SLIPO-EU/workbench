@@ -58,7 +58,10 @@ class LimesConfiguration extends React.Component {
       },
     }];
 
-    const limesProfiles = this.props.appConfiguration.profiles[EnumTool.LIMES] || [];
+    const { appConfiguration: config } = this.props;
+    const limesProfiles = config.profiles[EnumTool.LIMES] || [];
+    const limesProfileComments = config.profileComments[EnumTool.LIMES] || null;
+
     Object.keys(limesProfiles).map(key => {
       this.profiles.push({
         value: key,
@@ -67,6 +70,7 @@ class LimesConfiguration extends React.Component {
           ...readConfiguration(limesProfiles[key]),
           profile: key,
         },
+        comments: limesProfileComments ? limesProfileComments[key] : null || null,
       });
     });
 
@@ -173,6 +177,8 @@ class LimesConfiguration extends React.Component {
       value,
     };
 
+    const selectedProfile = this.profiles.find((p) => p.value === value.profile) || null;
+
     return (
       <div>
 
@@ -213,18 +219,25 @@ class LimesConfiguration extends React.Component {
           </div>
 
           {value.level !== configurationLevels.AUTO &&
-            <SelectField
-              {...inject}
-              id="profile"
-              label="Selected Profile"
-              help="Specify a default rules specification profile"
-              options={this.profiles}
-              clearable={false}
-              onChange={(value) => {
-                this.changeProfile(value);
-              }}
-              showLabel={value.level === configurationLevels.ADVANCED}
-            />
+            <>
+              <SelectField
+                {...inject}
+                id="profile"
+                label="Selected Profile"
+                help="Specify a default rules specification profile"
+                options={this.profiles}
+                clearable={false}
+                onChange={(value) => {
+                  this.changeProfile(value);
+                }}
+                showLabel={value.level === configurationLevels.ADVANCED}
+              />
+              {selectedProfile && selectedProfile.comments &&
+                <div className="alert-info alert-profile">
+                  {selectedProfile.comments}
+                </div>
+              }
+            </>
           }
 
         </div>

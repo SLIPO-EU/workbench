@@ -83,7 +83,10 @@ class TripleGeoConfiguration extends React.Component {
       },
     }];
 
-    const tripleGeoProfiles = this.props.appConfiguration.profiles[EnumTool.TripleGeo] || [];
+    const { appConfiguration: config } = this.props;
+    const tripleGeoProfiles = config.profiles[EnumTool.TripleGeo] || [];
+    const tripleGeoProfileComments = config.profileComments[EnumTool.TripleGeo] || null;
+
     Object.keys(tripleGeoProfiles).map(key => {
       profiles.push({
         value: key,
@@ -92,6 +95,7 @@ class TripleGeoConfiguration extends React.Component {
           ...readConfiguration(tripleGeoProfiles[key]),
           profile: key,
         },
+        comments: tripleGeoProfileComments ? tripleGeoProfileComments[key] : null || null,
       });
     });
 
@@ -178,6 +182,8 @@ class TripleGeoConfiguration extends React.Component {
       value,
     };
 
+    const selectedProfile = profiles.find((p) => p.value === value.profile) || null;
+
     const mappingErrors = Object.keys(errors)
       .filter(key => key.startsWith('mapping-'))
       .map(key => ({ key, text: errors[key] }));
@@ -246,18 +252,25 @@ class TripleGeoConfiguration extends React.Component {
               </div>
 
               {value.level !== configurationLevels.AUTO &&
-                <SelectField
-                  {...inject}
-                  id="profile"
-                  label="Selected Profile"
-                  help="Specify a default mapping and classification profile"
-                  options={profiles}
-                  clearable={false}
-                  onChange={(value) => {
-                    this.changeProfile(value);
-                  }}
-                  showLabel={value.level === configurationLevels.ADVANCED}
-                />
+                <>
+                  <SelectField
+                    {...inject}
+                    id="profile"
+                    label="Selected Profile"
+                    help="Specify a default mapping and classification profile"
+                    options={profiles}
+                    clearable={false}
+                    onChange={(value) => {
+                      this.changeProfile(value);
+                    }}
+                    showLabel={value.level === configurationLevels.ADVANCED}
+                  />
+                  {selectedProfile && selectedProfile.comments &&
+                    <div className="alert-info alert-profile">
+                      {selectedProfile.comments}
+                    </div>
+                  }
+                </>
               }
 
               <div>

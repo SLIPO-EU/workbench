@@ -61,7 +61,10 @@ class FagiConfiguration extends React.Component {
       },
     }];
 
-    const fagiProfiles = this.props.appConfiguration.profiles[EnumTool.FAGI] || [];
+    const { appConfiguration: config } = this.props;
+    const fagiProfiles = config.profiles[EnumTool.FAGI] || [];
+    const fagiProfileComments = config.profileComments[EnumTool.FAGI] || null;
+
     Object.keys(fagiProfiles).map(key => {
       this.profiles.push({
         value: key,
@@ -70,6 +73,7 @@ class FagiConfiguration extends React.Component {
           ...readConfiguration(fagiProfiles[key]),
           profile: key,
         },
+        comments: fagiProfileComments ? fagiProfileComments[key] : null || null,
       });
     });
 
@@ -179,6 +183,8 @@ class FagiConfiguration extends React.Component {
       value,
     };
 
+    const selectedProfile = this.profiles.find((p) => p.value === value.profile) || null;
+
     return (
       <div>
         <div>
@@ -218,18 +224,25 @@ class FagiConfiguration extends React.Component {
           </div>
 
           {value.level !== configurationLevels.AUTO &&
-            <SelectField
-              {...inject}
-              id="profile"
-              label="Selected Profile"
-              help="Specify a default rules specification profile"
-              options={this.profiles}
-              clearable={false}
-              onChange={(value) => {
-                this.changeProfile(value);
-              }}
-              showLabel={value.level === configurationLevels.ADVANCED}
-            />
+            <>
+              <SelectField
+                {...inject}
+                id="profile"
+                label="Selected Profile"
+                help="Specify a default rules specification profile"
+                options={this.profiles}
+                clearable={false}
+                onChange={(value) => {
+                  this.changeProfile(value);
+                }}
+                showLabel={value.level === configurationLevels.ADVANCED}
+              />
+              {selectedProfile && selectedProfile.comments &&
+                <div className="alert-info alert-profile">
+                  {selectedProfile.comments}
+                </div>
+              }
+            </>
           }
 
           {value.level === configurationLevels.ADVANCED &&

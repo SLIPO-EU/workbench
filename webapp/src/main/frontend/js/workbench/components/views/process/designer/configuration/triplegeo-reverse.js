@@ -45,7 +45,10 @@ class TripleGeoReverseConfiguration extends React.Component {
       },
     }];
 
+    const { appConfiguration: config } = this.props;
     const tripleGeoProfiles = this.props.appConfiguration.profiles[EnumTool.ReverseTripleGeo] || [];
+    const tripleGeoProfileComments = config.profileComments[EnumTool.ReverseTripleGeo] || null;
+
     Object.keys(tripleGeoProfiles).map(key => {
       this.profiles.push({
         value: key,
@@ -54,6 +57,7 @@ class TripleGeoReverseConfiguration extends React.Component {
           ...readConfiguration(tripleGeoProfiles[key]),
           profile: key,
         },
+        comments: tripleGeoProfileComments ? tripleGeoProfileComments[key] : null || null,
       });
     });
 
@@ -98,6 +102,8 @@ class TripleGeoReverseConfiguration extends React.Component {
       value,
     };
 
+    const selectedProfile = this.profiles.find((p) => p.value === value.profile) || null;
+
     return (
       <div>
 
@@ -134,6 +140,11 @@ class TripleGeoReverseConfiguration extends React.Component {
                 this.changeProfile(value);
               }}
             />
+            {selectedProfile && selectedProfile.comments &&
+              <div className="alert-info alert-profile">
+                {selectedProfile.comments}
+              </div>
+            }
 
             {this.state.displayQueryField &&
               <div>
