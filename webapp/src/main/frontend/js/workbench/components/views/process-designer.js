@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import * as React from 'react';
 import * as ReactRedux from 'react-redux';
 
@@ -15,6 +16,10 @@ import {
   DropdownItem,
   DropdownMenu,
   DropdownToggle,
+  FormFeedback,
+  FormGroup,
+  Input,
+  Label,
   Row,
 } from 'reactstrap';
 
@@ -114,8 +119,9 @@ import {
  * Component actions
  */
 const EnumComponentAction = {
+  Accept: 'Accept',
   Discard: 'Discard',
-  CloseCancelDialog: 'CloseCancelDialog',
+  CloseDialog: 'CloseDialog',
 };
 
 /**
@@ -131,6 +137,8 @@ class ProcessDesigner extends React.Component {
 
     this.state = {
       isLoading: true,
+      saveAsDialogOpen: false,
+      saveAsProcessName: '',
       saveDropdownOpen: false,
       cancelDialogOpen: false,
     };
@@ -140,10 +148,12 @@ class ProcessDesigner extends React.Component {
     this.onFetchError = this.onFetchError.bind(this);
     this.onFetchSuccess = this.onFetchSuccess.bind(this);
     this.reset = this.reset.bind(this);
+    this.saveAsDialogHandler = this.saveAsDialogHandler.bind(this);
     this.select = this.select.bind(this);
     this.viewKpi = this.viewKpi.bind(this);
     this.viewLog = this.viewLog.bind(this);
     this.toggleCancelDialog = this.toggleCancelDialog.bind(this);
+    this.toggleSaveAsDialog = this.toggleSaveAsDialog.bind(this);
     this.toggleSaveButtonDropdown = this.toggleSaveButtonDropdown.bind(this);
     this.viewMap = this.viewMap.bind(this);
   }
@@ -243,6 +253,15 @@ class ProcessDesigner extends React.Component {
     this.setState({ saveDropdownOpen: !this.state.saveDropdownOpen });
   }
 
+  toggleSaveAsDialog() {
+    const { designer: { process } } = this.props;
+
+    this.setState({
+      saveAsDialogOpen: !this.state.saveAsDialogOpen,
+      saveAsProcessName: this.state.saveAsDialogOpen ? '' : process.properties.name,
+    });
+  }
+
   toggleCancelDialog() {
     this.setState({ cancelDialogOpen: !this.state.cancelDialogOpen });
   }
@@ -263,6 +282,19 @@ class ProcessDesigner extends React.Component {
 
   select() {
     this.props.setActiveProcess(this.props.process);
+  }
+
+  saveAsDialogHandler(action) {
+    switch (action.key) {
+      case EnumComponentAction.Accept:
+        this.save(EnumDesignerSaveAction.Save, true);
+        break;
+
+      default:
+        this.toggleSaveAsDialog();
+        break;
+
+    }
   }
 
   cancelDialogHandler(action) {
@@ -289,11 +321,28 @@ class ProcessDesigner extends React.Component {
     }
   }
 
-  save(action) {
+  save(action, createNew = false) {
     const isTemplate = this.props.process.template || action === EnumDesignerSaveAction.SaveAsTemplate;
 
-    this.props.save(action, this.props.designer, isTemplate)
+    if (action === EnumDesignerSaveAction.SaveAs) {
+      this.toggleSaveAsDialog();
+      return;
+    }
+
+    const designer = _.cloneDeep(this.props.designer);
+
+    if (createNew) {
+      designer.process.id = null;
+      designer.process.version = null;
+      designer.process.properties.name = this.state.saveAsProcessName;
+    }
+
+    this.props.save(action, designer, isTemplate)
       .then(() => {
+        if (createNew) {
+          this.toggleSaveAsDialog();
+        }
+
         const text = `${isTemplate ? "Template" : "Process"} has been saved successfully!`;
         message.success(text, 'fa-save');
         this.reset();
@@ -374,17 +423,20 @@ class ProcessDesigner extends React.Component {
                   <Button color="default" onClick={this.props.undoAction} className="float-left ml-3" disabled={this.props.undo.length === 1}>Undo</Button>
                   <Button color="default" onClick={this.props.redoAction} className="float-left ml-3" disabled={this.props.redo.length === 0}>Redo</Button>
                   <ButtonGroup className="float-right">
-                    <Button color="primary" onClick={this.save.bind(this, EnumDesignerSaveAction.Save)}>Save</Button>
+                    <Button color="primary" onClick={() => this.save(EnumDesignerSaveAction.Save)} className="mr-1">Save</Button>
+                    {!this.props.process.template && this.props.process.id &&
+                      <Button color="primary" onClick={this.toggleSaveAsDialog} className="mr-1">Save As ...</Button>
+                    }
                     {!this.props.process.template &&
                       <ButtonDropdown isOpen={this.state.saveDropdownOpen} toggle={this.toggleSaveButtonDropdown} direction={'down'}>
                         <DropdownToggle caret>
                           More ...
                         </DropdownToggle>
                         <DropdownMenu>
-                          <DropdownItem onClick={this.save.bind(this, EnumDesignerSaveAction.SaveAndExecute)}>Save and Execute</DropdownItem>
-                          <DropdownItem onClick={this.save.bind(this, EnumDesignerSaveAction.SaveAndExecuteAndMap)}>Save, Execute and Create Map</DropdownItem>
+                          <DropdownItem onClick={() => this.save(EnumDesignerSaveAction.SaveAndExecute)}>Save and Execute</DropdownItem>
+                          <DropdownItem onClick={() => this.save(EnumDesignerSaveAction.SaveAndExecuteAndMap)}>Save, Execute and Create Map</DropdownItem>
                           {!this.props.process.id &&
-                            <DropdownItem onClick={this.save.bind(this, EnumDesignerSaveAction.SaveAsTemplate)}>Save Recipe </DropdownItem>
+                            <DropdownItem onClick={() => this.save(EnumDesignerSaveAction.SaveAsTemplate)}>Save Recipe </DropdownItem>
                           }
                         </DropdownMenu>
                       </ButtonDropdown>
@@ -530,6 +582,57 @@ class ProcessDesigner extends React.Component {
     );
   }
 
+  renderSaveAsDialog() {
+    const { saveAsProcessName } = this.state;
+    const { designer: { process } } = this.props;
+
+    const name = process.properties.name;
+    const error = !saveAsProcessName || saveAsProcessName === name;
+
+    return (
+      <Dialog className="modal-dialog-centered"
+        header={
+          <span>
+            <i className={'fa fa-save mr-2'}></i>
+            <span>Save <b>{name}</b> As ...</span>
+          </span>
+        }
+        modal={this.state.saveAsDialogOpen}
+        handler={this.saveAsDialogHandler}
+        actions={[
+          {
+            key: EnumComponentAction.Accept,
+            label: 'Yes',
+            iconClass: 'fa fa-check',
+            color: 'primary',
+            disabled: error,
+          }, {
+            key: EnumComponentAction.CloseDialog,
+            label: 'No',
+            iconClass: 'fa fa-times',
+          }
+        ]}
+      >
+        <div style={{ minWidth: 400 }}>
+          <FormGroup color={error ? 'danger' : null}>
+            <Label for="process-name">Enter a new name for the workflow</Label>
+            <Input
+              type="text"
+              name="process-name"
+              id="process-name"
+              value={saveAsProcessName || ''}
+              autoComplete="off"
+              onChange={e => this.setState({ saveAsProcessName: e.target.value })}
+              maxLength={80}
+            />
+            {!saveAsProcessName ? <FormFeedback>Process name is required</FormFeedback> : null}
+            {saveAsProcessName && saveAsProcessName === name ? <FormFeedback>A different process name is required</FormFeedback> : null}
+          </FormGroup>
+        </div>
+      </Dialog>
+    );
+  }
+
   renderCancelDialog() {
     return (
       <Dialog className="modal-dialog-centered"
@@ -547,7 +650,7 @@ class ProcessDesigner extends React.Component {
             iconClass: 'fa fa-trash',
             color: 'danger',
           }, {
-            key: EnumComponentAction.CloseCancelDialog,
+            key: EnumComponentAction.CloseDialog,
             label: 'No',
             iconClass: 'fa fa-undo',
           }
@@ -574,6 +677,9 @@ class ProcessDesigner extends React.Component {
             {this.props.view.type === EnumDesignerView.DockerLogViewer && this.renderDockerLogDetails()}
           </Col>
         </Row>
+        {this.state.saveAsDialogOpen &&
+          this.renderSaveAsDialog()
+        }
         {this.state.cancelDialogOpen &&
           this.renderCancelDialog()
         }

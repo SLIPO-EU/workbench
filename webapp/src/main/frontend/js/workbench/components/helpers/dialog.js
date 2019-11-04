@@ -31,6 +31,7 @@ class Dialog extends React.Component {
       label: PropTypes.string.isRequired,
       iconClass: PropTypes.string.isRequired,
       color: PropTypes.string,
+      disabled: PropTypes.bool,
     })).isRequired,
   };
 
@@ -59,6 +60,7 @@ class Dialog extends React.Component {
                   key={value.key}
                   color={value.color || 'secondary'}
                   onClick={() => { this.props.handler({ key: value.key }); }}
+                  disabled={value.disabled === true}
                 >
                   <span><i className={value.iconClass + ' mr-2'}></i>{value.label}</span>
                 </Button>
