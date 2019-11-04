@@ -116,6 +116,14 @@ function createFileColumns(props) {
   ];
 }
 
+function hasExtension(extensions, file) {
+  if (!extensions || extensions.length === 0) {
+    return true;
+  }
+
+  return extensions.some(ext => file.name.endsWith(`.${ext}`));
+}
+
 /**
  * A server file
  *
@@ -166,17 +174,18 @@ export class FileSelect extends React.Component {
   }
 
   static propTypes = {
-    id: PropTypes.string.isRequired,
-    filesystem: PropTypes.object.isRequired,
-    value: PropTypes.any,
-    onChange: PropTypes.func.isRequired,
-    allowUpload: PropTypes.bool,
-    allowNewFolder: PropTypes.bool,
     allowDelete: PropTypes.bool,
     allowDownload: PropTypes.bool,
+    allowedFileTypes: PropTypes.arrayOf(PropTypes.string),
+    allowNewFolder: PropTypes.bool,
+    allowUpload: PropTypes.bool,
     createFolder: PropTypes.func,
-    uploadFile: PropTypes.func,
     deletePath: PropTypes.func,
+    filesystem: PropTypes.object.isRequired,
+    id: PropTypes.string.isRequired,
+    onChange: PropTypes.func.isRequired,
+    uploadFile: PropTypes.func,
+    value: PropTypes.any,
   }
 
   static defaultProps = {
@@ -525,11 +534,13 @@ export class FileSelect extends React.Component {
   }
 
   renderBrowser() {
-    const { style } = this.props;
+    const { allowedFileTypes = null, style } = this.props;
     const { folder } = this.state;
     const data = [
       ...folder.folders.map(f => ({ ...f, type: 'folder' })),
-      ...folder.files.map(f => ({ ...f, type: 'file' })),
+      ...folder.files
+        .filter(f => hasExtension(allowedFileTypes, f))
+        .map(f => ({ ...f, type: 'file' })),
     ];
 
     if (this.state.mode !== EnumFileSelectMode.BROWSER && this.state.mode !== EnumFileSelectMode.NEW_FOLDER) {

@@ -170,7 +170,7 @@ class TripleGeoConfiguration extends React.Component {
 
   render() {
     const props = this.props;
-    const { errors = {}, readOnly, setValue, value, filesystem, inputFile, } = props;
+    const { appConfiguration: config, errors = {}, readOnly, setValue, value, filesystem, inputFile, } = props;
     const { createFolder, deletePath, uploadFile } = props;
     const { enabledLevels = [] } = props;
     const { profiles } = this.state;
@@ -288,6 +288,7 @@ class TripleGeoConfiguration extends React.Component {
                         filesystem={filesystem}
                         defaultMode={EnumFileSelectMode.FIELD}
                         allowDelete
+                        allowedFileTypes={config.tripleGeo.mappingFileTypes}
                         allowUpload
                         allowNewFolder
                         createFolder={createFolder}
@@ -312,6 +313,7 @@ class TripleGeoConfiguration extends React.Component {
                         filesystem={filesystem}
                         defaultMode={EnumFileSelectMode.FIELD}
                         allowDelete
+                        allowedFileTypes={config.tripleGeo.classificationFileTypes}
                         allowUpload
                         allowNewFolder
                         createFolder={createFolder}

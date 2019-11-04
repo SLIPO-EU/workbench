@@ -122,7 +122,7 @@ class DeerConfiguration extends React.Component {
 
   render() {
     const props = this.props;
-    const { enabledLevels, errors, readOnly, setValue, value, filesystem } = props;
+    const { appConfiguration: config, enabledLevels, errors, readOnly, setValue, value, filesystem } = props;
     const { createFolder, deletePath, uploadFile } = props;
 
     const inject = {
@@ -206,6 +206,7 @@ class DeerConfiguration extends React.Component {
                     filesystem={filesystem}
                     defaultMode={EnumFileSelectMode.FIELD}
                     allowDelete
+                    allowedFileTypes={config.deer.specificationFileTypes}
                     allowUpload
                     allowNewFolder
                     createFolder={createFolder}

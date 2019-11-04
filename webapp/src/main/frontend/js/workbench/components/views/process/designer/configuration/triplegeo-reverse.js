@@ -92,7 +92,7 @@ class TripleGeoReverseConfiguration extends React.Component {
 
   render() {
     const props = this.props;
-    const { errors, readOnly, setValue, value, filesystem, } = props;
+    const { appConfiguration: config, errors, readOnly, setValue, value, filesystem, } = props;
     const { createFolder, deletePath, uploadFile } = props;
 
     const inject = {
@@ -158,6 +158,7 @@ class TripleGeoReverseConfiguration extends React.Component {
                       filesystem={filesystem}
                       defaultMode={EnumFileSelectMode.FIELD}
                       allowDelete
+                      allowedFileTypes={config.reverseTripleGeo.queryFileTypes}
                       allowUpload
                       allowNewFolder
                       createFolder={createFolder}
