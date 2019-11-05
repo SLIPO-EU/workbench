@@ -8,6 +8,9 @@ export const RESET_SELECTION = 'ui/process-designer/RESET_SELECTION';
 export const SAVE_SEND_REQUEST = 'ui/process-designer/SAVE_SEND_REQUEST';
 export const SAVE_RECEIVE_RESPONSE = 'ui/process-designer/SAVE_RECEIVE_RESPONSE';
 
+export const SAVE_DRAFT_SUCCESS = 'ui/process-designer/SAVE_DRAFT_SUCCESS';
+export const RESTORE_DRAFT_SUCCESS = 'ui/process-designer/RESTORE_DRAFT_SUCCESS';
+
 export const LOAD_SEND_REQUEST = 'ui/process-designer/LOAD_SEND_REQUEST';
 export const LOAD_RECEIVE_RESPONSE = 'ui/process-designer/LOAD_RECEIVE_RESPONSE';
 

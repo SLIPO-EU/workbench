@@ -137,6 +137,8 @@ function load(state, action) {
     readOnly: action.readOnly,
     // Current process instance
     process,
+    // Process draft
+    draft: null,
     // Workflow step groups
     groups,
     // Process steps

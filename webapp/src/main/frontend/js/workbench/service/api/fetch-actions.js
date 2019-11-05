@@ -16,7 +16,7 @@ export default {
 
   get: (url, token) => fetchJSON(url, 'GET', token, null, headers),
 
-  post: (url, token, data) => fetchJSON(url, 'POST', token, JSON.stringify(data), headers),
+  post: (url, token, data) => fetchJSON(url, 'POST', token, typeof data === 'string' ? data : JSON.stringify(data), headers),
 
   put: (url, token, data) => fetchJSON(url, 'PUT', token, JSON.stringify(data), headers),
 

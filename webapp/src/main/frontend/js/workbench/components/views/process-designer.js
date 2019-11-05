@@ -2,6 +2,8 @@ import _ from 'lodash';
 import * as React from 'react';
 import * as ReactRedux from 'react-redux';
 
+import moment from '../../moment-localized';
+
 import {
   bindActionCreators
 } from 'redux';
@@ -22,6 +24,10 @@ import {
   Label,
   Row,
 } from 'reactstrap';
+
+import {
+  FormattedTime,
+} from 'react-intl';
 
 import {
   buildPath,
@@ -67,12 +73,14 @@ import {
   checkLog,
   downloadFile,
   downloadLog,
+  fetchDraft,
   fetchProcess,
   fetchProcessRevision,
   fetchExecutionDetails,
   fetchExecutionKpiData,
   fetchExecutionLogData,
   save,
+  saveDraft,
   addStep,
   cloneStep,
   removeStep,
@@ -109,11 +117,15 @@ import {
   selectOutputPart,
   getTripleGeoMappings,
   getTripleGeoMappingFileAsText,
+  restoreDraft,
+  rejectDraft,
 } from '../../ducks/ui/views/process-designer';
 
 import {
   message,
 } from '../../service';
+
+const DRAFT_SAVER_INTERVAL = 1000;
 
 /**
  * Component actions
@@ -141,12 +153,14 @@ class ProcessDesigner extends React.Component {
       saveAsProcessName: '',
       saveDropdownOpen: false,
       cancelDialogOpen: false,
+      draftDialogOpen: false,
+      remoteDraft: null,
     };
 
     this.cancelDialogHandler = this.cancelDialogHandler.bind(this);
+    this.draftDialogHandler = this.draftDialogHandler.bind(this);
     this.goToProcessExplorer = this.goToProcessExplorer.bind(this);
     this.onFetchError = this.onFetchError.bind(this);
-    this.onFetchSuccess = this.onFetchSuccess.bind(this);
     this.reset = this.reset.bind(this);
     this.saveAsDialogHandler = this.saveAsDialogHandler.bind(this);
     this.select = this.select.bind(this);
@@ -156,6 +170,8 @@ class ProcessDesigner extends React.Component {
     this.toggleSaveAsDialog = this.toggleSaveAsDialog.bind(this);
     this.toggleSaveButtonDropdown = this.toggleSaveButtonDropdown.bind(this);
     this.viewMap = this.viewMap.bind(this);
+
+    this.draftSaveInterval = null;
   }
 
   resolveMode() {
@@ -176,22 +192,33 @@ class ProcessDesigner extends React.Component {
 
   componentDidMount() {
     const { id, version, execution, ...rest } = this.props.match.params;
+    const { reloadDraft } = this.props;
+
     const action = this.resolveMode();
+
+    const reload = this.shouldReload(id, version);
 
     switch (action) {
       case EnumDesignerMode.CREATE:
-        if (this.shouldReload(id, version)) {
+        if (reload) {
           this.reset();
         }
-        this.select();
-        this.resume();
+
+        if (reload || reloadDraft) {
+          this.props.fetchDraft()
+            .then(result => this.onDraftFetchSuccess(action, result))
+            .catch(this.onFetchError);
+        } else {
+          this.onDraftFetchSuccess(action, null);
+        }
+
         break;
 
       case EnumDesignerMode.EDIT:
-        if (this.shouldReload(id, version)) {
+        if (reload) {
           this.reset();
           this.props.fetchProcess(Number.parseInt(id))
-            .then(this.onFetchSuccess)
+            .then(result => this.onProcessFetchSuccess(action, result))
             .catch(this.onFetchError);
         }
         break;
@@ -199,20 +226,24 @@ class ProcessDesigner extends React.Component {
       case EnumDesignerMode.VIEW:
         this.reset();
         this.props.fetchProcessRevision(Number.parseInt(id), Number.parseInt(version))
-          .then(this.onFetchSuccess)
+          .then(result => this.onProcessFetchSuccess(action, result))
           .catch(this.onFetchError);
         break;
 
       case EnumDesignerMode.EXECUTION:
         this.reset();
         this.props.fetchExecutionDetails(Number.parseInt(id), Number.parseInt(version), Number.parseInt(execution))
-          .then(this.onFetchSuccess)
+          .then(result => this.onProcessFetchSuccess(action, result))
           .catch(this.onFetchError);
         break;
 
       default:
         this.error('Action is not supported');
     }
+  }
+
+  componentWillUnmount() {
+    this.stopDraftTimer();
   }
 
   shouldReload(id, version) {
@@ -240,9 +271,59 @@ class ProcessDesigner extends React.Component {
     this.setState({ isLoading: false });
   }
 
-  onFetchSuccess() {
+  startDraftTimer() {
+    this.stopDraftTimer();
+
+    this.draftSaveInterval = setInterval(() => {
+      this.props.saveDraft();
+    }, DRAFT_SAVER_INTERVAL);
+  }
+
+  stopDraftTimer() {
+    if (this.draftSaveInterval) {
+      clearInterval(this.draftSaveInterval);
+      this.draftSaveInterval = null;
+    }
+  }
+
+  onProcessFetchSuccess(action, result) {
+    const { draft = null } = result;
+
     this.select();
     this.resume();
+
+    switch (action) {
+      case EnumDesignerMode.EDIT:
+        if (draft) {
+          this.toggleDraftDialog(draft);
+        } else {
+          this.startDraftTimer();
+        }
+        break;
+
+      default:
+      // No action
+    }
+  }
+
+  onDraftFetchSuccess(action, result) {
+    this.select();
+    this.resume();
+
+    switch (action) {
+      case EnumDesignerMode.CREATE:
+        if (result) {
+          this.toggleDraftDialog(result);
+        } else {
+          this.props.rejectDraft();
+
+          this.startDraftTimer();
+        }
+        break;
+
+      default:
+      // No action
+    }
   }
 
   onFetchError(err) {
@@ -264,6 +345,13 @@ class ProcessDesigner extends React.Component {
 
   toggleCancelDialog() {
     this.setState({ cancelDialogOpen: !this.state.cancelDialogOpen });
+  }
+
+  toggleDraftDialog(draft = null) {
+    this.setState({
+      draftDialogOpen: !this.state.draftDialogOpen,
+      remoteDraft: this.state.draftDialogOpen ? null : draft,
+    });
   }
 
   goToProcessExplorer() {
@@ -293,7 +381,21 @@ class ProcessDesigner extends React.Component {
       default:
         this.toggleSaveAsDialog();
         break;
+    }
+  }
 
+  draftDialogHandler(action) {
+    switch (action.key) {
+      case EnumComponentAction.Accept:
+        this.restoreDraft();
+        break;
+
+      default:
+        this.props.rejectDraft();
+
+        this.toggleDraftDialog();
+        this.startDraftTimer();
+        break;
     }
   }
 
@@ -322,6 +424,9 @@ class ProcessDesigner extends React.Component {
   }
 
   save(action, createNew = false) {
+    // Stop draft save timer
+    this.stopDraftTimer();
+
     const isTemplate = this.props.process.template || action === EnumDesignerSaveAction.SaveAsTemplate;
 
     if (action === EnumDesignerSaveAction.SaveAs) {
@@ -349,6 +454,9 @@ class ProcessDesigner extends React.Component {
         this.props.history.push(isTemplate ? StaticRoutes.RecipeExplorer : StaticRoutes.ProcessExplorer);
       })
       .catch((err) => {
+        // Restart draft saver timer
+        this.startDraftTimer();
+
         switch (err.level) {
           case EnumErrorLevel.INFO:
             message.infoHtml(this.formatErrors(err), 'fa-warning');
@@ -363,6 +471,15 @@ class ProcessDesigner extends React.Component {
             break;
         }
       });
+  }
+
+  restoreDraft() {
+    const { remoteDraft: draft } = this.state;
+
+    this.props.restoreDraft(draft.definition);
+
+    this.toggleDraftDialog();
+    this.startDraftTimer();
   }
 
   viewKpi(file) {
@@ -661,6 +778,49 @@ class ProcessDesigner extends React.Component {
     );
   }
 
+  renderDraftDialog() {
+    const { remoteDraft: { id, owner, updatedOn } } = this.state;
+
+    return (
+      <Dialog className="modal-dialog-centered"
+        header={
+          <span>
+            <i className={'fa fa-database mr-2'}></i>
+            <span>{id ? 'Restore most recent version' : 'Restore unsaved draft'}</span>
+          </span>
+        }
+        hideHeaderToggle={true}
+        modal={this.state.draftDialogOpen}
+        handler={this.draftDialogHandler}
+        actions={[
+          {
+            key: EnumComponentAction.Accept,
+            label: 'Yes',
+            iconClass: 'fa fa-repeat',
+            color: 'primary',
+          }, {
+            key: EnumComponentAction.CloseDialog,
+            label: 'No',
+            iconClass: 'fa fa-times',
+          }
+        ]}
+      >
+        <div style={{ minWidth: 400 }}>
+          <span>{id ? 'A newer version' : 'An unsaved workflow draft'}</span>
+          <span>, modified at </span>
+          <span className="text-danger"><b>{<FormattedTime value={moment(updatedOn).toDate()} day='numeric' month='numeric' year='numeric' />}</b></span>
+          <span> by </span>
+          <span className="text-danger"><b>{owner.name}</b></span>
+          <span>, has been found</span>
+          <span>{id ? ' for the selected workflow' : ''}</span>
+          <span>. Would you like to switch to the unsaved </span>
+          <span>{id ? 'version' : 'draft'}</span>
+          <span>?</span>
+        </div>
+      </Dialog>
+    );
+  }
+
   render() {
     if (this.state.isLoading) {
       return null;
@@ -683,6 +843,9 @@ class ProcessDesigner extends React.Component {
         {this.state.cancelDialogOpen &&
           this.renderCancelDialog()
         }
+        {this.state.draftDialogOpen &&
+          this.renderDraftDialog()
+        }
       </div>
     );
   }
@@ -692,10 +855,12 @@ const mapStateToProps = (state) => ({
   // Workflow designer
   active: state.ui.views.process.designer.active,
   designer: state.ui.views.process.designer,
+  draft: state.ui.views.process.designer.draft,
   groups: state.ui.views.process.designer.groups,
   process: state.ui.views.process.designer.process,
   readOnly: state.ui.views.process.designer.readOnly,
   redo: state.ui.views.process.designer.redo,
+  reloadDraft: state.ui.views.process.designer.reloadDraft,
   resources: state.ui.views.process.designer.resources,
   steps: state.ui.views.process.designer.steps,
   undo: state.ui.views.process.designer.undo,
@@ -721,6 +886,7 @@ const mapDispatchToProps = (dispatch) => bindActionCreators({
   fetchProcess,
   fetchProcessRevision,
   save,
+  saveDraft,
   addStep,
   cloneStep,
   removeStep,
@@ -752,10 +918,13 @@ const mapDispatchToProps = (dispatch) => bindActionCreators({
   showDockerLogDetails,
   hideStepExecutionDetails,
   hideDockerLogDetails,
+  fetchDraft,
   fetchExecutionDetails,
   fetchExecutionKpiData,
   fetchExecutionLogData,
   resetSelectedFile,
+  restoreDraft,
+  rejectDraft,
   selectFile,
   selectOutputPart,
   // File system
