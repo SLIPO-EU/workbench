@@ -8,10 +8,6 @@ import {
   Row,
 } from 'reactstrap';
 
-import {
-  Table,
-} from '../../../helpers';
-
 export const KpiGridColumns = [{
   Header: 'Name',
   accessor: 'key',

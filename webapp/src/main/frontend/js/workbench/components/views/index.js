@@ -5,6 +5,7 @@ export { default as ContextSidebar } from './context-sidebar';
 export { default as Dashboard } from './dashboard';
 export { default as EventViewer } from './event-viewer';
 export { default as HarvesterDataExplorer } from './harvester-data-explorer';
+export { default as KpiViewer } from './kpi-viewer';
 export { default as ProcessDesigner } from './process-designer';
 export { default as ProcessExecutionExplorer } from './process-execution-explorer';
 export { default as ProcessExecutionMapViewer } from './process-execution-map-viewer';

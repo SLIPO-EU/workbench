@@ -14,7 +14,7 @@ const Sections = {
   Resource: 'Resource',
   Process: 'Workflow',
   Recipe: 'Recipe',
-  Tool: 'Tool',
+  Utilities: 'Utilities',
   Admin: 'Admin',
   Documentation: 'Documentation',
 };
@@ -113,21 +113,6 @@ class Sidebar extends React.Component {
               </ul>
             </li>
 
-            <SecureContent roles={[Roles.ADMIN]}>
-              <li className={'d-none nav-item nav-dropdown ' + (expanded(Sections.Tool) ? 'open' : '')}>
-                <a className="nav-link nav-dropdown-toggle" onClick={() => (toggle(Sections.Tool), false)}>
-                  {'Tools'}
-                </a>
-                <ul className="nav-dropdown-items">
-                  <li className="nav-item">
-                    <NavLink to={StaticRoutes.HarvesterDataExplorer} className="nav-link" activeClassName="active">
-                      <i className="fa fa-bar-chart"></i>{'Harvester Data'}
-                    </NavLink>
-                  </li>
-                </ul>
-              </li>
-            </SecureContent>
-
             <SecureContent roles={[Roles.ADMIN, Roles.DEVELOPER]}>
               <li className={'nav-item nav-dropdown ' + (expanded(Sections.Admin) ? 'open' : '')}>
                 <a className="nav-link nav-dropdown-toggle" onClick={() => (toggle(Sections.Admin), false)}>
@@ -165,6 +150,24 @@ class Sidebar extends React.Component {
                 </ul>
               </li>
             </SecureContent>
+
+            <SecureContent roles={[Roles.ADMIN, Roles.DEVELOPER]}>
+              <li className={'nav-item nav-dropdown ' + (expanded(Sections.Utilities) ? 'open' : '')}>
+                <a className="nav-link nav-dropdown-toggle" onClick={() => (toggle(Sections.Utilities), false)}>
+                  {'Utilities'}
+                </a>
+                <ul className="nav-dropdown-items">
+                  <SecureContent roles={[Roles.ADMIN, Roles.DEVELOPER]}>
+                    <li className="nav-item">
+                      <NavLink to={StaticRoutes.KpiViewer} className="nav-link" activeClassName="active">
+                        <i className="fa fa-wrench"></i>{'KPI Viewer'}
+                      </NavLink>
+                    </li>
+                  </SecureContent>
+                </ul>
+              </li>
+            </SecureContent>
+
             <SecureContent roles={[Roles.ADMIN, Roles.DEVELOPER]}>
               <li className={'nav-item nav-dropdown ' + (expanded(Sections.Documentation) ? 'open' : '')}>
                 <a className="nav-link nav-dropdown-toggle" onClick={() => (toggle(Sections.Documentation), false)}>
@@ -181,6 +184,7 @@ class Sidebar extends React.Component {
                 </ul>
               </li>
             </SecureContent>
+
           </ul>
         </nav>
       </div>

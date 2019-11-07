@@ -57,6 +57,8 @@ const ApplicationKeyViewer = '/admin/application-key-viewer';
 const UserManager = '/admin/user-manager';
 const EventViewer = '/admin/event-viewer';
 
+const KpiViewer = '/utilities/kpi-viewer';
+
 export const StaticRoutes = {
   ApiUsage,
   Dashboard,
@@ -73,6 +75,7 @@ export const StaticRoutes = {
   UserManager,
   EventViewer,
   ApplicationKeyViewer,
+  KpiViewer,
 };
 
 /**
@@ -253,6 +256,13 @@ const routes = {
     defaultTitle: 'Application Keys Viewer',
     roles: [Roles.ADMIN],
     links: [UserManager, EventViewer],
+  },
+  [KpiViewer]: {
+    description: 'View KPI files',
+    title: 'links.kpi.viewer',
+    defaultTitle: 'View KPI files',
+    roles: [Roles.ADMIN, Roles.DEVELOPER],
+    links: [Dashboard],
   },
   // Dynamic
   [ApiExecutionViewer]: {
