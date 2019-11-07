@@ -11,6 +11,8 @@ import {
   Label,
 } from 'reactstrap';
 
+import GeometryType from 'ol/geom/GeometryType';
+
 import {
   CheckboxField,
   EnumFileSelectMode,
@@ -49,7 +51,7 @@ import {
   readConfiguration,
 } from '../../../../../service/toolkit/triplegeo';
 
-import GeometryType from 'ol/geom/GeometryType';
+import ProfileOption from './profile-option';
 
 const languages = _.orderBy(langs.map(l => ({ value: l.alpha2, label: l.English })), ['label'], ['asc']);
 
@@ -81,6 +83,7 @@ class TripleGeoConfiguration extends React.Component {
       config: {
         ...defaultValuesAdvanced,
       },
+      comments: null,
     }];
 
     const { appConfiguration: config } = this.props;
@@ -182,8 +185,6 @@ class TripleGeoConfiguration extends React.Component {
       value,
     };
 
-    const selectedProfile = profiles.find((p) => p.value === value.profile) || null;
-
     const mappingErrors = Object.keys(errors)
       .filter(key => key.startsWith('mapping-'))
       .map(key => ({ key, text: errors[key] }));
@@ -252,25 +253,19 @@ class TripleGeoConfiguration extends React.Component {
               </div>
 
               {value.level !== configurationLevels.AUTO &&
-                <>
-                  <SelectField
-                    {...inject}
-                    id="profile"
-                    label="Selected Profile"
-                    help="Specify a default mapping and classification profile"
-                    options={profiles}
-                    clearable={false}
-                    onChange={(value) => {
-                      this.changeProfile(value);
-                    }}
-                    showLabel={value.level === configurationLevels.ADVANCED}
-                  />
-                  {selectedProfile && selectedProfile.comments &&
-                    <div className="alert-info alert-profile">
-                      {selectedProfile.comments}
-                    </div>
-                  }
-                </>
+                <SelectField
+                  {...inject}
+                  id="profile"
+                  components={{ Option: ProfileOption }}
+                  label="Selected Profile"
+                  help="Specify a default mapping and classification profile"
+                  options={profiles}
+                  clearable={false}
+                  onChange={(value) => {
+                    this.changeProfile(value);
+                  }}
+                  showLabel={value.level === configurationLevels.ADVANCED}
+                />
               }
 
               <div>

@@ -27,11 +27,12 @@ import {
   readConfiguration,
 } from '../../../../../service/toolkit/deer';
 
+import ProfileOption from './profile-option';
+
 class DeerConfiguration extends React.Component {
 
   constructor(props) {
     super(props);
-
 
     this.profiles = [{
       value: null,
@@ -39,6 +40,7 @@ class DeerConfiguration extends React.Component {
       config: {
         ...defaultValuesAdvanced,
       },
+      comments: null,
     }];
 
     const { appConfiguration: config } = this.props;
@@ -132,8 +134,6 @@ class DeerConfiguration extends React.Component {
       value,
     };
 
-    const selectedProfile = this.profiles.find((p) => p.value === value.profile) || null;
-
     return (
       <div>
 
@@ -173,25 +173,19 @@ class DeerConfiguration extends React.Component {
           </div>
 
           {value.level !== configurationLevels.AUTO &&
-            <>
-              <SelectField
-                {...inject}
-                id="profile"
-                label="Selected Profile"
-                help="Specify a default specification profile"
-                options={this.profiles}
-                clearable={false}
-                onChange={(value) => {
-                  this.changeProfile(value);
-                }}
-                showLabel={value.level === configurationLevels.ADVANCED}
-              />
-              {selectedProfile && selectedProfile.comments &&
-                <div className="alert-info alert-profile">
-                  {selectedProfile.comments}
-                </div>
-              }
-            </>
+            <SelectField
+              {...inject}
+              id="profile"
+              components={{ Option: ProfileOption }}
+              label="Selected Profile"
+              help="Specify a default specification profile"
+              options={this.profiles}
+              clearable={false}
+              onChange={(value) => {
+                this.changeProfile(value);
+              }}
+              showLabel={value.level === configurationLevels.ADVANCED}
+            />
           }
 
           {value.level === configurationLevels.ADVANCED &&

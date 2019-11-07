@@ -29,6 +29,8 @@ import {
   readConfiguration,
 } from '../../../../../service/toolkit/triplegeo-reverse';
 
+import ProfileOption from './profile-option';
+
 const languages = _.orderBy(langs.map(l => ({ value: l.alpha2, label: l.English })), ['label'], ['asc']);
 
 class TripleGeoReverseConfiguration extends React.Component {
@@ -36,13 +38,13 @@ class TripleGeoReverseConfiguration extends React.Component {
   constructor(props) {
     super(props);
 
-
     this.profiles = [{
       value: null,
       label: 'Custom Profile',
       config: {
         ...defaultTripleGeoValues,
       },
+      comments: null,
     }];
 
     const { appConfiguration: config } = this.props;
@@ -102,8 +104,6 @@ class TripleGeoReverseConfiguration extends React.Component {
       value,
     };
 
-    const selectedProfile = this.profiles.find((p) => p.value === value.profile) || null;
-
     return (
       <div>
 
@@ -132,6 +132,7 @@ class TripleGeoReverseConfiguration extends React.Component {
             <SelectField
               {...inject}
               id="profile"
+              components={{ Option: ProfileOption }}
               label="Selected Profile"
               help="Specify a default SPARQL query"
               options={this.profiles}
@@ -140,11 +141,6 @@ class TripleGeoReverseConfiguration extends React.Component {
                 this.changeProfile(value);
               }}
             />
-            {selectedProfile && selectedProfile.comments &&
-              <div className="alert-info alert-profile">
-                {selectedProfile.comments}
-              </div>
-            }
 
             {this.state.displayQueryField &&
               <div>
