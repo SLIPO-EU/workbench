@@ -1,0 +1,1 @@
+All triples will be handled: fused triples will replace the respective ones in the first dataset, whereas unlinked triples from the second dataset are copied as-is into the first dataset, which becomes the final result.
