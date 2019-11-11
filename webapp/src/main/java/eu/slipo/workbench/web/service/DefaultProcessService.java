@@ -79,6 +79,7 @@ import eu.slipo.workbench.common.model.resource.ResourceRecord;
 import eu.slipo.workbench.common.model.security.ApplicationKeyRecord;
 import eu.slipo.workbench.common.model.tool.TriplegeoConfiguration;
 import eu.slipo.workbench.common.model.tool.TriplegeoFieldMapping;
+import eu.slipo.workbench.common.repository.ProcessDraftRepository;
 import eu.slipo.workbench.common.repository.ProcessRepository;
 import eu.slipo.workbench.common.repository.ResourceRepository;
 import eu.slipo.workbench.common.service.ProcessOperator;
@@ -117,6 +118,9 @@ public class DefaultProcessService implements ProcessService {
 
     @Autowired
     private ProcessRepository processRepository;
+
+    @Autowired
+    private ProcessDraftRepository processDraftRepository;
 
     @Autowired
     private ProcessOperator processOperator;
@@ -284,7 +288,12 @@ public class DefaultProcessService implements ProcessService {
             // Set default values for auto configuration
             this.setAutoConfigurationDefaults(null, definition);
 
-            return  processRepository.create(definition, userId, taskType, isTemplate);
+            ProcessRecord result = processRepository.create(definition, userId, taskType, isTemplate);
+
+            // Delete existing draft
+            processDraftRepository.remove(userId, 0);
+
+            return result;
         } catch(InvalidProcessDefinitionException ex) {
             throw ex;
         } catch (ApplicationException ex) {
@@ -310,7 +319,12 @@ public class DefaultProcessService implements ProcessService {
             // Set default values for auto configuration
             this.setAutoConfigurationDefaults(record, definition);
 
-            return processRepository.update(id, definition, currentUserId());
+            ProcessRecord result = processRepository.update(id, definition, currentUserId());
+
+            // Delete existing draft
+            processDraftRepository.remove(this.authenticationFacade.getCurrentUserId(), id);
+
+            return result;
         } catch (InvalidProcessDefinitionException ex) {
             throw ex;
         } catch (ApplicationException ex) {

@@ -31,7 +31,30 @@ const EnumChartMode = {
 };
 
 const itemColumns = [{
-  Header: '',
+  Header: props => {
+    if (props.data.length === 0) {
+      return '';
+    }
+    const selectAll = props.data.filter(r => !r._original.selected).length === 0;
+
+    if (selectAll) {
+      return (
+        <i
+          data-action="remove-all-from-chart"
+          title="Remove all from chart"
+          className='fa fa-check-square-o slipo-table-row-action'>
+        </i>
+      );
+    } else {
+      return (
+        <i
+          data-action="add-all-to-chart"
+          title="Add all to chart"
+          className='fa fa-square-o slipo-table-row-action'>
+        </i>
+      );
+    }
+  },
   id: 'selection',
   Cell: props => {
     if (props.original.selected) {
@@ -106,7 +129,7 @@ class KpiFagiView extends React.Component {
         const value = data[key];
 
         // Ignore previous versions of FAGI
-        if (!value.hasOwnProperty('items')) {
+        if (!Object.prototype.hasOwnProperty.call(value, 'items')) {
           return result;
         }
 
@@ -133,6 +156,19 @@ class KpiFagiView extends React.Component {
   onGroupSelected(selectedGroup) {
     this.setState({
       selectedGroup,
+    });
+  }
+
+  onAllItemsSelected(selectedGroup, checked) {
+    const { items } = this.state;
+
+    const updatedItems = items.map(item => ({
+      ...item,
+      selected: item.type === selectedGroup ? checked : item.selected,
+    }));
+
+    this.setState({
+      items: updatedItems,
     });
   }
 
@@ -201,6 +237,22 @@ class KpiFagiView extends React.Component {
 
         return [keys, series];
       }
+    }
+  }
+
+  handleHeaderAction(selectedGroup, e, handleOriginal) {
+    switch (e.target.getAttribute('data-action')) {
+      case 'add-all-to-chart':
+        this.onAllItemsSelected(selectedGroup, true);
+        break;
+      case 'remove-all-from-chart':
+        this.onAllItemsSelected(selectedGroup, false);
+        break;
+      default:
+        if (handleOriginal) {
+          handleOriginal();
+        }
+        break;
     }
   }
 
@@ -301,6 +353,9 @@ class KpiFagiView extends React.Component {
                             defaultPageSize={items.length}
                             pageSize={items.length}
                             showPageSizeOptions={false}
+                            getTheadThProps={(state, rowInfo, column) => ({
+                              onClick: this.handleHeaderAction.bind(this, selectedGroup)
+                            })}
                             getTdProps={(state, rowInfo, column) => ({
                               onClick: this.handleRowAction.bind(this, rowInfo)
                             })}

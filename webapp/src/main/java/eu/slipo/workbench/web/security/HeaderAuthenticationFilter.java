@@ -34,6 +34,7 @@ import eu.slipo.workbench.common.model.RestResponse;
 import eu.slipo.workbench.common.model.security.ApplicationKeyErrorCode;
 import eu.slipo.workbench.common.model.security.ApplicationKeyException;
 import eu.slipo.workbench.common.model.security.ApplicationKeyRecord;
+import eu.slipo.workbench.web.model.Headers;
 import eu.slipo.workbench.web.repository.ApplicationKeyRepository;
 import eu.slipo.workbench.web.service.DefaultUserDetailsService;
 
@@ -44,8 +45,6 @@ import eu.slipo.workbench.web.service.DefaultUserDetailsService;
 @Component
 public class HeaderAuthenticationFilter extends GenericFilterBean {
 
-    private static final String AUTHENTICATION_HEADER = "X-API-Key";
-
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -55,6 +54,9 @@ public class HeaderAuthenticationFilter extends GenericFilterBean {
     @Autowired
     @Qualifier("defaultUserDetailsService")
     private UserDetailsService userDetailsService;
+
+    @Autowired
+    ApplicationKeySessionRegistry applicationKeySessionRegistry;
 
     @Override
     public void doFilter(
@@ -71,9 +73,11 @@ public class HeaderAuthenticationFilter extends GenericFilterBean {
         String path = httpRequest.getServletPath();
         if (path.startsWith("/api/")) {
             // Attempt to authenticate user
-            String key = httpRequest.getHeader(AUTHENTICATION_HEADER);
+            String apiKey = httpRequest.getHeader(Headers.API_AUTHENTICATION_HEADER);
+            String sessionToken = httpRequest.getHeader(Headers.API_SESSION_TOKEN);
+
             try {
-                this.attemptAuthentication(key);
+                this.attemptAuthentication(apiKey, sessionToken);
             } catch (Exception ex) {
                 this.handleUnauthorizedRequest(httpResponse, ex);
                 execute = false;
@@ -97,19 +101,31 @@ public class HeaderAuthenticationFilter extends GenericFilterBean {
             if (session != null) {
                 session.invalidate();
             }
+            // TODO: Remove session cookie
         }
     }
 
-    private void attemptAuthentication(String key) {
-        // Check if header exists
-        if (StringUtils.isBlank(key)) {
+    private void attemptAuthentication(String apiKey, String sessionToken) {
+        EnumRole roleToAssign = EnumRole.API;
+
+        // If an application key exists, it will override the session token
+        if(StringUtils.isBlank(apiKey)) {
+            apiKey = this.applicationKeySessionRegistry.sessionTokenToKey(sessionToken);
+
+            roleToAssign = EnumRole.API_SESSION;
+        }
+
+        // Check if a supported header exists
+        if (StringUtils.isBlank(apiKey)) {
             throw new ApplicationKeyException(
                 ApplicationKeyErrorCode.MISSING_KEY,
-                String.format("Authentication header [%s] is missing", AUTHENTICATION_HEADER)
+                String.format("Cannot resolve application key. Include either [%s] or [%s] header",
+                              Headers.API_AUTHENTICATION_HEADER, Headers.API_SESSION_TOKEN)
             );
         }
-        // Get application key
-        ApplicationKeyRecord applicationKey = this.applicationKeyRepository.findOne(key);
+
+        // Validate application key
+        ApplicationKeyRecord applicationKey = this.applicationKeyRepository.findOne(apiKey);
         if (applicationKey == null) {
             throw new ApplicationKeyException(ApplicationKeyErrorCode.UNREGISTERED_KEY, "Application key is not registered");
         }
@@ -120,10 +136,10 @@ public class HeaderAuthenticationFilter extends GenericFilterBean {
         UserDetails userDetails = this.userDetailsService.loadUserByUsername(applicationKey.getMappedAccount().getUsername());
         // Set authorities
         List<GrantedAuthority> authorities = new ArrayList<>();
-        authorities.add(new SimpleGrantedAuthority("ROLE_API"));
+        authorities.add(new SimpleGrantedAuthority("ROLE_" + roleToAssign.name()));
         // Replace roles
         DefaultUserDetailsService.Details details = ((DefaultUserDetailsService.Details) userDetails);
-        details.setRoles(new HashSet<>(Arrays.asList(EnumRole.API)));
+        details.setRoles(new HashSet<>(Arrays.asList(roleToAssign)));
         // Create token
         ApplicationKeyAuthenticationToken token = new ApplicationKeyAuthenticationToken(details, "", authorities, applicationKey);
         // Update security context

@@ -32,7 +32,7 @@ export function FormField(props) {
 FormField.propTypes = {
   id: PropTypes.string.isRequired,
   label: PropTypes.string,
-  help: PropTypes.string,
+  help: PropTypes.oneOfType([PropTypes.string, PropTypes.element]),
   error: PropTypes.string,
   showLabel: PropTypes.bool,
 };

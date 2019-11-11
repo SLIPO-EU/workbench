@@ -27,11 +27,12 @@ import {
   readConfiguration,
 } from '../../../../../service/toolkit/deer';
 
+import ProfileOption from './profile-option';
+
 class DeerConfiguration extends React.Component {
 
   constructor(props) {
     super(props);
-
 
     this.profiles = [{
       value: null,
@@ -39,9 +40,13 @@ class DeerConfiguration extends React.Component {
       config: {
         ...defaultValuesAdvanced,
       },
+      comments: null,
     }];
 
-    const deerProfiles = this.props.appConfiguration.profiles[EnumTool.DEER] || [];
+    const { appConfiguration: config } = this.props;
+    const deerProfiles = config.profiles[EnumTool.DEER] || [];
+    const deerProfileComments = config.profileComments[EnumTool.DEER] || null;
+
     Object.keys(deerProfiles).map(key => {
       this.profiles.push({
         value: key,
@@ -50,6 +55,7 @@ class DeerConfiguration extends React.Component {
           ...readConfiguration(deerProfiles[key]),
           profile: key,
         },
+        comments: deerProfileComments ? deerProfileComments[key] : null || null,
       });
     });
 
@@ -118,7 +124,7 @@ class DeerConfiguration extends React.Component {
 
   render() {
     const props = this.props;
-    const { enabledLevels, errors, readOnly, setValue, value, filesystem } = props;
+    const { appConfiguration: config, enabledLevels, errors, readOnly, setValue, value, filesystem } = props;
     const { createFolder, deletePath, uploadFile } = props;
 
     const inject = {
@@ -170,6 +176,7 @@ class DeerConfiguration extends React.Component {
             <SelectField
               {...inject}
               id="profile"
+              components={{ Option: ProfileOption }}
               label="Selected Profile"
               help="Specify a default specification profile"
               options={this.profiles}
@@ -193,6 +200,7 @@ class DeerConfiguration extends React.Component {
                     filesystem={filesystem}
                     defaultMode={EnumFileSelectMode.FIELD}
                     allowDelete
+                    allowedFileTypes={config.deer.specificationFileTypes}
                     allowUpload
                     allowNewFolder
                     createFolder={createFolder}

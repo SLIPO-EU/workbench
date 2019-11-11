@@ -15,5 +15,3 @@ export { default as StatusLabel } from './status-label';
 export { default as Table } from './table';
 export { default as ToastTemplate } from './toast-template';
 export { default as Zoom } from './zoom';
-
-export * from './map';

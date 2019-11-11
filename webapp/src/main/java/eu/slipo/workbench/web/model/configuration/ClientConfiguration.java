@@ -12,6 +12,8 @@ public class ClientConfiguration {
 
     private Map<EnumTool, Map<String, ToolConfiguration<?>>> profiles;
 
+    private Map<EnumTool, Map<String, String>> profileComments;
+
     private OsmConfiguration osm;
 
     private BingMapsConfiguration bingMaps;
@@ -34,6 +36,14 @@ public class ClientConfiguration {
 
     public void setProfiles(Map<EnumTool, Map<String, ToolConfiguration<?>>> profiles) {
         this.profiles = profiles;
+    }
+
+    public Map<EnumTool, Map<String, String>> getProfileComments() {
+        return profileComments;
+    }
+
+    public void setProfileComments(Map<EnumTool, Map<String, String>> profileComments) {
+        this.profileComments = profileComments;
     }
 
     public OsmConfiguration getOsm() {

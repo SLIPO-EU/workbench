@@ -47,11 +47,12 @@ import {
   message,
 } from '../../../../../service';
 
+import ProfileOption from './profile-option';
+
 class FagiConfiguration extends React.Component {
 
   constructor(props) {
     super(props);
-
 
     this.profiles = [{
       value: null,
@@ -59,9 +60,13 @@ class FagiConfiguration extends React.Component {
       config: {
         ...defaultValuesAdvanced,
       },
+      comments: null,
     }];
 
-    const fagiProfiles = this.props.appConfiguration.profiles[EnumTool.FAGI] || [];
+    const { appConfiguration: config } = this.props;
+    const fagiProfiles = config.profiles[EnumTool.FAGI] || [];
+    const fagiProfileComments = config.profileComments[EnumTool.FAGI] || null;
+
     Object.keys(fagiProfiles).map(key => {
       this.profiles.push({
         value: key,
@@ -70,6 +75,7 @@ class FagiConfiguration extends React.Component {
           ...readConfiguration(fagiProfiles[key]),
           profile: key,
         },
+        comments: fagiProfileComments ? fagiProfileComments[key] : null || null,
       });
     });
 
@@ -169,7 +175,7 @@ class FagiConfiguration extends React.Component {
 
   render() {
     const props = this.props;
-    const { enabledLevels, errors, readOnly, setValue, value, filesystem } = props;
+    const { appConfiguration: config, enabledLevels, errors, readOnly, setValue, value, filesystem } = props;
     const { createFolder, deletePath, uploadFile } = props;
 
     const inject = {
@@ -221,6 +227,7 @@ class FagiConfiguration extends React.Component {
             <SelectField
               {...inject}
               id="profile"
+              components={{ Option: ProfileOption }}
               label="Selected Profile"
               help="Specify a default rules specification profile"
               options={this.profiles}
@@ -243,6 +250,7 @@ class FagiConfiguration extends React.Component {
                   filesystem={filesystem}
                   defaultMode={EnumFileSelectMode.FIELD}
                   allowDelete
+                  allowedFileTypes={config.fagi.ruleFileTypes}
                   allowUpload
                   allowNewFolder
                   createFolder={createFolder}

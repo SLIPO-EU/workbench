@@ -33,6 +33,7 @@ import eu.slipo.workbench.common.model.RestResponse;
 import eu.slipo.workbench.common.model.process.ApiCallQuery;
 import eu.slipo.workbench.common.model.process.EnumProcessTaskType;
 import eu.slipo.workbench.common.model.process.ProcessDefinition;
+import eu.slipo.workbench.common.model.process.ProcessDraftRecord;
 import eu.slipo.workbench.common.model.process.ProcessErrorCode;
 import eu.slipo.workbench.common.model.process.ProcessExecutionApiRecord;
 import eu.slipo.workbench.common.model.process.ProcessExecutionFileNotFoundException;
@@ -42,6 +43,7 @@ import eu.slipo.workbench.common.model.process.ProcessExecutionRecord;
 import eu.slipo.workbench.common.model.process.ProcessNotFoundException;
 import eu.slipo.workbench.common.model.process.ProcessQuery;
 import eu.slipo.workbench.common.model.process.ProcessRecord;
+import eu.slipo.workbench.common.repository.ProcessDraftRepository;
 import eu.slipo.workbench.web.model.QueryResult;
 import eu.slipo.workbench.web.model.process.EnumProcessSaveActionType;
 import eu.slipo.workbench.web.model.process.ProcessCreateRequest;
@@ -61,6 +63,9 @@ import eu.slipo.workbench.web.service.ProcessService;
 public class ProcessController extends BaseController {
 
     private static final Logger logger = LoggerFactory.getLogger(ProcessController.class);
+
+    @Autowired
+    private ProcessDraftRepository processDraftRepository;
 
     @Autowired
     private ProcessService processService;
@@ -448,7 +453,11 @@ public class ProcessController extends BaseController {
             if (record.getTaskType() == EnumProcessTaskType.API) {
                 throw this.accessDenied();
             }
-            return RestResponse.result(new ProcessRecordView(record));
+
+            // Get draft if exists
+            final ProcessDraftRecord draft = this.processDraftRepository.findOne(this.currentUserId(), id);
+
+            return RestResponse.result(new ProcessRecordView(record, draft));
         } catch (Exception ex) {
             return this.exceptionToResponse(ex);
         }
@@ -473,7 +482,9 @@ public class ProcessController extends BaseController {
             if (record.getTaskType() == EnumProcessTaskType.API) {
                 throw this.accessDenied();
             }
-            return RestResponse.result(new ProcessRecordView(record));
+
+            // No drafts are stored for process revisions
+            return RestResponse.result(new ProcessRecordView(record, null));
         } catch (Exception ex) {
             return this.exceptionToResponse(ex);
         }
@@ -605,7 +616,7 @@ public class ProcessController extends BaseController {
             return RestResponse.error(BasicErrorCode.UNKNOWN, "Failed to scheduler map creation.", Error.EnumLevel.WARN);
         }
 
-        return RestResponse.result(new ProcessRecordView(process));
+        return RestResponse.result(new ProcessRecordView(process, null));
     }
 
     private RestResponse<?> exceptionToResponse(Exception ex) {

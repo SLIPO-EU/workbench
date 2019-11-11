@@ -29,6 +29,8 @@ import {
   readConfiguration,
 } from '../../../../../service/toolkit/triplegeo-reverse';
 
+import ProfileOption from './profile-option';
+
 const languages = _.orderBy(langs.map(l => ({ value: l.alpha2, label: l.English })), ['label'], ['asc']);
 
 class TripleGeoReverseConfiguration extends React.Component {
@@ -36,16 +38,19 @@ class TripleGeoReverseConfiguration extends React.Component {
   constructor(props) {
     super(props);
 
-
     this.profiles = [{
       value: null,
       label: 'Custom Profile',
       config: {
         ...defaultTripleGeoValues,
       },
+      comments: null,
     }];
 
+    const { appConfiguration: config } = this.props;
     const tripleGeoProfiles = this.props.appConfiguration.profiles[EnumTool.ReverseTripleGeo] || [];
+    const tripleGeoProfileComments = config.profileComments[EnumTool.ReverseTripleGeo] || null;
+
     Object.keys(tripleGeoProfiles).map(key => {
       this.profiles.push({
         value: key,
@@ -54,6 +59,7 @@ class TripleGeoReverseConfiguration extends React.Component {
           ...readConfiguration(tripleGeoProfiles[key]),
           profile: key,
         },
+        comments: tripleGeoProfileComments ? tripleGeoProfileComments[key] : null || null,
       });
     });
 
@@ -88,7 +94,7 @@ class TripleGeoReverseConfiguration extends React.Component {
 
   render() {
     const props = this.props;
-    const { errors, readOnly, setValue, value, filesystem, } = props;
+    const { appConfiguration: config, errors, readOnly, setValue, value, filesystem, } = props;
     const { createFolder, deletePath, uploadFile } = props;
 
     const inject = {
@@ -126,6 +132,7 @@ class TripleGeoReverseConfiguration extends React.Component {
             <SelectField
               {...inject}
               id="profile"
+              components={{ Option: ProfileOption }}
               label="Selected Profile"
               help="Specify a default SPARQL query"
               options={this.profiles}
@@ -147,6 +154,7 @@ class TripleGeoReverseConfiguration extends React.Component {
                       filesystem={filesystem}
                       defaultMode={EnumFileSelectMode.FIELD}
                       allowDelete
+                      allowedFileTypes={config.reverseTripleGeo.queryFileTypes}
                       allowUpload
                       allowNewFolder
                       createFolder={createFolder}

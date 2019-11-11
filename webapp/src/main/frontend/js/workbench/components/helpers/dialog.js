@@ -26,13 +26,19 @@ class Dialog extends React.Component {
     modal: PropTypes.bool.isRequired,
     className: PropTypes.string,
     handler: PropTypes.func.isRequired,
+    hideHeaderToggle: PropTypes.bool,
     actions: PropTypes.arrayOf(PropTypes.shape({
       key: PropTypes.string.isRequired,
       label: PropTypes.string.isRequired,
       iconClass: PropTypes.string.isRequired,
       color: PropTypes.string,
+      disabled: PropTypes.bool,
     })).isRequired,
   };
+
+  static defaultProps = {
+    hideHeaderToggle: false,
+  }
 
   _toggle() {
     this.setState({
@@ -47,7 +53,7 @@ class Dialog extends React.Component {
   render() {
     return (
       <Modal isOpen={this.state.modal} toggle={this._toggle} className={this.props.className} backdrop={false}>
-        <ModalHeader toggle={this._toggle}>{this.props.header}</ModalHeader>
+        <ModalHeader toggle={this.props.hideHeaderToggle ? null : this._toggle}>{this.props.header}</ModalHeader>
         <ModalBody>
           {this.props.children}
         </ModalBody>
@@ -59,6 +65,7 @@ class Dialog extends React.Component {
                   key={value.key}
                   color={value.color || 'secondary'}
                   onClick={() => { this.props.handler({ key: value.key }); }}
+                  disabled={value.disabled === true}
                 >
                   <span><i className={value.iconClass + ' mr-2'}></i>{value.label}</span>
                 </Button>

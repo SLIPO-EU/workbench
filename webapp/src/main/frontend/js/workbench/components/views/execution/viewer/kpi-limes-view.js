@@ -18,10 +18,6 @@ import {
 
 class KpiLimesView extends React.Component {
 
-  constructor(props) {
-    super(props);
-  }
-
   static propTypes = {
     data: PropTypes.arrayOf(PropTypes.shape({
       key: PropTypes.string.isRequired,

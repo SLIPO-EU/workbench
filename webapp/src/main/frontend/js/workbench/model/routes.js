@@ -57,6 +57,8 @@ const ApplicationKeyViewer = '/admin/application-key-viewer';
 const UserManager = '/admin/user-manager';
 const EventViewer = '/admin/event-viewer';
 
+const KpiViewer = '/utilities/kpi-viewer';
+
 export const StaticRoutes = {
   ApiUsage,
   Dashboard,
@@ -73,6 +75,7 @@ export const StaticRoutes = {
   UserManager,
   EventViewer,
   ApplicationKeyViewer,
+  KpiViewer,
 };
 
 /**
@@ -254,6 +257,13 @@ const routes = {
     roles: [Roles.ADMIN],
     links: [UserManager, EventViewer],
   },
+  [KpiViewer]: {
+    description: 'View KPI files',
+    title: 'links.kpi.viewer',
+    defaultTitle: 'View KPI files',
+    roles: [Roles.ADMIN, Roles.DEVELOPER],
+    links: [Dashboard],
+  },
   // Dynamic
   [ApiExecutionViewer]: {
     description: 'View SLIPO API execution details',
@@ -342,7 +352,7 @@ const routes = {
 export function getRoute(path) {
   const prop = matchRoute(path);
 
-  if (routes.hasOwnProperty(prop)) {
+  if (Object.prototype.hasOwnProperty.call(routes, prop)) {
     return routes[prop];
   }
   return null;

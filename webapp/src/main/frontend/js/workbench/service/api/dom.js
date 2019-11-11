@@ -1,5 +1,5 @@
 const downloadBlob = (blob, fileName) => {
-  if ((typeof global !== 'undefined') && (global.hasOwnProperty('URL'))) {
+  if ((typeof global !== 'undefined') && (Object.prototype.hasOwnProperty.call(global, 'URL'))) {
     const url = global.URL.createObjectURL(blob);
 
     const a = document.createElement('a');

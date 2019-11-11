@@ -60,7 +60,7 @@ function projectProperty(feature, property, current, updates = [], index = 0) {
   for (let i = updates.length - 1; i >= index; i--) {
     if (property === ATTRIBUTE_GEOMETRY) {
       current = updates[i].geometry;
-    } else if (updates[i].properties.hasOwnProperty(property)) {
+    } else if (Object.prototype.hasOwnProperty.call(updates[i].properties, property)) {
       current = updates[i].properties[property];
     }
   }
@@ -72,8 +72,8 @@ function createEnrichedCells(step, property, features, updates = []) {
   const initial = features.filter((f) => f.properties[FEATURE_URI] === step.uri && f.source !== step.name).pop();
   const enriched = features.find((f) => f.properties[FEATURE_URI] === step.uri && f.source === step.name);
 
-  const updated = updates && updates.some(u => u.properties.hasOwnProperty(property));
-  const firstUpdate = updated ? updates.filter(u => u.properties.hasOwnProperty(property))[0] : null;
+  const updated = updates && updates.some(u => Object.prototype.hasOwnProperty.call(u.properties, property));
+  const firstUpdate = updated ? updates.filter(u => Object.prototype.hasOwnProperty.call(u.properties, property))[0] : null;
 
   const result = [
     // Initial

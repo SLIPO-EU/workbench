@@ -49,6 +49,9 @@
       "execution": {
         "viewer": "API Operation"
       }
+    },
+    "kpi": {
+      "viewer": "View KPI files"
     }
   },
   "login": {

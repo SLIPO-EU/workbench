@@ -49,6 +49,9 @@ const initialState = {
   // Current process instance
   readOnly: false,
   process: initializeProcess(),
+  // Draft most recently saved process
+  draft: null,
+  reloadDraft: true,
   // Workflow step groups
   groups: initializeGroups(),
   // Process steps
@@ -130,13 +133,15 @@ export default (state = initialState, action) => {
     case Types.LOGOUT:
       return initialState;
 
-    case Types.RESET:
-      return {
+    case Types.RESET: {
+      const result = {
         ...state,
         active: activeReducer(state.active, action),
         counters: counterReducer(state.counters, action),
         readOnly: false,
         process: initializeProcess(),
+        draft: null,
+        reloadDraft: true,
         groups: initializeGroups(),
         steps: [],
         execution: initializeExecution(),
@@ -151,6 +156,12 @@ export default (state = initialState, action) => {
           type: EnumDesignerView.Designer,
         },
       };
+
+      // Update draft after the model is initialized
+      result.draft = JSON.stringify(processService.serializeProcess(result));
+
+      return result;
+    }
 
     case Types.ADD_STEP:
       requireValidation = true;
@@ -486,6 +497,9 @@ export default (state = initialState, action) => {
       requireValidation = true;
 
       newState = processReducer(state, action);
+
+      // Update draft after the model is initialized
+      newState.draft = JSON.stringify(processService.serializeProcess(newState));
       break;
 
     case Types.SHOW_STEP_EXECUTION:
@@ -537,6 +551,18 @@ export default (state = initialState, action) => {
       return {
         ...state,
         steps: stepOutputPartReducer(state.steps, action),
+      };
+
+    case Types.SAVE_DRAFT_SUCCESS:
+      return {
+        ...state,
+        draft: action.draft,
+      };
+
+    case Types.RESTORE_DRAFT_SUCCESS:
+      return {
+        ...state,
+        reloadDraft: false,
       };
 
     default:
@@ -617,6 +643,7 @@ export {
   checkLog,
   downloadFile,
   downloadLog,
+  fetchDraft,
   fetchExecutionDetails,
   fetchExecutionKpiData,
   fetchExecutionLogData,
@@ -624,7 +651,10 @@ export {
   fetchProcessRevision,
   getTripleGeoMappings,
   getTripleGeoMappingFileAsText,
+  rejectDraft,
+  restoreDraft,
   save,
+  saveDraft,
 } from './process-designer/thunks';
 
 /*

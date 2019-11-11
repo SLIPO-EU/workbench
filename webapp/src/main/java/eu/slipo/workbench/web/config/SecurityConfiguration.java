@@ -4,6 +4,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -15,8 +16,14 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.switchuser.SwitchUserFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import com.google.common.collect.ImmutableList;
 
 import eu.slipo.workbench.web.logging.filter.MappedDiagnosticContextFilter;
+import eu.slipo.workbench.web.model.Headers;
 
 @Configuration
 @EnableWebSecurity
@@ -102,5 +109,36 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter
 
         security.addFilterAfter(
             new MappedDiagnosticContextFilter(), SwitchUserFilter.class);
+
+        // Handle CORS (Fix security errors)
+        //
+        // See: https://docs.spring.io/spring-security/site/docs/4.2.x/reference/html/cors.html
+        //
+        // CORS must be processed before Spring Security because the pre-flight request
+        // will not contain any cookies (i.e. the JSESSIONID). If the request does not
+        // contain any cookies and Spring Security is first, the request will determine
+        // the user is not authenticated (since there are no cookies in the request) and
+        // reject it.
+
+        security.cors();
     }
+
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+        final CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(ImmutableList.of("*"));
+        configuration.setAllowedMethods(ImmutableList.of("GET"));
+        configuration.setAllowedHeaders(ImmutableList.of(
+            "Authorization",
+            "Cache-Control",
+            "Content-Type",
+            Headers.API_SESSION_TOKEN
+        ));
+
+        final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+
+        return source;
+    }
+
 }

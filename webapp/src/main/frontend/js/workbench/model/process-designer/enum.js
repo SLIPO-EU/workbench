@@ -178,6 +178,7 @@ export const EnumDataFormat = {
 export const EnumDesignerSaveAction = {
   None: null,
   Save: 'SAVE',
+  SaveAs: 'SAVE_AS',
   SaveAndExecute: 'SAVE_AND_EXECUTE',
   SaveAndExecuteAndMap: 'SAVE_AND_EXECUTE_AND_MAP',
   SaveAsTemplate: 'SAVE_TEMPLATE',

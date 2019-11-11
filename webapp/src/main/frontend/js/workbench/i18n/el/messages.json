@@ -49,6 +49,9 @@
       "execution": {
         "viewer": "Εκτέλεση κλήσης API"
       }
+    },
+    "kpi": {
+      "viewer": "View KPI files"
     }
   },
   "login": {

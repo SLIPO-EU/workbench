@@ -15,10 +15,11 @@ import { styles } from './select-shared';
  * @returns The new component
  */
 export function Select(props) {
-  const options = props.options.map(option => ({ value: option.value, label: option.label || option.value }));
+  const options = props.options.map(({ value, label, ...rest }) => ({ value, label: label || value, ...rest }));
 
   return (
     <ReactSelect
+      components={props.components}
       name={props.id}
       id={props.id}
       value={options.find(opt => opt.value === props.value) || null}

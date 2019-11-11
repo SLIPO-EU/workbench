@@ -30,7 +30,7 @@ import {
   writeConfiguration,
 } from './toolkit';
 
-function buildProcessRequest(action, designer) {
+export function serializeProcess(designer) {
   const allInputOutputResources = designer.steps
     .reduce((result, step) => {
       const stepInputKeys = step.input.map(i => i.inputKey);
@@ -41,59 +41,63 @@ function buildProcessRequest(action, designer) {
       return r !== null ? r.toString() : null;
     });
 
+  return {
+    name: designer.process.properties.name,
+    description: designer.process.properties.description,
+    resources: designer.resources
+      .map((r) => {
+        switch (r.inputType) {
+          case EnumInputType.CATALOG:
+            return {
+              key: r.key !== null ? r.key.toString() : null,
+              inputType: EnumInputType.CATALOG,
+              resourceType: r.resourceType,
+              name: r.name,
+              description: r.description,
+              resource: {
+                id: r.id,
+                version: r.version,
+              },
+            };
+          case EnumInputType.OUTPUT:
+            return {
+              key: r.key !== null ? r.key.toString() : null,
+              inputType: EnumInputType.OUTPUT,
+              resourceType: r.resourceType,
+              name: r.name,
+              tool: r.tool,
+              stepKey: r.stepKey,
+            };
+          default:
+            return null;
+        }
+      }).filter((r) => {
+        // Require input resources used in a step definition and output resources
+        return ((r !== null) && (allInputOutputResources.includes(r.key)));
+      }),
+    steps: designer.steps.map((s) => {
+      return {
+        key: s.key,
+        group: s.group,
+        name: s.name,
+        tool: s.tool,
+        operation: s.operation,
+        input: buildInput(s, designer.steps),
+        sources: buildDataSource(s),
+        configuration: buildConfiguration(s),
+        outputKey: s.outputKey !== null ? s.outputKey.toString() : null,
+        outputFormat: (s.tool === EnumTool.CATALOG ? null : EnumDataFormat.N_TRIPLES),
+      };
+    }).filter((s) => {
+      return (s.configuration !== null);
+    }),
+  };
+}
+
+function buildProcessRequest(action, designer) {
   const model = {
     action,
-    definition: {
-      name: designer.process.properties.name,
-      description: designer.process.properties.description,
-      resources: designer.resources
-        .map((r) => {
-          switch (r.inputType) {
-            case EnumInputType.CATALOG:
-              return {
-                key: r.key !== null ? r.key.toString() : null,
-                inputType: EnumInputType.CATALOG,
-                resourceType: r.resourceType,
-                name: r.name,
-                description: r.description,
-                resource: {
-                  id: r.id,
-                  version: r.version,
-                },
-              };
-            case EnumInputType.OUTPUT:
-              return {
-                key: r.key !== null ? r.key.toString() : null,
-                inputType: EnumInputType.OUTPUT,
-                resourceType: r.resourceType,
-                name: r.name,
-                tool: r.tool,
-                stepKey: r.stepKey,
-              };
-            default:
-              return null;
-          }
-        }).filter((r) => {
-          // Require input resources used in a step definition and output resources
-          return ((r !== null) && (allInputOutputResources.includes(r.key)));
-        }),
-      steps: designer.steps.map((s) => {
-        return {
-          key: s.key,
-          group: s.group,
-          name: s.name,
-          tool: s.tool,
-          operation: s.operation,
-          input: buildInput(s, designer.steps),
-          sources: buildDataSource(s),
-          configuration: buildConfiguration(s),
-          outputKey: s.outputKey !== null ? s.outputKey.toString() : null,
-          outputFormat: (s.tool === EnumTool.CATALOG ? null : EnumDataFormat.N_TRIPLES),
-        };
-      }).filter((s) => {
-        return (s.configuration !== null);
-      }),
-    }
+    definition: serializeProcess(designer),
   };
 
   return model;
@@ -145,7 +149,7 @@ function buildDataSource(step) {
 }
 
 export function readProcessResponse(result) {
-  const { definition, id, taskType, template, version } = result;
+  const { definition, id, taskType, template, version, draft = null } = result;
 
   const resources = definition.resources
     .map((r) => {
@@ -211,11 +215,14 @@ export function readProcessResponse(result) {
     taskType,
     template,
     version,
+    draft,
   };
 }
 
 function readInput(step, resources) {
-  const input = step.input.map((i) => ({ inputKey: parseInt(i.inputKey), partKey: i.partKey }));
+  const input = step.input
+    .map((i) => ({ inputKey: parseInt(i.inputKey), partKey: i.partKey }))
+    .filter(i => !isNaN(i.inputKey) && typeof i.partKey !== 'undefined');
 
   if (step.tool === EnumTool.FAGI) {
     return input.filter((i) => {
@@ -286,6 +293,10 @@ export function fetchProcessRevision(id, version, token) {
     .then((result) => {
       return readProcessResponse(result);
     });
+}
+
+export function fetchDraft(token) {
+  return actions.get(`/action/process/draft`, token);
 }
 
 export function fetchTemplates(query, token) {
@@ -516,6 +527,14 @@ export function save(action, designer, token) {
     return actions.post(`/action/process/${id}`, token, data);
   } else {
     return actions.post('/action/process', token, data);
+  }
+}
+
+export function saveDraft(id, version, draft, token) {
+  if (id) {
+    return actions.post(`/action/process/draft/${id}/${version}`, token, draft);
+  } else {
+    return actions.post('/action/process/draft', token, draft);
   }
 }
 

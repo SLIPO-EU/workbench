@@ -11,6 +11,8 @@ import {
   Label,
 } from 'reactstrap';
 
+import GeometryType from 'ol/geom/GeometryType';
+
 import {
   CheckboxField,
   EnumFileSelectMode,
@@ -49,7 +51,7 @@ import {
   readConfiguration,
 } from '../../../../../service/toolkit/triplegeo';
 
-import GeometryType from 'ol/geom/GeometryType';
+import ProfileOption from './profile-option';
 
 const languages = _.orderBy(langs.map(l => ({ value: l.alpha2, label: l.English })), ['label'], ['asc']);
 
@@ -81,9 +83,13 @@ class TripleGeoConfiguration extends React.Component {
       config: {
         ...defaultValuesAdvanced,
       },
+      comments: null,
     }];
 
-    const tripleGeoProfiles = this.props.appConfiguration.profiles[EnumTool.TripleGeo] || [];
+    const { appConfiguration: config } = this.props;
+    const tripleGeoProfiles = config.profiles[EnumTool.TripleGeo] || [];
+    const tripleGeoProfileComments = config.profileComments[EnumTool.TripleGeo] || null;
+
     Object.keys(tripleGeoProfiles).map(key => {
       profiles.push({
         value: key,
@@ -92,6 +98,7 @@ class TripleGeoConfiguration extends React.Component {
           ...readConfiguration(tripleGeoProfiles[key]),
           profile: key,
         },
+        comments: tripleGeoProfileComments ? tripleGeoProfileComments[key] : null || null,
       });
     });
 
@@ -166,7 +173,7 @@ class TripleGeoConfiguration extends React.Component {
 
   render() {
     const props = this.props;
-    const { errors = {}, readOnly, setValue, value, filesystem, inputFile, } = props;
+    const { appConfiguration: config, errors = {}, readOnly, setValue, value, filesystem, inputFile, } = props;
     const { createFolder, deletePath, uploadFile } = props;
     const { enabledLevels = [] } = props;
     const { profiles } = this.state;
@@ -249,6 +256,7 @@ class TripleGeoConfiguration extends React.Component {
                 <SelectField
                   {...inject}
                   id="profile"
+                  components={{ Option: ProfileOption }}
                   label="Selected Profile"
                   help="Specify a default mapping and classification profile"
                   options={profiles}
@@ -268,10 +276,14 @@ class TripleGeoConfiguration extends React.Component {
                         {...inject}
                         id="mappingSpec"
                         label="Mapping specification file"
-                        help="File containing RML or XSLT mappings from input schema to RDF"
+                        help={
+                          <span>File containing YAML mappings from input schema to RDF. Example mappings for TripleGeo can be found <a href="https://github.com/SLIPO-EU/TripleGeo/tree/master/test/conf" target="_blank">here</a>.
+                          </span>
+                        }
                         filesystem={filesystem}
                         defaultMode={EnumFileSelectMode.FIELD}
                         allowDelete
+                        allowedFileTypes={config.tripleGeo.mappingFileTypes}
                         allowUpload
                         allowNewFolder
                         createFolder={createFolder}
@@ -289,10 +301,14 @@ class TripleGeoConfiguration extends React.Component {
                         {...inject}
                         id="classificationSpec"
                         label="Classification specification file"
-                        help="File (in YML or CSV format) containing classification hierarchy of categories"
+                        help={
+                          <span>File (in YML or CSV format) containing classification hierarchy of categories. Example classification for TripleGeo can be found <a href="https://github.com/SLIPO-EU/TripleGeo/tree/master/test/classification" target="_blank">here</a>.
+                          </span>
+                        }
                         filesystem={filesystem}
                         defaultMode={EnumFileSelectMode.FIELD}
                         allowDelete
+                        allowedFileTypes={config.tripleGeo.classificationFileTypes}
                         allowUpload
                         allowNewFolder
                         createFolder={createFolder}

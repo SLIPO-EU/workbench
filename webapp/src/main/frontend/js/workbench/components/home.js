@@ -33,6 +33,7 @@ import {
   Dashboard,
   EventViewer,
   HarvesterDataExplorer,
+  KpiViewer,
   ProcessDesigner,
   ProcessExecutionExplorer,
   ProcessExecutionMapViewer,
@@ -192,6 +193,7 @@ class Home extends React.Component {
                 <SecureRoute path={StaticRoutes.EventViewer} component={EventViewer} roles={[Roles.ADMIN, Roles.DEVELOPER]} />
                 <SecureRoute path={StaticRoutes.ApplicationKeyViewer} component={ApplicationKeyViewer} roles={[Roles.ADMIN]} />
                 <SecureRoute path={StaticRoutes.ApiUsage} component={ApiUsage} roles={[Roles.ADMIN]} />
+                <SecureRoute path={StaticRoutes.KpiViewer} component={KpiViewer} roles={[Roles.ADMIN, Roles.DEVELOPER]} />
                 {/* Default */}
                 <Redirect push={true} to={ErrorPages.NotFound} />
               </Switch>

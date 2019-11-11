@@ -44,11 +44,12 @@ import {
   message,
 } from '../../../../../service';
 
+import ProfileOption from './profile-option';
+
 class LimesConfiguration extends React.Component {
 
   constructor(props) {
     super(props);
-
 
     this.profiles = [{
       value: null,
@@ -56,9 +57,13 @@ class LimesConfiguration extends React.Component {
       config: {
         ...defaultValuesAdvanced,
       },
+      comments: null,
     }];
 
-    const limesProfiles = this.props.appConfiguration.profiles[EnumTool.LIMES] || [];
+    const { appConfiguration: config } = this.props;
+    const limesProfiles = config.profiles[EnumTool.LIMES] || [];
+    const limesProfileComments = config.profileComments[EnumTool.LIMES] || null;
+
     Object.keys(limesProfiles).map(key => {
       this.profiles.push({
         value: key,
@@ -67,6 +72,7 @@ class LimesConfiguration extends React.Component {
           ...readConfiguration(limesProfiles[key]),
           profile: key,
         },
+        comments: limesProfileComments ? limesProfileComments[key] : null || null,
       });
     });
 
@@ -216,6 +222,7 @@ class LimesConfiguration extends React.Component {
             <SelectField
               {...inject}
               id="profile"
+              components={{ Option: ProfileOption }}
               label="Selected Profile"
               help="Specify a default rules specification profile"
               options={this.profiles}
