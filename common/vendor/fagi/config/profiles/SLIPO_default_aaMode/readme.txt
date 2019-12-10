@@ -1,0 +1,1 @@
+Only linked triples will be handled and the fusion output is exclusively written in the first dataset, so fused triples will replace the respective ones in the first dataset.

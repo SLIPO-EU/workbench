@@ -129,6 +129,58 @@
 function query() { return; }
 
 /**
+ * @api {post} api/v1/process/{id}/save Save
+ * @apiHeader {String} X-API-Key Application key
+ * @apiVersion 1.0.0
+ * @apiName Save
+ * @apiGroup Workflow
+ * @apiPermission ROLE_API
+ *
+ * @apiDescription Creates a new version for the specified workflow
+ *
+ * @apiParam (Query String Parameters)    {Number}    id                The workflow unique id
+ *
+ * @apiParamExample {json} Request Example
+ * POST api/v1/process/1/save
+ *
+ * @apiSuccess                            {Boolean}   success           Returns <code>true</code> or <code>false</code>
+ * indicating success of the operation.
+ * @apiSuccess                            {Error[]}   errors            Array of <code>Error</code> objects.
+ * @apiSuccess                            {Object}    result            An instance of <code>ProcessExecutionRecord</code>.
+ * If value of <code>success</code> is <code>false</code>, <code>result</code> is <code>null</code>. Property
+ * <code>execution</code> is always <code>null</code> for new workflows.
+ *
+ * @apiSuccessExample {json} Response Example
+ * HTTP/1.1 200 OK
+ * {
+ *  "errors":[],
+ *  "execution": null,
+ *  "process": {
+ *    "createdOn": 1557508338603,
+ *    "description": "Demo",
+ *    "executedOn": 1558601054676,
+ *    "id": 285,
+ *    "name": "Demo",
+ *    "steps": [{
+ *      "group": 0,
+ *      "inputKeys": [],
+ *      "key": 0,
+ *      "name": "Transform 1",
+ *      "operation": "TRANSFORM",
+ *      "outputKey": "2",
+ *      "tool": "TRIPLEGEO"
+ *    }],
+ *    "taskType": "DATA_INTEGRATION",
+ *    "updatedOn": 1558601053135,
+ *    "version": 2
+ *  },
+ *  "success":true
+ * }
+ */
+ */
+function save() { return; }
+
+/**
  * @api {get} api/v1/process/{id}/{version} Status
  * @apiHeader {String} X-API-Key Application key
  * @apiVersion 1.0.0

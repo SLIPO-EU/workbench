@@ -98,9 +98,7 @@ public class ProcessController extends BaseController {
             if (result == null) {
                return RestResponse.error(ProcessErrorCode.PROCESS_NOT_FOUND, "Process was not found");
             }
-            if (result.getExecution() == null) {
-                return RestResponse.error(ProcessErrorCode.EXECUTION_NOT_FOUND, "Process execution was not found");
-            }
+
             return RestResponse.result(new ProcessExecutionSimpleRecordView(result));
         } catch (Exception ex) {
             return this.exceptionToResponse(ex);
@@ -163,6 +161,29 @@ public class ProcessController extends BaseController {
     }
 
     /**
+     * Creates a new version for the workflow with the specified id
+     *
+     * @param id The workflow id
+     *
+     * @return A instance of {@link ProcessSimpleRecord} if the operation was successful;
+     * Otherwise an error message is returned
+     */
+    @PostMapping(value = "/api/v1/process/{id}/save")
+    public RestResponse<?> save(@PathVariable long id) {
+        try {
+            ProcessRecord process = this.processService.findOne(id);
+            if (process == null) {
+                throw new ProcessNotFoundException(id);
+            }
+            process = this.processService.update(id, process.getDefinition(), false);
+
+            return this.getStatus(id, process.getVersion());
+        } catch (Exception ex) {
+            return this.exceptionToResponse(ex);
+        }
+    }
+
+    /**
      * Starts a workflow revision execution
      *
      * @param id The workflow id
@@ -179,10 +200,11 @@ public class ProcessController extends BaseController {
                 throw new ProcessNotFoundException(id, version);
             }
             this.processService.start(id, version, EnumProcessTaskType.UNDEFINED);
+
+            return this.getStatus(id, version);
         } catch (Exception ex) {
             return this.exceptionToResponse(ex);
         }
-        return RestResponse.success();
     }
 
     /**

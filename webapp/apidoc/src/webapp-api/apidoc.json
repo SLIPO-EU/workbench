@@ -24,6 +24,7 @@
     "Workflow",
     "QueryWorkflow",
     "Status",
+    "Save",
     "Start",
     "Stop",
     "DownloadWorkflowFile",

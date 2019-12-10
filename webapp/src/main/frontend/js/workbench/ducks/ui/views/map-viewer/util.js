@@ -188,10 +188,10 @@ function createFusedCells(step, property, features, updates) {
   return result;
 }
 
-export function processExecutionToLayers(process, execution) {
+export function processExecutionToLayers(config, process, execution) {
   const { steps, resources } = process;
   const layers = [];
-  const maxZoom = 15;
+  const maxZoom = config.mapViewer.layerMaxZoom || 15;
 
   // All input resource keys (exclude input for CATALOG or EXPORT operations)
   const input = steps.reduce(
@@ -405,16 +405,16 @@ export function provenanceToTable(provenance) {
               value: `Left Input: ${step.left.input}`,
               step: index + 1,
             }, {
-              selected: step.right.uri === step.selectedUri,
-              value: `Right Input : ${step.right.input}`,
-              step: index + 1,
-            }, {
-              value: `Action (Default : ${step.defaultAction})`,
-              step: index + 1,
-            }, {
-              value: 'Value',
-              step: index + 1,
-            },
+            selected: step.right.uri === step.selectedUri,
+            value: `Right Input : ${step.right.input}`,
+            step: index + 1,
+          }, {
+            value: `Action (Default : ${step.defaultAction})`,
+            step: index + 1,
+          }, {
+            value: 'Value',
+            step: index + 1,
+          },
           );
           break;
         default:

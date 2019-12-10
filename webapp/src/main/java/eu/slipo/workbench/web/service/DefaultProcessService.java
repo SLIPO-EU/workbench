@@ -307,7 +307,7 @@ public class DefaultProcessService implements ProcessService {
     public ProcessRecord update(
         long id, ProcessDefinition definition, boolean isTemplate
     ) throws InvalidProcessDefinitionException, ApplicationException {
-        if (!this.authenticationFacade.hasAnyRole(EnumRole.ADMIN, EnumRole.AUTHOR)) {
+        if (!this.authenticationFacade.hasAnyRole(EnumRole.ADMIN, EnumRole.AUTHOR, EnumRole.API)) {
             throw this.accessDenied();
         }
         try {
@@ -322,7 +322,9 @@ public class DefaultProcessService implements ProcessService {
             ProcessRecord result = processRepository.update(id, definition, currentUserId());
 
             // Delete existing draft
-            processDraftRepository.remove(this.authenticationFacade.getCurrentUserId(), id);
+            if (!this.authenticationFacade.hasRole(EnumRole.API)) {
+                processDraftRepository.remove(this.authenticationFacade.getCurrentUserId(), id);
+            }
 
             return result;
         } catch (InvalidProcessDefinitionException ex) {
