@@ -34,7 +34,7 @@ public class DeerConfiguration extends EnrichConfiguration<Deer>
     /**
      * This class represents the configuration of a specific version
      */
-    public static final String VERSION = "2.0";
+    public static final String VERSION = "2.1";
 
     /**
      * Available configuration levels

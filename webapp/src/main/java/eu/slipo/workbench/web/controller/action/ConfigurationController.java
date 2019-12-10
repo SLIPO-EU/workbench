@@ -79,6 +79,7 @@ public class ConfigurationController extends BaseController {
         config.setFagi(toolkitConfiguration.getFagi());
         config.setDeer(toolkitConfiguration.getDeer());
         config.setMapDefaults(this.mapConfiguration.getDefaults());
+        config.setMapViewer(this.mapConfiguration.getMapViewer());
 
         return config;
     }

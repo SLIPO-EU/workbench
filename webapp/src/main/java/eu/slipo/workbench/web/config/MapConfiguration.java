@@ -7,6 +7,7 @@ import org.springframework.context.annotation.PropertySource;
 import eu.slipo.workbench.web.model.configuration.BingMapsConfiguration;
 import eu.slipo.workbench.web.model.configuration.GeoServerConfiguration;
 import eu.slipo.workbench.web.model.configuration.MapDefaults;
+import eu.slipo.workbench.web.model.configuration.MapViewerConfiguration;
 import eu.slipo.workbench.web.model.configuration.OsmConfiguration;
 
 @Configuration
@@ -21,6 +22,8 @@ public class MapConfiguration {
     private BingMapsConfiguration bingMaps;
 
     private MapDefaults defaults;
+
+    private MapViewerConfiguration mapViewer;
 
     public OsmConfiguration getOsm() {
         return osm;
@@ -52,6 +55,14 @@ public class MapConfiguration {
 
     public void setDefaults(MapDefaults defaults) {
         this.defaults = defaults;
+    }
+
+    public MapViewerConfiguration getMapViewer() {
+        return mapViewer;
+    }
+
+    public void setMapViewer(MapViewerConfiguration mapViewer) {
+        this.mapViewer = mapViewer;
     }
 
 }

@@ -329,7 +329,7 @@ const configReducer = (state, action, global) => {
       return {
         ...state,
         evolution: null,
-        layers: processExecutionToLayers(action.data.process, action.data.execution),
+        layers: processExecutionToLayers(action.config, action.data.process, action.data.execution),
         provenance: null,
         selectedLayer: null,
         selectedFeatures: [],
@@ -621,18 +621,19 @@ const requestExecutionMapData = () => ({
   type: Types.REQUEST_EXECUTION_MAP_DATA,
 });
 
-const receiveExecutionMapData = (data) => ({
+const receiveExecutionMapData = (config, data) => ({
   type: Types.RECEIVE_EXECUTION_MAP_DATA,
+  config,
   data,
 });
 
 export const fetchExecutionMapData = (id, version, execution) => (dispatch, getState) => {
-  const { meta: { csrfToken: token } } = getState();
+  const { config, meta: { csrfToken: token } } = getState();
   dispatch(requestExecutionMapData());
 
   return mapService.fetchExecutionMapData(id, version, execution, token)
     .then((data) => {
-      dispatch(receiveExecutionMapData(data));
+      dispatch(receiveExecutionMapData(config, data));
     });
 };
 
@@ -640,18 +641,19 @@ const requestResourceMapData = () => ({
   type: Types.REQUEST_RESOURCE_MAP_DATA,
 });
 
-const receiveResourceMapData = (data) => ({
+const receiveResourceMapData = (config, data) => ({
   type: Types.RECEIVE_RESOURCE_MAP_DATA,
+  config,
   data,
 });
 
 export const fetchResourceMapData = (id, version) => (dispatch, getState) => {
-  const { meta: { csrfToken: token } } = getState();
+  const { config, meta: { csrfToken: token } } = getState();
   dispatch(requestResourceMapData());
 
   return mapService.fetchResourceMapData(id, version, token)
     .then((data) => {
-      dispatch(receiveResourceMapData(data));
+      dispatch(receiveResourceMapData(config, data));
     });
 };
 

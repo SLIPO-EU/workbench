@@ -30,6 +30,8 @@ public class ClientConfiguration {
 
     private MapDefaults mapDefaults;
 
+    private MapViewerConfiguration mapViewer;
+
     public Map<EnumTool, Map<String, ToolConfiguration<?>>> getProfiles() {
         return profiles;
     }
@@ -108,6 +110,14 @@ public class ClientConfiguration {
 
     public void setMapDefaults(MapDefaults mapDefaults) {
         this.mapDefaults = mapDefaults;
+    }
+
+    public MapViewerConfiguration getMapViewer() {
+        return mapViewer;
+    }
+
+    public void setMapViewer(MapViewerConfiguration mapViewer) {
+        this.mapViewer = mapViewer;
     }
 
 }

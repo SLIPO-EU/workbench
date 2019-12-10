@@ -17,7 +17,11 @@ public class ProcessExecutionSimpleRecordView {
 
     public ProcessExecutionSimpleRecordView(ProcessExecutionRecordView record) {
         this.process = new ProcessSimpleRecord(record.getProcess());
-        this.execution = new ProcessExecutionSimpleRecord(record.getExecution());
+        if (record.getExecution() != null) {
+            this.execution = new ProcessExecutionSimpleRecord(record.getExecution());
+        } else {
+            this.execution = null;
+        }
     }
 
     public ProcessSimpleRecord getProcess() {
