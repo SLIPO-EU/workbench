@@ -6,6 +6,7 @@ export { default as Dialog } from './dialog';
 export { default as ErrorLevel } from './error-level';
 export { default as JobStatus } from './job-status';
 export { default as OpenLayers } from './map';
+export { default as PieChart } from './pie-chart';
 export { default as Placeholder } from './placeholder';
 export { styles as SelectDefaultStyle } from './forms/fields/select-shared';
 export { default as SecureContent } from './secure-content';

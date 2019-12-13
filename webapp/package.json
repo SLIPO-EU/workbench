@@ -67,6 +67,7 @@
   "dependencies": {
     "@mdi/font": "^3.8.95",
     "@nivo/bar": "^0.59.2",
+    "@nivo/pie": "^0.59.1",
     "classnames": "^2.2.6",
     "codemirror": "^5.48.2",
     "dagre-d3": "^0.6.3",
