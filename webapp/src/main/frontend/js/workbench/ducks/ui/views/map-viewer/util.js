@@ -405,16 +405,16 @@ export function provenanceToTable(provenance) {
               value: `Left Input: ${step.left.input}`,
               step: index + 1,
             }, {
-            selected: step.right.uri === step.selectedUri,
-            value: `Right Input : ${step.right.input}`,
-            step: index + 1,
-          }, {
-            value: `Action (Default : ${step.defaultAction})`,
-            step: index + 1,
-          }, {
-            value: 'Value',
-            step: index + 1,
-          },
+              selected: step.right.uri === step.selectedUri,
+              value: `Right Input : ${step.right.input}`,
+              step: index + 1,
+            }, {
+              value: `Action (Default : ${step.defaultAction})`,
+              step: index + 1,
+            }, {
+              value: 'Value',
+              step: index + 1,
+            },
           );
           break;
         default:
