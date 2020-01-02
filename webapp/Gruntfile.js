@@ -367,7 +367,7 @@ module.exports = function (grunt) {
           }, {
             expand: true,
             filter: 'isFile',
-            cwd: 'node_modules/d3/build',
+            cwd: 'node_modules/d3/dist',
             src: [
               '*',
             ],
