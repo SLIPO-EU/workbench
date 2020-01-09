@@ -39,13 +39,13 @@ class KpiDeerView extends React.Component {
 
     return [
       {
-        id: 'Unmodified',
+        id: 'Enriched',
         label: 'Enriched POIs',
         value: enriched,
         color: 'hsl(33, 70%, 50%)'
       },
       {
-        id: 'Enriched',
+        id: 'Unmodified',
         label: 'Unmodified POIs',
         value: total - enriched,
         color: 'hsl(176, 70%, 50%)'
