@@ -1,7 +1,7 @@
 /**
  * Libraries
  */
-import pathToRegexp from 'path-to-regexp';
+import { pathToRegexp } from 'path-to-regexp';
 
 /**
  * Components

@@ -31,7 +31,7 @@ class KpiDeerView extends React.Component {
 
   getChartData() {
     const { original: data } = this.props;
-    if (!data) {
+    if (!data || !data.globalStats) {
       return [];
     }
 
@@ -39,13 +39,13 @@ class KpiDeerView extends React.Component {
 
     return [
       {
-        id: 'Unmodified',
+        id: 'Enriched',
         label: 'Enriched POIs',
         value: enriched,
         color: 'hsl(33, 70%, 50%)'
       },
       {
-        id: 'Enriched',
+        id: 'Unmodified',
         label: 'Unmodified POIs',
         value: total - enriched,
         color: 'hsl(176, 70%, 50%)'
@@ -64,7 +64,7 @@ class KpiDeerView extends React.Component {
     return (
       <div>
         <Row>
-          <Col xl={6}>
+          <Col xl={chartData.length !== 0 ? 6 : 12}>
             <Card>
               <CardBody>
                 <KpiSharedView
@@ -75,25 +75,27 @@ class KpiDeerView extends React.Component {
               </CardBody>
             </Card>
           </Col>
-          <Col xl={6}>
-            <Card>
-              <CardBody>
-                <Row className="mb-4">
-                  <Col>
-                    <i className="fa fa-pie-chart pr-1"></i>
-                    <span>{`Total POIs ${totalPOIs}`}</span>
-                  </Col>
-                </Row>
-                <Row>
-                  <Col>
-                    <PieChart
-                      data={chartData}
-                    />
-                  </Col>
-                </Row>
-              </CardBody>
-            </Card>
-          </Col>
+          {chartData.length !== 0 &&
+            <Col xl={6}>
+              <Card>
+                <CardBody>
+                  <Row className="mb-4">
+                    <Col>
+                      <i className="fa fa-pie-chart pr-1"></i>
+                      <span>{`Total POIs ${totalPOIs}`}</span>
+                    </Col>
+                  </Row>
+                  <Row>
+                    <Col>
+                      <PieChart
+                        data={chartData}
+                      />
+                    </Col>
+                  </Row>
+                </CardBody>
+              </Card>
+            </Col>
+          }
         </Row>
       </div>
     );

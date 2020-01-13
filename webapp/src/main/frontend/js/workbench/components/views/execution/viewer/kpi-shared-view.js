@@ -23,10 +23,17 @@ export const KpiGridColumns = [{
   show: false,
 }];
 
+const MIN_DEPTH = 1;
+const MAX_DEPTH = 100;
+
 class KpiSharedView extends React.Component {
 
   constructor(props) {
     super(props);
+
+    this.state = {
+      collapsed: MAX_DEPTH,
+    };
   }
 
   static propTypes = {
@@ -39,10 +46,18 @@ class KpiSharedView extends React.Component {
     original: PropTypes.object.isRequired,
   }
 
+  onToggleExpand() {
+    this.setState({
+      collapsed: this.state.collapsed === MIN_DEPTH ? MAX_DEPTH : MIN_DEPTH,
+    });
+  }
+
   render() {
     if (!this.props.data) {
       return null;
     }
+
+    const { collapsed } = this.state;
 
     return (
       <div>
@@ -50,12 +65,18 @@ class KpiSharedView extends React.Component {
           <Col>
             <i className="fa fa-th"></i>
             <span>{` KPI File : ${this.props.file.filePath.split('/').reverse()[0]}`}</span>
+            <a
+              className="p-2 slipo-action-link"
+              onClick={(e) => this.onToggleExpand(e)}
+            >
+              {collapsed === MIN_DEPTH ? 'Expand All' : 'Collapse All'}
+            </a>
           </Col>
         </Row>
         <Row>
           <Col>
             <ReactJson
-              collapsed={1}
+              collapsed={collapsed}
               displayDataTypes={false}
               enableClipboard={false}
               name={'metadata'}
