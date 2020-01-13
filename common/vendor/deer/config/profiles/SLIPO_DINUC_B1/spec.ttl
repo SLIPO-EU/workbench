@@ -1,4 +1,4 @@
-@prefix : <urn:example:slipo-bucharest/v1/> .
+@prefix : <urn:example:slipo-greece/v2/> .
 @prefix fcage: <http://w3id.org/fcage/> .
 @prefix deer: <http://w3id.org/deer/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -14,16 +14,20 @@
 # Decorators
 ####
 
-fcage:ExecutionNode fcage:decoratedBy [ a slipo:SlipoAnalyticsWrapper ] .
+fcage:ExecutionNode fcage:decoratedBy [
+    a slipo:SlipoAnalyticsWrapper ;
+    slipo:globalInputId :fullInput ;
+    slipo:globalOutputId :output_node  ] .
+
+#fcage:ExecutionNode fcage:decoratedBy [ a slipo:SlipoAnalyticsWrapper ] .
 
 ####
 # Input Nodes
 ####
 
 :fullInput
-  a deer:FileModelReader ;
-  deer:fromPath "fused.nt" ;
-  fcage:hasOutput ( :filtered :mergeFull ) ;
+ a deer:FileModelReader ;
+  deer:fromPath "../fused/output/b1_fused.nt" ;
 .
 
 :filtered
@@ -41,7 +45,7 @@ fcage:ExecutionNode fcage:decoratedBy [ a slipo:SlipoAnalyticsWrapper ] .
          ?s slipo:name/slipo:nameValue ?x .
       }
     ''' ;
-  fcage:hasOutput ( :linkBuildings ) ;
+  fcage:hasInput ( :fullInput ) ;
 .
 
 :dbp_buildings
@@ -49,50 +53,27 @@ fcage:ExecutionNode fcage:decoratedBy [ a slipo:SlipoAnalyticsWrapper ] .
   deer:fromEndpoint <http://dbpedia.org/sparql> ;
   deer:useSparqlConstruct
     '''
-      PREFIX bif: <http://www.openlinksw.com/schemas/bif#>
-      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-      PREFIX dbo: <http://dbpedia.org/ontology/>
-      PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#>
-      CONSTRUCT {
-        ?s a ?type .
-        ?s rdfs:label ?label .
-        ?s geo:lat ?lat .
-        ?s geo:long ?long .
-        ?s geo:geometry ?geometry .
-      } WHERE {
-        ?s a/rdfs:subClassOf* dbo:Building .
-        ?s a ?type .
-        ?s rdfs:label ?label .
-        ?s geo:lat ?lat .
-        ?s geo:long ?long .
-        ?s geo:geometry ?geometry .
-        {
-          SELECT *
-          WHERE {
-            ?s geo:geometry ?geometry .
-            FILTER(bif:isgeometry(?geometry)).
-            FILTER(bif:st_within(?geometry ,
-              "POLYGON((20.518942614901434 40.23535586695181,26.83246341948652 40.76876130334341,29.989223821779035 34.09230477228964,18.063684524229476 34.38227526935741,20.518942614901434 40.23535586695181))"^^<http://www.openlinksw.com/schemas/virtrdf#Geometry>))
-          }
-        }
-        UNION
-        {
-          {
-            ?s geo:lat ?lat .
-            ?s geo:long ?long .
-            FILTER(bif:st_within(bif:st_point(?long , ?lat) ,
-            "POLYGON((20.518942614901434 40.23535586695181,26.83246341948652 40.76876130334341,29.989223821779035 34.09230477228964,18.063684524229476 34.38227526935741,20.518942614901434 40.23535586695181))"^^<http://www.openlinksw.com/schemas/virtrdf#Geometry>))
-          }
-        }
-      }
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    PREFIX dbo: <http://dbpedia.org/ontology/>
+    PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#>
+    CONSTRUCT {
+      ?s rdfs:label ?label .
+      ?s geo:lat ?lat .
+      ?s geo:long ?long .
+      ?s geo:geometry ?geometry .
+    } WHERE {
+      ?s a/rdfs:subClassOf* dbo:Building .
+      ?s rdfs:label ?label .
+      ?s geo:lat ?lat .
+      ?s geo:long ?long .
+      BIND(REPLACE(REPLACE("POINT (lon lat)", "lon", ?long), "lat", ?lat) AS ?geometry) .
+    }
     ''' ;
-  fcage:hasOutput ( :linkBuildings );
 .
 
 :linkBuildings
   a deer:LinkingEnrichmentOperator ;
   fcage:hasInput ( :filtered :dbp_buildings ) ;
-  fcage:hasOutput ( :distanceToBuildings ) ;
   deer:selectMode "best1toN" ;
   deer:linkingPredicate slipo:nearestBuilding ;
   deer:linkSpecification "geo_hausdorff(x.http://www.w3.org/2003/01/geo/wgs84_pos#geometry, y.http://www.w3.org/2003/01/geo/wgs84_pos#geometry)" ;
@@ -102,44 +83,15 @@ fcage:ExecutionNode fcage:decoratedBy [ a slipo:SlipoAnalyticsWrapper ] .
 :distanceToBuildings
   a deer:GeoDistanceEnrichmentOperator ;
   fcage:hasInput ( :linkBuildings ) ;
-  fcage:hasOutput ( [ fcage:toNode :dereferencing ; fcage:toPort 0 ; ] ) ;
   deer:selectPredicate slipo:nearestBuilding ;
   deer:distancePredicate slipo:distanceToNearestBuilding ;
 .
 
 :dereferencing
   a deer:DereferencingEnrichmentOperator ;
-  fcage:hasOutput ( :mergeFull ) ;
-  deer:operation  [
-                    deer:lookUpProperty owl:sameAs ;
-                    deer:dereferencingProperty dbo:openingDate ;
-                    deer:importProperty slipo:openingDate
-                  ] ,
-                  [ deer:lookUpProperty owl:sameAs ;
-                    deer:dereferencingProperty dbp:numberOfStores ;
-                    deer:importProperty slipo:numberOfStores
-                  ] ,
-                  [ deer:lookUpProperty owl:sameAs ;
-                    deer:dereferencingProperty dbp:parking ;
-                    deer:importProperty slipo:parkingSlots
-                  ] ,
-                  [ deer:lookUpProperty slipo:nearestMall ;
-                    deer:dereferencingProperty dbo:openingDate ;
-                    deer:importProperty slipo:nearestMallOpeneningDate
-                  ] ,
-                  [ deer:lookUpProperty slipo:nearestMall ;
-                    deer:dereferencingProperty dbp:numberOfStores ;
-                    deer:importProperty slipo:nearestMallNumberOfStores
-                  ] ,
-                  [ deer:lookUpProperty slipo:nearestMall ;
-                    deer:dereferencingProperty dbp:parking ;
-                    deer:importProperty slipo:nearestMallParkingSlots
-                  ] ,
-                  [ deer:lookUpProperty slipo:nearestMall ;
-                    deer:dereferencingProperty rdfs:label ;
-                    deer:importProperty slipo:nearestMallName
-                  ] ,
-                  [ deer:lookUpProperty slipo:nearestBuilding ;
+  fcage:hasInput ( :distanceToBuildings ) ;
+  deer:useSparqlEndpoint <http://sparql.cs.upb.de:8891/sparql> ;
+  deer:operation  [ deer:lookUpProperty slipo:nearestBuilding ;
                     deer:dereferencingProperty dbo:openingDate ;
                     deer:importProperty slipo:nearestBuildingOpeningDate
                   ] ,
@@ -162,14 +114,13 @@ fcage:ExecutionNode fcage:decoratedBy [ a slipo:SlipoAnalyticsWrapper ] .
 .
 
 :mergeFull
-  a deer:MergeEnrichmentOperator ;
+ a deer:MergeEnrichmentOperator ;
   fcage:hasInput ( :fullInput :dereferencing ) ;
-  fcage:hasOutput ( :importDbpNames ) ;
 .
 
 :importDbpNames
-  a deer:SparqlUpdateEnrichmentOperator ;
-  fcage:hasOutput ( :cleanUpIntermediateTriples ) ;
+ a deer:SparqlUpdateEnrichmentOperator ;
+  fcage:hasInput :mergeFull ;
   deer:sparqlUpdateQuery '''
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     PREFIX owl: <http://www.w3.org/2002/07/owl#>
@@ -192,8 +143,8 @@ fcage:ExecutionNode fcage:decoratedBy [ a slipo:SlipoAnalyticsWrapper ] .
 .
 
 :cleanUpIntermediateTriples
-  a deer:SparqlUpdateEnrichmentOperator ;
-  fcage:hasOutput ( :output_node ) ;
+ a deer:SparqlUpdateEnrichmentOperator ;
+  fcage:hasInput :importDbpNames ;
   deer:sparqlUpdateQuery '''
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#>
@@ -214,6 +165,7 @@ fcage:ExecutionNode fcage:decoratedBy [ a slipo:SlipoAnalyticsWrapper ] .
 
 :output_node
   a deer:FileModelWriter ;
-  deer:outputFile "output/enriched.nt" ;
+  fcage:hasInput :cleanUpIntermediateTriples ;
+  deer:outputFile "./output/b1_enriched.ttl" ;
   deer:outputFormat "NT" ;
 .
