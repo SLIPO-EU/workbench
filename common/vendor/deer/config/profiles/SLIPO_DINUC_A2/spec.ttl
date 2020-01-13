@@ -1,4 +1,4 @@
-@prefix : <urn:example:slipo-bucharest/v1/> .
+@prefix : <urn:example:slipo-bucharest/v2/> .
 @prefix fcage: <http://w3id.org/fcage/> .
 @prefix deer: <http://w3id.org/deer/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -14,7 +14,10 @@
 # Decorators
 ####
 
-fcage:ExecutionNode fcage:decoratedBy [ a slipo:SlipoAnalyticsWrapper ] .
+fcage:ExecutionNode fcage:decoratedBy [
+    a slipo:SlipoAnalyticsWrapper ;
+    slipo:globalInputId :fullInput ;
+    slipo:globalOutputId :output_node  ] .
 
 ####
 # Input Nodes
@@ -22,8 +25,8 @@ fcage:ExecutionNode fcage:decoratedBy [ a slipo:SlipoAnalyticsWrapper ] .
 
 :fullInput
   a deer:FileModelReader ;
-  deer:fromPath "fused.nt" ;
-  fcage:hasOutput ( :malls :non_malls :mergeFull ) ;
+  deer:fromPath "../fused/aa_mode/output/a2_fused_mode_aa.nt" ;
+  # fcage:hasOutput ( :malls :non_malls :mergeFull ) ;
 .
 
 :malls
@@ -34,12 +37,13 @@ fcage:ExecutionNode fcage:decoratedBy [ a slipo:SlipoAnalyticsWrapper ] .
       PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#>
       PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
       PREFIX slipo: <http://slipo.eu/def#>
-      CONSTRUCT {?s rdfs:label ?x . ?s geo:lat ?lat . ?s geo:long ?long . ?s geo:geometry ?geometry . } WHERE {
+      CONSTRUCT {?s rdfs:label ?x . ?s geo:lat ?lat . ?s geo:long ?long . ?s geo:geometry ?geometry . ?s slipo:category ?category .} WHERE {
        {
          ?s geo:long ?long .
          ?s geo:lat ?lat .
          ?s geos:hasGeometry/geos:asWKT ?geometry .
          ?s slipo:name/slipo:nameValue ?x .
+         ?s slipo:category ?category .
          FILTER regex(str(?x),'Mall')
        } UNION {
          ?s geo:long ?long .
@@ -47,11 +51,13 @@ fcage:ExecutionNode fcage:decoratedBy [ a slipo:SlipoAnalyticsWrapper ] .
          ?s geos:hasGeometry/geos:asWKT ?geometry .
          ?s slipo:name/slipo:nameValue ?x .
          ?s slipo:category/slipo:value ?y.
+         ?s slipo:category ?category .
          FILTER regex(str(?y),'Shopping Center')
        }
       }
     ''' ;
-  fcage:hasOutput ( :linkMalls ) ;
+  fcage:hasInput ( :fullInput ) ;
+  # fcage:hasOutput ( :linkMalls ) ;
 .
 
 :non_malls
@@ -67,17 +73,20 @@ fcage:ExecutionNode fcage:decoratedBy [ a slipo:SlipoAnalyticsWrapper ] .
         ?s geo:lat ?lat .
         ?s geo:long ?long .
         ?s geo:geometry ?geometry .
+        ?s slipo:category ?category .
       } WHERE {
         ?s geo:long ?long .
         ?s geo:lat ?lat .
         ?s geos:hasGeometry/geos:asWKT ?geometry .
         ?s slipo:name/slipo:nameValue ?x .
+        ?s slipo:category ?category .
         FILTER regex(str(?x), '^((?!Mall).)*$') .
         OPTIONAL { ?s slipo:category/slipo:value ?y .
         FILTER regex(str(?y), '^((?!Shopping Center).)*$') . }
       }
     ''' ;
-  fcage:hasOutput ( :linkNonMalls ) ;
+  # fcage:hasOutput ( :linkNonMalls ) ;
+  fcage:hasInput ( :fullInput ) ;
 .
 
 :dbp_malls
@@ -107,7 +116,7 @@ fcage:ExecutionNode fcage:decoratedBy [ a slipo:SlipoAnalyticsWrapper ] .
       }
       LIMIT 10000
     ''' ;
-  fcage:hasOutput ( :linkMalls :linkNonMalls ) ;
+  # fcage:hasOutput ( :linkMalls :linkNonMalls ) ;
 .
 
 :dbp_buildings
@@ -138,7 +147,7 @@ fcage:ExecutionNode fcage:decoratedBy [ a slipo:SlipoAnalyticsWrapper ] .
       }
       LIMIT 10000
     ''' ;
-  fcage:hasOutput ( :linkBuildings );
+  # fcage:hasOutput ( :linkBuildings );
 .
 
 ####
@@ -148,7 +157,7 @@ fcage:ExecutionNode fcage:decoratedBy [ a slipo:SlipoAnalyticsWrapper ] .
 :linkMalls
   a deer:LinkingEnrichmentOperator ;
   fcage:hasInput ( :malls :dbp_malls ) ;
-  fcage:hasOutput ( :mergeLinks ) ;
+  # fcage:hasOutput ( :mergeLinks ) ;
   deer:selectMode "best1toN" ;
   deer:linkingPredicate owl:sameAs ;
   deer:linkSpecification "mongeelkan(y.http://www.w3.org/2000/01/rdf-schema#label, x.http://www.w3.org/2000/01/rdf-schema#label)" ;
@@ -158,7 +167,7 @@ fcage:ExecutionNode fcage:decoratedBy [ a slipo:SlipoAnalyticsWrapper ] .
 :linkNonMalls
   a deer:LinkingEnrichmentOperator ;
   fcage:hasInput ( :non_malls :dbp_malls ) ;
-  fcage:hasOutput ( :distanceToMalls ) ;
+  # fcage:hasOutput ( :distanceToMalls ) ;
   deer:selectMode "best1toN" ;
   deer:linkingPredicate slipo:nearestMall ;
   deer:linkSpecification "geo_hausdorff(x.http://www.w3.org/2003/01/geo/wgs84_pos#geometry,y.http://www.w3.org/2003/01/geo/wgs84_pos#geometry)" ;
@@ -167,7 +176,7 @@ fcage:ExecutionNode fcage:decoratedBy [ a slipo:SlipoAnalyticsWrapper ] .
 
 :distanceToMalls
   a deer:GeoDistanceEnrichmentOperator ;
-  fcage:hasOutput ( :mergeLinks ) ;
+  fcage:hasInput ( :linkNonMalls ) ;
   deer:selectPredicate slipo:nearestMall ;
   deer:distancePredicate slipo:distanceToNearestMall ;
 .
@@ -175,13 +184,13 @@ fcage:ExecutionNode fcage:decoratedBy [ a slipo:SlipoAnalyticsWrapper ] .
 :mergeLinks
   a deer:MergeEnrichmentOperator ;
   fcage:hasInput ( :linkMalls :distanceToMalls ) ;
-  fcage:hasOutput ( :linkBuildings ) ;
+  # fcage:hasOutput ( :linkBuildings ) ;
 .
 
 :linkBuildings
   a deer:LinkingEnrichmentOperator ;
   fcage:hasInput ( :mergeLinks :dbp_buildings ) ;
-  fcage:hasOutput ( :distanceToBuildings ) ;
+  # fcage:hasOutput ( :distanceToBuildings ) ;
   deer:selectMode "best1toN" ;
   deer:linkingPredicate slipo:nearestBuilding ;
   deer:linkSpecification "geo_hausdorff(x.http://www.w3.org/2003/01/geo/wgs84_pos#geometry,y.http://www.w3.org/2003/01/geo/wgs84_pos#geometry)" ;
@@ -191,14 +200,15 @@ fcage:ExecutionNode fcage:decoratedBy [ a slipo:SlipoAnalyticsWrapper ] .
 :distanceToBuildings
   a deer:GeoDistanceEnrichmentOperator ;
   fcage:hasInput ( :linkBuildings ) ;
-  fcage:hasOutput ( [ fcage:toNode :dereferencing ; fcage:toPort 0 ; ] ) ;
+  # fcage:hasOutput ( [ fcage:toNode :dereferencing ; fcage:toPort 0 ; ] ) ;
   deer:selectPredicate slipo:nearestBuilding ;
   deer:distancePredicate slipo:distanceToNearestBuilding ;
 .
 
 :dereferencing
   a deer:DereferencingEnrichmentOperator ;
-  fcage:hasOutput ( :mergeFull ) ;
+  # fcage:hasOutput ( :mergeFull ) ;
+  fcage:hasInput ( :distanceToBuildings ) ;
   deer:operation  [
                     deer:lookUpProperty owl:sameAs ;
                     deer:dereferencingProperty dbo:openingDate ;
@@ -253,12 +263,13 @@ fcage:ExecutionNode fcage:decoratedBy [ a slipo:SlipoAnalyticsWrapper ] .
 :mergeFull
   a deer:MergeEnrichmentOperator ;
   fcage:hasInput ( :fullInput :dereferencing ) ;
-  fcage:hasOutput ( :importDbpNames ) ;
+  # fcage:hasOutput ( :importDbpNames ) ;
 .
 
 :importDbpNames
   a deer:SparqlUpdateEnrichmentOperator ;
-  fcage:hasOutput ( :cleanUpIntermediateTriples ) ;
+  # fcage:hasOutput ( :cleanUpIntermediateTriples ) ;
+  fcage:hasInput ( :mergeFull ) ;
   deer:sparqlUpdateQuery '''
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     PREFIX owl: <http://www.w3.org/2002/07/owl#>
@@ -282,7 +293,8 @@ fcage:ExecutionNode fcage:decoratedBy [ a slipo:SlipoAnalyticsWrapper ] .
 
 :cleanUpIntermediateTriples
   a deer:SparqlUpdateEnrichmentOperator ;
-  fcage:hasOutput ( :output_node ) ;
+  # fcage:hasOutput ( :output_node ) ;
+  fcage:hasInput ( :importDbpNames ) ;
   deer:sparqlUpdateQuery '''
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#>
@@ -303,6 +315,7 @@ fcage:ExecutionNode fcage:decoratedBy [ a slipo:SlipoAnalyticsWrapper ] .
 
 :output_node
   a deer:FileModelWriter ;
-  deer:outputFile "output/enriched.nt" ;
+  fcage:hasInput ( :cleanUpIntermediateTriples ) ;
+  deer:outputFile "./output/a2_enriched.ttl" ;
   deer:outputFormat "NT" ;
 .
