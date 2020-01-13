@@ -13,6 +13,7 @@ CATEGORY_URI:                     ##SLIPO-specific constraint: Specifies the URI
 ASSIGNED_CATEGORY:                 ##SLIPO-specific constraint: Specifies an internal category assigned to each POI; Assuming that a mapping to a default (embedded) classification scheme
   entity: assignedCategory
   predicate: slipo:assignedCategory
+  generateWith: getEmbeddedCategory
 osm_id:
   partOf: sourceInfo
   entity: source
