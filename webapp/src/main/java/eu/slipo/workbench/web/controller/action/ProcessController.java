@@ -16,8 +16,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import eu.slipo.workbench.common.model.BasicErrorCode;
 import eu.slipo.workbench.common.model.Error;
@@ -362,7 +364,7 @@ public class ProcessController extends BaseController {
     @GetMapping(
         value = "/action/process/{id}/{version}/execution/{executionId}/file/{fileId}/download"
     )
-    public HttpEntity<byte[]> downloadProcessExecutionFile(
+    public ResponseEntity<StreamingResponseBody> downloadProcessExecutionFile(
         @PathVariable long id, @PathVariable long version, @PathVariable long executionId, @PathVariable long fileId,
         HttpServletResponse response
     ) throws IOException {
@@ -379,10 +381,15 @@ public class ProcessController extends BaseController {
                 HttpHeaders headers = new HttpHeaders();
                 headers.add("Content-Type", contentType);
                 headers.add("Content-Disposition", String.format("attachment; filename=%s", file.getName()));
+                headers.add("Content-Length", Long.toString(file.length()));
 
-                try(InputStream inputStream = new FileInputStream(file)) {
-                    return new HttpEntity<>(IOUtils.toByteArray(inputStream), headers);
-                }
+                StreamingResponseBody stream = out -> {
+                    try(InputStream inputStream = new FileInputStream(file)) {
+                        IOUtils.copyLarge(inputStream, out);
+                    }
+                };
+
+                return new ResponseEntity<StreamingResponseBody>(stream, headers, HttpStatus.OK);
             }
         } catch (ProcessNotFoundException ex) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND, "Process was not found");

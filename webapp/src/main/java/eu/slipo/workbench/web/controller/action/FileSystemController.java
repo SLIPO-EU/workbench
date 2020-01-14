@@ -2,6 +2,7 @@ package eu.slipo.workbench.web.controller.action;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -11,11 +12,13 @@ import java.nio.file.StandardCopyOption;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import eu.slipo.workbench.common.model.BasicErrorCode;
 import eu.slipo.workbench.common.model.DirectoryInfo;
@@ -101,7 +105,10 @@ public class FileSystemController extends BaseController {
      * @return the requested file
      */
     @RequestMapping(value = "/action/file-system", params = { "file" }, method = RequestMethod.GET)
-    public FileSystemResource downloadFile(@RequestParam("file") String filePath, HttpServletResponse response) throws IOException {
+    public ResponseEntity<StreamingResponseBody> downloadFile(
+        @RequestParam("file") String filePath,
+        HttpServletResponse response
+    ) throws IOException {
         try {
             if (StringUtils.isEmpty(filePath)) {
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "A path to the file is required");
@@ -124,8 +131,22 @@ public class FileSystemController extends BaseController {
                     this.currentUserId(),
                     absolutePath.toString());
 
+                String contentType = Files.probeContentType(file.toPath());
+                if (contentType == null) {
+                    contentType = "application/octet-stream";
+                }
+
                 response.setHeader("Content-Disposition", String.format("attachment; filename=%s", file.getName()));
-                return new FileSystemResource(file);
+                response.setHeader("Content-Type", contentType);
+                response.setHeader("Content-Length", Long.toString(file.length()));
+
+                StreamingResponseBody stream = out -> {
+                    try(InputStream inputStream = new FileInputStream(file)) {
+                        IOUtils.copyLarge(inputStream, out);
+                    }
+                };
+
+                return new ResponseEntity<StreamingResponseBody>(stream, HttpStatus.OK);
             }
         } catch (Exception ex) {
             logger.warn("Failed to download file [{}] for user {} ({})",
