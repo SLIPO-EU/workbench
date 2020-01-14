@@ -75,15 +75,22 @@ public class DefaultImportService implements ImportService, InitializingBean {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultImportService.class);
 
-    private static final int TRANSFORM_EXECUTION_TIMEOUT = 60 * 60 * 1000;
-
-    private static final int POLL_INTERVAL = 10000;
+    /**
+     * Export operation polling interval in seconds
+     */
+    private static final long POLL_INTERVAL = 10;
 
     private static final String FAGI_LINKS_TABLE_SUFFIX = "links";
 
     private static final String FAGI_ACTIONS_TABLE_SUFFIX = "actions";
 
     private static final String DEFAULT_REVERSE_TRIPLEGEO_PROFILE = "SLIPO_default";
+
+    /**
+     * Export operation timeout in seconds. Default value is 24 hours.
+     */
+    @Value("${map-export.timeout:86400}")
+    private long TRANSFORM_EXECUTION_TIMEOUT;
 
     @Value("${vector-data.default.schema:spatial}")
     private String defaultGeometrySchema;
@@ -489,7 +496,7 @@ public class DefaultImportService implements ImportService, InitializingBean {
             while (true) {
                 if (current.getStatus() == EnumProcessExecutionStatus.RUNNING) {
                     try {
-                        Thread.sleep(POLL_INTERVAL);
+                        Thread.sleep(POLL_INTERVAL * 1000);
                     } catch (InterruptedException e) {
                         // Ignore exception
                     }
@@ -760,6 +767,8 @@ public class DefaultImportService implements ImportService, InitializingBean {
         int size = 0;
         long id = 0;
 
+        String lines = "";
+
         // Helper variables
         CSVFormat format = CSVFormat.DEFAULT
             .withIgnoreEmptyLines()
@@ -775,6 +784,8 @@ public class DefaultImportService implements ImportService, InitializingBean {
             for (final CSVRecord record : parser) {
                 size++;
                 id++;
+
+                lines += String.format("Line %10d: %s\n", id, record.toString());
 
                 // Add surrogate key
                 params.add(id);
@@ -796,8 +807,11 @@ public class DefaultImportService implements ImportService, InitializingBean {
                     jdbcTemplate.update(StringUtils.repeat(insertSql, size), params.toArray(new Object[0]));
                     size = 0;
                     params.clear();
+
+                    lines = "";
                 }
             }
+
             // Insert remaining rows
             if (size != 0) {
                 jdbcTemplate.update(StringUtils.repeat(insertSql, size), params.toArray(new Object[0]));
@@ -805,7 +819,7 @@ public class DefaultImportService implements ImportService, InitializingBean {
 
             return id;
         } catch (Exception ex) {
-            logger.error(String.format("Failed to insert rows from file [%s]", fileName), ex);
+            logger.error(String.format("Failed to insert rows from file [%s].\n\n%s", fileName, lines), ex);
             throw ex;
         }
     }
@@ -848,8 +862,8 @@ public class DefaultImportService implements ImportService, InitializingBean {
         CSVFormat format = CSVFormat.DEFAULT
             .withIgnoreEmptyLines()
             .withFirstRecordAsHeader()
-            .withDelimiter(';')
-            .withQuote('"')
+            .withDelimiter(this.defaultDelimiter.charAt(0))
+            .withQuote(this.defaultQuote.charAt(0))
             .withTrim();
 
         // Scan the CSV file to extract columns names (the first line is assumed to
