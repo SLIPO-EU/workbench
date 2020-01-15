@@ -935,7 +935,7 @@ public class DefaultImportService implements ImportService, InitializingBean {
     }
 
     private List<String> getColumns(String tableName) {
-        String columnQuery = "select column_name from information_schema.columns where table_name = ?";
+        String columnQuery = "select column_name from information_schema.columns where table_name = ? order by ordinal_position";
 
         List<Map<String, Object>> rows = jdbcTemplate.queryForList(columnQuery, new Object[] { tableName });
         List<String> columns = rows.stream()
