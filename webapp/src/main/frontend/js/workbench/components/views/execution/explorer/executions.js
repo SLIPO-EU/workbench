@@ -99,6 +99,13 @@ const executionsColumns = (props) => (
     accessor: r => r.name,
     headerStyle: { 'textAlign': 'left' },
   }, {
+    Header: () => (<i className="fa fa-code-fork" />),
+    id: 'version',
+    accessor: r => r.process.version,
+    headerStyle: { 'textAlign': 'center' },
+    style: { 'textAlign': 'center' },
+    width: 30,
+  }, {
     Header: 'Submitted By',
     id: 'submittedBy',
     accessor: r => (r.submittedBy ? r.submittedBy.name : '-'),
