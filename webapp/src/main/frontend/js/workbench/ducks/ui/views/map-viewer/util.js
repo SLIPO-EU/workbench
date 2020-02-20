@@ -533,7 +533,7 @@ export function evolutionToTable(evolution) {
       name: process.name,
       description: process.description,
       userName: execution.submittedBy ? execution.submittedBy.name : 'System',
-      submittedOn: execution.submittedOn,
+      submittedOn: process.executedOn,
       id: process.id,
       version: process.version,
       executionId: execution.id,
