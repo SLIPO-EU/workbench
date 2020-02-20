@@ -137,8 +137,7 @@ const renderCell = (cell, row, cellProps, componentProps) => {
   const value = revision.showUpdates ? cell.value : cell.initial;
   const previousValue = previousCells.length === 0 ?
     value :
-    previousRevisions[previousRevisions.length - 1].showUpdates ?
-      previousCells[previousCells.length - 1].value : previousCells[previousCells.length - 1].initial;
+    previousRevisions[0].showUpdates ? previousCells[0].value : previousCells[0].initial;
 
   // Handle property updates
   if (cell.property === ATTRIBUTE_PROPERTIES) {
