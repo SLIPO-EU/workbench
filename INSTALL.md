@@ -12,13 +12,17 @@ PostGIS               > 2.2.1
 Docker                > 19.03.6
 ```
 
-Install sass required for building webapp client application:
+Only a very basic familiarity with Docker containers is required (what is a container, how can i pull an image from a Docker registry).
+
+## Install SASS
+
+Install SASS (compiler for CSS stylesheets) required for building web application:
 
 `sudo gem install sass`
 
-## Docker Images
+## Fetch Docker images
 
-Pull Docker images of SLIPO Toolkit components for rpc-server:
+Pull Docker images of SLIPO Toolkit components for RPC server:
 
 ```
 docker pull athenarc/triplegeo:2.0
