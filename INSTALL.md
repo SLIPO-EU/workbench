@@ -48,18 +48,25 @@ CREATE EXTENSION IF NOT EXISTS postgis_topology;
 
 ## Build
 
-Clone repository
+Clone repository and fetch subprojects (Git submodules):
 
-`git clone https://github.com/SLIPO-EU/workbench.git workbench`
+    git clone https://github.com/SLIPO-EU/workbench.git workbench
+    cd workbench
+    git submodule init
+    git submodule update
 
 Configure each application
 
-See each project's README page for more details
 
+Configure each application. See each project's README page for more details.
+
+Command Line Suite: 
 https://github.com/SLIPO-EU/workbench/tree/master/command
 
+RPC Server (internal component for executing workflows): 
 https://github.com/SLIPO-EU/workbench/tree/master/rpc-server
 
+Web application: 
 https://github.com/SLIPO-EU/workbench/tree/master/webapp
 
 For the webapp application, a default admin account must be configured. The account username and password are set using configuration properties as shown in the example:
