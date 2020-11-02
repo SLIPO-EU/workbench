@@ -33,6 +33,15 @@ public class DefaultAccountRepository implements AccountRepository {
     private EntityManager entityManager;
 
     @Override
+    public int count() {
+       final String q = "select count(a.id) from Account a ";
+
+       TypedQuery<Number> countQuery = entityManager.createQuery(q, Number.class);
+
+       return countQuery.getSingleResult().intValue();
+    }
+
+    @Override
     public QueryResultPage<Account> query(AccountQuery query, PageRequest pageReq) {
         // Check query parameters
         if (pageReq == null) {
@@ -106,11 +115,11 @@ public class DefaultAccountRepository implements AccountRepository {
     }
 
     @Override
-    public Account create(int createdBy, String userName, String password, String givenName, String familyName, Set<EnumRole> roles) {
+    public Account create(Integer createdBy, String userName, String password, String givenName, String familyName, Set<EnumRole> roles) {
         PasswordEncoder encoder = new BCryptPasswordEncoder();
 
         AccountEntity entity = new AccountEntity(userName, userName);
-        AccountEntity grantedBy = this.findEntity(createdBy);
+        AccountEntity grantedBy = createdBy == null ? null : this.findEntity(createdBy);
 
         entity.setActive(true);
         entity.setBlocked(false);

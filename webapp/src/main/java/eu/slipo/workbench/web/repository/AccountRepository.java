@@ -12,6 +12,13 @@ import eu.slipo.workbench.web.model.admin.AccountQuery;
 public interface AccountRepository {
 
     /**
+     * Count accounts
+     *
+     * @return The number of accounts
+     */
+    int count();
+
+    /**
      * Find accounts filtered by an {@link AccountQuery}
      *
      * @param query A query to filter records, or <tt>null</tt> to fetch everything
@@ -49,7 +56,7 @@ public interface AccountRepository {
      *
      * @return The new account
      */
-    Account create(int createdBy, String userName, String password, String givenName, String familyName, Set<EnumRole> roles);
+    Account create(Integer createdBy, String userName, String password, String givenName, String familyName, Set<EnumRole> roles);
 
     /**
      * Update the account with the given id
