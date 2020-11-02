@@ -64,9 +64,9 @@ public class StartupApplicationListener implements ApplicationListener<ContextRe
             this.accountRepository.create(null,username  , password, "admin", "", roles);
 
             if(logPassword) {
-                logger.info("Default admin user [{}] have been created. Password is [{}].", username, password);
+                logger.info("Default admin user [{}] has been created. Password is [{}].", username, password);
             } else {
-                logger.info("Default admin user [{}] have been created.", username);
+                logger.info("Default admin user [{}] has been created.", username);
             }
         } catch (Exception ex) {
             logger.error("Failed to initialize application default account", ex);
