@@ -3,13 +3,13 @@
 ## Requirements
 
 ```
-git					> 2.7.4
-maven					> 3.3.9
-java (openjdk-8-jdk)			= 1.8.0
-ruby					  > 2.3.1p112
-PostgreSQL			> 9.5
-PostGIS				  > 2.2.1
-Docker					> 19.03.6
+git                   > 2.7.4
+maven                 > 3.3.9
+java (openjdk-8-jdk)  = 1.8.0
+ruby                  > 2.3.1p112
+PostgreSQL            > 9.5
+PostGIS               > 2.2.1
+Docker                > 19.03.6
 ```
 
 Install sass required for building webapp client application:
@@ -39,7 +39,7 @@ createdb slipo
 createdb slipo-test
 ```
 
-Install PostGis extensions in both databases
+Install PostGIS extensions in both databases
 
 ```
 CREATE EXTENSION IF NOT EXISTS postgis;
