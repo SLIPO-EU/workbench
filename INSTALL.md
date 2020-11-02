@@ -48,51 +48,44 @@ CREATE EXTENSION IF NOT EXISTS postgis_topology;
 
 ## Build
 
-Clone repository and fetch subprojects (Git submodules):
+Clone repository for the top-level project:
 
     git clone https://github.com/SLIPO-EU/workbench.git workbench
+    
+Enter into project and and fetch subprojects (Git submodules):
+
     cd workbench
     git submodule init
     git submodule update
 
-Configure each application
-
-
 Configure each application. See each project's README page for more details.
 
-Command Line Suite: 
-https://github.com/SLIPO-EU/workbench/tree/master/command
-
-RPC Server (internal component for executing workflows): 
-https://github.com/SLIPO-EU/workbench/tree/master/rpc-server
-
-Web application: 
-https://github.com/SLIPO-EU/workbench/tree/master/webapp
+  * Command Line Suite: https://github.com/SLIPO-EU/workbench/tree/master/command/README.md
+  * RPC Server (internal component for executing workflows): https://github.com/SLIPO-EU/workbench/tree/master/rpc-server/README.md
+  * Web application: https://github.com/SLIPO-EU/workbench/tree/master/webapp/README.md
 
 For the webapp application, a default admin account must be configured. The account username and password are set using configuration properties as shown in the example:
 
 https://github.com/SLIPO-EU/workbench/blob/master/webapp/config-example/application.properties#L13
 
 Build all projects:
+    
+    mvn clean package
 
-```
-cd workbench
-mvn clean package
-```
 
 ## Initialize Database
 
-Initialize database in PostgreSQL (run once)
+Initialize database in PostgreSQL (run once):
 
 `java -jar command/target/workbench-command.jar`
 
 ## Start SLIPO applications
 
-Start rpc-server:
+Start RPC server:
 
 `java -jar rpc-server/target/workbench-rpc-server.jar`
 
-Start webapp:
+Start web application:
 
 `java -jar webapp/target/workbench-webapp.jar`
 
