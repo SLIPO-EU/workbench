@@ -89,7 +89,7 @@ Start webapp:
 
 `java -jar webapp/target/workbench-webapp.jar`
 
-Once the application has been started,  a message like “Default admin user [admin@domain.local] has been created.” will be written in the application log webapp.log file. Application log files are located in folder logs. If a password is not configured, the random password value will be also included in the message.
+Once the application has been started,  a message like “Default admin user `[admin@domain.local]` has been created.” will be written in the application log webapp.log file. Application log files are located in folder logs. If a password is not configured, the random password value will be also included in the message.
 
 
 
