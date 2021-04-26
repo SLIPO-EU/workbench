@@ -127,7 +127,7 @@
             <!-- The org.apache.commons:commons-io artifact was renamed to commons-io:commons-io -->
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.5</version>
+            <version>2.7</version>
         </dependency>
 
         <dependency>
