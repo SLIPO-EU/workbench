@@ -78,7 +78,7 @@
     "intl-messageformat": "^2.2.0",
     "isomorphic-fetch": "^2.2.1",
     "jquery": "^3.4.1",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.21",
     "moment": "^2.24.0",
     "ol": "^6.1.1",
     "path-to-regexp": "^6.1.0",
