@@ -69,7 +69,7 @@
     "@nivo/bar": "^0.61.1",
     "@nivo/pie": "^0.61.1",
     "classnames": "^2.2.6",
-    "codemirror": "^5.50.2",
+    "codemirror": "^5.58.2",
     "dagre-d3": "^0.6.4",
     "flat": "^5.0.0",
     "history": "^4.10.1",
