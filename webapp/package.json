@@ -71,7 +71,7 @@
     "classnames": "^2.2.6",
     "codemirror": "^5.50.2",
     "dagre-d3": "^0.6.4",
-    "flat": "^5.0.0",
+    "flat": "^5.0.1",
     "history": "^4.10.1",
     "http-status-codes": "^1.4.0",
     "immutable": "^3.8.2",
